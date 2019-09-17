@@ -7,26 +7,22 @@ from oauth2client import file, client, tools
 from mimetypes import guess_type
 import httplib2
 import os
-from config import Config
-import logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                     level=logging.INFO)
-
+from bot import LOGGER, getConfig
 
 G_DRIVE_TOKEN_FILE = "auth_token.txt"
 # Copy your credentials from the APIs Console
-CLIENT_ID = Config.G_DRIVE_CLIENT_ID
-CLIENT_SECRET = Config.G_DRIVE_CLIENT_SECRET
+CLIENT_ID = getConfig('G_DRIVE_CLIENT_ID')
+CLIENT_SECRET = getConfig('G_DRIVE_CLIENT_SECRET')
 # Check https://developers.google.com/drive/scopes for all available scopes
 OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
 # Redirect URI for installed apps, can be left as is
 REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
-parent_id = Config.GDRIVE_FOLDER_ID
+parent_id = getConfig('GDRIVE_FOLDER_ID')
 G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
 
 
 if CLIENT_ID is None or CLIENT_SECRET is None or parent_id is None:
-	logging.error("Please Setup Config Properly.")
+	LOGGER.error("Please Setup Config Properly.")
 
 
 
@@ -46,10 +42,10 @@ def upload(fileName):
 		file_name, mime_type = file_ops(fileName)	
 		try:
 			g_drive_link = upload_file(http, file_name,file_name, mime_type,parent_id)
-			logging.info("Uploaded To G-Drive: "+fileName)
+			LOGGER.info("Uploaded To G-Drive: "+fileName)
 			link = g_drive_link
 		except Exception as e:
-			logging.error(str(e))
+			LOGGER.error(str(e))
 			pass
 	else:
 		http = authorize(G_DRIVE_TOKEN_FILE, None)
@@ -57,11 +53,11 @@ def upload(fileName):
 		try:
 			dir_id = create_directory(http, os.path.basename(os.path.abspath(fileName)), parent_id)		
 			DoTeskWithDir(http,fileName, dir_id)
-			logging.info("Uploaded To G-Drive: "+fileName)
+			LOGGER.info("Uploaded To G-Drive: "+fileName)
 			dir_link = "https://drive.google.com/folderview?id={}".format(dir_id)
 			link = dir_link
 		except Exception as e:
-			logging.error(str(e))	
+			LOGGER.error(str(e))	
 			pass
 	return link 		
 	# with open('data','w') as f:
@@ -88,7 +84,7 @@ def create_directory(http, directory_name, parent_id):
 	file = drive_service.files().insert(body=file_metadata).execute()
 	file_id = file.get("id")
 	drive_service.permissions().insert(fileId=file_id, body=permissions).execute()
-	logging.info("Created Gdrive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
+	LOGGER.info("Created Gdrive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
 	return file_id
 
 

@@ -1,15 +1,10 @@
 import aria2p
 import os
 from time import sleep
-import logging
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                     level=logging.INFO)
+from bot import LOGGER
 
 
-
-cmd = "aria2c --enable-rpc --rpc-listen-all=false --rpc-listen-port 6800  --max-connection-per-server=10 --rpc-max-request-size=1024M --seed-time=0.01 --min-split-size=10M --follow-torrent=mem --split=10 --daemon=true --allow-overwrite=true"
 EDIT_SLEEP_TIME_OUT = 5
-aria2_is_running = os.system(cmd)
 
 aria2 = aria2p.API(
 		aria2p.Client(
@@ -26,7 +21,7 @@ def check_metadata(gid):
 	file = aria2.get_download(gid)
 	if file.followed_by_ids[0] != None:
 		new_gid = file.followed_by_ids[0]
-		logging.info("Changing GID "+gid+" to "+new_gid)
+		LOGGER.info("Changing GID "+gid+" to "+new_gid)
 		return new_gid	
 	else:
 		return False	
@@ -36,12 +31,12 @@ def add_download(link,message):
 	if "magnet" in link:
 		download = aria2.add_magnet(link)
 		allDls[message[0]] = [download,message[1]]
-		logging.info("Adding: "+link)
+		LOGGER.info("Adding: "+link)
 		return download
 	else:
 		download = aria2.add_uris([link])
 		allDls[message[0]] = [download,message[1]]
-		logging.info("Adding: "+link)
+		LOGGER.info("Adding: "+link)
 		return download
 
 
@@ -77,7 +72,7 @@ def progress_status(context,update,previous):
 			sleep(5)	
 			progress_status(context,update,previous)	
 		else:
-			logging.error(file.error_message)
+			LOGGER.error(file.error_message)
 			return
 	else:
 		try:
@@ -90,7 +85,7 @@ def progress_status(context,update,previous):
 			allDls[update][0] = download
 			progress_status(context,update,previous=None)
 		else:	
-			logging.info(file.name+" Completed.")
+			LOGGER.info(file.name+" Completed.")
 			msg = "<i>"+str(file.name) +"</i>:- Uploading."
 			context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
 			with open('data','w') as f:

@@ -1,1 +1,6 @@
-*config.env
+*.env
+*.ini
+*auth_token.txt
+*.pyc
+downloads/*
+data*
