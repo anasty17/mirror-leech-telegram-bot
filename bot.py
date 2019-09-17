@@ -17,16 +17,14 @@ def start(update, context):
 def mirror(update,context):
 	message = update.message.text
 	link = message.replace('/mirror','')[1:]
-	reply_msg = context.bot.send_message(chat_id=update.message.chat_id, text="Starting Download")
+	reply_msg = context.bot.send_message(chat_id=update.message.chat_id, reply_to_message_id=update.message.message_id, text="Starting Download")
 	download = ariaTools.add_download(link,[reply_msg,update])
 	ariaTools.progress_status(context,reply_msg,previous=None)
 	with open('data','r') as f:
 		file_name = f.read()
 		print("File-Name: "+file_name)
 	link = gdriveTools.upload(file_name)
-	# with open('data','r') as f:
-	# 	link = f.read()
-	msg = "<i>"+str(file_name) +"</i>\n"+link
+	msg = '<a href="{}">{}</a>'.format(link,file_name)
 	context.bot.edit_message_text(text=msg,message_id=reply_msg.message_id,chat_id=reply_msg.chat.id,parse_mode='HTMl')
 
 
