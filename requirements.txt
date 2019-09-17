@@ -1,0 +1,13 @@
+google-api-python-client>=1.7.3
+google-auth>=1.5.0
+google-auth-httplib2<=0.0.3
+httplib2>=0.11.3
+more-itertools>=4.2.0
+ndg-httpsclient>=0.4.0
+oauth>=1.0.1
+pyasn1>=0.4.3
+pyasn1-modules>=0.2.1
+pycurl>=7.43.0
+uritemplate>=3.0.0
+urllib3>=1.23
+
