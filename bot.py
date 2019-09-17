@@ -2,11 +2,20 @@ from telegram.ext import Updater,CommandHandler,run_async
 import ariaTools
 import logging
 import gdriveTools
+import ConfigParser
+
+config = ConfigParser.ConfigParser()
+
+config.read('config.env')
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
 
+if (getConfig('_____REMOVE_THIS_LINE_____')):
+	logging.ERROR('The README.md file there to be read! Exiting now!')
 
 
+def getConfig(var: str):
+	return config.get('BOT', var)
 
 @run_async
 def start(update, context):
@@ -29,7 +38,7 @@ def mirror(update,context):
 
 
 def main():
-	BOT_TOKEN = "976868081:AAEO--j0dqomyy0ZOYD0sSIGim4UHTYQg5E"
+	BOT_TOKEN = getConfig('BOT_TOKEN')
 	updater = Updater(token=BOT_TOKEN, use_context=True)
 
 	start_handler = CommandHandler('start', start)
