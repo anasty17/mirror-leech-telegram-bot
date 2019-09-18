@@ -63,14 +63,14 @@ def progress_status(context,update,previous):
 		if not file.error_message:
 			msg = "<i>"+str(file.name) +"</i>:- " +str(file.progress_string())+" of "+str(file.total_length_string())+" at "+str(file.download_speed_string())+" ,ETA: "+str(file.eta_string())
 			if previous != msg:
-				print("editing message")
+				LOGGER.info("editing message")
 				try:
 					context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
 				except:
 					pass
 				previous = msg
 			sleep(5)	
-			progress_status(context,update,previous)	
+			return progress_status(context,update,previous)	
 		else:
 			LOGGER.error(file.error_message)
 			return
@@ -83,10 +83,9 @@ def progress_status(context,update,previous):
 		if new_gid:
 			download = aria2.get_download(new_gid)
 			allDls[update][0] = download
-			progress_status(context,update,previous=None)
+			return progress_status(context,update,previous=None)
 		else:	
 			LOGGER.info(file.name+" Completed.")
 			msg = "<i>"+str(file.name) +"</i>:- Uploading."
 			context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
-			with open('data','w') as f:
-				f.write(file.name)	
+			return file.name

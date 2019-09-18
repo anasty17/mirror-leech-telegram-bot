@@ -9,10 +9,8 @@ def mirror(update,context):
 	link = message.replace('/mirror','')[1:]
 	reply_msg = context.bot.send_message(chat_id=update.message.chat_id, reply_to_message_id=update.message.message_id, text="Starting Download")
 	download = ariaTools.add_download(link,[reply_msg,update])
-	ariaTools.progress_status(context,reply_msg,previous=None)
-	with open('data','r') as f:
-		file_name = f.read()
-		print("File-Name: "+file_name)
+	file_name = ariaTools.progress_status(context,reply_msg,previous=None)
+	LOGGER.info("File-Name: "+file_name)
 	try:
 		link = gdriveTools.upload(file_name)
 		msg = '<a href="{}">{}</a>'.format(link,file_name)

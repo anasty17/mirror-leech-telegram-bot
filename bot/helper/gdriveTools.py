@@ -55,13 +55,7 @@ def upload(fileName):
 		except Exception as e:
 			LOGGER.error(str(e))	
 			raise Exception('Error: {}'.format(str(e)))
-	return link 		
-	# with open('data','w') as f:
-	# 	f.write(link)
-
-
-
-
+	return link
 
 def create_directory(http, directory_name, parent_id):
 	drive_service = build("drive", "v2", http=http, cache_discovery=False)
