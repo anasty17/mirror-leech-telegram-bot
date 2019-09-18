@@ -1,8 +1,7 @@
 from telegram.ext import CommandHandler, run_async
 from bot.helper import ariaTools, gdriveTools
-import configparser
 from bot import config, LOGGER, dispatcher
-
+from bot.helper.exceptions import DriveAuthError
 LOGGER.info('mirror.py')
 @run_async
 def mirror(update,context):
@@ -14,8 +13,14 @@ def mirror(update,context):
 	with open('data','r') as f:
 		file_name = f.read()
 		print("File-Name: "+file_name)
-	link = gdriveTools.upload(file_name)
-	msg = '<a href="{}">{}</a>'.format(link,file_name)
+	try:
+		link = gdriveTools.upload(file_name)
+		msg = '<a href="{}">{}</a>'.format(link,file_name)
+	except DriveAuthError as e:
+		msg = 'Authentication error: {}'.format(str(e))
+	except Exception as e:
+		msg = str(e)
+		
 	context.bot.edit_message_text(text=msg,message_id=reply_msg.message_id,chat_id=reply_msg.chat.id,parse_mode='HTMl')
 
 

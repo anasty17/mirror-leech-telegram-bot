@@ -4,20 +4,18 @@ from apiclient.errors import ResumableUploadError
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.file import Storage
 from oauth2client import file, client, tools
+from oauth2client.client import HttpAccessTokenRefreshError
 from mimetypes import guess_type
 import httplib2
 import os
-from bot import LOGGER, getConfig
+from bot import LOGGER, CLIENT_ID, CLIENT_SECRET, parent_id, DOWNLOAD_DIR
+from bot.helper.exceptions import DriveAuthError
 
 G_DRIVE_TOKEN_FILE = "auth_token.txt"
-# Copy your credentials from the APIs Console
-CLIENT_ID = getConfig('G_DRIVE_CLIENT_ID')
-CLIENT_SECRET = getConfig('G_DRIVE_CLIENT_SECRET')
 # Check https://developers.google.com/drive/scopes for all available scopes
 OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
 # Redirect URI for installed apps, can be left as is
 REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
-parent_id = getConfig('GDRIVE_FOLDER_ID')
 G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
 
 
@@ -25,40 +23,38 @@ if CLIENT_ID is None or CLIENT_SECRET is None or parent_id is None:
 	LOGGER.error("Please Setup Config Properly.")
 
 
-
-
-
-
 def upload(fileName):
+	filePath = DOWNLOAD_DIR + fileName
 	try:
 		with open(G_DRIVE_TOKEN_FILE) as f:
 			pass
 	except IOError:
 		storage = create_token_file(G_DRIVE_TOKEN_FILE)
 		http = authorize(G_DRIVE_TOKEN_FILE, storage)
-	print("Uploading File: "+fileName)	
-	if os.path.isfile(fileName):
+
+	LOGGER.info("Uploading File: "+fileName)	
+	if os.path.isfile(filePath):
 		http = authorize(G_DRIVE_TOKEN_FILE, None)
-		file_name, mime_type = file_ops(fileName)	
+		file_name, mime_type = file_ops(filePath)	
 		try:
-			g_drive_link = upload_file(http, file_name,file_name, mime_type,parent_id)
-			LOGGER.info("Uploaded To G-Drive: "+fileName)
+			g_drive_link = upload_file(http, filePath, file_name, mime_type,parent_id)
+			LOGGER.info("Uploaded To G-Drive: " + filePath)
 			link = g_drive_link
 		except Exception as e:
 			LOGGER.error(str(e))
 			pass
 	else:
 		http = authorize(G_DRIVE_TOKEN_FILE, None)
-		file_name, mime_type = file_ops(fileName)
+		file_name, mime_type = file_ops(filePath)
 		try:
 			dir_id = create_directory(http, os.path.basename(os.path.abspath(fileName)), parent_id)		
-			DoTeskWithDir(http,fileName, dir_id)
+			DoTeskWithDir(http,filePath, dir_id)
 			LOGGER.info("Uploaded To G-Drive: "+fileName)
 			dir_link = "https://drive.google.com/folderview?id={}".format(dir_id)
 			link = dir_link
 		except Exception as e:
 			LOGGER.error(str(e))	
-			pass
+			raise Exception('Error: {}'.format(str(e)))
 	return link 		
 	# with open('data','w') as f:
 	# 	f.write(link)
@@ -135,9 +131,15 @@ def authorize(token_file, storage):
 		storage = Storage(token_file)
 	credentials = storage.get()
 	# Create an httplib2.Http object and authorize it with our credentials
-	http = httplib2.Http()
-	credentials.refresh(http)
-	http = credentials.authorize(http)
+	try:
+		http = httplib2.Http()
+		credentials.refresh(http)
+		http = credentials.authorize(http)
+	except HttpAccessTokenRefreshError as e:
+		LOGGER.error(str(e))
+		LOGGER.info('Deleting {} file'.format(G_DRIVE_TOKEN_FILE))
+		os.remove(G_DRIVE_TOKEN_FILE)
+		raise DriveAuthError(str(e))
 	return http
 
 
