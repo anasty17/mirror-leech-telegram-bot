@@ -1,7 +1,7 @@
 import aria2p
 import os
 from time import sleep
-from bot import LOGGER
+from bot import LOGGER,DOWNLOAD_DIR
 
 
 EDIT_SLEEP_TIME_OUT = 5
@@ -29,12 +29,12 @@ def check_metadata(gid):
 
 def add_download(link,message):
 	if "magnet" in link:
-		download = aria2.add_magnet(link)
+		download = aria2.add_magnet(link,{'dir':DOWNLOAD_DIR})
 		allDls[message[0]] = [download,message[1]]
 		LOGGER.info("Adding: "+link)
 		return download
 	else:
-		download = aria2.add_uris([link])
+		download = aria2.add_uris([link],{'dir':DOWNLOAD_DIR})
 		allDls[message[0]] = [download,message[1]]
 		LOGGER.info("Adding: "+link)
 		return download

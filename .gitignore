@@ -1,5 +1,6 @@
 *.env
 config.ini
+*conf.ini
 *auth_token.txt
 *.pyc
 downloads/*
