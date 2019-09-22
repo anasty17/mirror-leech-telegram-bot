@@ -64,9 +64,10 @@ def progress_status(context,update,previous):
 	file = aria2.get_download(download.gid)
 	if not file.is_complete:
 		if not file.error_message:
-			msg = "<i>"+str(file.name) +"</i>:- " +str(file.progress_string())+" of "+str(file.total_length_string())+" at "+str(file.download_speed_string())+" ,ETA: "+str(file.eta_string())
+			msg = "<i>" + file.name +"</i>:- " + file.progress_string()+" of " + file.total_length_string() + \
+				" at " + file.download_speed_string() + " ,ETA: " + file.eta_string()
 			if previous != msg:
-				LOGGER.info("editing message")
+				LOGGER.info("Editing message")
 				try:
 					context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
 				except:
@@ -89,5 +90,5 @@ def progress_status(context,update,previous):
 			return progress_status(context,update,previous=None)
 		else:	
 			LOGGER.info(file.name+" Completed.")
-			msg = "<i>"+str(file.name) +"</i>:- Uploading."
+			msg = "<i>" + file.name +"</i>:- Uploading."
 			context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
