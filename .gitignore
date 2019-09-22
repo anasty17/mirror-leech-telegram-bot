@@ -6,3 +6,4 @@ config.ini
 downloads/*
 download/*
 data*
+.vscode

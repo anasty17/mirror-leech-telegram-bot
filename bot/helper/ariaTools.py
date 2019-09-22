@@ -46,6 +46,9 @@ def remove_download(message):
 	return True	
 
 
+def get_file_name(download):
+	file = aria2.get_download(download.gid)
+	return file.name
 
 def get_download_by_message(message):
 	if allDls[message] == None:
@@ -88,4 +91,3 @@ def progress_status(context,update,previous):
 			LOGGER.info(file.name+" Completed.")
 			msg = "<i>"+str(file.name) +"</i>:- Uploading."
 			context.bot.edit_message_text(text=msg,message_id=update.message_id,chat_id=update.chat.id,parse_mode='HTMl')
-			return file.name
