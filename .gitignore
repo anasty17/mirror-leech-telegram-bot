@@ -7,3 +7,6 @@ downloads/*
 download/*
 data*
 .vscode
+.idea
+*.json
+*.pickle

@@ -1,7 +1,7 @@
 python-telegram-bot
 google-api-python-client>=1.7.3
-google-auth>=1.5.0
 google-auth-httplib2<=0.0.3
+google-auth-oauthlib
 httplib2>=0.11.3
 more-itertools>=4.2.0
 ndg-httpsclient>=0.4.0

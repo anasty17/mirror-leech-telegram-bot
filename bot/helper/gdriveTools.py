@@ -1,174 +1,150 @@
-from apiclient.discovery import build
-from apiclient.http import MediaFileUpload
-from apiclient.errors import ResumableUploadError
-from oauth2client.client import OAuth2WebServerFlow
-from oauth2client.file import Storage
-from oauth2client import file, client, tools
-from oauth2client.client import HttpAccessTokenRefreshError
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from googleapiclient.http import MediaFileUpload
+import pickle
 from mimetypes import guess_type
-import httplib2
 import os
-from bot import LOGGER, CLIENT_ID, CLIENT_SECRET, parent_id, DOWNLOAD_DIR
-from bot.helper.exceptions import DriveAuthError
+from bot import LOGGER, CLIENT_ID, CLIENT_SECRET, parent_id, DOWNLOAD_DIR, download_list
+from .listeners import MirrorListeners
+from shutil import rmtree
 
-G_DRIVE_TOKEN_FILE = "auth_token.txt"
-# Check https://developers.google.com/drive/scopes for all available scopes
-OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
-# Redirect URI for installed apps, can be left as is
-REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
-G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
+class GoogleDriveHelper:
 
+    def __init__(self, listener: MirrorListeners):
+        self.__G_DRIVE_TOKEN_FILE = "token.pickle"
+        # Check https://developers.google.com/drive/scopes for all available scopes
+        self.__OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
+        # Redirect URI for installed apps, can be left as is
+        self.__REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+        self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
+        self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
+        self.__listener = listener
+        if CLIENT_ID is None or CLIENT_SECRET is None or parent_id is None:
+            LOGGER.error("Please Setup Config Properly.")
 
-if CLIENT_ID is None or CLIENT_SECRET is None or parent_id is None:
-	LOGGER.error("Please Setup Config Properly.")
+        self.__service = self.authorize()
 
+    def upload_file(self, file_path, file_name, mime_type, parent_id):
+        # File body description
+        media_body = MediaFileUpload(file_path,
+                                     mimetype=mime_type,
+                                     resumable=True)
+        body = {
+            'title': file_name,
+            'description': 'backup',
+            'mimeType': mime_type,
+        }
+        if parent_id is not None:
+            body["parents"] = [{"id": parent_id}]
+        # Permissions body description: anyone who has link can upload
+        # Other permissions can be found at https://developers.google.com/drive/v2/reference/permissions
+        permissions = {
+            'role': 'reader',
+            'type': 'anyone',
+            'value': None,
+            'withLink': True
+        }
+        # Insert a file
+        drive_file = self.__service.files().create(body=body, media_body=media_body).execute()
+        # Insert new permissions
+        self.__service.permissions().create(fileId=drive_file['id'], body=permissions).execute()
+        # Define file instance and get url for download
+        drive_file = self.__service.files().get(fileId=drive_file['id']).execute()
+        download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+        return download_url
 
-def upload(fileName):
-	filePath = DOWNLOAD_DIR + fileName
-	try:
-		with open(G_DRIVE_TOKEN_FILE) as f:
-			pass
-	except IOError:
-		storage = create_token_file(G_DRIVE_TOKEN_FILE)
-		http = authorize(G_DRIVE_TOKEN_FILE, storage)
+    def file_ops(self, file_path):
+        mime_type = guess_type(file_path)[0]
+        mime_type = mime_type if mime_type else "text/plain"
+        file_name = file_path.split("/")[-1]
+        return file_name, mime_type
 
-	LOGGER.info("Uploading File: "+fileName)	
-	if os.path.isfile(filePath):
-		http = authorize(G_DRIVE_TOKEN_FILE, None)
-		file_name, mime_type = file_ops(filePath)	
-		try:
-			g_drive_link = upload_file(http, filePath, file_name, mime_type,parent_id)
-			LOGGER.info("Uploaded To G-Drive: " + filePath)
-			link = g_drive_link
-		except Exception as e:
-			LOGGER.error(str(e))
-			pass
-	else:
-		http = authorize(G_DRIVE_TOKEN_FILE, None)
-		file_name, mime_type = file_ops(filePath)
-		try:
-			dir_id = create_directory(http, os.path.basename(os.path.abspath(fileName)), parent_id)		
-			DoTeskWithDir(http,filePath, dir_id)
-			LOGGER.info("Uploaded To G-Drive: "+fileName)
-			dir_link = "https://drive.google.com/folderview?id={}".format(dir_id)
-			link = dir_link
-		except Exception as e:
-			LOGGER.error(str(e))	
-			raise Exception('Error: {}'.format(str(e)))
-	return link
+    def upload(self, file_name: str):
+        self.__listener.onUploadStarted(file_name)
+        file_dir = "{}/{}".format(DOWNLOAD_DIR, self.__listener.update.update_id)
+        file_path = "{}/{}".format(file_dir, file_name)
+        link = None
+        LOGGER.info("Uploading File: " + file_name)
+        if os.path.isfile(file_path):
+            file_name, mime_type = self.file_ops(file_path)
+            try:
+                g_drive_link = self.upload_file(file_path, file_name, mime_type, parent_id)
+                LOGGER.info("Uploaded To G-Drive: " + file_path)
+                link = g_drive_link
+            except Exception as e:
+                LOGGER.error(str(e))
+                pass
+        else:
+            file_name, mime_type = self.file_ops(file_path)
+            try:
+                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
+                self.upload_dir(file_path, dir_id)
+                LOGGER.info("Uploaded To G-Drive: " + file_name)
+                link = "https://drive.google.com/folderview?id={}".format(dir_id)
+            except Exception as e:
+                LOGGER.error(str(e))
+                self.__listener.onUploadError(str(e))
+                raise Exception('Error: {}'.format(str(e)))
+        del download_list[self.__listener.update.update_id]
+        LOGGER.info(download_list)
+        self.__listener.onUploadComplete(link, file_name)
+        LOGGER.info("Deleting downloaded file/folder..")
+        rmtree(file_dir)
+        return link
 
-def create_directory(http, directory_name, parent_id):
-	drive_service = build("drive", "v2", http=http, cache_discovery=False)
-	permissions = {
-        "role": "reader",
-        "type": "anyone",
-        "value": None,
-        "withLink": True
-	}
-	file_metadata = {
-        "title": directory_name,
-        "mimeType": G_DRIVE_DIR_MIME_TYPE
-	}
-	if parent_id is not None:
-		file_metadata["parents"] = [{"id": parent_id}]
-	file = drive_service.files().insert(body=file_metadata).execute()
-	file_id = file.get("id")
-	drive_service.permissions().insert(fileId=file_id, body=permissions).execute()
-	LOGGER.info("Created Gdrive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
-	return file_id
+    def create_directory(self, directory_name, parent_id):
+        permissions = {
+            "role": "reader",
+            "type": "anyone",
+            "value": None,
+            "withLink": True
+        }
+        file_metadata = {
+            "title": directory_name,
+            "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
+        }
+        if parent_id is not None:
+            file_metadata["parents"] = [{"id": parent_id}]
+        file = self.__service.files().create(body=file_metadata).execute()
+        file_id = file.get("id")
+        self.__service.permissions().create(fileId=file_id, body=permissions).execute()
+        LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
+        return file_id
 
+    def upload_dir(self, input_directory, parent_id):
+        list_dirs = os.listdir(input_directory)
+        if len(list_dirs) == 0:
+            return parent_id
+        r_p_id = None
+        for a_c_f_name in list_dirs:
+            current_file_name = os.path.join(input_directory, a_c_f_name)
+            if os.path.isdir(current_file_name):
+                current_dir_id = self.create_directory(a_c_f_name, parent_id)
+                r_p_id = self.upload_dir(current_file_name, current_dir_id)
+            else:
+                file_name, mime_type = self.file_ops(current_file_name)
+                # current_file_name will have the full path
+                self.upload_file(current_file_name, file_name, mime_type, parent_id)
+                r_p_id = parent_id
+        return r_p_id
 
-def DoTeskWithDir(http, input_directory, parent_id):
-	list_dirs = os.listdir(input_directory)
-	if len(list_dirs) == 0:
-		return parent_id
-	r_p_id = None
-	for a_c_f_name in list_dirs:
-		current_file_name = os.path.join(input_directory, a_c_f_name)
-		if os.path.isdir(current_file_name):
-			current_dir_id = create_directory(http, a_c_f_name, parent_id)
-			r_p_id = DoTeskWithDir(http, current_file_name,current_dir_id)
-		else:
-			file_name, mime_type = file_ops(current_file_name)
-            # current_file_name will have the full path
-			g_drive_link = upload_file(http, current_file_name, file_name, mime_type, parent_id)
-			r_p_id = parent_id
-    # TODO: there is a #bug here :(
-	return r_p_id
+    def authorize(self):
+        # Get credentials
+        credentials = None
+        if os.path.exists(self.__G_DRIVE_TOKEN_FILE):
+            with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
+                credentials = pickle.load(f)
+        if credentials is None or not credentials.valid:
+            if credentials and credentials.expired and credentials.refresh_token:
+                credentials.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    'credentials.json', self.__OAUTH_SCOPE)
+                LOGGER.info(flow)
+                credentials = flow.run_local_server(port=0)
 
-def file_ops(file_path):
-	mime_type = guess_type(file_path)[0]
-	mime_type = mime_type if mime_type else "text/plain"
-	file_name = file_path.split("/")[-1]
-	return file_name, mime_type
-
-
-def create_token_file(token_file):
-# Run through the OAuth flow and retrieve credentials
-	flow = OAuth2WebServerFlow(
-		CLIENT_ID,
-		CLIENT_SECRET,
-		OAUTH_SCOPE,
-		redirect_uri=REDIRECT_URI
-		)
-	authorize_url = flow.step1_get_authorize_url()
-	print('Go to the following link in your browser: ' + authorize_url)
-	code = input('Enter verification code: ').strip()
-	credentials = flow.step2_exchange(code)
-	storage = Storage(token_file)
-	storage.put(credentials)
-	return storage
-
-def authorize(token_file, storage):
-    # Get credentials
-	if storage is None:
-		storage = Storage(token_file)
-	credentials = storage.get()
-	# Create an httplib2.Http object and authorize it with our credentials
-	try:
-		http = httplib2.Http()
-		credentials.refresh(http)
-		http = credentials.authorize(http)
-	except HttpAccessTokenRefreshError as e:
-		LOGGER.error(str(e))
-		LOGGER.info('Deleting {} file'.format(G_DRIVE_TOKEN_FILE))
-		os.remove(G_DRIVE_TOKEN_FILE)
-		raise DriveAuthError(str(e))
-	return http
-
-
-
-
-def upload_file(http, file_path,file_name, mime_type, parent_id):
-# Create Google Drive service instance
-	drive_service = build('drive', 'v2', http=http, cache_discovery=False)
-# File body description
-	media_body = MediaFileUpload(file_path,
-                                 mimetype=mime_type,
-                                 resumable=True)
-	body = {
-        'title': file_name,
-        'description': 'backup',
-        'mimeType': mime_type,
-	}
-	if parent_id is not None:
-		body["parents"] = [{"id": parent_id}]
-# Permissions body description: anyone who has link can upload
-# Other permissions can be found at https://developers.google.com/drive/v2/reference/permissions
-	permissions = {
-        'role': 'reader',
-        'type': 'anyone',
-        'value': None,
-        'withLink': True
-    }
-# Insert a file
-	file = drive_service.files().insert(body=body, media_body=media_body).execute()
-# Insert new permissions
-	drive_service.permissions().insert(fileId=file['id'], body=permissions).execute()
-# Define file instance and get url for download
-	file = drive_service.files().get(fileId=file['id']).execute()
-	download_url = file.get('webContentLink')
-	return download_url	
-
-
-
+            # Save the credentials for the next run
+            with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
+                pickle.dump(credentials, token)
+        return build('drive', 'v3', credentials=credentials, cache_discovery=False)
