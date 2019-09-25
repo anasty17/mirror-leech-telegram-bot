@@ -1,6 +1,9 @@
 import logging
 import configparser
+import aria2p
 from telegram.ext import Updater
+
+
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -21,6 +24,13 @@ try:
 except KeyError:
     pass
 
+aria2 = aria2p.API(
+            aria2p.Client(
+                host="http://localhost",
+                port=6800,
+                secret="",
+            )
+        )
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 try:
