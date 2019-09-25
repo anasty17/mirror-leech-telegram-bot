@@ -140,7 +140,7 @@ class GoogleDriveHelper:
                 flow = InstalledAppFlow.from_client_secrets_file(
                     'credentials.json', self.__OAUTH_SCOPE)
                 LOGGER.info(flow)
-                credentials = flow.run_local_server(port=0)
+                credentials = flow.run_console(port=0)
 
             # Save the credentials for the next run
             with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:

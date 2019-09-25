@@ -1,7 +1,6 @@
 from telegram.ext import CommandHandler, run_async
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import config, LOGGER, dispatcher
-from bot.helper.exceptions import DriveAuthError
 
 LOGGER.info('mirror.py')
 
