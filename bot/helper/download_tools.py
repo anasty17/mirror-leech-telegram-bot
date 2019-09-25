@@ -4,33 +4,32 @@ from bot.helper.listeners import *
 from urllib.parse import urlparse
 
 
-def is_url(url: str):
-    try:
-        urlparse(url)
-        return True
-    except ValueError:
-        return False
-
-
-def is_magnet(url: str):
-    if "magnet" in url:
-        return True
-    else:
-        return False
-
-
 class DownloadHelper:
 
     def __init__(self, listener: MirrorListeners):
         self.__listener = listener
+        self.__is_torrent = False
+
+    def is_url(self, url: str):
+        try:
+            urlparse(url)
+            return True
+        except ValueError:
+            return False
+
+    def is_magnet(self, url: str):
+        if "magnet" in url:
+            return True
+        else:
+            return False
 
     def add_download(self, link: str):
         download = None
-        if is_url(link):
-            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id),
-                                                      'max_download_limit': 1})
-        elif is_magnet(link):
+        if self.is_url(link):
+            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id)})
+        elif self.is_magnet(link):
             download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR})
+            self.__is_torrent = True
         else:
             self.__listener.onDownloadError("No download URL or URL malformed")
             return
@@ -58,11 +57,26 @@ class DownloadHelper:
     def __get_download(self):
         return aria2.get_download(download_list[self.__listener.update.update_id])
 
+    def __get_followed_download_gid(self):
+        download = self.__get_download()
+        if len(download.followed_by_ids) != 0:
+            return download.followed_by_ids[0]
+        return None
+
     def __update_download_status(self):
         # TODO: Try to find a way to move this code to mirror.py and send only a
         #   list of Download objects to onDownloadProgress()
         previous = None
         LOGGER.info(self.get_downloads_status_str_list())
+        if self.__is_torrent:
+            # Waiting for the actual gid
+            new_gid = None
+            while new_gid is None:
+                # Check every few seconds
+                sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
+                new_gid = self.__get_followed_download_gid()
+            download_list[self.__listener.update.update_id] = new_gid
+
         while not self.__get_download().is_complete:
             if self.__get_download().has_failed:
                 self.__listener.onDownloadError(self.__get_download().error_message)

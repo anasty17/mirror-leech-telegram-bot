@@ -60,7 +60,7 @@ class GoogleDriveHelper:
 
     def upload(self, file_name: str):
         self.__listener.onUploadStarted(file_name)
-        file_dir = "{}/{}".format(DOWNLOAD_DIR, self.__listener.update.update_id)
+        file_dir = "{}{}".format(DOWNLOAD_DIR, self.__listener.update.update_id)
         file_path = "{}/{}".format(file_dir, file_name)
         link = None
         LOGGER.info("Uploading File: " + file_name)
