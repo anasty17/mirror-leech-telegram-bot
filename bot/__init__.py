@@ -25,8 +25,6 @@ DOWNLOAD_DIR = None
 BOT_TOKEN = None
 try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
-    CLIENT_ID = getConfig('G_DRIVE_CLIENT_ID')
-    CLIENT_SECRET = getConfig('G_DRIVE_CLIENT_SECRET')
     parent_id = getConfig('GDRIVE_FOLDER_ID')
     DOWNLOAD_DIR = getConfig('DOWNLOAD_DIR')
     if DOWNLOAD_DIR[-1] != '/' or DOWNLOAD_DIR[-1] != '\\':

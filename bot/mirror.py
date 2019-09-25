@@ -19,8 +19,8 @@ class MirrorListener(listeners.MirrorListeners):
         for progress_str in progress_str_list:
             msg += progress_str + '\n\n'
         self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                    chat_id=self.reply_message.chat.id,
-                                    parse_mode='HTMl')
+                                           chat_id=self.reply_message.chat.id,
+                                           parse_mode='HTMl')
 
     def onDownloadComplete(self, download):
         msg = "Downloaded"

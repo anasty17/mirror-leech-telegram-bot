@@ -5,9 +5,10 @@ from googleapiclient.http import MediaFileUpload
 import pickle
 from mimetypes import guess_type
 import os
-from bot import LOGGER, CLIENT_ID, CLIENT_SECRET, parent_id, DOWNLOAD_DIR, download_list
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, download_list
 from .listeners import MirrorListeners
 from shutil import rmtree
+
 
 class GoogleDriveHelper:
 
@@ -20,9 +21,6 @@ class GoogleDriveHelper:
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
         self.__listener = listener
-        if CLIENT_ID is None or CLIENT_SECRET is None or parent_id is None:
-            LOGGER.error("Please Setup Config Properly.")
-
         self.__service = self.authorize()
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
