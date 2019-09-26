@@ -1,12 +1,14 @@
 from telegram.ext import CommandHandler, run_async
+from telegram.error import BadRequest
 from bot.helper import download_tools, gdriveTools, listeners
-from bot import config, LOGGER, dispatcher
+from bot import LOGGER, dispatcher
 
 LOGGER.info('mirror.py')
 
 
 def get_readable_message(progress_list: list):
     msg = ""
+    LOGGER.info(progress_list)
     for status in progress_list:
         msg += "<b>Name:</b> {}\n" \
                "<b>status:</b> {}\n" \
@@ -15,7 +17,7 @@ def get_readable_message(progress_list: list):
                "<b>ETA:</b> {}\n\n".format(status.name(), status.status(),
                                            status.progress(), status.size(),
                                            status.speed(), status.eta())
-        return msg
+    return msg
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -26,18 +28,23 @@ class MirrorListener(listeners.MirrorListeners):
         LOGGER.info("Adding link: " + link)
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
-        LOGGER.info("Editing message")
         msg = get_readable_message(progress_status_list)
-        self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                           chat_id=self.reply_message.chat.id,
-                                           parse_mode='HTMl')
+        if self.reply_message.text != msg:
+            LOGGER.info("Editing message")
+            self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
+                                               chat_id=self.reply_message.chat.id,
+                                               parse_mode='HTMl')
 
     def onDownloadComplete(self, progress_status_list, index: int):
         msg = get_readable_message(progress_status_list)
         LOGGER.info("Download completed")
-        self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                           chat_id=self.reply_message.chat.id,
-                                           parse_mode='HTMl')
+        try:
+            LOGGER.info("Editing message")
+            self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
+                                               chat_id=self.reply_message.chat.id,
+                                               parse_mode='HTMl')
+        except BadRequest:
+            pass
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(progress_status_list[index].name())
 
@@ -48,11 +55,13 @@ class MirrorListener(listeners.MirrorListeners):
                                            parse_mode='HTMl')
 
     def onUploadStarted(self, progress_status_list: list, index: int):
-        msg = get_readable_message(progress_status_list)
-        if not msg != self.update.message.text:
+        try:
+            msg = get_readable_message(progress_status_list)
             self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
                                                chat_id=self.reply_message.chat.id,
                                                parse_mode='HTMl')
+        except BadRequest:
+            pass
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())

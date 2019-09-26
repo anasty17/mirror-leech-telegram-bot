@@ -17,8 +17,8 @@ def get_download_index(_list, gid):
         index += 1
 
 
-def get_download_str_list():
-    str_list = []
+def get_download_str():
+    result = ""
     for status in list(download_list.values()):
-        str_list.append(status.progress() + status.speed() + status.status())
-    return str_list
+        result += (status.progress() + status.speed() + status.status())
+    return result

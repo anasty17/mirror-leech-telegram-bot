@@ -61,17 +61,18 @@ class DownloadHelper:
 
         # Start tracking the actual download
         previous = None
-        while not self.__get_download().is_complete:
+        download = self.__get_download()
+        while not download.is_complete:
+            status_list = get_download_status_list()
             if self.__get_download().has_failed:
                 self.__listener.onDownloadError(self.__get_download().error_message)
                 break
             # TODO: Find a better way
-            progress_str_list = get_download_str_list()
+            progress_str_list = get_download_str()
             if progress_str_list != previous:
-                self.__listener.onDownloadProgress(status_list,
-                                                   get_download_index(status_list, self.__get_download().gid))
+                self.__listener.onDownloadProgress(status_list, index)
                 previous = progress_str_list
-
+            download = self.__get_download()
             sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
-        self.__listener.onDownloadComplete(status_list, get_download_index(status_list, self.__get_download().gid))
+        self.__listener.onDownloadComplete(status_list, index)
