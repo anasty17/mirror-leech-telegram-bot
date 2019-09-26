@@ -23,7 +23,7 @@ class GoogleDriveHelper:
         self.__listener = listener
         self.__service = self.authorize()
 
-    def upload_file(self, file_path, file_name, mime_type):
+    def upload_file(self, file_path, file_name, mime_type,parent_id):
         # File body description
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
@@ -34,7 +34,7 @@ class GoogleDriveHelper:
             'mimeType': mime_type,
         }
         if parent_id is not None:
-            file_metadata["parents"] = [{"id": parent_id}]
+            file_metadata['parents'] = [parent_id]
         # Permissions body description: anyone who has link can upload
         # Other permissions can be found at https://developers.google.com/drive/v2/reference/permissions
         permissions = {
@@ -63,7 +63,7 @@ class GoogleDriveHelper:
         if os.path.isfile(file_path):
             mime_type = get_mime_type(file_path)
             try:
-                g_drive_link = self.upload_file(file_path, file_name, mime_type)
+                g_drive_link = self.upload_file(file_path, file_name, mime_type,parent_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
                 link = g_drive_link
             except Exception as e:
@@ -71,8 +71,8 @@ class GoogleDriveHelper:
                 pass
         else:
             try:
-                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)))
-                self.upload_dir(file_path)
+                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)),parent_id)
+                self.upload_dir(file_path,dir_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = "https://drive.google.com/folderview?id={}".format(dir_id)
             except Exception as e:
@@ -87,7 +87,7 @@ class GoogleDriveHelper:
         clean_download(file_dir)
         return link
 
-    def create_directory(self, directory_name):
+    def create_directory(self, directory_name,parent_id):
         permissions = {
             "role": "reader",
             "type": "anyone",
@@ -99,14 +99,14 @@ class GoogleDriveHelper:
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
         }
         if parent_id is not None:
-            file_metadata["parents"] = [{"id": parent_id}]
+            file_metadata["parents"] = [parent_id]
         file = self.__service.files().create(body=file_metadata).execute()
         file_id = file.get("id")
         self.__service.permissions().create(fileId=file_id, body=permissions).execute()
-        LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
+        LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
         return file_id
 
-    def upload_dir(self, input_directory):
+    def upload_dir(self, input_directory, parent_id):
         list_dirs = os.listdir(input_directory)
         if len(list_dirs) == 0:
             return parent_id
@@ -114,12 +114,13 @@ class GoogleDriveHelper:
         for a_c_f_name in list_dirs:
             current_file_name = os.path.join(input_directory, a_c_f_name)
             if os.path.isdir(current_file_name):
-                current_dir_id = self.create_directory(a_c_f_name)
-                r_p_id = self.upload_dir(current_file_name)
+                current_dir_id = self.create_directory(a_c_f_name, parent_id)
+                r_p_id = self.upload_dir(current_file_name, current_dir_id)
             else:
-                file_name, mime_type = get_mime_type(current_file_name)
+                mime_type = get_mime_type(current_file_name)
+                file_name = current_file_name.split("/")[-1]
                 # current_file_name will have the full path
-                self.upload_file(current_file_name, file_name, mime_type)
+                self.upload_file(current_file_name, file_name, mime_type, parent_id)
                 r_p_id = parent_id
         return r_p_id
 
