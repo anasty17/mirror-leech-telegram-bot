@@ -7,7 +7,7 @@ from mimetypes import guess_type
 import os
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, download_list
 from .listeners import MirrorListeners
-from shutil import rmtree
+from .fs_utils import clean_download
 
 
 class GoogleDriveHelper:
@@ -76,22 +76,23 @@ class GoogleDriveHelper:
         else:
             file_name, mime_type = self.file_ops(file_path)
             try:
-                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
-                self.upload_dir(file_path, dir_id)
+                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)))
+                self.upload_dir(file_path)
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = "https://drive.google.com/folderview?id={}".format(dir_id)
             except Exception as e:
                 LOGGER.error(str(e))
                 self.__listener.onUploadError(str(e))
+                clean_download(file_dir)
                 raise Exception('Error: {}'.format(str(e)))
         del download_list[self.__listener.update.update_id]
         LOGGER.info(download_list)
         self.__listener.onUploadComplete(link, file_name)
         LOGGER.info("Deleting downloaded file/folder..")
-        rmtree(file_dir)
+        clean_download(file_dir)
         return link
 
-    def create_directory(self, directory_name, parent_id):
+    def create_directory(self, directory_name):
         permissions = {
             "role": "reader",
             "type": "anyone",
@@ -110,7 +111,7 @@ class GoogleDriveHelper:
         LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("title"), file_id))
         return file_id
 
-    def upload_dir(self, input_directory, parent_id):
+    def upload_dir(self, input_directory):
         list_dirs = os.listdir(input_directory)
         if len(list_dirs) == 0:
             return parent_id
@@ -118,8 +119,8 @@ class GoogleDriveHelper:
         for a_c_f_name in list_dirs:
             current_file_name = os.path.join(input_directory, a_c_f_name)
             if os.path.isdir(current_file_name):
-                current_dir_id = self.create_directory(a_c_f_name, parent_id)
-                r_p_id = self.upload_dir(current_file_name, current_dir_id)
+                current_dir_id = self.create_directory(a_c_f_name)
+                r_p_id = self.upload_dir(current_file_name)
             else:
                 file_name, mime_type = self.file_ops(current_file_name)
                 # current_file_name will have the full path
