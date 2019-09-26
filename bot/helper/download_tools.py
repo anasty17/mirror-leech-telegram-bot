@@ -47,6 +47,8 @@ class DownloadHelper:
         return None
 
     def __update_download_status(self):
+        status_list = get_download_status_list()
+        index = get_download_index(status_list, self.__get_download().gid)
         if self.__is_torrent:
             # Waiting for the actual gid
             new_gid = None
@@ -54,12 +56,11 @@ class DownloadHelper:
                 # Check every few seconds
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 new_gid = self.__get_followed_download_gid()
-                self.__listener.onDownloadProgress(get_download_status_list())
+                self.__listener.onDownloadProgress(get_download_status_list(), index)
             download_list[self.__listener.update.update_id] = DownloadStatus(new_gid)
 
         # Start tracking the actual download
         previous = None
-        status_list = get_download_status_list()
         while not self.__get_download().is_complete:
             if self.__get_download().has_failed:
                 self.__listener.onDownloadError(self.__get_download().error_message)
