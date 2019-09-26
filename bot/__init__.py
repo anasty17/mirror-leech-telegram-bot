@@ -31,6 +31,8 @@ aria2 = aria2p.API(
                 secret="",
             )
         )
+aria2.autopurge()
+aria2.remove_all(True)
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 try:
