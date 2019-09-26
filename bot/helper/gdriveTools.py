@@ -3,11 +3,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
-from mimetypes import guess_type
 import os
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, download_list
 from .listeners import MirrorListeners
-from .fs_utils import clean_download
+from .fs_utils import clean_download, get_mime_type
 from .bot_utils import *
 
 
@@ -53,12 +52,6 @@ class GoogleDriveHelper:
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         return download_url
 
-    def file_ops(self, file_path):
-        mime_type = guess_type(file_path)[0]
-        mime_type = mime_type if mime_type else "text/plain"
-        file_name = file_path.split("/")[-1]
-        return file_name, mime_type
-
     def upload(self, file_name: str):
         _list = get_download_status_list()
         index = get_download_index(_list, get_download(self.__listener.update.update_id).gid)
@@ -68,7 +61,7 @@ class GoogleDriveHelper:
         link = None
         LOGGER.info("Uploading File: " + file_name)
         if os.path.isfile(file_path):
-            file_name, mime_type = self.file_ops(file_path)
+            mime_type = get_mime_type(file_path)
             try:
                 g_drive_link = self.upload_file(file_path, file_name, mime_type)
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
@@ -77,7 +70,6 @@ class GoogleDriveHelper:
                 LOGGER.error(str(e))
                 pass
         else:
-            file_name, mime_type = self.file_ops(file_path)
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)))
                 self.upload_dir(file_path)
@@ -125,7 +117,7 @@ class GoogleDriveHelper:
                 current_dir_id = self.create_directory(a_c_f_name)
                 r_p_id = self.upload_dir(current_file_name)
             else:
-                file_name, mime_type = self.file_ops(current_file_name)
+                file_name, mime_type = get_mime_type(current_file_name)
                 # current_file_name will have the full path
                 self.upload_file(current_file_name, file_name, mime_type)
                 r_p_id = parent_id
