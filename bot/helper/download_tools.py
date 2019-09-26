@@ -11,11 +11,10 @@ class DownloadHelper:
         self.__is_torrent = False
 
     def is_url(self, url: str):
-        try:
-            urlparse(url)
+        # TODO: Find the proper way to validate the url
+        if url.startswith('https://') or url.startswith('http://'):
             return True
-        except ValueError:
-            return False
+        return False
 
     def is_magnet(self, url: str):
         if "magnet" in url:
