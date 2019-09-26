@@ -24,18 +24,18 @@ class GoogleDriveHelper:
         self.__listener = listener
         self.__service = self.authorize()
 
-    def upload_file(self, file_path, file_name, mime_type, parent_id):
+    def upload_file(self, file_path, file_name, mime_type):
         # File body description
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True)
-        body = {
-            'title': file_name,
-            'description': 'backup',
+        file_metadata = {
+            'name': file_name,
+            'description': 'mirror',
             'mimeType': mime_type,
         }
         if parent_id is not None:
-            body["parents"] = [{"id": parent_id}]
+            file_metadata["parents"] = [{"id": parent_id}]
         # Permissions body description: anyone who has link can upload
         # Other permissions can be found at https://developers.google.com/drive/v2/reference/permissions
         permissions = {
@@ -45,7 +45,7 @@ class GoogleDriveHelper:
             'withLink': True
         }
         # Insert a file
-        drive_file = self.__service.files().create(body=body, media_body=media_body).execute()
+        drive_file = self.__service.files().create(body=file_metadata, media_body=media_body).execute()
         # Insert new permissions
         self.__service.permissions().create(fileId=drive_file['id'], body=permissions).execute()
         # Define file instance and get url for download
@@ -70,7 +70,7 @@ class GoogleDriveHelper:
         if os.path.isfile(file_path):
             file_name, mime_type = self.file_ops(file_path)
             try:
-                g_drive_link = self.upload_file(file_path, file_name, mime_type, parent_id)
+                g_drive_link = self.upload_file(file_path, file_name, mime_type)
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
                 link = g_drive_link
             except Exception as e:
@@ -103,7 +103,7 @@ class GoogleDriveHelper:
             "withLink": True
         }
         file_metadata = {
-            "title": directory_name,
+            "name": directory_name,
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
         }
         if parent_id is not None:
@@ -127,7 +127,7 @@ class GoogleDriveHelper:
             else:
                 file_name, mime_type = self.file_ops(current_file_name)
                 # current_file_name will have the full path
-                self.upload_file(current_file_name, file_name, mime_type, parent_id)
+                self.upload_file(current_file_name, file_name, mime_type)
                 r_p_id = parent_id
         return r_p_id
 
