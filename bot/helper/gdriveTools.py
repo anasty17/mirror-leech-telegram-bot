@@ -143,3 +143,24 @@ class GoogleDriveHelper:
             with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
                 pickle.dump(credentials, token)
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+
+    def drive_list(self,fileName):
+        msg = ""
+        #Create Search Query for API request.
+        query = "'{}' in parents and (name contains '{}')".format(parent_id,fileName)
+        page_token = None
+        while True:
+            response = self.__service.files().list(q=query,
+                                              spaces='drive',
+                                              fields='nextPageToken, files(id, name, mimeType)',
+                                              pageToken=page_token).execute()
+            for file in response.get('files',[]):
+                if file.get('mimeType') == "application/vnd.google-apps.folder":
+                    msg +='⁍ <a href="https://drive.google.com/drive/folders/{}">{}</a> (folder)'.format(file.get('id'),file.get('name'))+"\n"
+                # Detect Whether Current Entity is a Folder or File.
+                else:
+                    msg += '⁍ <a href="https://drive.google.com/uc?id={}&export=download">{}</a>'.format(file.get('id'),file.get('name'))+"\n"
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        return msg        
