@@ -8,6 +8,7 @@ import os
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, download_list
 from .listeners import MirrorListeners
 from .fs_utils import clean_download
+from .bot_utils import *
 
 
 class GoogleDriveHelper:
@@ -59,7 +60,9 @@ class GoogleDriveHelper:
         return file_name, mime_type
 
     def upload(self, file_name: str):
-        self.__listener.onUploadStarted(file_name)
+        _list = get_download_status_list()
+        index = get_download_index(_list, get_download(self.__listener.update.update_id).gid)
+        self.__listener.onUploadStarted(_list, index)
         file_dir = "{}{}".format(DOWNLOAD_DIR, self.__listener.update.update_id)
         file_path = "{}/{}".format(file_dir, file_name)
         link = None
@@ -87,7 +90,7 @@ class GoogleDriveHelper:
                 raise Exception('Error: {}'.format(str(e)))
         del download_list[self.__listener.update.update_id]
         LOGGER.info(download_list)
-        self.__listener.onUploadComplete(link, file_name)
+        self.__listener.onUploadComplete(link, _list, index)
         LOGGER.info("Deleting downloaded file/folder..")
         clean_download(file_dir)
         return link
