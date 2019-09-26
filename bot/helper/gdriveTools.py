@@ -110,19 +110,19 @@ class GoogleDriveHelper:
         list_dirs = os.listdir(input_directory)
         if len(list_dirs) == 0:
             return parent_id
-        r_p_id = None
-        for a_c_f_name in list_dirs:
-            current_file_name = os.path.join(input_directory, a_c_f_name)
+        new_id = None
+        for item in list_dirs:
+            current_file_name = os.path.join(input_directory, item)
             if os.path.isdir(current_file_name):
-                current_dir_id = self.create_directory(a_c_f_name, parent_id)
-                r_p_id = self.upload_dir(current_file_name, current_dir_id)
+                current_dir_id = self.create_directory(item, parent_id)
+                new_id = self.upload_dir(current_file_name, current_dir_id)
             else:
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 # current_file_name will have the full path
                 self.upload_file(current_file_name, file_name, mime_type, parent_id)
-                r_p_id = parent_id
-        return r_p_id
+                new_id = parent_id
+        return new_id
 
     def authorize(self):
         # Get credentials
