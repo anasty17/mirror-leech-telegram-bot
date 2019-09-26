@@ -1,6 +1,8 @@
 from telegram.ext import CommandHandler, run_async
-from bot import dispatcher, LOGGER, updater
+from bot import dispatcher, LOGGER, updater, aria2
 import bot.mirror
+from bot.helper import fs_utils
+import signal
 
 
 @run_async
@@ -13,10 +15,12 @@ LOGGER.info('__main__.py')
 
 
 def main():
+
     start_handler = CommandHandler('start', start)
     dispatcher.add_handler(start_handler)
     LOGGER.info("Bot Started!")
     updater.start_polling()
+    signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
 
 
 main()

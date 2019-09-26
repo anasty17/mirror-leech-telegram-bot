@@ -3,7 +3,6 @@ import configparser
 import aria2p
 from telegram.ext import Updater
 
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 
@@ -31,8 +30,7 @@ aria2 = aria2p.API(
                 secret="",
             )
         )
-aria2.autopurge()
-aria2.remove_all(True)
+
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 try:
