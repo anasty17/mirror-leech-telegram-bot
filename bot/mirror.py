@@ -40,7 +40,11 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
-        deleteMessage(self.context, self.reply_message)
+        try:
+            deleteMessage(self.context, self.reply_message)
+        except BadRequest:
+            # This means that the message has been deleted because of a /status command
+            pass
         sendMessage(msg, self.context, self.update)
         del download_dict[self.update.update_id]
         fs_utils.clean_download(progress_status_list[index].path())
@@ -57,6 +61,7 @@ def mirror(update, context):
     message = update.message.text
     link = message.replace('/mirror', '')[1:]
     reply_msg = sendMessage('Starting Download', context, update)
+    status_reply_dict[update.effective_chat] = reply_msg
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
@@ -77,6 +82,7 @@ def mirror_status(update, context):
             try:
                 deleteMessage(context, status_reply_dict[update.effective_chat])
                 del status_reply_dict[update.effective_chat]
+                sendMessage(message, context, update)
             except KeyError:
                 pass
             break
@@ -86,6 +92,10 @@ def mirror_status(update, context):
             status_reply_dict[update.effective_chat] = sendMessage(message, context, update)
         sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
+
+@run_async
+def cancel_mirror(update, context):
+    pass
 
 mirror_handler = CommandHandler('mirror', mirror)
 mirror_status_handler = CommandHandler('status', mirror_status)
