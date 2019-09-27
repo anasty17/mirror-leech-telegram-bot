@@ -61,41 +61,43 @@ def mirror(update, context):
     message = update.message.text
     link = message.replace('/mirror', '')[1:]
     reply_msg = sendMessage('Starting Download', context, update)
-    status_reply_dict[update.effective_chat] = reply_msg
+    index = update.effective_chat.id
+    if index in status_reply_dict.keys():
+        deleteMessage(context, status_reply_dict[index])
+    status_reply_dict[index] = reply_msg
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
 
 
 @run_async
-def mirror_status(update, context):
-    try:
-        deleteMessage(context, status_reply_dict[update.effective_chat])
-        del status_reply_dict[update.effective_chat]
-    except KeyError:
-        pass
-
+def mirror_status(update: Update, context):
+    message = get_readable_message()
+    if len(message) == 0:
+        message = "No active downloads"
+        sendMessage(message, context, update)
+        return
+    index = update.effective_chat.id
+    if index in status_reply_dict.keys():
+        deleteMessage(context, status_reply_dict[index])
+        del status_reply_dict[index]
     while True:
         message = get_readable_message()
-        if len(message) == 0:
-            message = "No active downloads"
-            try:
-                deleteMessage(context, status_reply_dict[update.effective_chat])
-                del status_reply_dict[update.effective_chat]
-                sendMessage(message, context, update)
-            except KeyError:
-                pass
-            break
-        try:
-            editMessage(message, context, status_reply_dict[update.effective_chat])
-        except KeyError:
-            status_reply_dict[update.effective_chat] = sendMessage(message, context, update)
+        if index in status_reply_dict.keys():
+            if len(message) == 0:
+                message = "No active downloads"
+                editMessage(message, context, status_reply_dict[index])
+                break
+            editMessage(message, context, status_reply_dict[index])
+        else:
+            status_reply_dict[index] = sendMessage(message, context, update)
         sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
 
 @run_async
 def cancel_mirror(update, context):
     pass
+
 
 mirror_handler = CommandHandler('mirror', mirror)
 mirror_status_handler = CommandHandler('status', mirror_status)
