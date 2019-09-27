@@ -55,7 +55,10 @@ class DownloadHelper:
                 # Check every few seconds
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 new_gid = self.__get_followed_download_gid()
-                self.__listener.onDownloadProgress(get_download_status_list(), index)
+                try:
+                    self.__listener.onDownloadProgress(get_download_status_list(), index)
+                except KillThreadException:
+                    return
             download_dict[self.__listener.update.update_id] = DownloadStatus(new_gid, self.__listener.update.update_id)
 
         # Start tracking the actual download
@@ -70,7 +73,10 @@ class DownloadHelper:
             # TODO: Find a better way to differentiate between 2 list of objects
             progress_str_list = get_download_str()
             if progress_str_list != previous:
-                self.__listener.onDownloadProgress(status_list, index)
+                try:
+                    self.__listener.onDownloadProgress(status_list, index)
+                except KillThreadException:
+                    return
                 previous = progress_str_list
             download = self.__get_download()
             sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)

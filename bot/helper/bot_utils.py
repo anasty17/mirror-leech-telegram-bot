@@ -1,3 +1,4 @@
+
 from bot import download_dict
 
 
@@ -35,3 +36,10 @@ def get_readable_message(progress_list: list = download_dict.values()):
                                            status.progress(), status.size(),
                                            status.speed(), status.eta())
     return msg
+
+
+# Custom Exception class for killing thread as soon as they aren't needed
+class KillThreadException(Exception):
+    def __init__(self, message, error=None):
+        super().__init__(message)
+        self.error = error

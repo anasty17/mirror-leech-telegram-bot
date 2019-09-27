@@ -5,7 +5,7 @@ from bot.helper import fs_utils
 from bot import download_dict, status_reply_dict, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.message_utils import *
 from time import sleep
-from bot.helper.bot_utils import get_readable_message
+from bot.helper.bot_utils import get_readable_message, KillThreadException
 LOGGER.info('mirror.py')
 
 
@@ -19,7 +19,10 @@ class MirrorListener(listeners.MirrorListeners):
     def onDownloadProgress(self, progress_status_list: list, index: int):
         msg = get_readable_message(progress_status_list)
         LOGGER.info("Editing message")
-        editMessage(msg, self.context, self.reply_message)
+        try:
+            editMessage(msg, self.context, self.reply_message)
+        except BadRequest:
+            raise KillThreadException('Message deleted. Terminate thread')
 
     def onDownloadComplete(self, progress_status_list, index: int):
         msg = get_readable_message(progress_status_list)
@@ -70,28 +73,6 @@ def mirror(update, context):
     aria.add_download(link)
 
 
-@run_async
-def mirror_status(update: Update, context):
-    message = get_readable_message()
-    if len(message) == 0:
-        message = "No active downloads"
-        sendMessage(message, context, update)
-        return
-    index = update.effective_chat.id
-    if index in status_reply_dict.keys():
-        deleteMessage(context, status_reply_dict[index])
-        del status_reply_dict[index]
-    while True:
-        message = get_readable_message()
-        if index in status_reply_dict.keys():
-            if len(message) == 0:
-                message = "No active downloads"
-                editMessage(message, context, status_reply_dict[index])
-                break
-            editMessage(message, context, status_reply_dict[index])
-        else:
-            status_reply_dict[index] = sendMessage(message, context, update)
-        sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
 
 @run_async
@@ -100,6 +81,4 @@ def cancel_mirror(update, context):
 
 
 mirror_handler = CommandHandler('mirror', mirror)
-mirror_status_handler = CommandHandler('status', mirror_status)
 dispatcher.add_handler(mirror_handler)
-dispatcher.add_handler(mirror_status_handler)
