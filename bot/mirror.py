@@ -1,8 +1,10 @@
-from telegram.ext import CommandHandler, run_async
-from telegram.error import BadRequest
+
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher
-
+from bot.helper import fs_utils
+from bot.helper.download_status import DownloadStatus
+from bot import download_list
+from bot.helper.message_utils import *
 LOGGER.info('mirror.py')
 
 
@@ -29,63 +31,50 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
         msg = get_readable_message(progress_status_list)
-        if self.reply_message.text != msg:
-            LOGGER.info("Editing message")
-            self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                               chat_id=self.reply_message.chat.id,
-                                               parse_mode='HTMl')
+        LOGGER.info("Editing message")
+        editMessage(msg, self.context, self.reply_message)
 
     def onDownloadComplete(self, progress_status_list, index: int):
         msg = get_readable_message(progress_status_list)
         LOGGER.info("Download completed")
-        try:
-            LOGGER.info("Editing message")
-            self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                               chat_id=self.reply_message.chat.id,
-                                               parse_mode='HTMl')
-        except BadRequest:
-            pass
+        editMessage(msg, self.context, self.reply_message)
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(progress_status_list[index].name())
 
-    def onDownloadError(self, error):
+    def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
-        self.context.bot.edit_message_text(text=error, message_id=self.reply_message.message_id,
-                                           chat_id=self.reply_message.chat.id,
-                                           parse_mode='HTMl')
+        editMessage(error, self.context, self.reply_message)
+        fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadStarted(self, progress_status_list: list, index: int):
-        try:
-            msg = get_readable_message(progress_status_list)
-            self.context.bot.edit_message_text(text=msg, message_id=self.reply_message.message_id,
-                                               chat_id=self.reply_message.chat.id,
-                                               parse_mode='HTMl')
-        except BadRequest:
-            pass
+        msg = get_readable_message(progress_status_list)
+        editMessage(msg, self.context, self.reply_message)
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
-        self.context.bot.delete_message(chat_id=self.reply_message.chat.id, message_id=self.reply_message.message_id)
-        self.context.bot.send_message(chat_id=self.update.message.chat_id,
-                                      reply_to_message_id=self.update.message.message_id,
-                                      text=msg, parse_mode='HTMl')
+        deleteMessage(self.context, self.reply_message)
+        sendMessage(msg, self.context, self.update)
+        fs_utils.clean_download(progress_status_list[index].path())
 
-    def onUploadError(self, error: str):
+    def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
-        self.context.bot.edit_message_text(text=error, message_id=self.reply_message.message_id,
-                                           chat_id=self.reply_message.chat.id,
-                                           parse_mode='HTMl')
+        editMessage(error, self.context, self.reply_message)
+        fs_utils.clean_download(progress_status[index].path())
 
 
 @run_async
 def mirror(update, context):
     message = update.message.text
     link = message.replace('/mirror', '')[1:]
-    reply_msg = context.bot.send_message(chat_id=update.message.chat_id, reply_to_message_id=update.message.message_id,
-                                         text="Starting Download")
+    reply_msg = sendMessage('Starting Download', context, update)
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
+
+
+@run_async
+def cancel_mirror(update, context):
+    pass
 
 
 mirror_handler = CommandHandler('mirror', mirror)

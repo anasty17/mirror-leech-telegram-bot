@@ -4,15 +4,14 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, download_list
-from .listeners import MirrorListeners
-from .fs_utils import clean_download, get_mime_type
+from bot import LOGGER, parent_id, DOWNLOAD_DIR
+from .fs_utils import get_mime_type
 from .bot_utils import *
 
 
 class GoogleDriveHelper:
 
-    def __init__(self, listener: MirrorListeners):
+    def __init__(self, listener=None):
         self.__G_DRIVE_TOKEN_FILE = "token.pickle"
         # Check https://developers.google.com/drive/scopes for all available scopes
         self.__OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
@@ -63,28 +62,24 @@ class GoogleDriveHelper:
         if os.path.isfile(file_path):
             mime_type = get_mime_type(file_path)
             try:
-                g_drive_link = self.upload_file(file_path, file_name, mime_type,parent_id)
+                g_drive_link = self.upload_file(file_path, file_name, mime_type, parent_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
                 link = g_drive_link
             except Exception as e:
                 LOGGER.error(str(e))
-                pass
+                self.__listener.onUploadError(str(e), _list, index)
         else:
             try:
-                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)),parent_id)
+                dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
                 self.upload_dir(file_path,dir_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = "https://drive.google.com/folderview?id={}".format(dir_id)
             except Exception as e:
                 LOGGER.error(str(e))
-                self.__listener.onUploadError(str(e))
-                clean_download(file_dir)
-                raise Exception('Error: {}'.format(str(e)))
-        del download_list[self.__listener.update.update_id]
+                self.__listener.onUploadError(str(e), _list, index)
         LOGGER.info(download_list)
         self.__listener.onUploadComplete(link, _list, index)
         LOGGER.info("Deleting downloaded file/folder..")
-        clean_download(file_dir)
         return link
 
     def create_directory(self, directory_name,parent_id):

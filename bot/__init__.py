@@ -7,7 +7,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     level=logging.INFO)
 
 config = configparser.ConfigParser()
-config.read('bot/conf.ini')
+config.read('bot/config.ini')
 
 
 def getConfig(name: str):

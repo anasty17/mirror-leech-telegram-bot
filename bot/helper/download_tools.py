@@ -1,13 +1,12 @@
 from time import sleep
-from bot import LOGGER, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, download_list, aria2
-from bot.helper.listeners import *
+from bot import DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, aria2
 from .download_status import DownloadStatus
 from .bot_utils import *
 
 
 class DownloadHelper:
 
-    def __init__(self, listener: MirrorListeners):
+    def __init__(self, listener=None):
         self.__listener = listener
         self.__is_torrent = False
 
@@ -33,7 +32,7 @@ class DownloadHelper:
         else:
             self.__listener.onDownloadError("No download URL or URL malformed")
             return
-        download_list[self.__listener.update.update_id] = DownloadStatus(download.gid)
+        download_list[self.__listener.update.update_id] = DownloadStatus(download.gid, self.__listener.update.update_id)
         self.__listener.onDownloadStarted(link)
         self.__update_download_status()
 
@@ -57,17 +56,18 @@ class DownloadHelper:
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 new_gid = self.__get_followed_download_gid()
                 self.__listener.onDownloadProgress(get_download_status_list(), index)
-            download_list[self.__listener.update.update_id] = DownloadStatus(new_gid)
+            download_list[self.__listener.update.update_id] = DownloadStatus(new_gid, self.__listener.update.update_id)
 
         # Start tracking the actual download
         previous = None
         download = self.__get_download()
         while not download.is_complete:
             status_list = get_download_status_list()
+            index = get_download_index(status_list, self.__get_download().gid)
             if self.__get_download().has_failed:
-                self.__listener.onDownloadError(self.__get_download().error_message)
+                self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
                 break
-            # TODO: Find a better way
+            # TODO: Find a better way to differentiate between 2 list of objects
             progress_str_list = get_download_str()
             if progress_str_list != previous:
                 self.__listener.onDownloadProgress(status_list, index)

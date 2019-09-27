@@ -1,4 +1,4 @@
-from bot import aria2
+from bot import aria2, download_list, DOWNLOAD_DIR
 
 
 def get_download(gid):
@@ -11,9 +11,10 @@ class DownloadStatus:
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
 
-    def __init__(self, gid):
+    def __init__(self, gid, update_id):
         self.__gid = gid
         self.__download = get_download(gid)
+        self.__uid = update_id
 
     def __update(self):
         self.__download = get_download(self.__gid)
@@ -28,6 +29,9 @@ class DownloadStatus:
 
     def name(self):
         return self.__download.name
+
+    def path(self):
+        return "{}{}/{}".format(DOWNLOAD_DIR, self.__uid, self.name())
 
     def size(self):
         return self.__download.total_length_string()
@@ -45,6 +49,8 @@ class DownloadStatus:
             # If download exists and is complete the it must be uploading
             # otherwise the gid would have been removed from the download_list
             status = DownloadStatus.STATUS_UPLOADING
+        elif self.__download.has_failed:
+            status = DownloadStatus.STATUS_FAILED
         elif self.__download.is_active:
             status = DownloadStatus.STATUS_DOWNLOADING
         return status

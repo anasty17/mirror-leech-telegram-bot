@@ -5,6 +5,7 @@ import os
 import pathlib
 import mimetypes
 
+
 def clean_download(path: str):
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -13,8 +14,8 @@ def clean_download(path: str):
 def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
-        aria2.autopurge()
-        aria2.remove_all(True)
+        for download in aria2.get_downloads():
+            download.remove()
         shutil.rmtree(DOWNLOAD_DIR)
         sys.exit(0)
     except KeyboardInterrupt:
