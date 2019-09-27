@@ -25,9 +25,7 @@ class MirrorListener(listeners.MirrorListeners):
             raise KillThreadException('Message deleted. Terminate thread')
 
     def onDownloadComplete(self, progress_status_list, index: int):
-        msg = get_readable_message(progress_status_list)
         LOGGER.info("Download completed")
-        editMessage(msg, self.context, self.reply_message)
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(progress_status_list[index].name())
 
@@ -38,8 +36,7 @@ class MirrorListener(listeners.MirrorListeners):
         fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadStarted(self, progress_status_list: list, index: int):
-        msg = get_readable_message(progress_status_list)
-        editMessage(msg, self.context, self.reply_message)
+        pass
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
