@@ -1,12 +1,12 @@
-from bot import download_list
+from bot import download_dict
 
 
 def get_download(update_id):
-    return download_list[update_id].download()
+    return download_dict[update_id].download()
 
 
 def get_download_status_list():
-    return list(download_list.values())
+    return list(download_dict.values())
 
 
 def get_download_index(_list, gid):
@@ -19,6 +19,19 @@ def get_download_index(_list, gid):
 
 def get_download_str():
     result = ""
-    for status in list(download_list.values()):
+    for status in list(download_dict.values()):
         result += (status.progress() + status.speed() + status.status())
     return result
+
+
+def get_readable_message(progress_list: list = download_dict.values()):
+    msg = ""
+    for status in progress_list:
+        msg += "<b>Name:</b> {}\n" \
+               "<b>status:</b> {}\n" \
+               "<b>Downloaded:</b> {} of {}\n" \
+               "<b>Speed:</b> {}\n" \
+               "<b>ETA:</b> {}\n\n".format(status.name(), status.status(),
+                                           status.progress(), status.size(),
+                                           status.speed(), status.eta())
+    return msg

@@ -1,4 +1,3 @@
-from telegram.ext import CommandHandler, run_async
 from telegram.error import BadRequest
 from telegram.message import Message
 from telegram.update import Update

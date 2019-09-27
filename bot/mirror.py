@@ -1,25 +1,12 @@
-
+from telegram.ext import CommandHandler, run_async
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
-from bot.helper.download_status import DownloadStatus
-from bot import download_list
+from bot import download_dict, status_reply_dict, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.message_utils import *
+from time import sleep
+from bot.helper.bot_utils import get_readable_message
 LOGGER.info('mirror.py')
-
-
-def get_readable_message(progress_list: list):
-    msg = ""
-    LOGGER.info(progress_list)
-    for status in progress_list:
-        msg += "<b>Name:</b> {}\n" \
-               "<b>status:</b> {}\n" \
-               "<b>Downloaded:</b> {} of {}\n" \
-               "<b>Speed:</b> {}\n" \
-               "<b>ETA:</b> {}\n\n".format(status.name(), status.status(),
-                                           status.progress(), status.size(),
-                                           status.speed(), status.eta())
-    return msg
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -44,6 +31,7 @@ class MirrorListener(listeners.MirrorListeners):
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
         editMessage(error, self.context, self.reply_message)
+        del download_dict[self.update.update_id]
         fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadStarted(self, progress_status_list: list, index: int):
@@ -54,11 +42,13 @@ class MirrorListener(listeners.MirrorListeners):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
         deleteMessage(self.context, self.reply_message)
         sendMessage(msg, self.context, self.update)
+        del download_dict[self.update.update_id]
         fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
         editMessage(error, self.context, self.reply_message)
+        del download_dict[self.update.update_id]
         fs_utils.clean_download(progress_status[index].path())
 
 
@@ -73,9 +63,31 @@ def mirror(update, context):
 
 
 @run_async
-def cancel_mirror(update, context):
-    pass
+def mirror_status(update, context):
+    try:
+        deleteMessage(context, status_reply_dict[update.effective_chat])
+        del status_reply_dict[update.effective_chat]
+    except KeyError:
+        pass
+
+    while True:
+        message = get_readable_message()
+        if len(message) == 0:
+            message = "No active downloads"
+            try:
+                deleteMessage(context, status_reply_dict[update.effective_chat])
+                del status_reply_dict[update.effective_chat]
+            except KeyError:
+                pass
+            break
+        try:
+            editMessage(message, context, status_reply_dict[update.effective_chat])
+        except KeyError:
+            status_reply_dict[update.effective_chat] = sendMessage(message, context, update)
+        sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
 
 mirror_handler = CommandHandler('mirror', mirror)
+mirror_status_handler = CommandHandler('status', mirror_status)
 dispatcher.add_handler(mirror_handler)
+dispatcher.add_handler(mirror_status_handler)

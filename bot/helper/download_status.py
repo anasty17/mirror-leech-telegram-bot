@@ -1,4 +1,4 @@
-from bot import aria2, download_list, DOWNLOAD_DIR
+from bot import aria2, download_dict, DOWNLOAD_DIR
 
 
 def get_download(gid):

@@ -77,7 +77,7 @@ class GoogleDriveHelper:
             except Exception as e:
                 LOGGER.error(str(e))
                 self.__listener.onUploadError(str(e), _list, index)
-        LOGGER.info(download_list)
+        LOGGER.info(download_dict)
         self.__listener.onUploadComplete(link, _list, index)
         LOGGER.info("Deleting downloaded file/folder..")
         return link

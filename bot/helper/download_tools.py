@@ -32,7 +32,7 @@ class DownloadHelper:
         else:
             self.__listener.onDownloadError("No download URL or URL malformed")
             return
-        download_list[self.__listener.update.update_id] = DownloadStatus(download.gid, self.__listener.update.update_id)
+        download_dict[self.__listener.update.update_id] = DownloadStatus(download.gid, self.__listener.update.update_id)
         self.__listener.onDownloadStarted(link)
         self.__update_download_status()
 
@@ -56,7 +56,7 @@ class DownloadHelper:
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 new_gid = self.__get_followed_download_gid()
                 self.__listener.onDownloadProgress(get_download_status_list(), index)
-            download_list[self.__listener.update.update_id] = DownloadStatus(new_gid, self.__listener.update.update_id)
+            download_dict[self.__listener.update.update_id] = DownloadStatus(new_gid, self.__listener.update.update_id)
 
         # Start tracking the actual download
         previous = None

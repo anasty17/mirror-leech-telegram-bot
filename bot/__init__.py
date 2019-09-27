@@ -33,6 +33,9 @@ aria2 = aria2p.API(
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
+
+status_reply_dict = {}
+download_dict = {}
 try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
     parent_id = getConfig('GDRIVE_FOLDER_ID')
@@ -40,7 +43,6 @@ try:
     if DOWNLOAD_DIR[-1] != '/' or DOWNLOAD_DIR[-1] != '\\':
         DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
-    download_list = {}
 
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
