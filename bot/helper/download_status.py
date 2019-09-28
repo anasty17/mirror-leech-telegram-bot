@@ -32,7 +32,7 @@ class DownloadStatus:
         return self.__download.name
 
     def path(self):
-        return "{}{}".format(DOWNLOAD_DIR, self.__uid)
+        return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def size(self):
         return self.__download.total_length_string()

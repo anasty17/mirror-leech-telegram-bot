@@ -27,14 +27,14 @@ class MirrorListener(listeners.MirrorListeners):
             raise KillThreadException('Message deleted. Terminate thread')
 
     def onDownloadComplete(self, progress_status_list, index: int):
-        LOGGER.info("Download completed: {}".format(progress_status_list[index].name()))
+        LOGGER.info(f"Download completed: {progress_status_list[index].name()}")
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(progress_status_list[index].name())
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
 
-        msg = "@{} your download has been cancelled due to: {}".format(self.message.from_user.username, error)
+        msg = f"@{self.message.from_user.username} your download has been cancelled due to: {error}"
         sendMessage(msg, self.context, self.update)
         del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status_list[index].path())
@@ -43,7 +43,7 @@ class MirrorListener(listeners.MirrorListeners):
         pass
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
-        msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
+        msg = f'<a href="{link}">{progress_status_list[index].name()}</a>'
         del download_dict[self.message.message_id]
         try:
             deleteMessage(self.context, self.reply_message)
@@ -75,11 +75,6 @@ def mirror(update, context):
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
-
-
-@run_async
-def cancel_mirror(update, context):
-    pass
 
 
 mirror_handler = CommandHandler('mirror', mirror)

@@ -28,13 +28,11 @@ def get_download_str():
 def get_readable_message(progress_list: list = download_dict.values()):
     msg = ""
     for status in progress_list:
-        msg += "<b>Name:</b> {}\n" \
-               "<b>status:</b> {}\n" \
-               "<b>Downloaded:</b> {} of {}\n" \
-               "<b>Speed:</b> {}\n" \
-               "<b>ETA:</b> {}\n\n".format(status.name(), status.status(),
-                                           status.progress(), status.size(),
-                                           status.speed(), status.eta())
+        msg += f'<b>Name:</b> {status.name()}\n' \
+               f'<b>status:</b> {status.status()}\n' \
+               f'<b>Downloaded:</b> {status.progress()} of {status.size()}\n' \
+               f'<b>Speed:</b> {status.speed()}\n' \
+               f'<b>ETA:</b> {status.eta()}\n\n'
     return msg
 
 

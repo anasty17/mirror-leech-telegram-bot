@@ -3,7 +3,7 @@ from bot import dispatcher, status_reply_dict, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.message_utils import *
 from time import sleep
 from bot.helper.bot_utils import get_readable_message
-
+from telegram.error import BadRequest
 
 @run_async
 def mirror_status(update: Update, context):

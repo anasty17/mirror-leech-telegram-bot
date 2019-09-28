@@ -59,8 +59,8 @@ class GoogleDriveHelper:
         _list = get_download_status_list()
         index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
         self.__listener.onUploadStarted(_list, index)
-        file_dir = "{}{}".format(DOWNLOAD_DIR, self.__listener.message.message_id)
-        file_path = "{}/{}".format(file_dir, file_name)
+        file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
+        file_path = f"{file_dir}/{file_name}"
         link = None
         LOGGER.info("Uploading File: " + file_name)
         if os.path.isfile(file_path):
@@ -77,7 +77,7 @@ class GoogleDriveHelper:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
                 self.upload_dir(file_path, dir_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
-                link = "https://drive.google.com/folderview?id={}".format(dir_id)
+                link = f"https://drive.google.com/folderview?id={dir_id}"
             except Exception as e:
                 LOGGER.error(str(e))
                 self.__listener.onUploadError(str(e), _list, index)
@@ -146,7 +146,7 @@ class GoogleDriveHelper:
     def drive_list(self, fileName):
         msg = ""
         # Create Search Query for API request.
-        query = "'{}' in parents and (name contains '{}')".format(parent_id, fileName)
+        query = f"'{parent_id}' in parents and (name contains '{fileName}')"
         page_token = None
         while True:
             response = self.__service.files().list(q=query,
@@ -155,13 +155,12 @@ class GoogleDriveHelper:
                                                    pageToken=page_token).execute()
             for file in response.get('files', []):
                 if file.get('mimeType') == "application/vnd.google-apps.folder":
-                    msg += '⁍ <a href="https://drive.google.com/drive/folders/{}">{}</a> (folder)'.format(
-                        file.get('id'), file.get('name')) + "\n"
+                    msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
+                           f"</a> (folder)" + "\n"
                 # Detect Whether Current Entity is a Folder or File.
                 else:
-                    msg += '⁍ <a href="https://drive.google.com/uc?id={}&export=download">{}</a>'.format(file.get('id'),
-                                                                                                         file.get(
-                                                                                                             'name')) + "\n"
+                    msg += f"⁍ <a href='https://drive.google.com/uc?id={file.get('id')}" \
+                           f"&export=download'>{file.get('name')}</a>" + "\n"
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break

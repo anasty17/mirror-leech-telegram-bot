@@ -8,7 +8,7 @@ import mimetypes
 
 def clean_download(path: str):
     if os.path.exists(path):
-        LOGGER.info("Cleaning download: {}".format(path))
+        LOGGER.info(f"Cleaning download: {path}")
         shutil.rmtree(path)
 
 
