@@ -8,6 +8,7 @@ from bot.helper.message_utils import *
 from bot.helper.bot_utils import get_readable_message, KillThreadException
 from bot.helper.download_status import DownloadStatus
 
+
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, context, update, reply_message):
         super().__init__(context, update, reply_message)
@@ -32,7 +33,8 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
-        msg = "@{} your download has been cancelled!".format(self.message.from_user.username)
+
+        msg = "@{} your download has been cancelled due to: {}".format(self.message.from_user.username, error)
         sendMessage(msg, self.context, self.update)
         del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status_list[index].path())
@@ -73,8 +75,6 @@ def mirror(update, context):
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
-
-
 
 
 @run_async
