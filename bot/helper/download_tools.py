@@ -25,6 +25,8 @@ class DownloadHelper:
     def add_download(self, link: str):
         download = None
         if self.is_url(link):
+            if link.endswith('.torrent'):
+                self.__is_torrent = True
             download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id)})
         elif self.is_magnet(link):
             download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id)})
