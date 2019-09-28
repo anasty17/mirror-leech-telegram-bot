@@ -9,7 +9,10 @@ from .fs_utils import get_mime_type
 from .bot_utils import *
 
 import logging
+
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
+
+
 class GoogleDriveHelper:
 
     def __init__(self, listener=None):
@@ -23,7 +26,7 @@ class GoogleDriveHelper:
         self.__listener = listener
         self.__service = self.authorize()
 
-    def upload_file(self, file_path, file_name, mime_type,parent_id):
+    def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
@@ -72,7 +75,7 @@ class GoogleDriveHelper:
         else:
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
-                self.upload_dir(file_path,dir_id)
+                self.upload_dir(file_path, dir_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = "https://drive.google.com/folderview?id={}".format(dir_id)
             except Exception as e:
@@ -83,7 +86,7 @@ class GoogleDriveHelper:
         LOGGER.info("Deleting downloaded file/folder..")
         return link
 
-    def create_directory(self, directory_name,parent_id):
+    def create_directory(self, directory_name, parent_id):
         permissions = {
             "role": "reader",
             "type": "anyone",
@@ -140,23 +143,26 @@ class GoogleDriveHelper:
                 pickle.dump(credentials, token)
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
 
-    def drive_list(self,fileName):
+    def drive_list(self, fileName):
         msg = ""
-        #Create Search Query for API request.
-        query = "'{}' in parents and (name contains '{}')".format(parent_id,fileName)
+        # Create Search Query for API request.
+        query = "'{}' in parents and (name contains '{}')".format(parent_id, fileName)
         page_token = None
         while True:
             response = self.__service.files().list(q=query,
-                                              spaces='drive',
-                                              fields='nextPageToken, files(id, name, mimeType)',
-                                              pageToken=page_token).execute()
-            for file in response.get('files',[]):
+                                                   spaces='drive',
+                                                   fields='nextPageToken, files(id, name, mimeType)',
+                                                   pageToken=page_token).execute()
+            for file in response.get('files', []):
                 if file.get('mimeType') == "application/vnd.google-apps.folder":
-                    msg +='⁍ <a href="https://drive.google.com/drive/folders/{}">{}</a> (folder)'.format(file.get('id'),file.get('name'))+"\n"
+                    msg += '⁍ <a href="https://drive.google.com/drive/folders/{}">{}</a> (folder)'.format(
+                        file.get('id'), file.get('name')) + "\n"
                 # Detect Whether Current Entity is a Folder or File.
                 else:
-                    msg += '⁍ <a href="https://drive.google.com/uc?id={}&export=download">{}</a>'.format(file.get('id'),file.get('name'))+"\n"
+                    msg += '⁍ <a href="https://drive.google.com/uc?id={}&export=download">{}</a>'.format(file.get('id'),
+                                                                                                         file.get(
+                                                                                                             'name')) + "\n"
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break
-        return msg        
+        return msg

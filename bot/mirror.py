@@ -2,9 +2,8 @@ from telegram.ext import CommandHandler, run_async
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
-from bot import download_dict, status_reply_dict, DOWNLOAD_STATUS_UPDATE_INTERVAL
+from bot import download_dict, status_reply_dict
 from bot.helper.message_utils import *
-from time import sleep
 from bot.helper.bot_utils import get_readable_message, KillThreadException
 LOGGER.info('mirror.py')
 
@@ -18,14 +17,14 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
         msg = get_readable_message(progress_status_list)
-        LOGGER.info("Editing message")
+        # LOGGER.info("Editing message")
         try:
             editMessage(msg, self.context, self.reply_message)
         except BadRequest:
             raise KillThreadException('Message deleted. Terminate thread')
 
     def onDownloadComplete(self, progress_status_list, index: int):
-        LOGGER.info("Download completed")
+        LOGGER.info("Download completed: {}".format(progress_status_list[index].name()))
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(progress_status_list[index].name())
 
@@ -40,13 +39,16 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
+        del download_dict[self.update.update_id]
         try:
             deleteMessage(self.context, self.reply_message)
+            del status_reply_dict[self.update.effective_chat.id]
         except BadRequest:
             # This means that the message has been deleted because of a /status command
             pass
+        except KeyError:
+            pass
         sendMessage(msg, self.context, self.update)
-        del download_dict[self.update.update_id]
         fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadError(self, error: str, progress_status: list, index: int):

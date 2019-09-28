@@ -54,6 +54,9 @@ class DownloadHelper:
             # Waiting for the actual gid
             new_gid = None
             while new_gid is None:
+                if self.__get_download().has_failed:
+                    self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
+                    break
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 if should_update:
                     # Check every few seconds
@@ -68,12 +71,12 @@ class DownloadHelper:
         previous = None
         download = self.__get_download()
         while not download.is_complete:
+            if download.has_failed:
+                self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
+                return
             if should_update:
                 status_list = get_download_status_list()
                 index = get_download_index(status_list, self.__get_download().gid)
-                if self.__get_download().has_failed:
-                    self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
-                    break
                 # TODO: Find a better way to differentiate between 2 list of objects
                 progress_str_list = get_download_str()
                 if progress_str_list != previous:
@@ -82,6 +85,7 @@ class DownloadHelper:
                     except KillThreadException:
                         should_update = False
                     previous = progress_str_list
-                download = self.__get_download()
+            download = self.__get_download()
             sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
+
         self.__listener.onDownloadComplete(status_list, index)
