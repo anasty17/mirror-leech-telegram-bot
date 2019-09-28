@@ -27,19 +27,20 @@ class DownloadHelper:
         if self.is_url(link):
             if link.endswith('.torrent'):
                 self.__is_torrent = True
-            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id)})
+            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.message.message_id)})
         elif self.is_magnet(link):
-            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.update.update_id)})
+            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.message.message_id)})
             self.__is_torrent = True
         else:
             self.__listener.onDownloadError("No download URL or URL malformed")
             return
-        download_dict[self.__listener.update.update_id] = DownloadStatus(download.gid, self.__listener.update.update_id)
+        download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
+                                                                           self.__listener.message.message_id)
         self.__listener.onDownloadStarted(link)
         self.__update_download_status()
 
     def __get_download(self):
-        return get_download(self.__listener.update.update_id)
+        return get_download(self.__listener.message.message_id)
 
     def __get_followed_download_gid(self):
         download = self.__get_download()
@@ -67,7 +68,7 @@ class DownloadHelper:
                         self.__listener.onDownloadProgress(get_download_status_list(), index)
                     except KillThreadException:
                         should_update = False
-            download_dict[self.__listener.update.update_id] = DownloadStatus(new_gid, self.__listener.update.update_id)
+            download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid, self.__listener.message.message_id)
 
         # Start tracking the actual download
         previous = None

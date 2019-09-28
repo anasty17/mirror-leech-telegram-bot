@@ -11,10 +11,10 @@ class DownloadStatus:
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
 
-    def __init__(self, gid, update_id):
+    def __init__(self, gid, message_id):
         self.__gid = gid
         self.__download = get_download(gid)
-        self.__uid = update_id
+        self.__uid = message_id
 
     def __update(self):
         self.__download = get_download(self.__gid)

@@ -2,8 +2,8 @@
 from bot import download_dict
 
 
-def get_download(update_id):
-    return download_dict[update_id].download()
+def get_download(message_id):
+    return download_dict[message_id].download()
 
 
 def get_download_status_list():

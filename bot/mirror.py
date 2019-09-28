@@ -1,11 +1,11 @@
 from telegram.ext import CommandHandler, run_async
+from telegram.error import BadRequest
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
 from bot import download_dict, status_reply_dict
 from bot.helper.message_utils import *
 from bot.helper.bot_utils import get_readable_message, KillThreadException
-LOGGER.info('mirror.py')
 
 
 class MirrorListener(listeners.MirrorListeners):

@@ -1,7 +1,7 @@
 class MirrorListeners:
     def __init__(self, context, update, reply_message):
         self.context = context
-        self.update = update
+        self.message = update.message
         self.reply_message = reply_message
 
     def onDownloadStarted(self, link: str):

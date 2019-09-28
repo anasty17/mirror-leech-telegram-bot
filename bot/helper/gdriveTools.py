@@ -57,9 +57,9 @@ class GoogleDriveHelper:
 
     def upload(self, file_name: str):
         _list = get_download_status_list()
-        index = get_download_index(_list, get_download(self.__listener.update.update_id).gid)
+        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
         self.__listener.onUploadStarted(_list, index)
-        file_dir = "{}{}".format(DOWNLOAD_DIR, self.__listener.update.update_id)
+        file_dir = "{}{}".format(DOWNLOAD_DIR, self.__listener.message.message_id)
         file_path = "{}/{}".format(file_dir, file_name)
         link = None
         LOGGER.info("Uploading File: " + file_name)

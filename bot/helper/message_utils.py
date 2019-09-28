@@ -1,7 +1,6 @@
-from telegram.error import BadRequest
 from telegram.message import Message
 from telegram.update import Update
-from bot import LOGGER
+
 
 def sendMessage(text: str, context, update: Update):
     return context.bot.send_message(update.message.chat_id,
@@ -10,9 +9,9 @@ def sendMessage(text: str, context, update: Update):
 
 
 def editMessage(text: str, context, message: Message):
-        context.bot.edit_message_text(text=text, message_id=message.message_id,
-                                      chat_id=message.chat.id,
-                                      parse_mode='HTMl')
+    context.bot.edit_message_text(text=text, message_id=message.message_id,
+                                  chat_id=message.chat.id,
+                                  parse_mode='HTMl')
 
 
 def deleteMessage(context, message: Message):
