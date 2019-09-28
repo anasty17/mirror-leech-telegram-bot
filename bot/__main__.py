@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler, run_async
 from bot import dispatcher, LOGGER, updater, aria2
-import bot.mirror, bot.list, bot.mirror_status
+import bot.mirror, bot.list, bot.mirror_status, bot.cancel_mirror
 from bot.helper import fs_utils
 import signal
 

@@ -56,10 +56,14 @@ class DownloadHelper:
         if self.__is_torrent:
             # Waiting for the actual gid
             new_gid = None
+            download = self.__get_download()
             while new_gid is None:
-                if self.__get_download().has_failed:
-                    self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
-                    break
+                if download.has_failed:
+                    self.__listener.onDownloadError(download.error_message, status_list, index)
+                    return
+                if download.is_paused:
+                    self.__listener.onDownloadError("Download cancelled", status_list, index)
+                    return
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 if should_update:
                     # Check every few seconds
@@ -75,7 +79,10 @@ class DownloadHelper:
         download = self.__get_download()
         while not download.is_complete:
             if download.has_failed:
-                self.__listener.onDownloadError(self.__get_download().error_message, status_list[index])
+                self.__listener.onDownloadError(self.__get_download().error_message, status_list, index)
+                return
+            if download.is_paused:
+                self.__listener.onDownloadError("Download has been canceled", status_list, index)
                 return
             if should_update:
                 status_list = get_download_status_list()

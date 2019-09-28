@@ -6,7 +6,7 @@ from bot.helper import fs_utils
 from bot import download_dict, status_reply_dict
 from bot.helper.message_utils import *
 from bot.helper.bot_utils import get_readable_message, KillThreadException
-
+from bot.helper.download_status import DownloadStatus
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, context, update, reply_message):
@@ -16,6 +16,8 @@ class MirrorListener(listeners.MirrorListeners):
         LOGGER.info("Adding link: " + link)
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
+        if progress_status_list[index].status() == DownloadStatus.STATUS_CANCELLED:
+            raise KillThreadException('Mirror cancelled by user')
         msg = get_readable_message(progress_status_list)
         # LOGGER.info("Editing message")
         try:
@@ -30,8 +32,9 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
-        editMessage(error, self.context, self.reply_message)
-        del download_dict[self.update.update_id]
+        msg = "@{} your download has been cancelled!".format(self.message.from_user.username)
+        sendMessage(msg, self.context, self.update)
+        del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status_list[index].path())
 
     def onUploadStarted(self, progress_status_list: list, index: int):
@@ -39,7 +42,7 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = '<a href="{}">{}</a>'.format(link, progress_status_list[index].name())
-        del download_dict[self.update.update_id]
+        del download_dict[self.message.message_id]
         try:
             deleteMessage(self.context, self.reply_message)
             del status_reply_dict[self.update.effective_chat.id]
@@ -54,7 +57,7 @@ class MirrorListener(listeners.MirrorListeners):
     def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
         editMessage(error, self.context, self.reply_message)
-        del download_dict[self.update.update_id]
+        del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status[index].path())
 
 

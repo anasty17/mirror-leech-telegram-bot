@@ -10,6 +10,7 @@ class DownloadStatus:
     STATUS_DOWNLOADING = "Downloading"
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
+    STATUS_CANCELLED = "Cancelled"
 
     def __init__(self, gid, message_id):
         self.__gid = gid
@@ -45,6 +46,8 @@ class DownloadStatus:
         status = None
         if self.__download.is_waiting:
             status = DownloadStatus.STATUS_WAITING
+        elif self.download().is_paused:
+            status = DownloadStatus.STATUS_CANCELLED
         elif self.__download.is_complete:
             # If download exists and is complete the it must be uploading
             # otherwise the gid would have been removed from the download_list
