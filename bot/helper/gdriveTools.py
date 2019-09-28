@@ -8,7 +8,8 @@ from bot import LOGGER, parent_id, DOWNLOAD_DIR
 from .fs_utils import get_mime_type
 from .bot_utils import *
 
-
+import logging
+logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 class GoogleDriveHelper:
 
     def __init__(self, listener=None):
