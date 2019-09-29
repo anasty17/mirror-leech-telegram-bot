@@ -61,3 +61,6 @@ class DownloadStatus:
     def download(self):
         self.__update()
         return self.__download
+
+    def uid(self):
+        return self.__uid

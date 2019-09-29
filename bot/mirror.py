@@ -33,11 +33,12 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
-        if progress_status_list is not None:
+        deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
+        if index is not None:
             fs_utils.clean_download(progress_status_list[index].path())
+            del download_dict[self.message.message_id]
         msg = f"@{self.message.from_user.username} your download has been cancelled due to: {error}"
         sendMessage(msg, self.context, self.update)
-        del download_dict[self.message.message_id]
 
     def onUploadStarted(self, progress_status_list: list, index: int):
         pass
