@@ -63,7 +63,7 @@ class DownloadHelper:
                     self.__listener.onDownloadError(download.error_message, status_list, index)
                     return
                 if download.is_paused:
-                    self.__listener.onDownloadError("Download cancelled", status_list, index)
+                    self.__listener.onDownloadError("Download cancelled manually by user", status_list, index)
                     return
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 if should_update:
