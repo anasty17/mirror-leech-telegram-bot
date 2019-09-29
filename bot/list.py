@@ -3,8 +3,6 @@ from telegram.error import BadRequest
 from bot.helper.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
 
-LOGGER.info('list.py')
-
 
 @run_async
 def list_drive(update, context):
