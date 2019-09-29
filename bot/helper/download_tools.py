@@ -32,7 +32,7 @@ class DownloadHelper:
             download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.message.message_id)})
             self.__is_torrent = True
         else:
-            self.__listener.onDownloadError("No download URL or URL malformed")
+            self.__listener.onDownloadError("No download URL or URL malformed", None, None)
             return
         download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
                                                                            self.__listener.message.message_id)
