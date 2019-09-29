@@ -34,6 +34,7 @@ class MirrorListener(listeners.MirrorListeners):
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
         deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
+        del status_reply_dict[self.update.effective_chat.id]
         if index is not None:
             fs_utils.clean_download(progress_status_list[index].path())
             del download_dict[self.message.message_id]
@@ -68,6 +69,11 @@ class MirrorListener(listeners.MirrorListeners):
 def mirror(update, context):
     message = update.message.text
     link = message.replace('/mirror', '')[1:]
+    link = link.strip()
+    if len(link) == 0 and update.message.reply_to_message is not None:
+        document = update.message.reply_to_message.document
+        if document is not None and document.mime_type == "application/x-bittorrent":
+            link = document.get_file().file_path
     reply_msg = sendMessage('Starting Download', context, update)
     index = update.effective_chat.id
     if index in status_reply_dict.keys():

@@ -24,7 +24,6 @@ class DownloadHelper:
 
     def add_download(self, link: str):
         download = None
-        link = link.strip()
         if self.is_url(link):
             if link.endswith('.torrent'):
                 self.__is_torrent = True
