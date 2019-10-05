@@ -7,7 +7,7 @@ import os
 from bot import LOGGER, parent_id, DOWNLOAD_DIR
 from .fs_utils import get_mime_type
 from .bot_utils import *
-
+import time
 import logging
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
@@ -25,6 +25,8 @@ class GoogleDriveHelper:
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
         self.__listener = listener
         self.__service = self.authorize()
+        self.uploadedBytes = 0
+        self.start_time = 0
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
@@ -47,11 +49,27 @@ class GoogleDriveHelper:
             'withLink': True
         }
         # Insert a file
-        drive_file = self.__service.files().create(body=file_metadata, media_body=media_body).execute()
+        drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
+        response = None
+        _list = get_download_status_list()
+        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
+        uploaded_bytes = 0
+        while response is None:
+            status, response = drive_file.next_chunk()
+            time_lapsed = time.time() - self.start_time
+
+            if status:
+                # The iconic formula of speed = distance / time :)
+                LOGGER.info(status.progress() * 100)
+                chunk_size = status.total_size*status.progress() - uploaded_bytes
+                uploaded_bytes = status.total_size*status.progress()
+                download_dict[self.__listener.uid].uploaded_bytes += chunk_size
+                download_dict[self.__listener.uid].upload_time = time_lapsed
+                self.__listener.onUploadProgress(_list, index)
         # Insert new permissions
-        self.__service.permissions().create(fileId=drive_file['id'], body=permissions).execute()
+        self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
         # Define file instance and get url for download
-        drive_file = self.__service.files().get(fileId=drive_file['id']).execute()
+        drive_file = self.__service.files().get(fileId=response['id']).execute()
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         return download_url
 
@@ -61,17 +79,20 @@ class GoogleDriveHelper:
         self.__listener.onUploadStarted(_list, index)
         file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
         file_path = f"{file_dir}/{file_name}"
-        link = None
         LOGGER.info("Uploading File: " + file_name)
+        self.start_time = time.time()
         if os.path.isfile(file_path):
-            mime_type = get_mime_type(file_path)
             try:
+                mime_type = get_mime_type(file_path)
                 g_drive_link = self.upload_file(file_path, file_name, mime_type, parent_id)
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
                 link = g_drive_link
             except Exception as e:
                 LOGGER.error(str(e))
-                self.__listener.onUploadError(str(e), _list, index)
+                e_str = str(e).replace('<', '')
+                e_str = e_str.replace('>', '')
+                self.__listener.onUploadError(e_str, _list, index)
+                return
         else:
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
@@ -80,7 +101,10 @@ class GoogleDriveHelper:
                 link = f"https://drive.google.com/folderview?id={dir_id}"
             except Exception as e:
                 LOGGER.error(str(e))
-                self.__listener.onUploadError(str(e), _list, index)
+                e_str = str(e).replace('<', '')
+                e_str = e_str.replace('>', '')
+                self.__listener.onUploadError(e_str, _list, index)
+                return
         LOGGER.info(download_dict)
         self.__listener.onUploadComplete(link, _list, index)
         LOGGER.info("Deleting downloaded file/folder..")

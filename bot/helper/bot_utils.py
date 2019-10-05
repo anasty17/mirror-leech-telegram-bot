@@ -1,8 +1,30 @@
 from bot import download_dict
-from bot.helper.download_status import DownloadStatus
+
+
+class MirrorStatus:
+
+    STATUS_UPLOADING = "Uploading"
+    STATUS_DOWNLOADING = "Downloading"
+    STATUS_WAITING = "Queued"
+    STATUS_FAILED = "Failed. Cleaning download"
+    STATUS_CANCELLED = "Cancelled"
+
 
 PROGRESS_MAX_SIZE = 100 // 8
 PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
+
+SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+
+def get_readable_file_size(size_in_bytes) -> str:
+    index = 0
+    while size_in_bytes >= 1024:
+        size_in_bytes /= 1024
+        index += 1
+    try:
+        return f'{round(size_in_bytes, 2)} {SIZE_UNITS[index]}'
+    except IndexError:
+        return 'File too large'
 
 
 def get_download(message_id):
@@ -13,8 +35,11 @@ def get_download_status_list():
     return list(download_dict.values())
 
 
-def get_progress_bar_string(status: DownloadStatus):
-    completed = status.download().completed_length/8
+def get_progress_bar_string(status):
+    if status.status() == MirrorStatus.STATUS_UPLOADING:
+        completed = status.uploaded_bytes/8
+    else:
+        completed = status.download().completed_length/8
     total = status.download().total_length/8
     if total == 0:
         p = 0
@@ -50,18 +75,8 @@ def get_readable_message(progress_list: list = download_dict.values()):
     msg = ''
     for status in progress_list:
         msg += f'<b>Name:</b> {status.name()}\n' \
-               f'<b>status:</b> {status.status()}\n'
-
-        if status.status() == DownloadStatus.STATUS_DOWNLOADING:
-            msg += f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
+               f'<b>status:</b> {status.status()}\n' \
+               f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
                    f'<b>Speed:</b> {status.speed()}\n' \
                    f'<b>ETA:</b> {status.eta()}\n'
-        msg += '\n'
     return msg
-
-
-# Custom Exception class for killing thread as soon as they aren't needed
-class KillThreadException(Exception):
-    def __init__(self, message, error=None):
-        super().__init__(message)
-        self.error = error

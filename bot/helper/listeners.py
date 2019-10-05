@@ -3,6 +3,7 @@ class MirrorListeners:
         self.context = context
         self.update = update
         self.message = update.message
+        self.uid = self.message.message_id
         self.reply_message = reply_message
 
     def onDownloadStarted(self, link: str):
@@ -18,6 +19,9 @@ class MirrorListeners:
         raise NotImplementedError
 
     def onUploadStarted(self, progress_status_list: list, index: int):
+        raise NotImplementedError
+
+    def onUploadProgress(self, progress: list, index: int):
         raise NotImplementedError
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):

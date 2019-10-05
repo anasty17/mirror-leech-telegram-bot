@@ -5,8 +5,7 @@ from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
 from bot import download_dict, status_reply_dict
 from bot.helper.message_utils import *
-from bot.helper.bot_utils import get_readable_message, KillThreadException
-from bot.helper.download_status import DownloadStatus
+from bot.helper.bot_utils import get_readable_message, KillThreadException, MirrorStatus
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -17,7 +16,7 @@ class MirrorListener(listeners.MirrorListeners):
         LOGGER.info("Adding link: " + link)
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
-        if progress_status_list[index].status() == DownloadStatus.STATUS_CANCELLED:
+        if progress_status_list[index].status() == MirrorStatus.STATUS_CANCELLED:
             raise KillThreadException('Mirror cancelled by user')
         msg = get_readable_message(progress_status_list)
         # LOGGER.info("Editing message")
@@ -64,6 +63,10 @@ class MirrorListener(listeners.MirrorListeners):
         editMessage(error, self.context, self.reply_message)
         del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status[index].path())
+
+    def onUploadProgress(self, progress: list, index: int):
+        msg = get_readable_message(progress)
+        editMessage(msg, self.context, self.reply_message)
 
 
 @run_async

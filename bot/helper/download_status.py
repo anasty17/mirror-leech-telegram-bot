@@ -1,4 +1,5 @@
-from bot import aria2, download_dict, DOWNLOAD_DIR
+from bot import aria2, DOWNLOAD_DIR
+from .bot_utils import get_readable_file_size, MirrorStatus
 
 
 def get_download(gid):
@@ -6,26 +7,51 @@ def get_download(gid):
 
 
 class DownloadStatus:
-    STATUS_UPLOADING = "Uploading"
-    STATUS_DOWNLOADING = "Downloading"
-    STATUS_WAITING = "Queued"
-    STATUS_FAILED = "Failed. Cleaning download"
-    STATUS_CANCELLED = "Cancelled"
 
     def __init__(self, gid, message_id):
         self.__gid = gid
         self.__download = get_download(gid)
         self.__uid = message_id
+        self.uploaded_bytes = 0
+        self.upload_time = 0
 
     def __update(self):
         self.__download = get_download(self.__gid)
 
     def progress(self):
+        """
+        Calculates the progress of the mirror (upload or download)
+        :return: returns progress in percentage
+        """
         self.__update()
+        if self.status() == MirrorStatus.STATUS_UPLOADING:
+            return f'{round(self.upload_progress(), 2)}%'
         return self.__download.progress_string()
+
+    def upload_progress(self):
+        return self.uploaded_bytes / self.download().total_length * 100
+
+    def __size(self):
+        """
+        Gets total size of the mirror file/folder
+        :return: total size of mirror
+        """
+        return self.download().total_length
+
+    def __upload_speed(self):
+        """
+        Calculates upload speed in bytes/second
+        :return: Upload speed in Bytes/Seconds
+        """
+        try:
+            return self.uploaded_bytes / self.upload_time
+        except ZeroDivisionError:
+            return 0
 
     def speed(self):
         self.__update()
+        if self.status() == MirrorStatus.STATUS_UPLOADING:
+            return f'{get_readable_file_size(self.__upload_speed())}/s'
         return self.__download.download_speed_string()
 
     def name(self):
@@ -39,23 +65,28 @@ class DownloadStatus:
 
     def eta(self):
         self.__update()
+        if self.status() == MirrorStatus.STATUS_UPLOADING:
+            try:
+                return f'{round(self.__size() / self.__upload_speed(), 2)} seconds'
+            except ZeroDivisionError:
+                return '-'
         return self.__download.eta_string()
 
     def status(self):
         self.__update()
         status = None
         if self.__download.is_waiting:
-            status = DownloadStatus.STATUS_WAITING
+            status = MirrorStatus.STATUS_WAITING
         elif self.download().is_paused:
-            status = DownloadStatus.STATUS_CANCELLED
+            status = MirrorStatus.STATUS_CANCELLED
         elif self.__download.is_complete:
             # If download exists and is complete the it must be uploading
             # otherwise the gid would have been removed from the download_list
-            status = DownloadStatus.STATUS_UPLOADING
+            status = MirrorStatus.STATUS_UPLOADING
         elif self.__download.has_failed:
-            status = DownloadStatus.STATUS_FAILED
+            status = MirrorStatus.STATUS_FAILED
         elif self.__download.is_active:
-            status = DownloadStatus.STATUS_DOWNLOADING
+            status = MirrorStatus.STATUS_DOWNLOADING
         return status
 
     def download(self):
