@@ -2,6 +2,7 @@ from time import sleep
 from bot import DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, aria2
 from .download_status import DownloadStatus
 from .bot_utils import *
+from .exceptions import KillThreadException
 
 
 class DownloadHelper:

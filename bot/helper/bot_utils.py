@@ -1,8 +1,10 @@
 from bot import download_dict
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class MirrorStatus:
-
     STATUS_UPLOADING = "Uploading"
     STATUS_DOWNLOADING = "Downloading"
     STATUS_WAITING = "Queued"
@@ -37,10 +39,10 @@ def get_download_status_list():
 
 def get_progress_bar_string(status):
     if status.status() == MirrorStatus.STATUS_UPLOADING:
-        completed = status.uploaded_bytes/8
+        completed = status.uploaded_bytes / 8
     else:
-        completed = status.download().completed_length/8
-    total = status.download().total_length/8
+        completed = status.download().completed_length / 8
+    total = status.download().total_length / 8
     if total == 0:
         p = 0
     else:
@@ -48,10 +50,10 @@ def get_progress_bar_string(status):
     p = min(max(p, 0), 100)
     cFull = p // 8
     cPart = p % 8 - 1
-    p_str = '█'*cFull
+    p_str = '█' * cFull
     if cPart >= 0:
-      p_str += PROGRESS_INCOMPLETE[cPart]
-    p_str += ' '*(PROGRESS_MAX_SIZE - cFull)
+        p_str += PROGRESS_INCOMPLETE[cPart]
+    p_str += ' ' * (PROGRESS_MAX_SIZE - cFull)
     p_str = f"[{p_str}]"
     return p_str
 
@@ -77,6 +79,7 @@ def get_readable_message(progress_list: list = download_dict.values()):
         msg += f'<b>Name:</b> {status.name()}\n' \
                f'<b>status:</b> {status.status()}\n' \
                f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
-                   f'<b>Speed:</b> {status.speed()}\n' \
-                   f'<b>ETA:</b> {status.eta()}\n'
+               f'<b>Speed:</b> {status.speed()}\n' \
+               f'<b>ETA:</b> {status.eta()}\n'
+    LOGGER.info(msg)
     return msg

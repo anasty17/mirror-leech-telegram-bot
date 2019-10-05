@@ -67,7 +67,10 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadProgress(self, progress: list, index: int):
         msg = get_readable_message(progress)
-        editMessage(msg, self.context, self.reply_message)
+        try:
+            editMessage(msg, self.context, self.reply_message)
+        except BadRequest:
+            raise KillThreadException('Message deleted. Do not call this method from the thread')
 
 
 @run_async

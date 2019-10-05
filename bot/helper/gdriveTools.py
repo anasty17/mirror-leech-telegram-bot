@@ -4,11 +4,12 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
+import time
+import logging
 from bot import LOGGER, parent_id, DOWNLOAD_DIR
 from .fs_utils import get_mime_type
 from .bot_utils import *
-import time
-import logging
+from .exceptions import KillThreadException
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
@@ -32,7 +33,8 @@ class GoogleDriveHelper:
         # File body description
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
-                                     resumable=True)
+                                     resumable=True,
+                                     chunksize=1024*1024)
         file_metadata = {
             'name': file_name,
             'description': 'mirror',
@@ -54,18 +56,23 @@ class GoogleDriveHelper:
         _list = get_download_status_list()
         index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
         uploaded_bytes = 0
+        should_update = True
         while response is None:
             status, response = drive_file.next_chunk()
             time_lapsed = time.time() - self.start_time
 
             if status:
                 # The iconic formula of speed = distance / time :)
-                LOGGER.info(status.progress() * 100)
+                LOGGER.info(f'{file_name}: {status.progress() * 100}')
                 chunk_size = status.total_size*status.progress() - uploaded_bytes
                 uploaded_bytes = status.total_size*status.progress()
                 download_dict[self.__listener.uid].uploaded_bytes += chunk_size
                 download_dict[self.__listener.uid].upload_time = time_lapsed
-                self.__listener.onUploadProgress(_list, index)
+                if should_update:
+                    try:
+                        self.__listener.onUploadProgress(_list, index)
+                    except KillThreadException:
+                        should_update = False
         # Insert new permissions
         self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
         # Define file instance and get url for download
