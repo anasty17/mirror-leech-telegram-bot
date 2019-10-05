@@ -67,7 +67,7 @@ class DownloadStatus:
         self.__update()
         if self.status() == MirrorStatus.STATUS_UPLOADING:
             try:
-                return f'{round(self.__size() / self.__upload_speed(), 2)} seconds'
+                return f'{round((self.__size() - self.uploaded_bytes) / self.__upload_speed(), 2)} seconds'
             except ZeroDivisionError:
                 return '-'
         return self.__download.eta_string()
