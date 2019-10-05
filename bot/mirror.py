@@ -5,7 +5,8 @@ from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
 from bot import download_dict, status_reply_dict
 from bot.helper.message_utils import *
-from bot.helper.bot_utils import get_readable_message, KillThreadException, MirrorStatus
+from bot.helper.bot_utils import get_readable_message, MirrorStatus
+from bot.helper.exceptions import KillThreadException
 
 
 class MirrorListener(listeners.MirrorListeners):
