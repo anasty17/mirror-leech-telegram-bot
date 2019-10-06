@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, run_async
 from bot.helper.message_utils import *
 from bot import download_dict, aria2, dispatcher, download_dict_lock
-
+from .helper.telegram_helper.filters import CustomFilters
 
 @run_async
 def cancel_mirror(update: Update, context):
@@ -21,5 +21,6 @@ def cancel_mirror(update: Update, context):
     sendMessage("Download canceled", context, update)
 
 
-cancel_mirror_handler = CommandHandler('cancel', cancel_mirror)
+cancel_mirror_handler = CommandHandler('cancel', cancel_mirror,
+                                       filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(cancel_mirror_handler)

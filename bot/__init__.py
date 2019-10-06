@@ -39,6 +39,13 @@ download_dict_lock = threading.Lock()
 status_reply_dict_lock = threading.Lock()
 status_reply_dict = {}
 download_dict = {}
+# Stores list of users and chats the bot is authorized to use in
+AUTHORIZED_CHATS = []
+with open('authorized_chats.txt', 'r+') as f:
+    lines = f.readlines()
+    for line in lines:
+        LOGGER.info(line.split())
+        AUTHORIZED_CHATS.append(line.split()[0])
 try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
     parent_id = getConfig('GDRIVE_FOLDER_ID')
@@ -46,7 +53,7 @@ try:
     if DOWNLOAD_DIR[-1] != '/' or DOWNLOAD_DIR[-1] != '\\':
         DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
-
+    OWNER_ID = int(getConfig('OWNER_ID'))
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)

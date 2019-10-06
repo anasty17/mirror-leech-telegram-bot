@@ -1,12 +1,12 @@
 from telegram.ext import CommandHandler, run_async
 from bot import dispatcher, LOGGER, updater, aria2
-import bot.mirror, bot.list, bot.mirror_status, bot.cancel_mirror
+import bot.mirror, bot.list, bot.mirror_status, bot.cancel_mirror, bot.authorize
 from bot.helper import fs_utils
 import signal
 import time
 from bot.helper.message_utils import *
 import shutil
-
+from .helper.telegram_helper.filters import CustomFilters
 
 @run_async
 def disk_usage(update, context):
@@ -52,14 +52,19 @@ def bot_help(update, context):
 
 def main():
 
-    start_handler = CommandHandler('start', start)
-    ping_handler = CommandHandler('ping', ping)
-    help_handler = CommandHandler('help', bot_help)
-    disk_usage_handler = CommandHandler('disk', disk_usage)
+    start_handler = CommandHandler('start', start,
+                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    ping_handler = CommandHandler('ping', ping,
+                                  filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    help_handler = CommandHandler('help',
+                                  bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    disk_handler = CommandHandler('disk',
+                                  disk_usage, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(disk_usage_handler)
+    dispatcher.add_handler(disk_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)

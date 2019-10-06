@@ -7,7 +7,7 @@ from bot import download_dict, status_reply_dict, status_reply_dict_lock, downlo
 from bot.helper.message_utils import *
 from bot.helper.bot_utils import get_readable_message, MirrorStatus
 from bot.helper.exceptions import KillThreadException
-
+from .helper.telegram_helper.filters import CustomFilters
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, context, update, reply_message):
@@ -98,5 +98,5 @@ def mirror(update, context):
     aria.add_download(link)
 
 
-mirror_handler = CommandHandler('mirror', mirror)
+mirror_handler = CommandHandler('mirror', mirror, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(mirror_handler)

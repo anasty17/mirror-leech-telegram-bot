@@ -11,3 +11,4 @@ data*
 .idea
 *.json
 *.pickle
+authorized_chats.txt
