@@ -1,4 +1,4 @@
-from bot import download_dict
+from bot import download_dict, download_dict_lock
 import logging
 
 LOGGER = logging.getLogger(__name__)
@@ -30,11 +30,13 @@ def get_readable_file_size(size_in_bytes) -> str:
 
 
 def get_download(message_id):
-    return download_dict[message_id].download()
+    with download_dict_lock:
+        return download_dict[message_id].download()
 
 
 def get_download_status_list():
-    return list(download_dict.values())
+    with download_dict_lock:
+        return list(download_dict.values())
 
 
 def get_progress_bar_string(status):
@@ -68,9 +70,10 @@ def get_download_index(_list, gid):
 
 def get_download_str():
     result = ""
-    for status in list(download_dict.values()):
-        result += (status.progress() + status.speed() + status.status())
-    return result
+    with download_dict_lock:
+        for status in list(download_dict.values()):
+            result += (status.progress() + status.speed() + status.status())
+        return result
 
 
 def get_readable_message(progress_list: list = download_dict.values()):

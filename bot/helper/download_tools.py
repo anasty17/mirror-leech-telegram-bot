@@ -36,8 +36,9 @@ class DownloadHelper:
             _list = get_download_status_list()
             self.__listener.onDownloadError("No download URL or URL malformed", get_download_status_list(), None)
             return
-        download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
-                                                                           self.__listener.message.message_id)
+        with download_dict_lock:
+            download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
+                                                                               self.__listener.message.message_id)
         self.__listener.onDownloadStarted(link)
         self.__update_download_status()
 
@@ -74,7 +75,9 @@ class DownloadHelper:
                         self.__listener.onDownloadProgress(get_download_status_list(), index)
                     except KillThreadException:
                         should_update = False
-            download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid, self.__listener.message.message_id)
+            with download_dict_lock:
+                download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid,
+                                                                               self.__listener.message.message_id)
 
         # Start tracking the actual download
         previous = None

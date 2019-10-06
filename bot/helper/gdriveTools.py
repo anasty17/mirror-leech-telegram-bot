@@ -56,23 +56,30 @@ class GoogleDriveHelper:
         _list = get_download_status_list()
         index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
         uploaded_bytes = 0
+        progress_change = 0
+        chunk_size = 0
         should_update = True
         while response is None:
             status, response = drive_file.next_chunk()
             time_lapsed = time.time() - self.start_time
-
+            # Update the message only if status is not null and change in progress is more than 40 bytes
             if status:
-                # The iconic formula of speed = distance / time :)
-                LOGGER.info(f'{file_name}: {status.progress() * 100}')
-                chunk_size = status.total_size*status.progress() - uploaded_bytes
-                uploaded_bytes = status.total_size*status.progress()
-                download_dict[self.__listener.uid].uploaded_bytes += chunk_size
-                download_dict[self.__listener.uid].upload_time = time_lapsed
-                if should_update:
-                    try:
-                        self.__listener.onUploadProgress(_list, index)
-                    except KillThreadException:
-                        should_update = False
+                chunk_size = status.total_size * status.progress() - uploaded_bytes
+                uploaded_bytes = status.total_size * status.progress()
+                progress_change = uploaded_bytes - progress_change
+                if progress_change >= 10*1024*1024:
+                    LOGGER.info(f'{file_name}: {status.progress() * 100}')
+
+                    with download_dict_lock:
+                        download_dict[self.__listener.uid].uploaded_bytes += chunk_size
+                        download_dict[self.__listener.uid].upload_time = time_lapsed
+                    if should_update:
+                        try:
+                            self.__listener.onUploadProgress(_list, index)
+                        except KillThreadException:
+                            should_update = False
+                    progress_change = 0
+
         # Insert new permissions
         self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
         # Define file instance and get url for download

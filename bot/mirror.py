@@ -3,7 +3,7 @@ from telegram.error import BadRequest
 from bot.helper import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher
 from bot.helper import fs_utils
-from bot import download_dict, status_reply_dict
+from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock
 from bot.helper.message_utils import *
 from bot.helper.bot_utils import get_readable_message, MirrorStatus
 from bot.helper.exceptions import KillThreadException
@@ -33,12 +33,14 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
-        if len(status_reply_dict) == 1:
-            deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
-        del status_reply_dict[self.update.effective_chat.id]
+        with status_reply_dict_lock:
+            if len(status_reply_dict) == 1:
+                deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
+            del status_reply_dict[self.update.effective_chat.id]
         if index is not None:
             fs_utils.clean_download(progress_status_list[index].path())
-            del download_dict[self.message.message_id]
+            with download_dict_lock:
+                del download_dict[self.message.message_id]
         msg = f"@{self.message.from_user.username} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
 
@@ -47,10 +49,12 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
         msg = f'<a href="{link}">{progress_status_list[index].name()}</a>'
-        del download_dict[self.message.message_id]
+        with download_dict_lock:
+            del download_dict[self.message.message_id]
         try:
             deleteMessage(self.context, self.reply_message)
-            del status_reply_dict[self.update.effective_chat.id]
+            with status_reply_dict_lock:
+                del status_reply_dict[self.update.effective_chat.id]
         except BadRequest:
             # This means that the message has been deleted because of a /status command
             pass
@@ -62,7 +66,8 @@ class MirrorListener(listeners.MirrorListeners):
     def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
         editMessage(error, self.context, self.reply_message)
-        del download_dict[self.message.message_id]
+        with download_dict_lock:
+            del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status[index].path())
 
     def onUploadProgress(self, progress: list, index: int):
@@ -84,9 +89,10 @@ def mirror(update, context):
             link = document.get_file().file_path
     reply_msg = sendMessage('Starting Download', context, update)
     index = update.effective_chat.id
-    if index in status_reply_dict.keys():
-        deleteMessage(context, status_reply_dict[index])
-    status_reply_dict[index] = reply_msg
+    with status_reply_dict_lock:
+        if index in status_reply_dict.keys():
+            deleteMessage(context, status_reply_dict[index])
+        status_reply_dict[index] = reply_msg
     listener = MirrorListener(context, update, reply_msg)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)

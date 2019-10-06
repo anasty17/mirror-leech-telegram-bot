@@ -1,6 +1,7 @@
 import logging
 import configparser
 import aria2p
+import threading
 from telegram.ext import Updater
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -34,6 +35,8 @@ aria2 = aria2p.API(
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 
+download_dict_lock = threading.Lock()
+status_reply_dict_lock = threading.Lock()
 status_reply_dict = {}
 download_dict = {}
 try:
