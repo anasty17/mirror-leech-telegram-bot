@@ -12,6 +12,13 @@ def clean_download(path: str):
         shutil.rmtree(path)
 
 
+def start_cleanup():
+    try:
+        shutil.rmtree(DOWNLOAD_DIR)
+    except FileNotFoundError:
+        pass
+
+
 def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")

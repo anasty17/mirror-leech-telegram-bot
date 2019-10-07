@@ -59,7 +59,7 @@ def bot_help(update, context):
 
 
 def main():
-
+    fs_utils.start_cleanup()
     start_handler = CommandHandler('start', start,
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     ping_handler = CommandHandler('ping', ping,

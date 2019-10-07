@@ -60,7 +60,7 @@ class GoogleDriveHelper:
         while response is None:
             status, response = drive_file.next_chunk()
             time_lapsed = time.time() - self.start_time
-            # Update the message only if status is not null and loop_count is multiple of 10
+            # Update the message only if status is not null and loop_count is multiple of 50
             if status and loop_count % 50 == 0:
                 chunk_size = status.total_size * status.progress() - uploaded_bytes
                 uploaded_bytes = status.total_size * status.progress()
