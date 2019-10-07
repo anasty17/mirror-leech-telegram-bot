@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, run_async
-from bot.helper.message_utils import *
+from bot.helper.telegram_helper.message_utils import *
 from bot import download_dict, aria2, dispatcher, download_dict_lock
-from .helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.filters import CustomFilters
 
 @run_async
 def cancel_mirror(update: Update, context):

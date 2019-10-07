@@ -1,6 +1,5 @@
 from telegram.ext import CommandHandler, run_async
-from telegram.error import BadRequest
-from bot.helper.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
 
 

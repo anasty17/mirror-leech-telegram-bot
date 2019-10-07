@@ -5,11 +5,10 @@ from googleapiclient.http import MediaFileUpload
 import pickle
 import os
 import time
-import logging
 from bot import LOGGER, parent_id, DOWNLOAD_DIR
-from .fs_utils import get_mime_type
-from .bot_utils import *
-from .exceptions import KillThreadException
+from bot.helper.ext_utils.fs_utils import get_mime_type
+from bot.helper.ext_utils.bot_utils import *
+from bot.helper.ext_utils.exceptions import KillThreadException
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
