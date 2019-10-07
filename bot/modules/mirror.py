@@ -31,11 +31,15 @@ class MirrorListener(listeners.MirrorListeners):
     def onDownloadComplete(self, progress_status_list, index: int):
         LOGGER.info(f"Download completed: {progress_status_list[index].name()}")
         if self.isTar:
+            with download_dict_lock:
+                download_dict[self.uid].is_archiving = True
             path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}')
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}'
         name = pathlib.PurePath(path).name
-        download_dict[self.uid].upload_name = name
+        with download_dict_lock:
+            download_dict[self.uid].is_archiving = False
+            download_dict[self.uid].upload_name = name
         gdrive = gdriveTools.GoogleDriveHelper(self)
         gdrive.upload(name)
 

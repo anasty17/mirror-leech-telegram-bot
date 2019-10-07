@@ -10,6 +10,7 @@ class DownloadStatus:
 
     def __init__(self, gid, message_id):
         self.upload_name = None
+        self.is_archiving = False
         self.__gid = gid
         self.__download = get_download(gid)
         self.__uid = message_id
@@ -78,6 +79,8 @@ class DownloadStatus:
     def status(self):
         self.__update()
         status = None
+        if self.is_archiving:
+            status = MirrorStatus.STATUS_ARCHIVING
         if self.__download.is_waiting:
             status = MirrorStatus.STATUS_WAITING
         elif self.download().is_paused:

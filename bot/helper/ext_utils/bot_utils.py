@@ -10,6 +10,7 @@ class MirrorStatus:
     STATUS_WAITING = "Queued"
     STATUS_FAILED = "Failed. Cleaning download"
     STATUS_CANCELLED = "Cancelled"
+    STATUS_ARCHIVING = "Archiving"
 
 
 PROGRESS_MAX_SIZE = 100 // 8
