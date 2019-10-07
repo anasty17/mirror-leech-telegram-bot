@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, run_async
 from bot import dispatcher, LOGGER, updater
 from bot.helper.ext_utils import fs_utils
+from .helper.ext_utils.bot_utils import get_readable_file_size
 import signal
 import time
 from bot.helper.telegram_helper.message_utils import *
@@ -11,14 +12,13 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror
 
 @run_async
 def disk_usage(update, context):
-    total, used, free = shutil.disk_usage('/')
-    divider = 1024*1024*1024
-    total //= divider
-    used //= divider
-    free //= divider
-    disk_usage_string = f'Total disk space: {total} GBs\n' \
-                        f'Used: {used} GBs\n' \
-                        f'Free: {free} GBs'
+    total, used, free = shutil.disk_usage('.')
+    total = get_readable_file_size(total)
+    used = get_readable_file_size(used)
+    free = get_readable_file_size(free)
+    disk_usage_string = f'Total disk space: {total}\n' \
+                        f'Used: {used}\n' \
+                        f'Free: {free}'
     sendMessage(disk_usage_string, context, update)
 
 
