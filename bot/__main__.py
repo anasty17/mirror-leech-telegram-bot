@@ -6,7 +6,7 @@ import time
 from bot.helper.telegram_helper.message_utils import *
 import shutil
 from .helper.telegram_helper.filters import CustomFilters
-from .modules import *
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror
 
 
 @run_async
@@ -39,15 +39,22 @@ def ping(update, context):
 @run_async
 def bot_help(update, context):
     help_string = '''
-    /help: To get this message
+/help: To get this message
 
-    /mirror [download_url][magnet_link]: Start mirroring the link to google drive
+/mirror [download_url][magnet_link]: Start mirroring the link to google drive
 
-    /cancel: Reply to the message by which the download was initiated and that download will be cancelled
+/tarmirror [download_url][magnet_link]: start mirroring and upload the archived (.tar) version of the download
 
-    /status: Shows a status of all the downloads
+/cancel: Reply to the message by which the download was initiated and that download will be cancelled
 
-    /list [search term]: Searches the search term in the Google drive, if found replies with the link'''
+/status: Shows a status of all the downloads
+
+/list [search term]: Searches the search term in the Google drive, if found replies with the link
+
+/disk: Show a status of the disk usage of the machine the bot is hosted on
+
+/authorize: Authorize a chat or a user to use the bot (Can only be invoked by owner of the bot)
+'''
     sendMessage(help_string, context, update)
 
 

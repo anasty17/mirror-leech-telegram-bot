@@ -1,17 +1,19 @@
 from telegram.ext import CommandHandler, run_async
 from telegram.error import BadRequest
 from bot.helper.mirror_utils import download_tools, gdriveTools, listeners
-from bot import LOGGER, dispatcher
+from bot import LOGGER, dispatcher, DOWNLOAD_DIR
 from bot.helper.ext_utils import fs_utils
 from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock
 from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus
 from bot.helper.ext_utils.exceptions import KillThreadException
 from bot.helper.telegram_helper.filters import CustomFilters
+import pathlib
 
 class MirrorListener(listeners.MirrorListeners):
-    def __init__(self, context, update, reply_message):
+    def __init__(self, context, update, reply_message, isTar=False):
         super().__init__(context, update, reply_message)
+        self.isTar = isTar
 
     def onDownloadStarted(self, link):
         LOGGER.info("Adding link: " + link)
@@ -28,8 +30,14 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onDownloadComplete(self, progress_status_list, index: int):
         LOGGER.info(f"Download completed: {progress_status_list[index].name()}")
+        if self.isTar:
+            path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}')
+        else:
+            path = f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}'
+        name = pathlib.PurePath(path).name
+        download_dict[self.uid].upload_name = name
         gdrive = gdriveTools.GoogleDriveHelper(self)
-        gdrive.upload(progress_status_list[index].name())
+        gdrive.upload(name)
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
         LOGGER.error(error)
@@ -78,10 +86,10 @@ class MirrorListener(listeners.MirrorListeners):
             raise KillThreadException('Message deleted. Do not call this method from the thread')
 
 
-@run_async
-def mirror(update, context):
-    message = update.message.text
-    link = message.replace('/mirror', '')[1:]
+def _mirror(update, context, isTar=False):
+    message_args = update.message.text.split(' ')
+    link = message_args[1]
+    LOGGER.info(link)
     link = link.strip()
     if len(link) == 0 and update.message.reply_to_message is not None:
         document = update.message.reply_to_message.document
@@ -93,10 +101,23 @@ def mirror(update, context):
         if index in status_reply_dict.keys():
             deleteMessage(context, status_reply_dict[index])
         status_reply_dict[index] = reply_msg
-    listener = MirrorListener(context, update, reply_msg)
+    listener = MirrorListener(context, update, reply_msg, isTar)
     aria = download_tools.DownloadHelper(listener)
     aria.add_download(link)
 
 
+@run_async
+def mirror(update, context):
+    _mirror(update, context)
+
+
+@run_async
+def tar_mirror(update, context):
+    _mirror(update, context, True)
+
+
 mirror_handler = CommandHandler('mirror', mirror, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+tar_mirror_handler = CommandHandler('tarmirror', tar_mirror,
+                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(mirror_handler)
+dispatcher.add_handler(tar_mirror_handler)

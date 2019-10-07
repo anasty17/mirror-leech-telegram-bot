@@ -9,6 +9,7 @@ def get_download(gid):
 class DownloadStatus:
 
     def __init__(self, gid, message_id):
+        self.upload_name = None
         self.__gid = gid
         self.__download = get_download(gid)
         self.__uid = message_id
@@ -55,6 +56,8 @@ class DownloadStatus:
         return self.__download.download_speed_string()
 
     def name(self):
+        if self.upload_name is not None:
+            return self.upload_name
         return self.__download.name
 
     def path(self):

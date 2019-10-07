@@ -84,5 +84,5 @@ def get_readable_message(progress_list: list = download_dict.values()):
                f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
                f'<b>Speed:</b> {status.speed()}\n' \
                f'<b>ETA:</b> {status.eta()}\n'
-    LOGGER.info(msg)
+#    LOGGER.info(msg)
     return msg

@@ -27,8 +27,9 @@ def exit_clean_up(signal, frame):
 def tar(orig_path: str):
     path = pathlib.PurePath(orig_path)
     base = path.name
-    root = path.parent.name
-    shutil.make_archive(base_name=orig_path, format='tar', root_dir=root, base_dir=base)
+    root = pathlib.Path(path.parent.as_posix()).absolute().as_posix()
+    LOGGER.info(f'Tar: orig_path: {orig_path}, base: {base}, root: {root}')
+    return shutil.make_archive(orig_path, 'tar', root, base)
 
 
 def get_mime_type(file_path):
