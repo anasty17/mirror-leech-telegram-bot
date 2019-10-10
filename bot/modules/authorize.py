@@ -10,20 +10,25 @@ from telegram import Update
 @run_async
 def authorize(update: Update, context):
     reply_message = update.message.reply_to_message
+    msg = ''
     with open('authorized_chats.txt', 'a') as file:
         if reply_message is None:
             chat_id = update.effective_chat.id
             if chat_id not in AUTHORIZED_CHATS:
                 file.write(f'{chat_id}\n')
                 AUTHORIZED_CHATS.append(chat_id)
-                sendMessage('Chat authorized', context, update)
+                msg = 'Chat authorized'
             else:
-                sendMessage('Already authorized chat', context, update)
+                msg = 'Already authorized chat'
         else:
             user_id = reply_message.from_user.id
             if user_id not in AUTHORIZED_CHATS:
                 file.write(f'{user_id}\n')
                 AUTHORIZED_CHATS.append(user_id)
+                msg = 'Person Authorized to use the bot!'
+            else:
+                msg = 'Person already authorized'
+        sendMessage(msg, context, update)
 
 
 authorize_handler = CommandHandler(command='authorize', callback=authorize,

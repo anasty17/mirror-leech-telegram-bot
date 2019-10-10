@@ -45,7 +45,7 @@ with open('authorized_chats.txt', 'r+') as f:
     lines = f.readlines()
     for line in lines:
         LOGGER.info(line.split())
-        AUTHORIZED_CHATS.append(line.split()[0])
+        AUTHORIZED_CHATS.append(int(line.split()[0]))
 try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
     parent_id = getConfig('GDRIVE_FOLDER_ID')
