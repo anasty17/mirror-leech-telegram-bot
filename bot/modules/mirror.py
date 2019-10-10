@@ -9,6 +9,8 @@ from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus
 from bot.helper.ext_utils.exceptions import KillThreadException
 from bot.helper.telegram_helper.filters import CustomFilters
 import pathlib
+import threading
+
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, context, update, reply_message, isTar=False):
@@ -19,9 +21,10 @@ class MirrorListener(listeners.MirrorListeners):
         LOGGER.info("Adding link: " + link)
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
-        if progress_status_list[index].status() == MirrorStatus.STATUS_CANCELLED:
-            raise KillThreadException('Mirror cancelled by user')
         msg = get_readable_message(progress_status_list)
+        if progress_status_list[index].status() == MirrorStatus.STATUS_CANCELLED:
+            editMessage(msg, self.context, self.reply_message)
+            raise KillThreadException('Mirror cancelled by user')
         # LOGGER.info("Editing message")
         try:
             editMessage(msg, self.context, self.reply_message)
@@ -50,9 +53,9 @@ class MirrorListener(listeners.MirrorListeners):
                 deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
             del status_reply_dict[self.update.effective_chat.id]
         if index is not None:
-            fs_utils.clean_download(progress_status_list[index].path())
             with download_dict_lock:
                 del download_dict[self.message.message_id]
+        fs_utils.clean_download(progress_status_list[index].path())
         msg = f"@{self.message.from_user.username} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
 
@@ -92,13 +95,20 @@ class MirrorListener(listeners.MirrorListeners):
 
 def _mirror(update, context, isTar=False):
     message_args = update.message.text.split(' ')
-    link = message_args[1]
+    try:
+        link = message_args[1]
+    except KeyError:
+        link = ''
     LOGGER.info(link)
     link = link.strip()
+
     if len(link) == 0 and update.message.reply_to_message is not None:
         document = update.message.reply_to_message.document
         if document is not None and document.mime_type == "application/x-bittorrent":
             link = document.get_file().file_path
+        else:
+            sendMessage('No download source provided', context, update)
+            return
     reply_msg = sendMessage('Starting Download', context, update)
     index = update.effective_chat.id
     with status_reply_dict_lock:
@@ -107,7 +117,8 @@ def _mirror(update, context, isTar=False):
         status_reply_dict[index] = reply_msg
     listener = MirrorListener(context, update, reply_msg, isTar)
     aria = download_tools.DownloadHelper(listener)
-    aria.add_download(link)
+    t = threading.Thread(target=aria.add_download, args=(link,))
+    t.start()
 
 
 @run_async

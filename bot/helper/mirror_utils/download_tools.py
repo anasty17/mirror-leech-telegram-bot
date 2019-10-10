@@ -24,13 +24,12 @@ class DownloadHelper:
             return False
 
     def add_download(self, link: str):
-        download = None
         if self.is_url(link):
             if link.endswith('.torrent'):
                 self.__is_torrent = True
-            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.message.message_id)})
+            download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
         elif self.is_magnet(link):
-            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.message.message_id)})
+            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
             self.__is_torrent = True
         else:
             _list = get_download_status_list()
@@ -38,12 +37,12 @@ class DownloadHelper:
             return
         with download_dict_lock:
             download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
-                                                                               self.__listener.message.message_id)
+                                                                               self.__listener.uid)
         self.__listener.onDownloadStarted(link)
         self.__update_download_status()
 
     def __get_download(self):
-        return get_download(self.__listener.message.message_id)
+        return get_download(self.__listener.uid)
 
     def __get_followed_download_gid(self):
         download = self.__get_download()
@@ -59,8 +58,8 @@ class DownloadHelper:
         if self.__is_torrent:
             # Waiting for the actual gid
             new_gid = None
-            download = self.__get_download()
             while new_gid is None:
+                download = self.__get_download()
                 if download.has_failed:
                     self.__listener.onDownloadError(download.error_message, status_list, index)
                     return
@@ -69,12 +68,12 @@ class DownloadHelper:
                     return
                 sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 if should_update:
-                    # Check every few seconds
-                    new_gid = self.__get_followed_download_gid()
                     try:
                         self.__listener.onDownloadProgress(get_download_status_list(), index)
                     except KillThreadException:
                         should_update = False
+                        # Check every few seconds
+                new_gid = self.__get_followed_download_gid()
             with download_dict_lock:
                 download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid,
                                                                                self.__listener.message.message_id)
