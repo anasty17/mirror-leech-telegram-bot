@@ -22,9 +22,22 @@ def cancel_mirror(update: Update, context):
         downloads = aria2.get_downloads(download.followed_by_ids)
         aria2.pause(downloads)
     aria2.pause([download])
-    sendMessage("Download canceled", context, update)
+    clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}/')
+
+
+@run_async
+def cancel_all(update, context):
+    aria2.pause_all(True)
+
+    with download_dict_lock:
+        download_dict.clear()
+    clean_download(DOWNLOAD_DIR)
+    sendMessage('Cancelled all downloads!', context, update)
 
 
 cancel_mirror_handler = CommandHandler('cancel', cancel_mirror,
                                        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+cancel_all_handler = CommandHandler('cancelall', cancel_all,
+                                    filters=CustomFilters.authorized_user | CustomFilters.authorized_chat)
+dispatcher.add_handler(cancel_all_handler)
 dispatcher.add_handler(cancel_mirror_handler)
