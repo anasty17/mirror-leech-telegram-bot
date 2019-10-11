@@ -38,7 +38,11 @@ BOT_TOKEN = None
 
 download_dict_lock = threading.Lock()
 status_reply_dict_lock = threading.Lock()
+# Key: update.effective_chat.id
+# Value: telegram.Message
 status_reply_dict = {}
+# Key: update.message.message_id
+# Value: An object of DownloadStatus
 download_dict = {}
 # Stores list of users and chats the bot is authorized to use in
 AUTHORIZED_CHATS = []

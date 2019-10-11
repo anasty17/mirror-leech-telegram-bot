@@ -52,9 +52,8 @@ class MirrorListener(listeners.MirrorListeners):
             if len(status_reply_dict) == 1:
                 deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
             del status_reply_dict[self.update.effective_chat.id]
-        if index is not None:
-            with download_dict_lock:
-                del download_dict[self.message.message_id]
+        with download_dict_lock:
+            del download_dict[self.uid]
         fs_utils.clean_download(progress_status_list[index].path())
         msg = f"@{self.message.from_user.username} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
