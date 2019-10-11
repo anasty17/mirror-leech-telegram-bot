@@ -2,7 +2,7 @@
 This is a telegram bot writen in python for mirroring files on the internet to our beloved Google Drive.
 
 ## Inspiration 
-This project is heavily inspired from @out396 's telegram bot which is written in JS.
+This project is heavily inspired from @out386 's telegram bot which is written in JS.
 
 ## Features supported:
 - Mirroring direct download links to google drive
@@ -70,3 +70,5 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 ```
 python3 -m bot
 ```
+
+###### You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
