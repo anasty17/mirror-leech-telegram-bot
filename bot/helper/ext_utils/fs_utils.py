@@ -22,8 +22,7 @@ def start_cleanup():
 def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
-        for download in aria2.get_downloads():
-            download.remove()
+        aria2.remove_all(True)
         shutil.rmtree(DOWNLOAD_DIR)
         sys.exit(0)
     except KeyboardInterrupt:
