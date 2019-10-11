@@ -77,7 +77,10 @@ def get_download_str():
         return result
 
 
-def get_readable_message(progress_list: list = download_dict.values()):
+def get_readable_message(progress_list: list = None):
+    if progress_list is None:
+        with download_dict_lock:
+            progress_list = list(download_dict.values())
     msg = ''
     for status in progress_list:
         msg += f'<b>Name:</b> {status.name()}\n' \

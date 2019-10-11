@@ -35,7 +35,7 @@ For Debian based distros
 ```
 sudo apt install aria2c
 ```
-For Arch and it's derivatives:
+- For Arch and it's derivatives:
 ```
 sudo pacman -S aria2
 ```
