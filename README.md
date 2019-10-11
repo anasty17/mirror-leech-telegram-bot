@@ -71,4 +71,4 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 python3 -m bot
 ```
 
-###### You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
+Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
