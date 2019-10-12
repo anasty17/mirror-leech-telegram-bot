@@ -1,5 +1,7 @@
 from telegram.message import Message
 from telegram.update import Update
+import time
+from bot import AUTO_DELETE_MESSAGE_DURATION
 
 
 def sendMessage(text: str, context, update: Update):
@@ -17,3 +19,14 @@ def editMessage(text: str, context, message: Message):
 def deleteMessage(context, message: Message):
     context.bot.delete_message(chat_id=message.chat.id,
                                message_id=message.message_id)
+
+
+def auto_delete_message(context, cmd_message: Message, bot_message: Message):
+    if AUTO_DELETE_MESSAGE_DURATION != -1:
+        time.sleep(AUTO_DELETE_MESSAGE_DURATION)
+        try:
+            # Skip if None is passed meaning we don't want to delete bot xor cmd message
+            deleteMessage(context, cmd_message)
+            deleteMessage(context, bot_message)
+        except AttributeError:
+            pass

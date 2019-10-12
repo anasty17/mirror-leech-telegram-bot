@@ -1,16 +1,16 @@
 # What is this repo about?
 This is a telegram bot writen in python for mirroring files on the internet to our beloved Google Drive.
 
-## Inspiration 
+# Inspiration 
 This project is heavily inspired from @out386 's telegram bot which is written in JS.
 
-## Features supported:
+# Features supported:
 - Mirroring direct download links to google drive
 - Download progress
 - Upload progress
 - Download/upload speeds and ETAs
 
-## Upcoming features (TODOs):
+# Upcoming features (TODOs):
 - Mega link mirror support
 - Docker support
 - More code clean up
@@ -54,7 +54,7 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - DOWNLOAD_DIR : The path to the local folder where the downloads should be downloaded to
 - DOWNLOAD_STATUS_UPDATE_INTERVAL : A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it 5 seconds at least)  
 - OWNER_ID : The Telegram user ID (not username) of the owner of the bot
-
+- AUTO_DELETE_MESSAGE_DURATION : Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. Note: Set to -1 to never automatically delete messages 
 ## Getting Google OAuth API credential file
 
 - Visit the Google Cloud Console

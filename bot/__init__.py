@@ -60,6 +60,7 @@ try:
         DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
     OWNER_ID = int(getConfig('OWNER_ID'))
+    AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)

@@ -1,6 +1,8 @@
 from telegram.ext import CommandHandler, run_async
 from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
+from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
+import threading
 
 
 @run_async
@@ -11,12 +13,12 @@ def list_drive(update, context):
     gdrive = GoogleDriveHelper(None)
     msg = gdrive.drive_list(search)
     if msg:
-        context.bot.send_message(chat_id=update.message.chat_id, reply_to_message_id=update.message.message_id,
-                                 text=msg, parse_mode='HTML')
+        reply_message = sendMessage(msg, context, update)
 
     else:
-        context.bot.send_message(chat_id=update.message.chat_id, reply_to_message_id=update.message.message_id,
-                                 text="No Results Found.")
+        reply_message = sendMessage('No result found', context, update)
+
+    threading.Thread(target=auto_delete_message, args=(context, update.message, reply_message)).start()
 
 
 list_handler = CommandHandler('list', list_drive)
