@@ -5,7 +5,7 @@ from googleapiclient.http import MediaFileUpload
 import pickle
 import os
 import time
-from bot import LOGGER, parent_id, DOWNLOAD_DIR
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.exceptions import KillThreadException
@@ -28,13 +28,11 @@ class GoogleDriveHelper:
         self.uploadedBytes = 0
         self.start_time = 0
         self._should_update = True
-        self.event = threading.Event()
         self._do_progress_update = True
         self.status = None
 
     def _on_upload_progress(self):
         while self._do_progress_update:
-            self.event.wait()
             if self.status is not None:
                 time_lapsed = time.time() - self.start_time
                 # Update the message only if status is not null and loop_count is multiple of 50
@@ -54,7 +52,7 @@ class GoogleDriveHelper:
                         self.__listener.onUploadProgress(_list, index)
                     except KillThreadException:
                         self._should_update = False
-            self.event.clear()
+            time.sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
@@ -83,7 +81,6 @@ class GoogleDriveHelper:
         threading.Thread(target=self._on_upload_progress).start()
         while response is None:
             self.status, response = drive_file.next_chunk()
-            self.event.set()
         self._do_progress_update = False
         # Insert new permissions
         self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
