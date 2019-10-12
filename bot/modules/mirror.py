@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler, run_async
 from telegram.error import BadRequest
 from bot.helper.mirror_utils import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher, DOWNLOAD_DIR
-from bot.helper.ext_utils import fs_utils
+from bot.helper.ext_utils import fs_utils, bot_utils
 from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock
 from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus
@@ -110,9 +110,9 @@ def _mirror(update, context, isTar=False):
             else:
                 sendMessage('Only torrent files can be mirrored from telegram', context, update)
                 return
-        else:
-            sendMessage('No download source provided', context, update)
-            return
+    if not bot_utils.is_url(link) and not bot_utils.is_magnet(link):
+        sendMessage('No download source provided', context, update)
+        return
     reply_msg = sendMessage('Starting Download', context, update)
     index = update.effective_chat.id
     with status_reply_dict_lock:
