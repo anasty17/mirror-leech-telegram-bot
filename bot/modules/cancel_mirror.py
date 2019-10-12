@@ -3,7 +3,7 @@ from bot.helper.telegram_helper.message_utils import *
 from bot import download_dict, aria2, dispatcher, download_dict_lock, DOWNLOAD_DIR
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.fs_utils import clean_download
-
+from bot.helper.telegram_helper.bot_commands import BotCommands
 
 @run_async
 def cancel_mirror(update: Update, context):
@@ -37,9 +37,9 @@ def cancel_all(update, context):
     clean_download(DOWNLOAD_DIR)
 
 
-cancel_mirror_handler = CommandHandler('cancel', cancel_mirror,
+cancel_mirror_handler = CommandHandler(BotCommands.CancelMirror, cancel_mirror,
                                        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-cancel_all_handler = CommandHandler('cancelall', cancel_all,
+cancel_all_handler = CommandHandler(BotCommands.CancelAllCommand, cancel_all,
                                     filters=CustomFilters.authorized_user | CustomFilters.authorized_chat)
 dispatcher.add_handler(cancel_all_handler)
 dispatcher.add_handler(cancel_mirror_handler)

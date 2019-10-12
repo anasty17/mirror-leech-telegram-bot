@@ -7,6 +7,7 @@ import time
 from bot.helper.telegram_helper.message_utils import *
 import shutil
 from .helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror
 
 
@@ -38,35 +39,35 @@ def ping(update, context):
 
 @run_async
 def bot_help(update, context):
-    help_string = '''
-/help: To get this message
+    help_string = f'''
+/{BotCommands.HelpCommand}: To get this message
 
-/mirror [download_url][magnet_link]: Start mirroring the link to google drive
+/{BotCommands.MirrorCommand} [download_url][magnet_link]: Start mirroring the link to google drive
 
-/tarmirror [download_url][magnet_link]: start mirroring and upload the archived (.tar) version of the download
+/{BotCommands.TarMirrorCommand} [download_url][magnet_link]: start mirroring and upload the archived (.tar) version of the download
 
-/cancel: Reply to the message by which the download was initiated and that download will be cancelled
+/{BotCommands.CancelMirror} : Reply to the message by which the download was initiated and that download will be cancelled
 
-/status: Shows a status of all the downloads
+/{BotCommands.StatusCommand}: Shows a status of all the downloads
 
-/list [search term]: Searches the search term in the Google drive, if found replies with the link
+/{BotCommands.ListCommand} [search term]: Searches the search term in the Google drive, if found replies with the link
 
-/disk: Show a status of the disk usage of the machine the bot is hosted on
+/{BotCommands.DiskCommand}: Show a status of the disk usage of the machine the bot is hosted on
 
-/authorize: Authorize a chat or a user to use the bot (Can only be invoked by owner of the bot)
+/{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Can only be invoked by owner of the bot)
 '''
     sendMessage(help_string, context, update)
 
 
 def main():
     fs_utils.start_cleanup()
-    start_handler = CommandHandler('start', start,
+    start_handler = CommandHandler(BotCommands.StartCommand, start,
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-    ping_handler = CommandHandler('ping', ping,
+    ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-    help_handler = CommandHandler('help',
+    help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-    disk_handler = CommandHandler('disk',
+    disk_handler = CommandHandler(BotCommands.DiskCommand,
                                   disk_usage, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 
     dispatcher.add_handler(start_handler)

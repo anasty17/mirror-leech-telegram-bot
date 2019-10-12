@@ -8,6 +8,7 @@ from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus
 from bot.helper.ext_utils.exceptions import KillThreadException
 from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
 import threading
 
@@ -101,10 +102,14 @@ def _mirror(update, context, isTar=False):
     LOGGER.info(link)
     link = link.strip()
 
-    if len(link) == 0 and update.message.reply_to_message is not None:
-        document = update.message.reply_to_message.document
-        if document is not None and document.mime_type == "application/x-bittorrent":
-            link = document.get_file().file_path
+    if len(link) == 0:
+        if update.message.reply_to_message is not None:
+            document = update.message.reply_to_message.document
+            if document is not None and document.mime_type == "application/x-bittorrent":
+                link = document.get_file().file_path
+            else:
+                sendMessage('Only torrent files can be mirrored from telegram', context, update)
+                return
         else:
             sendMessage('No download source provided', context, update)
             return
@@ -130,8 +135,8 @@ def tar_mirror(update, context):
     _mirror(update, context, True)
 
 
-mirror_handler = CommandHandler('mirror', mirror, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-tar_mirror_handler = CommandHandler('tarmirror', tar_mirror,
+mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+tar_mirror_handler = CommandHandler(BotCommands.TarMirrorCommand, tar_mirror,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(tar_mirror_handler)

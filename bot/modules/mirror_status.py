@@ -5,7 +5,7 @@ from time import sleep
 from bot.helper.ext_utils.bot_utils import get_readable_message
 from telegram.error import BadRequest
 from bot.helper.telegram_helper.filters import CustomFilters
-
+from bot.helper.telegram_helper.bot_commands import BotCommands
 
 @run_async
 def mirror_status(update: Update, context):
@@ -43,6 +43,6 @@ def mirror_status(update: Update, context):
         sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
 
-mirror_status_handler = CommandHandler('status', mirror_status,
+mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,
                                        filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(mirror_status_handler)

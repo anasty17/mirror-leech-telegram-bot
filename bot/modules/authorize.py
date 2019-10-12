@@ -5,7 +5,7 @@ from telegram.ext import CommandHandler
 from bot.helper.telegram_helper.filters import CustomFilters
 from telegram.ext import Filters
 from telegram import Update
-
+from bot.helper.telegram_helper.bot_commands import BotCommands
 
 @run_async
 def authorize(update: Update, context):
@@ -31,7 +31,7 @@ def authorize(update: Update, context):
         sendMessage(msg, context, update)
 
 
-authorize_handler = CommandHandler(command='authorize', callback=authorize,
+authorize_handler = CommandHandler(command=BotCommands.AuthorizeCommand, callback=authorize,
                                    filters=CustomFilters.owner_filter & Filters.group)
 dispatcher.add_handler(authorize_handler)
 

@@ -90,3 +90,16 @@ def get_readable_message(progress_list: list = None):
                f'<b>ETA:</b> {status.eta()}\n\n'
 #    LOGGER.info(msg)
     return msg
+
+
+def is_url(url: str):
+    # TODO: Find the proper way to validate the url
+    if url.startswith('https://') or url.startswith('http://'):
+        return True
+    return False
+
+
+def is_magnet(url: str):
+    if "magnet" in url:
+        return True
+    return False

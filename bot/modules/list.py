@@ -3,7 +3,7 @@ from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 import threading
-
+from bot.helper.telegram_helper.bot_commands import BotCommands
 
 @run_async
 def list_drive(update, context):
@@ -21,5 +21,5 @@ def list_drive(update, context):
     threading.Thread(target=auto_delete_message, args=(context, update.message, reply_message)).start()
 
 
-list_handler = CommandHandler('list', list_drive)
+list_handler = CommandHandler(BotCommands.ListCommand, list_drive)
 dispatcher.add_handler(list_handler)

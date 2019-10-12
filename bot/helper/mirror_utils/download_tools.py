@@ -11,30 +11,14 @@ class DownloadHelper:
         self.__listener = listener
         self.__is_torrent = False
 
-    def is_url(self, url: str):
-        # TODO: Find the proper way to validate the url
-        if url.startswith('https://') or url.startswith('http://'):
-            return True
-        return False
-
-    def is_magnet(self, url: str):
-        if "magnet" in url:
-            return True
-        else:
-            return False
-
     def add_download(self, link: str):
-        if self.is_url(link):
+        if is_url(link):
             if link.endswith('.torrent'):
                 self.__is_torrent = True
             download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
-        elif self.is_magnet(link):
+        else:
             download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
             self.__is_torrent = True
-        else:
-            _list = get_download_status_list()
-            self.__listener.onDownloadError("No download URL or URL malformed", get_download_status_list(), None)
-            return
         with download_dict_lock:
             download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
                                                                                self.__listener.uid)
