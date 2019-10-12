@@ -117,7 +117,7 @@ def _mirror(update, context, isTar=False):
     message_args = update.message.text.split(' ')
     try:
         link = message_args[1]
-    except KeyError:
+    except IndexError:
         link = ''
     LOGGER.info(link)
     link = link.strip()
