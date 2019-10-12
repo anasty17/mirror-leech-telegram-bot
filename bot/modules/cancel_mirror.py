@@ -30,8 +30,6 @@ def cancel_mirror(update: Update, context):
 @run_async
 def cancel_all(update, context):
     aria2.pause_all(True)
-    with download_dict_lock:
-        download_dict.clear()
     sendMessage('Cancelled all downloads!', context, update)
 
     clean_download(DOWNLOAD_DIR)

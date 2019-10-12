@@ -37,7 +37,11 @@ class MirrorListener(listeners.MirrorListeners):
         if self.isTar:
             with download_dict_lock:
                 download_dict[self.uid].is_archiving = True
-            path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}')
+            try:
+                path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}')
+            except FileNotFoundError:
+                self.onUploadError('Download cancelled!', progress_status_list, index)
+                return
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}'
         name = pathlib.PurePath(path).name
@@ -51,8 +55,15 @@ class MirrorListener(listeners.MirrorListeners):
         LOGGER.error(error)
         with status_reply_dict_lock:
             if len(status_reply_dict) == 1:
-                deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
-            del status_reply_dict[self.update.effective_chat.id]
+                try:
+                    deleteMessage(self.context, status_reply_dict[self.update.effective_chat.id])
+                except KeyError:
+                    pass
+            LOGGER.info(self.update.effective_chat.id)
+            try:
+                del status_reply_dict[self.update.effective_chat.id]
+            except KeyError:
+                pass
         with download_dict_lock:
             del download_dict[self.uid]
         fs_utils.clean_download(progress_status_list[index].path())
@@ -80,7 +91,7 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
-        editMessage(error, self.context, self.reply_message)
+        sendMessage(error, self.context, self.update)
         with download_dict_lock:
             del download_dict[self.message.message_id]
         fs_utils.clean_download(progress_status[index].path())
