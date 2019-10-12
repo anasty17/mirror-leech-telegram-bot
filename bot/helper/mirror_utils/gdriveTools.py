@@ -9,7 +9,7 @@ from bot import LOGGER, parent_id, DOWNLOAD_DIR
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.exceptions import KillThreadException
-
+import threading
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
 
@@ -27,13 +27,41 @@ class GoogleDriveHelper:
         self.__service = self.authorize()
         self.uploadedBytes = 0
         self.start_time = 0
+        self._should_update = True
+        self.event = threading.Event()
+        self._do_progress_update = True
+        self.status = None
+
+    def _on_upload_progress(self):
+        while self._do_progress_update:
+            self.event.wait()
+            if self.status is not None:
+                time_lapsed = time.time() - self.start_time
+                # Update the message only if status is not null and loop_count is multiple of 50
+                chunk_size = self.status.total_size * self.status.progress() - self.uploadedBytes
+                self.uploadedBytes = self.status.total_size * self.status.progress()
+
+                # LOGGER.info(f'{file_name}: {status.progress() * 100}')
+
+                with download_dict_lock:
+                    download_dict[self.__listener.uid].uploaded_bytes += chunk_size
+                    download_dict[self.__listener.uid].upload_time = time_lapsed
+
+                if self._should_update:
+                    try:
+                        _list = get_download_status_list()
+                        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
+                        self.__listener.onUploadProgress(_list, index)
+                    except KillThreadException:
+                        self._should_update = False
+            self.event.clear()
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True,
-                                     chunksize=1024*1024)
+                                     chunksize=50*1024*1024)
         file_metadata = {
             'name': file_name,
             'description': 'mirror',
@@ -52,31 +80,11 @@ class GoogleDriveHelper:
         # Insert a file
         drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
         response = None
-        _list = get_download_status_list()
-        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
-        uploaded_bytes = 0
-        loop_count = 0
-        should_update = True
+        threading.Thread(target=self._on_upload_progress).start()
         while response is None:
-            status, response = drive_file.next_chunk()
-            time_lapsed = time.time() - self.start_time
-            # Update the message only if status is not null and loop_count is multiple of 50
-            if status and loop_count % 50 == 0:
-                chunk_size = status.total_size * status.progress() - uploaded_bytes
-                uploaded_bytes = status.total_size * status.progress()
-
-                # LOGGER.info(f'{file_name}: {status.progress() * 100}')
-
-                with download_dict_lock:
-                    download_dict[self.__listener.uid].uploaded_bytes += chunk_size
-                    download_dict[self.__listener.uid].upload_time = time_lapsed
-                if should_update:
-                    try:
-                        self.__listener.onUploadProgress(_list, index)
-                    except KillThreadException:
-                        should_update = False
-            loop_count += 1
-
+            self.status, response = drive_file.next_chunk()
+            self.event.set()
+        self._do_progress_update = False
         # Insert new permissions
         self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
         # Define file instance and get url for download
