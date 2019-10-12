@@ -66,7 +66,10 @@ class MirrorListener(listeners.MirrorListeners):
                 pass
         with download_dict_lock:
             del download_dict[self.uid]
-        fs_utils.clean_download(progress_status_list[index].path())
+        try:
+            fs_utils.clean_download(progress_status_list[index].path())
+        except FileNotFoundError:
+            pass
         msg = f"@{self.message.from_user.username} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
 
@@ -87,14 +90,20 @@ class MirrorListener(listeners.MirrorListeners):
         except KeyError:
             pass
         sendMessage(msg, self.context, self.update)
-        fs_utils.clean_download(progress_status_list[index].path())
+        try:
+            fs_utils.clean_download(progress_status_list[index].path())
+        except FileNotFoundError:
+            pass
 
     def onUploadError(self, error: str, progress_status: list, index: int):
         LOGGER.error(error)
         sendMessage(error, self.context, self.update)
         with download_dict_lock:
             del download_dict[self.message.message_id]
-        fs_utils.clean_download(progress_status[index].path())
+        try:
+            fs_utils.clean_download(progress_status[index].path())
+        except FileNotFoundError:
+            pass
 
     def onUploadProgress(self, progress: list, index: int):
         msg = get_readable_message(progress)
