@@ -87,6 +87,6 @@ def get_readable_message(progress_list: list = None):
                f'<b>status:</b> {status.status()}\n' \
                f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
                f'<b>Speed:</b> {status.speed()}\n' \
-               f'<b>ETA:</b> {status.eta()}\n'
+               f'<b>ETA:</b> {status.eta()}\n\n'
 #    LOGGER.info(msg)
     return msg

@@ -16,8 +16,10 @@ def cancel_mirror(update: Update, context):
             msg = 'Message has already been cancelled'
         else:
             msg = 'Please reply to the /mirror message which was used to start the download to cancel it!'
-        sendMessage(msg, context, update)
         return
+    else:
+        msg = 'Download cancelled'
+    sendMessage(msg, context, update)
     if len(download.followed_by_ids) != 0:
         downloads = aria2.get_downloads(download.followed_by_ids)
         aria2.pause(downloads)
@@ -28,11 +30,11 @@ def cancel_mirror(update: Update, context):
 @run_async
 def cancel_all(update, context):
     aria2.pause_all(True)
-
     with download_dict_lock:
         download_dict.clear()
-    clean_download(DOWNLOAD_DIR)
     sendMessage('Cancelled all downloads!', context, update)
+
+    clean_download(DOWNLOAD_DIR)
 
 
 cancel_mirror_handler = CommandHandler('cancel', cancel_mirror,
