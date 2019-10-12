@@ -92,6 +92,22 @@ def get_readable_message(progress_list: list = None):
     return msg
 
 
+def get_readable_time(seconds: int) -> str:
+    result = ''
+    (days, remainder) = divmod(seconds, 86400)
+    if days != 0:
+        result += f'{days}d'
+    (hours, remainder) = divmod(remainder, 3600)
+    if hours != 0:
+        result += f'{hours}h'
+    (minutes, seconds) = divmod(remainder, 60)
+    if minutes != 0:
+        result += f'{minutes}m'
+
+    result += f'{seconds}s'
+    return result
+
+
 def is_url(url: str):
     # TODO: Find the proper way to validate the url
     if url.startswith('https://') or url.startswith('http://'):

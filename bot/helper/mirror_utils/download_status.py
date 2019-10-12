@@ -1,5 +1,5 @@
 from bot import aria2, DOWNLOAD_DIR
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
 
 
 def get_download(gid):
@@ -71,7 +71,8 @@ class DownloadStatus:
         self.__update()
         if self.status() == MirrorStatus.STATUS_UPLOADING:
             try:
-                return f'{round((self.__size() - self.uploaded_bytes) / self.__upload_speed(), 2)} seconds'
+                seconds = round((self.__size() - self.uploaded_bytes) / self.__upload_speed(), 2)
+                return f'{get_readable_time(seconds)}'
             except ZeroDivisionError:
                 return '-'
         return self.__download.eta_string()
