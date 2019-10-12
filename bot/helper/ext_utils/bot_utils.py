@@ -84,7 +84,7 @@ def get_readable_message(progress_list: list = None):
     msg = ''
     for status in progress_list:
         msg += f'<b>Name:</b> {status.name()}\n' \
-               f'<b>status:</b> {status.status()}\n' \
+               f'<b>Status:</b> {status.status()}\n' \
                f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
                f'<b>Speed:</b> {status.speed()}\n' \
                f'<b>ETA:</b> {status.eta()}\n\n'
