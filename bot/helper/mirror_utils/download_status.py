@@ -14,8 +14,7 @@ class DownloadStatus:
         self.__gid = gid
         self.__download = get_download(gid)
         self.__uid = message_id
-        self.uploaded_bytes = 0
-        self.upload_time = 0
+        self.upload_helper = None
 
     def __update(self):
         self.__download = get_download(self.__gid)
@@ -26,12 +25,12 @@ class DownloadStatus:
         :return: returns progress in percentage
         """
         self.__update()
-        if self.status() == MirrorStatus.STATUS_UPLOADING:
+        if self.upload_helper is not None:
             return f'{round(self.upload_progress(), 2)}%'
         return self.__download.progress_string()
 
     def upload_progress(self):
-        return self.uploaded_bytes / self.download().total_length * 100
+        return self.upload_helper.uploaded_bytes / self.download().total_length * 100
 
     def __size(self):
         """
@@ -42,17 +41,13 @@ class DownloadStatus:
 
     def __upload_speed(self):
         """
-        Calculates upload speed in bytes/second
         :return: Upload speed in Bytes/Seconds
         """
-        try:
-            return self.uploaded_bytes / self.upload_time
-        except ZeroDivisionError:
-            return 0
+        return self.upload_helper.speed()
 
     def speed(self):
         self.__update()
-        if self.status() == MirrorStatus.STATUS_UPLOADING:
+        if self.upload_helper is not None:
             return f'{get_readable_file_size(self.__upload_speed())}/s'
         return self.__download.download_speed_string()
 
@@ -69,9 +64,9 @@ class DownloadStatus:
 
     def eta(self):
         self.__update()
-        if self.status() == MirrorStatus.STATUS_UPLOADING:
+        if self.upload_helper is not None:
             try:
-                seconds = round((self.__size() - self.uploaded_bytes) / self.__upload_speed(), 2)
+                seconds = (self.__size() - self.upload_helper.uploaded_bytes) / self.__upload_speed()
                 return f'{get_readable_time(seconds)}'
             except ZeroDivisionError:
                 return '-'
@@ -79,20 +74,17 @@ class DownloadStatus:
 
     def status(self):
         self.__update()
-        status = None
         if self.is_archiving:
             status = MirrorStatus.STATUS_ARCHIVING
-        if self.__download.is_waiting:
+        elif self.download().is_waiting:
             status = MirrorStatus.STATUS_WAITING
         elif self.download().is_paused:
             status = MirrorStatus.STATUS_CANCELLED
-        elif self.__download.is_complete:
-            # If download exists and is complete the it must be uploading
-            # otherwise the gid would have been removed from the download_list
+        elif self.upload_helper is not None:
             status = MirrorStatus.STATUS_UPLOADING
         elif self.__download.has_failed:
             status = MirrorStatus.STATUS_FAILED
-        elif self.__download.is_active:
+        else:
             status = MirrorStatus.STATUS_DOWNLOADING
         return status
 

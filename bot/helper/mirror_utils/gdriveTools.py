@@ -25,33 +25,49 @@ class GoogleDriveHelper:
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
         self.__listener = listener
         self.__service = self.authorize()
-        self.uploadedBytes = 0
+        self._file_uploaded_bytes = 0
+        self.uploaded_bytes = 0
         self.start_time = 0
+        self.total_time = 0
         self._should_update = True
-        self._do_progress_update = True
+        self.is_uploading = True
+        self.is_cancelled = False
         self.status = None
 
+    def cancel(self):
+        self.is_cancelled = True
+        self.is_uploading = False
+
+    def speed(self):
+        """
+        It calculates the average upload speed and returns it in bytes/seconds unit
+        :return: Upload speed in bytes/second
+        """
+        try:
+            return self.uploaded_bytes / self.total_time
+        except ZeroDivisionError:
+            return 0
+
     def _on_upload_progress(self):
-        while self._do_progress_update:
+        while self.is_uploading:
             if self.status is not None:
-                time_lapsed = time.time() - self.start_time
-                # Update the message only if status is not null and loop_count is multiple of 50
-                chunk_size = self.status.total_size * self.status.progress() - self.uploadedBytes
-                self.uploadedBytes = self.status.total_size * self.status.progress()
-
-                # LOGGER.info(f'{file_name}: {status.progress() * 100}')
-
-                with download_dict_lock:
-                    download_dict[self.__listener.uid].uploaded_bytes += chunk_size
-                    download_dict[self.__listener.uid].upload_time = time_lapsed
+                chunk_size = self.status.total_size * self.status.progress() - self._file_uploaded_bytes
+                self._file_uploaded_bytes = self.status.total_size * self.status.progress()
+                LOGGER.info(f'Chunk size: {get_readable_file_size(chunk_size)}')
+                self.uploaded_bytes += chunk_size
+                self.total_time += DOWNLOAD_STATUS_UPDATE_INTERVAL
 
                 if self._should_update:
                     try:
+                        LOGGER.info('Updating messages')
                         _list = get_download_status_list()
                         index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
                         self.__listener.onUploadProgress(_list, index)
-                    except KillThreadException:
+                    except KillThreadException as e:
+                        LOGGER.info(f'Stopped calling onDownloadProgress(): {str(e)}')
                         self._should_update = False
+            else:
+                LOGGER.info('status: None')
             time.sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
@@ -78,10 +94,12 @@ class GoogleDriveHelper:
         # Insert a file
         drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
         response = None
-        threading.Thread(target=self._on_upload_progress).start()
+        file_start_time = time.time()
         while response is None:
+            if self.is_cancelled:
+                return None
             self.status, response = drive_file.next_chunk()
-        self._do_progress_update = False
+        self._file_uploaded_bytes = 0
         # Insert new permissions
         self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
         # Define file instance and get url for download
@@ -97,22 +115,28 @@ class GoogleDriveHelper:
         file_path = f"{file_dir}/{file_name}"
         LOGGER.info("Uploading File: " + file_name)
         self.start_time = time.time()
+        threading.Thread(target=self._on_upload_progress).start()
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)
-                g_drive_link = self.upload_file(file_path, file_name, mime_type, parent_id)
+                link = self.upload_file(file_path, file_name, mime_type, parent_id)
+                if link is None:
+                    raise Exception('Upload has been manually cancelled')
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
-                link = g_drive_link
             except Exception as e:
                 LOGGER.error(str(e))
                 e_str = str(e).replace('<', '')
                 e_str = e_str.replace('>', '')
                 self.__listener.onUploadError(e_str, _list, index)
                 return
+            finally:
+                self.is_uploading = False
         else:
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
-                self.upload_dir(file_path, dir_id)
+                result = self.upload_dir(file_path, dir_id)
+                if result is None:
+                    raise Exception('Upload has been manually cancelled!')
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = f"https://drive.google.com/folderview?id={dir_id}"
             except Exception as e:
@@ -121,6 +145,8 @@ class GoogleDriveHelper:
                 e_str = e_str.replace('>', '')
                 self.__listener.onUploadError(e_str, _list, index)
                 return
+            finally:
+                self.is_uploading = False
         LOGGER.info(download_dict)
         self.__listener.onUploadComplete(link, _list, index)
         LOGGER.info("Deleting downloaded file/folder..")
@@ -152,6 +178,8 @@ class GoogleDriveHelper:
         new_id = None
         for item in list_dirs:
             current_file_name = os.path.join(input_directory, item)
+            if self.is_cancelled:
+                return None
             if os.path.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, parent_id)
                 new_id = self.upload_dir(current_file_name, current_dir_id)

@@ -1,5 +1,5 @@
 from telegram.ext import CommandHandler, run_async
-from telegram.error import BadRequest
+from telegram.error import BadRequest, TimedOut
 from bot.helper.mirror_utils import download_tools, gdriveTools, listeners
 from bot import LOGGER, dispatcher, DOWNLOAD_DIR
 from bot.helper.ext_utils import fs_utils, bot_utils
@@ -49,6 +49,8 @@ class MirrorListener(listeners.MirrorListeners):
             download_dict[self.uid].is_archiving = False
             download_dict[self.uid].upload_name = name
         gdrive = gdriveTools.GoogleDriveHelper(self)
+        with download_dict_lock:
+            download_dict[self.uid].upload_helper = gdrive
         gdrive.upload(name)
 
     def onDownloadError(self, error, progress_status_list: list, index: int):
@@ -109,8 +111,10 @@ class MirrorListener(listeners.MirrorListeners):
         msg = get_readable_message(progress)
         try:
             editMessage(msg, self.context, self.reply_message)
-        except BadRequest:
-            raise KillThreadException('Message deleted. Do not call this method from the thread')
+        except BadRequest as e:
+            raise KillThreadException(str(e))
+        except TimedOut:
+            pass
 
 
 def _mirror(update, context, isTar=False):

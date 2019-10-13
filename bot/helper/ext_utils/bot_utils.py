@@ -42,7 +42,7 @@ def get_download_status_list():
 
 def get_progress_bar_string(status):
     if status.status() == MirrorStatus.STATUS_UPLOADING:
-        completed = status.uploaded_bytes / 8
+        completed = status.upload_helper.uploaded_bytes / 8
     else:
         completed = status.download().completed_length / 8
     total = status.download().total_length / 8

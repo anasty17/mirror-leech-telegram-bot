@@ -24,6 +24,10 @@ def cancel_mirror(update: Update, context):
         downloads = aria2.get_downloads(download.followed_by_ids)
         aria2.pause(downloads)
     aria2.pause([download])
+    with download_dict_lock:
+        upload_helper = download_dict[mirror_message.message_id].upload_helper
+    if upload_helper is not None:
+        upload_helper.cancel()
     clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}/')
 
 
