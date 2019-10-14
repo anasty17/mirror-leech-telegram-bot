@@ -65,7 +65,9 @@ class GoogleDriveHelper:
                         self.__listener.onUploadProgress(_list, index)
                     except KillThreadException as e:
                         LOGGER.info(f'Stopped calling onDownloadProgress(): {str(e)}')
-                        self._should_update = False
+                        # TODO: Find a way to know if the Error is actually about message not found and not found
+                        # self._should_update = False
+                        pass
             else:
                 LOGGER.info('status: None')
             time.sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
@@ -94,7 +96,6 @@ class GoogleDriveHelper:
         # Insert a file
         drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
         response = None
-        file_start_time = time.time()
         while response is None:
             if self.is_cancelled:
                 return None
