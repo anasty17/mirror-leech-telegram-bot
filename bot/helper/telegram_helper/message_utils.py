@@ -21,6 +21,13 @@ def deleteMessage(context, message: Message):
                                message_id=message.message_id)
 
 
+def sendLogFile(context, update: Update):
+    with open('log.txt', 'rb') as f:
+        context.bot.send_document(document=f, filename=f.name,
+                                  reply_to_message_id=update.message.message_id,
+                                  chat_id=update.message.chat_id)
+
+
 def auto_delete_message(context, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
         time.sleep(AUTO_DELETE_MESSAGE_DURATION)

@@ -38,6 +38,11 @@ def ping(update, context):
 
 
 @run_async
+def log(update, context):
+    sendLogFile(context, update)
+
+
+@run_async
 def bot_help(update, context):
     help_string = f'''
 /{BotCommands.HelpCommand}: To get this message
@@ -55,6 +60,9 @@ def bot_help(update, context):
 /{BotCommands.DiskCommand}: Show a status of the disk usage of the machine the bot is hosted on
 
 /{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Can only be invoked by owner of the bot)
+
+/{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
+
 '''
     sendMessage(help_string, context, update)
 
@@ -69,11 +77,12 @@ def main():
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     disk_handler = CommandHandler(BotCommands.DiskCommand,
                                   disk_usage, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-
+    log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(disk_handler)
+    dispatcher.add_handler(log_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
