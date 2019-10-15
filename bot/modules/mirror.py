@@ -141,7 +141,10 @@ def _mirror(update, context, isTar=False):
     index = update.effective_chat.id
     with status_reply_dict_lock:
         if index in status_reply_dict.keys():
-            deleteMessage(context, status_reply_dict[index])
+            try:
+                deleteMessage(context, status_reply_dict[index])
+            except BadRequest:
+                pass
         status_reply_dict[index] = reply_msg
     listener = MirrorListener(context, update, reply_msg, isTar)
     aria = download_tools.DownloadHelper(listener)
