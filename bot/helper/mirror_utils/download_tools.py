@@ -41,23 +41,22 @@ class DownloadHelper:
         should_update = True
         if self.__is_torrent:
             # Waiting for the actual gid
-            new_gid = None
-            while new_gid is None:
-                download = self.__get_download()
+            download = self.__get_download()
+            while download.is_complete != True:  # Check every few seconds
+                download = self.__get_download()  
                 if download.has_failed:
                     self.__listener.onDownloadError(download.error_message, status_list, index)
                     return
                 if download.is_paused:
                     self.__listener.onDownloadError("Download cancelled manually by user", status_list, index)
                     return
-                sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
                 if should_update:
                     try:
                         self.__listener.onDownloadProgress(get_download_status_list(), index)
                     except KillThreadException:
                         should_update = False
-                        # Check every few seconds
-                new_gid = self.__get_followed_download_gid()
+                sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)        
+            new_gid = self.__get_followed_download_gid()
             with download_dict_lock:
                 download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid,
                                                                                self.__listener.message.message_id)

@@ -12,3 +12,4 @@ data*
 *.json
 *.pickle
 authorized_chats.txt
+log.txt

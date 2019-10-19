@@ -4,6 +4,7 @@ from bot import download_dict, aria2, dispatcher, download_dict_lock, DOWNLOAD_D
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.ext_utils.fs_utils import clean_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
+from time import sleep
 
 @run_async
 def cancel_mirror(update: Update, context):
@@ -28,6 +29,7 @@ def cancel_mirror(update: Update, context):
         upload_helper = download_dict[mirror_message.message_id].upload_helper
     if upload_helper is not None:
         upload_helper.cancel()
+    sleep(1) #Wait a Second For Aria2 To free Resources. 
     clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}/')
 
 
@@ -35,7 +37,7 @@ def cancel_mirror(update: Update, context):
 def cancel_all(update, context):
     aria2.pause_all(True)
     sendMessage('Cancelled all downloads!', context, update)
-
+    sleep(1) #Wait a Second For Aria2 To free Resources. 
     clean_download(DOWNLOAD_DIR)
 
 
