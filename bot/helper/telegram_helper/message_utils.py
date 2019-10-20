@@ -1,7 +1,8 @@
 from telegram.message import Message
 from telegram.update import Update
 import time
-from bot import AUTO_DELETE_MESSAGE_DURATION
+from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER
+from telegram.error import TimedOut
 
 
 def sendMessage(text: str, context, update: Update):
@@ -11,9 +12,14 @@ def sendMessage(text: str, context, update: Update):
 
 
 def editMessage(text: str, context, message: Message):
-    context.bot.edit_message_text(text=text, message_id=message.message_id,
+    try:
+        context.bot.edit_message_text(text=text, message_id=message.message_id,
                                   chat_id=message.chat.id,
                                   parse_mode='HTMl')
+    except TimedOut as e:
+        LOGGER.error(str(e))
+        pass             
+        
 
 
 def deleteMessage(context, message: Message):
