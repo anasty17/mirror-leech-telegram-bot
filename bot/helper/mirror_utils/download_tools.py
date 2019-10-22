@@ -43,6 +43,8 @@ class DownloadHelper:
             # Waiting for the actual gid
             download = self.__get_download()
             while download.is_complete != True:  # Check every few seconds
+                status_list = get_download_status_list()
+                index = get_download_index(status_list, self.__get_download().gid)
                 download = self.__get_download()  
                 if download.has_failed:
                     self.__listener.onDownloadError(download.error_message, status_list, index)
@@ -55,7 +57,7 @@ class DownloadHelper:
                         self.__listener.onDownloadProgress(get_download_status_list(), index)
                     except KillThreadException:
                         should_update = False
-                sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)        
+                    sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)        
             new_gid = self.__get_followed_download_gid()
             with download_dict_lock:
                 download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid,
@@ -65,6 +67,8 @@ class DownloadHelper:
         previous = None
         download = self.__get_download()
         while not download.is_complete:
+            status_list = get_download_status_list()
+            index = get_download_index(status_list, self.__get_download().gid)
             if download.has_failed:
                 self.__listener.onDownloadError(self.__get_download().error_message, status_list, index)
                 return
@@ -72,8 +76,6 @@ class DownloadHelper:
                 self.__listener.onDownloadError("Download has been canceled", status_list, index)
                 return
             if should_update:
-                status_list = get_download_status_list()
-                index = get_download_index(status_list, self.__get_download().gid)
                 # TODO: Find a better way to differentiate between 2 list of objects
                 progress_str_list = get_download_str()
                 if progress_str_list != previous:
@@ -82,7 +84,7 @@ class DownloadHelper:
                     except KillThreadException:
                         should_update = False
                     previous = progress_str_list
+                    sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
             download = self.__get_download()
-            sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
         self.__listener.onDownloadComplete(status_list, index)

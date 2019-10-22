@@ -47,6 +47,7 @@ class MirrorListener(listeners.MirrorListeners):
         name = pathlib.PurePath(path).name
         with download_dict_lock:
             download_dict[self.uid].is_archiving = False
+            LOGGER.info(f"Upload Name : {name}")
             download_dict[self.uid].upload_name = name
         gdrive = gdriveTools.GoogleDriveHelper(self)
         with download_dict_lock:
@@ -67,7 +68,12 @@ class MirrorListener(listeners.MirrorListeners):
             except KeyError:
                 pass
         with download_dict_lock:
-            del download_dict[self.uid]
+            LOGGER.info(f"Deleting {progress_status_list[index].name()} from download_dict.")
+            try:
+               del download_dict[self.uid]
+            except KeyError as e:
+                LOGGER.info(str(e))
+                pass   
         try:
             fs_utils.clean_download(progress_status_list[index].path())
         except FileNotFoundError:
@@ -79,7 +85,7 @@ class MirrorListener(listeners.MirrorListeners):
         pass
 
     def onUploadComplete(self, link: str, progress_status_list: list, index: int):
-        msg = f'<a href="{link}">{progress_status_list[index].name()}</a>'
+        msg = f'<a href="{link}">{progress_status_list[index].name()}</a> ({progress_status_list[index].size()})'
         with download_dict_lock:
             del download_dict[self.message.message_id]
         try:
