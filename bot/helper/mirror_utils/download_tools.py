@@ -12,13 +12,13 @@ class DownloadHelper:
         self.__is_torrent = False
 
     def add_download(self, link: str):
-        if is_url(link):
+        if is_magnet(link):
+            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
+            self.__is_torrent = True
+        else:
             if link.endswith('.torrent'):
                 self.__is_torrent = True
             download = aria2.add_uris([link], {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
-        else:
-            download = aria2.add_magnet(link, {'dir': DOWNLOAD_DIR + str(self.__listener.uid)})
-            self.__is_torrent = True
         with download_dict_lock:
             download_dict[self.__listener.message.message_id] = DownloadStatus(download.gid,
                                                                                self.__listener.uid)
@@ -60,6 +60,7 @@ class DownloadHelper:
                     sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)        
             new_gid = self.__get_followed_download_gid()
             with download_dict_lock:
+                LOGGER.info(f"{download.name}: Changing GID {download.gid} to {new_gid}")
                 download_dict[self.__listener.message.message_id] = DownloadStatus(new_gid,
                                                                                self.__listener.message.message_id)
 

@@ -1,8 +1,12 @@
 from bot import download_dict, download_dict_lock
 import logging
+import re
 
 LOGGER = logging.getLogger(__name__)
 
+MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
+
+URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 
 class MirrorStatus:
     STATUS_UPLOADING = "Uploading"
@@ -112,13 +116,14 @@ def get_readable_time(seconds: int) -> str:
 
 
 def is_url(url: str):
-    # TODO: Find the proper way to validate the url
-    if url.startswith('https://') or url.startswith('http://'):
+    url = re.findall(URL_REGEX,url)
+    if url:
         return True
-    return False
+    return False    
 
 
 def is_magnet(url: str):
-    if "magnet" in url:
+    magnet = re.findall(MAGNET_REGEX,url)
+    if magnet:
         return True
     return False
