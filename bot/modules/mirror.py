@@ -93,11 +93,11 @@ class MirrorListener(listeners.MirrorListeners):
             with status_reply_dict_lock:
                 del status_reply_dict[self.update.effective_chat.id]
         except BadRequest as e:
-        	LOGGER.error(str(e))
+            LOGGER.error(str(e))
             # This means that the message has been deleted because of a /status command
             pass
         except KeyError as e:
-        	LOGGER.error(str(e))
+            LOGGER.error(str(e))
             pass
         sendMessage(msg, self.context, self.update)
         try:
