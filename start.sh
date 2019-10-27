@@ -1,0 +1,1 @@
+./aria.sh; python -m bot
