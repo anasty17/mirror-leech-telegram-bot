@@ -78,7 +78,11 @@ class MirrorListener(listeners.MirrorListeners):
             fs_utils.clean_download(progress_status_list[index].path())
         except FileNotFoundError:
             pass
-        msg = f"@{self.message.from_user.username} your download has been stopped due to: {error}"
+        if self.message.from_user.username:
+            uname = f"@{self.message.from_user.username}"
+        else:
+            uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>' 
+        msg = f"{uname} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
 
     def onUploadStarted(self, progress_status_list: list, index: int):
