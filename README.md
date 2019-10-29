@@ -33,7 +33,7 @@ pip3 install -r requirements.txt
 - Install aria2
 For Debian based distros
 ```
-sudo apt install aria2c
+sudo apt install aria2
 ```
 - For Arch and it's derivatives:
 ```
@@ -72,3 +72,45 @@ python3 -m bot
 ```
 
 Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
+
+#Deploying on Heroku
+- First Run Bot locally on your computer i.e: Do above steps and get G-Drive Token File( token.pickle )
+- Change Bot Download Dir to /bot/downloads in config.ini file.
+- Install [Heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
+- Login into your heroku account with command:
+```
+heroku login
+```
+- Create a new heroku app:
+```
+heroku create appname	
+```
+- Select This App in your Heroku-cli: 
+```
+heroku git:remote -a appname
+```
+- Change Dyno Stack to a Docker Container:
+```
+heroku stack:set container
+```
+- Add Private Credentials and Config Stuff:
+```
+git add -f credentials.json token.pickle ./bot/config.ini
+```
+- Commit new changes:
+```
+git commit -m "Added Creds."
+```
+- Push Code to Heroku:
+```
+git push heroku master --force
+```
+- Restart Worker by these commands:
+```
+heroku ps:scale worker=0
+```
+```
+heroku ps:scale worker=1	
+``` 	
+
+Heroku-Note: Doing authorizations ( /authorize command ) through telegram wont be permanent as heroku uses ephemeral filesystem. They will be reset on each dyno boot. 
