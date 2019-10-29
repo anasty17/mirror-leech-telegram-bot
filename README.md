@@ -73,7 +73,7 @@ python3 -m bot
 
 Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
 
-#Deploying on Heroku
+## Deploying on Heroku
 - First Run Bot locally on your computer i.e: Do above steps and get G-Drive Token File( token.pickle )
 - Change Bot Download Dir to /bot/downloads in config.ini file.
 - Install [Heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
