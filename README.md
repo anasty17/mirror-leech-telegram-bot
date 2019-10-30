@@ -63,8 +63,11 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - Choose Other and Create.
 - Use the download button to download your credentials.
 - Move that file to the root of mirror-bot, and rename it to credentials.json
-
 ## Deploy
+- Run the script to generate token file for Google Drive:
+```
+python3 generate_drive_token.py
+```
 - Start aria client by `./aria.sh` on linux or running `aria.bat` on Windows (Any issue on Windows is not supported and will be closed immediately)
 - Start the bot by
 ```
