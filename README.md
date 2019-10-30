@@ -9,10 +9,10 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Download progress
 - Upload progress
 - Download/upload speeds and ETAs
+- Docker support
 
 # Upcoming features (TODOs):
 - Mega link mirror support
-- Docker support
 - More code clean up
 
 # How to deploy?
@@ -64,7 +64,7 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - Use the download button to download your credentials.
 - Move that file to the root of mirror-bot, and rename it to credentials.json
 ## Deploy
-- Run the script to generate token file for Google Drive:
+- Run the script to generate token file (token.pickle) for Google Drive:
 ```
 python3 generate_drive_token.py
 ```
@@ -77,7 +77,10 @@ python3 -m bot
 Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
 
 ## Deploying on Heroku
-- First Run Bot locally on your computer i.e: Do above steps and get G-Drive Token File( token.pickle )
+- Run the script to generate token file(token.pickle) for Google Drive:
+```
+python3 generate_drive_token.py
+```
 - Change Bot Download Dir to /bot/downloads in config.ini file.
 - Install [Heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
 - Login into your heroku account with command:
