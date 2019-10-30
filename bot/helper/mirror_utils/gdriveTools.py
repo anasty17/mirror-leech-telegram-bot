@@ -229,7 +229,7 @@ class GoogleDriveHelper:
                     if len(results) >= 20:
                         break
                     msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                           f"</a> ({get_readable_file_size(int(file.get('size')))}) + "\n"
+                           f"</a> ({get_readable_file_size(int(file.get('size')))})" + "\n"
                     results.append(file)
                 else:
                     if len(results) >= 20:
