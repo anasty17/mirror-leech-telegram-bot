@@ -1,5 +1,4 @@
 from telegram.ext import BaseFilter
-from telegram import Update
 from bot import AUTHORIZED_CHATS, OWNER_ID
 
 

@@ -22,22 +22,18 @@ Deploying is pretty much straight forward and is divided into several steps as f
 - Clone this repo:
 ```
 git clone https://github.com/lzzy12/python-aria-mirror-bot mirror-bot/
-```
-
-- Installing requirements
-```
 cd mirror-bot
-pip3 install -r requirements.txt 
 ```
 
-- Install aria2
+- Install requirements
 For Debian based distros
 ```
-sudo apt install aria2
+sudo apt install python3
+sudo snap install docker 
 ```
 - For Arch and it's derivatives:
 ```
-sudo pacman -S aria2
+sudo pacman -S docker python
 ```
 
 ## Setting up config file
@@ -54,7 +50,10 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - DOWNLOAD_DIR : The path to the local folder where the downloads should be downloaded to
 - DOWNLOAD_STATUS_UPDATE_INTERVAL : A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it 5 seconds at least)  
 - OWNER_ID : The Telegram user ID (not username) of the owner of the bot
-- AUTO_DELETE_MESSAGE_DURATION : Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. Note: Set to -1 to never automatically delete messages 
+- AUTO_DELETE_MESSAGE_DURATION : Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. Note: Set to -1 to never automatically delete messages
+
+Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
+ 
 ## Getting Google OAuth API credential file
 
 - Visit the Google Cloud Console
@@ -63,18 +62,24 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - Choose Other and Create.
 - Use the download button to download your credentials.
 - Move that file to the root of mirror-bot, and rename it to credentials.json
-## Deploy
-- Run the script to generate token file (token.pickle) for Google Drive:
+- Finally, run the script to generate token file (token.pickle) for Google Drive:
 ```
 python3 generate_drive_token.py
 ```
-- Start aria client by `./aria.sh` on linux or running `aria.bat` on Windows (Any issue on Windows is not supported and will be closed immediately)
-- Start the bot by
-```
-python3 -m bot
-```
+## Deploying
 
-Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
+- Start docker daemon (skip if already running):
+```
+sudo dockerd
+```
+- Build Docker image:
+```
+sudo docker build . -t mirror-bot
+```
+- Run the image:
+```
+sudo docker run mirror-bot
+```
 
 ## Deploying on Heroku
 - Run the script to generate token file(token.pickle) for Google Drive:
@@ -116,7 +121,13 @@ git push heroku master --force
 heroku ps:scale worker=0
 ```
 ```
-heroku ps:scale worker=1	
-``` 	
-
-Heroku-Note: Doing authorizations ( /authorize command ) through telegram wont be permanent as heroku uses ephemeral filesystem. They will be reset on each dyno boot. 
+heroku ps:scale worker=1	 	
+```
+Heroku-Note: Doing authorizations ( /authorize command ) through telegram wont be permanent as heroku uses ephemeral filesystem. They will be reset on each dyno boot. As a workaround you can:
+- Make a file authorized_chats.txt and write the user names and chat_id of you want to authorize, each separated by new line
+- Then force add authorized_chats.txt to git and push it to heroku
+```
+git add authorized_chats.txt -f
+git commit -asm "Added hardcoded authorized_chats.txt"
+git push heroku heroku:master
+```
