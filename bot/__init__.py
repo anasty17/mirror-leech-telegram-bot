@@ -4,8 +4,9 @@ import aria2p
 import threading
 from telegram.ext import Updater
 import os
+import time
 
-
+botStartTime = time.time()
 if os.path.exists('log.txt'):
     with open('log.txt', 'r+') as f:
         f.truncate(0)

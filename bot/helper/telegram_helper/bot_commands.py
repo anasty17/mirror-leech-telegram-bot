@@ -10,7 +10,7 @@ class _BotCommands:
         self.AuthorizeCommand = 'authorize'
         self.UnAuthorizeCommand = 'unauthorize'
         self.PingCommand = 'ping'
-        self.DiskCommand = 'disk'
+        self.StatsCommand = 'stats'
         self.HelpCommand = 'help'
         self.LogCommand = 'log'
 

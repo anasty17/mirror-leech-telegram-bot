@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, run_async
-from bot import dispatcher, LOGGER, updater
+from bot import dispatcher, LOGGER, updater, botStartTime
 from bot.helper.ext_utils import fs_utils
-from .helper.ext_utils.bot_utils import get_readable_file_size
+from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 import signal
 import time
 from bot.helper.telegram_helper.message_utils import *
@@ -11,16 +11,18 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror
 
 
-@run_async
-def disk_usage(update, context):
+def stats(update, context):
+    currentTime = get_readable_time((time.time() - botStartTime))
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
     used = get_readable_file_size(used)
     free = get_readable_file_size(free)
-    disk_usage_string = f'Total disk space: {total}\n' \
+    stats = f'Bot Uptime: {currentTime}\n' \
+            f'Total disk space: {total}\n' \
                         f'Used: {used}\n' \
                         f'Free: {free}'
-    sendMessage(disk_usage_string, context, update)
+    sendMessage(stats, context, update)
+
 
 
 @run_async
@@ -57,7 +59,7 @@ def bot_help(update, context):
 
 /{BotCommands.ListCommand} [search term]: Searches the search term in the Google drive, if found replies with the link
 
-/{BotCommands.DiskCommand}: Show a status of the disk usage of the machine the bot is hosted on
+/{BotCommands.StatsCommand}: Show Stats of the machine the bot is hosted on
 
 /{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Can only be invoked by owner of the bot)
 
@@ -75,13 +77,13 @@ def main():
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-    disk_handler = CommandHandler(BotCommands.DiskCommand,
-                                  disk_usage, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    stats_handler = CommandHandler(BotCommands.StatsCommand,
+                                  stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
     dispatcher.add_handler(help_handler)
-    dispatcher.add_handler(disk_handler)
+    dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
     updater.start_polling()
     LOGGER.info("Bot Started!")
