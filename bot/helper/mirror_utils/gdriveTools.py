@@ -105,7 +105,7 @@ class GoogleDriveHelper:
         if parent_id is not None:
             file_metadata['parents'] = [parent_id]
 
-        if os.path.getsize(file_path):
+        if os.path.getsize(file_path) == 0:
             media_body = MediaFileUpload(file_path,
                                          mimetype=mime_type,
                                          resumable=False)
