@@ -10,6 +10,7 @@ from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.exceptions import KillThreadException
 import threading
+
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
 
@@ -72,12 +73,10 @@ class GoogleDriveHelper:
                 LOGGER.info('status: None')
             time.sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
 
-    def upload_file(self, file_path, file_name, mime_type, parent_id):
-        # File body description
-        media_body = MediaFileUpload(file_path,
+    def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
+        media_body = MediaFileUpload(path,
                                      mimetype=mime_type,
-                                     resumable=True,
-                                     chunksize=50*1024*1024)
+                                     resumable=False)
         file_metadata = {
             'name': file_name,
             'description': 'mirror',
@@ -85,14 +84,41 @@ class GoogleDriveHelper:
         }
         if parent_id is not None:
             file_metadata['parents'] = [parent_id]
-        # Permissions body description: anyone who has link can upload
-        # Other permissions can be found at https://developers.google.com/drive/v2/reference/permissions
+        return self.__service.files().create(body=file_metadata, media_body=media_body).execute()
+
+    def __set_permission(self, drive_id):
         permissions = {
             'role': 'reader',
             'type': 'anyone',
             'value': None,
             'withLink': True
         }
+        return self.__service.permissions().create(fileId=drive_id, body=permissions).execute()
+
+    def upload_file(self, file_path, file_name, mime_type, parent_id):
+        # File body description
+        file_metadata = {
+            'name': file_name,
+            'description': 'mirror',
+            'mimeType': mime_type,
+        }
+        if parent_id is not None:
+            file_metadata['parents'] = [parent_id]
+
+        if os.path.getsize(file_path):
+            media_body = MediaFileUpload(file_path,
+                                         mimetype=mime_type,
+                                         resumable=False)
+            response = self.__service.files().create(body=file_metadata, media_body=media_body).execute()
+            self.__set_permission(response['id'])
+            drive_file = self.__service.files().get(fileId=response['id']).execute()
+            download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+            return download_url
+        media_body = MediaFileUpload(file_path,
+                                     mimetype=mime_type,
+                                     resumable=True,
+                                     chunksize=50*1024*1024)
+
         # Insert a file
         drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
         response = None
@@ -102,7 +128,7 @@ class GoogleDriveHelper:
             self.status, response = drive_file.next_chunk()
         self._file_uploaded_bytes = 0
         # Insert new permissions
-        self.__service.permissions().create(fileId=response['id'], body=permissions).execute()
+        self.__set_permission(response['id'])
         # Define file instance and get url for download
         drive_file = self.__service.files().get(fileId=response['id']).execute()
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
@@ -154,12 +180,6 @@ class GoogleDriveHelper:
         return link
 
     def create_directory(self, directory_name, parent_id):
-        permissions = {
-            "role": "reader",
-            "type": "anyone",
-            "value": None,
-            "withLink": True
-        }
         file_metadata = {
             "name": directory_name,
             "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
@@ -168,7 +188,7 @@ class GoogleDriveHelper:
             file_metadata["parents"] = [parent_id]
         file = self.__service.files().create(body=file_metadata).execute()
         file_id = file.get("id")
-        self.__service.permissions().create(fileId=file_id, body=permissions).execute()
+        self.__set_permission(file_id)
         LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
         return file_id
 
@@ -222,10 +242,11 @@ class GoogleDriveHelper:
             response = self.__service.files().list(q=query,
                                                    spaces='drive',
                                                    fields='nextPageToken, files(id, name, mimeType, size)',
-                                                   pageToken=page_token, 
+                                                   pageToken=page_token,
                                                    orderBy='modifiedTime desc').execute()
             for file in response.get('files', []):
-                if file.get('mimeType') == "application/vnd.google-apps.folder": # Detect Whether Current Entity is a Folder or File.
+                if file.get(
+                        'mimeType') == "application/vnd.google-apps.folder":  # Detect Whether Current Entity is a Folder or File.
                     if len(results) >= 20:
                         break
                     msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
@@ -240,5 +261,5 @@ class GoogleDriveHelper:
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break
-        del results        
+        del results
         return msg
