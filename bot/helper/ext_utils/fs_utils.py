@@ -3,7 +3,7 @@ from bot import aria2, LOGGER, DOWNLOAD_DIR
 import shutil
 import os
 import pathlib
-import mimetypes
+import mimelib
 
 
 def clean_download(path: str):
@@ -39,6 +39,7 @@ def tar(orig_path: str):
 
 
 def get_mime_type(file_path):
-    mime_type = mimetypes.guess_type(file_path)[0]
+    mime_type = mimelib.url(file_path).mime_type
     mime_type = mime_type if mime_type else "text/plain"
     return mime_type
+
