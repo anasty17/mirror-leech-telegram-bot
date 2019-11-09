@@ -42,7 +42,7 @@ class DownloadHelper:
         if self.__is_torrent:
             # Waiting for the actual gid
             download = self.__get_download()
-            while download.is_complete:  # Check every few seconds
+            while not download.is_complete:  # Check every few seconds
                 status_list = get_download_status_list()
                 index = get_download_index(status_list, self.__get_download().gid)
                 download = self.__get_download()  
