@@ -81,17 +81,16 @@ def get_download_str():
         return result
 
 
-def get_readable_message(progress_list: list = None):
-    if progress_list is None:
-        with download_dict_lock:
-            progress_list = list(download_dict.values())
+def get_readable_message():
+    with download_dict_lock:
+        progress_list = list(download_dict.values())
     msg = ''
-    for status in progress_list:
-        msg += f'<b>Name:</b> {status.name()}\n' \
-               f'<b>Status:</b> {status.status()}\n' \
-               f'<code>{get_progress_bar_string(status)}</code> {status.progress()} of {status.size()}\n' \
-               f'<b>Speed:</b> {status.speed()}\n' \
-               f'<b>ETA:</b> {status.eta()}\n\n'
+    for download in progress_list:
+        msg += f'<b>Name:</b> {download.name()}\n' \
+               f'<b>Status:</b> {download.status()}\n' \
+               f'<code>{get_progress_bar_string(download)}</code> {download.progress()} of {download.size()}\n' \
+               f'<b>Speed:</b> {download.speed()}\n' \
+               f'<b>ETA:</b> {download.eta()}\n\n'
 #    LOGGER.info(msg)
     return msg
 

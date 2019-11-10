@@ -1,7 +1,9 @@
 from telegram.message import Message
 from telegram.update import Update
 import time
-from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER
+from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, bot, \
+    status_reply_dict, status_reply_dict_lock, download_dict_lock, download_dict
+from bot.helper.ext_utils.bot_utils import get_readable_message
 from telegram.error import TimedOut
 
 
@@ -11,15 +13,14 @@ def sendMessage(text: str, context, update: Update):
                                     text=text, parse_mode='HTMl')
 
 
-def editMessage(text: str, context, message: Message):
+def editMessage(text: str, message: Message):
     try:
-        context.bot.edit_message_text(text=text, message_id=message.message_id,
-                                  chat_id=message.chat.id,
-                                  parse_mode='HTMl')
+        bot.edit_message_text(text=text, message_id=message.message_id,
+                              chat_id=message.chat.id,
+                              parse_mode='HTMl')
     except TimedOut as e:
         LOGGER.error(str(e))
-        pass             
-        
+        pass
 
 
 def deleteMessage(context, message: Message):
@@ -43,3 +44,10 @@ def auto_delete_message(context, cmd_message: Message, bot_message: Message):
             deleteMessage(context, bot_message)
         except AttributeError:
             pass
+
+
+def update_all_messages():
+    msg = get_readable_message()
+    with status_reply_dict_lock:
+        for message in list(status_reply_dict.values()):
+            editMessage(msg, message)

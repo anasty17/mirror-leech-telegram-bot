@@ -1,52 +1,44 @@
 from telegram.ext import CommandHandler, run_async
 from telegram.error import BadRequest, TimedOut
-from bot.helper.mirror_utils import download_tools, gdriveTools, listeners
+from bot.helper.mirror_utils import aria2_download, gdriveTools, listeners
 from bot import LOGGER, dispatcher, DOWNLOAD_DIR
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock
 from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus
-from bot.helper.ext_utils.exceptions import KillThreadException
+from bot.helper.ext_utils.exceptions import MessageDeletedError
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
-import threading
 
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, context, update, isTar=False):
         super().__init__(context, update)
         self.isTar = isTar
+        self.reply_message = None
 
-    def onDownloadStarted(self, link):
-        LOGGER.info(f"Adding link: {link}")
-        self.reply_message = sendMessage(bot_utils.get_readable_message(), self.context, self.update)    
+    def onDownloadStarted(self):
+        self.reply_message = sendMessage(bot_utils.get_readable_message(), self.context, self.update)
         with status_reply_dict_lock:
             status_reply_dict[self.update.effective_chat.id] = self.reply_message
 
-    def onDownloadProgress(self, progress_status_list: list, index: int):
-        msg = get_readable_message(progress_status_list)
-        if progress_status_list[index].status() == MirrorStatus.STATUS_CANCELLED:
-            editMessage(msg, self.context, self.reply_message)
-            raise KillThreadException('Mirror cancelled by user')
-        # LOGGER.info("Editing message")
-        try:
-            editMessage(msg, self.context, self.reply_message)
-        except BadRequest:
-            raise KillThreadException('Message deleted. Terminate thread')
+    def onDownloadProgress(self):
+        # We are handling this on our own!
+        pass
 
-    def onDownloadComplete(self, progress_status_list, index: int):
-        LOGGER.info(f"Download completed: {progress_status_list[index].name()}")
-        if self.isTar:
-            with download_dict_lock:
+    def onDownloadComplete(self):
+        with download_dict_lock:
+            LOGGER.info(f"Download completed: {download_dict[self.uid].name()}")
+            if self.isTar:
                 download_dict[self.uid].is_archiving = True
-            try:
-                path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}')
-            except FileNotFoundError:
-                self.onUploadError('Download cancelled!', progress_status_list, index)
-                return
-        else:
-            path = f'{DOWNLOAD_DIR}{self.uid}/{progress_status_list[index].name()}'
+                try:
+                    path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}')
+                except FileNotFoundError:
+                    self.onUploadError('Download cancelled!', download_dict, self.uid)
+                    return
+            else:
+                path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
         name = pathlib.PurePath(path).name
         with download_dict_lock:
             download_dict[self.uid].is_archiving = False
@@ -57,7 +49,7 @@ class MirrorListener(listeners.MirrorListeners):
             download_dict[self.uid].upload_helper = gdrive
         gdrive.upload(name)
 
-    def onDownloadError(self, error, progress_status_list: list, index: int):
+    def onDownloadError(self, error):
         LOGGER.error(error)
         with status_reply_dict_lock:
             if len(status_reply_dict) == 1:
@@ -70,21 +62,20 @@ class MirrorListener(listeners.MirrorListeners):
                 del status_reply_dict[self.update.effective_chat.id]
             except KeyError:
                 pass
-        with download_dict_lock:
-            LOGGER.info(f"Deleting {progress_status_list[index].name()} from download_dict.")
-            try:
-               del download_dict[self.uid]
-            except KeyError as e:
-                LOGGER.info(str(e))
-                pass   
         try:
-            fs_utils.clean_download(progress_status_list[index].path())
+            with download_dict_lock:
+                LOGGER.info(f"Deleting folder: {download_dict[self.uid].path()}")
+                fs_utils.clean_download(download_dict[self.uid].path())
+                LOGGER.info(f"Deleting {download_dict[self.uid].name()} from download_dict.")
+                del download_dict[self.uid]
         except FileNotFoundError:
             pass
+        except KeyError as e:
+            LOGGER.info(str(e))
         if self.message.from_user.username:
             uname = f"@{self.message.from_user.username}"
         else:
-            uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>' 
+            uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
         msg = f"{uname} your download has been stopped due to: {error}"
         sendMessage(msg, self.context, self.update)
 
@@ -127,7 +118,7 @@ class MirrorListener(listeners.MirrorListeners):
         try:
             editMessage(msg, self.context, self.reply_message)
         except BadRequest as e:
-            raise KillThreadException(str(e))
+            raise MessageDeletedError(str(e))
         except TimedOut:
             pass
 
@@ -160,10 +151,10 @@ def _mirror(update, context, isTar=False):
             except BadRequest:
                 pass
     listener = MirrorListener(context, update, isTar)
-    aria = download_tools.DownloadHelper(listener)
-    t = threading.Thread(target=aria.add_download, args=(link,))
-    t.start()
-
+    aria = aria2_download.AriaDownloadHelper(listener)
+    with download_dict_lock:
+        download_dict[listener.uid] = aria
+    aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
 
 @run_async
 def mirror(update, context):
@@ -175,7 +166,8 @@ def tar_mirror(update, context):
     _mirror(update, context, True)
 
 
-mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 tar_mirror_handler = CommandHandler(BotCommands.TarMirrorCommand, tar_mirror,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 dispatcher.add_handler(mirror_handler)

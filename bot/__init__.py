@@ -3,6 +3,7 @@ import configparser
 import aria2p
 import threading
 from telegram.ext import Updater
+from telegram import Bot
 import os
 import time
 
@@ -72,5 +73,6 @@ except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
+bot = Bot(BOT_TOKEN)
 updater = Updater(token=BOT_TOKEN, use_context=True)
 dispatcher = updater.dispatcher

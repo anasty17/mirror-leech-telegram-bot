@@ -8,7 +8,7 @@ import time
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
-from bot.helper.ext_utils.exceptions import KillThreadException
+from bot.helper.ext_utils.exceptions import MessageDeletedError
 import threading
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
@@ -64,7 +64,7 @@ class GoogleDriveHelper:
                         _list = get_download_status_list()
                         index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
                         self.__listener.onUploadProgress(_list, index)
-                    except KillThreadException as e:
+                    except MessageDeletedError as e:
                         LOGGER.info(f'Stopped calling onDownloadProgress(): {str(e)}')
                         # TODO: Find a way to know if the Error is actually about message not found and not found
                         # self._should_update = False
