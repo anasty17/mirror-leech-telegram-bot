@@ -6,13 +6,15 @@ from bot.helper.ext_utils.bot_utils import get_readable_message
 from telegram.error import BadRequest
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
+import threading
 
 @run_async
 def mirror_status(update: Update, context):
     message = get_readable_message()
     if len(message) == 0:
         message = "No active downloads"
-        sendMessage(message, context, update)
+        reply_message = sendMessage(message, context, update)
+        threading.Thread(target=auto_delete_message, args=(context, update.message, reply_message)).start()
         return
     index = update.effective_chat.id
     with status_reply_dict_lock:
@@ -27,6 +29,7 @@ def mirror_status(update: Update, context):
                 if len(message) == 0:
                     message = "No active downloads"
                     editMessage(message, context, status_reply_dict[index])
+                    threading.Thread(target=auto_delete_message, args=(context, update.message,status_reply_dict[index])).start()
                     break
                 try:
                     editMessage(message, context, status_reply_dict[index])

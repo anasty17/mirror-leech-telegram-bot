@@ -14,12 +14,15 @@ import threading
 
 
 class MirrorListener(listeners.MirrorListeners):
-    def __init__(self, context, update, reply_message, isTar=False):
-        super().__init__(context, update, reply_message)
+    def __init__(self, context, update, isTar=False):
+        super().__init__(context, update)
         self.isTar = isTar
 
     def onDownloadStarted(self, link):
-        LOGGER.info("Adding link: " + link)
+        LOGGER.info(f"Adding link: {link}")
+        self.reply_message = sendMessage(bot_utils.get_readable_message(), self.context, self.update)    
+        with status_reply_dict_lock:
+            status_reply_dict[self.update.effective_chat.id] = self.reply_message
 
     def onDownloadProgress(self, progress_status_list: list, index: int):
         msg = get_readable_message(progress_status_list)
@@ -149,7 +152,6 @@ def _mirror(update, context, isTar=False):
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link):
         sendMessage('No download source provided', context, update)
         return
-    reply_msg = sendMessage('Starting Download', context, update)
     index = update.effective_chat.id
     with status_reply_dict_lock:
         if index in status_reply_dict.keys():
@@ -157,8 +159,7 @@ def _mirror(update, context, isTar=False):
                 deleteMessage(context, status_reply_dict[index])
             except BadRequest:
                 pass
-        status_reply_dict[index] = reply_msg
-    listener = MirrorListener(context, update, reply_msg, isTar)
+    listener = MirrorListener(context, update, isTar)
     aria = download_tools.DownloadHelper(listener)
     t = threading.Thread(target=aria.add_download, args=(link,))
     t.start()

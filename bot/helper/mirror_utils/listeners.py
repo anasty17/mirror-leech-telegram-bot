@@ -1,10 +1,9 @@
 class MirrorListeners:
-    def __init__(self, context, update, reply_message):
+    def __init__(self, context, update):
         self.context = context
         self.update = update
         self.message = update.message
         self.uid = self.message.message_id
-        self.reply_message = reply_message
 
     def onDownloadStarted(self, link: str):
         raise NotImplementedError
