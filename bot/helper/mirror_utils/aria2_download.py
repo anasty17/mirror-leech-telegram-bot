@@ -76,7 +76,7 @@ class AriaDownloadHelper(DownloadHelper):
             if download.name.endswith('.torrent'):
                 self.__is_torrent = True
         self.gid = download.gid
-        aria2.listen_to_notifications(threaded=True, on_download_start=self._listener.onDownloadStarted,
+        aria2.listen_to_notifications(threaded=True, on_download_start=self.__onDownloadStarted,
                                       on_download_error=self.__onDownloadError,
                                       on_download_complete=self.__onDownloadComplete)
         threading.Thread(target=self.__updater).start()
