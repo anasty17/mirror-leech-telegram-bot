@@ -1,10 +1,10 @@
 import logging
 import aria2p
 import threading
-import telegram.ext as tg
-from telegram import Bot
 import os
-import configparser
+from dotenv import load_dotenv
+from telegram import Bot
+import telegram.ext as tg
 import time
 
 botStartTime = time.time()
@@ -16,13 +16,12 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
                     level=logging.INFO)
 
-config = configparser.ConfigParser()
-config.read('bot/config.ini')
+load_dotenv('config.env')
 
 Interval = []
 
 def getConfig(name: str):
-    return config['DEFAULT'][name]
+    return os.environ[name]
 
 
 LOGGER = logging.getLogger(__name__)
@@ -75,7 +74,7 @@ except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
-bot  = Bot(BOT_TOKEN)
+bot = Bot(BOT_TOKEN)
 updater = tg.Updater(token=BOT_TOKEN)
 dispatcher = updater.dispatcher
 
