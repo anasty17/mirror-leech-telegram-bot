@@ -38,7 +38,7 @@ sudo pacman -S docker python
 
 ## Setting up config file
 ```
-cp bot/config_sample.ini bot/config.ini
+cp config_sample.env config.env
 ```
 - Remove the first line saying:
 ```
@@ -87,7 +87,6 @@ sudo docker run mirror-bot
 ```
 python3 generate_drive_token.py
 ```
-- Change Bot Download Dir to /bot/downloads in config.ini file.
 - Install [Heroku cli](https://devcenter.heroku.com/articles/heroku-cli)
 - Login into your heroku account with command:
 ```
@@ -107,7 +106,7 @@ heroku stack:set container
 ```
 - Add Private Credentials and Config Stuff:
 ```
-git add -f credentials.json token.pickle ./bot/config.ini
+git add -f credentials.json token.pickle config.env
 ```
 - Commit new changes:
 ```

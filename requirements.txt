@@ -10,3 +10,4 @@ uritemplate>=3.0.0
 urllib3>=1.23
 aria2p
 mimelib
+python-dotenv>=0.10

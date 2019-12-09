@@ -1,10 +1,9 @@
 import logging
-import configparser
 import aria2p
 import threading
 from telegram.ext import Updater
-from telegram import Bot
 import os
+from dotenv import load_dotenv
 import time
 
 botStartTime = time.time()
@@ -16,12 +15,11 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
                     level=logging.INFO)
 
-config = configparser.ConfigParser()
-config.read('bot/config.ini')
+load_dotenv('config.env')
 
 
 def getConfig(name: str):
-    return config['DEFAULT'][name]
+    return os.environ[name]
 
 
 LOGGER = logging.getLogger(__name__)
