@@ -4,11 +4,11 @@ import time
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, bot, \
     status_reply_dict, status_reply_dict_lock, download_dict_lock, download_dict
 from bot.helper.ext_utils.bot_utils import get_readable_message
-from telegram.error import TimedOut
+from telegram.error import TimedOut, BadRequest
+from bot import bot
 
-
-def sendMessage(text: str, context, update: Update):
-    return context.bot.send_message(update.message.chat_id,
+def sendMessage(text: str, bot, update: Update):
+    return bot.send_message(update.message.chat_id,
                                     reply_to_message_id=update.message.message_id,
                                     text=text, parse_mode='HTMl')
 
@@ -23,31 +23,62 @@ def editMessage(text: str, message: Message):
         pass
 
 
-def deleteMessage(context, message: Message):
-    context.bot.delete_message(chat_id=message.chat.id,
+def deleteMessage(bot, message: Message):
+    try:
+        bot.delete_message(chat_id=message.chat.id,
                                message_id=message.message_id)
+    except Exception as e:
+        LOGGER.error(str(e))
 
 
-def sendLogFile(context, update: Update):
+def sendLogFile(bot, update: Update):
     with open('log.txt', 'rb') as f:
-        context.bot.send_document(document=f, filename=f.name,
+        bot.send_document(document=f, filename=f.name,
                                   reply_to_message_id=update.message.message_id,
                                   chat_id=update.message.chat_id)
 
 
-def auto_delete_message(context, cmd_message: Message, bot_message: Message):
+def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
         time.sleep(AUTO_DELETE_MESSAGE_DURATION)
         try:
             # Skip if None is passed meaning we don't want to delete bot xor cmd message
-            deleteMessage(context, cmd_message)
-            deleteMessage(context, bot_message)
+            deleteMessage(bot, cmd_message)
+            deleteMessage(bot, bot_message)
         except AttributeError:
             pass
 
+def delete_all_messages():
+    with status_reply_dict_lock:
+        for message in list(status_reply_dict.values()):
+            try:
+                deleteMessage(bot, message)
+                del status_reply_dict[message.chat.id]
+            except BadRequest as e:
+                LOGGER.info(str(e))
+                del status_reply_dict[message.chat.id]
+                pass
 
 def update_all_messages():
     msg = get_readable_message()
     with status_reply_dict_lock:
         for message in list(status_reply_dict.values()):
-            editMessage(msg, message)
+            try:
+                editMessage(msg,message)
+            except:
+                pass
+
+def sendStatusMessage(msg,bot):
+    progress = get_readable_message()
+    with status_reply_dict_lock:
+        if msg.message.chat.id in list(status_reply_dict.keys()):
+            try:
+                message = status_reply_dict[msg.message.chat.id]
+                deleteMessage(bot,message)
+                del status_reply_dict[msg.message.chat.id]
+            except Exception as e:
+                LOGGER.error(str(e))
+                del status_reply_dict[msg.message.chat.id]
+                pass
+        message = sendMessage(progress,bot,msg)
+        status_reply_dict[msg.message.chat.id] = message

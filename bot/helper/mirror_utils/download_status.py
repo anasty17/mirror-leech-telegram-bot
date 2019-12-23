@@ -8,13 +8,16 @@ def get_download(gid):
 
 class DownloadStatus:
 
-    def __init__(self, gid, message_id):
+    def __init__(self, gid, listener):
         self.upload_name = None
         self.is_archiving = False
         self.__gid = gid
         self.__download = get_download(gid)
-        self.__uid = message_id
+        self.__uid = listener.uid
+        self._listener = listener
         self.upload_helper = None
+        self.last = None
+        self.is_waiting = False
 
     def __update(self):
         self.__download = get_download(self.__gid)
@@ -54,6 +57,7 @@ class DownloadStatus:
     def name(self):
         if self.upload_name is not None:
             return self.upload_name
+        self.__update()
         return self.__download.name
 
     def path(self):

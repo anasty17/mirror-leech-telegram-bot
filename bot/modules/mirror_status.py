@@ -9,41 +9,20 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 import threading
 
 @run_async
-def mirror_status(update: Update, context):
+def mirror_status(bot,update):
     message = get_readable_message()
     if len(message) == 0:
         message = "No active downloads"
-        reply_message = sendMessage(message, context, update)
-        threading.Thread(target=auto_delete_message, args=(context, update.message, reply_message)).start()
+        reply_message = sendMessage(message, bot, update)
+        threading.Thread(target=auto_delete_message, args=(bot, update.message, reply_message)).start()
         return
     index = update.effective_chat.id
     with status_reply_dict_lock:
         if index in status_reply_dict.keys():
-            deleteMessage(context, status_reply_dict[index])
+            deleteMessage(bot, status_reply_dict[index])
             del status_reply_dict[index]
-    kill_thread = False
-    while len(message) != 0:
-        message = get_readable_message()
-        with status_reply_dict_lock:
-            if index in status_reply_dict.keys():
-                if len(message) == 0:
-                    message = "No active downloads"
-                    editMessage(message, context, status_reply_dict[index])
-                    threading.Thread(target=auto_delete_message, args=(context, update.message,status_reply_dict[index])).start()
-                    break
-                try:
-                    editMessage(message, context, status_reply_dict[index])
-                except BadRequest:
-                    break
-            else:
-                # If the loop returns here 2nd time, it means the message
-                # has been replaced by a new message due to a second /status command in the chat.
-                # So we kill the thread by simply breaking the loop
-                if kill_thread:
-                    break
-                status_reply_dict[index] = sendMessage(message, context, update)
-                kill_thread = True
-        sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
+    sendStatusMessage(update,bot)
+    deleteMessage(bot,update.message)
 
 
 mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,

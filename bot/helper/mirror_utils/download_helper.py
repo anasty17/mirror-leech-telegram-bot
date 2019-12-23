@@ -3,12 +3,12 @@ import threading
 
 
 class MethodNotImplementedError(NotImplementedError):
-    def __int__(self):
+    def __init__(self):
         super(self, 'Not implemented method')
 
 
 class DownloadHelper:
-    def __int__(self, listener):
+    def __init__(self):
         self.name = ''  # Name of the download; empty string if no download has been started
         self.size = 0.0  # Size of the download
         self.downloaded_bytes = 0.0  # Bytes downloaded
@@ -16,8 +16,7 @@ class DownloadHelper:
         self.progress = 0.0
         self.progress_string = '0.00%'
         self.eta = 0  # Estimated time of download complete
-        self.eta_string = '0s'
-        self._listener = listener  # A listener class which have event callbacks
+        self.eta_string = '0s' # A listener class which have event callbacks
         self._resource_lock = threading.Lock()
 
     def add_download(self, link: str, path):

@@ -1,90 +1,71 @@
-from bot import DOWNLOAD_STATUS_UPDATE_INTERVAL, aria2
+from bot import DOWNLOAD_STATUS_UPDATE_INTERVAL, aria2, Interval
 from bot.helper.ext_utils.bot_utils import *
 from .download_helper import DownloadHelper
 from .download_status import DownloadStatus
+from bot.helper.telegram_helper.message_utils import *
+from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
 import threading
 from aria2p import API, ClientException
 import schedule
 import time
 
-
 class AriaDownloadHelper(DownloadHelper):
 
-    def __init__(self, listener):
-        super(AriaDownloadHelper, self).__init__(listener)
-        self.__is_torrent = False
+    def __init__(self,listener):
         self.gid = None
-        self.__scheduler = schedule.every(DOWNLOAD_STATUS_UPDATE_INTERVAL).seconds.do(self.__onDownloadProgress())
-
-    def __updater(self):
-        while True:
-            with self._resource_lock:
-                if self.__scheduler is None:
-                    break
-            schedule.run_pending()
-            time.sleep(1)
+        self._listener = listener
+        self._resource_lock = threading.Lock()
 
     def __onDownloadStarted(self, api, gid):
         with self._resource_lock:
             if self.gid == gid:
                 download = api.get_download(gid)
                 self.name = download.name
-                self.size = download.length
-                self._listener.onDownloadStarted()
-                self.should_update = True
-
-    def __onDownloadProgress(self):
-        with self._resource_lock:
-            download = aria2.get_download(self.gid)
-            self.progress = download.progress
-            self.progress_string = download.progress_string
-            self.eta_string = download.eta_string
-            self.eta = download.eta
+                update_all_messages()
 
     def __onDownloadComplete(self, api: API, gid):
         with self._resource_lock:
             if self.gid == gid:
-                if self.__is_torrent:
-                    self.__is_torrent = False
+                if api.get_download(gid).followed_by_ids:
                     self.gid = api.get_download(gid).followed_by_ids[0]
+                    download_dict[self._listener.uid] = DownloadStatus(self.gid,self._listener)                 
+                    update_all_messages()
                     LOGGER.info(f'Changed gid from {gid} to {self.gid}')
                 else:
-                    self._listener.onDownloadComplete()
-                    self.__scheduler = None
+                    self._listener.onDownloadComplete() 
 
     def __onDownloadPause(self, api, gid):
         if self.gid == gid:
+            LOGGER.info("Called onDownloadPause")
             self._listener.onDownloadError('Download stopped by user!')
 
     def __onDownloadStopped(self, api, gid):
         if self.gid == gid:
-            self._listener.onDownloadError()
+            LOGGER.info("Called on_download_stop")
 
     def __onDownloadError(self, api, gid):
         with self._resource_lock:
             if self.gid == gid:
                 download = api.get_download(gid)
                 error = download.error_message
+                LOGGER.info(f"Download Error: {error}")
                 self._listener.onDownloadError(error)
 
     def add_download(self, link: str, path):
         if is_magnet(link):
             download = aria2.add_magnet(link, {'dir': path})
-            self.__is_torrent = True
         else:
             download = aria2.add_uris([link], {'dir': path})
-            if download.name.endswith('.torrent'):
-                self.__is_torrent = True
         self.gid = download.gid
+        with download_dict_lock:
+            download_dict[self._listener.uid] = DownloadStatus(self.gid,self._listener)
+        if download.error_message:
+            self._listener.onDownloadError(download.error_message)
+            return 
+        LOGGER.info(f"Started: {self.gid} DIR:{download.dir} ")
         aria2.listen_to_notifications(threaded=True, on_download_start=self.__onDownloadStarted,
-                                      on_download_error=self.__onDownloadError,
-                                      on_download_complete=self.__onDownloadComplete)
-        threading.Thread(target=self.__updater).start()
+                                    on_download_error=self.__onDownloadError,
+                                    on_download_pause=self.__onDownloadPause,
+                                    on_download_stop=self.__onDownloadStopped,
+                                    on_download_complete=self.__onDownloadComplete)
 
-    def cancel_download(self):
-        # Returns None if successfully cancelled, else error string
-        download = aria2.get_download(self.gid)
-        try:
-            download.pause(force=True)
-        except ClientException:
-            return 'Unable to cancel download! Internal error.'

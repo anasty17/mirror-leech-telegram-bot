@@ -140,9 +140,9 @@ class GoogleDriveHelper:
         self.__listener.onUploadStarted(_list, index)
         file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
         file_path = f"{file_dir}/{file_name}"
-        LOGGER.info("Uploading File: " + file_name)
+        LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
-        threading.Thread(target=self._on_upload_progress).start()
+        #threading.Thread(target=self._on_upload_progress).start()
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)

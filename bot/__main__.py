@@ -8,10 +8,10 @@ from bot.helper.telegram_helper.message_utils import *
 import shutil
 from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror,eval, shell,lydia
 
 @run_async
-def stats(update, context):
+def stats(bot,update):
     currentTime = get_readable_time((time.time() - botStartTime))
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
@@ -21,31 +21,31 @@ def stats(update, context):
             f'Total disk space: {total}\n' \
                         f'Used: {used}\n' \
                         f'Free: {free}'
-    sendMessage(stats, context, update)
+    sendMessage(stats, bot, update)
 
 
 
 @run_async
-def start(update, context):
+def start(bot,update):
     sendMessage("This is a bot which can mirror all your links to Google drive!\n"
-                "Type /help to get a list of available commands", context, update)
+                "Type /help to get a list of available commands", bot, update)
 
 
 @run_async
-def ping(update, context):
+def ping(bot,update):
     start_time = int(round(time.time() * 1000))
-    reply = sendMessage("Starting Ping", context, update)
+    reply = sendMessage("Starting Ping", bot, update)
     end_time = int(round(time.time()*1000))
-    editMessage(f'{end_time - start_time} ms', context, reply)
+    editMessage(f'{end_time - start_time} ms',reply)
 
 
 @run_async
-def log(update, context):
-    sendLogFile(context, update)
+def log(bot,update):
+    sendLogFile(bot, update)
 
 
 @run_async
-def bot_help(update, context):
+def bot_help(bot,update):
     help_string = f'''
 /{BotCommands.HelpCommand}: To get this message
 
@@ -66,7 +66,7 @@ def bot_help(update, context):
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
 
 '''
-    sendMessage(help_string, context, update)
+    sendMessage(help_string, bot, update)
 
 
 def main():

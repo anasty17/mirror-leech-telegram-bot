@@ -1,6 +1,9 @@
 from bot import download_dict, download_dict_lock
 import logging
 import re
+import threading
+import time
+import math
 
 LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +25,22 @@ PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
+class setInterval :
+    def __init__(self,interval,action) :
+        self.interval=interval
+        self.action=action
+        self.stopEvent=threading.Event()
+        thread=threading.Thread(target=self.__setInterval)
+        thread.start()
+
+    def __setInterval(self) :
+        nextTime=time.time()+self.interval
+        while not self.stopEvent.wait(nextTime-time.time()) :
+            nextTime+=self.interval
+            self.action()
+
+    def cancel(self) :
+        self.stopEvent.set()
 
 def get_readable_file_size(size_in_bytes) -> str:
     index = 0
@@ -29,7 +48,7 @@ def get_readable_file_size(size_in_bytes) -> str:
         size_in_bytes /= 1024
         index += 1
     try:
-        return f'{round(size_in_bytes, 2)} {SIZE_UNITS[index]}'
+        return f'{round(size_in_bytes, 2)}{SIZE_UNITS[index]}'
     except IndexError:
         return 'File too large'
 
@@ -80,20 +99,21 @@ def get_download_str():
             result += (status.progress() + status.speed() + status.status())
         return result
 
-
 def get_readable_message():
     with download_dict_lock:
-        progress_list = list(download_dict.values())
-    msg = ''
-    for download in progress_list:
-        msg += f'<b>Name:</b> {download.name()}\n' \
-               f'<b>Status:</b> {download.status()}\n' \
-               f'<code>{get_progress_bar_string(download)}</code> {download.progress()} of {download.size()}\n' \
-               f'<b>Speed:</b> {download.speed()}\n' \
-               f'<b>ETA:</b> {download.eta()}\n\n'
-#    LOGGER.info(msg)
-    return msg
-
+        msg = ""
+        for download in list(download_dict.values()):
+            msg += f"<i>{download.name()}</i> - "
+            if download.status() == MirrorStatus.STATUS_UPLOADING:
+                msg += "Uploading\n\n"
+            elif download.status() == MirrorStatus.STATUS_ARCHIVING:
+                msg += "Archiving\n\n"
+            elif download.status() == MirrorStatus.STATUS_WAITING:
+                msg += "Queued\n\n"
+            else:
+                msg += f"<code>{get_progress_bar_string(download)} {download.progress()}</code> of {get_readable_file_size(download.download().total_length)}" \
+                       f" at {get_readable_file_size(download.download().download_speed)}ps, ETA: {download.eta()}\n\n"
+        return msg
 
 def get_readable_time(seconds: int) -> str:
     result = ''
