@@ -8,7 +8,7 @@ from bot.helper.telegram_helper.message_utils import *
 import shutil
 from .helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror,eval, shell,lydia
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror
 
 @run_async
 def stats(bot,update):

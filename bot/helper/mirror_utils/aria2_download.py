@@ -3,15 +3,13 @@ from bot.helper.ext_utils.bot_utils import *
 from .download_helper import DownloadHelper
 from .download_status import DownloadStatus
 from bot.helper.telegram_helper.message_utils import *
-from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
 import threading
-from aria2p import API, ClientException
-import schedule
-import time
+from aria2p import API
 
 class AriaDownloadHelper(DownloadHelper):
 
-    def __init__(self,listener):
+    def __init__(self, listener):
+        super().__init__()
         self.gid = None
         self._listener = listener
         self._resource_lock = threading.Lock()
