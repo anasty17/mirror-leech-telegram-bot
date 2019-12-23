@@ -38,7 +38,7 @@ def tar(orig_path: str):
 
 
 def get_mime_type(file_path):
-    mime_type = mimetypes.guess_type(file_path).mime_type
+    mime_type = mimetypes.guess_type(file_path)[0]
     mime_type = mime_type if mime_type else "text/plain"
     return mime_type
 
