@@ -62,11 +62,13 @@ def delete_all_messages():
 def update_all_messages():
     msg = get_readable_message()
     with status_reply_dict_lock:
-        for message in list(status_reply_dict.values()):
-            try:
-                editMessage(msg,message)
-            except:
-                pass
+        for chat_id in list(status_reply_dict.keys()):
+            if msg != status_reply_dict[chat_id].text:
+                try:
+                    editMessage(msg,status_reply_dict[chat_id])
+                except:
+                    pass
+                status_reply_dict[chat_id].text = msg
 
 def sendStatusMessage(msg,bot):
     progress = get_readable_message()
