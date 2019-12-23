@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, run_async
 from telegram.error import BadRequest, TimedOut
 from bot.helper.mirror_utils import aria2_download, gdriveTools, listeners
-from bot import LOGGER, dispatcher, DOWNLOAD_DIR
+from bot import LOGGER, dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock, Interval
 from bot.helper.telegram_helper.message_utils import *
@@ -144,7 +144,7 @@ def _mirror(bot,update ,isTar=False):
     aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
     sendStatusMessage(update,bot)
     if len(Interval) == 0:
-        Interval.append(setInterval(5,update_all_messages))
+        Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL,update_all_messages))
 
 @run_async
 def mirror(bot,update):
