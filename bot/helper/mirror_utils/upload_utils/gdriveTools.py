@@ -4,7 +4,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, IS_TEAM_DRIVE
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 
@@ -95,7 +95,8 @@ class GoogleDriveHelper:
                                          resumable=False)
             response = self.__service.files().create(supportsTeamDrives=True,
                                                      body=file_metadata, media_body=media_body).execute()
-            self.__set_permission(response['id'])
+            if not IS_TEAM_DRIVE:
+                self.__set_permission(response['id'])
             drive_file = self.__service.files().get(fileId=response['id']).execute()
             download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
             return download_url
@@ -114,7 +115,8 @@ class GoogleDriveHelper:
             self.status, response = drive_file.next_chunk()
         self._file_uploaded_bytes = 0
         # Insert new permissions
-        self.__set_permission(response['id'])
+        if not IS_TEAM_DRIVE:
+            self.__set_permission(response['id'])
         # Define file instance and get url for download
         drive_file = self.__service.files().get(supportsTeamDrives=True, fileId=response['id']).execute()
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
@@ -172,7 +174,8 @@ class GoogleDriveHelper:
             file_metadata["parents"] = [parent_id]
         file = self.__service.files().create(supportsTeamDrives=True, body=file_metadata).execute()
         file_id = file.get("id")
-        self.__set_permission(file_id)
+        if not IS_TEAM_DRIVE:
+            self.__set_permission(file_id)
         LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
         return file_id
 

@@ -76,7 +76,11 @@ try:
     INDEX_URL = getConfig('INDEX_URL')
 except KeyError:
     INDEX_URL = None
-
+try:
+    IS_TEAM_DRIVE = getConfig('IS_TEAM_DRIVE')
+except KeyError:
+    IS_TEAM_DRIVE = False
+    
 updater = tg.Updater(token=BOT_TOKEN)
 bot = updater.bot
 dispatcher = updater.dispatcher

@@ -10,6 +10,8 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Upload progress
 - Download/upload speeds and ETAs
 - Docker support
+- Uploading To Team Drives.
+- Index Link support
 
 # Upcoming features (TODOs):
 - Mega link mirror support
@@ -51,6 +53,7 @@ Fill up rest of the fields. Meaning of each fields are discussed below:
 - DOWNLOAD_STATUS_UPDATE_INTERVAL : A short interval of time in seconds after which the Mirror progress message is updated. (I recommend to keep it 5 seconds at least)  
 - OWNER_ID : The Telegram user ID (not username) of the owner of the bot
 - AUTO_DELETE_MESSAGE_DURATION : Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. Note: Set to -1 to never automatically delete messages
+- IS_TEAM_DRIVE : (Optional field) Set to "True" if GDRIVE_FOLDER_ID is from a Team Drive else False or Leave it empty. 
 - INDEX_URL : (Optional field) Refer to https://github.com/maple3142/GDIndex/ The URL should not have any trailing '/'
 
 Note: You can limit maximum concurrent downloads by changing the value of MAX_CONCURRENT_DOWNLOADS in aria.sh. By default, it's set to 2
