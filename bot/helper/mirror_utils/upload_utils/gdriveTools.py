@@ -67,7 +67,8 @@ class GoogleDriveHelper:
         }
         if parent_id is not None:
             file_metadata['parents'] = [parent_id]
-        return self.__service.files().create(body=file_metadata, media_body=media_body).execute()
+        return self.__service.files().create(supportsTeamDrives=True,
+                                             body=file_metadata, media_body=media_body).execute()
 
     def __set_permission(self, drive_id):
         permissions = {
@@ -76,7 +77,7 @@ class GoogleDriveHelper:
             'value': None,
             'withLink': True
         }
-        return self.__service.permissions().create(fileId=drive_id, body=permissions).execute()
+        return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
 
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
@@ -92,7 +93,8 @@ class GoogleDriveHelper:
             media_body = MediaFileUpload(file_path,
                                          mimetype=mime_type,
                                          resumable=False)
-            response = self.__service.files().create(body=file_metadata, media_body=media_body).execute()
+            response = self.__service.files().create(supportsTeamDrives=True,
+                                                     body=file_metadata, media_body=media_body).execute()
             self.__set_permission(response['id'])
             drive_file = self.__service.files().get(fileId=response['id']).execute()
             download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
@@ -103,7 +105,8 @@ class GoogleDriveHelper:
                                      chunksize=50*1024*1024)
 
         # Insert a file
-        drive_file = self.__service.files().create(body=file_metadata, media_body=media_body)
+        drive_file = self.__service.files().create(supportsTeamDrives=True,
+                                                   body=file_metadata, media_body=media_body)
         response = None
         while response is None:
             if self.is_cancelled:
@@ -113,7 +116,7 @@ class GoogleDriveHelper:
         # Insert new permissions
         self.__set_permission(response['id'])
         # Define file instance and get url for download
-        drive_file = self.__service.files().get(fileId=response['id']).execute()
+        drive_file = self.__service.files().get(supportsTeamDrives=True, fileId=response['id']).execute()
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         return download_url
 
@@ -123,7 +126,7 @@ class GoogleDriveHelper:
         file_path = f"{file_dir}/{file_name}"
         LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
-        self.updater = setInterval(1, self._on_upload_progress)
+        self.updater = setInterval(5, self._on_upload_progress)
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)
@@ -167,7 +170,7 @@ class GoogleDriveHelper:
         }
         if parent_id is not None:
             file_metadata["parents"] = [parent_id]
-        file = self.__service.files().create(body=file_metadata).execute()
+        file = self.__service.files().create(supportsTeamDrives=True, body=file_metadata).execute()
         file_id = file.get("id")
         self.__set_permission(file_id)
         LOGGER.info("Created Google-Drive Folder:\nName: {}\nID: {} ".format(file.get("name"), file_id))
@@ -220,7 +223,8 @@ class GoogleDriveHelper:
         page_token = None
         results = []
         while True:
-            response = self.__service.files().list(q=query,
+            response = self.__service.files().list(supportsTeamDrives=True,
+                                                   q=query,
                                                    spaces='drive',
                                                    fields='nextPageToken, files(id, name, mimeType, size)',
                                                    pageToken=page_token,

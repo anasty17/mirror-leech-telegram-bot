@@ -6,7 +6,7 @@ from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
 from bot.helper.mirror_utils.status_utils.tar_status import TarStatus
 from bot import dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils import fs_utils, bot_utils
-from bot import Interval
+from bot import Interval, INDEX_URL
 from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -52,7 +52,6 @@ class MirrorListener(listeners.MirrorListeners):
             path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
         name = pathlib.PurePath(path).name
         with download_dict_lock:
-            download_dict[self.uid].is_archiving = False
             LOGGER.info(f"Upload Name : {name}")
             drive = gdriveTools.GoogleDriveHelper(name, self)
             upload_status = UploadStatus(drive, size, self.uid)
@@ -91,6 +90,11 @@ class MirrorListener(listeners.MirrorListeners):
         with download_dict_lock:
             msg = f'<a href="{link}">{download_dict[self.uid].name()}</a> ({download_dict[self.uid].size()})'
             LOGGER.info(f'Done Uploading {download_dict[self.uid].name()}')
+
+            share_url = f'{INDEX_URL}/{download_dict[self.uid].name()}'
+            share_url = share_url.replace(' ', '%20')
+            if INDEX_URL is not None:
+                msg += f'\n\n Shareable link: <a href="{share_url}/">here</a>'
 
         if len(download_dict) == 0:
             self.clean()
