@@ -3,7 +3,6 @@ import aria2p
 import threading
 import os
 from dotenv import load_dotenv
-from telegram import Bot
 import telegram.ext as tg
 import time
 
@@ -19,6 +18,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 load_dotenv('config.env')
 
 Interval = []
+
 
 def getConfig(name: str):
     return os.environ[name]
@@ -40,7 +40,6 @@ aria2 = aria2p.API(
         secret="",
     )
 )
-
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -74,8 +73,6 @@ except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
-bot = Bot(BOT_TOKEN)
 updater = tg.Updater(token=BOT_TOKEN)
+bot = updater.bot
 dispatcher = updater.dispatcher
-
-

@@ -4,19 +4,16 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
-import time
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
-from bot.helper.ext_utils.exceptions import MessageDeletedError
-import threading
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
 
 class GoogleDriveHelper:
 
-    def __init__(self, listener=None):
+    def __init__(self, name=None, listener=None):
         self.__G_DRIVE_TOKEN_FILE = "token.pickle"
         # Check https://developers.google.com/drive/scopes for all available scopes
         self.__OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
@@ -34,6 +31,8 @@ class GoogleDriveHelper:
         self.is_uploading = True
         self.is_cancelled = False
         self.status = None
+        self.updater = None
+        self.name = name
 
     def cancel(self):
         self.is_cancelled = True
@@ -50,28 +49,12 @@ class GoogleDriveHelper:
             return 0
 
     def _on_upload_progress(self):
-        while self.is_uploading:
-            if self.status is not None:
-                chunk_size = self.status.total_size * self.status.progress() - self._file_uploaded_bytes
-                self._file_uploaded_bytes = self.status.total_size * self.status.progress()
-                LOGGER.info(f'Chunk size: {get_readable_file_size(chunk_size)}')
-                self.uploaded_bytes += chunk_size
-                self.total_time += DOWNLOAD_STATUS_UPDATE_INTERVAL
-
-                if self._should_update:
-                    try:
-                        LOGGER.info('Updating messages')
-                        _list = get_download_status_list()
-                        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
-                        self.__listener.onUploadProgress(_list, index)
-                    except MessageDeletedError as e:
-                        LOGGER.info(f'Stopped calling onDownloadProgress(): {str(e)}')
-                        # TODO: Find a way to know if the Error is actually about message not found and not found
-                        # self._should_update = False
-                        pass
-            else:
-                LOGGER.info('status: None')
-            time.sleep(DOWNLOAD_STATUS_UPDATE_INTERVAL)
+        if self.status is not None:
+            chunk_size = self.status.total_size * self.status.progress() - self._file_uploaded_bytes
+            self._file_uploaded_bytes = self.status.total_size * self.status.progress()
+            LOGGER.info(f'Chunk size: {get_readable_file_size(chunk_size)}')
+            self.uploaded_bytes += chunk_size
+            self.total_time += DOWNLOAD_STATUS_UPDATE_INTERVAL
 
     def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
         media_body = MediaFileUpload(path,
@@ -135,14 +118,12 @@ class GoogleDriveHelper:
         return download_url
 
     def upload(self, file_name: str):
-        _list = get_download_status_list()
-        index = get_download_index(_list, get_download(self.__listener.message.message_id).gid)
-        self.__listener.onUploadStarted(_list, index)
+        self.__listener.onUploadStarted()
         file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
         file_path = f"{file_dir}/{file_name}"
         LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
-        #threading.Thread(target=self._on_upload_progress).start()
+        self.updater = setInterval(1, self._on_upload_progress)
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)
@@ -154,10 +135,10 @@ class GoogleDriveHelper:
                 LOGGER.error(str(e))
                 e_str = str(e).replace('<', '')
                 e_str = e_str.replace('>', '')
-                self.__listener.onUploadError(e_str, _list, index)
+                self.__listener.onUploadError(e_str)
                 return
             finally:
-                self.is_uploading = False
+                self.updater.cancel()
         else:
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
@@ -170,12 +151,12 @@ class GoogleDriveHelper:
                 LOGGER.error(str(e))
                 e_str = str(e).replace('<', '')
                 e_str = e_str.replace('>', '')
-                self.__listener.onUploadError(e_str, _list, index)
+                self.__listener.onUploadError(e_str)
                 return
             finally:
-                self.is_uploading = False
+                self.updater.cancel()
         LOGGER.info(download_dict)
-        self.__listener.onUploadComplete(link, _list, index)
+        self.__listener.onUploadComplete(link)
         LOGGER.info("Deleting downloaded file/folder..")
         return link
 

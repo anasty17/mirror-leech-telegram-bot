@@ -5,6 +5,7 @@ import os
 import pathlib
 import mimetypes
 
+
 def clean_download(path: str):
     if os.path.exists(path):
         LOGGER.info(f"Cleaning download: {path}")
@@ -41,4 +42,3 @@ def get_mime_type(file_path):
     mime_type = mimetypes.guess_type(file_path)[0]
     mime_type = mime_type if mime_type else "text/plain"
     return mime_type
-

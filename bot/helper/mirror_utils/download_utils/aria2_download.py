@@ -1,10 +1,11 @@
-from bot import DOWNLOAD_STATUS_UPDATE_INTERVAL, aria2, Interval
+from bot import aria2
 from bot.helper.ext_utils.bot_utils import *
 from .download_helper import DownloadHelper
-from .download_status import DownloadStatus
+from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import *
 import threading
 from aria2p import API
+
 
 class AriaDownloadHelper(DownloadHelper):
 
@@ -26,11 +27,11 @@ class AriaDownloadHelper(DownloadHelper):
             if self.gid == gid:
                 if api.get_download(gid).followed_by_ids:
                     self.gid = api.get_download(gid).followed_by_ids[0]
-                    download_dict[self._listener.uid] = DownloadStatus(self.gid,self._listener)                 
+                    download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
                     update_all_messages()
                     LOGGER.info(f'Changed gid from {gid} to {self.gid}')
                 else:
-                    self._listener.onDownloadComplete() 
+                    self._listener.onDownloadComplete()
 
     def __onDownloadPause(self, api, gid):
         if self.gid == gid:
@@ -56,14 +57,13 @@ class AriaDownloadHelper(DownloadHelper):
             download = aria2.add_uris([link], {'dir': path})
         self.gid = download.gid
         with download_dict_lock:
-            download_dict[self._listener.uid] = DownloadStatus(self.gid,self._listener)
+            download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
         if download.error_message:
             self._listener.onDownloadError(download.error_message)
-            return 
+            return
         LOGGER.info(f"Started: {self.gid} DIR:{download.dir} ")
         aria2.listen_to_notifications(threaded=True, on_download_start=self.__onDownloadStarted,
-                                    on_download_error=self.__onDownloadError,
-                                    on_download_pause=self.__onDownloadPause,
-                                    on_download_stop=self.__onDownloadStopped,
-                                    on_download_complete=self.__onDownloadComplete)
-
+                                      on_download_error=self.__onDownloadError,
+                                      on_download_pause=self.__onDownloadPause,
+                                      on_download_stop=self.__onDownloadStopped,
+                                      on_download_complete=self.__onDownloadComplete)

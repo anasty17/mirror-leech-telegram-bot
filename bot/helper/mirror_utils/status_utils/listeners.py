@@ -17,14 +17,14 @@ class MirrorListeners:
     def onDownloadError(self, error: str):
         raise NotImplementedError
 
-    def onUploadStarted(self, progress_status_list: list, index: int):
+    def onUploadStarted(self):
         raise NotImplementedError
 
-    def onUploadProgress(self, progress: list, index: int):
+    def onUploadProgress(self):
         raise NotImplementedError
 
-    def onUploadComplete(self, link: str, progress_status_list: list, index: int):
+    def onUploadComplete(self, link: str):
         raise NotImplementedError
 
-    def onUploadError(self, error: str, progress_status: list, index: int):
+    def onUploadError(self, error: str):
         raise NotImplementedError

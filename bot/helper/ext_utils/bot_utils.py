@@ -3,13 +3,13 @@ import logging
 import re
 import threading
 import time
-import math
 
 LOGGER = logging.getLogger(__name__)
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
 
 URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
+
 
 class MirrorStatus:
     STATUS_UPLOADING = "Uploading"
@@ -25,22 +25,24 @@ PROGRESS_INCOMPLETE = ['▏', '▎', '▍', '▌', '▋', '▊', '▉']
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
-class setInterval :
-    def __init__(self,interval,action) :
-        self.interval=interval
-        self.action=action
-        self.stopEvent=threading.Event()
-        thread=threading.Thread(target=self.__setInterval)
+
+class setInterval:
+    def __init__(self, interval, action):
+        self.interval = interval
+        self.action = action
+        self.stopEvent = threading.Event()
+        thread = threading.Thread(target=self.__setInterval)
         thread.start()
 
-    def __setInterval(self) :
-        nextTime=time.time()+self.interval
-        while not self.stopEvent.wait(nextTime-time.time()) :
-            nextTime+=self.interval
+    def __setInterval(self):
+        nextTime = time.time() + self.interval
+        while not self.stopEvent.wait(nextTime - time.time()):
+            nextTime += self.interval
             self.action()
 
-    def cancel(self) :
+    def cancel(self):
         self.stopEvent.set()
+
 
 def get_readable_file_size(size_in_bytes) -> str:
     index = 0
@@ -65,10 +67,10 @@ def get_download_status_list():
 
 def get_progress_bar_string(status):
     if status.status() == MirrorStatus.STATUS_UPLOADING:
-        completed = status.upload_helper.uploaded_bytes / 8
+        completed = status.obj.uploaded_bytes / 8
     else:
         completed = status.download().completed_length / 8
-    total = status.download().total_length / 8
+    total = status.size_raw() / 8
     if total == 0:
         p = 0
     else:
@@ -99,6 +101,7 @@ def get_download_str():
             result += (status.progress() + status.speed() + status.status())
         return result
 
+
 def get_readable_message():
     with download_dict_lock:
         msg = ""
@@ -110,10 +113,14 @@ def get_readable_message():
                 msg += "Archiving\n\n"
             elif download.status() == MirrorStatus.STATUS_WAITING:
                 msg += "Queued\n\n"
-            else:
-                msg += f"<code>{get_progress_bar_string(download)} {download.progress()}</code> of {get_readable_file_size(download.download().total_length)}" \
-                       f" at {get_readable_file_size(download.download().download_speed)}ps, ETA: {download.eta()}\n\n"
+            elif download.status() == MirrorStatus.STATUS_DOWNLOADING:
+                msg += "Downloading"
+            if download.status() != MirrorStatus.STATUS_ARCHIVING:
+                msg += f"<code>{get_progress_bar_string(download)} {download.progress()}</code> of " \
+                    f"{download.size()}" \
+                    f" at {download.speed()}ps, ETA: {download.eta()}\n\n"
         return msg
+
 
 def get_readable_time(seconds: int) -> str:
     result = ''
@@ -135,14 +142,14 @@ def get_readable_time(seconds: int) -> str:
 
 
 def is_url(url: str):
-    url = re.findall(URL_REGEX,url)
+    url = re.findall(URL_REGEX, url)
     if url:
         return True
-    return False    
+    return False
 
 
 def is_magnet(url: str):
-    magnet = re.findall(MAGNET_REGEX,url)
+    magnet = re.findall(MAGNET_REGEX, url)
     if magnet:
         return True
     return False

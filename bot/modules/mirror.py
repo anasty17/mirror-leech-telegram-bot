@@ -1,16 +1,17 @@
 from telegram.ext import CommandHandler, run_async
-from telegram.error import BadRequest, TimedOut
-from bot.helper.mirror_utils import aria2_download, gdriveTools, listeners
-from bot import LOGGER, dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
+from bot.helper.mirror_utils.status_utils import listeners
+from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.mirror_utils.download_utils import aria2_download
+from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
+from bot.helper.mirror_utils.status_utils.tar_status import TarStatus
+from bot import dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils import fs_utils, bot_utils
-from bot import download_dict, status_reply_dict, status_reply_dict_lock, download_dict_lock, Interval
+from bot import Interval
 from bot.helper.telegram_helper.message_utils import *
-from bot.helper.ext_utils.bot_utils import get_readable_message, MirrorStatus,setInterval
-from bot.helper.ext_utils.exceptions import MessageDeletedError
+from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
-from time import sleep
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -18,12 +19,13 @@ class MirrorListener(listeners.MirrorListeners):
         super().__init__(bot, update)
         self.isTar = isTar
 
-    def onDownloadStarted(self,reply_message):
+    def onDownloadStarted(self):
         pass
 
     def onDownloadProgress(self):
         # We are handling this on our own!
         pass
+
     def clean(self):
         Interval[0].cancel()
         del Interval[0]
@@ -33,12 +35,18 @@ class MirrorListener(listeners.MirrorListeners):
         with download_dict_lock:
             LOGGER.info(f"Download completed: {download_dict[self.uid].name()}")
             download = download_dict[self.uid]
+            name = download.name()
+            size = download.size_raw()
+            m_path = f'{DOWNLOAD_DIR}{self.uid}/{download.name()}'
         if self.isTar:
             download.is_archiving = True
             try:
-                path = fs_utils.tar(f'{DOWNLOAD_DIR}{self.uid}/{download.name()}')
+                with download_dict_lock:
+                    download_dict[self.uid] = TarStatus(name, m_path, size)
+                path = fs_utils.tar(m_path)
             except FileNotFoundError:
-                self.onUploadError('Download cancelled!', download_dict, self.uid)
+                LOGGER.info('File to archive not found!')
+                self.onUploadError('Internal error occurred!!')
                 return
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
@@ -46,17 +54,17 @@ class MirrorListener(listeners.MirrorListeners):
         with download_dict_lock:
             download_dict[self.uid].is_archiving = False
             LOGGER.info(f"Upload Name : {name}")
-            download_dict[self.uid].upload_name = name
-            gdrive = gdriveTools.GoogleDriveHelper(self)
-            download_dict[self.uid].upload_helper = gdrive
+            drive = gdriveTools.GoogleDriveHelper(name, self)
+            upload_status = UploadStatus(drive, size, self.uid)
+            download_dict[self.uid] = upload_status
         update_all_messages()
-        gdrive.upload(name)
+        drive.upload(name)
 
     def onDownloadError(self, error):
         LOGGER.info(self.update.effective_chat.id)
         with download_dict_lock:
             try:
-                download = download_dict[self.uid] 
+                download = download_dict[self.uid]
                 del download_dict[self.uid]
                 LOGGER.info(f"Deleting folder: {download.path()}")
                 fs_utils.clean_download(download.path())
@@ -76,25 +84,32 @@ class MirrorListener(listeners.MirrorListeners):
             update_all_messages()
         sendMessage(msg, self.bot, self.update)
 
-    def onUploadStarted(self, progress_status_list: list, index: int):
+    def onUploadStarted(self):
         pass
 
-    def onUploadComplete(self, link: str, progress_status_list: list, index: int):
-        msg = f'<a href="{link}">{progress_status_list[index].name()}</a> ({progress_status_list[index].size()})'
+    def onUploadComplete(self, link: str):
         with download_dict_lock:
-            del download_dict[self.uid]
+            msg = f'<a href="{link}">{download_dict[self.uid].name()}</a> ({download_dict[self.uid].size()})'
+            LOGGER.info(f'Done Uploading {download_dict[self.uid].name()}')
+
         if len(download_dict) == 0:
             self.clean()
         else:
             update_all_messages()
         sendMessage(msg, self.bot, self.update)
-        print("Downloads: "+str(download_dict))
         try:
-            fs_utils.clean_download(progress_status_list[index].path())
+            with download_dict_lock:
+                fs_utils.clean_download(download_dict[self.uid].path())
+                del download_dict[self.uid]
+                count = len(download_dict)
+            if count == 0:
+                self.clean()
+            else:
+                update_all_messages()
         except FileNotFoundError:
             pass
 
-    def onUploadError(self, error: str, progress_status: list, index: int):
+    def onUploadError(self, error: str):
         LOGGER.error(error)
         sendMessage(error, self.bot, self.update)
         with download_dict_lock:
@@ -104,22 +119,13 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             update_all_messages()
         try:
-            fs_utils.clean_download(progress_status[index].path())
+            with download_dict_lock:
+                fs_utils.clean_download(download_dict[self.uid].path())
         except FileNotFoundError:
             pass
 
-    def onUploadProgress(self, progress: list, index: int):
-        msg = get_readable_message(progress)
-        try:
-            print("lul")
-            #editMessage(msg, self.bot, self.reply_message)
-        except BadRequest as e:
-            raise MessageDeletedError(str(e))
-        except TimedOut:
-            pass
 
-
-def _mirror(bot,update ,isTar=False):
+def _mirror(bot, update, isTar=False):
     message_args = update.message.text.split(' ')
     try:
         link = message_args[1]
@@ -142,13 +148,14 @@ def _mirror(bot,update ,isTar=False):
     listener = MirrorListener(bot, update, isTar)
     aria = aria2_download.AriaDownloadHelper(listener)
     aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
-    sendStatusMessage(update,bot)
+    sendStatusMessage(update, bot)
     if len(Interval) == 0:
-        Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL,update_all_messages))
+        Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
+
 
 @run_async
-def mirror(bot,update):
-    _mirror(bot,update)
+def mirror(bot, update):
+    _mirror(bot, update)
 
 
 @run_async

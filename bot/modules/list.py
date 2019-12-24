@@ -1,5 +1,5 @@
 from telegram.ext import CommandHandler, run_async
-from bot.helper.mirror_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
 from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMessage
 import threading
