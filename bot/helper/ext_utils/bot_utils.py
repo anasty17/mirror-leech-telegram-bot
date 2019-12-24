@@ -107,14 +107,7 @@ def get_readable_message():
         msg = ""
         for download in list(download_dict.values()):
             msg += f"<i>{download.name()}</i> - "
-            if download.status() == MirrorStatus.STATUS_UPLOADING:
-                msg += "Uploading\n\n"
-            elif download.status() == MirrorStatus.STATUS_ARCHIVING:
-                msg += "Archiving\n\n"
-            elif download.status() == MirrorStatus.STATUS_WAITING:
-                msg += "Queued\n\n"
-            elif download.status() == MirrorStatus.STATUS_DOWNLOADING:
-                msg += "Downloading"
+            msg += download.status()
             if download.status() != MirrorStatus.STATUS_ARCHIVING:
                 msg += f"<code>{get_progress_bar_string(download)} {download.progress()}</code> of " \
                     f"{download.size()}" \
