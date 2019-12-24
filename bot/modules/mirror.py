@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
-
+import os
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, bot, update, isTar=False):
@@ -93,6 +93,8 @@ class MirrorListener(listeners.MirrorListeners):
 
             share_url = f'{INDEX_URL}/{download_dict[self.uid].name()}'
             share_url = share_url.replace(' ', '%20')
+            if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
+                    share_url += '/'
             if INDEX_URL is not None:
                 msg += f'\n\n Shareable link: <a href="{share_url}">here</a>'
 
