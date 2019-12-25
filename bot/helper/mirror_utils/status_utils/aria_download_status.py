@@ -1,13 +1,13 @@
 from bot import aria2, DOWNLOAD_DIR
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus, get_readable_time
-from .download_status import DownloadStatus
+from bot.helper.ext_utils.bot_utils import MirrorStatus
+from .status import Status
 
 
 def get_download(gid):
     return aria2.get_download(gid)
 
 
-class AriaDownloadStatus(DownloadStatus):
+class AriaDownloadStatus(Status):
 
     def __init__(self, gid, listener):
         super().__init__()
@@ -38,31 +38,31 @@ class AriaDownloadStatus(DownloadStatus):
         """
         return self.download().total_length
 
+    def processed_bytes(self):
+        return self.download().completed_length
+
     def speed(self):
-        self.__update()
-        return self.__download.download_speed_string()
+        return self.download().download_speed_string()
 
     def name(self):
-        self.__update()
-        return self.__download.name
+        return self.download().name
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def size(self):
-        return self.__download.total_length_string()
+        return self.download().total_length_string()
 
     def eta(self):
-        self.__update()
-        return self.__download.eta_string()
+        return self.download().eta_string()
 
     def status(self):
-        self.__update()
-        if self.download().is_waiting:
+        download = self.download()
+        if download.is_waiting:
             status = MirrorStatus.STATUS_WAITING
-        elif self.download().is_paused:
+        elif download.is_paused:
             status = MirrorStatus.STATUS_CANCELLED
-        elif self.__download.has_failed:
+        elif download.has_failed:
             status = MirrorStatus.STATUS_FAILED
         else:
             status = MirrorStatus.STATUS_DOWNLOADING

@@ -1,12 +1,15 @@
-from .download_status import DownloadStatus
+from .status import Status
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
 
 
-class TarStatus(DownloadStatus):
+class TarStatus(Status):
     def __init__(self, name, path, size):
         self.__name = name
         self.__path = path
         self.__size = size
+
+    # The progress of Tar function cannot be tracked. So we just return dummy values.
+    # If this is possible in future,we should implement it
 
     def progress(self):
         return '0'
@@ -29,3 +32,5 @@ class TarStatus(DownloadStatus):
     def status(self):
         return MirrorStatus.STATUS_ARCHIVING
 
+    def processed_bytes(self):
+        return 0

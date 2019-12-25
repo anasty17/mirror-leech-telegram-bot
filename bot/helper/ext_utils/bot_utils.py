@@ -55,21 +55,8 @@ def get_readable_file_size(size_in_bytes) -> str:
         return 'File too large'
 
 
-def get_download(message_id):
-    with download_dict_lock:
-        return download_dict[message_id].download()
-
-
-def get_download_status_list():
-    with download_dict_lock:
-        return list(download_dict.values())
-
-
 def get_progress_bar_string(status):
-    if status.status() == MirrorStatus.STATUS_UPLOADING:
-        completed = status.obj.uploaded_bytes / 8
-    else:
-        completed = status.download().completed_length / 8
+    completed = status.processed_bytes() / 8
     total = status.size_raw() / 8
     if total == 0:
         p = 0
@@ -92,14 +79,6 @@ def get_download_index(_list, gid):
         if i.download().gid == gid:
             return index
         index += 1
-
-
-def get_download_str():
-    result = ""
-    with download_dict_lock:
-        for status in list(download_dict.values()):
-            result += (status.progress() + status.speed() + status.status())
-        return result
 
 
 def get_readable_message():

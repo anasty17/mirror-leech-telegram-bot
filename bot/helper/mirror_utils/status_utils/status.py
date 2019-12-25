@@ -1,7 +1,7 @@
 # Generic status class. All other status classes must inherit this class
 
 
-class DownloadStatus:
+class Status:
 
     def progress(self):
         """
@@ -33,4 +33,8 @@ class DownloadStatus:
     def status(self):
         """:return String describing what is the object of this class will be tracking (upload/download/something
         else) """
+        raise NotImplementedError
+
+    def processed_bytes(self):
+        """:return The size of file that has been processed (downloaded/uploaded/archived)"""
         raise NotImplementedError
