@@ -14,6 +14,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
 import os
 
+
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, bot, update, isTar=False):
         super().__init__(bot, update)
@@ -90,12 +91,11 @@ class MirrorListener(listeners.MirrorListeners):
         with download_dict_lock:
             msg = f'<a href="{link}">{download_dict[self.uid].name()}</a> ({download_dict[self.uid].size()})'
             LOGGER.info(f'Done Uploading {download_dict[self.uid].name()}')
-
-            share_url = f'{INDEX_URL}/{download_dict[self.uid].name()}'
-            share_url = share_url.replace(' ', '%20')
-            if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
-                    share_url += '/'
             if INDEX_URL is not None:
+                share_url = f'{INDEX_URL}/{download_dict[self.uid].name()}'
+                share_url = share_url.replace(' ', '%20')
+                if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
+                    share_url += '/'
                 msg += f'\n\n Shareable link: <a href="{share_url}">here</a>'
 
         if len(download_dict) == 0:
