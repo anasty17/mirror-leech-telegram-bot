@@ -4,7 +4,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, IS_TEAM_DRIVE
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, IS_TEAM_DRIVE, INDEX_URL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 
@@ -234,19 +234,23 @@ class GoogleDriveHelper:
                                                    pageToken=page_token,
                                                    orderBy='modifiedTime desc').execute()
             for file in response.get('files', []):
+                if len(results) >= 20:
+                    break
                 if file.get(
                         'mimeType') == "application/vnd.google-apps.folder":  # Detect Whether Current Entity is a Folder or File.
-                    if len(results) >= 20:
-                        break
                     msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                           f"</a> (folder)" + "\n"
-                    results.append(file)
+                           f"</a> (folder)"
+                    if INDEX_URL is not None:
+                        url = f'{INDEX_URL}/{file.get("name")}/'
+                        msg += f'| <a href="{url}"> Index URL</a>'
                 else:
-                    if len(results) >= 20:
-                        break
                     msg += f"⁍ <a href='https://drive.google.com/uc?id={file.get('id')}" \
-                           f"&export=download'>{file.get('name')}</a> ({get_readable_file_size(int(file.get('size')))})" + "\n"
-                    results.append(file)
+                           f"&export=download'>{file.get('name')}</a> ({get_readable_file_size(int(file.get('size')))})"
+                    if INDEX_URL is not None:
+                        url = f'{INDEX_URL}/{file.get("name")}'
+                        msg += f' | <a href="{url}"> Index URL</a>'
+                msg += '\n'
+                results.append(file)
             page_token = response.get('nextPageToken', None)
             if page_token is None:
                 break
