@@ -227,6 +227,7 @@ class GoogleDriveHelper:
         results = []
         while True:
             response = self.__service.files().list(supportsTeamDrives=True,
+                                                   includeTeamDriveItems=True,
                                                    q=query,
                                                    spaces='drive',
                                                    fields='nextPageToken, files(id, name, mimeType, size)',
