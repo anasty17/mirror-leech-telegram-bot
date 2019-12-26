@@ -5,7 +5,7 @@ from google.auth.transport.requests import Request
 
 credentials = None
 __G_DRIVE_TOKEN_FILE = "token.pickle"
-__OAUTH_SCOPE = ["https://www.googleapis.com/auth/drive.file"]
+__OAUTH_SCOPE = ["https://www.googleapis.com/auth/drive"]
 if os.path.exists(__G_DRIVE_TOKEN_FILE):
     with open(__G_DRIVE_TOKEN_FILE, 'rb') as f:
         credentials = pickle.load(f)

@@ -16,7 +16,7 @@ class GoogleDriveHelper:
     def __init__(self, name=None, listener=None):
         self.__G_DRIVE_TOKEN_FILE = "token.pickle"
         # Check https://developers.google.com/drive/scopes for all available scopes
-        self.__OAUTH_SCOPE = "https://www.googleapis.com/auth/drive.file"
+        self.__OAUTH_SCOPE = "https://www.googleapis.com/auth/drive"
         # Redirect URI for installed apps, can be left as is
         self.__REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
