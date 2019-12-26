@@ -4,7 +4,8 @@ from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
 import pickle
 import os
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, IS_TEAM_DRIVE, INDEX_URL
+import threading
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 
@@ -23,20 +24,22 @@ class GoogleDriveHelper:
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
         self.__listener = listener
         self.__service = self.authorize()
-        self._file_uploaded_bytes = 0
-        self.uploaded_bytes = 0
+        self.__uploaded_bytes = 0
         self.start_time = 0
-        self.total_time = 0
-        self._should_update = True
         self.is_uploading = True
         self.is_cancelled = False
-        self.status = None
-        self.updater = None
         self.name = name
+        self.resource_lock = threading.Lock()
 
     def cancel(self):
-        self.is_cancelled = True
-        self.is_uploading = False
+        with self.resource_lock:
+            self.is_cancelled = True
+            self.is_uploading = False
+
+    @property
+    def uploaded_bytes(self):
+        with self.resource_lock:
+            return self.__uploaded_bytes
 
     def speed(self):
         """
@@ -44,17 +47,10 @@ class GoogleDriveHelper:
         :return: Upload speed in bytes/second
         """
         try:
-            return self.uploaded_bytes / self.total_time
+            with self.resource_lock:
+                return self.__uploaded_bytes / (time.time() - self.start_time)
         except ZeroDivisionError:
             return 0
-
-    def _on_upload_progress(self):
-        if self.status is not None:
-            chunk_size = self.status.total_size * self.status.progress() - self._file_uploaded_bytes
-            self._file_uploaded_bytes = self.status.total_size * self.status.progress()
-            LOGGER.info(f'Chunk size: {get_readable_file_size(chunk_size)}')
-            self.uploaded_bytes += chunk_size
-            self.total_time += DOWNLOAD_STATUS_UPDATE_INTERVAL
 
     def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
         media_body = MediaFileUpload(path,
@@ -109,11 +105,16 @@ class GoogleDriveHelper:
         drive_file = self.__service.files().create(supportsTeamDrives=True,
                                                    body=file_metadata, media_body=media_body)
         response = None
+        last_uploaded = 0
         while response is None:
             if self.is_cancelled:
                 return None
-            self.status, response = drive_file.next_chunk()
-        self._file_uploaded_bytes = 0
+            status, response = drive_file.next_chunk()
+            if status is not None:
+                with self.resource_lock:
+                    chunk_size = status.total_size * status.progress() - last_uploaded
+                    last_uploaded = status.total_size * status.progress()
+                    self.__uploaded_bytes += chunk_size
         # Insert new permissions
         if not IS_TEAM_DRIVE:
             self.__set_permission(response['id'])
@@ -128,7 +129,6 @@ class GoogleDriveHelper:
         file_path = f"{file_dir}/{file_name}"
         LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
-        self.updater = setInterval(5, self._on_upload_progress)
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)
@@ -142,8 +142,6 @@ class GoogleDriveHelper:
                 e_str = e_str.replace('>', '')
                 self.__listener.onUploadError(e_str)
                 return
-            finally:
-                self.updater.cancel()
         else:
             try:
                 dir_id = self.create_directory(os.path.basename(os.path.abspath(file_name)), parent_id)
@@ -158,8 +156,6 @@ class GoogleDriveHelper:
                 e_str = e_str.replace('>', '')
                 self.__listener.onUploadError(e_str)
                 return
-            finally:
-                self.updater.cancel()
         LOGGER.info(download_dict)
         self.__listener.onUploadComplete(link)
         LOGGER.info("Deleting downloaded file/folder..")

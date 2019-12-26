@@ -6,8 +6,9 @@ from bot.helper.ext_utils.fs_utils import clean_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from time import sleep
 
+
 @run_async
-def cancel_mirror(bot,update):
+def cancel_mirror(bot, update):
     mirror_message = update.message.reply_to_message
     with download_dict_lock:
         keys = download_dict.keys()
@@ -26,11 +27,11 @@ def cancel_mirror(bot,update):
             aria2.pause(downloads)
         aria2.pause([download])
     elif dl.status() == "Uploading":
-        sendMessage("Upload in Progress, Dont Cancel it.",bot,update)
+        sendMessage("Upload in Progress, Don't Cancel it.", bot, update)
         return
     else:
         dl._listener.onDownloadError("Download stopped by user!")
-    sleep(1) #Wait a Second For Aria2 To free Resources. 
+    sleep(1)  # Wait a Second For Aria2 To free Resources.
     clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}/')
 
 
@@ -42,8 +43,8 @@ def cancel_all(update, bot):
                 dlDetails._listener.onDownloadError("Download Manually Cancelled By user.")
             aria2.pause([dlDetails.download()])
     delete_all_messages()
-    sendMessage('Cancelled all downloads!',update,bot)
-    sleep(0.5)#Wait a Second For Aria2 To free Resources. 
+    sendMessage('Cancelled all downloads!', update, bot)
+    sleep(0.5)  # Wait a Second For Aria2 To free Resources.
     clean_download(DOWNLOAD_DIR)
 
 
