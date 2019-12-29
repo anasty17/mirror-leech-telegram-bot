@@ -27,10 +27,10 @@ def cancel_mirror(bot, update):
         sendMessage("Archival in Progress, Don't Cancel it.", bot, update)
         return
     elif dl.status() != "Queued":
+        download = dl.download()
         if len(download.followed_by_ids) != 0:
             downloads = aria2.get_downloads(download.followed_by_ids)
             aria2.pause(downloads)
-        download = dl.download()
         aria2.pause([download])
     else:
         dl._listener.onDownloadError("Download stopped by user!")
