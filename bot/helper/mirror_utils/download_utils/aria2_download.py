@@ -6,7 +6,6 @@ from bot.helper.telegram_helper.message_utils import *
 import threading
 from aria2p import API
 
-
 class AriaDownloadHelper(DownloadHelper):
 
     def __init__(self, listener):
@@ -25,7 +24,7 @@ class AriaDownloadHelper(DownloadHelper):
     def __onDownloadComplete(self, api: API, gid):
         with self._resource_lock:
             if self.gid == gid:
-                if api.get_download(gid).followed_by_ids:
+                if api.get_download(gid).followed_by:
                     self.gid = api.get_download(gid).followed_by_ids[0]
                     download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
                     update_all_messages()
