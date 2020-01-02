@@ -2,8 +2,10 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.http import MediaFileUpload
+from googleapiclient.errors import HttpError
 import pickle
 import os
+from tenacity import *
 import threading
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL
 from bot.helper.ext_utils.fs_utils import get_mime_type
@@ -40,7 +42,7 @@ class GoogleDriveHelper:
     def uploaded_bytes(self):
         with self.resource_lock:
             return self.__uploaded_bytes
-
+            
     def speed(self):
         """
         It calculates the average upload speed and returns it in bytes/seconds unit
@@ -52,6 +54,7 @@ class GoogleDriveHelper:
         except ZeroDivisionError:
             return 0
 
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
     def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
         media_body = MediaFileUpload(path,
                                      mimetype=mime_type,
@@ -66,6 +69,7 @@ class GoogleDriveHelper:
         return self.__service.files().create(supportsTeamDrives=True,
                                              body=file_metadata, media_body=media_body).execute()
 
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
     def __set_permission(self, drive_id):
         permissions = {
             'role': 'reader',
@@ -75,6 +79,7 @@ class GoogleDriveHelper:
         }
         return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
 
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
         file_metadata = {
@@ -137,10 +142,9 @@ class GoogleDriveHelper:
                     raise Exception('Upload has been manually cancelled')
                 LOGGER.info("Uploaded To G-Drive: " + file_path)
             except Exception as e:
-                LOGGER.error(str(e))
-                e_str = str(e).replace('<', '')
-                e_str = e_str.replace('>', '')
-                self.__listener.onUploadError(e_str)
+                LOGGER.info(f"Total Attempts: {e.last_attempt.attempt_number}")
+                LOGGER.error(e.last_attempt.exception())
+                self.__listener.onUploadError(e)
                 return
         else:
             try:
@@ -151,16 +155,16 @@ class GoogleDriveHelper:
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
                 link = f"https://drive.google.com/folderview?id={dir_id}"
             except Exception as e:
-                LOGGER.error(str(e))
-                e_str = str(e).replace('<', '')
-                e_str = e_str.replace('>', '')
-                self.__listener.onUploadError(e_str)
+                LOGGER.info(f"Total Attempts: {e.last_attempt.attempt_number}")
+                LOGGER.error(e.last_attempt.exception())
+                self.__listener.onUploadError(e)
                 return
         LOGGER.info(download_dict)
         self.__listener.onUploadComplete(link)
         LOGGER.info("Deleting downloaded file/folder..")
         return link
 
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
     def create_directory(self, directory_name, parent_id):
         file_metadata = {
             "name": directory_name,

@@ -110,9 +110,8 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             update_all_messages()
 
-    def onUploadError(self, error: str):
-        LOGGER.error(error)
-        sendMessage(error, self.bot, self.update)
+    def onUploadError(self, error):
+        e_str = str(error.last_attempt.exception()).replace('<', '').replace('>', '')
         with download_dict_lock:
             try:
                 fs_utils.clean_download(download_dict[self.uid].path())
@@ -120,7 +119,8 @@ class MirrorListener(listeners.MirrorListeners):
                 pass
             del download_dict[self.message.message_id]
             count = len(download_dict)
-        if len(count) == 0:
+        sendMessage(e_str, self.bot, self.update)
+        if count == 0:
             self.clean()
         else:
             update_all_messages()
