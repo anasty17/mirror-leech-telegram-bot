@@ -51,14 +51,14 @@ class MirrorListener(listeners.MirrorListeners):
                 return
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
-        name = pathlib.PurePath(path).name
+        up_name = pathlib.PurePath(path).name
         with download_dict_lock:
-            LOGGER.info(f"Upload Name : {name}")
-            drive = gdriveTools.GoogleDriveHelper(name, self)
+            LOGGER.info(f"Upload Name : {up_name}")
+            drive = gdriveTools.GoogleDriveHelper(up_name, self)
             upload_status = UploadStatus(drive, size, self.uid)
             download_dict[self.uid] = upload_status
         update_all_messages()
-        drive.upload(name)
+        drive.upload(up_name)
 
     def onDownloadError(self, error):
         LOGGER.info(self.update.effective_chat.id)
@@ -72,17 +72,18 @@ class MirrorListener(listeners.MirrorListeners):
                 LOGGER.info(str(download_dict))
             except Exception as e:
                 LOGGER.error(str(e))
+                pass
             count = len(download_dict)
-        if count == 0:
-            self.clean()
         if self.message.from_user.username:
             uname = f"@{self.message.from_user.username}"
         else:
             uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
         msg = f"{uname} your download has been stopped due to: {error}"
-        if count != 0:
-            update_all_messages()
         sendMessage(msg, self.bot, self.update)
+        if count == 0:
+            self.clean()
+        else:
+            update_all_messages()
 
     def onUploadStarted(self):
         pass
@@ -97,39 +98,32 @@ class MirrorListener(listeners.MirrorListeners):
                 if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
                     share_url += '/'
                 msg += f'\n\n Shareable link: <a href="{share_url}">here</a>'
-
-        if len(download_dict) == 0:
+            try:
+                fs_utils.clean_download(download_dict[self.uid].path())
+            except FileNotFoundError:
+                pass
+            del download_dict[self.uid]
+            count = len(download_dict)
+        sendMessage(msg,self.bot,self.update)
+        if count == 0:
             self.clean()
         else:
             update_all_messages()
-        sendMessage(msg, self.bot, self.update)
-        try:
-            with download_dict_lock:
-                fs_utils.clean_download(download_dict[self.uid].path())
-                del download_dict[self.uid]
-                count = len(download_dict)
-            if count == 0:
-                self.clean()
-            else:
-                update_all_messages()
-        except FileNotFoundError:
-            pass
 
     def onUploadError(self, error: str):
         LOGGER.error(error)
         sendMessage(error, self.bot, self.update)
         with download_dict_lock:
+            try:
+                fs_utils.clean_download(download_dict[self.uid].path())
+            except FileNotFoundError:
+                pass
             del download_dict[self.message.message_id]
-        if len(download_dict) == 0:
+            count = len(download_dict)
+        if len(count) == 0:
             self.clean()
         else:
             update_all_messages()
-        try:
-            with download_dict_lock:
-                fs_utils.clean_download(download_dict[self.uid].path())
-        except FileNotFoundError:
-            pass
-
 
 def _mirror(bot, update, isTar=False):
     message_args = update.message.text.split(' ')
