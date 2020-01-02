@@ -41,16 +41,17 @@ def cancel_mirror(bot, update):
 @run_async
 def cancel_all(update, bot):
     with download_dict_lock:
+        count = 0
         for dlDetails in list(download_dict.values()):
             if not dlDetails.status() == "Uploading" or dlDetails.status() == "Archiving":
                 aria2.pause([dlDetails.download()])
+                count += 1
                 continue
             if dlDetails.status() == "Queued":
+                count += 1
                 dlDetails._listener.onDownloadError("Download Manually Cancelled By user.")
     delete_all_messages()
-    sendMessage('Cancelled all downloads!', update, bot)
-    sleep(0.5)  # Wait a Second For Aria2 To free Resources.
-    clean_download(DOWNLOAD_DIR)
+    sendMessage(f'Cancelled {count} downloads!', update, bot)
 
 
 cancel_mirror_handler = CommandHandler(BotCommands.CancelMirror, cancel_mirror,
