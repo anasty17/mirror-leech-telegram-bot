@@ -7,7 +7,7 @@ import pickle
 import os
 from tenacity import *
 import threading
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, DOWNLOAD_STATUS_UPDATE_INTERVAL
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
 
