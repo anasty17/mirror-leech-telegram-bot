@@ -1,4 +1,4 @@
-from bot import aria2
+from bot import aria2,download_dict,download_dict_lock
 from bot.helper.ext_utils.bot_utils import *
 from .download_helper import DownloadHelper
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
@@ -26,7 +26,9 @@ class AriaDownloadHelper(DownloadHelper):
             if self.gid == gid:
                 if api.get_download(gid).followed_by_ids:
                     self.gid = api.get_download(gid).followed_by_ids[0]
-                    download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
+                    with download_dict_lock:
+                        download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
+                        download_dict[self._listener.uid].is_torrent =True
                     update_all_messages()
                     LOGGER.info(f'Changed gid from {gid} to {self.gid}')
                 else:
