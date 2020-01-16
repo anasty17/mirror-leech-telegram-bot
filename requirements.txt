@@ -5,3 +5,4 @@ google-auth-oauthlib>=0.4.1,<0.10.0
 aria2p>=0.3.0,<0.10.0
 python-dotenv>=0.10
 tenacity>=6.0.0 
+python-magic
