@@ -1,4 +1,5 @@
 python-telegram-bot==12.2.0
+httplib2==0.15.0
 google-api-python-client>=1.7.11,<1.7.20
 google-auth-httplib2>=0.0.3,<0.1.0
 google-auth-oauthlib>=0.4.1,<0.10.0
