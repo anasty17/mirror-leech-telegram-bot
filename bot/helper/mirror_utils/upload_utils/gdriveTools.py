@@ -36,6 +36,7 @@ class GoogleDriveHelper:
         self.status = None
         self.updater = None
         self.name = name
+        self.update_interval = 3
 
     def cancel(self):
         self.is_cancelled = True
@@ -58,7 +59,7 @@ class GoogleDriveHelper:
             self._file_uploaded_bytes = self.status.total_size * self.status.progress()
             LOGGER.info(f'Chunk size: {get_readable_file_size(chunk_size)}')
             self.uploaded_bytes += chunk_size
-            self.total_time += DOWNLOAD_STATUS_UPDATE_INTERVAL
+            self.total_time += self.update_interval
 
     def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
         media_body = MediaFileUpload(path,
@@ -134,7 +135,7 @@ class GoogleDriveHelper:
         file_path = f"{file_dir}/{file_name}"
         LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
-        self.updater = setInterval(5, self._on_upload_progress)
+        self.updater = setInterval(self.update_interval, self._on_upload_progress)
         if os.path.isfile(file_path):
             try:
                 mime_type = get_mime_type(file_path)
