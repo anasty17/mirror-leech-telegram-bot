@@ -13,7 +13,7 @@ if os.path.exists('log.txt'):
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 load_dotenv('config.env')
 
