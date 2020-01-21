@@ -4,33 +4,66 @@ import urllib.parse as urlparse
 from urllib.parse import parse_qs
 
 import requests
+
 from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import *
 
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, DOWNLOAD_STATUS_UPDATE_INTERVAL, \
+    USE_SERVICE_ACCOUNTS
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.fs_utils import get_mime_type
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
+G_DRIVE_TOKEN_FILE = "token.pickle"
+# Check https://developers.google.com/drive/scopes for all available scopes
+OAUTH_SCOPE = ["https://www.googleapis.com/auth/drive"]
+
+SERVICE_ACCOUNT_INDEX = 0
+
+
+def authorize():
+    # Get credentials
+    credentials = None
+    if not USE_SERVICE_ACCOUNTS:
+        if os.path.exists(G_DRIVE_TOKEN_FILE):
+            with open(G_DRIVE_TOKEN_FILE, 'rb') as f:
+                credentials = pickle.load(f)
+        if credentials is None or not credentials.valid:
+            if credentials and credentials.expired and credentials.refresh_token:
+                credentials.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    'credentials.json', OAUTH_SCOPE)
+                LOGGER.info(flow)
+                credentials = flow.run_console(port=0)
+
+            # Save the credentials for the next run
+            with open(G_DRIVE_TOKEN_FILE, 'wb') as token:
+                pickle.dump(credentials, token)
+    else:
+        credentials = service_account.Credentials \
+            .from_service_account_file(f'accounts/{SERVICE_ACCOUNT_INDEX}.json',
+                                       scopes=OAUTH_SCOPE)
+    return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+
+
+service = authorize()
+
 
 class GoogleDriveHelper:
+    # Redirect URI for installed apps, can be left as is
+    REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
+    G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
+    G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
 
     def __init__(self, name=None, listener=None):
-        self.__G_DRIVE_TOKEN_FILE = "token.pickle"
-        # Check https://developers.google.com/drive/scopes for all available scopes
-        self.__OAUTH_SCOPE = ["https://www.googleapis.com/auth/drive"]
-        # Redirect URI for installed apps, can be left as is
-        self.__REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
-        self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
-        self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
-        self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL = "https://drive.google.com/drive/folders/{}"
         self.__listener = listener
-        self.__service = self.authorize()
         self._file_uploaded_bytes = 0
         self.uploaded_bytes = 0
         self.start_time = 0
@@ -74,6 +107,21 @@ class GoogleDriveHelper:
             self.uploaded_bytes += chunk_size
             self.total_time += self.update_interval
 
+    @staticmethod
+    def __upload_empty_file(path, file_name, mime_type, parent_id=None):
+        media_body = MediaFileUpload(path,
+                                     mimetype=mime_type,
+                                     resumable=False)
+        file_metadata = {
+            'name': file_name,
+            'description': 'mirror',
+            'mimeType': mime_type,
+        }
+        if parent_id is not None:
+            file_metadata['parents'] = [parent_id]
+        return service.files().create(supportsTeamDrives=True,
+                                      body=file_metadata, media_body=media_body).execute()
+
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def __set_permission(self, drive_id):
@@ -83,11 +131,13 @@ class GoogleDriveHelper:
             'value': None,
             'withLink': True
         }
-        return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
+        return service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def upload_file(self, file_path, file_name, mime_type, parent_id):
+        global SERVICE_ACCOUNT_INDEX
+        global service
         # File body description
         file_metadata = {
             'name': file_name,
@@ -101,13 +151,13 @@ class GoogleDriveHelper:
             media_body = MediaFileUpload(file_path,
                                          mimetype=mime_type,
                                          resumable=False)
-            response = self.__service.files().create(supportsTeamDrives=True,
-                                                     body=file_metadata, media_body=media_body).execute()
+            response = service.files().create(supportsTeamDrives=True,
+                                              body=file_metadata, media_body=media_body).execute()
             if not IS_TEAM_DRIVE:
                 self.__set_permission(response['id'])
-            drive_file = self.__service.files().get(supportsTeamDrives=True,
-                                                    fileId=response['id']).execute()
-            download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+            drive_file = service.files().get(supportsTeamDrives=True,
+                                             fileId=response['id']).execute()
+            download_url = self.G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
             return download_url
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
@@ -115,20 +165,28 @@ class GoogleDriveHelper:
                                      chunksize=50 * 1024 * 1024)
 
         # Insert a file
-        drive_file = self.__service.files().create(supportsTeamDrives=True,
-                                                   body=file_metadata, media_body=media_body)
+        drive_file = service.files().create(supportsTeamDrives=True,
+                                            body=file_metadata, media_body=media_body)
         response = None
         while response is None:
             if self.is_cancelled:
                 return None
-            self.status, response = drive_file.next_chunk()
+            try:
+                self.status, response = drive_file.next_chunk()
+            except HttpError as err:
+                if err.resp.get('content-type', '').startswith('application/json'):
+                    reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
+                    if reason == 'userRateLimitExceeded':
+                        SERVICE_ACCOUNT_INDEX += 1
+                        service = authorize()
+                raise err
         self._file_uploaded_bytes = 0
         # Insert new permissions
         if not IS_TEAM_DRIVE:
             self.__set_permission(response['id'])
         # Define file instance and get url for download
-        drive_file = self.__service.files().get(supportsTeamDrives=True, fileId=response['id']).execute()
-        download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+        drive_file = service.files().get(supportsTeamDrives=True, fileId=response['id']).execute()
+        download_url = self.G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         return download_url
 
     def upload(self, file_name: str):
@@ -249,11 +307,11 @@ class GoogleDriveHelper:
     def create_directory(self, directory_name, parent_id):
         file_metadata = {
             "name": directory_name,
-            "mimeType": self.__G_DRIVE_DIR_MIME_TYPE
+            "mimeType": self.G_DRIVE_DIR_MIME_TYPE
         }
         if parent_id is not None:
             file_metadata["parents"] = [parent_id]
-        file = self.__service.files().create(supportsTeamDrives=True, body=file_metadata).execute()
+        file = service.files().create(supportsTeamDrives=True, body=file_metadata).execute()
         file_id = file.get("id")
         if not IS_TEAM_DRIVE:
             self.__set_permission(file_id)
@@ -280,26 +338,6 @@ class GoogleDriveHelper:
                 new_id = parent_id
         return new_id
 
-    def authorize(self):
-        # Get credentials
-        credentials = None
-        if os.path.exists(self.__G_DRIVE_TOKEN_FILE):
-            with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
-                credentials = pickle.load(f)
-        if credentials is None or not credentials.valid:
-            if credentials and credentials.expired and credentials.refresh_token:
-                credentials.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    'credentials.json', self.__OAUTH_SCOPE)
-                LOGGER.info(flow)
-                credentials = flow.run_console(port=0)
-
-            # Save the credentials for the next run
-            with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
-                pickle.dump(credentials, token)
-        return build('drive', 'v3', credentials=credentials, cache_discovery=False)
-
     def drive_list(self, fileName):
         msg = ""
         # Create Search Query for API request.
@@ -307,13 +345,13 @@ class GoogleDriveHelper:
         page_token = None
         results = []
         while True:
-            response = self.__service.files().list(supportsTeamDrives=True,
-                                                   includeTeamDriveItems=True,
-                                                   q=query,
-                                                   spaces='drive',
-                                                   fields='nextPageToken, files(id, name, mimeType, size)',
-                                                   pageToken=page_token,
-                                                   orderBy='modifiedTime desc').execute()
+            response = service.files().list(supportsTeamDrives=True,
+                                            includeTeamDriveItems=True,
+                                            q=query,
+                                            spaces='drive',
+                                            fields='nextPageToken, files(id, name, mimeType, size)',
+                                            pageToken=page_token,
+                                            orderBy='modifiedTime desc').execute()
             for file in response.get('files', []):
                 if len(results) >= 20:
                     break

@@ -87,3 +87,34 @@ sudo docker build . -t mirror-bot
 ```
 sudo docker run mirror-bot
 ```
+
+## Using service accounts for uploading to avoid user rate limit
+
+Many thanks to [AutoRClone](https://github.com/xyou365/AutoRclone) for the scripts
+### Generating service accounts
+Step 1. Generate service accounts [What is service account](https://cloud.google.com/iam/docs/service-accounts) [How to use service account in rclone](https://rclone.org/drive/#service-account-support).
+---------------------------------
+Let us create only the service accounts that we need. 
+**Warning:** abuse of this feature is not the aim of autorclone and we do **NOT** recommend that you make a lot of projects, just one project and 100 sa allow you plenty of use, its also possible that overabuse might get your projects banned by google. 
+
+```
+Note: 1 service account can copy around 750gb a day, 1 project makes 100 service accounts so thats 75tb a day, for most users this should easily suffice. 
+```
+
+`python3 gen_sa_accounts.py --quick-setup 1 --new-only`
+
+A folder named accounts will be created which will contain keys for the service accounts created
+```
+We highly recommend to zip this folder and store it somewhere safe, so that you do not have to create a new project everytime you want to deploy the bot
+```
+### Adding service accounts to Google Groups:
+We use Google Groups to manager our service accounts considering the  
+[Official limits to the members of Team Drive](https://support.google.com/a/answer/7338880?hl=en) (Limit for individuals and groups directly added as members: 600).
+
+1. Turn on the Directory API following [official steps](https://developers.google.com/admin-sdk/directory/v1/quickstart/python) (save the generated json file to folder `credentials`).
+
+2. Create group for your organization [in the Admin console](https://support.google.com/a/answer/33343?hl=en). After create a group, you will have an address for example`sa@yourdomain.com`.
+
+3. Run `python3 add_to_google_group.py -g sa@yourdomain.com`
+
+4. Now, add Google Groups (**Step 2**) to manager your service accounts, add the group address `sa@yourdomain.com` or `sa@googlegroups.com` to the Team drive or folder
