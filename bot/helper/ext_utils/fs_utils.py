@@ -4,6 +4,7 @@ import shutil
 import os
 import pathlib
 import magic
+import tarfile
 
 
 def clean_download(path: str):
@@ -30,12 +31,14 @@ def exit_clean_up(signal, frame):
         sys.exit(1)
 
 
-def tar(orig_path: str):
-    path = pathlib.PurePath(orig_path)
-    base = path.name
-    root = pathlib.Path(path.parent.as_posix()).absolute().as_posix()
-    LOGGER.info(f'Tar: orig_path: {orig_path}, base: {base}, root: {root}')
-    return shutil.make_archive(orig_path, 'tar', root, base)
+def tar(org_path):
+    tar_path = org_path + ".tar"
+    path = pathlib.PurePath(org_path)
+    LOGGER.info(f'Tar: orig_path: {org_path}, tar_path: {tar_path}')
+    tar = tarfile.open(tar_path, "w")
+    tar.add(org_path, arcname=path.name)
+    tar.close()
+    return tar_path
 
 
 def get_mime_type(file_path):
