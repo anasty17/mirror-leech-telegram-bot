@@ -36,6 +36,7 @@ class GoogleDriveHelper:
         self.__listener = listener
         self._file_uploaded_bytes = 0
         self.uploaded_bytes = 0
+        self.UPDATE_INTERVAL = 5
         self.start_time = 0
         self.total_time = 0
         self._should_update = True
