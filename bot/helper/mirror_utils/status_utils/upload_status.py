@@ -28,7 +28,10 @@ class UploadStatus(Status):
         return self.obj.name
 
     def progress_raw(self):
-        return self.obj.uploaded_bytes / self.__size * 100
+        try:
+            return self.obj.uploaded_bytes / self.__size * 100
+        except ZeroDivisionError:
+            return 0
 
     def progress(self):
         return f'{round(self.progress_raw(), 2)}%'
