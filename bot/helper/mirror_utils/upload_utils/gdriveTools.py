@@ -1,15 +1,16 @@
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from googleapiclient.http import MediaFileUpload
-from googleapiclient.errors import HttpError
-import pickle
 import os
+import pickle
+
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+from googleapiclient.http import MediaFileUpload
 from tenacity import *
-import threading
+
 from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, DOWNLOAD_STATUS_UPDATE_INTERVAL
-from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import *
+from bot.helper.ext_utils.fs_utils import get_mime_type
 
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
@@ -52,7 +53,8 @@ class GoogleDriveHelper:
         except ZeroDivisionError:
             return 0
 
-    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def _on_upload_progress(self):
         if self.status is not None:
             chunk_size = self.status.total_size * self.status.progress() - self._file_uploaded_bytes
@@ -61,21 +63,8 @@ class GoogleDriveHelper:
             self.uploaded_bytes += chunk_size
             self.total_time += self.update_interval
 
-    def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
-        media_body = MediaFileUpload(path,
-                                     mimetype=mime_type,
-                                     resumable=False)
-        file_metadata = {
-            'name': file_name,
-            'description': 'mirror',
-            'mimeType': mime_type,
-        }
-        if parent_id is not None:
-            file_metadata['parents'] = [parent_id]
-        return self.__service.files().create(supportsTeamDrives=True,
-                                             body=file_metadata, media_body=media_body).execute()
-
-    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def __set_permission(self, drive_id):
         permissions = {
             'role': 'reader',
@@ -85,7 +74,8 @@ class GoogleDriveHelper:
         }
         return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
 
-    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def upload_file(self, file_path, file_name, mime_type, parent_id):
         # File body description
         file_metadata = {
@@ -104,13 +94,14 @@ class GoogleDriveHelper:
                                                      body=file_metadata, media_body=media_body).execute()
             if not IS_TEAM_DRIVE:
                 self.__set_permission(response['id'])
-            drive_file = self.__service.files().get(fileId=response['id']).execute()
+            drive_file = self.__service.files().get(supportsTeamDrives=True,
+                                                    fileId=response['id']).execute()
             download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
             return download_url
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True,
-                                     chunksize=50*1024*1024)
+                                     chunksize=50 * 1024 * 1024)
 
         # Insert a file
         drive_file = self.__service.files().create(supportsTeamDrives=True,
@@ -170,7 +161,8 @@ class GoogleDriveHelper:
         LOGGER.info("Deleting downloaded file/folder..")
         return link
 
-    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
     def create_directory(self, directory_name, parent_id):
         file_metadata = {
             "name": directory_name,
