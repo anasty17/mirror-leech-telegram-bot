@@ -323,8 +323,8 @@ class GoogleDriveHelper:
         # Get credentials
         credentials = None
         if not USE_SERVICE_ACCOUNTS:
-            if os.path.exists(G_DRIVE_TOKEN_FILE):
-                with open(G_DRIVE_TOKEN_FILE, 'rb') as f:
+            if os.path.exists(self.__G_DRIVE_TOKEN_FILE):
+                with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                     credentials = pickle.load(f)
             if credentials is None or not credentials.valid:
                 if credentials and credentials.expired and credentials.refresh_token:
@@ -336,7 +336,7 @@ class GoogleDriveHelper:
                     credentials = flow.run_console(port=0)
 
                 # Save the credentials for the next run
-                with open(G_DRIVE_TOKEN_FILE, 'wb') as token:
+                with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
                     pickle.dump(credentials, token)
         else:
             LOGGER.info(f"Authorizing with {SERVICE_ACCOUNT_INDEX}.json service account")
@@ -349,35 +349,26 @@ class GoogleDriveHelper:
         msg = ""
         # Create Search Query for API request.
         query = f"'{parent_id}' in parents and (name contains '{fileName}')"
-        page_token = None
-        count = 0
-        while True:
-            response = self.__service.files().list(supportsTeamDrives=True,
-                                                   includeTeamDriveItems=True,
-                                                   q=query,
-                                                   spaces='drive',
-                                                   fields='nextPageToken, files(id, name, mimeType, size)',
-                                                   pageToken=page_token,
-                                                   orderBy='modifiedTime desc').execute()
-            for file in response.get('files', []):
-                if count >= 20:
-                    break
-                if file.get(
-                        'mimeType') == "application/vnd.google-apps.folder":  # Detect Whether Current Entity is a Folder or File.
-                    msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                           f"</a> (folder)"
-                    if INDEX_URL is not None:
-                        url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}/')
-                        msg += f' | <a href="{url}"> Index URL</a>'
-                else:
-                    msg += f"⁍ <a href='https://drive.google.com/uc?id={file.get('id')}" \
-                           f"&export=download'>{file.get('name')}</a> ({get_readable_file_size(int(file.get('size')))})"
-                    if INDEX_URL is not None:
-                        url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}')
-                        msg += f' | <a href="{url}"> Index URL</a>'
-                msg += '\n'
-                count += 1
-            page_token = response.get('nextPageToken', None)
-            if page_token is None or count >= 20:
-                break
+        response = self.__service.files().list(supportsTeamDrives=True,
+                                               includeTeamDriveItems=True,
+                                               q=query,
+                                               spaces='drive',
+                                               pageSize=20,
+                                               fields='files(id, name, mimeType, size)',
+                                               orderBy='modifiedTime desc').execute()
+        for file in response.get('files', []):
+            if file.get(
+                    'mimeType') == "application/vnd.google-apps.folder":  # Detect Whether Current Entity is a Folder or File.
+                msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
+                       f"</a> (folder)"
+                if INDEX_URL is not None:
+                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}/')
+                    msg += f' | <a href="{url}"> Index URL</a>'
+            else:
+                msg += f"⁍ <a href='https://drive.google.com/uc?id={file.get('id')}" \
+                       f"&export=download'>{file.get('name')}</a> ({get_readable_file_size(int(file.get('size')))})"
+                if INDEX_URL is not None:
+                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}/')
+                    msg += f' | <a href="{url}"> Index URL</a>'
+            msg += '\n'
         return msg
