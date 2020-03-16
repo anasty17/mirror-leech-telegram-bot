@@ -15,3 +15,9 @@ class DownloadCancelled(Exception):
     def __init__(self, message, error=None):
         super().__init__(message)
         self.error = error
+
+
+class DirectDownloadLinkException(Exception):
+    def __init__(self, message, error=None):
+        super().__init__(message)
+        self.error = error

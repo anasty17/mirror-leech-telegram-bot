@@ -13,6 +13,8 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 import pathlib
 import os
+from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -104,7 +106,7 @@ class MirrorListener(listeners.MirrorListeners):
                 pass
             del download_dict[self.uid]
             count = len(download_dict)
-        sendMessage(msg,self.bot,self.update)
+        sendMessage(msg, self.bot, self.update)
         if count == 0:
             self.clean()
         else:
@@ -124,6 +126,7 @@ class MirrorListener(listeners.MirrorListeners):
             self.clean()
         else:
             update_all_messages()
+
 
 def _mirror(bot, update, isTar=False):
     message_args = update.message.text.split(' ')
@@ -145,6 +148,11 @@ def _mirror(bot, update, isTar=False):
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link):
         sendMessage('No download source provided', bot, update)
         return
+
+    try:
+        link = direct_link_generator(link)
+    except DirectDownloadLinkException as e:
+        LOGGER.info(f'{link}: {e.error}')
     listener = MirrorListener(bot, update, isTar)
     aria = aria2_download.AriaDownloadHelper(listener)
     aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')

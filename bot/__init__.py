@@ -28,7 +28,7 @@ LOGGER = logging.getLogger(__name__)
 
 try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
-        logging.ERROR('The README.md file there to be read! Exiting now!')
+        logging.error('The README.md file there to be read! Exiting now!')
         exit()
 except KeyError:
     pass
