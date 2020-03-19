@@ -80,11 +80,10 @@ except KeyError:
     INDEX_URL = None
 try:
     IS_TEAM_DRIVE = getConfig('IS_TEAM_DRIVE')
-    if IS_TEAM_DRIVE == 'True' or IS_TEAM_DRIVE == 'true':
+    if IS_TEAM_DRIVE.lower() == 'true':
         IS_TEAM_DRIVE = True
     else:
         IS_TEAM_DRIVE = False
-
 except KeyError:
     IS_TEAM_DRIVE = False
 updater = tg.Updater(token=BOT_TOKEN)
