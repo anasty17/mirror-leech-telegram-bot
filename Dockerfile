@@ -8,7 +8,7 @@ RUN apk add --no-cache --update \
       ca-certificates \
       aria2 \
       libmagic \
-      py3-lxml \
+      python3-lxml \
       curl \
       pv \
       jq
