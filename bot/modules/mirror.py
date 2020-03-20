@@ -15,6 +15,7 @@ import pathlib
 import os
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+import requests
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -96,8 +97,7 @@ class MirrorListener(listeners.MirrorListeners):
             msg = f'<a href="{link}">{download_dict[self.uid].name()}</a> ({download_dict[self.uid].size()})'
             LOGGER.info(f'Done Uploading {download_dict[self.uid].name()}')
             if INDEX_URL is not None:
-                share_url = f'{INDEX_URL}/{download_dict[self.uid].name()}'
-                share_url = share_url.replace(' ', '%20')
+                share_url = requests.utils.requote_uri(f'{INDEX_URL}/{download_dict[self.uid].name()}')
                 if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
                     share_url += '/'
                 msg += f'\n\n Shareable link: <a href="{share_url}">here</a>'
