@@ -24,6 +24,7 @@ class GoogleDriveHelper:
         self.__REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
+        self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL = "https://drive.google.com/drive/folders/{}"
         self.__listener = listener
         self.__service = self.authorize()
         self._file_uploaded_bytes = 0
@@ -51,6 +52,13 @@ class GoogleDriveHelper:
             return self.uploaded_bytes / self.total_time
         except ZeroDivisionError:
             return 0
+
+    def parseLink(self,link):
+        if "folders" in link or "file" in link:
+            node_id = link.split("?")[0].split("/")[-1].replace("/",'')
+        else:
+            node_id = link.split("=")[1].split("&")[0].replace("/",'')
+        return node_id 
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
@@ -159,6 +167,78 @@ class GoogleDriveHelper:
         self.__listener.onUploadComplete(link)
         LOGGER.info("Deleting downloaded file/folder..")
         return link
+
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6),stop=stop_after_attempt(5),retry=retry_if_exception_type(HttpError),before=before_log(LOGGER,logging.DEBUG))
+    def copyFile(self,file_id,dest_id):
+        body = {
+            'parents': [dest_id]
+        }
+        return self.__service.files().copy(supportsAllDrives=True,fileId=file_id,body=body).execute()
+
+    def clone(self,link):
+        self.transferred_size = 0 
+        file_id = self.parseLink(link)   
+        msg = ""
+        LOGGER.info(f"File ID: {file_id}")
+        try:
+            meta = self.__service.files().get(fileId=file_id,fields="name,id,mimeType,size").execute()
+        except Exception as e:
+            return f"{str(e).replace('>','').replace('<','')}"
+        if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:
+            dir_id = self.create_directory(meta.get('name'),parent_id)
+            try:
+                result = self.cloneFolder(meta.get('name'),meta.get('name'),meta.get('id'),dir_id)
+            except Exception as e:
+                if isinstance(e,RetryError):
+                    LOGGER.info(f"Total Attempts: {e.last_attempt.attempt_number}")
+                    err = e.last_attempt.exception()
+                else:
+                    err = str(e).replace('>','').replace('<','')
+                LOGGER.error(err)
+                return err
+            msg += f'<a href="{self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)}">{meta.get("name")}</a> ({get_readable_file_size(self.transferred_size)})'
+        else:
+            file = self.copyFile(meta.get('id'),parent_id)
+            msg += f'<a href="{self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))}">{meta.get("name")}</a> ({get_readable_file_size(int(meta.get("size")))})'
+        return msg
+
+
+    def cloneFolder(self,name,local_path,folder_id,parent_id):
+        page_token = None
+        q =f"'{folder_id}' in parents"
+        files = []
+        LOGGER.info(f"Syncing: {local_path}")
+        new_id = None
+        while True:
+            response = self.__service.files().list(q=q,
+                                                  spaces='drive',
+                                                  fields='nextPageToken, files(id, name, mimeType,size)',
+                                                  pageToken=page_token).execute()
+            for file in response.get('files', []):
+                files.append(file)
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break  
+        if len(files) == 0:
+            return parent_id
+        for file in files:
+            if file.get('mimeType') == self.__G_DRIVE_DIR_MIME_TYPE:
+                file_path = os.path.join(local_path,file.get('name'))
+                current_dir_id = self.create_directory(file.get('name'),parent_id)
+                new_id = self.cloneFolder(file.get('name'),file_path,file.get('id'),current_dir_id) 
+            else:
+                self.transferred_size += int(file.get('size'))
+                try:
+                    self.copyFile(file.get('id'),parent_id)
+                    new_id = parent_id
+                except Exception as e:
+                    if isinstance(e,RetryError):
+                        LOGGER.info(f"Total Attempts: {e.last_attempt.attempt_number}")
+                        err = e.last_attempt.exception()
+                    else:
+                        err = e
+                    LOGGER.error(err)
+        return new_id
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
