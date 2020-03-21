@@ -13,7 +13,7 @@ if os.path.exists('log.txt'):
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
+                    level=logging.WARNING)
 
 load_dotenv('config.env')
 
@@ -69,6 +69,9 @@ try:
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
     OWNER_ID = int(getConfig('OWNER_ID'))
     AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
+    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
+    TELEGRAM_API = getConfig('TELEGRAM_API')
+    TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
