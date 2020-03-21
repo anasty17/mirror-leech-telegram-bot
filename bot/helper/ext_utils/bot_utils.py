@@ -54,6 +54,14 @@ def get_readable_file_size(size_in_bytes) -> str:
     except IndexError:
         return 'File too large'
 
+def getDownloadByGid(gid):
+    with download_dict_lock:
+        for dl in download_dict.values():
+            if dl.status() == MirrorStatus.STATUS_DOWNLOADING:
+                if dl.download().gid == gid:
+                    return dl
+    return None
+
 
 def get_progress_bar_string(status):
     completed = status.processed_bytes() / 8
@@ -95,6 +103,7 @@ def get_readable_message():
                 if hasattr(download, 'is_torrent'):
                     msg += f"| P: {download.download().connections} " \
                            f"| S: {download.download().num_seeders}"
+                msg += f"\nGID: <code>{download.download().gid}</code>"
             msg += "\n\n"
         return msg
 
