@@ -3,7 +3,7 @@ import time
 
 from pyrogram import Client
 
-from bot import LOGGER, bot, download_dict, download_dict_lock, TELEGRAM_API, \
+from bot import LOGGER, download_dict, download_dict_lock, TELEGRAM_API, \
     TELEGRAM_HASH, USER_SESSION_STRING
 from .download_helper import DownloadHelper
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
@@ -55,7 +55,8 @@ class TelegramDownloadHelper(DownloadHelper):
                 return 0
 
     def __onDownloadComplete(self):
-
+        with global_lock:
+            GLOBAL_GID.remove(self.gid)
         self.__listener.onDownloadComplete()
 
     def __download(self, message, path):
@@ -64,10 +65,7 @@ class TelegramDownloadHelper(DownloadHelper):
         self.__onDownloadComplete()
 
     def add_download(self, message, path):
-        if message.chat.type == "private":
-            _message = self.__user_bot.get_messages(bot.get_me().id, message.message_id)
-        else:
-            _message = self.__user_bot.get_messages(message.chat.id, message.message_id)
+        _message = self.__user_bot.get_messages(message.chat.id, message.message_id)
         media = None
         media_array = [_message.document, _message.video, _message.audio]
         for i in media_array:

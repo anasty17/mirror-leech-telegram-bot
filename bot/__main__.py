@@ -1,17 +1,19 @@
-from telegram.ext import CommandHandler, run_async
-from bot import dispatcher, LOGGER, updater, botStartTime
-from bot.helper.ext_utils import fs_utils
-from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
-import signal
-import time
-from bot.helper.telegram_helper.message_utils import *
 import shutil
-from .helper.telegram_helper.filters import CustomFilters
+import signal
+
+from telegram.ext import CommandHandler, run_async
+
+from bot import dispatcher, updater, botStartTime
+from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror
+from bot.helper.telegram_helper.message_utils import *
+from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
+from .helper.telegram_helper.filters import CustomFilters
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone
+
 
 @run_async
-def stats(bot,update):
+def stats(bot, update):
     currentTime = get_readable_time((time.time() - botStartTime))
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
