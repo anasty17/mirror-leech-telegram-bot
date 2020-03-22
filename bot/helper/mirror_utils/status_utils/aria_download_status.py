@@ -74,3 +74,7 @@ class AriaDownloadStatus(Status):
 
     def uid(self):
         return self.__uid
+
+    def gid(self):
+        self.__update()
+        return self.__gid

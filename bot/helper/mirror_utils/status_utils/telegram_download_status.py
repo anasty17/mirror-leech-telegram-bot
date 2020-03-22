@@ -1,12 +1,15 @@
+from bot import DOWNLOAD_DIR
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from .status import Status
-from bot import DOWNLOAD_DIR
 
 
 class TelegramDownloadStatus(Status):
     def __init__(self, obj, uid):
         self.obj = obj
         self.uid = uid
+
+    def gid(self):
+        return self.obj.gid
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.uid}"

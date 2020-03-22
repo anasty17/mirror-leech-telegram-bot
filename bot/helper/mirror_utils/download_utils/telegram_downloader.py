@@ -1,14 +1,16 @@
-from .download_helper import DownloadHelper
 import threading
 import time
-from ..status_utils.telegram_download_status import TelegramDownloadStatus
-from bot.helper.ext_utils.bot_utils import get_readable_file_size
-from bot import LOGGER, bot, download_dict, download_dict_lock, TELEGRAM_API,\
-    TELEGRAM_HASH, USER_SESSION_STRING
+
 from pyrogram import Client
+
+from bot import LOGGER, bot, download_dict, download_dict_lock, TELEGRAM_API, \
+    TELEGRAM_HASH, USER_SESSION_STRING
+from .download_helper import DownloadHelper
+from ..status_utils.telegram_download_status import TelegramDownloadStatus
 
 global_lock = threading.Lock()
 GLOBAL_GID = set()
+
 
 class TelegramDownloadHelper(DownloadHelper):
     def __init__(self, listener):
@@ -19,8 +21,8 @@ class TelegramDownloadHelper(DownloadHelper):
         self.__gid = ''
         self.__start_time = time.time()
         self.__user_bot = Client(api_id=TELEGRAM_API,
-         api_hash=TELEGRAM_HASH,
-         session_name=USER_SESSION_STRING)
+                                 api_hash=TELEGRAM_HASH,
+                                 session_name=USER_SESSION_STRING)
         self.__user_bot.start()
 
     @property
@@ -51,15 +53,16 @@ class TelegramDownloadHelper(DownloadHelper):
                 self.progress = current / self.size * 100
             except ZeroDivisionError:
                 return 0
+
     def __onDownloadComplete(self):
-        
+
         self.__listener.onDownloadComplete()
 
     def __download(self, message, path):
         self.__user_bot.download_media(message,
-                progress=self.__onDownloadProgress, file_name=path)
+                                       progress=self.__onDownloadProgress, file_name=path)
         self.__onDownloadComplete()
-    
+
     def add_download(self, message, path):
         if message.chat.type == "private":
             _message = self.__user_bot.get_messages(bot.get_me().id, message.message_id)
@@ -70,7 +73,7 @@ class TelegramDownloadHelper(DownloadHelper):
             with global_lock:
                 # For avoiding locking the thread lock for long time unnecessarily
                 download = media.file_id not in GLOBAL_GID
-            
+
             if download:
                 self.__onDownloadStart(media.file_name, media.file_size, media.file_id)
                 LOGGER.info(media.file_id)
