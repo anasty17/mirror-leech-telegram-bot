@@ -5,13 +5,15 @@
 #
 """ Helper Module containing various sites direct links generators"""
 
-from os import popen
+import json
 import re
 import urllib.parse
-import json
+from os import popen
 from random import choice
+
 import requests
 from bs4 import BeautifulSoup
+
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 
@@ -32,7 +34,7 @@ def direct_link_generator(link: str):
     elif 'mediafire.com' in link:
         return mediafire(link)
     elif 'sourceforge.net' in link:
-            return sourceforge(link)
+        return sourceforge(link)
     elif 'osdn.net' in link:
         return osdn(link)
     elif 'github.com' in link:
@@ -40,8 +42,7 @@ def direct_link_generator(link: str):
     elif 'androidfilehost.com' in link:
         return androidfilehost(link)
     else:
-        raise DirectDownloadLinkException(re.findall(r"\bhttps?://(.*?[^/]+)",
-                            link)[0] + 'is not supported')
+        raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 
 def gdrive(url: str) -> str:
