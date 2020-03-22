@@ -1,16 +1,20 @@
 import os
 import pickle
+import urllib.parse as urlparse
+from urllib.parse import parse_qs
 
+import requests
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import *
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, DOWNLOAD_STATUS_UPDATE_INTERVAL
+
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.fs_utils import get_mime_type
-import requests
+
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 
 
@@ -53,12 +57,12 @@ class GoogleDriveHelper:
         except ZeroDivisionError:
             return 0
 
-    def parseLink(self,link):
+    @staticmethod
+    def getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
-            node_id = link.split("?")[0].split("/")[-1].replace("/",'')
-        else:
-            node_id = link.split("=")[1].split("&")[0].replace("/",'')
-        return node_id 
+            return link.rsplit('/')[-1]
+        parsed = urlparse.urlparse(link)
+        return parse_qs(parsed.query)['id'][0]
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
@@ -176,8 +180,8 @@ class GoogleDriveHelper:
         return self.__service.files().copy(supportsAllDrives=True,fileId=file_id,body=body).execute()
 
     def clone(self,link):
-        self.transferred_size = 0 
-        file_id = self.parseLink(link)   
+        self.transferred_size = 0
+        file_id = self.getIdFromUrl(link)
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
