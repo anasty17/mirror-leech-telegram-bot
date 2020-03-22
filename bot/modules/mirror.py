@@ -1,23 +1,25 @@
+import os
+import pathlib
+
+import requests
 from telegram.ext import CommandHandler, run_async
-from bot.helper.mirror_utils.status_utils import listeners
-from bot.helper.mirror_utils.upload_utils import gdriveTools
-from bot.helper.mirror_utils.download_utils import aria2_download
-from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
-from bot.helper.mirror_utils.status_utils.tar_status import TarStatus
+
+from bot import Interval, INDEX_URL
 from bot import dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, download_dict, download_dict_lock
 from bot.helper.ext_utils import fs_utils, bot_utils
-from bot import Interval, INDEX_URL
-from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import setInterval
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.bot_commands import BotCommands
-import pathlib
-import os
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.mirror_utils.download_utils import aria2_download
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
-import requests
-import threading
+from bot.helper.mirror_utils.status_utils import listeners
+from bot.helper.mirror_utils.status_utils.tar_status import TarStatus
+from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
+from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import *
+
 
 class MirrorListener(listeners.MirrorListeners):
     def __init__(self, bot, update, isTar=False, tag=None):
@@ -142,12 +144,18 @@ def _mirror(bot, update, isTar=False):
     link = link.strip()
     reply_to = update.message.reply_to_message
     if reply_to is not None:
+        file = None
         tag = reply_to.from_user.username
-        document = reply_to.document
+        media_array = [reply_to.document, reply_to.video, reply_to.audio]
+        for i in media_array:
+            if i is not None:
+                file = i
+                break
+
         if len(link) == 0:
-            if document is not None:
-                if document.file_size <= 20 * 1024 * 1024:
-                    link = document.get_file().file_path
+            if file is not None:
+                if file.file_size <= 20 * 1024 * 1024:
+                    link = file.get_file().file_path
                 else:
                     listener = MirrorListener(bot, update, isTar, tag)
                     tg_downloader = TelegramDownloadHelper(listener)
