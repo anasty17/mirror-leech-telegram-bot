@@ -112,7 +112,8 @@ class GoogleDriveHelper:
             'value': None,
             'withLink': True
         }
-        return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id, body=permissions).execute()
+        return self.__service.permissions().create(supportsTeamDrives=True, fileId=drive_id,
+                                                   body=permissions).execute()
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
@@ -251,10 +252,12 @@ class GoogleDriveHelper:
                     err = str(e).replace('>', '').replace('<', '')
                 LOGGER.error(err)
                 return err
-            msg += f'<a href="{self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)}">{meta.get("name")}</a> ({get_readable_file_size(self.transferred_size)})'
+            msg += f'<a href="{self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)}">{meta.get("name")}</a>' \
+                   f' ({get_readable_file_size(self.transferred_size)})'
         else:
             file = self.copyFile(meta.get('id'), parent_id)
-            msg += f'<a href="{self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))}">{meta.get("name")}</a> ({get_readable_file_size(int(meta.get("size")))})'
+            msg += f'<a href="{self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))}">{meta.get("name")}</a>' \
+                   f' ({get_readable_file_size(int(meta.get("size")))}) '
         return msg
 
     def cloneFolder(self, name, local_path, folder_id, parent_id):
@@ -264,7 +267,9 @@ class GoogleDriveHelper:
         LOGGER.info(f"Syncing: {local_path}")
         new_id = None
         while True:
-            response = self.__service.files().list(q=q,
+            response = self.__service.files().list(supportsTeamDrives=True,
+                                                   includeTeamDriveItems=True,
+                                                   q=q,
                                                    spaces='drive',
                                                    fields='nextPageToken, files(id, name, mimeType,size)',
                                                    pageToken=page_token).execute()
