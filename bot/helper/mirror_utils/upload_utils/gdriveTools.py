@@ -185,7 +185,7 @@ class GoogleDriveHelper:
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
-            meta = self.__service.files().get(fileId=file_id,fields="name,id,mimeType,size").execute()
+            meta = self.__service.files().get(supportsAllDrives=True,fileId=file_id,fields="name,id,mimeType,size").execute()
         except Exception as e:
             return f"{str(e).replace('>','').replace('<','')}"
         if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:
