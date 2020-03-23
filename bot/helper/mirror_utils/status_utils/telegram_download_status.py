@@ -50,3 +50,6 @@ class TelegramDownloadStatus(Status):
             return f'{get_readable_time(seconds)}'
         except ZeroDivisionError:
             return '-'
+
+    def download(self):
+        return self.obj

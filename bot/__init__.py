@@ -1,10 +1,11 @@
 import logging
-import aria2p
-import threading
 import os
-from dotenv import load_dotenv
-import telegram.ext as tg
+import threading
 import time
+
+import aria2p
+import telegram.ext as tg
+from dotenv import load_dotenv
 
 botStartTime = time.time()
 if os.path.exists('log.txt'):
@@ -13,7 +14,7 @@ if os.path.exists('log.txt'):
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.WARNING)
+                    level=logging.INFO)
 
 load_dotenv('config.env')
 
