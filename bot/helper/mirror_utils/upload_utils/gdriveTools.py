@@ -228,7 +228,20 @@ class GoogleDriveHelper:
         body = {
             'parents': [dest_id]
         }
-        return self.__service.files().copy(supportsAllDrives=True, fileId=file_id, body=body).execute()
+
+        try:
+            res = self.__service.files().copy(supportsAllDrives=True,fileId=file_id,body=body).execute()
+            return res
+        except HttpError as err:
+            if err.resp.get('content-type', '').startswith('application/json'):
+                reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
+                if reason == 'userRateLimitExceeded' or reason == 'dailyLimitExceeded':
+                    if USE_SERVICE_ACCOUNTS:
+                        self.switchServiceAccount()
+                        LOGGER.info(f"Got: {reason}, Trying Again.")
+                        self.copyFile(file_id,dest_id)
+                else:
+                    raise err
 
     def clone(self, link):
         self.transferred_size = 0
