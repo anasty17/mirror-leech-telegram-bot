@@ -3,6 +3,7 @@ import pickle
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 
+import json
 import requests
 
 from google.auth.transport.requests import Request
@@ -13,7 +14,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import *
 
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, DOWNLOAD_STATUS_UPDATE_INTERVAL, \
+from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
     USE_SERVICE_ACCOUNTS
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.fs_utils import get_mime_type
@@ -31,6 +32,7 @@ class GoogleDriveHelper:
         self.__REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob"
         self.__G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
         self.__G_DRIVE_BASE_DOWNLOAD_URL = "https://drive.google.com/uc?id={}&export=download"
+        self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL = "https://drive.google.com/drive/folders/{}"
         self.__listener = listener
         self.__service = self.authorize()
         self.__listener = listener
@@ -46,7 +48,6 @@ class GoogleDriveHelper:
         self.updater = None
         self.name = name
         self.update_interval = 3
-        self.service_account_count = len(os.listdir("accounts"))
 
     def cancel(self):
         self.is_cancelled = True
@@ -79,8 +80,7 @@ class GoogleDriveHelper:
             self.uploaded_bytes += chunk_size
             self.total_time += self.update_interval
 
-    @staticmethod
-    def __upload_empty_file(path, file_name, mime_type, parent_id=None):
+    def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
         media_body = MediaFileUpload(path,
                                      mimetype=mime_type,
                                      resumable=False)
@@ -96,7 +96,8 @@ class GoogleDriveHelper:
 
     def switchServiceAccount(self):
         global SERVICE_ACCOUNT_INDEX
-        if SERVICE_ACCOUNT_INDEX == self.service_account_count - 1:
+        service_account_count = len(os.listdir("accounts"))
+        if SERVICE_ACCOUNT_INDEX == service_account_count - 1:
             SERVICE_ACCOUNT_INDEX = 0
         SERVICE_ACCOUNT_INDEX += 1
         LOGGER.info(f"Switching to {SERVICE_ACCOUNT_INDEX}.json service account")
