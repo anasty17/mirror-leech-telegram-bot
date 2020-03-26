@@ -36,8 +36,6 @@ def direct_link_generator(link: str):
         return cm_ru(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
-    elif 'sourceforge.net' in link:
-        return sourceforge(link)
     elif 'osdn.net' in link:
         return osdn(link)
     elif 'github.com' in link:
@@ -172,23 +170,6 @@ def mediafire(url: str) -> str:
     page = BeautifulSoup(requests.get(link).content, 'lxml')
     info = page.find('a', {'aria-label': 'Download file'})
     dl_url = info.get('href')
-    return dl_url
-
-
-def sourceforge(url: str) -> str:
-    """ SourceForge direct links generator """
-    try:
-        link = re.findall(r'\bhttps?://.*sourceforge\.net\S+', url)[0]
-    except IndexError:
-        raise DirectDownloadLinkException("`No SourceForge links found`\n")
-    file_path = re.findall(r'files(.*)/download', link)[0]
-    project = re.findall(r'projects?/(.*?)/files', link)[0]
-    mirrors = f'https://sourceforge.net/settings/mirror_choices?' \
-              f'projectname={project}&filename={file_path}'
-    page = BeautifulSoup(requests.get(mirrors).content, 'html.parser')
-    info = page.find('ul', {'id': 'mirrorList'}).findAll('li')
-    for mirror in info[1:]:
-        dl_url = f'https://{mirror["id"]}.dl.sourceforge.net/project/{project}/{file_path}'
     return dl_url
 
 
