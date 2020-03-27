@@ -1,6 +1,3 @@
-import os
-import pathlib
-
 import requests
 from telegram.ext import CommandHandler, run_async
 
@@ -19,6 +16,9 @@ from bot.helper.mirror_utils.upload_utils import gdriveTools
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import *
+from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
+import pathlib
+import os
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -175,8 +175,16 @@ def _mirror(bot, update, isTar=False):
     except DirectDownloadLinkException as e:
         LOGGER.info(f'{link}: {e}')
     listener = MirrorListener(bot, update, isTar, tag)
-    aria = aria2_download.AriaDownloadHelper(listener)
-    aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
+    try:
+        ydl = YoutubeDLHelper(listener)
+        sup_link = ydl.extractMetaData(link)
+    except Exception as e:
+        sup_link = None
+    if sup_link:
+        ydl.add_download(link)
+    else:
+        aria = aria2_download.AriaDownloadHelper(listener)
+        aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
     sendStatusMessage(update, bot)
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
