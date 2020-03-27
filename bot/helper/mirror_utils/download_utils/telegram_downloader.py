@@ -64,7 +64,10 @@ class TelegramDownloadHelper(DownloadHelper):
 
     def __onDownloadError(self, error):
         with global_lock:
-            GLOBAL_GID.remove(self.gid)
+            try:
+                GLOBAL_GID.remove(self.gid)
+            except KeyError:
+                pass
         self.__listener.onDownloadError(error)
 
     def __onDownloadComplete(self):
