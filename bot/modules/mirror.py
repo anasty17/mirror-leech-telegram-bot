@@ -173,7 +173,7 @@ def _mirror(bot, update, isTar=False):
     try:
         link = direct_link_generator(link)
     except DirectDownloadLinkException as e:
-        LOGGER.info(f'{link}: {e.error}')
+        LOGGER.info(f'{link}: {e}')
     listener = MirrorListener(bot, update, isTar, tag)
     aria = aria2_download.AriaDownloadHelper(listener)
     aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
