@@ -14,7 +14,6 @@ class YoutubeDLHelper(DownloadHelper):
         self.__listener = listener
         self.__gid = ""
         self.opts = {
-            'format': 'bestaudio/best',
             'progress_hooks': [self.__onDownloadProgress],
         }
         self.ydl = YoutubeDL(self.opts)
