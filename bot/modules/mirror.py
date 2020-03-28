@@ -175,13 +175,13 @@ def _mirror(bot, update, isTar=False):
     except DirectDownloadLinkException as e:
         LOGGER.info(f'{link}: {e}')
     listener = MirrorListener(bot, update, isTar, tag)
+    ydl = YoutubeDLHelper(listener)
     try:
-        ydl = YoutubeDLHelper(listener)
         sup_link = ydl.extractMetaData(link)
     except Exception as e:
         sup_link = None
     if sup_link:
-        ydl.add_download(link)
+        ydl.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}')
     else:
         aria = aria2_download.AriaDownloadHelper(listener)
         aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
