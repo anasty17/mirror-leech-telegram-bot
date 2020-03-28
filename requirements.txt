@@ -10,5 +10,4 @@ python-magic
 beautifulsoup4>=4.8.2,<4.8.10
 Pyrogram>=0.16.0,<0.16.10
 TgCrypto>=1.1.1,<1.1.10
-tenacity>=6.0.0
 youtube-dl

@@ -181,7 +181,7 @@ def _mirror(bot, update, isTar=False):
     except Exception as e:
         sup_link = None
     if sup_link:
-        ydl.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}')
+        ydl.add_download(link, f'{DOWNLOAD_DIR}{listener.uid}')
     else:
         aria = aria2_download.AriaDownloadHelper(listener)
         aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')

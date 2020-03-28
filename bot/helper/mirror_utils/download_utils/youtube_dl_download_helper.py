@@ -44,10 +44,6 @@ class YoutubeDLHelper(DownloadHelper):
         if d['status'] == "finished":
             if self.is_playlist:
                 self.last_downloaded = 0
-                if self.downloaded_bytes == self.size:
-                    self.__onDownloadComplete()
-            else:
-                self.__onDownloadComplete()
         elif d['status'] == "downloading":
             with self.__resource_lock:
                 self.__download_speed = d['speed']
@@ -77,15 +73,13 @@ class YoutubeDLHelper(DownloadHelper):
             video = result['entries'][0]
             for v in result['entries']:
                 self.size += float(v['filesize'])
-            self.name = result.get('title')
+            self.name = video.get('playlist_title')
             self.vid_id = video.get('id')
             self.is_playlist = True
-            self.opts['o'] = f"{DOWNLOAD_DIR}{self.__listener.uid}/%(playlist)s/%(title)s.%(ext)s"
-            self.ydl = YoutubeDL(self.opts)
         else:
             video = result
             self.size = int(video.get('filesize'))
-            self.name = video.get('title')
+            self.name = f"{video.get('title')}.{video.get('ext')}"
             self.vid_id = video.get('id')
         return video
 
@@ -100,7 +94,11 @@ class YoutubeDLHelper(DownloadHelper):
     def add_download(self, link, path):
         LOGGER.info(f"Downloading with YT-DL: {link}")
         self.__gid = f"{self.vid_id}{self.__listener.uid}"
-        self.opts['o'] = f"{path}/%(title)s/%(title)s.%(ext)s"
+        if not self.is_playlist:
+            self.opts['outtmpl'] = f"{path}/%(title)s.%(ext)s"
+        else:
+            self.opts['outtmpl'] = f"{path}/%(playlist_title)s/%(title)s.%(ext)s"
+        self.ydl = YoutubeDL(self.opts)
         self.__onDownloadStart()
         threading.Thread(target=self.__download, args=(link,)).start()
 
