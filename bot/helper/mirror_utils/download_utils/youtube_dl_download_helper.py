@@ -72,13 +72,15 @@ class YoutubeDLHelper(DownloadHelper):
         if 'entries' in result:
             video = result['entries'][0]
             for v in result['entries']:
-                self.size += float(v['filesize'])
+                if v.get('filesize'):
+                    self.size += float(v['filesize'])
             self.name = video.get('playlist_title')
             self.vid_id = video.get('id')
             self.is_playlist = True
         else:
             video = result
-            self.size = int(video.get('filesize'))
+            if video.get('filesize'):
+                self.size = int(video.get('filesize'))
             self.name = f"{video.get('title')}.{video.get('ext')}"
             self.vid_id = video.get('id')
         return video

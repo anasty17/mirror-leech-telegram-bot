@@ -59,10 +59,12 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
         up_name = pathlib.PurePath(path).name
+        LOGGER.info(f"Upload Name : {up_name}")
+        drive = gdriveTools.GoogleDriveHelper(up_name, self)
+        if size == 0:
+            size = fs_utils.get_path_size(m_path)
+        upload_status = UploadStatus(drive, size, self.uid)
         with download_dict_lock:
-            LOGGER.info(f"Upload Name : {up_name}")
-            drive = gdriveTools.GoogleDriveHelper(up_name, self)
-            upload_status = UploadStatus(drive, size, self.uid)
             download_dict[self.uid] = upload_status
         update_all_messages()
         drive.upload(up_name)
