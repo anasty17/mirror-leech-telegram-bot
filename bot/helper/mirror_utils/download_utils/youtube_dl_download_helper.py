@@ -72,6 +72,8 @@ class YoutubeDLHelper(DownloadHelper):
         with YoutubeDL(self.opts) as ydl:
             result = ydl.extract_info(link, download=False)
             name = ydl.prepare_filename(result)
+        if result.get('direct'):
+            return None
         if 'entries' in result:
             video = result['entries'][0]
             for v in result['entries']:
