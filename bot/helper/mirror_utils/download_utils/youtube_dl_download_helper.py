@@ -16,7 +16,6 @@ class YoutubeDLHelper(DownloadHelper):
         self.opts = {
             'progress_hooks': [self.__onDownloadProgress],
         }
-        self.ydl = YoutubeDL(self.opts)
         self.__download_speed = 0
         self.download_speed_readable = ''
         self.downloaded_bytes = 0
@@ -67,7 +66,11 @@ class YoutubeDLHelper(DownloadHelper):
         self.__listener.onDownloadError(error)
 
     def extractMetaData(self, link):
-        result = self.ydl.extract_info(link, download=False)
+        if 'hotstar' in link:
+            self.opts['geo-bypass-country'] = 'IN'
+
+        with YoutubeDL(self.opts) as ydl:
+            result = ydl.extract_info(link, download=False)
         if 'entries' in result:
             video = result['entries'][0]
             for v in result['entries']:
@@ -86,7 +89,8 @@ class YoutubeDLHelper(DownloadHelper):
 
     def __download(self, link):
         try:
-            self.ydl.download([link], )
+            with YoutubeDL(self.opts) as ydl:
+                ydl.download([link])
             self.__onDownloadComplete()
         except ValueError:
             LOGGER.info("Download Cancelled by User!")
@@ -99,7 +103,7 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['outtmpl'] = f"{path}/%(title)s.%(ext)s"
         else:
             self.opts['outtmpl'] = f"{path}/%(playlist_title)s/%(title)s.%(ext)s"
-        self.ydl = YoutubeDL(self.opts)
+
         self.__onDownloadStart()
         threading.Thread(target=self.__download, args=(link,)).start()
 
