@@ -22,6 +22,7 @@ import os
 
 
 class MirrorListener(listeners.MirrorListeners):
+
     def __init__(self, bot, update, isTar=False, tag=None):
         super().__init__(bot, update)
         self.isTar = isTar
@@ -95,6 +96,9 @@ class MirrorListener(listeners.MirrorListeners):
             update_all_messages()
 
     def onUploadStarted(self):
+        pass
+
+    def onUploadProgress(self):
         pass
 
     def onUploadComplete(self, link: str):
