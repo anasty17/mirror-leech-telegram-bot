@@ -71,19 +71,21 @@ class YoutubeDLHelper(DownloadHelper):
 
         with YoutubeDL(self.opts) as ydl:
             result = ydl.extract_info(link, download=False)
+            name = ydl.prepare_filename(result)
         if 'entries' in result:
             video = result['entries'][0]
             for v in result['entries']:
                 if v.get('filesize'):
                     self.size += float(v['filesize'])
-            self.name = video.get('playlist_title')
+            # For playlists, ydl.prepare-filename returns the following format: <Playlist Name>-<Id of playlist>.NA
+            self.name = name.split(f"-{result['id']}")[0]
             self.vid_id = video.get('id')
             self.is_playlist = True
         else:
             video = result
             if video.get('filesize'):
                 self.size = int(video.get('filesize'))
-            self.name = f"{video.get('title')}.{video.get('ext')}"
+            self.name = name
             self.vid_id = video.get('id')
         return video
 
@@ -100,9 +102,9 @@ class YoutubeDLHelper(DownloadHelper):
         LOGGER.info(f"Downloading with YT-DL: {link}")
         self.__gid = f"{self.vid_id}{self.__listener.uid}"
         if not self.is_playlist:
-            self.opts['outtmpl'] = f"{path}/%(title)s.%(ext)s"
+            self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
-            self.opts['outtmpl'] = f"{path}/%(playlist_title)s/%(title)s.%(ext)s"
+            self.opts['outtmpl'] = f"{path}/{self.name}/%(title)s.%(ext)s"
 
         self.__onDownloadStart()
         threading.Thread(target=self.__download, args=(link,)).start()
