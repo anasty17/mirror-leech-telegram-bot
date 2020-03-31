@@ -46,6 +46,8 @@ class setInterval:
 
 
 def get_readable_file_size(size_in_bytes) -> str:
+    if size_in_bytes is None:
+        return '0B'
     index = 0
     while size_in_bytes >= 1024:
         size_in_bytes /= 1024

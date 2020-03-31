@@ -2,9 +2,11 @@ from .download_helper import DownloadHelper
 import time
 from youtube_dl import YoutubeDL
 import threading
-from bot import LOGGER, download_dict_lock, download_dict, DOWNLOAD_DIR
+from bot import download_dict_lock, download_dict
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
 import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 class MyLogger:
@@ -12,13 +14,13 @@ class MyLogger:
         self.obj = obj
 
     def debug(self, msg):
-        logging.debug(msg)
+        LOGGER.debug(msg)
 
     def warning(self, msg):
-        logging.warning(msg)
+        LOGGER.warning(msg)
 
     def error(self, msg):
-        logging.error(msg)
+        LOGGER.error(msg)
 
 
 class YoutubeDLHelper(DownloadHelper):
@@ -67,7 +69,10 @@ class YoutubeDLHelper(DownloadHelper):
                     chunk_size = d['downloaded_bytes'] - self.last_downloaded
                     self.last_downloaded = d['total_bytes'] * progress
                     self.downloaded_bytes += chunk_size
-                    self.progress = (self.downloaded_bytes / self.size) * 100
+                    try:
+                        self.progress = (self.downloaded_bytes / self.size) * 100
+                    except ZeroDivisionError:
+                        pass
                 else:
                     self.download_speed_readable = d['_speed_str']
                     self.downloaded_bytes = d['downloaded_bytes']
@@ -103,7 +108,7 @@ class YoutubeDLHelper(DownloadHelper):
         else:
             video = result
             if video.get('filesize'):
-                self.size = int(video.get('filesize'))
+                self.size = float(video.get('filesize'))
             self.name = name
             self.vid_id = video.get('id')
         return video

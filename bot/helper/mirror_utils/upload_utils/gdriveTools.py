@@ -14,11 +14,12 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import *
 
-from bot import LOGGER, parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
+from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
     USE_SERVICE_ACCOUNTS
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.fs_utils import get_mime_type
 
+LOGGER = logging.getLogger(__name__)
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 SERVICE_ACCOUNT_INDEX = 0
 
@@ -269,8 +270,12 @@ class GoogleDriveHelper:
                    f' ({get_readable_file_size(self.transferred_size)})'
         else:
             file = self.copyFile(meta.get('id'), parent_id)
-            msg += f'<a href="{self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))}">{meta.get("name")}</a>' \
-                   f' ({get_readable_file_size(int(meta.get("size")))}) '
+
+            msg += f'<a href="{self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))}">{meta.get("name")}</a>'
+            try:
+                msg += f' ({get_readable_file_size(int(meta.get("size")))}) '
+            except TypeError:
+                pass
         return msg
 
     def cloneFolder(self, name, local_path, folder_id, parent_id):
@@ -299,7 +304,10 @@ class GoogleDriveHelper:
                 current_dir_id = self.create_directory(file.get('name'), parent_id)
                 new_id = self.cloneFolder(file.get('name'), file_path, file.get('id'), current_dir_id)
             else:
-                self.transferred_size += int(file.get('size'))
+                try:
+                    self.transferred_size += int(file.get('size'))
+                except TypeError:
+                    pass
                 try:
                     self.copyFile(file.get('id'), parent_id)
                     new_id = parent_id
