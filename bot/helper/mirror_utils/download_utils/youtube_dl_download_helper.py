@@ -4,6 +4,21 @@ from youtube_dl import YoutubeDL
 import threading
 from bot import LOGGER, download_dict_lock, download_dict, DOWNLOAD_DIR
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
+import logging
+
+
+class MyLogger:
+    def __init__(self, obj):
+        self.obj = obj
+
+    def debug(self, msg):
+        logging.debug(msg)
+
+    def warning(self, msg):
+        logging.warning(msg)
+
+    def error(self, msg):
+        logging.error(msg)
 
 
 class YoutubeDLHelper(DownloadHelper):
@@ -15,6 +30,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.__gid = ""
         self.opts = {
             'progress_hooks': [self.__onDownloadProgress],
+            'logger': MyLogger(self),
             'usenetrc': True
         }
         self.__download_speed = 0
