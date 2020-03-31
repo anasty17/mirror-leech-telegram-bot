@@ -15,6 +15,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.__gid = ""
         self.opts = {
             'progress_hooks': [self.__onDownloadProgress],
+            'usenetrc': True
         }
         self.__download_speed = 0
         self.download_speed_readable = ''
