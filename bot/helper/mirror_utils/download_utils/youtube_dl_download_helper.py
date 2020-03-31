@@ -5,6 +5,7 @@ import threading
 from bot import download_dict_lock, download_dict
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
 import logging
+import re
 
 LOGGER = logging.getLogger(__name__)
 
@@ -14,7 +15,11 @@ class MyLogger:
         self.obj = obj
 
     def debug(self, msg):
-        LOGGER.debug(msg)
+        LOGGER.info(msg)
+        # Hack to fix changing changing extension
+        match = re.search(r'.ffmpeg..Merging formats into..(.*?).$', msg)
+        if match and not self.obj.is_playlist:
+            self.obj.name = match.group(1)
 
     def warning(self, msg):
         LOGGER.warning(msg)
