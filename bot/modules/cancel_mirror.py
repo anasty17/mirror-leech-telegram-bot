@@ -1,22 +1,18 @@
-from time import sleep
-
 from telegram.ext import CommandHandler, run_async
 
-from bot import download_dict, aria2, dispatcher, download_dict_lock, DOWNLOAD_DIR
+from bot import download_dict, dispatcher, download_dict_lock, DOWNLOAD_DIR
 from bot.helper.ext_utils.fs_utils import clean_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import *
-from ..helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 
 from time import sleep
 from bot.helper.ext_utils.bot_utils import getDownloadByGid
-from ..helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
+from ..helper.ext_utils.bot_utils import MirrorStatus
 
 
 @run_async
 def cancel_mirror(bot, update):
-    # TODO: Rewrite this for good
     args = update.message.text.split(" ", maxsplit=1)
     mirror_message = None
     if len(args) > 1:
@@ -27,7 +23,7 @@ def cancel_mirror(bot, update):
             return
         with download_dict_lock:
             keys = list(download_dict.keys())
-        mirror_message = dl._listener.message
+        mirror_message = dl.__listener.message
     elif update.message.reply_to_message:
         mirror_message = update.message.reply_to_message
         with download_dict_lock:
@@ -45,25 +41,14 @@ def cancel_mirror(bot, update):
                       "used to start the download or /cancel gid to cancel it!"
                 sendMessage(msg, bot, update)
                 return
-    if dl.status() == "Uploading":
+    if dl.status() == MirrorStatus.STATUS_UPLOADING:
         sendMessage("Upload in Progress, Don't Cancel it.", bot, update)
         return
-    elif dl.status() == "Archiving":
+    elif dl.status() == MirrorStatus.STATUS_ARCHIVING:
         sendMessage("Archival in Progress, Don't Cancel it.", bot, update)
         return
-    elif dl.status() != "Queued":
-        download = dl.download()
-        if isinstance(download, TelegramDownloadHelper):
-            download.cancel_download()
-        if isinstance(download, YoutubeDLHelper):
-            download.cancel_download()
-        else:
-            if len(download.followed_by_ids) != 0:
-                downloads = aria2.get_downloads(download.followed_by_ids)
-                aria2.pause(downloads)
-            aria2.pause([download])
     else:
-        dl._listener.onDownloadError("Download stopped by user!")
+        dl.download().cancel_download()
     sleep(1)  # Wait a Second For Aria2 To free Resources.
     clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}/')
 
@@ -73,13 +58,10 @@ def cancel_all(update, bot):
     with download_dict_lock:
         count = 0
         for dlDetails in list(download_dict.values()):
-            if not dlDetails.status() == "Uploading" or dlDetails.status() == "Archiving":
-                aria2.pause([dlDetails.download()])
+            if not dlDetails.status() == MirrorStatus.STATUS_UPLOADING\
+                    or not dlDetails.status() == MirrorStatus.STATUS_ARCHIVING:
+                dlDetails.cancel_download()
                 count += 1
-                continue
-            if dlDetails.status() == "Queued":
-                count += 1
-                dlDetails._listener.onDownloadError("Download Manually Cancelled By user.")
     delete_all_messages()
     sendMessage(f'Cancelled {count} downloads!', update, bot)
 
