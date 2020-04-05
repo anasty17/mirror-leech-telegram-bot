@@ -246,7 +246,14 @@ class GoogleDriveHelper:
 
     def clone(self, link):
         self.transferred_size = 0
-        file_id = self.getIdFromUrl(link)
+        try:
+            file_id = self.getIdFromUrl(link)
+        except KeyError:
+            msg = "Google drive ID could not be found in the provided link"
+            return msg
+        except IndexError:
+            msg = "Google drive ID could not be found in the provided link"
+            return msg
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
