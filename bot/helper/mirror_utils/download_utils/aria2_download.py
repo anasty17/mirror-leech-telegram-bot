@@ -29,7 +29,7 @@ class AriaDownloadHelper(DownloadHelper):
                     self.gid = api.get_download(gid).followed_by_ids[0]
                     with download_dict_lock:
                         download_dict[self.__listener.uid] = AriaDownloadStatus(self.gid, self.__listener)
-                        download_dict[self.__listener.uid].is_torrent =True
+                        download_dict[self.__listener.uid].is_torrent = True
                     update_all_messages()
                     LOGGER.info(f'Changed gid from {gid} to {self.gid}')
                 else:

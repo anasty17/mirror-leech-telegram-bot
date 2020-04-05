@@ -64,7 +64,7 @@ class MirrorListener(listeners.MirrorListeners):
         drive = gdriveTools.GoogleDriveHelper(up_name, self)
         if size == 0:
             size = fs_utils.get_path_size(m_path)
-        upload_status = UploadStatus(drive, size, self.uid)
+        upload_status = UploadStatus(drive, size, self)
         with download_dict_lock:
             download_dict[self.uid] = upload_status
         update_all_messages()

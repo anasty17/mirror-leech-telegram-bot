@@ -4,9 +4,10 @@ from .status import Status
 
 
 class YoutubeDLDownloadStatus(Status):
-    def __init__(self, obj, uid):
+    def __init__(self, obj, listener):
         self.obj = obj
-        self.uid = uid
+        self.uid = listener.uid
+        self.message = listener.message
 
     def gid(self):
         return self.obj.gid

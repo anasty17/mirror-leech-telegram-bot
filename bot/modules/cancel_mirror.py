@@ -7,8 +7,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import *
 
 from time import sleep
-from bot.helper.ext_utils.bot_utils import getDownloadByGid
-from ..helper.ext_utils.bot_utils import MirrorStatus
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus
 
 
 @run_async
@@ -23,7 +22,7 @@ def cancel_mirror(bot, update):
             return
         with download_dict_lock:
             keys = list(download_dict.keys())
-        mirror_message = dl.__listener.message
+        mirror_message = dl.message
     elif update.message.reply_to_message:
         mirror_message = update.message.reply_to_message
         with download_dict_lock:

@@ -41,7 +41,7 @@ class TelegramDownloadHelper(DownloadHelper):
 
     def __onDownloadStart(self, name, size, file_id):
         with download_dict_lock:
-            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener.uid)
+            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener)
         with global_lock:
             GLOBAL_GID.add(file_id)
         with self.__resource_lock:
