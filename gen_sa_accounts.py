@@ -163,7 +163,7 @@ def _delete_sas(iam, project):
 
 def serviceaccountfactory(
         credentials='credentials.json',
-        token='token.pickle',
+        token='token_sa.pickle',
         path=None,
         list_projects=False,
         list_sas=None,
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     parse = ArgumentParser(description='A tool to create Google service accounts.')
     parse.add_argument('--path', '-p', default='accounts',
                        help='Specify an alternate directory to output the credential files.')
-    parse.add_argument('--token', default='token.pickle', help='Specify the pickle token file path.')
+    parse.add_argument('--token', default='token_sa.pickle', help='Specify the pickle token file path.')
     parse.add_argument('--credentials', default='credentials.json', help='Specify the credentials file path.')
     parse.add_argument('--list-projects', default=False, action='store_true',
                        help='List projects viewable by the user.')
