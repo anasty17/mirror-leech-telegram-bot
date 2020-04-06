@@ -24,11 +24,13 @@ class AriaDownloadHelper(DownloadHelper):
     def __onDownloadComplete(self, api: API, gid):
         with self._resource_lock:
             if self.gid == gid:
-                if api.get_download(gid).followed_by_ids:
-                    self.gid = api.get_download(gid).followed_by_ids[0]
+                download = api.get_download(gid)
+                if download.followed_by_ids:
+                    self.gid = download.followed_by_ids[0]
                     with download_dict_lock:
                         download_dict[self._listener.uid] = AriaDownloadStatus(self.gid, self._listener)
-                        download_dict[self._listener.uid].is_torrent =True
+                        if download.is_torrent:
+                            download_dict[self._listener.uid].is_torrent = True
                     update_all_messages()
                     LOGGER.info(f'Changed gid from {gid} to {self.gid}')
                 else:
