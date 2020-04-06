@@ -85,14 +85,6 @@ def get_progress_bar_string(status):
     return p_str
 
 
-def get_download_index(_list, gid):
-    index = 0
-    for i in _list:
-        if i.download().gid == gid:
-            return index
-        index += 1
-
-
 def get_readable_message():
     with download_dict_lock:
         msg = ""
@@ -105,8 +97,8 @@ def get_readable_message():
                        f" at {download.speed()}, ETA: {download.eta()} "
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
                 if hasattr(download, 'is_torrent'):
-                    msg += f"| P: {download.download().connections} " \
-                           f"| S: {download.download().num_seeders}"
+                    msg += f"| P: {download.aria_download().connections} " \
+                           f"| S: {download.aria_download().num_seeders}"
                 msg += f"\nGID: <code>{download.gid()}</code>"
             msg += "\n\n"
         return msg

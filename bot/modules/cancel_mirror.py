@@ -57,9 +57,9 @@ def cancel_all(update, bot):
     with download_dict_lock:
         count = 0
         for dlDetails in list(download_dict.values()):
-            if not dlDetails.status() == MirrorStatus.STATUS_UPLOADING\
-                    or not dlDetails.status() == MirrorStatus.STATUS_ARCHIVING:
-                dlDetails.cancel_download()
+            if dlDetails.status() == MirrorStatus.STATUS_DOWNLOADING\
+                    or dlDetails.status() == MirrorStatus.STATUS_WAITING:
+                dlDetails.download().cancel_download()
                 count += 1
     delete_all_messages()
     sendMessage(f'Cancelled {count} downloads!', update, bot)
