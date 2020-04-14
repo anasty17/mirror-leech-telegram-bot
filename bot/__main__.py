@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from .helper.telegram_helper.filters import CustomFilters
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone
+from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch
 
 
 @run_async
@@ -21,39 +21,42 @@ def stats(bot, update):
     free = get_readable_file_size(free)
     stats = f'Bot Uptime: {currentTime}\n' \
             f'Total disk space: {total}\n' \
-                        f'Used: {used}\n' \
-                        f'Free: {free}'
+            f'Used: {used}\n' \
+            f'Free: {free}'
     sendMessage(stats, bot, update)
 
 
-
 @run_async
-def start(bot,update):
+def start(bot, update):
     sendMessage("This is a bot which can mirror all your links to Google drive!\n"
                 "Type /help to get a list of available commands", bot, update)
 
 
 @run_async
-def ping(bot,update):
+def ping(bot, update):
     start_time = int(round(time.time() * 1000))
     reply = sendMessage("Starting Ping", bot, update)
-    end_time = int(round(time.time()*1000))
-    editMessage(f'{end_time - start_time} ms',reply)
+    end_time = int(round(time.time() * 1000))
+    editMessage(f'{end_time - start_time} ms', reply)
 
 
 @run_async
-def log(bot,update):
+def log(bot, update):
     sendLogFile(bot, update)
 
 
 @run_async
-def bot_help(bot,update):
+def bot_help(bot, update):
     help_string = f'''
 /{BotCommands.HelpCommand}: To get this message
 
 /{BotCommands.MirrorCommand} [download_url][magnet_link]: Start mirroring the link to google drive
 
 /{BotCommands.TarMirrorCommand} [download_url][magnet_link]: start mirroring and upload the archived (.tar) version of the download
+
+/{BotCommands.WatchCommand} [youtube-dl supported link]: Mirror through youtube-dl 
+
+/{BotCommands.TarWatchCommand} [youtube-dl supported link]: Mirror through youtube-dl and tar before uploading
 
 /{BotCommands.CancelMirror} : Reply to the message by which the download was initiated and that download will be cancelled
 
@@ -80,7 +83,7 @@ def main():
     help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     stats_handler = CommandHandler(BotCommands.StatsCommand,
-                                  stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+                                   stats, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
