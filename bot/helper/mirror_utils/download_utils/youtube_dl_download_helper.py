@@ -21,12 +21,13 @@ class MyLogger:
         if match and not self.obj.is_playlist:
             self.obj.name = match.group(1)
 
-    def warning(self, msg):
+    @staticmethod
+    def warning(msg):
         LOGGER.warning(msg)
 
-    def error(self, msg):
+    @staticmethod
+    def error(msg):
         LOGGER.error(msg)
-        #self.obj.onDownloadError(msg)
 
 
 class YoutubeDLHelper(DownloadHelper):
@@ -38,8 +39,9 @@ class YoutubeDLHelper(DownloadHelper):
         self.__gid = ""
         self.opts = {
             'progress_hooks': [self.__onDownloadProgress],
+            'logger': MyLogger(self),
             'usenetrc': True,
-            'format': "best"
+            'format': "best/bestvideo+bestaudio"
         }
         self.__download_speed = 0
         self.download_speed_readable = ''
@@ -98,8 +100,12 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['geo_bypass_country'] = 'IN'
 
         with YoutubeDL(self.opts) as ydl:
-            result = ydl.extract_info(link, download=False)
-            name = ydl.prepare_filename(result)
+            try:
+                result = ydl.extract_info(link, download=False)
+                name = ydl.prepare_filename(result)
+            except DownloadError as e:
+                self.onDownloadError(str(e))
+                return
         if result.get('direct'):
             return None
         if 'entries' in result:
@@ -133,9 +139,9 @@ class YoutubeDLHelper(DownloadHelper):
             self.onDownloadError("Download Cancelled by User!")
 
     def add_download(self, link, path):
+        self.extractMetaData(link)
         LOGGER.info(f"Downloading with YT-DL: {link}")
         self.__gid = f"{self.vid_id}{self.__listener.uid}"
-        self.opts['logger'] = MyLogger(self)
         if not self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:

@@ -119,3 +119,10 @@ python3 gen_sa_accounts.py --download-keys project_id
 ```
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
+
+# Youtube-dl authentication using .netrc file
+For using your premium accounts in youtube-dl, edit the netrc file (in the root directory of this repository) according to following format:
+```
+machine host login username password my_youtube_password
+```
+where host is the name of extractor (eg. youtube, twitch). Multiple accounts of different hosts can be added each separated by a new line
