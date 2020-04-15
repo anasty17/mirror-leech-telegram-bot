@@ -13,6 +13,9 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Uploading To Team Drives.
 - Index Link support
 - Service account support
+- Mirror all youtube-dl supported links
+- Mirror telegram files
+
 # Upcoming features (TODOs):
 
 # How to deploy?
