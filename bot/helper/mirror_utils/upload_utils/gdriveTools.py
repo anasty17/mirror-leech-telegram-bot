@@ -292,7 +292,7 @@ class GoogleDriveHelper:
             try:
                 msg += f' ({get_readable_file_size(int(meta.get("size")))}) '
                 if INDEX_URL is not None:
-                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}/')
+                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}')
                     msg += f' | <a href="{url}"> Index URL</a>'
             except TypeError:
                 pass
