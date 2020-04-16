@@ -30,12 +30,12 @@ def _watch(bot: Bot, update: Update, args: list, isTar=False):
 
 
 @run_async
-def watchTar(bot: Bot, update: Update, args: list):
-    _watch(bot, update, args, True)
+def watchTar(update, context, args):
+    _watch(context.bot, update, args, True)
 
 
-def watch(bot: Bot, update: Update, args: list):
-    _watch(bot, update, args)
+def watch(update, context, args):
+    _watch(context.bot, update, args)
 
 
 mirror_handler = CommandHandler(BotCommands.WatchCommand, watch,
