@@ -194,13 +194,13 @@ def _mirror(bot, update, isTar=False):
 
 
 @run_async
-def mirror(bot, update):
-    _mirror(bot, update)
+def mirror(update, context):
+    _mirror(context.bot, update)
 
 
 @run_async
-def tar_mirror(update, bot):
-    _mirror(update, bot, True)
+def tar_mirror(update, context):
+    _mirror(context.bot, update, True)
 
 
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,

@@ -13,7 +13,7 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 
 @run_async
-def stats(bot, update):
+def stats(update,context):
     currentTime = get_readable_time((time.time() - botStartTime))
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
@@ -21,32 +21,32 @@ def stats(bot, update):
     free = get_readable_file_size(free)
     stats = f'Bot Uptime: {currentTime}\n' \
             f'Total disk space: {total}\n' \
-            f'Used: {used}\n' \
-            f'Free: {free}'
-    sendMessage(stats, bot, update)
+                        f'Used: {used}\n' \
+                        f'Free: {free}'
+    sendMessage(stats, context.bot, update)
 
 
 @run_async
-def start(bot, update):
+def start(update,context):
     sendMessage("This is a bot which can mirror all your links to Google drive!\n"
-                "Type /help to get a list of available commands", bot, update)
+                "Type /help to get a list of available commands", context.bot, update)
 
 
 @run_async
-def ping(bot, update):
+def ping(update, context):
     start_time = int(round(time.time() * 1000))
-    reply = sendMessage("Starting Ping", bot, update)
+    reply = sendMessage("Starting Ping", context.bot, update)
     end_time = int(round(time.time() * 1000))
     editMessage(f'{end_time - start_time} ms', reply)
 
 
 @run_async
-def log(bot, update):
-    sendLogFile(bot, update)
+def log(update, context):
+    sendLogFile(context.bot, update)
 
 
 @run_async
-def bot_help(bot, update):
+def bot_help(update, context):
     help_string = f'''
 /{BotCommands.HelpCommand}: To get this message
 
@@ -71,7 +71,7 @@ def bot_help(bot, update):
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
 
 '''
-    sendMessage(help_string, bot, update)
+    sendMessage(help_string, context.bot, update)
 
 
 def main():

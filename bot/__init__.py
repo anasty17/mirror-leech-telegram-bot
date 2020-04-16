@@ -103,6 +103,6 @@ try:
 except KeyError:
     USE_SERVICE_ACCOUNTS = False
 
-updater = tg.Updater(token=BOT_TOKEN)
+updater = tg.Updater(token=BOT_TOKEN,use_context=True)
 bot = updater.bot
 dispatcher = updater.dispatcher

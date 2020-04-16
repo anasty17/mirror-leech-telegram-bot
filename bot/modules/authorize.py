@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 
 
 @run_async
-def authorize(bot, update):
+def authorize(update,context):
     reply_message = update.message.reply_to_message
     msg = ''
     with open('authorized_chats.txt', 'a') as file:
@@ -31,11 +31,11 @@ def authorize(bot, update):
                 msg = 'Person Authorized to use the bot!'
             else:
                 msg = 'Person already authorized'
-        sendMessage(msg, bot, update)
+        sendMessage(msg, context.bot, update)
 
 
 @run_async
-def unauthorize(bot,update):
+def unauthorize(update,context):
     reply_message = update.message.reply_to_message
     if reply_message is None:
         # Trying to unauthorize a chat
@@ -57,7 +57,7 @@ def unauthorize(bot,update):
         file.truncate(0)
         for i in AUTHORIZED_CHATS:
             file.write(f'{i}\n')
-    sendMessage(msg, bot, update)
+    sendMessage(msg, context.bot, update)
 
 
 authorize_handler = CommandHandler(command=BotCommands.AuthorizeCommand, callback=authorize,
