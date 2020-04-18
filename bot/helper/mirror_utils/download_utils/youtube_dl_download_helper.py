@@ -1,7 +1,6 @@
 from .download_helper import DownloadHelper
 import time
 from youtube_dl import YoutubeDL, DownloadError
-import threading
 from bot import download_dict_lock, download_dict
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
 import logging
@@ -139,6 +138,7 @@ class YoutubeDLHelper(DownloadHelper):
             self.onDownloadError("Download Cancelled by User!")
 
     def add_download(self, link, path):
+        self.__onDownloadStart()
         self.extractMetaData(link)
         LOGGER.info(f"Downloading with YT-DL: {link}")
         self.__gid = f"{self.vid_id}{self.__listener.uid}"
@@ -146,9 +146,7 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
             self.opts['outtmpl'] = f"{path}/{self.name}/%(title)s.%(ext)s"
-
-        self.__onDownloadStart()
-        threading.Thread(target=self.__download, args=(link,)).start()
+        self.__download(link)
 
     def cancel_download(self):
         self.is_cancelled = True
