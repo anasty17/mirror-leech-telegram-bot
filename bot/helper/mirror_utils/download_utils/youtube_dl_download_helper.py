@@ -5,6 +5,7 @@ from bot import download_dict_lock, download_dict
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
 import logging
 import re
+import threading
 
 LOGGER = logging.getLogger(__name__)
 
