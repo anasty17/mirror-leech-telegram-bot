@@ -1,5 +1,7 @@
 import shutil
 import signal
+from os import execl
+from sys import executable
 
 from telegram.ext import CommandHandler, run_async
 
@@ -33,6 +35,11 @@ def start(update,context):
 
 
 @run_async
+def restart(update, context):
+    reply = sendMessage("Restarting, Please wait!", context.bot, update)
+    execl(executable, executable, "-m", "bot")
+
+
 def ping(update, context):
     start_time = int(round(time.time() * 1000))
     reply = sendMessage("Starting Ping", context.bot, update)
@@ -80,6 +87,8 @@ def main():
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+    restart_handler = CommandHandler(BotCommands.RestartCommand, restart,
+                                  filters=CustomFilters.owner_filter)
     help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     stats_handler = CommandHandler(BotCommands.StatsCommand,
@@ -87,6 +96,7 @@ def main():
     log_handler = CommandHandler(BotCommands.LogCommand, log, filters=CustomFilters.owner_filter)
     dispatcher.add_handler(start_handler)
     dispatcher.add_handler(ping_handler)
+    dispatcher.add_handler(restart_handler)
     dispatcher.add_handler(help_handler)
     dispatcher.add_handler(stats_handler)
     dispatcher.add_handler(log_handler)
