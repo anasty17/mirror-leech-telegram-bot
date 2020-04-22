@@ -14,7 +14,7 @@ def _watch(bot: Bot, update: Update, args: list, isTar=False):
     try:
         link = args[0]
     except IndexError:
-        sendMessage('/watch [yt_dl supported link] to mirror with youtube_dl', bot, update)
+        sendMessage(f'/{BotCommands.WatchCommand} [yt_dl supported link] to mirror with youtube_dl', bot, update)
         return
     reply_to = update.message.reply_to_message
     if reply_to is not None:
