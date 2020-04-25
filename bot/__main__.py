@@ -1,6 +1,8 @@
 import shutil
 import signal
-from os import execl
+import pickle
+
+from os import execl, path, remove
 from sys import executable
 
 from telegram.ext import CommandHandler, run_async
@@ -36,7 +38,10 @@ def start(update,context):
 
 @run_async
 def restart(update, context):
-    reply = sendMessage("Restarting, Please wait!", context.bot, update)
+    restart_message = sendMessage("Restarting, Please wait!", context.bot, update)
+    # Save restart message object in order to reply to it after restarting
+    with open('restart.pickle', 'wb') as status:
+        pickle.dump(restart_message, status)
     execl(executable, executable, "-m", "bot")
 
 
@@ -83,6 +88,13 @@ def bot_help(update, context):
 
 def main():
     fs_utils.start_cleanup()
+    # Check if the bot is restarting
+    if path.exists('restart.pickle'):
+        with open('restart.pickle', 'rb') as status:
+            restart_message = pickle.load(status)
+        restart_message.edit_text("Restarted Successfully!")
+        remove('restart.pickle')
+
     start_handler = CommandHandler(BotCommands.StartCommand, start,
                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
