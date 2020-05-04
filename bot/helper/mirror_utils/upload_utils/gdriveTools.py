@@ -3,6 +3,7 @@ import pickle
 import urllib.parse as urlparse
 from urllib.parse import parse_qs
 
+import re
 import json
 import requests
 
@@ -67,7 +68,11 @@ class GoogleDriveHelper:
     @staticmethod
     def getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
-            return link.rsplit('/')[-1]
+            regex = r"https://drive\.google\.com/(drive)?/?u?/\d?/?mobile?/?(file)?(folders)?/?d?/([-\w]+)[?+]?/?(w+)?"
+            res = re.search(regex,link)
+            if res is None:
+                raise IndexError("GDrive ID not found.")
+            return res.group(4)
         parsed = urlparse.urlparse(link)
         return parse_qs(parsed.query)['id'][0]
 
