@@ -6,8 +6,7 @@ from os import execl, path, remove
 from sys import executable
 
 from telegram.ext import CommandHandler, run_async
-
-from bot import dispatcher, updater, botStartTime
+from bot import dispatcher, updater, botStartTime, DOWNLOAD_DIR
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
@@ -40,6 +39,7 @@ def start(update,context):
 def restart(update, context):
     restart_message = sendMessage("Restarting, Please wait!", context.bot, update)
     # Save restart message object in order to reply to it after restarting
+    fs_utils.clean_all()
     with open('restart.pickle', 'wb') as status:
         pickle.dump(restart_message, status)
     execl(executable, executable, "-m", "bot")
