@@ -6,7 +6,7 @@ from os import execl, path, remove
 from sys import executable
 
 from telegram.ext import CommandHandler, run_async
-from bot import dispatcher, updater, botStartTime, DOWNLOAD_DIR
+from bot import dispatcher, updater, botStartTime
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import *
@@ -16,7 +16,7 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 
 @run_async
-def stats(update,context):
+def stats(update, context):
     currentTime = get_readable_time((time.time() - botStartTime))
     total, used, free = shutil.disk_usage('.')
     total = get_readable_file_size(total)
@@ -24,13 +24,13 @@ def stats(update,context):
     free = get_readable_file_size(free)
     stats = f'Bot Uptime: {currentTime}\n' \
             f'Total disk space: {total}\n' \
-                        f'Used: {used}\n' \
-                        f'Free: {free}'
+            f'Used: {used}\n' \
+            f'Free: {free}'
     sendMessage(stats, context.bot, update)
 
 
 @run_async
-def start(update,context):
+def start(update, context):
     sendMessage("This is a bot which can mirror all your links to Google drive!\n"
                 "Type /help to get a list of available commands", context.bot, update)
 
@@ -45,6 +45,7 @@ def restart(update, context):
     execl(executable, executable, "-m", "bot")
 
 
+@run_async
 def ping(update, context):
     start_time = int(round(time.time() * 1000))
     reply = sendMessage("Starting Ping", context.bot, update)
@@ -100,7 +101,7 @@ def main():
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     restart_handler = CommandHandler(BotCommands.RestartCommand, restart,
-                                  filters=CustomFilters.owner_filter)
+                                     filters=CustomFilters.owner_filter)
     help_handler = CommandHandler(BotCommands.HelpCommand,
                                   bot_help, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
     stats_handler = CommandHandler(BotCommands.StatsCommand,
