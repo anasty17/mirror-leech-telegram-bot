@@ -1,10 +1,14 @@
 import logging
-import aria2p
-import threading
 import os
-from dotenv import load_dotenv
-import telegram.ext as tg
+import threading
 import time
+
+import aria2p
+import telegram.ext as tg
+from dotenv import load_dotenv
+import socket
+
+socket.setdefaulttimeout(600)
 
 botStartTime = time.time()
 if os.path.exists('log.txt'):
@@ -69,6 +73,9 @@ try:
     DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
     OWNER_ID = int(getConfig('OWNER_ID'))
     AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
+    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
+    TELEGRAM_API = getConfig('TELEGRAM_API')
+    TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
@@ -80,13 +87,22 @@ except KeyError:
     INDEX_URL = None
 try:
     IS_TEAM_DRIVE = getConfig('IS_TEAM_DRIVE')
-    if IS_TEAM_DRIVE == 'True' or IS_TEAM_DRIVE == 'true':
+    if IS_TEAM_DRIVE.lower() == 'true':
         IS_TEAM_DRIVE = True
     else:
         IS_TEAM_DRIVE = False
-
 except KeyError:
     IS_TEAM_DRIVE = False
-updater = tg.Updater(token=BOT_TOKEN)
+
+try:
+    USE_SERVICE_ACCOUNTS = getConfig('USE_SERVICE_ACCOUNTS')
+    if USE_SERVICE_ACCOUNTS.lower() == 'true':
+        USE_SERVICE_ACCOUNTS = True
+    else:
+        USE_SERVICE_ACCOUNTS = False
+except KeyError:
+    USE_SERVICE_ACCOUNTS = False
+
+updater = tg.Updater(token=BOT_TOKEN,use_context=True)
 bot = updater.bot
 dispatcher = updater.dispatcher

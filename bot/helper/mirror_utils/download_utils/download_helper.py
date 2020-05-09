@@ -16,7 +16,7 @@ class DownloadHelper:
         self.progress = 0.0
         self.progress_string = '0.00%'
         self.eta = 0  # Estimated time of download complete
-        self.eta_string = '0s' # A listener class which have event callbacks
+        self.eta_string = '0s'  # A listener class which have event callbacks
         self._resource_lock = threading.Lock()
 
     def add_download(self, link: str, path):

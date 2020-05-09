@@ -9,14 +9,16 @@ def get_download(gid):
 
 class AriaDownloadStatus(Status):
 
-    def __init__(self, gid, listener):
+    def __init__(self, obj, listener):
         super().__init__()
         self.upload_name = None
         self.is_archiving = False
-        self.__gid = gid
-        self.__download = get_download(gid)
+        self.obj = obj
+        self.__gid = obj.gid
+        self.__download = get_download(obj.gid)
         self.__uid = listener.uid
-        self._listener = listener
+        self.__listener = listener
+        self.message = listener.message
         self.last = None
         self.is_waiting = False
 
@@ -36,28 +38,28 @@ class AriaDownloadStatus(Status):
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        return self.download().total_length
+        return self.aria_download().total_length
 
     def processed_bytes(self):
-        return self.download().completed_length
+        return self.aria_download().completed_length
 
     def speed(self):
-        return self.download().download_speed_string()
+        return self.aria_download().download_speed_string()
 
     def name(self):
-        return self.download().name
+        return self.aria_download().name
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def size(self):
-        return self.download().total_length_string()
+        return self.aria_download().total_length_string()
 
     def eta(self):
-        return self.download().eta_string()
+        return self.aria_download().eta_string()
 
     def status(self):
-        download = self.download()
+        download = self.aria_download()
         if download.is_waiting:
             status = MirrorStatus.STATUS_WAITING
         elif download.is_paused:
@@ -68,9 +70,16 @@ class AriaDownloadStatus(Status):
             status = MirrorStatus.STATUS_DOWNLOADING
         return status
 
-    def download(self):
+    def aria_download(self):
         self.__update()
         return self.__download
 
+    def download(self):
+        return self.obj
+    
     def uid(self):
         return self.__uid
+
+    def gid(self):
+        self.__update()
+        return self.__gid

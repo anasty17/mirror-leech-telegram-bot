@@ -1,8 +1,9 @@
-from bot import download_dict, download_dict_lock
 import logging
 import re
 import threading
 import time
+
+from bot import download_dict, download_dict_lock
 
 LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,8 @@ class setInterval:
 
 
 def get_readable_file_size(size_in_bytes) -> str:
+    if size_in_bytes is None:
+        return '0B'
     index = 0
     while size_in_bytes >= 1024:
         size_in_bytes /= 1024
@@ -53,6 +56,15 @@ def get_readable_file_size(size_in_bytes) -> str:
         return f'{round(size_in_bytes, 2)}{SIZE_UNITS[index]}'
     except IndexError:
         return 'File too large'
+
+
+def getDownloadByGid(gid):
+    with download_dict_lock:
+        for dl in download_dict.values():
+            if dl.status() == MirrorStatus.STATUS_DOWNLOADING or dl.status() == MirrorStatus.STATUS_WAITING:
+                if dl.gid() == gid:
+                    return dl
+    return None
 
 
 def get_progress_bar_string(status):
@@ -73,14 +85,6 @@ def get_progress_bar_string(status):
     return p_str
 
 
-def get_download_index(_list, gid):
-    index = 0
-    for i in _list:
-        if i.download().gid == gid:
-            return index
-        index += 1
-
-
 def get_readable_message():
     with download_dict_lock:
         msg = ""
@@ -89,12 +93,13 @@ def get_readable_message():
             msg += download.status()
             if download.status() != MirrorStatus.STATUS_ARCHIVING:
                 msg += f"\n<code>{get_progress_bar_string(download)} {download.progress()}</code> of " \
-                    f"{download.size()}" \
-                    f" at {download.speed()}, ETA: {download.eta()} "
+                       f"{download.size()}" \
+                       f" at {download.speed()}, ETA: {download.eta()} "
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
                 if hasattr(download, 'is_torrent'):
-                    msg += f"| P: {download.download().connections} " \
-                           f"| S: {download.download().num_seeders}"
+                    msg += f"| P: {download.aria_download().connections} " \
+                           f"| S: {download.aria_download().num_seeders}"
+                msg += f"\nGID: <code>{download.gid()}</code>"
             msg += "\n\n"
         return msg
 

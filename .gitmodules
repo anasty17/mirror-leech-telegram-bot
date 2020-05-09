@@ -1,0 +1,3 @@
+[submodule "vendor/cmrudl.py"]
+	path = vendor/cmrudl.py
+	url = https://github.com/JrMasterModelBuilder/cmrudl.py.git
