@@ -130,7 +130,7 @@ class MirrorListener(listeners.MirrorListeners):
             update_all_messages()
 
     def onUploadError(self, error):
-        e_str = str(error.last_attempt.exception()).replace('<', '').replace('>', '')
+        e_str = error.replace('<', '').replace('>', '')
         with download_dict_lock:
             try:
                 fs_utils.clean_download(download_dict[self.uid].path())
