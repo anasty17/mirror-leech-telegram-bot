@@ -6,7 +6,7 @@ from bot import dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, downl
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
-from bot.helper.mirror_utils.download_utils import aria2_download
+from bot.helper.mirror_utils.download_utils.aria2_download import AriaDownloadHelper
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.status_utils import listeners
@@ -19,6 +19,9 @@ from bot.helper.telegram_helper.message_utils import *
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 import pathlib
 import os
+
+ariaDlManager = AriaDownloadHelper()
+ariaDlManager.start_listener()
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -83,7 +86,6 @@ class MirrorListener(listeners.MirrorListeners):
                 del download_dict[self.uid]
                 LOGGER.info(f"Deleting folder: {download.path()}")
                 fs_utils.clean_download(download.path())
-                LOGGER.info(f"Deleting {download.name()} from download_dict.")
                 LOGGER.info(str(download_dict))
             except Exception as e:
                 LOGGER.error(str(e))
@@ -186,8 +188,7 @@ def _mirror(bot, update, isTar=False):
     except DirectDownloadLinkException as e:
         LOGGER.info(f'{link}: {e}')
     listener = MirrorListener(bot, update, isTar, tag)
-    aria = aria2_download.AriaDownloadHelper(listener)
-    aria.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
+    ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/',listener)
     sendStatusMessage(update, bot)
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))

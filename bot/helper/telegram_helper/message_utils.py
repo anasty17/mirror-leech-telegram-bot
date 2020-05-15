@@ -66,7 +66,7 @@ def update_all_messages():
     msg = get_readable_message()
     with status_reply_dict_lock:
         for chat_id in list(status_reply_dict.keys()):
-            if msg != status_reply_dict[chat_id].text:
+            if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id].text:
                 try:
                     editMessage(msg, status_reply_dict[chat_id])
                 except BadRequest as e:
