@@ -33,7 +33,7 @@ class CustomFilters:
                 # Cancelling by gid
                 with download_dict_lock:
                     for message_id, status in download_dict.items():
-                        if status.gid == args[1] and status.message.from_user.id == user_id:
+                        if status.gid() == args[1] and status.message.from_user.id == user_id:
                             return True
                     else:
                         return False
