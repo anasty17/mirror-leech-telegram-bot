@@ -1,0 +1,34 @@
+#!/bin/bash
+
+if [ $# -lt 1 ];then
+  echo "Usage: `basename $0` FILES"
+  exit 1
+fi
+
+extract () {
+	arg="$1"
+		cd $(dirname "$arg")
+            case "$arg" in
+                *.tar.bz2) 
+					tar xjf "$arg" --one-top-level ;;
+                *.tar.gz)
+					tar xzf "$arg" --one-top-level ;;
+                *.bz2) bunzip2 "$arg"  ;;
+                *.gz)  gunzip "$arg"       ;;
+                *.tar) tar xf "$arg" --one-top-level ;;
+                *.tbz2) tar xjf "$arg" --one-top-level ;;
+                *.tgz) tar xzf "$arg" --one-top-level ;;
+                *.zip)
+					a_dir=`expr "$arg" : '\(.*\).zip'`
+					unzip "$arg" -d "$a_dir"       ;;
+                *.Z)  uncompress "$arg"   ;;
+                *.rar)   
+					a_dir=`expr "$arg" : '\(.*\).rar'` ;
+					mkdir "$a_dir" ;
+					rar x "$arg"  "$a_dir"      ;;  # 'rar' must to be installed
+                *)          echo "'$arg' cannot be extracted via extract()" ;;
+            esac
+		cd -
+}
+
+extract "$1"
