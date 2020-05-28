@@ -31,8 +31,11 @@ def stats(update, context):
 
 @run_async
 def start(update, context):
-    sendMessage("This is a bot which can mirror all your links to Google drive!\n"
-                "Type /{BotCommands.HelpCommand} to get a list of available commands", context.bot, update)
+    start_string = f'''
+This is a bot which can mirror all your links to Google drive!
+Type /{BotCommands.HelpCommand} to get a list of available commands
+'''
+    sendMessage(start_string, context.bot, update)
 
 
 @run_async
