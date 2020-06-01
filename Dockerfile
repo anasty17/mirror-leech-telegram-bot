@@ -17,8 +17,8 @@ WORKDIR sdk
 RUN git checkout v$MEGA_SDK_VERSION && ./autogen.sh && \
     ./configure --disable-silent-rules --enable-python --disable-examples && \
     make -j$(nproc --all) && cd bindings/python/ && \
-    python setup.py bdist_wheel && cd dist/ && \
-    pip install --no-cache-dir megasdk-$MEGA_SDK_VERSION-*.whl
+    python3 setup.py bdist_wheel && cd dist/ && \
+    pip3 install --no-cache-dir megasdk-$MEGA_SDK_VERSION-*.whl
 
 
 COPY requirements.txt .
