@@ -6,17 +6,36 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 
 # Features supported:
 - Mirroring direct download links to google drive
+- Mirroring Mega.nz links to google drive (In development stage)
+- Mirror Telegram files to google drive
+- Mirror all youtube-dl supported links
+- Extract zip, rar, tar and many supported file types and uploads to google drive
+- Copy files from someone's drive to your drive (using Rclone)
+- Service account support in cloning and uploading
 - Download progress
 - Upload progress
 - Download/upload speeds and ETAs
 - Docker support
 - Uploading To Team Drives.
 - Index Link support
-- Service account support
-- Mirror all youtube-dl supported links
-- Mirror telegram files
 
-# Upcoming features (TODOs):
+# Bot commands to be set in botfather
+
+```
+mirror - Start Mirroring
+tarmirror - Upload tar (zipped) file
+unzipmirror - Extract files
+clone - copy folder to drive
+watch - mirror YT-DL support link
+tarwatch - mirror youtube playlist link as tar
+cancel - Cancel a task
+cancelall - Cancel all tasks
+list - [query] searches files in G-Drive
+status - Get Mirror Status message
+stats - Bot Usage Stats
+help - Get Detailed Help
+log - Bot Log [owner only]
+```
 
 # How to deploy?
 Deploying is pretty much straight forward and is divided into several steps as follows:
@@ -24,7 +43,7 @@ Deploying is pretty much straight forward and is divided into several steps as f
 
 - Clone this repo:
 ```
-git clone https://github.com/lzzy12/python-aria-mirror-bot mirror-bot/
+git clone https://github.com/magneto261290/magneto-python-aria mirror-bot/
 cd mirror-bot
 ```
 
