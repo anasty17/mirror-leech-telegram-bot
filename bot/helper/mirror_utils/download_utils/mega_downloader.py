@@ -4,7 +4,8 @@ from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 from bot.helper.telegram_helper.message_utils import update_all_messages
 import os
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
-
+import random
+import string
 
 class MegaDownloaderException(Exception):
     pass
@@ -137,7 +138,8 @@ class MegaDownloadHelper:
             node = mega_listener.node
         if mega_listener.error is not None:
             return listener.onDownloadError(str(mega_listener.error))
-        mega_listener.setValues(node.getName(), api.getSize(node), mega_link.split("!", 1)[-1].split("!", 1)[0])
+        gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
+        mega_listener.setValues(node.getName(), api.getSize(node), gid)
         with download_dict_lock:
             download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
         threading.Thread(target=executor.do, args=(api.startDownload, (node, path))).start()
