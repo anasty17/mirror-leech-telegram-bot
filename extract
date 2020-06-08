@@ -20,7 +20,7 @@ extract () {
                 *.tgz) tar xzf "$arg" --one-top-level ;;
                 *.zip)
 					a_dir=`expr "$arg" : '\(.*\).zip'`
-					7z "$arg" -o"$a_dir"       ;;
+					7z x "$arg" -o"$a_dir"       ;;
                 *.Z)  uncompress "$arg"   ;;
                 *.rar)
 					a_dir=`expr "$arg" : '\(.*\).rar'` ;
