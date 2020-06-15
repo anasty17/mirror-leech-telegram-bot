@@ -1,6 +1,7 @@
 from telegram.message import Message
 from telegram.update import Update
 import time
+import psutil
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, bot, \
     status_reply_dict, status_reply_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_message
@@ -64,6 +65,8 @@ def delete_all_messages():
 
 def update_all_messages():
     msg = get_readable_message()
+    msg += f"<b>CPU:</b> {psutil.cpu_percent()} %" \
+           f"  <b>DISK:</b> {psutil.disk_usage('/').percent} %"
     with status_reply_dict_lock:
         for chat_id in list(status_reply_dict.keys()):
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id].text:
@@ -76,6 +79,8 @@ def update_all_messages():
 
 def sendStatusMessage(msg, bot):
     progress = get_readable_message()
+    progress += f"<b>CPU:</b> {psutil.cpu_percent()} %" \
+           f"  <b>DISK:</b> {psutil.disk_usage('/').percent} %"
     with status_reply_dict_lock:
         if msg.message.chat.id in list(status_reply_dict.keys()):
             try:
