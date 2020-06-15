@@ -83,8 +83,17 @@ except KeyError as e:
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
 except KeyError:
-    logging.warning('MEGA Api key not provided!')
-    MEGA_API_KEY = None
+    logging.warning('MEGA API KEY not provided!')
+
+try:
+    MEGA_EMAIL_ID = getConfig('MEGA_EMAIL_ID')
+    MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
+    if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+        raise KeyError
+except KeyError:
+    logging.warning('MEGA Credentials not provided!')
+    MEGA_EMAIL_ID = None
+    MEGA_PASSWORD = None
 try:
     INDEX_URL = getConfig('INDEX_URL')
     if len(INDEX_URL) == 0:

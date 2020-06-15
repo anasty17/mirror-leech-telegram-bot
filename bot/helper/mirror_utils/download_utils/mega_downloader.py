@@ -1,11 +1,19 @@
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict
+from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
 import threading
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 from bot.helper.telegram_helper.message_utils import update_all_messages
 import os
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
+import random
+import string
+
+class MegaDownloaderException(Exception):
+    pass
+
 
 class MegaAppListener(MegaListener):
+    _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN,
+                    MegaRequest.TYPE_FETCH_NODES)
 
     def __init__(self, continue_event: threading.Event, listener):
         self.continue_event = continue_event
@@ -31,7 +39,7 @@ class MegaAppListener(MegaListener):
         """Returns name of the download"""
         return self.__name
 
-    def setValues(self,name,size,gid):
+    def setValues(self, name, size, gid):
         self.__name = name
         self.__size = size
         self.gid = gid
@@ -53,15 +61,14 @@ class MegaAppListener(MegaListener):
                     .format(request, error))
 
         request_type = request.getType()
-        if request_type == MegaRequest.TYPE_GET_PUBLIC_NODE:
-            self.node = request.getPublicMegaNode()
         if request_type == MegaRequest.TYPE_LOGIN:
-            LOGGER.info("Fetching Nodes.")
             api.fetchNodes()
-        if request_type == MegaRequest.TYPE_FETCH_NODES:
+        elif request_type == MegaRequest.TYPE_GET_PUBLIC_NODE:
+            self.node = request.getPublicMegaNode()
+        elif request_type == MegaRequest.TYPE_FETCH_NODES:
             LOGGER.info("Fetching Root Node.")
             self.node = api.getRootNode()
-        if request_type != MegaRequest.TYPE_LOGIN:
+        if request_type not in self._NO_EVENT_ON:
             self.continue_event.set()
 
     def onRequestTemporaryError(self, api, request, error: MegaError):
@@ -74,11 +81,11 @@ class MegaAppListener(MegaListener):
 
     def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
         if self.is_cancelled:
-            api.cancelTransfer(transfer,None)
+            api.cancelTransfer(transfer, None)
         self.__speed = transfer.getSpeed()
         self.__bytes_transferred = transfer.getTransferredBytes()
 
-    def onTransferFinish(self, api: MegaApi, transfer : MegaTransfer, error):
+    def onTransferFinish(self, api: MegaApi, transfer: MegaTransfer, error):
         try:
             LOGGER.info(f'Transfer finished ({transfer}); Result: {transfer.getFileName()}')
             if str(error) != "No error" and self.is_cancelled:
@@ -98,7 +105,8 @@ class MegaAppListener(MegaListener):
     def cancel_download(self):
         self.is_cancelled = True
 
-class AsyncExecutor(object):
+
+class AsyncExecutor:
 
     def __init__(self):
         self.continue_event = threading.Event()
@@ -108,16 +116,21 @@ class AsyncExecutor(object):
         function(*args)
         self.continue_event.wait()
 
+
 class MegaDownloadHelper:
     def __init__(self):
         pass
 
     def add_download(self, mega_link: str, path: str, listener):
+        if MEGA_API_KEY is None:
+            raise MegaDownloaderException('Mega API KEY not provided! Cannot mirror mega links')
         executor = AsyncExecutor()
         api = MegaApi(MEGA_API_KEY, None, None, 'telegram-mirror-bot')
         mega_listener = MegaAppListener(executor.continue_event, listener)
         os.makedirs(path)
         api.addListener(mega_listener)
+        if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
+            executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
         executor.do(api.getPublicNode, (mega_link,))
         node = mega_listener.node
         if node is None:
@@ -125,8 +138,9 @@ class MegaDownloadHelper:
             node = mega_listener.node
         if mega_listener.error is not None:
             return listener.onDownloadError(str(mega_listener.error))
-        mega_listener.setValues(node.getName(),api.getSize(node),mega_link.split("!",1)[-1].split("!",1)[0])
+        gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
+        mega_listener.setValues(node.getName(), api.getSize(node), gid)
         with download_dict_lock:
-            download_dict[listener.uid] = MegaDownloadStatus(mega_listener,listener)
-        threading.Thread(target=executor.do,args=(api.startDownload,(node,path))).start()
+            download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
+        threading.Thread(target=executor.do, args=(api.startDownload, (node, path))).start()
         update_all_messages()

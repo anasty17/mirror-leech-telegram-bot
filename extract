@@ -7,7 +7,7 @@ fi
 
 extract () {
 	arg="$1"
-		cd $(dirname "$arg")
+		cd "$(dirname "$arg")" || exit
             case "$arg" in
                 *.tar.bz2) 
 					tar xjf "$arg" --one-top-level ;;
@@ -20,15 +20,15 @@ extract () {
                 *.tgz) tar xzf "$arg" --one-top-level ;;
                 *.zip)
 					a_dir=`expr "$arg" : '\(.*\).zip'`
-					unzip "$arg" -d "$a_dir"       ;;
+					7z x "$arg" -o"$a_dir"       ;;
                 *.Z)  uncompress "$arg"   ;;
-                *.rar)   
+                *.rar)
 					a_dir=`expr "$arg" : '\(.*\).rar'` ;
 					mkdir "$a_dir" ;
-					rar x "$arg"  "$a_dir"      ;;  # 'rar' must to be installed
+					7z x "$arg" -o"$a_dir"      ;;
                 *)          echo "'$arg' cannot be extracted via extract()" ;;
             esac
-		cd -
+		cd - || exit
 }
 
 extract "$1"
