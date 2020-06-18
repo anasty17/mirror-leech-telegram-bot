@@ -6,6 +6,7 @@ from urllib.parse import parse_qs
 import re
 import json
 import requests
+import logging
 
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -16,7 +17,7 @@ from googleapiclient.http import MediaFileUpload
 from tenacity import *
 
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
-    USE_SERVICE_ACCOUNTS
+    USE_SERVICE_ACCOUNTS, download_dict
 from bot.helper.ext_utils.bot_utils import *
 from bot.helper.ext_utils.fs_utils import get_mime_type
 
@@ -167,7 +168,7 @@ class GoogleDriveHelper:
                         if USE_SERVICE_ACCOUNTS:
                             self.switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again.")
-                            self.upload_file(file_path, file_name, mime_type, parent_id)
+                            return self.upload_file(file_path, file_name, mime_type, parent_id)
                     else:
                         raise err
         self._file_uploaded_bytes = 0
@@ -247,9 +248,36 @@ class GoogleDriveHelper:
                     if USE_SERVICE_ACCOUNTS:
                         self.switchServiceAccount()
                         LOGGER.info(f"Got: {reason}, Trying Again.")
-                        self.copyFile(file_id,dest_id)
+                        return self.copyFile(file_id,dest_id)
                 else:
                     raise err
+
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
+    def getFileMetadata(self,file_id):
+        return self.__service.files().get(supportsAllDrives=True, fileId=file_id,
+                                              fields="name,id,mimeType,size").execute()
+
+    @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(5),
+           retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, logging.DEBUG))
+    def getFilesByFolderId(self,folder_id):
+        page_token = None
+        q = f"'{folder_id}' in parents"
+        files = []
+        while True:
+            response = self.__service.files().list(supportsTeamDrives=True,
+                                                   includeTeamDriveItems=True,
+                                                   q=q,
+                                                   spaces='drive',
+                                                   pageSize=200,
+                                                   fields='nextPageToken, files(id, name, mimeType,size)',
+                                                   pageToken=page_token).execute()
+            for file in response.get('files', []):
+                files.append(file)
+            page_token = response.get('nextPageToken', None)
+            if page_token is None:
+                break
+        return files
 
     def clone(self, link):
         self.transferred_size = 0
@@ -304,23 +332,9 @@ class GoogleDriveHelper:
         return msg
 
     def cloneFolder(self, name, local_path, folder_id, parent_id):
-        page_token = None
-        q = f"'{folder_id}' in parents"
-        files = []
         LOGGER.info(f"Syncing: {local_path}")
+        files = self.getFilesByFolderId(folder_id)
         new_id = None
-        while True:
-            response = self.__service.files().list(supportsTeamDrives=True,
-                                                   includeTeamDriveItems=True,
-                                                   q=q,
-                                                   spaces='drive',
-                                                   fields='nextPageToken, files(id, name, mimeType,size)',
-                                                   pageToken=page_token).execute()
-            for file in response.get('files', []):
-                files.append(file)
-            page_token = response.get('nextPageToken', None)
-            if page_token is None:
-                break
         if len(files) == 0:
             return parent_id
         for file in files:
