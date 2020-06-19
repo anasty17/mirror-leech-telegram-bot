@@ -84,7 +84,7 @@ try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
 except KeyError:
     logging.warning('MEGA API KEY not provided!')
-
+    MEGA_API_KEY = None
 try:
     MEGA_EMAIL_ID = getConfig('MEGA_EMAIL_ID')
     MEGA_PASSWORD = getConfig('MEGA_PASSWORD')

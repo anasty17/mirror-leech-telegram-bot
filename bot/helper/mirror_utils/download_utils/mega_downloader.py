@@ -121,7 +121,8 @@ class MegaDownloadHelper:
     def __init__(self):
         pass
 
-    def add_download(self, mega_link: str, path: str, listener):
+    @staticmethod
+    def add_download(mega_link: str, path: str, listener):
         if MEGA_API_KEY is None:
             raise MegaDownloaderException('Mega API KEY not provided! Cannot mirror mega links')
         executor = AsyncExecutor()
