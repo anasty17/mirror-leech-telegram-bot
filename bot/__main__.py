@@ -1,9 +1,10 @@
-import shutil
+import shutil, psutil
 import signal
 import pickle
 
 from os import execl, path, remove
 from sys import executable
+import time
 
 from telegram.ext import CommandHandler, run_async
 from bot import dispatcher, updater, botStartTime
@@ -22,10 +23,14 @@ def stats(update, context):
     total = get_readable_file_size(total)
     used = get_readable_file_size(used)
     free = get_readable_file_size(free)
+    cpuUsage = psutil.cpu_percent(interval=0.5)
+    memory = psutil.virtual_memory().percent
     stats = f'Bot Uptime: {currentTime}\n' \
             f'Total disk space: {total}\n' \
             f'Used: {used}\n' \
-            f'Free: {free}'
+            f'Free: {free}\n' \
+            f'CPU: {cpuUsage}%\n' \
+            f'RAM: {memory}%'
     sendMessage(stats, context.bot, update)
 
 
