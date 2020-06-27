@@ -25,8 +25,10 @@ extract () {
                 *.rar)
 					a_dir=`expr "$arg" : '\(.*\).rar'` ;
 					mkdir "$a_dir" ;
-					7z x "$arg" -o"$a_dir"      ;;
-                *)          echo "'$arg' cannot be extracted via extract()" ;;
+					7z x "$arg" -o"$a_dir"     ;;
+                *)          echo "'$arg' cannot be extracted via extract()" 1>&2
+                  exit 1 ;;
+
             esac
 		cd - || exit
 }
