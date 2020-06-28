@@ -8,7 +8,7 @@ class ExtractStatus(Status):
         self.__path = path
         self.__size = size
 
-    # The progress of Tar function cannot be tracked. So we just return dummy values.
+    # The progress of extract function cannot be tracked. So we just return dummy values.
     # If this is possible in future,we should implement it
 
     def progress(self):
