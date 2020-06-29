@@ -6,7 +6,7 @@ from bot import Interval, INDEX_URL
 from bot import dispatcher, DOWNLOAD_DIR, DOWNLOAD_STATUS_UPDATE_INTERVAL, download_dict, download_dict_lock
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.bot_utils import setInterval
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
 from bot.helper.mirror_utils.download_utils.aria2_download import AriaDownloadHelper
 from bot.helper.mirror_utils.download_utils.mega_downloader import MegaDownloadHelper
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
@@ -22,6 +22,8 @@ from bot.helper.telegram_helper.message_utils import *
 from bot.helper.telegram_helper import button_build
 import pathlib
 import os
+import subprocess
+import threading
 
 ariaDlManager = AriaDownloadHelper()
 ariaDlManager.start_listener()
@@ -68,30 +70,29 @@ class MirrorListener(listeners.MirrorListeners):
                 return
         elif self.extract:
             download.is_extracting = True
-
-            path = fs_utils.get_base_name(m_path)
-            if path != "unsupported":
+            try:
+                path = fs_utils.get_base_name(m_path)
                 LOGGER.info(
-                    f"Extracting : {download_dict[self.uid].name()} "
+                    f"Extracting : {name} "
                 )
-                download_dict[self.uid] = ExtractStatus(name, m_path, size)
-                os.system(f"extract '{m_path}'")
-                if not os.path.exists(path):
-                    self.onUploadError("Cannot extract file, check integrity of the file")
-                    return
+                with download_dict_lock:
+                    download_dict[self.uid] = ExtractStatus(name, m_path, size)
+                archive_result = subprocess.run(["extract", m_path])
+                if archive_result.returncode == 0:
+                    threading.Thread(target=os.remove, args=(m_path,)).start()
+                    LOGGER.info(f"Deleting archive : {m_path}")
+                else:
+                    LOGGER.warning('Unable to extract archive! Uploading anyway')
+                    path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
                 LOGGER.info(
                     f'got path : {path}'
                 )
-                try:
-                    os.remove(m_path)
-                    LOGGER.info(f"Deleting archive : {m_path}")
-                except Exception as e:
-                    LOGGER.error(str(e))
-            else:
+
+            except NotSupportedExtractionArchive:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
-                path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
+                path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         else:
-            path = f'{DOWNLOAD_DIR}{self.uid}/{download_dict[self.uid].name()}'
+            path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         up_name = pathlib.PurePath(path).name
         LOGGER.info(f"Upload Name : {up_name}")
         drive = gdriveTools.GoogleDriveHelper(up_name, self)

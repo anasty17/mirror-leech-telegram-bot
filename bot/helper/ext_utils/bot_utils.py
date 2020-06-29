@@ -62,7 +62,9 @@ def get_readable_file_size(size_in_bytes) -> str:
 def getDownloadByGid(gid):
     with download_dict_lock:
         for dl in download_dict.values():
-            if dl.status() != MirrorStatus.STATUS_UPLOADING and dl.status() != MirrorStatus.STATUS_ARCHIVING:
+            status = dl.status()
+            if status != MirrorStatus.STATUS_UPLOADING and status != MirrorStatus.STATUS_ARCHIVING\
+                    and status != MirrorStatus.STATUS_EXTRACTING:
                 if dl.gid() == gid:
                     return dl
     return None
@@ -140,15 +142,19 @@ def is_magnet(url: str):
         return True
     return False
 
+
 def is_mega_link(url: str):
     return "mega.nz" in url
+
 
 def new_thread(fn):
     """To use as decorator to make a function call threaded.
     Needs import
     from threading import Thread"""
+
     def wrapper(*args, **kwargs):
         thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
         thread.start()
         return thread
+
     return wrapper

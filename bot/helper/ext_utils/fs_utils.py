@@ -5,6 +5,7 @@ import os
 import pathlib
 import magic
 import tarfile
+from .exceptions import NotSupportedExtractionArchive
 
 
 def clean_download(path: str):
@@ -60,25 +61,25 @@ def get_base_name(orig_path: str):
     if orig_path.endswith(".tar.bz2"):
         return orig_path.replace(".tar.bz2", "")
     elif orig_path.endswith(".tar.gz"):
-        return orig_path.replace(".tar.gz","")
+        return orig_path.replace(".tar.gz", "")
     elif orig_path.endswith(".bz2"):
-        return orig_path.replace(".bz2","")
+        return orig_path.replace(".bz2", "")
     elif orig_path.endswith(".gz"):
-        return orig_path.replace(".gz","")
+        return orig_path.replace(".gz", "")
     elif orig_path.endswith(".tar"):
-        return orig_path.replace(".tar","")
+        return orig_path.replace(".tar", "")
     elif orig_path.endswith(".tbz2"):
-        return orig_path.replace("tbz2","")
+        return orig_path.replace("tbz2", "")
     elif orig_path.endswith(".tgz"):
-        return orig_path.replace(".tgz","")
+        return orig_path.replace(".tgz", "")
     elif orig_path.endswith(".zip"):
-        return orig_path.replace(".zip","")
+        return orig_path.replace(".zip", "")
     elif orig_path.endswith(".Z"):
-        return orig_path.replace(".Z","")
+        return orig_path.replace(".Z", "")
     elif orig_path.endswith(".rar"):
-        return orig_path.replace(".rar","")
+        return orig_path.replace(".rar", "")
     else:
-        return "unsupported"
+        raise NotSupportedExtractionArchive('File format not supported for extraction')
 
 
 def get_mime_type(file_path):
