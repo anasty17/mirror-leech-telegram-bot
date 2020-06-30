@@ -182,6 +182,25 @@ class GoogleDriveHelper:
         download_url = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
         return download_url
 
+    def deletefile(self, link: str):
+        try:
+            file_id = self.getIdFromUrl(link)
+        except (KeyError,IndexError):
+            msg = "Google drive ID could not be found in the provided link"
+            return msg
+        msg = ''
+        try:
+            res = self.__service.files().delete(fileId=file_id, supportsTeamDrives=IS_TEAM_DRIVE).execute()
+            msg = "Successfully deleted"
+        except HttpError as err:
+            LOGGER.error(str(err))
+            if "File not found" in str(err):
+                msg = "No such file exist"
+            else:
+                msg = "Something went wrong check log"
+        finally:
+            return msg
+
     def upload(self, file_name: str):
         if USE_SERVICE_ACCOUNTS:
             self.service_account_count = len(os.listdir("accounts"))
