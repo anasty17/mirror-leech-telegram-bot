@@ -18,6 +18,7 @@ from tenacity import *
 
 from telegram import InlineKeyboardMarkup
 from bot.helper.telegram_helper import button_build
+
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
     USE_SERVICE_ACCOUNTS, download_dict
 from bot.helper.ext_utils.bot_utils import *
@@ -306,7 +307,7 @@ class GoogleDriveHelper:
             file_id = self.getIdFromUrl(link)
         except (KeyError,IndexError):
             msg = "Google drive ID could not be found in the provided link"
-            return msg
+            return msg, ""
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
@@ -338,7 +339,7 @@ class GoogleDriveHelper:
                 err = err.last_attempt.exception()
             err = str(err).replace('>', '').replace('<', '')
             LOGGER.error(err)
-            return err
+            return err, ""
         return msg, InlineKeyboardMarkup(buttons.build_menu(2))
 
     def cloneFolder(self, name, local_path, folder_id, parent_id):

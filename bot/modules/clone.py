@@ -16,7 +16,10 @@ def cloneNode(update,context):
         gd = GoogleDriveHelper()
         result, button = gd.clone(link)
         deleteMessage(context.bot,msg)
-        sendMarkup(result,context.bot,update,button)
+        if button == "":
+            sendMessage(result,context.bot,update)
+        else:
+            sendMarkup(result,context.bot,update,button)
     else:
         sendMessage("Provide G-Drive Shareable Link to Clone.",context.bot,update)
 
