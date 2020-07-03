@@ -1,4 +1,4 @@
-FROM lzzy12/mega-sdk-python:latest
+FROM ubuntu:18.04
 
 WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
@@ -24,5 +24,3 @@ COPY netrc /root/.netrc
 RUN chmod +x aria.sh
 
 CMD ["bash","start.sh"]
-
-
