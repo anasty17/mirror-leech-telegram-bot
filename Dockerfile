@@ -4,12 +4,7 @@ WORKDIR /usr/src/app
 RUN chmod 777 /usr/src/app
 
 RUN apt-get -qq update && \
-    apt-get install -y software-properties-common && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-add-repository non-free && \
-    apt-get -qq update && \
-    apt-get -qq install -y p7zip-full p7zip-rar aria2 curl pv jq ffmpeg locales python3-lxml && \
-    apt-get purge -y software-properties-common
+    apt-get -qq install -y python3 python3-pip p7zip-full p7zip-rar aria2 curl pv jq ffmpeg gcc git locales python3-lxml 
 
 COPY requirements.txt .
 COPY extract /usr/local/bin
