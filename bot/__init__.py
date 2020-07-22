@@ -102,6 +102,30 @@ try:
 except KeyError:
     INDEX_URL = None
 try:
+    BUTTON_THREE_NAME = getConfig('BUTTON_THREE_NAME')
+    BUTTON_THREE_URL = getConfig('BUTTON_THREE_URL')
+    if len(BUTTON_THREE_NAME) == 0 or len(BUTTON_THREE_URL) == 0:
+        raise KeyError
+except KeyError:
+    BUTTON_THREE_NAME = None
+    BUTTON_THREE_URL = None
+try:
+    BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
+    BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
+    if len(BUTTON_FOUR_NAME) == 0 or len(BUTTON_FOUR_URL) == 0:
+        raise KeyError
+except KeyError:
+    BUTTON_FOUR_NAME = None
+    BUTTON_FOUR_URL = None
+try:
+    BUTTON_FIVE_NAME = getConfig('BUTTON_FIVE_NAME')
+    BUTTON_FIVE_URL = getConfig('BUTTON_FIVE_URL')
+    if len(BUTTON_FIVE_NAME) == 0 or len(BUTTON_FIVE_URL) == 0:
+        raise KeyError
+except KeyError:
+    BUTTON_FIVE_NAME = None
+    BUTTON_FIVE_URL = None
+try:
     IS_TEAM_DRIVE = getConfig('IS_TEAM_DRIVE')
     if IS_TEAM_DRIVE.lower() == 'true':
         IS_TEAM_DRIVE = True
