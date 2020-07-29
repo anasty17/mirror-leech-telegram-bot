@@ -74,6 +74,8 @@ def get_base_name(orig_path: str):
         return orig_path.replace(".tgz", "")
     elif orig_path.endswith(".zip"):
         return orig_path.replace(".zip", "")
+    elif orig_path.endswith(".7z"):
+        return orig_path.replace(".7z", "")
     elif orig_path.endswith(".Z"):
         return orig_path.replace(".Z", "")
     elif orig_path.endswith(".rar"):
