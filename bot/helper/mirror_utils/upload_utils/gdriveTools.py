@@ -445,8 +445,15 @@ class GoogleDriveHelper:
                 scopes=self.__OAUTH_SCOPE)
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
 
+    def escapes(self, str):
+        chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\t']
+        for char in chars:
+            str = str.replace(char, '\\'+char)
+        return str
+
     def drive_list(self, fileName):
         msg = ""
+        fileName = self.escapes(str(fileName))
         # Create Search Query for API request.
         query = f"'{parent_id}' in parents and (name contains '{fileName}')"
         response = self.__service.files().list(supportsTeamDrives=True,
