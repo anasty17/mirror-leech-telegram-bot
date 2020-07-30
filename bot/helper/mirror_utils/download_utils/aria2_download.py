@@ -1,4 +1,5 @@
-from bot import aria2
+from bot import aria2, download_dict_lock, STOP_DUPLICATE_MIRROR
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import *
 from .download_helper import DownloadHelper
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
@@ -15,7 +16,19 @@ class AriaDownloadHelper(DownloadHelper):
 
     @new_thread
     def __onDownloadStarted(self, api, gid):
+        sleep(1.5)
         LOGGER.info(f"onDownloadStart: {gid}")
+        dl = getDownloadByGid(gid)
+        download = api.get_download(gid)
+        self.name = download.name
+        sname = download.name
+        gdrive = GoogleDriveHelper(None)
+        smsg = gdrive.drive_slist(sname)
+        if STOP_DUPLICATE_MIRROR:
+            if smsg:
+                dl.getListener().onDownloadError(f'😡😡<code>File is already available in drive. You should have search before mirror any file.</code> <b>You might get ban if you do this again.</b> <code>This download has been stopped.</code>\n\n Here are the search results:👇👇 \n\n{smsg}')
+                aria2.remove([download])
+            return
         update_all_messages()
 
     def __onDownloadComplete(self, api: API, gid):
