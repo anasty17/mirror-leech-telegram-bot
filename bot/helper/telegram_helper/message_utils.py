@@ -28,10 +28,10 @@ def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarku
         LOGGER.error(str(e))
 
 
-def editMessage(text: str, message: Message):
+def editMessage(text: str, message: Message, reply_markup=None):
     try:
         bot.edit_message_text(text=text, message_id=message.message_id,
-                              chat_id=message.chat.id,
+                              chat_id=message.chat.id,reply_markup=reply_markup,
                               parse_mode='HTMl')
     except Exception as e:
         LOGGER.error(str(e))
