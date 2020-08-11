@@ -33,7 +33,11 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Mirroring Mega.nz links to google drive (In development stage)
 - Mirror Telegram files to google drive
 - Mirror all youtube-dl supported links
-- Extract zip, rar, tar and many supported file types and uploads to google drive
+- Extract these filetypes and uploads to google drive
+> ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, 
+> APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, 
+> HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, 
+> NTFS, RPM, SquashFS, UDF, VHD, XAR, Z.
 - Copy files from someone's drive to your drive (using Autorclone)
 - Service account support in cloning and uploading
 - Download progress
