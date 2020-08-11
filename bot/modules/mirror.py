@@ -105,6 +105,8 @@ class MirrorListener(listeners.MirrorListeners):
         drive.upload(up_name)
 
     def onDownloadError(self, error):
+        error = error.replace('<', ' ')
+        error = error.replace('>', ' ')
         LOGGER.info(self.update.effective_chat.id)
         with download_dict_lock:
             try:

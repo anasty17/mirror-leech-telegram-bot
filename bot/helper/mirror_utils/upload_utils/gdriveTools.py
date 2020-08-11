@@ -465,7 +465,7 @@ class GoogleDriveHelper:
             Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
                                  title = 'Mirror Bot Search',
                                  author_name='Mirror Bot',
-                                 author_url='https://github.com/magneto261290/magneto-python-ariap',
+                                 author_url='https://github.com/magneto261290/magneto-python-aria',
                                  html_content=content)
         return
 
@@ -540,32 +540,3 @@ class GoogleDriveHelper:
 
         else :
             return '', ''
-
-    def drive_slist(self, fileName):
-        msg = ""
-        fileName = self.escapes(str(fileName))
-        # Create Search Query for API request.
-        query = f"'{parent_id}' in parents and (name contains '{fileName}')"
-        response = self.__service.files().list(supportsTeamDrives=True,
-                                               includeTeamDriveItems=True,
-                                               q=query,
-                                               spaces='drive',
-                                               pageSize=20,
-                                               fields='files(id, name, mimeType, size)',
-                                               orderBy='modifiedTime desc').execute()
-        for file in response.get('files', []):
-            if file.get(
-                    'mimeType') == "application/vnd.google-apps.folder":  # Detect Whether Current Entity is a Folder or File.
-                msg += f"⁍ <a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                       f"</a> (folder)"
-                if INDEX_URL is not None:
-                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}/')
-                    msg += f' | <a href="{url}"> Index URL</a>'
-            else:
-                msg += f"⁍ <a href='https://drive.google.com/uc?id={file.get('id')}" \
-                       f"&export=download'>{file.get('name')}</a> ({get_readable_file_size(int(file.get('size')))})"
-                if INDEX_URL is not None:
-                    url = requests.utils.requote_uri(f'{INDEX_URL}/{file.get("name")}')
-                    msg += f' | <a href="{url}"> Index URL</a>'
-            msg += '\n'
-        return msg
