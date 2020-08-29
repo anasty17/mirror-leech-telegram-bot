@@ -146,6 +146,15 @@ def is_magnet(url: str):
 def is_mega_link(url: str):
     return "mega.nz" in url
 
+def get_mega_link_type(url: str):
+    if "folder" in url:
+        return "folder"
+    elif "file" in url:
+        return "file"
+    elif "/#F!" in url:
+        return "folder"
+    return "file"
+
 
 def new_thread(fn):
     """To use as decorator to make a function call threaded.
