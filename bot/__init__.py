@@ -162,6 +162,15 @@ try:
 except KeyError:
     BLOCK_MEGA_LINKS = False
 
+try:
+    SHORTENER = getConfig('SHORTENER')
+    SHORTENER_API = getConfig('SHORTENER_API')
+    if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
+        raise KeyError
+except KeyError:
+    SHORTENER = None
+    SHORTENER_API = None
+
 updater = tg.Updater(token=BOT_TOKEN,use_context=True)
 bot = updater.bot
 dispatcher = updater.dispatcher
