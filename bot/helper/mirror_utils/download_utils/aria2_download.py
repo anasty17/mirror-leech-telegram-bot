@@ -24,9 +24,10 @@ class AriaDownloadHelper(DownloadHelper):
         download = api.get_download(gid)
         if download.followed_by_ids:
             new_gid = download.followed_by_ids[0]
+            new_download = api.get_download(new_gid)
             with download_dict_lock:
                 download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
-                if download.is_torrent:
+                if new_download.is_torrent:
                     download_dict[dl.uid()].is_torrent = True
             update_all_messages()
             LOGGER.info(f'Changed gid from {gid} to {new_gid}')
@@ -62,15 +63,16 @@ class AriaDownloadHelper(DownloadHelper):
                                       on_download_stop=self.__onDownloadStopped,
                                       on_download_complete=self.__onDownloadComplete)
 
-    def add_download(self, link: str, path, listener):
+
+    def add_download(self, link: str, path,listener):
         if is_magnet(link):
             download = aria2.add_magnet(link, {'dir': path})
         else:
             download = aria2.add_uris([link], {'dir': path})
-
         if download.error_message:  # no need to proceed further at this point
             listener.onDownloadError(download.error_message)
             return
         with download_dict_lock:
             download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
             LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")
+

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+if [ $# -lt 1 ]; then
+  echo "Usage: $(basename $0) FILES"
+  exit 1
+fi
+
+extract() {
+  arg="$1"
+  cd "$(dirname "$arg")" || exit
+  case "$arg" in
+  *.tar.bz2)
+    tar xjf "$arg" --one-top-level
+    local code=$?
+    ;;
+  *.tar.gz)
+    tar xzf "$arg" --one-top-level
+    local code=$?
+    ;;
+  *.bz2)
+    bunzip2 "$arg"
+    local code=$?
+    ;;
+  *.gz)
+    gunzip "$arg"
+    local code=$?
+    ;;
+  *.tar)
+    tar xf "$arg" --one-top-level
+    local code=$?
+    ;;
+  *.tbz2)
+    (tar xjf "$arg" --one-top-level)
+    local code=$?
+    ;;
+  *.tgz)
+    tar xzf "$arg" --one-top-level
+    local code=$?
+    ;;
+  *.zip)
+    a_dir=$(expr "$arg" : '\(.*\).zip')
+    7z x "$arg" -o"$a_dir"
+    local code=$?
+    ;;
+  *.7z)
+    a_dir=$(expr "$arg" : '\(.*\).7z')
+    7z x "$arg" -o"$a_dir"
+    local code=$?
+    ;;
+  *.Z)
+    uncompress "$arg"
+    local code=$?
+    ;;
+  *.rar)
+    a_dir=$(expr "$arg" : '\(.*\).rar')
+    mkdir "$a_dir"
+    7z x "$arg" -o"$a_dir"
+    local code=$?
+    ;;
+  *)
+    echo "'$arg' cannot be extracted via extract()" 1>&2
+    exit 1
+    ;;
+  esac
+  cd - || exit $?
+  exit $code
+}
+
+extract "$1"

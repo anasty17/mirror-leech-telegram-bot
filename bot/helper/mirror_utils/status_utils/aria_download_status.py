@@ -20,6 +20,7 @@ class AriaDownloadStatus(Status):
         self.message = listener.message
         self.last = None
         self.is_waiting = False
+        self.is_extracting = False
 
     def __update(self):
         self.__download = get_download(self.__gid)
