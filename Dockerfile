@@ -8,6 +8,8 @@ RUN apt-get -qq update && \
     curl pv jq ffmpeg \
     p7zip-full p7zip-rar
 COPY requirements.txt .
+COPY extract /usr/local/bin
+RUN chmod +x /usr/local/bin/extract
 RUN pip3 install --no-cache-dir -r requirements.txt && \
     apt-get -qq purge git
 
