@@ -14,8 +14,16 @@ def _watch(bot: Bot, update: Update, args: list, isTar=False):
     try:
         link = args[0]
     except IndexError:
-        sendMessage(f'/{BotCommands.WatchCommand} [yt_dl supported link] to mirror with youtube_dl', bot, update)
+        msg = f"/{BotCommands.WatchCommand} [yt_dl supported link] [quality] to mirror with youtube_dl.\n\n"
+        msg += "Example of quality :- audio, 144, 360, 720, 1080.\nNote :- Quality is optional"
+        sendMessage(msg, bot, update)
         return
+    try:
+      qual = args[1]
+      if qual != "audio":
+        qual = f'bestvideo[height<={qual}]+bestaudio/best[height<={qual}]'
+    except IndexError:
+      qual = "bestvideo+bestaudio/best"
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         tag = reply_to.from_user.username
@@ -24,7 +32,7 @@ def _watch(bot: Bot, update: Update, args: list, isTar=False):
 
     listener = MirrorListener(bot, update, isTar, tag)
     ydl = YoutubeDLHelper(listener)
-    threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{listener.uid}')).start()
+    threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{listener.uid}', qual)).start()
     sendStatusMessage(update, bot)
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
