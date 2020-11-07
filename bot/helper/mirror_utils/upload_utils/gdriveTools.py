@@ -23,7 +23,7 @@ from telegraph import Telegraph
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
     USE_SERVICE_ACCOUNTS, download_dict, telegraph_token, BUTTON_THREE_NAME, BUTTON_THREE_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, SHORTENER, SHORTENER_API
 from bot.helper.ext_utils.bot_utils import *
-from bot.helper.ext_utils.fs_utils import get_mime_type
+from bot.helper.ext_utils.fs_utils import get_mime_type, get_path_size
 
 LOGGER = logging.getLogger(__name__)
 logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
@@ -212,6 +212,7 @@ class GoogleDriveHelper:
         self.__listener.onUploadStarted()
         file_dir = f"{DOWNLOAD_DIR}{self.__listener.message.message_id}"
         file_path = f"{file_dir}/{file_name}"
+        size = get_readable_file_size(get_path_size(file_path))
         LOGGER.info("Uploading File: " + file_path)
         self.start_time = time.time()
         self.updater = setInterval(self.update_interval, self._on_upload_progress)
@@ -253,7 +254,7 @@ class GoogleDriveHelper:
             finally:
                 self.updater.cancel()
         LOGGER.info(download_dict)
-        self.__listener.onUploadComplete(link)
+        self.__listener.onUploadComplete(link, size)
         LOGGER.info("Deleting downloaded file/folder..")
         return link
 
