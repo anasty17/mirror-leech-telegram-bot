@@ -1,3 +1,6 @@
+# ! Development Stopped!
+I am offline on telegram too. So don't waste your time in messaging me on TG. Don't know when i will be back. B...Bye (◕‿◕)
+
 # Important - Read these points first
 - Original repo is https://github.com/lzzy12/python-aria-mirror-bot
 - I have collected some cool features from various repositories and merged them in one.
