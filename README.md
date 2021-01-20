@@ -6,7 +6,7 @@
 - So if you have any issue then check first that issue is in official repo or not, You are only allowed to report that issue in bot support group if that issue is also present in official repo.
 
 ## Features Coming soon....
-- Custom Filename
+- ~Custom Filename~ Added 
 ```
 Only for url, telegram files and ytdl.
 Not for mega links and magnet/torrents
@@ -18,7 +18,7 @@ Note :- it is not a Bot Support group. It's only for discussing rubbish things b
 
 
 ## Credits :-
-- First of all, full credit goes to [Shivam Jha aka lzzy12](https://github.com/lzzy12) He build up this bot from scratch.
+- First of all, full credit goes to [Shivam Jha aka lzzy12](https://github.com/lzzy12) and [JaskaranSM aka Zero Cool](https://github.com/jaskaranSM) They build up this bot from scratch.
 - Then a huge thanks to [Sreeraj V R](https://github.com/SVR666) You can checkout his [repo here](https://github.com/SVR666/LoaderX-Bot)
 - Features added from [Sreeraj V R's](https://github.com/SVR666) repo -
 ```
@@ -46,6 +46,7 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Mirroring Mega.nz links to google drive (In development stage)
 - Mirror Telegram files to google drive
 - Mirror all youtube-dl supported links
+- Custom filename support in direct link, telegram files, YT-DL links
 - Extract these filetypes and uploads to google drive
 > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, 
 > APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, 
@@ -60,6 +61,9 @@ This project is heavily inspired from @out386 's telegram bot which is written i
 - Uploading To Team Drives.
 - Index Link support
 - Shortener support
+
+- For using custom filename see these examples :-
+> https://telegra.ph/Magneto-Python-Aria---Custom-Filename-Examples-01-20
 
 ## Bot commands to be set in botfather
 

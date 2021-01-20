@@ -19,7 +19,10 @@ class MyLogger:
         # Hack to fix changing changing extension
         match = re.search(r'.ffmpeg..Merging formats into..(.*?).$', msg)
         if match and not self.obj.is_playlist:
-            self.obj.name = match.group(1)
+            newname = match.group(1)
+            newname = newname.split("/")
+            newname = newname[-1]
+            self.obj.name = newname
 
     @staticmethod
     def warning(msg):
@@ -94,14 +97,17 @@ class YoutubeDLHelper(DownloadHelper):
     def onDownloadError(self, error):
         self.__listener.onDownloadError(error)
 
-    def extractMetaData(self, link, qual):
+    def extractMetaData(self, link, qual, name):
         if 'hotstar' or 'sonyliv' in link:
             self.opts['geo_bypass_country'] = 'IN'
 
         with YoutubeDL(self.opts) as ydl:
             try:
                 result = ydl.extract_info(link, download=False)
-                name = ydl.prepare_filename(result)
+                if name == "":
+                    name = ydl.prepare_filename(result)
+                else:
+                    name = name
                 # noobway hack for changing extension after converting to mp3
                 if qual == "audio":
                   name = name.replace(".mp4", ".mp3").replace(".webm", ".mp3")
@@ -140,9 +146,9 @@ class YoutubeDLHelper(DownloadHelper):
             LOGGER.info("Download Cancelled by User!")
             self.onDownloadError("Download Cancelled by User!")
 
-    def add_download(self, link, path, qual):
+    def add_download(self, link, path, qual, name):
         self.__onDownloadStart()
-        self.extractMetaData(link, qual)
+        self.extractMetaData(link, qual, name)
         LOGGER.info(f"Downloading with YT-DL: {link}")
         self.__gid = f"{self.vid_id}{self.__listener.uid}"
         if qual == "audio":

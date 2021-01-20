@@ -197,10 +197,15 @@ class MirrorListener(listeners.MirrorListeners):
 
 def _mirror(bot, update, isTar=False, extract=False):
     message_args = update.message.text.split(' ')
+    name_args = update.message.text.split('|')
     try:
         link = message_args[1]
     except IndexError:
         link = ''
+    try:
+        name = name_args[1]
+    except IndexError:
+        name = ''
     LOGGER.info(link)
     link = link.strip()
     reply_to = update.message.reply_to_message
@@ -213,12 +218,12 @@ def _mirror(bot, update, isTar=False, extract=False):
                 file = i
                 break
 
-        if len(link) == 0:
+        if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) or len(link) == 0:
             if file is not None:
                 if file.mime_type != "application/x-bittorrent":
                     listener = MirrorListener(bot, update, isTar, tag)
                     tg_downloader = TelegramDownloadHelper(listener)
-                    tg_downloader.add_download(reply_to, f'{DOWNLOAD_DIR}{listener.uid}/')
+                    tg_downloader.add_download(reply_to, f'{DOWNLOAD_DIR}{listener.uid}/', name)
                     sendStatusMessage(update, bot)
                     if len(Interval) == 0:
                         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
@@ -241,10 +246,10 @@ def _mirror(bot, update, isTar=False, extract=False):
             sendMessage("Mega links are blocked bcoz mega downloading is too much unstable and buggy. mega support will be added back after fix", bot, update)
         else:
             mega_dl = MegaDownloadHelper()
-            mega_dl.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/', listener)
+            mega_dl.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/', listener, name)
             sendStatusMessage(update, bot)
     else:
-        ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/', listener)
+        ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/', listener, name)
         sendStatusMessage(update, bot)
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
