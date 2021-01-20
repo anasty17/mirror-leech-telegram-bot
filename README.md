@@ -1,12 +1,21 @@
-# ! Development Stopped!
-I am offline on telegram too. So don't waste your time in messaging me on TG. Don't know when i will be back. B...Bye (◕‿◕)
-
 # Important - Read these points first
 - Original repo is https://github.com/lzzy12/python-aria-mirror-bot
 - I have collected some cool features from various repositories and merged them in one.
 - So, credits goes to original repo holder, not to me. I have just collected them.
 - This (or any custom) repo is not supported in official bot support group.
 - So if you have any issue then check first that issue is in official repo or not, You are only allowed to report that issue in bot support group if that issue is also present in official repo.
+
+## Features Coming soon....
+- Custom Filename
+```
+Only for url, telegram files and ytdl.
+Not for mega links and magnet/torrents
+```
+- Rename Drive files
+
+Let's have some chit chat here - [@Magneto_chit_chat](https://t.me/magneto_chit_chat)
+Note :- it is not a Bot Support group. It's only for discussing rubbish things bcoz i want your help to learn coding 😜🤪.
+
 
 ## Credits :-
 - First of all, full credit goes to [Shivam Jha aka lzzy12](https://github.com/lzzy12) He build up this bot from scratch.
@@ -24,6 +33,7 @@ I am offline on telegram too. So don't waste your time in messaging me on TG. Do
 2. Update tracker list dynamically
 3. Fix SSL handsake error
 ```
+
 
 # What is this repo about?
 This is a telegram bot writen in python for mirroring files on the internet to our beloved Google Drive.
