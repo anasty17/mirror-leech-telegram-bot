@@ -9,6 +9,7 @@ class MegaDownloadStatus(Status):
         self.uid = obj.uid
         self.listener = listener
         self.obj = obj
+        self.message = listener.message
 
     def name(self) -> str:
         return self.obj.name
