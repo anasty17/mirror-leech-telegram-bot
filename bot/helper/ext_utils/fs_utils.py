@@ -23,7 +23,10 @@ def start_cleanup():
 
 def clean_all():
     aria2.remove_all(True)
-    shutil.rmtree(DOWNLOAD_DIR)
+    try:
+        shutil.rmtree(DOWNLOAD_DIR)
+    except FileNotFoundError:
+        pass
 
 
 def exit_clean_up(signal, frame):
