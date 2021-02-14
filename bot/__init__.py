@@ -2,6 +2,8 @@ import logging
 import os
 import threading
 import time
+import random
+import string
 
 import aria2p
 import telegram.ext as tg
@@ -97,10 +99,12 @@ with Client(':memory:', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_to
     USER_SESSION_STRING = app.export_session_string()
 
 #Generate Telegraph Token
-LOGGER.info("Generating Telegraph Token")
+sname = ''.join(random.SystemRandom().choices(string.ascii_letters, k=8))
+LOGGER.info("Generating Telegraph Token using '" + sname + "' name")
 telegraph = Telegraph()
-telegraph.create_account(short_name="mirror_bot")
+telegraph.create_account(short_name=sname)
 telegraph_token = telegraph.get_access_token()
+LOGGER.info("Telegraph Token Generated: '" + telegraph_token + "'")
 
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
