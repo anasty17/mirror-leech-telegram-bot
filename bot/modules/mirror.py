@@ -100,6 +100,8 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         up_name = pathlib.PurePath(path).name
+        if up_name == "None":
+            up_name = "".join(os.listdir(f'{DOWNLOAD_DIR}{self.uid}/'))
         up_path = f'{DOWNLOAD_DIR}{self.uid}/{up_name}'
         LOGGER.info(f"Upload Name : {up_name}")
         drive = gdriveTools.GoogleDriveHelper(up_name, self)
