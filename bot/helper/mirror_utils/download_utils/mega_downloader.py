@@ -101,11 +101,20 @@ class MegaAppListener(MegaListener):
             LOGGER.error(e)
 
     def onTransferTemporaryError(self, api, transfer, error):
-        LOGGER.info(f'Mega download error in file {transfer} {transfer.getFileName()}: {error}')
-        self.error = error.toString()
+        filen = transfer.getFileName()
+        state = transfer.getState()
+        errStr = error.toString()
+        LOGGER.info(f'Mega download error in file {transfer} {filen}: {error}')
+
+        if state == 1 or state == 4:
+            # Sometimes MEGA (offical client) can't stream a node either and raises a temp failed error.
+            # Don't break the transfer queue if transfer's in queued (1) or retrying (4) state [causes seg fault]
+            return
+
+        self.error = errStr
         if not self.is_cancelled:
             self.is_cancelled = True
-            self.listener.onDownloadError("TransferTempError: "+self.error)
+            self.listener.onDownloadError(f"TransferTempError: {errStr} ({filen})")
 
     def cancel_download(self):
         self.is_cancelled = True
