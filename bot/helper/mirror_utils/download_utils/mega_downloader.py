@@ -61,7 +61,9 @@ class MegaAppListener(MegaListener):
     def onRequestFinish(self, api, request, error):
         LOGGER.info('Mega Request finished ({}); Result: {}'
                     .format(request, error))
-
+        if str(error).lower() != "no error":
+            self.error = error.copy()
+            return
         request_type = request.getType()
         if request_type == MegaRequest.TYPE_LOGIN:
             api.fetchNodes()
