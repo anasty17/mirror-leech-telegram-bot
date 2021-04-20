@@ -54,7 +54,7 @@ class MegaDownloader(DownloadHelper):
                 return self.__mega_client.getDownloadInfo(self.gid)['speed']
 
     def __onDownloadStart(self, name, size, gid):
-        setInterval(self.POLLING_INTERVAL, self.__onInterval)
+        self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
         with download_dict_lock:
             download_dict[self.__listener.uid] = MegaDownloadStatus(self, self.__listener)
         with self.__resource_lock:
