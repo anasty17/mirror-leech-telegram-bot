@@ -11,3 +11,4 @@ data*
 authorized_chats.txt
 log.txt
 accounts/*
+venv/
