@@ -1,7 +1,4 @@
-import logging
 import threading
-import time
-
 from bot import LOGGER, download_dict, download_dict_lock
 from .download_helper import DownloadHelper
 from ..status_utils.mega_status import MegaDownloadStatus
@@ -80,6 +77,7 @@ class MegaDownloader(DownloadHelper):
             self.__onDownloadError(dlInfo['error_string'])
             if self.__periodic is not None:
                 self.__periodic.cancel()
+        self.__onDownloadProgress(dlInfo['completed_length'], dlInfo['total_length'])
 
     def __onDownloadProgress(self, current, total):
         if self.__is_cancelled:
@@ -89,7 +87,7 @@ class MegaDownloader(DownloadHelper):
         with self.__resource_lock:
             self.__downloaded_bytes = current
             try:
-                self.__progress = current / self.size * 100
+                self.__progress = current / total * 100
             except ZeroDivisionError:
                 self.__progress = 0
 
