@@ -216,9 +216,9 @@ def _mirror(bot, update, isTar=False, extract=False):
     listener = MirrorListener(bot, update, isTar, tag, extract)
     if bot_utils.is_mega_link(link) and MEGA_KEY is not None:
         mega_dl = MegaDownloader(listener)
-        mega_dl.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/')
+        mega_dl.add_download(link, f'{DOWNLOAD_DIR}{listener.uid}/')
     else:
-        ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}/{listener.uid}/', listener)
+        ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)
     sendStatusMessage(update, bot)
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
