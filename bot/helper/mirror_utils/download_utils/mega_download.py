@@ -4,9 +4,8 @@ from .download_helper import DownloadHelper
 from ..status_utils.mega_status import MegaDownloadStatus
 from megasdkrestclient import MegaSdkRestClient, constants
 from bot.helper.ext_utils.bot_utils import setInterval
-
-
-class MegaDownloader(DownloadHelper):
+from pathlib import Path
+class MegaDownloader:
     POLLING_INTERVAL = 1
 
     def __init__(self, listener):
@@ -49,9 +48,8 @@ class MegaDownloader(DownloadHelper):
 
     @property
     def download_speed(self):
-        with self.__resource_lock:
-            if self.gid is not None:
-                return self.__mega_client.getDownloadInfo(self.gid)['speed']
+        if self.gid is not None:
+            return self.__mega_client.getDownloadInfo(self.gid)['speed']
 
     def __onDownloadStart(self, name, size, gid):
         self.__periodic = setInterval(self.POLLING_INTERVAL, self.__onInterval)
@@ -98,6 +96,7 @@ class MegaDownloader(DownloadHelper):
         self.__listener.onDownloadComplete()
 
     def add_download(self, link, path):
+        Path(path).mkdir(parents=True, exist_ok=True)
         dl = self.__mega_client.addDl(link, path)
         gid = dl['gid']
         info = self.__mega_client.getDownloadInfo(gid)
