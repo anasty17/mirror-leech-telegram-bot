@@ -10,7 +10,7 @@ RUN apt-get -qq update && \
     libcrypto++-dev libssl-dev \
     libc-ares-dev libcurl4-openssl-dev \
     libsqlite3-dev libsodium-dev && \
-    curl https://github.com/jaskaranSM/megasdkrest/releases/download/v0.1/megasdkrest -o /usr/local/bin/megasdkrest && \
+    curl -L https://github.com/jaskaranSM/megasdkrest/releases/download/v0.1/megasdkrest -o /usr/local/bin/megasdkrest && \
     chmod +x /usr/local/bin/megasdkrest
 
 COPY requirements.txt .
