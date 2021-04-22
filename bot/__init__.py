@@ -93,6 +93,7 @@ if MEGA_KEY is not None:
         MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
         # Start megasdkrest binary
         subprocess.Popen(["megasdkrest", "--apikey", MEGA_KEY])
+        time.sleep(3)
         mega_client = MegaSdkRestClient('http://localhost:6090')
         try:
             mega_client.login(MEGA_USERNAME, MEGA_PASSWORD)
