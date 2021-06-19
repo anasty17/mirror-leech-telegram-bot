@@ -1,11 +1,13 @@
 from bot import DOWNLOAD_DIR
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from .status import Status
-
+import typing
+if typing.TYPE_CHECKING:
+    from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 
 class YoutubeDLDownloadStatus(Status):
-    def __init__(self, obj, listener):
-        self.obj = obj
+    def __init__(self, obj: "YoutubeDLHelper", listener):
+        self.obj: "YoutubeDLHelper" = obj
         self.uid = listener.uid
         self.message = listener.message
 

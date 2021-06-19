@@ -53,6 +53,11 @@ class YoutubeDLHelper(DownloadHelper):
         self.__resource_lock = threading.RLock()
 
     @property
+    def name(self):
+        with self.__resource_lock:
+            return self.__name
+
+    @property
     def download_speed(self):
         with self.__resource_lock:
             return self.__download_speed
@@ -116,14 +121,14 @@ class YoutubeDLHelper(DownloadHelper):
                 if v.get('filesize'):
                     self.size += float(v['filesize'])
             # For playlists, ydl.prepare-filename returns the following format: <Playlist Name>-<Id of playlist>.NA
-            self.name = name.split(f"-{result['id']}")[0]
+            self.__name = name.split(f"-{result['id']}")[0]
             self.vid_id = video.get('id')
             self.is_playlist = True
         else:
             video = result
             if video.get('filesize'):
                 self.size = float(video.get('filesize'))
-            self.name = name
+            self.__name = name
             self.vid_id = video.get('id')
         return video
 
