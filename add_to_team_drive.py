@@ -62,7 +62,7 @@ pbar = progress.bar.Bar("Readying accounts", max=len(aa))
 for i in aa:
     ce = json.loads(open(i, 'r').read())['client_email']
     batch.add(drive.permissions().create(fileId=did, supportsAllDrives=True, body={
-        "role": "fileOrganizer",
+        "role": "organizer",
         "type": "user",
         "emailAddress": ce
     }))

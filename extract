@@ -37,6 +37,11 @@ extract() {
     tar xzf "$arg" --one-top-level
     local code=$?
     ;;
+  *.tar.xz)
+    a_dir=$(expr "$arg" : '\(.*\).tar.xz')
+    7z x "$arg" -o"$a_dir"
+    local code=$?
+    ;;
   *.zip)
     a_dir=$(expr "$arg" : '\(.*\).zip')
     7z x "$arg" -o"$a_dir"
