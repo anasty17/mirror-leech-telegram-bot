@@ -175,7 +175,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
         total_duration = metadata.get('duration').seconds - 7
         split_size = split_size - 2500000
         parts = math.ceil(size/TG_SPLIT_SIZE)
-        while start_time < total_duration or i < parts:
+        while start_time < total_duration or i <= parts:
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = os.path.join(dirpath, parted_name)
             subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", 

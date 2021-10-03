@@ -56,7 +56,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         sendMarkup(start_string, context.bot, update, reply_markup)
     else:
         sendMarkup(
-            'Not a Authorized user</b>.',
+            'Not a Authorized user',
             context.bot,
             update,
             reply_markup,
@@ -71,7 +71,10 @@ def restart(update, context):
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
     fs_utils.clean_all()
     alive.terminate()
-    web.terminate()
+    process = psutil.Process(web.pid)
+    for proc in process.children(recursive=True):
+        proc.kill()
+    process.kill()
     os.execl(executable, executable, "-m", "bot")
 
 

@@ -41,6 +41,7 @@ class TgUploader:
 
     def upload(self):
         msgs_dict = {}
+        corrupted = 0
         path = f"{DOWNLOAD_DIR}{self.message_id}"
         self.user_settings()
         for dirpath, subdir, files in sorted(os.walk(path)):
@@ -48,6 +49,10 @@ class TgUploader:
                 if self.is_cancelled:
                     return
                 up_path = os.path.join(dirpath, filee)
+                fsize = os.path.getsize(up_path)
+                if fsize == 0:
+                    corrupted += 1
+                    continue
                 self.upload_file(up_path, filee, dirpath)
                 if self.is_cancelled:
                     return
@@ -55,7 +60,7 @@ class TgUploader:
                 self.last_uploaded = 0
                 time.sleep(1)
         LOGGER.info(f"Leech Done: {self.name}")
-        self.__listener.onUploadComplete(self.name, None, msgs_dict, None, None)
+        self.__listener.onUploadComplete(self.name, None, msgs_dict, None, corrupted)
 
     def upload_file(self, up_path, filee, dirpath):
         cap_mono = f"<code>{filee}</code>"
@@ -92,11 +97,15 @@ class TgUploader:
                                                               progress=self.upload_progress)
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
                     metadata = extractMetadata(createParser(up_path))
+                    title = None
+                    artist = None
                     if metadata is not None:
                         if metadata.has("duration"):
                             duration = metadata.get('duration').seconds
-                        title = metadata.get("title") if metadata.has("title") else None
-                        artist = metadata.get("artist") if metadata.has("artist") else None
+                        if metadata.has("title"):
+                            title = metadata.get("title")
+                        if metadata.has("artist"):
+                            artist = metadata.get("artist") 
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,

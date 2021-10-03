@@ -37,7 +37,7 @@ class AriaDownloadHelper:
         if (TORRENT_DIRECT_LIMIT is not None or TAR_UNZIP_LIMIT is not None) and dl is not None:
             sleep(1)
             size = aria2.get_download(gid).total_length
-            if dl.getListener().isTar or dl.getListener().extract:
+            if (dl.getListener().isTar or dl.getListener().extract) and TAR_UNZIP_LIMIT is not None:
                 is_tar_ext = True
                 mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
             else:
