@@ -14,7 +14,7 @@ from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS
 from bot.helper.ext_utils.fs_utils import take_ss 
 
 LOGGER = logging.getLogger(__name__)
-logging.getLogger("pyrogram").setLevel(logging.WARNING)
+logging.getLogger("pyrogram").setLevel(logging.ERROR)
 
 VIDEO_SUFFIXES = ("MKV", "MP4", "MOV", "WMV", "3GP", "MPG", "WEBM", "AVI", "FLV", "M4V")
 AUDIO_SUFFIXES = ("MP3", "M4A", "M4B", "FLAC", "WAV", "AIF", "OGG", "AAC", "DTS", "MID", "AMR", "MKA")
@@ -66,8 +66,9 @@ class TgUploader:
                 duration = 0
                 if filee.upper().endswith(VIDEO_SUFFIXES):
                     metadata = extractMetadata(createParser(up_path))
-                    if metadata.has("duration"):
-                        duration = metadata.get("duration").seconds
+                    if metadata is not None:
+                        if metadata.has("duration"):
+                            duration = metadata.get("duration").seconds
                     if thumb is None:
                         thumb = take_ss(up_path)
                         if self.is_cancelled:
@@ -91,10 +92,11 @@ class TgUploader:
                                                               progress=self.upload_progress)
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
                     metadata = extractMetadata(createParser(up_path))
-                    if metadata.has("duration"):
-                        duration = metadata.get('duration').seconds
-                    title = metadata.get("title") if metadata.has("title") else None
-                    artist = metadata.get("artist") if metadata.has("artist") else None
+                    if metadata is not None:
+                        if metadata.has("duration"):
+                            duration = metadata.get('duration').seconds
+                        title = metadata.get("title") if metadata.has("title") else None
+                        artist = metadata.get("artist") if metadata.has("artist") else None
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
