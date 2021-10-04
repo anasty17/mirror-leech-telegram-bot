@@ -19,35 +19,35 @@ class AriaDownloadHelper:
             sleep(1)
             dl = getDownloadByGid(gid)
             download = aria2.get_download(gid)
-        if STOP_DUPLICATE and dl is not None and not dl.getListener().isLeech:
-            LOGGER.info('Checking File/Folder if already in Drive...')
-            sname = aria2.get_download(gid).name
-            if dl.getListener().isTar:
-                sname = sname + ".zip" if dl.getListener().isZip else sname + ".tar"
-            if dl.getListener().extract:
-                smsg = None
-            else:
-                gdrive = GoogleDriveHelper()
-                smsg, button = gdrive.drive_list(sname, True)
-            if smsg:
-                dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                aria2.remove([download], force=True)
-                sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
-                return
-        if (TORRENT_DIRECT_LIMIT is not None or TAR_UNZIP_LIMIT is not None) and dl is not None:
-            sleep(1)
-            size = aria2.get_download(gid).total_length
-            if (dl.getListener().isTar or dl.getListener().extract) and TAR_UNZIP_LIMIT is not None:
-                is_tar_ext = True
-                mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
-            else:
-                is_tar_ext = False
-                mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
-            result = check_limit(size, TORRENT_DIRECT_LIMIT, TAR_UNZIP_LIMIT, is_tar_ext)
-            if result:
-                dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                aria2.remove([download], force=True)
-                return
+            if STOP_DUPLICATE and dl is not None and not dl.getListener().isLeech:
+                LOGGER.info('Checking File/Folder if already in Drive...')
+                sname = aria2.get_download(gid).name
+                if dl.getListener().isTar:
+                    sname = sname + ".zip" if dl.getListener().isZip else sname + ".tar"
+                if not dl.getListener().extract:
+                    gdrive = GoogleDriveHelper()
+                    smsg, button = gdrive.drive_list(sname, True)
+                    if smsg:
+                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
+                         aria2.remove([download], force=True)
+                         sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
+                         return
+            if dl is not None:
+                limit = None
+                if TAR_UNZIP_LIMIT is not None and (dl.getListener().isTar or dl.getListener().extract):
+                    mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
+                    limit = TAR_UNZIP_LIMIT
+                elif TORRENT_DIRECT_LIMIT is not None:
+                    mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
+                    limit = TORRENT_DIRECT_LIMIT
+                if limit is not None:
+                    sleep(1)
+                    size = aria2.get_download(gid).total_length
+                    result = check_limit(size, limit)
+                    if result:
+                        dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
+                        aria2.remove([download], force=True)
+                        return
         update_all_messages()
 
     def __onDownloadComplete(self, api: API, gid):

@@ -15,8 +15,9 @@ from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 
-from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, TAR_UNZIP_LIMIT
+from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, TAR_UNZIP_LIMIT, STOP_DUPLICATE
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import *
 from bot.helper.ext_utils.bot_utils import setInterval, new_thread, MirrorStatus, getDownloadByGid, get_readable_file_size, check_limit
 from bot.helper.telegram_helper import button_build
@@ -60,6 +61,7 @@ class QbitTorrent:
                 os.remove(link)
             else:
                 op = self.client.torrents_add(link, save_path=dire)
+            time.sleep(0.3)
             if op.lower() == "ok.":
                 tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
                 if len(tor_info) == 0:
@@ -153,23 +155,43 @@ class QbitTorrent:
                     self.updater.cancel()
             elif tor_info.state == "downloading":
                 self.stalled_time = time.time()
-                if (TORRENT_DIRECT_LIMIT is not None or TAR_UNZIP_LIMIT is not None) and not self.checked:
-                    if (self.listener.isTar or self.listener.extract) and TAR_UNZIP_LIMIT is not None:
-                        is_tar_ext = True
+                if not self.checked:
+                    if STOP_DUPLICATE and not self.listener.isLeech:
+                        LOGGER.info('Checking File/Folder if already in Drive')
+                        qbname = os.listdir(f'{self.dire}')[0]
+                        if self.listener.isTar:
+                            qbname = qbname + ".zip" if self.listener.isZip else qbname + ".tar"
+                        if not self.listener.extract:
+                            gd = GoogleDriveHelper()
+                            qbmsg, button = gd.drive_list(qbname, True)
+                            if qbmsg:
+                                msg = "File/Folder is already available in Drive."
+                                self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                                time.sleep(0.3)
+                                self.listener.onDownloadError(msg)
+                                sendMarkup("Here are the search results:", self.listener.bot, self.listener.update, button)
+                                self.client.torrents_delete(torrent_hashes=self.ext_hash)
+                                self.client.auth_log_out()
+                                self.updater.cancel()  
+                                return
+                    limit = None
+                    if TAR_UNZIP_LIMIT is not None and (self.listener.isTar or self.listener.extract):
                         mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
-                    else:
-                        is_tar_ext = False
+                        limit = TAR_UNZIP_LIMIT
+                    elif TORRENT_DIRECT_LIMIT is not None:
                         mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
-                    size = tor_info.size
-                    result = check_limit(size, TORRENT_DIRECT_LIMIT, TAR_UNZIP_LIMIT, is_tar_ext)
+                        limit = TORRENT_DIRECT_LIMIT
+                    if limit is not None:
+                        size = tor_info.size
+                        result = check_limit(size, limit)
+                        if result:
+                            self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                            time.sleep(0.3)
+                            self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
+                            self.client.torrents_delete(torrent_hashes=self.ext_hash)
+                            self.client.auth_log_out()
+                            self.updater.cancel()     
                     self.checked = True
-                    if result:
-                        self.client.torrents_pause(torrent_hashes=self.ext_hash)
-                        time.sleep(0.3)
-                        self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
-                        self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                        self.client.auth_log_out()
-                        self.updater.cancel()
             elif tor_info.state == "stalledDL":
                 if time.time() - self.stalled_time >= 999999999: # timeout after downloading metadata
                     self.client.torrents_pause(torrent_hashes=self.ext_hash)
