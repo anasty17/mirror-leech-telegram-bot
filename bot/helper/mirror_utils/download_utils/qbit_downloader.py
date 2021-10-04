@@ -182,6 +182,7 @@ class QbitTorrent:
                         mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
                         limit = TORRENT_DIRECT_LIMIT
                     if limit is not None:
+                        time.sleep(1)
                         size = tor_info.size
                         result = check_limit(size, limit)
                         if result:

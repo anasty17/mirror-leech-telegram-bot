@@ -88,9 +88,9 @@ class MirrorListener(listeners.MirrorListeners):
                     path = m_path + ".zip"
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                     if pswd is not None:
-                        subprocess.run(["7z", "a", "tzip", "-mx=0", f"-p{pswd}", path, m_path])
+                        subprocess.run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
                     else:
-                        subprocess.run(["7z", "a", "tzip", "-mx=0", path, m_path])
+                        subprocess.run(["7z", "a", "-mx=0", path, m_path])
                 else:
                     path = fs_utils.tar(m_path)
             except FileNotFoundError:
