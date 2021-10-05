@@ -118,20 +118,6 @@ class GoogleDriveHelper:
             self.uploaded_bytes += chunk_size
             self.total_time += self.update_interval
 
-    def __upload_empty_file(self, path, file_name, mime_type, parent_id=None):
-        media_body = MediaFileUpload(path,
-                                     mimetype=mime_type,
-                                     resumable=False)
-        file_metadata = {
-            'name': file_name,
-            'description': 'Uploaded using Mirrorbot',
-            'mimeType': mime_type,
-        }
-        if parent_id is not None:
-            file_metadata['parents'] = [parent_id]
-        return self.__service.files().create(supportsTeamDrives=True,
-                                             body=file_metadata, media_body=media_body).execute()
-
     def deletefile(self, link: str):
         try:
             file_id = self.getIdFromUrl(link)
@@ -179,7 +165,7 @@ class GoogleDriveHelper:
         # File body description
         file_metadata = {
             'name': file_name,
-            'description': 'Uploaded by Mirrorbot',
+            'description': 'Uploaded by Mirror-leech-telegram-bot',
             'mimeType': mime_type,
         }
         try:
@@ -590,8 +576,8 @@ class GoogleDriveHelper:
                     content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
             Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
-                                 title = 'Mirrorbot Search',
-                                 author_name='Mirrorbot',
+                                 title = 'Mirror-leech-bot Search',
+                                 author_name='Mirror-leech-bot',
                                  author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                  html_content=content)
         return
@@ -787,8 +773,8 @@ class GoogleDriveHelper:
 
         for content in self.telegraph_content :
             self.path.append(Telegraph(access_token=telegraph_token).create_page(
-                                                    title = 'Mirrorbot Search',
-                                                    author_name='Mirrorbot',
+                                                    title = 'Mirror-leech-bot Search',
+                                                    author_name='Mirror-leech-bot',
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])

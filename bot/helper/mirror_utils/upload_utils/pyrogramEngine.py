@@ -7,11 +7,9 @@ import logging
 import time
 
 from pyrogram.errors import FloodWait
-from hachoir.parser import createParser
-from hachoir.metadata import extractMetadata
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS
-from bot.helper.ext_utils.fs_utils import take_ss 
+from bot.helper.ext_utils.fs_utils import take_ss, get_media_info
 
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
@@ -70,10 +68,7 @@ class TgUploader:
             if not self.as_doc:
                 duration = 0
                 if filee.upper().endswith(VIDEO_SUFFIXES):
-                    metadata = extractMetadata(createParser(up_path))
-                    if metadata is not None:
-                        if metadata.has("duration"):
-                            duration = metadata.get("duration").seconds
+                    duration = get_media_info(up_path)[0]
                     if thumb is None:
                         thumb = take_ss(up_path)
                         if self.is_cancelled:
@@ -96,16 +91,7 @@ class TgUploader:
                                                               disable_notification=True,
                                                               progress=self.upload_progress)
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
-                    metadata = extractMetadata(createParser(up_path))
-                    title = None
-                    artist = None
-                    if metadata is not None:
-                        if metadata.has("duration"):
-                            duration = metadata.get('duration').seconds
-                        if metadata.has("title"):
-                            title = metadata.get("title")
-                        if metadata.has("artist"):
-                            artist = metadata.get("artist") 
+                    duration , artist, title = get_media_info(up_path)
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,

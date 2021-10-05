@@ -415,6 +415,6 @@ if os.path.exists('drive_folder'):
             except IndexError as e:
                 INDEX_URLS.append(None)
 
-updater = tg.Updater(token=BOT_TOKEN)
+updater = tg.Updater(token=BOT_TOKEN, request_kwargs={'read_timeout': 30, 'connect_timeout': 10})
 bot = updater.bot
 dispatcher = updater.dispatcher
