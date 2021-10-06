@@ -93,25 +93,22 @@ def rss_load():
         rss_dict[row[0]] = (row[1], row[2], row[3])
 
 def cmd_rsshelp(update, context):
-    help_string=f"""
-<b>Commands:</b> 
-• /rsshelp: <i>To get this message</i>
-• /feeds: <i>List your subscriptions</i>
-• /get Title 10: <i>Force fetch last n item(s)</i>
-• /sub Title https://www.rss-url.com: <i>Subscribe to a RSS feed</i>
-• /unsub Title: <i>Removes the RSS subscription corresponding to it's title</i>
-• /unsuball: <i>Removes all subscriptions</i>
-"""
+    help_string = "\x1f<b>Commands:</b> \x1f• /rsshelp: <i>To get this message</i>\x1f• /feeds: <i>List your subscriptions</i>\x1f• /get Title 10: <i>Force fetch last n item(s)</i>\x1f• /sub Title https://www.rss-url.com: <i>Subscribe to a RSS feed</i>\x1f• /unsub Title: <i>Removes the RSS subscription corresponding to it's title</i>\x1f• /unsuball: <i>Removes all subscriptions</i>\x1f"
+
     update.effective_message.reply_text(help_string, parse_mode='HTMl')
 
 def cmd_rss_list(update, context):
-    listfeed = ""
     if bool(rss_dict) is False:
         update.effective_message.reply_text("No subscriptions.")
     else:
-        for title, url_list in rss_dict.items():
-            listfeed +=f"Title: {title}\nFeed: {url_list[0]}\n\n"
-        update.effective_message.reply_text(f"<b>Your subscriptions:</b>\n\n" + listfeed, parse_mode='HTMl')
+        listfeed = "".join(
+            f"Title: {title}\nFeed: {url_list[0]}\n\n"
+            for title, url_list in rss_dict.items()
+        )
+
+        update.effective_message.reply_text(
+            '<b>Your subscriptions:</b>\n\n' + listfeed, parse_mode='HTMl'
+        )
 
 def cmd_get(update, context):
     try:
@@ -145,7 +142,11 @@ def cmd_rss_sub(update, context):
     try:
         context.args[1]
     except IndexError:
-        update.effective_message.reply_text(f"Please use this format to add:\n/sub Title https://www.rss-url.com", parse_mode='HTMl')
+        update.effective_message.reply_text(
+            'Please use this format to add:\n/sub Title https://www.rss-url.com',
+            parse_mode='HTMl',
+        )
+
     else:
         try:
             # try if the url is a valid RSS feed
@@ -165,7 +166,10 @@ def cmd_rss_unsub(update, context):
         postgres_delete(q)
         update.effective_message.reply_text("If it exists in the database, it'll be removed.")
     except IndexError:
-        update.effective_message.reply_text(f"Please use this format to remove:\n/unsub Title", parse_mode='HTMl')                
+        update.effective_message.reply_text(
+            'Please use this format to remove:\n/unsub Title',
+            parse_mode='HTMl',
+        )                
 
 def cmd_rss_unsuball(update, context):
     if rss_dict != {}:
@@ -175,29 +179,31 @@ def cmd_rss_unsuball(update, context):
         update.effective_message.reply_text("No subscriptions.")
 
 def init_feeds():
-    if INIT_FEEDS == "True":
-        for name, url_list in rss_dict.items():
-            try:
-                rss_d = feedparser.parse(url_list[0])
-                postgres_update(str(rss_d.entries[0]['link']), name, str(rss_d.entries[0]['title']))
-                LOGGER.info("Feed name: "+ name)
-                LOGGER.info("Latest feed item: "+ rss_d.entries[0]['link'])
-            except IndexError:
-                LOGGER.info(f"There was an error while parsing this feed: {url_list[0]}")
-                continue                    
-        rss_load()
-        LOGGER.info('Initiated feeds.')
+    if INIT_FEEDS != "True":
+        return
+
+    for name, url_list in rss_dict.items():
+        try:
+            rss_d = feedparser.parse(url_list[0])
+            postgres_update(str(rss_d.entries[0]['link']), name, str(rss_d.entries[0]['title']))
+            LOGGER.info("Feed name: "+ name)
+            LOGGER.info("Latest feed item: "+ rss_d.entries[0]['link'])
+        except IndexError:
+            LOGGER.info(f"There was an error while parsing this feed: {url_list[0]}")
+            continue
+    rss_load()
+    LOGGER.info('Initiated feeds.')
 
 def rss_monitor(context):
     feed_info = ""
     for name, url_list in rss_dict.items():
         try:
-            feed_count = 0
-            feed_titles = []
-            feed_urls = []
             # check whether the URL & title of the latest item is in the database
             rss_d = feedparser.parse(url_list[0])
             if (url_list[1] != rss_d.entries[0]['link'] and url_list[2] != rss_d.entries[0]['title']):
+                feed_count = 0
+                feed_titles = []
+                feed_urls = []
                 # check until a new item pops up
                 while (url_list[1] != rss_d.entries[feed_count]['link'] and url_list[2] != rss_d.entries[feed_count]['title']):
                     feed_titles.insert(0, rss_d.entries[feed_count]['title'])
