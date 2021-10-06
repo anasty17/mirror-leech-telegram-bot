@@ -186,6 +186,8 @@ help_string = f'''
 /{BotCommands.ShellCommand}: Run commands in Shell (Only Owner)
 
 /{BotCommands.ExecHelpCommand}: Get help for Executor module (Only Owner)
+
+/{BotCommands.RssHelpCommand}:  Get help for RSS feeds module
 '''
 
 def bot_help(update, context):
@@ -218,7 +220,8 @@ botcmds = [
         (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
         (f'{BotCommands.PingCommand}','Ping the Bot'),
         (f'{BotCommands.RestartCommand}','Restart the bot [owner/sudo only]'),
-        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]')
+        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]'),
+        (f'{BotCommands.RssHelpCommand}','Get help for RSS feeds module'),
     ]
 '''
 
@@ -261,6 +264,7 @@ def main():
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
     signal.signal(signal.SIGINT, fs_utils.exit_clean_up)
+    rss_init()
 
 app.start()
 main()
