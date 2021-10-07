@@ -2,21 +2,28 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # Features:
 
+## By me
 - qBittorrent
-- Leech
-- Size limiting for Torrent/Direct, Tar/Unzip, Mega and clone
-- Stop duplicates for all tasks except for youtube-dl tasks 
-- Tar/Unzip G-Drive link 
 - Select files from Torrent before downloading using qbittorrent
+- Leech (splitting, thumbnail for each user, setting as document or as media for each user)
+- Size limiting for Torrent/Direct, Tar/Unzip, Mega and Clone
+- Stop duplicates for all tasks except youtube-dl tasks 
+- Tar/Unzip G-Drive links
 - Counting files/folders from Google Drive link
-- View Link button instead of direct download link
+- View Link button, extra button to open file index link in broswer instead of direct download
 - Status Pages for unlimited tasks
 - Clone status
-- Search in multiple Drive folder/TD
-- Recursive Search
+- Search in multiple Drive folder/TeamDrive
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be skipped)
+- Multi-Search by token.pickle if exists 
+- Extract rar, zip and 7z splits with or without password
+- Zip file/folder with or without password
+- Use Toke.pickle if file not found with Service Account
+- Random Service Account at startup
+- Mirror/Leech by reply (soon will add for watch and clone)
 - Many bugs has been fixed
 
-## From Original and Other Repos
+## From official and Other Repositories
 - Mirror direct download links, Torrent, and Telegram files to Google Drive
 - Mirror Mega.nz links to Google Drive (If you have non-premium Mega account, it will limit download to 5GB per 6 hours)
 - Copy files from someone's Drive to your Drive (Using Autorclone)
@@ -30,7 +37,6 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Shortener support
 - Speedtest
 - Multiple Trackers support
-- Extracting **tar.xz** support
 - Shell and Executor
 - Sudo with or without Database
 - Custom Filename (Only for direct links, Telegram files and Youtube-dl. Not for Mega links and Torrents)
@@ -42,7 +48,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, 
 APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, 
 HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, 
-NTFS, RPM, SquashFS, UDF, VHD, XAR, Z.
+NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, tar.xz
 ```
 - Direct links Supported:
 ```
@@ -137,10 +143,10 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `BLOCK_MEGA_FOLDER`: If you want to remove mega.nz folder support, set it to `True`.
 - `BLOCK_MEGA_LINKS`: If you want to remove mega.nz mirror support, set it to `True`.
 - `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
-- `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone (leave space between number and unit, Available units are (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `MEGA_LIMIT`: To limit the size of Mega download (leave space between number and unit, available units are (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size, leave space between number and unit. Available units are (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
-- `TAR_UNZIP_LIMIT`: To limit the size of mirroring as Tar or unzipmirror. Available units are (gb or GB, tb or TB), Examples: `100 gb, 100 GB, 10 tb, 10 TB`
+- `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
+- `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
+- `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size. Don't add unit, the default unit is `GB`.
+- `TAR_UNZIP_LIMIT`: To limit the size of mirroring as Tar or unzipmirror. Don't add unit, the default unit is `GB`.
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True` it will work (Compatible with https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index Code)
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
 - `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`.
@@ -204,6 +210,7 @@ shell - Run commands in Shell [owner only]
 restart - Restart the Bot [owner/sudo only]
 stats - Bot Usage Stats
 ping - Ping the Bot
+help - All cmds with description
 ```
 
 ## Getting Google OAuth API credential file
@@ -297,11 +304,11 @@ Let us create only the Service Accounts that we need.
 python3 gen_sa_accounts.py --download-keys project_id
 ```
 
-**NOTE:** 1 Service Account can copy around 750 GB a day, 1 project can make 100 Service Accounts so you can upload 75 TB a day and clone 2 TB from each file creator (uploader email).
+**NOTE:** 1 Service Account can upload/copy around 750 GB a day, 1 project can make 100 Service Accounts so you can upload 75 TB a day or clone 2 TB from each file creator (uploader email).
 
 **NOTE:** Add Service Accounts to team drive or google group no need to add them in both.
 
-### Create Service Accounts to current project (Manual Method)
+### Create Service Accounts to current project (Recommended Method)
 
 - List your projects ids
 ```

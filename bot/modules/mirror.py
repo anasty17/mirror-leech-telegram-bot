@@ -12,7 +12,6 @@ import shutil
 
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
-from fnmatch import fnmatch
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, \
@@ -112,8 +111,9 @@ class MirrorListener(listeners.MirrorListeners):
                 if os.path.isdir(m_path):
                     for dirpath, subdir, files in os.walk(m_path, topdown=False):
                         for filee in files:
-                            suffixes = (".part1.rar", ".part01.rar", ".part001.rar", ".part0001.rar")
-                            if (filee.endswith(".rar") and "part" not in filee) or filee.endswith(suffixes):
+                            if re.search(r'\.part0*1.rar$', filee) or re.search(r'\.7z.0*1$', filee) \
+                               or (filee.endswith(".rar") and not re.search(r'\.part\d+.rar$', filee)) \
+                               or re.search(r'\.zip.0*1$', filee):
                                 m_path = os.path.join(dirpath, filee)
                                 if pswd is not None:
                                     result = subprocess.run(["7z", "x", f"-p{pswd}", m_path, f"-o{dirpath}"])
@@ -123,7 +123,8 @@ class MirrorListener(listeners.MirrorListeners):
                                     LOGGER.warning('Unable to extract archive!')
                                 break
                         for filee in files:
-                            if filee.endswith(".rar") or fnmatch(filee, "*.r[0-9]") or fnmatch(filee, "*.r[0-9]*"):
+                            if filee.endswith(".rar") or re.search(r'\.r\d+$', filee) \
+                               or re.search(r'\.7z.\d+$', filee) or re.search(r'\.zip.\d+$', filee):
                                 del_path = os.path.join(dirpath, filee)
                                 os.remove(del_path)
                     path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
@@ -434,9 +435,9 @@ def _mirror(bot, update, isTar=False, extract=False, isZip=False, isQbit=False, 
             sendMessage(res, bot, update)
             return
         if TAR_UNZIP_LIMIT is not None:
-            result = bot_utils.check_limit(size, TAR_UNZIP_LIMIT)
-            if result:
-                msg = f'Failed, Tar/Unzip limit is {TAR_UNZIP_LIMIT}.\nYour File/Folder size is {get_readable_file_size(size)}.'
+            LOGGER.info('Checking File/Folder Size...')
+            if size > TAR_UNZIP_LIMIT * 1024**3:
+                msg = f'Failed, Tar/Unzip limit is {TAR_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 sendMessage(msg, bot, update)
                 return
         LOGGER.info(f"Download Name: {name}")

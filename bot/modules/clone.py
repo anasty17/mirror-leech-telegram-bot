@@ -7,9 +7,10 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
 from bot import dispatcher, LOGGER, CLONE_LIMIT, STOP_DUPLICATE, download_dict, download_dict_lock, Interval
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, check_limit
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, new_thread
 
 
+@new_thread
 def cloneNode(update, context):
     args = update.message.text.split(" ", maxsplit=1)
     if len(args) > 1:
@@ -27,12 +28,12 @@ def cloneNode(update, context):
                 sendMarkup(msg3, context.bot, update, button)
                 return
         if CLONE_LIMIT is not None:
-            result = check_limit(size, CLONE_LIMIT)
-            if result:
-                msg2 = f'Failed, Clone limit is {CLONE_LIMIT}.\nYour File/Folder size is {get_readable_file_size(size)}.'
+            LOGGER.info('Checking File/Folder Size...')
+            if size > CLONE_LIMIT * 1024**3:
+                msg2 = f'Failed, Clone limit is {CLONE_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 sendMessage(msg2, context.bot, update)
                 return
-        if files < 15:
+        if files <= 10:
             msg = sendMessage(f"Cloning: <code>{link}</code>", context.bot, update)
             result, button = gd.clone(link)
             deleteMessage(context.bot, msg)

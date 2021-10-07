@@ -35,16 +35,16 @@ class AriaDownloadHelper:
             if dl is not None:
                 limit = None
                 if TAR_UNZIP_LIMIT is not None and (dl.getListener().isTar or dl.getListener().extract):
-                    mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
+                    mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}GB'
                     limit = TAR_UNZIP_LIMIT
                 elif TORRENT_DIRECT_LIMIT is not None:
-                    mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
+                    mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}GB'
                     limit = TORRENT_DIRECT_LIMIT
                 if limit is not None:
+                    LOGGER.info('Checking File/Folder Size...')
                     sleep(1)
                     size = aria2.get_download(gid).total_length
-                    result = check_limit(size, limit)
-                    if result:
+                    if size > limit * 1024**3:
                         dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
                         aria2.remove([download], force=True)
                         return

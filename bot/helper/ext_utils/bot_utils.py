@@ -180,17 +180,6 @@ def turn(update, context):
             PAGE_NO -= 1
     message_utils.update_all_messages()
 
-def check_limit(size, limit):
-    LOGGER.info('Checking File/Folder Size...')
-    limit = limit.split(' ', maxsplit=1)
-    limitint = int(limit[0])
-    if 'G' in limit[1] or 'g' in limit[1]:
-        if size > limitint * 1024**3:
-            return True
-    elif 'T' in limit[1] or 't' in limit[1]:
-        if size > limitint * 1024**4:
-            return True
-
 def get_readable_time(seconds: int) -> str:
     result = ''
     (days, remainder) = divmod(seconds, 86400)

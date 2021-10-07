@@ -241,24 +241,32 @@ try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
         TORRENT_DIRECT_LIMIT = None
+    else:
+        TORRENT_DIRECT_LIMIT = int(TORRENT_DIRECT_LIMIT)
 except KeyError:
     TORRENT_DIRECT_LIMIT = None
 try:
     CLONE_LIMIT = getConfig('CLONE_LIMIT')
     if len(CLONE_LIMIT) == 0:
         CLONE_LIMIT = None
+    else:
+        CLONE_LIMIT =int(CLONE_LIMIT)
 except KeyError:
     CLONE_LIMIT = None
 try:
     MEGA_LIMIT = getConfig('MEGA_LIMIT')
     if len(MEGA_LIMIT) == 0:
         MEGA_LIMIT = None
+    else:
+        MEGA_LIMIT =int(MEGA_LIMIT)
 except KeyError:
     MEGA_LIMIT = None
 try:
     TAR_UNZIP_LIMIT = getConfig('TAR_UNZIP_LIMIT')
     if len(TAR_UNZIP_LIMIT) == 0:
         TAR_UNZIP_LIMIT = None
+    else:
+        TAR_UNZIP_LIMIT = int(TAR_UNZIP_LIMIT)
 except KeyError:
     TAR_UNZIP_LIMIT = None
 try:

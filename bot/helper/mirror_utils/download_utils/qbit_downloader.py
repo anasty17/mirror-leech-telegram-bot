@@ -19,7 +19,7 @@ from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_cli
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import *
-from bot.helper.ext_utils.bot_utils import setInterval, new_thread, MirrorStatus, getDownloadByGid, get_readable_file_size, check_limit
+from bot.helper.ext_utils.bot_utils import setInterval, new_thread, MirrorStatus, getDownloadByGid, get_readable_file_size
 from bot.helper.telegram_helper import button_build
 
 LOGGER = logging.getLogger(__name__)
@@ -180,16 +180,16 @@ class QbitTorrent:
                 if not self.sizechecked:
                     limit = None
                     if TAR_UNZIP_LIMIT is not None and (self.listener.isTar or self.listener.extract):
-                        mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}'
+                        mssg = f'Tar/Unzip limit is {TAR_UNZIP_LIMIT}GB'
                         limit = TAR_UNZIP_LIMIT
                     elif TORRENT_DIRECT_LIMIT is not None:
-                        mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}'
+                        mssg = f'Torrent limit is {TORRENT_DIRECT_LIMIT}GB'
                         limit = TORRENT_DIRECT_LIMIT
                     if limit is not None:
+                        LOGGER.info('Checking File/Folder Size...')
                         time.sleep(1)
                         size = tor_info.size
-                        result = check_limit(size, limit)
-                        if result:
+                        if size > limit * 1024**3:
                             self.client.torrents_pause(torrent_hashes=self.ext_hash)
                             time.sleep(0.3)
                             self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
