@@ -242,7 +242,7 @@ try:
     if len(TORRENT_DIRECT_LIMIT) == 0:
         TORRENT_DIRECT_LIMIT = None
     else:
-        TORRENT_DIRECT_LIMIT = int(TORRENT_DIRECT_LIMIT)
+        TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
 except KeyError:
     TORRENT_DIRECT_LIMIT = None
 try:
@@ -250,7 +250,7 @@ try:
     if len(CLONE_LIMIT) == 0:
         CLONE_LIMIT = None
     else:
-        CLONE_LIMIT =int(CLONE_LIMIT)
+        CLONE_LIMIT = float(CLONE_LIMIT)
 except KeyError:
     CLONE_LIMIT = None
 try:
@@ -258,7 +258,7 @@ try:
     if len(MEGA_LIMIT) == 0:
         MEGA_LIMIT = None
     else:
-        MEGA_LIMIT =int(MEGA_LIMIT)
+        MEGA_LIMIT = float(MEGA_LIMIT)
 except KeyError:
     MEGA_LIMIT = None
 try:
@@ -266,7 +266,7 @@ try:
     if len(TAR_UNZIP_LIMIT) == 0:
         TAR_UNZIP_LIMIT = None
     else:
-        TAR_UNZIP_LIMIT = int(TAR_UNZIP_LIMIT)
+        TAR_UNZIP_LIMIT = float(TAR_UNZIP_LIMIT)
 except KeyError:
     TAR_UNZIP_LIMIT = None
 try:
