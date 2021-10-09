@@ -112,10 +112,7 @@ def getResult(search_results, start=0):
         msg += f"<b>Name: </b><a href='{result.descrLink}'>{result.fileName}</a>\n"
         msg += f"<b>Size: </b>{get_readable_file_size(result.fileSize)}\n"
         msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}\n"
-        if str(result.fileUrl).startswith("magnet"):
-            msg += f"<b>Link: </b><code>{str(result.fileUrl).split('&tr', 1)[0]}</code>\n"
-        else:
-            msg += f"<b>Link: </b><code>{result.fileUrl}</code>\n"
+        msg += f"<b>Link: </b><code>{result.fileUrl}</code>\n"
         if index == 3:
             break
     return msg
