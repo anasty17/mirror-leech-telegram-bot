@@ -109,11 +109,10 @@ def searchPages(update, context):
 def getResult(search_results, start=0):
     msg = ""
     for index, result in enumerate(search_results[start:], start=1):
-        msg += f"<b>Name: </b><code>{result.fileName}</code>\n"
+        msg += f"<b>Name: </b><a href='{result.descrLink}'>{result.fileName}</a>\n"
         msg += f"<b>Size: </b>{get_readable_file_size(result.fileSize)}\n"
         msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}\n"
         msg += f"<b>Link: </b><code>{result.fileUrl}</code>\n"
-        msg += f"<b>Source: </b>{result.descrLink}\n\n"
         if index == 3:
             break
     return msg
