@@ -6,9 +6,9 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - qBittorrent
 - Select files from Torrent before downloading using qbittorrent
 - Leech (splitting, thumbnail for each user, setting as document or as media for each user)
-- Size limiting for Torrent/Direct, Tar/Unzip, Mega and Clone
+- Size limiting for Torrent/Direct, Zip/Unzip, Mega and Clone
 - Stop duplicates for all tasks except youtube-dl tasks 
-- Tar/Unzip G-Drive links
+- Zip/Unzip G-Drive links
 - Counting files/folders from Google Drive link
 - View Link button, extra button to open file index link in broswer instead of direct download
 - Status Pages for unlimited tasks
@@ -21,6 +21,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Use Toke.pickle if file not found with Service Account
 - Random Service Account at startup
 - Mirror/Leech by reply (soon will add for watch and clone)
+- Search for torrents with variable plugins using qBittorrent search engine
 - Many bugs has been fixed
 
 ## From official and Other Repositories
@@ -39,10 +40,8 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Multiple Trackers support
 - Shell and Executor
 - Sudo with or without Database
-- Custom Filename (Only for direct links, Telegram files and Youtube-dl. Not for Mega links and Torrents)
-- Extracting and downloading password protected index links. See these examples:
-<p><a href="https://telegra.ph/Magneto-Python-Aria---Custom-Filename-Examples-01-20"> <img src="https://img.shields.io/badge/See%20Telegraph-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
-
+- Custom Filename (Only for direct links, Telegram files and Youtube-dl. Not for Mega links, Gdrive links or Torrents)
+- Extract or Compress password protected files.
 - Extract these filetypes and uploads to Google Drive
 ```
 ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, 
@@ -59,6 +58,8 @@ streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net,
 1fichier.com, 1drv.ms (Only works for file not folder or business account),
 uptobox.com (Uptobox account must be premium), solidfiles.com
 ```
+**See these examples for custom filename, Extract/Compress password protected files and downlaod from protected links**
+<p><a href="https://telegra.ph/Magneto-Python-Aria---Custom-Filename-Examples-01-20"> <img src="https://img.shields.io/badge/See%20Telegraph-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
 
 # How to deploy?
 Deploying is pretty much straight forward and is divided into several steps as follows:
@@ -156,14 +157,14 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `RECURSIVE_SEARCH`: Set this to `True` to search in sub-folders with `/list` (**NOTE**: This will only work with Shared-Drive ID or fill `root` for main Drive. Folder IDs are not compatible with it.)
 - `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`
 - `AS_DOCUMENT`: Should all the upload to Telegram be forced as documents or not, set it `True` or `False`
-- `SHORTENER_API`: Fill your Shortener API key if you are using Shortener.
-- `SHORTENER`: if you want to use Shortener in G-Drive and index link, fill Shortener URL here. Examples:
+- `SHORTENER_API`: Fill your Shortener API key.
+- `SHORTENER`: Shortener URL.
+Supported URL Shorteners:
 ```
 exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly,
 shorte.st, linkvertise.com , ouo.io
 ```
-
-Above are the supported URL Shorteners. Except these only some URL Shorteners are supported.
+- `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins) (**NOTE**: Many plugins will leads to slow search process).
 ### Add more buttons (Optional Field)
 Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
 - `BUTTON_FOUR_NAME`:
@@ -176,27 +177,21 @@ Three buttons are already added including Drive Link, Index Link, and View Link,
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
 ```
 mirror - Start Mirroring
-tarmirror - Start mirroring and upload as .tar
 zipmirror - Start mirroring and upload as .zip
 unzipmirror - Extract files
 qbmirror - Start Mirroring using qBittorrent
-qbtarmirror - Start mirroring and upload as .tar using qb
 qbzipmirror - Start mirroring and upload as .zip using qb
 qbunzipmirror - Extract files using qBittorrent
 leech - Leech Torrent/Direct link
-tarleech - Leech Torrent/Direct link and upload as .tar
 zipleech - Leech Torrent/Direct link and upload as .zip
 unzipleech - Leech Torrent/Direct link and extract
 qbleech - Leech Torrent/Magnet using qBittorrent
-qbtarleech - Leech Torrent/Magnet and upload as .tar using qb
 qbzipleech - Leech Torrent/Magnet and upload as .zip using qb
 qbunzipleech - Leech Torrent and extract using qb
 clone - Copy file/folder to Drive count - Count file/folder of Drive link
 watch - Mirror Youtube-dl supported link
-tarwatch - Mirror Youtube playlist link and upload as .tar
 zipwatch - Mirror Youtube playlist link and upload as .zip
 leechwatch - Leech through Youtube-dl supported link
-leechtarwatch - Leech Youtube playlist link and upload as .tar
 leechzipwatch - Leech Youtube playlist link and upload as .zip
 leechset - Leech settings
 setthumb - Set Thumbnail

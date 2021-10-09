@@ -55,6 +55,7 @@ def get_path_size(path):
             total_size += os.path.getsize(abs_path)
     return total_size
 
+"""
 def tar(org_path):
     tar_path = org_path + ".tar"
     path = pathlib.PurePath(org_path)
@@ -63,6 +64,7 @@ def tar(org_path):
     tar.add(org_path, arcname=path.name)
     tar.close()
     return tar_path
+"""
 
 def get_base_name(orig_path: str):
     if orig_path.endswith(".tar.bz2"):

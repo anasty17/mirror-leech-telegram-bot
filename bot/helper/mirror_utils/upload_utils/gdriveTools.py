@@ -376,8 +376,8 @@ class GoogleDriveHelper:
                     msg = self.deletefile(durl)
                     LOGGER.info(f"{msg}")
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
-                msg += '\n<b>Type: </b>Folder'
+                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
                 buttons = button_build.ButtonMaker()
@@ -409,8 +409,8 @@ class GoogleDriveHelper:
                 except:
                     typ = 'File'
                 try:
-                    msg += f'\n<b>Size: </b>{get_readable_file_size(int(meta.get("size")))}'
-                    msg += f'\n<b>Type: </b>{typ}'
+                    msg += f'\n\n<b>Size: </b>{get_readable_file_size(int(meta.get("size")))}'
+                    msg += f'\n\n<b>Type: </b>{typ}'
                 except TypeError:
                     pass
                 if INDEX_URL is not None:

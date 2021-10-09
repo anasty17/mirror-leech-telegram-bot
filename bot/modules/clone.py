@@ -13,8 +13,15 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size, new_thread
 @new_thread
 def cloneNode(update, context):
     args = update.message.text.split(" ", maxsplit=1)
+    reply_to = update.message.reply_to_message
     if len(args) > 1:
         link = args[1]
+    elif reply_to is not None:
+        reply_text = reply_to.text
+        link = reply_text.split('\n')[0]
+    else:
+        link = None
+    if link is not None:
         gd = gdriveTools.GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
         if res != "":

@@ -127,6 +127,10 @@ class TgUploader:
         except FloodWait as f:
             LOGGER.info(f)
             time.sleep(f.x)
+        except Exception as e:
+            LOGGER.error(str(e))
+            self.is_cancelled = True
+            self.__listener.onUploadError(e)
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:

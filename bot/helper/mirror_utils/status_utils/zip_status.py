@@ -2,13 +2,13 @@ from .status import Status
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
 
 
-class TarStatus(Status):
+class ZipStatus(Status):
     def __init__(self, name, path, size):
         self.__name = name
         self.__path = path
         self.__size = size
 
-    # The progress of Tar function cannot be tracked. So we just return dummy values.
+    # The progress of Zip function cannot be tracked. So we just return dummy values.
     # If this is possible in future,we should implement it
 
     def progress(self):

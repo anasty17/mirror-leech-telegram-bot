@@ -6,6 +6,7 @@ import random
 import string
 import subprocess
 import requests
+import json
 
 import aria2p
 import qbittorrentapi as qba
@@ -49,11 +50,11 @@ load_dotenv('config.env')
 SERVER_PORT = os.environ.get('SERVER_PORT', None)
 PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
-time.sleep(1)
 alive = subprocess.Popen(["python3", "alive.py"])
 subprocess.run(["mkdir", "-p", "qBittorrent/config"])
 subprocess.run(["cp", "qBittorrent.conf", "qBittorrent/config/qBittorrent.conf"])
-subprocess.run(["qbittorrent-nox", "-d", "--profile=."])
+nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
+time.sleep(1)
 Interval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
@@ -94,7 +95,6 @@ def get_client() -> qba.TorrentsAPIMixIn:
     qb_client = qba.Client(host="localhost", port=8090, username="admin", password="adminadmin")
     try:
         qb_client.auth_log_in()
-        #qb_client.application.set_preferences({"disk_cache":64, "incomplete_files_ext":True, "max_connec":3000, "max_connec_per_torrent":300, "async_io_threads":8, "preallocate_all":True, "upnp":True, "dl_limit":-1, "up_limit":-1, "dht":True, "pex":True, "lsd":True, "encryption":0, "queueing_enabled":True, "max_active_downloads":15, "max_active_torrents":50, "dont_count_slow_torrents":True, "bittorrent_protocol":0, "recheck_completed_torrents":True, "enable_multi_connections_from_same_ip":True, "slow_torrent_dl_rate_threshold":100,"slow_torrent_inactive_timer":600})
         return qb_client
     except qba.LoginFailed as e:
         logging.error(str(e))
@@ -106,12 +106,16 @@ BOT_TOKEN = None
 
 download_dict_lock = threading.Lock()
 status_reply_dict_lock = threading.Lock()
+search_dict_lock = threading.Lock()
 # Key: update.effective_chat.id
 # Value: telegram.Message
 status_reply_dict = {}
 # Key: update.message.message_id
 # Value: An object of Status
 download_dict = {}
+# key: search_id
+# Value: client, search_results, total_results, total_pages, pageNo, start
+search_dict = {}
 # Stores list of users and chats the bot is authorized to use in
 AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
@@ -240,7 +244,7 @@ except KeyError:
 try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
-        TORRENT_DIRECT_LIMIT = None
+        raise KeyError
     else:
         TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
 except KeyError:
@@ -248,7 +252,7 @@ except KeyError:
 try:
     CLONE_LIMIT = getConfig('CLONE_LIMIT')
     if len(CLONE_LIMIT) == 0:
-        CLONE_LIMIT = None
+        raise KeyError
     else:
         CLONE_LIMIT = float(CLONE_LIMIT)
 except KeyError:
@@ -256,19 +260,19 @@ except KeyError:
 try:
     MEGA_LIMIT = getConfig('MEGA_LIMIT')
     if len(MEGA_LIMIT) == 0:
-        MEGA_LIMIT = None
+        raise KeyError
     else:
         MEGA_LIMIT = float(MEGA_LIMIT)
 except KeyError:
     MEGA_LIMIT = None
 try:
-    TAR_UNZIP_LIMIT = getConfig('TAR_UNZIP_LIMIT')
-    if len(TAR_UNZIP_LIMIT) == 0:
-        TAR_UNZIP_LIMIT = None
+    ZIP_UNZIP_LIMIT = getConfig('ZIP_UNZIP_LIMIT')
+    if len(ZIP_UNZIP_LIMIT) == 0:
+        raise KeyError
     else:
-        TAR_UNZIP_LIMIT = float(TAR_UNZIP_LIMIT)
+        ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
 except KeyError:
-    TAR_UNZIP_LIMIT = None
+    ZIP_UNZIP_LIMIT = None
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
@@ -422,6 +426,10 @@ if os.path.exists('drive_folder'):
                 INDEX_URLS.append(temp[2])
             except IndexError as e:
                 INDEX_URLS.append(None)
+
+SEARCH_PLUGINS = json.loads(os.environ['SEARCH_PLUGINS'])
+qbclient = get_client()
+qbclient.search_install_plugin(SEARCH_PLUGINS)
 
 updater = tg.Updater(token=BOT_TOKEN, request_kwargs={'read_timeout': 30, 'connect_timeout': 10})
 bot = updater.bot
