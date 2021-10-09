@@ -364,6 +364,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     else:
         pswd = None
     link = re.split(r"pswd:|\|", link)[0]
+    link = link.strip()
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         file = None
