@@ -40,11 +40,8 @@ def search(update, context):
                 msg += f"<b>Pages: </b>1/{total_pages} | <b>Results: </b>{total_results}"
                 buttons.sbutton("Previous", f"srchprev {user_id} {search_id}")
                 buttons.sbutton("Next", f"srchnext {user_id} {search_id}")
-                buttons.sbutton("Close", f"closesrch {user_id} {search_id}")
-                button = InlineKeyboardMarkup(buttons.build_menu(2))
-            else:
-                buttons.sbutton("Close", f"closesrch {user_id} {search_id}")
-                button = InlineKeyboardMarkup(buttons.build_menu(2))
+            buttons.sbutton("Close", f"closesrch {user_id} {search_id}")
+            button = InlineKeyboardMarkup(buttons.build_menu(2))
             editMessage(msg, srchmsg, button)
             with search_dict_lock:
                 search_dict[search_id] = client, search_results, total_results, total_pages, 1, 0
