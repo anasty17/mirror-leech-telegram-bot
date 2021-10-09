@@ -334,7 +334,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     qbitsel = False
     try:
         link = message_args[1]
-        if link == "s":
+        if link.startswith("s ") or link == "s":
             qbitsel = True
             message_args = mesg[0].split(' ', maxsplit=2)
             link = message_args[2]
