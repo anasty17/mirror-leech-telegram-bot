@@ -34,7 +34,7 @@ logging.getLogger('googleapiclient.discovery').setLevel(logging.ERROR)
 if USE_SERVICE_ACCOUNTS:
     SERVICE_ACCOUNT_INDEX = randrange(len(os.listdir("accounts")))
 
-TELEGRAPHLIMIT = 70
+TELEGRAPHLIMIT = 60
 
 
 class GoogleDriveHelper:
