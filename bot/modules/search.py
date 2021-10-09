@@ -16,9 +16,6 @@ def search(update, context):
     try:
         key = update.message.text.split(" ", maxsplit=1)[1]
         client = get_client()
-        #client.search_update_plugins()
-        #plug = client.search_plugins()
-        #LOGGER.info(plug)
         search = client.search_start(pattern=str(key), plugins='all', category='all')
         srchmsg = sendMessage("Searching...", context.bot, update)
         user_id = update.message.from_user.id
