@@ -21,7 +21,7 @@ def cloneNode(update, context):
             sendMessage(res, context.bot, update)
             return
         if STOP_DUPLICATE:
-            LOGGER.info('Checking File/Folder if already in Drive...')
+            LOGGER.info('🔎 Checking File/Folder if already in Drive...')
             smsg, button = gd.drive_list(name, True, True)
             if smsg:
                 msg3 = "File/Folder is already available in Drive.\nHere are the search results:"
@@ -34,7 +34,7 @@ def cloneNode(update, context):
                 sendMessage(msg2, context.bot, update)
                 return
         if files <= 10:
-            msg = sendMessage(f"Cloning: <code>{link}</code>", context.bot, update)
+            msg = sendMessage(f"📚 Cloning: <code>{link}</code>", context.bot, update)
             result, button = gd.clone(link)
             deleteMessage(context.bot, msg)
         else:
@@ -62,7 +62,7 @@ def cloneNode(update, context):
         else:
             uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
         if uname is not None:
-            cc = f'\n\n<b>cc: </b>{uname}'
+            cc = f'\n\n👤 𝗖𝗹𝗼𝗻𝗲𝗿 : {uname}\n\n🔥 𝙔𝙖𝙢𝙧𝙖𝙖𝙟 𝗠𝗶𝗿𝗿𝗼𝗿 𝗭𝗼𝗻𝗘\n\n🔥 𝗚𝗿𝗼𝘂𝗽 : @Mirrorclouds\n\n▫️#Uploaded To Team Drive ✓ \n\n🚫 𝗗𝗼 𝗡𝗼𝘁 𝗦𝗵𝗮𝗿𝗲 𝗜𝗻𝗱𝗲𝘅 𝗟𝗶𝗻𝗸 \n\n✅ 𝗣𝗼𝘄𝗲𝗿𝗲𝗱 𝗕𝘆 : @Yamraaj007'
             men = f'{uname} '
         if button in ["cancelled", ""]:
             sendMessage(men + result, context.bot, update)
