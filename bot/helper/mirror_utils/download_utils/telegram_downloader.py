@@ -93,10 +93,7 @@ class TelegramDownloadHelper(DownloadHelper):
                 # For avoiding locking the thread lock for long time unnecessarily
                 download = media.file_id not in GLOBAL_GID
             if filename == "":
-                try:
-                    name = media.file_name
-                except:
-                    name = media.file_id
+                name = media.file_name
             else:
                 name = filename
                 path = path + name
