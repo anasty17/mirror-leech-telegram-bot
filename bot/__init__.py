@@ -187,7 +187,7 @@ if DB_URI is not None:
         conn.close()
 
 LOGGER.info("Generating USER_SESSION_STRING")
-app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN)
+app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, workers=343)
 
 # Generate Telegraph Token
 sname = ''.join(random.SystemRandom().choices(string.ascii_letters, k=8))
@@ -214,6 +214,8 @@ except KeyError:
     STATUS_LIMIT = None
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
+    if len(MEGA_API_KEY) == 0:
+        raise KeyError
 except KeyError:
     logging.warning('MEGA API KEY not provided!')
     MEGA_API_KEY = None
@@ -228,6 +230,8 @@ except KeyError:
     MEGA_PASSWORD = None
 try:
     UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
+    if len(UPTOBOX_TOKEN) == 0:
+        raise KeyError
 except KeyError:
     logging.warning('UPTOBOX_TOKEN not provided!')
     UPTOBOX_TOKEN = None
@@ -358,6 +362,17 @@ try:
 except KeyError:
     AS_DOCUMENT = False
 try:
+    EQUAL_SPLITS = getConfig('EQUAL_SPLITS')
+    EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
+except KeyError:
+    EQUAL_SPLITS = False
+try:
+    CUSTOM_FILENAME = getConfig('CUSTOM_FILENAME')
+    if len(CUSTOM_FILENAME) == 0:
+        raise KeyError
+except KeyError:
+    CUSTOM_FILENAME = None
+try:
     RECURSIVE_SEARCH = getConfig('RECURSIVE_SEARCH')
     RECURSIVE_SEARCH = RECURSIVE_SEARCH.lower() == 'true'
 except KeyError:
@@ -433,6 +448,6 @@ if SEARCH_PLUGINS is not None:
     qbclient = get_client()
     qbclient.search_install_plugin(SEARCH_PLUGINS)
 
-updater = tg.Updater(token=BOT_TOKEN, request_kwargs={'read_timeout': 30, 'connect_timeout': 10})
+updater = tg.Updater(token=BOT_TOKEN, request_kwargs={'read_timeout': 30, 'connect_timeout': 15})
 bot = updater.bot
 dispatcher = updater.dispatcher

@@ -8,7 +8,7 @@ import time
 
 from pyrogram.errors import FloodWait
 
-from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS
+from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info
 
 LOGGER = logging.getLogger(__name__)
@@ -46,6 +46,8 @@ class TgUploader:
             for filee in sorted(files):
                 if self.is_cancelled:
                     return
+                if filee.endswith('.torrent'):
+                    continue
                 up_path = os.path.join(dirpath, filee)
                 fsize = os.path.getsize(up_path)
                 if fsize == 0:
@@ -56,12 +58,19 @@ class TgUploader:
                     return
                 msgs_dict[filee] = self.sent_msg.message_id
                 self.last_uploaded = 0
-                time.sleep(1)
+                time.sleep(1.5)
         LOGGER.info(f"Leech Done: {self.name}")
         self.__listener.onUploadComplete(self.name, None, msgs_dict, None, corrupted)
 
     def upload_file(self, up_path, filee, dirpath):
-        cap_mono = f"<code>{filee}</code>"
+        if CUSTOM_FILENAME is not None:
+            cap_mono = f"{CUSTOM_FILENAME} <code>{filee}</code>"
+            filee = f"{CUSTOM_FILENAME} {filee}"
+            new_path = os.path.join(dirpath, filee)
+            os.rename(up_path, new_path)
+            up_path = new_path
+        else:
+            cap_mono = f"<code>{filee}</code>"
         notMedia = False
         thumb = self.thumb
         try:
@@ -130,7 +139,7 @@ class TgUploader:
         except Exception as e:
             LOGGER.error(str(e))
             self.is_cancelled = True
-            self.__listener.onUploadError(e)
+            self.__listener.onUploadError(str(e))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:
