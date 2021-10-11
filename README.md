@@ -356,9 +356,10 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
 
 # Multi Search IDs
-To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate a file **drive_folder** when you finish or u can simply create `drive_folder` file in working directory and fill, check below format:
+To use list from multi TD/folder. Run driveid.py in your terminal, it will generate **drive_folder** file when you finish or u can simply create `drive_folder` file in working directory and fill it manually (easier), check below format:
 ```
 MyTdName folderID/tdID IndexLink(if available)
+MyTdName2 folderID/tdID IndexLink(if available)
 ```
 
 # Youtube-dl and Index Authentication Using .netrc File
