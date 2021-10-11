@@ -83,7 +83,7 @@ class TelegramDownloadHelper(DownloadHelper):
     def add_download(self, message, path, filename):
         _message = self._bot.get_messages(message.chat.id, reply_to_message_ids=message.message_id)
         media = None
-        media_array = [_message.document, _message.video, _message.audio]
+        media_array = [_message.document, _message.video, _message.audio, _message.photo]
         for i in media_array:
             if i is not None:
                 media = i
@@ -93,7 +93,10 @@ class TelegramDownloadHelper(DownloadHelper):
                 # For avoiding locking the thread lock for long time unnecessarily
                 download = media.file_id not in GLOBAL_GID
             if filename == "":
-                name = media.file_name
+                try:
+                    name = media.file_name
+                except:
+                    name = media.file_id
             else:
                 name = filename
                 path = path + name

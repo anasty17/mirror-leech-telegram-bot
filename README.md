@@ -131,32 +131,34 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 ### Optional Field
 - `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link. Archive the accounts folder to a zip file. Fill this with the direct link of that file.
 - `TOKEN_PICKLE_URL`: Only if you want to load your **token.pickle** externally from an Index Link. Fill this with the direct link of that file.
-- `MULTI_SEARCH_URL`: To use search/list in multiple TD/folder. Run driveid.py in your terminal and follow it. It will generate a file **drive_folder** when you finish. Upload that file [here](https://gist.github.com/) with the same file name. Open the raw file of that gist, it's URL will be your required config. Check wiki for gist related help. 
+- `MULTI_SEARCH_URL`: Check `drive_folder` setup [here](https://github.com/anasty17/mirror-leech-telegram-bot# Multi search IDs). Upload `drive_folder` file [here](https://gist.github.com/). Open the raw file of that gist, it's URL will be your required variable.
 - `DATABASE_URL`: Your Database URL. See [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your Sudo ID permanently using `/addsudo` command).
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of groups/users you want to authorize. Separate them with space, Examples: `-0123456789 -1122334455 6915401739`.
 - `SUDO_USERS`: Fill user_id (not username) of users whom you want to give sudo permission. Separate them with space, Examples: `0123456789 1122334455 6915401739` (**NOTE**: If you want to save Sudo ID permanently without database, you must fill your Sudo Id here).
-- `IS_TEAM_DRIVE`: Set to `True` if `GDRIVE_FOLDER_ID` is from a Team Drive else `False` or Leave it empty.
+- `IS_TEAM_DRIVE`: Set to `True` if `GDRIVE_FOLDER_ID` is from a Team Drive else `False` or Leave it empty. `Bool`
 - `USE_SERVICE_ACCOUNTS`: (Leave empty if unsure) Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below.
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index The URL should not have any trailing '/'
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk)
 - `MEGA_EMAIL_ID`: Your E-Mail ID used to sign up on mega.nz for using premium account (Leave though)
 - `MEGA_PASSWORD`: Your Password for your mega.nz account
-- `BLOCK_MEGA_FOLDER`: If you want to remove mega.nz folder support, set it to `True`.
-- `BLOCK_MEGA_LINKS`: If you want to remove mega.nz mirror support, set it to `True`.
-- `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename, not using filehash, so this feature is not perfect yet)
+- `BLOCK_MEGA_FOLDER`: If you want to remove mega.nz folder support, set it to `True`. `Bool`
+- `BLOCK_MEGA_LINKS`: If you want to remove mega.nz mirror support, set it to `True`. `Bool`
+- `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). `Bool`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
 - `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size. Don't add unit, the default unit is `GB`.
 - `TAR_UNZIP_LIMIT`: To limit the size of mirroring as Tar or unzipmirror. Don't add unit, the default unit is `GB`.
-- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True` it will work (Compatible with https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index Code)
+- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True` it will work (Compatible with https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index Code). `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
-- `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`.
+- `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`. `Bool`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with button. (**NOTE**: Recommended limit is `4` tasks at max).
-- `IS_VPS`: (Only for VPS) Don't set this to `True` even if you are using VPS, unless facing error with web server.
+- `IS_VPS`: (Only for VPS) Don't set this to `True` even if you are using VPS, unless facing error with web server. `Bool`
 - `SERVER_PORT`: Only For VPS even if `IS_VPS` is `False` --> Base URL Port
 - `RECURSIVE_SEARCH`: Set this to `True` to search in sub-folders with `/list` (**NOTE**: This will only work with Shared-Drive ID or fill `root` for main Drive. Folder IDs are not compatible with it.)
-- `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`
-- `AS_DOCUMENT`: Should all the upload to Telegram be forced as documents or not, set it `True` or `False`
+- `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`.
+- `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
+- `EQUAL_SPLITS`: Split files larger than `TG_SPLIT_SIZE` into equal parts size. `Bool`
+- `CUSTOM_FILENAME`: Add custom word to leeched file name.
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
 Supported URL Shorteners:
@@ -175,11 +177,12 @@ Three buttons are already added including Drive Link, Index Link, and View Link,
 - `BUTTON_SIX_URL`:
 
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
+
 ```
-mirror - Start Mirroring
+mirror - Start mirroring
 zipmirror - Start mirroring and upload as .zip
 unzipmirror - Extract files
-qbmirror - Start Mirroring using qBittorrent
+qbmirror - Start mirroring using qBittorrent
 qbzipmirror - Start mirroring and upload as .zip using qb
 qbunzipmirror - Extract files using qBittorrent
 leech - Leech Torrent/Direct link
@@ -196,7 +199,8 @@ leechzipwatch - Leech Youtube playlist link and upload as .zip
 leechset - Leech settings
 setthumb - Set Thumbnail
 status - Get Mirror Status message
-list - [query] Searches files in Drive
+list - [query] Search files in Drive
+search - [query] Search for torrents with installed qbittorrent search plugins
 cancel - Cancel a task
 cancelall - Cancel all tasks
 del - [drive_url] Delete file from Drive
@@ -303,7 +307,7 @@ python3 gen_sa_accounts.py --download-keys project_id
 
 **NOTE:** Add Service Accounts to team drive or google group no need to add them in both.
 
-### Create Service Accounts to current project (Recommended Method)
+### Create Service Accounts to Current Project (Recommended Method)
 
 - List your projects ids
 ```
@@ -351,7 +355,13 @@ Then add emails from emails.txt to Google Group, after that add this Google Grou
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
 
-# Youtube-dl and index authentication using .netrc file
+# Multi Search IDs
+To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate a file **drive_folder** when you finish or u can simply create `drive_folder` file in working directory and fill, check below format:
+```
+MyTdName folderID/tdID IndexLink(if available)
+```
+
+# Youtube-dl and Index Authentication Using .netrc File
 For using your premium accounts in Youtube-dl or for protected Index Links, edit the netrc file according to following format:
 ```
 machine host login username password my_youtube_password

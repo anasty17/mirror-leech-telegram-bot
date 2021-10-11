@@ -12,7 +12,7 @@ import json
 from PIL import Image
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE
+from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SPLITS
 
 VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
 
@@ -173,34 +173,37 @@ def take_ss(video_file):
 def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
     if filee.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = os.path.splitext(filee)
-        total_duration = get_media_info(path)[0] - 7
-        split_size = split_size - 2500000
         parts = math.ceil(size/TG_SPLIT_SIZE)
-        while start_time < total_duration:
+        if EQUAL_SPLITS:
+            split_size = (size // parts) - 2500000
+        else:
+            split_size = split_size - 2500000
+        while i <= parts :
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = os.path.join(dirpath, parted_name)
             subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", 
                             path, "-ss", str(start_time), "-fs", str(split_size),
-                            "-strict", "-2", "-c", "copy", out_path])
+                            "-async", "1", "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
-            if out_size > TG_SPLIT_SIZE:
+            if out_size > 2097152000:
                 dif = out_size - TG_SPLIT_SIZE
                 split_size = split_size - dif + 2400000
                 os.remove(out_path)
                 return split(path, size, filee, dirpath, split_size, start_time, i)
             lpd = get_media_info(out_path)[0]
-            start_time = start_time + lpd - 5
-            if i > parts:
-                LOGGER.warning("Maybe something went Wrong while splitting, check last part of each splited video")
-                break
+            start_time += lpd - 3
             i = i + 1
     else:
         out_path = os.path.join(dirpath, filee + ".")
         subprocess.run(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
 
 def get_media_info(path):
-    result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format", 
-                                      "json", "-show_format", path]).decode('utf-8')
+    try:
+        result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format", 
+                                          "json", "-show_format", path]).decode('utf-8')
+    except:
+        LOGGER.error(f"ffprobe error with code {result.returncode}")
+        return 0, None, None
     fields = json.loads(result)['format']
     try:
         duration = round(float(fields['duration']))

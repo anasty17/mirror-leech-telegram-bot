@@ -228,10 +228,12 @@ class MirrorListener(listeners.MirrorListeners):
                     msg_id = files[item]
                     link = f"https://t.me/c/{chat_id}/{msg_id}"
                     fmsg += f"{index}. <a href='{link}'>{item}</a>\n"
-                    if len(fmsg) > 3000:
+                    if len(fmsg.encode('utf-8') + msg.encode('utf-8')) > 4000:
+                        time.sleep(1.5)
                         sendMessage(msg + fmsg, self.bot, self.update)
                         fmsg = ''
                 if fmsg != '':
+                    time.sleep(1.5)
                     sendMessage(msg + fmsg, self.bot, self.update)
             with download_dict_lock:
                 try:
@@ -368,7 +370,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         file = None
-        media_array = [reply_to.document, reply_to.video, reply_to.audio]
+        media_array = [reply_to.document, reply_to.video, reply_to.audio, reply_to.photo]
         for i in media_array:
             if i is not None:
                 file = i
@@ -386,9 +388,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
             elif isQbit:
                 file_name = str(time.time()).replace(".", "") + ".torrent"
-                file.get_file().download(custom_path=f"{file_name}")
-                link = f"{file_name}"
-            elif file.mime_type != "application/x-bittorrent":
+                link = file.get_file().download(custom_path=file_name)
+            elif isinstance(file, list) or file.mime_type != "application/x-bittorrent":
                 listener = MirrorListener(bot, update, pswd, isZip, extract, isLeech=isLeech)
                 tg_downloader = TelegramDownloadHelper(listener)
                 ms = update.message

@@ -55,18 +55,17 @@ def searchPages(update, context):
     data = query.data
     data = data.split(" ")
     search_id = int(data[2])
-    with search_dict_lock:
-        try:
-            client, search_results, total_results, total_pages, pageNo, start  = search_dict[search_id]
-        except Exception as e:
-            query.answer(text="Old Result", show_alert=True)
-            query.message.delete()
-            return
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
         return
-    elif data[0] == "srchnext":
-        query.answer()
+    with search_dict_lock:
+        try:
+            client, search_results, total_results, total_pages, pageNo, start = search_dict[search_id]
+        except:
+            query.answer(text="Old Result", show_alert=True)
+            query.message.delete()
+            return
+    if data[0] == "srchnext":
         if pageNo == total_pages:
             start = 0
             pageNo = 1
@@ -74,7 +73,6 @@ def searchPages(update, context):
             start += 3
             pageNo += 1
     elif data[0] == "srchprev":
-        query.answer()
         if pageNo == 1:
             pageNo = total_pages
             start = 3 * (total_pages -1)
@@ -82,7 +80,6 @@ def searchPages(update, context):
             pageNo -= 1
             start -= 3
     elif data[0] == "closesrch":
-        query.answer()
         client.search_delete(search_id)
         client.auth_log_out()
         with search_dict_lock:
@@ -92,6 +89,8 @@ def searchPages(update, context):
                 pass
         query.message.delete()
         return
+    with search_dict_lock:
+        search_dict[search_id] = client, search_results, total_results, total_pages, pageNo, start
     msg = getResult(search_results, start=start)
     msg += f"<b>Pages: </b>{pageNo}/{total_pages} | <b>Results: </b>{total_results}"
     buttons = button_build.ButtonMaker()
@@ -99,20 +98,16 @@ def searchPages(update, context):
     buttons.sbutton("Next", f"srchnext {user_id} {search_id}")
     buttons.sbutton("Close", f"closesrch {user_id} {search_id}")
     button = InlineKeyboardMarkup(buttons.build_menu(2))
-    try:
-        editMessage(msg, query.message, button)
-        with search_dict_lock:
-            search_dict[search_id] = client, search_results, total_results, total_pages, pageNo, start
-    except:
-        pass
+    query.answer()
+    editMessage(msg, query.message, button)
 
 def getResult(search_results, start=0):
     msg = ""
     for index, result in enumerate(search_results[start:], start=1):
-        msg += f"<b>Name: </b><a href='{result.descrLink}'>{result.fileName}</a>\n"
+        msg += f"<a href='{result.descrLink}'>{result.fileName}</a>\n"
         msg += f"<b>Size: </b>{get_readable_file_size(result.fileSize)}\n"
         msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}\n"
-        msg += f"<b>Link: </b><code>{result.fileUrl}</code>\n"
+        msg += f"<b>Link: </b><code>{result.fileUrl}</code>\n\n"
         if index == 3:
             break
     return msg
