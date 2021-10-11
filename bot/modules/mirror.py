@@ -370,7 +370,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         file = None
-        media_array = [reply_to.document, reply_to.video, reply_to.audio, reply_to.photo]
+        media_array = [reply_to.document, reply_to.video, reply_to.audio]
         for i in media_array:
             if i is not None:
                 file = i
@@ -389,7 +389,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             elif isQbit:
                 file_name = str(time.time()).replace(".", "") + ".torrent"
                 link = file.get_file().download(custom_path=file_name)
-            elif isinstance(file, list) or file.mime_type != "application/x-bittorrent":
+            elif file.mime_type != "application/x-bittorrent":
                 listener = MirrorListener(bot, update, pswd, isZip, extract, isLeech=isLeech)
                 tg_downloader = TelegramDownloadHelper(listener)
                 ms = update.message
