@@ -6,7 +6,7 @@ attrdict
 beautifulsoup4
 cloudscrape
 feedparser
-google-api-python-client<=2.24.0,>1.7.11
+google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
