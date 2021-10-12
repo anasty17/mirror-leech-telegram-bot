@@ -30,10 +30,10 @@ def search(update, context):
         search_results = dict_search_results.results
         total_results = dict_search_results.total
         if total_results != 0:
+            total_pages = math.ceil(total_results/3)
             msg = getResult(search_results)
             buttons = button_build.ButtonMaker()
             if total_results > 3:
-                total_pages = math.ceil(total_results/3)
                 msg += f"<b>Pages: </b>1/{total_pages} | <b>Results: </b>{total_results}"
                 buttons.sbutton("Previous", f"srchprev {user_id} {search_id}")
                 buttons.sbutton("Next", f"srchnext {user_id} {search_id}")

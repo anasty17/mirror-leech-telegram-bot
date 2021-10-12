@@ -10,9 +10,6 @@ from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
 import random
 import string
 
-class MegaDownloaderException(Exception):
-    pass
-
 
 class MegaAppListener(MegaListener):
     _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN,MegaRequest.TYPE_FETCH_NODES)
@@ -144,8 +141,6 @@ class MegaDownloadHelper:
     @staticmethod
     @new_thread
     def add_download(mega_link: str, path: str, listener):
-        if MEGA_API_KEY is None:
-            raise MegaDownloaderException('Mega API KEY not provided! Cannot mirror Mega links')
         executor = AsyncExecutor()
         api = MegaApi(MEGA_API_KEY, None, None, 'telegram-mirror-bot')
         global listeners

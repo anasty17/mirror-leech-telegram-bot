@@ -214,6 +214,8 @@ except KeyError:
     STATUS_LIMIT = None
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
+    if len(MEGA_API_KEY) == 0:
+        raise KeyError
 except KeyError:
     logging.warning('MEGA API KEY not provided!')
     MEGA_API_KEY = None

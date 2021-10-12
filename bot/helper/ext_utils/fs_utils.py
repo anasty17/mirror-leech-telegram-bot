@@ -201,10 +201,10 @@ def get_media_info(path):
     try:
         result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format", 
                                           "json", "-show_format", path]).decode('utf-8')
-    except:
-        LOGGER.error(f"ffprobe error with code {result.returncode}")
+        fields = json.loads(result)['format']
+    except Exception as e:
+        LOGGER.error(str(e))
         return 0, None, None
-    fields = json.loads(result)['format']
     try:
         duration = round(float(fields['duration']))
     except:
