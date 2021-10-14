@@ -1,4 +1,5 @@
 # Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/d888a1e7237f4633c066f7c2bbfba030b83ad616)
+# Leech Settings V2 Implement By - @VarnaX-279
 # (c) https://github.com/SlamDevs/slam-mirrorbot
 # All rights reserved
 
@@ -10,38 +11,56 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, dispatcher, AS_DOCUMENT, app, AUTO_DELETE_MESSAGE_DURATION
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, auto_delete_message
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
 
 
-def leechSet(update, context):
-    user_id = update.message.from_user.id
-    path = f"Thumbnails/{user_id}.jpg"
-    msg = f"Leech Type for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a> is "
+def getleechinfo(from_user):
+    user_id = from_user.id
+    name = from_user.full_name
+    buttons = button_build.ButtonMaker()
+    thumbpath = f"Thumbnails/{user_id}.jpg"
     if (
         user_id in AS_DOC_USERS
         or user_id not in AS_MEDIA_USERS
         and AS_DOCUMENT
     ):
-        msg += "DOCUMENT"
+        ltype = "DOCUMENT"
+        buttons.sbutton("Send As Media", f"med {user_id}")
     else:
-        msg += "MEDIA"
-    msg += "\nCustom Thumbnail "
-    msg += "exists" if os.path.exists(path) else "not exists"
-    buttons = button_build.ButtonMaker()
-    buttons.sbutton("As Document", f"doc {user_id}")
-    buttons.sbutton("As Media", f"med {user_id}")
-    buttons.sbutton("Delete Thumbnail", f"thumb {user_id}")
+        ltype = "MEDIA"
+        buttons.sbutton("Send As Document", f"doc {user_id}")
+    
+    if os.path.exists(thumbpath):
+        thumbmsg =  "Exists"
+        buttons.sbutton("Delete Thumbnail", f"thumb {user_id}")
+    else:
+        thumbmsg =  "Not Exists"
+    
     if AUTO_DELETE_MESSAGE_DURATION == -1:
         buttons.sbutton("Close", f"closeset {user_id}")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
+    
+    button = InlineKeyboardMarkup(buttons.build_menu(1))
+
+    text = f"<u>Leech Setting Of <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
+           f"Leech Type <b>{ltype}</b>\n"\
+           f"Custom Thumbnail <b>{thumbmsg}</b>"
+    return text, button
+
+def editLeechType(message, query):
+    msg, button = getleechinfo(query.from_user)
+    editMessage(msg, message, button)
+
+def leechSet(update, context):
+    msg, button = getleechinfo(update.message.from_user)
     choose_msg = sendMarkup(msg, context.bot, update, button)
     threading.Thread(target=auto_delete_message, args=(context.bot, update.message, choose_msg)).start()
 
 def setLeechType(update, context):
     query = update.callback_query
+    message = query.message
     user_id = query.from_user.id
     data = query.data
     data = data.split(" ")
@@ -58,24 +77,29 @@ def setLeechType(update, context):
             AS_MEDIA_USERS.remove(user_id)
             AS_DOC_USERS.add(user_id)
             query.answer(text="Done!", show_alert=True)
+            editLeechType(message, query)
         else:
             AS_DOC_USERS.add(user_id)
             query.answer(text="Done!", show_alert=True)
+            editLeechType(message, query)
     elif data[0] == "med":
         if user_id in AS_DOC_USERS:
             AS_DOC_USERS.remove(user_id)
             AS_MEDIA_USERS.add(user_id)
             query.answer(text="Done!", show_alert=True)
+            editLeechType(message, query)
         elif user_id in AS_MEDIA_USERS or not AS_DOCUMENT:
             query.answer(text="Already As Media!", show_alert=True)
         else:
             AS_MEDIA_USERS.add(user_id)
             query.answer(text="Done!", show_alert=True)
+            editLeechType(message, query)
     elif data[0] == "thumb":
         path = f"Thumbnails/{user_id}.jpg"
         if os.path.lexists(path):
             os.remove(path)
-            query.answer(text="Done!", show_alert=True)
+            query.answer(text="Thumbnail Removed!", show_alert=True)
+            editLeechType(message, query)
         else:
             query.answer(text="No Thumbnail To Delete!", show_alert=True)
     elif data[0] == "closeset":
