@@ -1,8 +1,12 @@
+# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/d888a1e7237f4633c066f7c2bbfba030b83ad616)
+# (c) https://github.com/SlamDevs/slam-mirrorbot
+# All rights reserved
+
 from .status import Status
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
 
 
-class TarStatus(Status):
+class SplitStatus(Status):
     def __init__(self, name, path, size):
         self.__name = name
         self.__path = path
@@ -30,7 +34,7 @@ class TarStatus(Status):
         return '0s'
 
     def status(self):
-        return MirrorStatus.STATUS_ARCHIVING
+        return MirrorStatus.STATUS_SPLITTING
 
     def processed_bytes(self):
         return 0

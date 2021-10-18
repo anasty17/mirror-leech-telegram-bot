@@ -1,13 +1,11 @@
 from bot import DOWNLOAD_DIR
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from .status import Status
-import typing
-if typing.TYPE_CHECKING:
-    from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
+from bot.helper.ext_utils.fs_utils import get_path_size
 
 class YoutubeDLDownloadStatus(Status):
-    def __init__(self, obj: "YoutubeDLHelper", listener):
-        self.obj: "YoutubeDLHelper" = obj
+    def __init__(self, obj, listener):
+        self.obj = obj
         self.uid = listener.uid
         self.message = listener.message
 
@@ -18,7 +16,10 @@ class YoutubeDLDownloadStatus(Status):
         return f"{DOWNLOAD_DIR}{self.uid}"
 
     def processed_bytes(self):
-        return self.obj.downloaded_bytes
+        if self.obj.downloaded_bytes != 0:
+          return self.obj.downloaded_bytes
+        else:
+          return get_path_size(f"{DOWNLOAD_DIR}{self.uid}")
 
     def size_raw(self):
         return self.obj.size
@@ -51,7 +52,7 @@ class YoutubeDLDownloadStatus(Status):
         try:
             seconds = (self.size_raw() - self.processed_bytes()) / self.speed_raw()
             return f'{get_readable_time(seconds)}'
-        except ZeroDivisionError:
+        except:
             return '-'
 
     def download(self):

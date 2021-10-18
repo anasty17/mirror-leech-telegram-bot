@@ -24,7 +24,7 @@ sleep_time = 30
 # Create count SAs in project
 def _create_accounts(service, project, count):
     batch = service.new_batch_http_request(callback=_def_batch_resp)
-    for i in range(count):
+    for _ in range(count):
         aid = _generate_id('mfc-')
         batch.add(service.projects().serviceAccounts().create(name='projects/' + project, body={'accountId': aid,
                                                                                                 'serviceAccount': {
@@ -76,7 +76,7 @@ def _create_projects(cloud, count):
     global project_create_ops
     batch = cloud.new_batch_http_request(callback=_pc_resp)
     new_projs = []
-    for i in range(count):
+    for _ in range(count):
         new_proj = _generate_id()
         new_projs.append(new_proj)
         batch.add(cloud.projects().create(body={'project_id': new_proj}))
@@ -145,11 +145,9 @@ def _create_sa_keys(iam, projects, path):
                 print('Redownloading keys from %s' % i)
                 current_key_dump = []
             else:
-                index = 0
-                for j in current_key_dump:
+                for index, j in enumerate(current_key_dump):
                     with open(f'{path}/{index}.json', 'w+') as f:
                         f.write(j[1])
-                    index += 1
 
 
 # Delete Service Accounts
@@ -198,7 +196,7 @@ def serviceaccountfactory(
     serviceusage = build('serviceusage', 'v1', credentials=creds)
 
     projs = None
-    while projs == None:
+    while projs is None:
         try:
             projs = _get_projects(cloud)
         except HttpError as e:
@@ -233,8 +231,7 @@ def serviceaccountfactory(
             input("Press Enter to continue...")
 
     if enable_services:
-        ste = []
-        ste.append(enable_services)
+        ste = [enable_services]
         if enable_services == '~':
             ste = selected_projects
         elif enable_services == '*':
@@ -243,8 +240,7 @@ def serviceaccountfactory(
         print('Enabling services')
         _enable_services(serviceusage, ste, services)
     if create_sas:
-        stc = []
-        stc.append(create_sas)
+        stc = [create_sas]
         if create_sas == '~':
             stc = selected_projects
         elif create_sas == '*':
@@ -255,12 +251,9 @@ def serviceaccountfactory(
         try:
             os.mkdir(path)
         except OSError as e:
-            if e.errno == errno.EEXIST:
-                pass
-            else:
+            if e.errno != errno.EEXIST:
                 raise
-        std = []
-        std.append(download_keys)
+        std = [download_keys]
         if download_keys == '~':
             std = selected_projects
         elif download_keys == '*':
@@ -309,26 +302,19 @@ if __name__ == '__main__':
         if len(options) < 1:
             exit(-1)
         else:
-            i = 0
             print('Select a credentials file below.')
             inp_options = [str(i) for i in list(range(1, len(options) + 1))] + options
-            while i < len(options):
+            for i in range(len(options)):
                 print('  %d) %s' % (i + 1, options[i]))
-                i += 1
             inp = None
             while True:
                 inp = input('> ')
                 if inp in inp_options:
                     break
-            if inp in options:
-                args.credentials = inp
-            else:
-                args.credentials = options[int(inp) - 1]
+            args.credentials = inp if inp in options else options[int(inp) - 1]
             print('Use --credentials %s next time to use this credentials file.' % args.credentials)
     if args.quick_setup:
-        opt = '*'
-        if args.new_only:
-            opt = '~'
+        opt = '~' if args.new_only else '*'
         args.services = ['iam', 'drive']
         args.create_projects = args.quick_setup
         args.enable_services = opt
