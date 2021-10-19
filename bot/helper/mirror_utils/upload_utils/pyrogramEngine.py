@@ -81,7 +81,7 @@ class TgUploader:
                     if thumb is None:
                         thumb = take_ss(up_path)
                         if self.is_cancelled:
-                            if self.thumb is None and os.path.lexists(thumb):
+                            if self.thumb is None and thumb is not None and os.path.lexists(thumb):
                                 os.remove(thumb)
                             return
                     if not filee.upper().endswith(("MKV", "MP4")):
@@ -125,7 +125,7 @@ class TgUploader:
                 if filee.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
                     thumb = take_ss(up_path)
                     if self.is_cancelled:
-                        if self.thumb is None and os.path.lexists(thumb):
+                        if self.thumb is None and thumb is not None and os.path.lexists(thumb):
                             os.remove(thumb)
                         return
                 self.sent_msg = self.sent_msg.reply_document(document=up_path,
@@ -142,7 +142,7 @@ class TgUploader:
             LOGGER.error(str(e))
             self.is_cancelled = True
             self.__listener.onUploadError(str(e))
-        if self.thumb is None and os.path.lexists(thumb):
+        if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:
             os.remove(up_path)
