@@ -49,7 +49,7 @@ def getResult(search_results, key):
         try:
             msg += f"<b>Link: </b>{result['Magnet']}<br><br>"
         except:
-            msg += f"<br>"
+            msg += "<br>"
 
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
