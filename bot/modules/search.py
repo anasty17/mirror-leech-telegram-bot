@@ -2,11 +2,12 @@ import aiohttp
 import asyncio
 import itertools
 
+from time import sleep
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
 
-from bot import dispatcher, LOGGER, telegraph_token
+from bot import dispatcher, LOGGER, telegraph_token, DEFAULT_SEARCH
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -14,15 +15,23 @@ from bot.helper.telegram_helper import button_build
 
 telegraph_content = []
 path = []
-
+SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
 def search(update, context):
     try:
         key = update.message.text.split(" ", maxsplit=1)[1]
+        if key.lower().startswith(SITES):
+            site = key.split(" ")[0]
+            key = update.message.text.split(" ", maxsplit=2)[2]
+        elif DEFAULT_SEARCH is not None:
+            site = DEFAULT_SEARCH
+        else:
+            site = "all"
         srchmsg = sendMessage("Searching...", context.bot, update)
-        LOGGER.info(f"Searching: {key}")
-        search_results = asyncio.run(apiSearch(key))
-        search_results = list(itertools.chain.from_iterable(search_results))
+        LOGGER.info(f"Searching: {key} from {site}")
+        search_results = asyncio.run(apiSearch(key, site))
+        if site == "all":
+            search_results = list(itertools.chain.from_iterable(search_results))
         link = getResult(search_results, key)
         if link is not None:
             buttons = button_build.ButtonMaker()
@@ -49,7 +58,7 @@ def getResult(search_results, key):
         try:
             msg += f"<b>Link: </b>{result['Magnet']}<br><br>"
         except:
-            msg += f"<br>"
+            msg += "<br>"
 
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
@@ -68,6 +77,7 @@ def getResult(search_results, key):
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
+        sleep(1)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
@@ -94,9 +104,9 @@ def edit_telegraph(path, telegraph_content):
                              html_content=content)
         return
 
-async def apiSearch(key):
+async def apiSearch(key, site):
     async with aiohttp.ClientSession() as session:
-        api = f"https://anasty17.herokuapp.com/api/all/{key}"
+        api = f"https://anasty17.herokuapp.com/api/{site}/{key}"
         async with session.get(api, timeout=15) as resp:
             results = await resp.json()
     return results

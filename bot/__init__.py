@@ -241,6 +241,12 @@ except KeyError:
     INDEX_URL = None
     INDEX_URLS.append(None)
 try:
+    DEFAULT_SEARCH = getConfig('DEFAULT_SEARCH')
+    if len(DEFAULT_SEARCH) == 0:
+        DEFAULT_SEARCH = None
+except KeyError:
+    DEFAULT_SEARCH = None
+try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
         raise KeyError

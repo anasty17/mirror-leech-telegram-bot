@@ -46,7 +46,7 @@ def stats(update, context):
 def start(update, context):
     buttons = button_build.ButtonMaker()
     buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.buildbutton("Group", "https://t.me/mirrorLeechTelegramBot")
+    buttons.buildbutton("Group", "https://t.me/mirrorLeechGroup")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
@@ -135,8 +135,8 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.ListCommand}</b> [query]: Search in Google Drive
 <br><br>
-<b>/{BotCommands.SearchCommand}</b> [query]: Search for torrents with installed qbittorrent search plugins
-<br><br>
+<b>/{BotCommands.SearchCommand}</b> [site](optional) [query]: Search for torrents with API
+<br>sites: <code>rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv</code><br><br>
 <b>/{BotCommands.StatusCommand}</b>: Shows a status of all the downloads
 <br><br>
 <b>/{BotCommands.StatsCommand}</b>: Show Stats of the machine the bot is hosted on
@@ -180,7 +180,7 @@ def bot_help(update, context):
 
 '''
 botcmds = [
-        (f'{BotCommands.HelpCommand}','Get Detailed Help'),
+        
         (f'{BotCommands.MirrorCommand}', 'Start Mirroring'),
         (f'{BotCommands.ZipMirrorCommand}','Start mirroring and upload as .zip'),
         (f'{BotCommands.UnzipMirrorCommand}','Extract files'),
@@ -199,7 +199,8 @@ botcmds = [
         (f'{BotCommands.StatsCommand}','Bot Usage Stats'),
         (f'{BotCommands.PingCommand}','Ping the Bot'),
         (f'{BotCommands.RestartCommand}','Restart the bot [owner/sudo only]'),
-        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]')
+        (f'{BotCommands.LogCommand}','Get the Bot Log [owner/sudo only]'),
+        (f'{BotCommands.HelpCommand}','Get Detailed Help')
     ]
 '''
 

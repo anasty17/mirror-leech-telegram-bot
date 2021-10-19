@@ -18,10 +18,11 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Multi-Search by token.pickle if exists 
 - Extract rar, zip and 7z splits with or without password
 - Zip file/folder with or without password
-- Use Toke.pickle if file not found with Service Account
+- Use Token.pickle if file not found with Service Account for all Gdrive functions
 - Random Service Account at startup
 - Mirror/Leech by reply (soon will add for watch and clone)
-- Search for torrents with variable plugins using qBittorrent search engine
+- Search for torrents with Torrent Search API
+- Docker image support for `linux/amd64, linux/arm64, linux/386, linux/arm/v7, linux/arm/v6`
 - Many bugs has been fixed
 
 ## From official and Other Repositories
@@ -147,7 +148,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
 - `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size. Don't add unit, the default unit is `GB`.
-- `TAR_UNZIP_LIMIT`: To limit the size of mirroring as Tar or unzipmirror. Don't add unit, the default unit is `GB`.
+- `ZIP_UNZIP_LIMIT`: To limit the size of mirroring as Zip or unzipmirror. Don't add unit, the default unit is `GB`.
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True` it will work (Compatible with https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index Code). `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
 - `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`. `Bool`
@@ -157,7 +158,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `RECURSIVE_SEARCH`: Set this to `True` to search in sub-folders with `/list` (**NOTE**: This will only work with Shared-Drive ID or fill `root` for main Drive. Folder IDs are not compatible with it.)
 - `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`.
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
-- `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size. `Bool`
+- `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
@@ -166,7 +167,11 @@ Supported URL Shorteners:
 exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly,
 shorte.st, linkvertise.com , ouo.io
 ```
-- `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins) (**NOTE**: Many plugins will leads to slow search process).
+- `DEFAULT_SEARCH`: Choose which default search site (still you can choose site or all while bot running), empty means `all`.
+Supported Sites:
+```
+rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
+```
 
 ### Add more buttons (Optional Field)
 Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
@@ -201,7 +206,7 @@ leechset - Leech settings
 setthumb - Set Thumbnail
 status - Get Mirror Status message
 list - [query] Search files in Drive
-search - [query] Search for torrents with installed qbittorrent search plugins
+search - [site] [query] Search for torrents with API
 cancel - Cancel a task
 cancelall - Cancel all tasks
 del - [drive_url] Delete file from Drive
@@ -265,7 +270,13 @@ OR
 ```
 sudo docker-compose up --build
 ```
-- To stop Docker: 
+- To stop Docker:
+If docker-compose
+```
+sudo docker-compose stop
+```
+**Note**: To start the docker again `sudo docker-compose start`
+Else
 ```
 sudo docker ps
 ```
@@ -285,7 +296,7 @@ sudo docker image prune -a
 
 ## Deploying on Heroku
 - Join the group and read
-<p><a href="https://t.me/joinchat/N56L6ogb4Yw0NGVk"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+<p><a href="https://telegra.ph/Heroku-Deployment-10-04"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 - Deploying on Heroku with heroku-cli and Goorm IDE
 <p><a href="https://telegra.ph/How-to-Deploy-a-Mirror-Bot-to-Heroku-with-CLI-05-06"> <img src="https://img.shields.io/badge/Deploy%20Guide-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>

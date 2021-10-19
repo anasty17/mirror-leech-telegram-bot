@@ -774,7 +774,7 @@ class GoogleDriveHelper:
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
-
+        time.sleep(1)
         self.num_of_path = len(self.path)
         if self.num_of_path > 1:
             self.edit_telegraph()
