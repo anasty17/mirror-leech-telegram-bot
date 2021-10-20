@@ -20,7 +20,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Zip file/folder with or without password
 - Use Token.pickle if file not found with Service Account for all Gdrive functions
 - Random Service Account at startup
-- Mirror/Leech by reply (soon will add for watch and clone)
+- Mirror/Leech/clone/del by reply (soon will add for watch)
 - Search for torrents with Torrent Search API
 - Docker image support for `linux/amd64, linux/arm64, linux/386, linux/arm/v7, linux/arm/v6`
 - Many bugs has been fixed

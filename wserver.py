@@ -559,7 +559,6 @@ section span{
 </html>
 """
 
-
 @routes.get('/app/files/{hash_id}')
 async def list_torrent_contents(request):
 
@@ -602,7 +601,6 @@ async def list_torrent_contents(request):
         "{form_url}", f"/app/files/{torr}?pin_code={pincode}")
     client.auth_log_out()
     return web.Response(text=rend_page, content_type='text/html')
-
 
 async def re_verfiy(paused, resumed, client, torr):
 
@@ -652,7 +650,6 @@ async def re_verfiy(paused, resumed, client, torr):
             return False
     LOGGER.info("Verified")
     return True
-
 
 @routes.post('/app/files/{hash_id}')
 async def set_priority(request):
@@ -707,7 +704,6 @@ async def homepage(request):
 
     return web.Response(text="<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>", content_type="text/html")
 
-
 async def e404_middleware(app, handler):
 
     async def middleware_handler(request):
@@ -723,13 +719,11 @@ async def e404_middleware(app, handler):
             raise
     return middleware_handler
 
-
 async def start_server():
 
     app = web.Application(middlewares=[e404_middleware])
     app.add_routes(routes)
     return app
-
 
 async def start_server_async(port=80):
 

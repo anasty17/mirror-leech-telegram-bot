@@ -1,6 +1,7 @@
 import aiohttp
 import asyncio
 import itertools
+import logging
 
 from time import sleep
 from telegram import InlineKeyboardMarkup
@@ -12,6 +13,8 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
+
+logging.getLogger('aiohttp.client').setLevel(logging.ERROR)
 
 telegraph_content = []
 path = []
@@ -32,11 +35,11 @@ def search(update, context):
         search_results = asyncio.run(apiSearch(key, site))
         if site == "all":
             search_results = list(itertools.chain.from_iterable(search_results))
-        link = getResult(search_results, key)
+        link, resCount = getResult(list(search_results), key)
         if link is not None:
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            msg = f"<b>Found {len(search_results)} result for <i>{key}</i></b>"
+            msg = f"<b>Found {resCount} result for <i>{key}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, srchmsg, button)
         else:
@@ -47,6 +50,7 @@ def search(update, context):
         LOGGER.error(str(e))
 
 def getResult(search_results, key):
+    count = 0
     msg = f"Search Result For {key}<br><br>"
     for result in search_results:
         try:
@@ -59,7 +63,7 @@ def getResult(search_results, key):
             msg += f"<b>Link: </b>{result['Magnet']}<br><br>"
         except:
             msg += "<br>"
-
+        count += 1
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
@@ -80,7 +84,7 @@ def getResult(search_results, key):
         sleep(1)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
-    return f"https://telegra.ph/{path[0]}"
+    return f"https://telegra.ph/{path[0]}", count
 
 def edit_telegraph(path, telegraph_content):
     nxt_page = 1
@@ -107,8 +111,11 @@ def edit_telegraph(path, telegraph_content):
 async def apiSearch(key, site):
     async with aiohttp.ClientSession() as session:
         api = f"https://anasty17.herokuapp.com/api/{site}/{key}"
-        async with session.get(api, timeout=15) as resp:
-            results = await resp.json()
+        try:
+            async with session.get(api, timeout=15) as resp:
+                results = await resp.json()
+        except Exception as err:
+            raise err
     return results
 
 
