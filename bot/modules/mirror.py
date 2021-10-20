@@ -130,6 +130,7 @@ class MirrorListener(listeners.MirrorListeners):
                                or re.search(r'\.zip.\d+$', filee) or filee.endswith(".zip"):
                                 del_path = os.path.join(dirpath, filee)
                                 os.remove(del_path)
+                    path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
                 else:
                     if pswd is not None:
                         result = subprocess.run(["pextract", m_path, pswd])
@@ -140,9 +141,10 @@ class MirrorListener(listeners.MirrorListeners):
                         LOGGER.info(f"Deleting archive: {m_path}")
                     else:
                         LOGGER.warning('Unable to extract archive! Uploading anyway')
+                        path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
             except NotSupportedExtractionArchive:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
-            path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
+                path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         up_name = pathlib.PurePath(path).name
