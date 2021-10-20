@@ -17,7 +17,6 @@ from bot.helper.telegram_helper import button_build
 logging.getLogger('aiohttp.client').setLevel(logging.ERROR)
 
 telegraph_content = []
-path = []
 SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
 def search(update, context):
@@ -50,6 +49,7 @@ def search(update, context):
         LOGGER.error(str(e))
 
 def getResult(search_results, key):
+    path = []
     count = 0
     msg = f"Search Result For {key}<br><br>"
     for result in search_results:
@@ -60,7 +60,16 @@ def getResult(search_results, key):
         except:
             pass
         try:
-            msg += f"<b>Link: </b>{result['Magnet']}<br><br>"
+            msg += f"<b>Link: </b>{result['Magnet']}<br>"
+        except:
+            pass
+        try:
+            for data in result["Files"]:
+                msg += f"<b>Quality: </b><code>{data['Quality']}</code> | " \
+                    f"<b>Size: </b>{data['Size']}<br>"
+                msg += f"<b>Link: </b><code>{data['Magnet']}</code><br>"
+            if result["Files"]:
+                msg += "<br>"
         except:
             msg += "<br>"
         count += 1

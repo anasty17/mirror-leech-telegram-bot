@@ -31,7 +31,6 @@ def cancel_mirror(update, context):
         msg = f"Please reply to the <code>/{BotCommands.MirrorCommand}</code> message which was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         if mirror_message and mirror_message.message_id not in keys:
             if BotCommands.MirrorCommand in mirror_message.text or \
-               BotCommands.TarMirrorCommand in mirror_message.text or \
                BotCommands.UnzipMirrorCommand in mirror_message.text:
                 msg1 = "Mirror Already Have Been Cancelled"
                 sendMessage(msg1, context.bot, update)
