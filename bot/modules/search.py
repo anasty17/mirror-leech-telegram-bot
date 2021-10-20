@@ -1,7 +1,6 @@
 import aiohttp
 import asyncio
 import itertools
-import logging
 
 from time import sleep
 from telegram import InlineKeyboardMarkup
@@ -13,8 +12,6 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
-
-logging.getLogger('aiohttp.client').setLevel(logging.ERROR)
 
 SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
@@ -62,8 +59,6 @@ def getResult(search_results, key):
                         msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
                     except KeyError:
                         msg += f"<b>Magnet: </b><code>{subres['Magnet']}</code><br>"
-                    except:
-                        pass
             else:
                 msg += f"<b>Size: </b>{result['Size']}<br>"
                 msg += f"<b>Seeders: </b>{result['Seeders']} | <b>Leechers: </b>{result['Leechers']}<br>"
