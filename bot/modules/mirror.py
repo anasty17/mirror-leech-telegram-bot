@@ -390,7 +390,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 reply_text = reply_to.text
                 reply_text = reply_text.split('\n')[0]
                 if bot_utils.is_url(reply_text) or bot_utils.is_magnet(reply_text):
-                    link = reply_text
+                    link = reply_text.strip()
 
             elif isQbit:
                 file_name = str(time.time()).replace(".", "") + ".torrent"
