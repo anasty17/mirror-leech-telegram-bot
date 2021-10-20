@@ -16,8 +16,6 @@ from bot.helper.telegram_helper import button_build
 
 logging.getLogger('aiohttp.client').setLevel(logging.ERROR)
 
-telegraph_content = []
-path = []
 SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
 def search(update, context):
@@ -35,8 +33,8 @@ def search(update, context):
         search_results = asyncio.run(apiSearch(key, site))
         if site == "all":
             search_results = list(itertools.chain.from_iterable(search_results))
-        link, resCount = getResult(list(search_results), key)
-        if link is not None:
+        if isinstance(search_results, list):
+            link, resCount = getResult(list(search_results), key)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
             msg = f"<b>Found {resCount} result for <i>{key}</i></b>"
@@ -50,18 +48,30 @@ def search(update, context):
         LOGGER.error(str(e))
 
 def getResult(search_results, key):
+    telegraph_content = []
+    path = []
     count = 0
     msg = f"Search Result For {key}<br><br>"
     for result in search_results:
         try:
             msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
-            msg += f"<b>Size: </b>{result['Size']}<br>"
-            msg += f"<b>Seeders: </b>{result['Seeders']} | <b>Leechers: </b>{result['Leechers']}<br>"
-        except:
+            if "Files" in result.keys():
+                for subres in result['Files']:
+                    msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
+                    try:
+                        msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
+                    except KeyError:
+                        msg += f"<b>Magnet: </b><code>{subres['Magnet']}</code><br>"
+                    except:
+                        pass
+            else:
+                msg += f"<b>Size: </b>{result['Size']}<br>"
+                msg += f"<b>Seeders: </b>{result['Seeders']} | <b>Leechers: </b>{result['Leechers']}<br>"
+        except KeyError:
             pass
         try:
-            msg += f"<b>Link: </b>{result['Magnet']}<br><br>"
-        except:
+            msg += f"<b>Magnet: </b><code>{result['Magnet']}</code><br><br>"
+        except KeyError:
             msg += "<br>"
         count += 1
         if len(msg.encode('utf-8')) > 40000 :
@@ -70,9 +80,6 @@ def getResult(search_results, key):
 
     if msg != "":
         telegraph_content.append(msg)
-
-    if len(telegraph_content) == 0:
-        return None
 
     for content in telegraph_content :
         path.append(Telegraph(access_token=telegraph_token).create_page(
