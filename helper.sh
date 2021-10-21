@@ -5,10 +5,11 @@
 printf "This is an interactive script that will help you in deploying almost any mirrorbot. What do you want to do?
 1) Deploying first time
 2) Redeploying but already have credentials.json, token.pickle and SA folder (optional)
-3) Just commiting changes to existing repo \n"
+3) Check if appname is available 
+4) Just commiting changes to existing repo\n"
 while true; do
 	read -p "Select one of the following: " choice
-    case $choice in
+	case $choice in
             "1")
 				echo -e "Firstly we will make credentials.json"
 				echo -e "For that, follow the TUTORIAL 2 given in this post: https://telegra.ph/Deploying-your-own-Mirrorbot-10-19#TUTORIAL-2"
@@ -54,20 +55,20 @@ while true; do
 				pip3 install -r requirements-cli.txt
 				pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 				echo -e "\nNow we will create token.pickle. Follow the instructions given. \n"
-                sleep 5
+				sleep 5
 				python -m pip install google-auth-oauthlib
 				python3 generate_drive_token.py
-                sleep 5
+				sleep 5
 				echo -e "\nService Accounts (SA) help you bypass daily 750GB limit when you want to upload to Shared Drive/Team Drive (TD). Keeping this in mind, select one of the following: \n"
 				echo -e "1) You don't have SA but want to use them? \n"
 				echo -e "2) You already have SA and want to use them? \n"
 				echo -e "3) You don't want to add SA \n"
 				read -p "Enter your choice: " sa
-                sleep 3
+				sleep 3
 				if [ $sa = 1 ] ; then
 					python -m pip install progress
 					python3 gen_sa_accounts.py --list-projects
-                    echo -e "Choose the project id which contains credentails.json, that way you can avoid mess of multiple projects \n"
+					echo -e "Choose the project id which contains credentails.json, that way you can avoid mess of multiple projects \n"
 					echo
 					read -p "Project id: " pid
 					python3 gen_sa_accounts.py --enable-services $pid
@@ -77,7 +78,7 @@ while true; do
 				fi
 				if [ $sa = 2 ] ; then
 					python3 gen_sa_accounts.py --list-projects
-                    echo -e "Choose the project id which contains SA \n"
+					echo -e "Choose the project id which contains SA \n"
 					echo
 					read -p "Project id: " pid
 					python3 gen_sa_accounts.py --download-keys $pid
@@ -146,8 +147,8 @@ while true; do
 						git commit -m "Deploy number 1"
 						git push heroku master --force
 						heroku apps:destroy -c $bname
-                        echo -e "\nDeploy number 2"
-                        sleep 3
+						echo -e "\nDeploy number 2"
+						sleep 3
 						heroku create $bname
 						heroku git:remote -a $bname
 						heroku stack:set container -a $bname
@@ -163,7 +164,7 @@ while true; do
 						echo -e "Then do it first! \n"
 					fi
 				done
-            break
+			break
 		;;
 		"2")
                 echo -e "Firstly we will login to heroku \n"
@@ -208,8 +209,8 @@ while true; do
 						git commit -m "Deploy number 1"
 						git push heroku master --force
 						heroku apps:destroy -c $bname
-                        echo -e "\nDeploy number 2"
-                        sleep 3
+						echo -e "\nDeploy number 2"
+						sleep 3
 						heroku create $bname
 						heroku git:remote -a $bname
 						heroku stack:set container -a $bname
@@ -227,7 +228,22 @@ while true; do
 				done
 			break
             ;;
-            "3")
+			"3")
+				for (( ; ; ))
+						do
+							read -p "Enter unique appname for your bot: " bname
+							heroku create $bname
+							status=$?
+							if test $status -eq 0; then
+								echo -e "App created successfully \n"
+							break
+							fi
+						echo -e "Appname is already taken, choose another one \n"
+						done
+				heroku apps:destroy -c $bname
+				echo -e "Now use this appname in BASE_URL_OF_BOT var like https://appname.herokuapp.com"
+			;;
+            "4")
                 read -p "Enter commit description in one line: " c_des
                 git add -f .
                 git commit -m "$c_des"
