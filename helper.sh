@@ -229,6 +229,20 @@ while true; do
 			break
             ;;
 			"3")
+				echo -e "\nFirst, we will login to heroku"
+				echo
+				for (( ; ; ))
+				do
+					echo -e "Enter your Heroku credentials: \n"
+					heroku login -i
+					status=$?
+					if test $status -eq 0; then
+						echo -e "Signed in successfully \n"
+					break
+					fi
+					echo -e "Invalid credentials, try again \n"
+				done
+				
 				for (( ; ; ))
 						do
 							read -p "Enter unique appname for your bot: " bname
@@ -242,6 +256,7 @@ while true; do
 						done
 				heroku apps:destroy -c $bname
 				echo -e "Now use this appname in BASE_URL_OF_BOT var like https://appname.herokuapp.com"
+				break
 			;;
             "4")
                 read -p "Enter commit description in one line: " c_des
