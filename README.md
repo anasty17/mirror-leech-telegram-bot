@@ -276,7 +276,6 @@ If docker-compose
 sudo docker-compose stop
 ```
 **Note**: To start the docker again `sudo docker-compose start`
-Else
 ```
 sudo docker ps
 ```
@@ -295,7 +294,7 @@ sudo docker image prune -a
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ## Deploying on Heroku
-- Join the group and read
+- Deploying on Heroku with Github Workflow
 <p><a href="https://telegra.ph/Heroku-Deployment-10-04"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 - Deploying on Heroku with helper script and Goorm IDE (works on VPS too)
