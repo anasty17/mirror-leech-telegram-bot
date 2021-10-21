@@ -256,6 +256,7 @@ while true; do
 						done
 				heroku apps:destroy -c $bname
 				echo -e "Now use this appname in BASE_URL_OF_BOT var like https://appname.herokuapp.com"
+				break
 			;;
             "4")
                 read -p "Enter commit description in one line: " c_des
