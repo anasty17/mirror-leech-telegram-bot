@@ -229,6 +229,20 @@ while true; do
 			break
             ;;
 			"3")
+				echo -e "\nFirst, we will login to heroku"
+				echo
+				for (( ; ; ))
+				do
+					echo -e "Enter your Heroku credentials: \n"
+					heroku login -i
+					status=$?
+					if test $status -eq 0; then
+						echo -e "Signed in successfully \n"
+					break
+					fi
+					echo -e "Invalid credentials, try again \n"
+				done
+				
 				for (( ; ; ))
 						do
 							read -p "Enter unique appname for your bot: " bname
