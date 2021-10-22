@@ -36,7 +36,7 @@ def stats(update, context):
     swap_p = swap.percent
     swap_t = get_readable_file_size(swap.total)
     swap_u = get_readable_file_size(swap.used)
-    mem = psutil.virtual_memory()
+    memory = psutil.virtual_memory()
     mem_p = memory.percent
     mem_t = get_readable_file_size(memory.total)
     mem_a = get_readable_file_size(memory.available)
