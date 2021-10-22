@@ -10,7 +10,6 @@ class AriaDownloadStatus(Status):
 
     def __init__(self, gid, listener):
         super().__init__()
-        self.upload_name = None
         self.__gid = gid
         self.__download = get_download(self.__gid)
         self.__uid = listener.uid

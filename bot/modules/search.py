@@ -31,10 +31,10 @@ def search(update, context):
         if site == "all":
             search_results = list(itertools.chain.from_iterable(search_results))
         if isinstance(search_results, list):
-            link, resCount = getResult(list(search_results), key)
+            link = getResult(list(search_results), key)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            msg = f"<b>Found {resCount} result for <i>{key}</i></b>"
+            msg = f"<b>Found {len(search_results)} result for <i>{key}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, srchmsg, button)
         else:
@@ -47,7 +47,6 @@ def search(update, context):
 def getResult(search_results, key):
     telegraph_content = []
     path = []
-    count = 0
     msg = f"Search Result For {key}<br><br>"
     for result in search_results:
         try:
@@ -68,7 +67,6 @@ def getResult(search_results, key):
             msg += f"<b>Magnet: </b><code>{result['Magnet']}</code><br><br>"
         except KeyError:
             msg += "<br>"
-        count += 1
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
@@ -86,7 +84,7 @@ def getResult(search_results, key):
         sleep(1)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
-    return f"https://telegra.ph/{path[0]}", count
+    return f"https://telegra.ph/{path[0]}"
 
 def edit_telegraph(path, telegraph_content):
     nxt_page = 1

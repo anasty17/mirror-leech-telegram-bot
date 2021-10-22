@@ -217,14 +217,14 @@ class MirrorListener(listeners.MirrorListeners):
                 uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
             count = len(files)
             if self.message.chat.type == 'private':
-                msg = f'<code>{link}</code>\n'
+                msg = f'<code>{link}</code>\n\n'
                 msg += f'<b>Total Files: </b>{count}'
                 if typ != 0:
                     msg += f'\n<b>Corrupted Files: </b>{typ}'
                 sendMessage(msg, self.bot, self.update)
             else:
                 chat_id = str(self.message.chat.id)[4:]
-                msg = f"<a href='https://t.me/c/{chat_id}/{self.uid}'>{link}</a>\n"
+                msg = f'<code>{link}</code>\n\n'
                 msg += f'<b>Total Files: </b>{count}\n'
                 if typ != 0:
                     msg += f'<b>Corrupted Files: </b>{typ}\n'

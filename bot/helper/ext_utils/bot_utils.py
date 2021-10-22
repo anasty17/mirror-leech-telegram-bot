@@ -18,6 +18,7 @@ URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
 
 COUNT = 0
 PAGE_NO = 1
+START = 0
 
 
 class MirrorStatus:
@@ -111,7 +112,6 @@ def get_progress_bar_string(status):
 def get_readable_message():
     with download_dict_lock:
         msg = ""
-        start = 0
         if STATUS_LIMIT is not None:
             dick_no = len(download_dict)
             global pages
@@ -119,8 +119,8 @@ def get_readable_message():
             if pages != 0 and PAGE_NO > pages:
                 globals()['COUNT'] -= STATUS_LIMIT
                 globals()['PAGE_NO'] -= 1
-            start = COUNT
-        for index, download in enumerate(list(download_dict.values())[start:], start=1):
+            START = COUNT
+        for index, download in enumerate(list(download_dict.values())[START:], start=1):
             msg += f"<code>{download.name()}</code>"
             msg += f"\n<b>Status:</b> <i>{download.status()}</i>"
             if download.status() not in [
