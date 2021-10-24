@@ -55,10 +55,10 @@ def getResult(search_results, key):
                 for subres in result['Files']:
                     msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
                     try:
-                        msg += f"<a href='http://t.me/share/url?url={subres['Torrent']}'>Send to Telegram</a><br>"
+                        msg += f"<b>Share</b> link to <a href='http://t.me/share/url?url={subres['Torrent']}'>Telegram</a><br>"
                         msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
                     except KeyError:
-                        msg += f"<a href='http://t.me/share/url?url={quote(subres['Magnet'])}'>Send to Telegram</a><br>"
+                        msg += f"<b>Share</b> Magnet to <a href='http://t.me/share/url?url={quote(subres['Magnet'])}'>Telegram</a><br>"
                         msg += f"<b>Magnet: </b><code>{subres['Magnet']}</code><br>"
             else:
                 msg += f"<b>Size: </b>{result['Size']}<br>"
@@ -66,7 +66,7 @@ def getResult(search_results, key):
         except KeyError:
             pass
         try:
-            msg += f"<a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Send to Telegram</a><br>"
+            msg += f"<b>Share</b> Magnet to <a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Telegram</a><br>"
             msg += f"<b>Magnet: </b><code>{result['Magnet']}</code><br><br>"
         except KeyError:
             msg += "<br>"
