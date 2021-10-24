@@ -16,7 +16,7 @@ from telegram import InlineKeyboardMarkup
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, \
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, SHORTENER, SHORTENER_API, \
-                ZIP_UNZIP_LIMIT, TG_SPLIT_SIZE
+                ZIP_UNZIP_LIMIT, TG_SPLIT_SIZE, SHOW_WEB_INDEX, BASE_URL
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
@@ -397,6 +397,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 link = file.get_file().download(custom_path=file_name)
             elif file.mime_type != "application/x-bittorrent":
                 listener = MirrorListener(bot, update, pswd, isZip, extract, isLeech=isLeech)
+                if BASE_URL is not None and SHOW_WEB_INDEX:
+                    sendMessage("You Can See Your downloaded/zipped/splitted/unzipped Files And Download Files Using This Link\n"\
+                                f" {BASE_URL}/index/{listener.uid}/\n"\
+                                "<b>Note:-</b> After Upload Your File Will Be Deleted. So Download Small Files", bot, update)
                 tg_downloader = TelegramDownloadHelper(listener)
                 ms = update.message
                 tg_downloader.add_download(ms, f'{DOWNLOAD_DIR}{listener.uid}/', name)
@@ -431,6 +435,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 return
 
     listener = MirrorListener(bot, update, pswd, isZip, extract, isQbit, isLeech)
+    if BASE_URL is not None and SHOW_WEB_INDEX:
+        sendMessage("You Can See Your downloaded/zipped/splitted/unzipped Files And Download Files Using This Link\n"\
+                    f" {BASE_URL}/index/{listener.uid}/\n"\
+                    "<b>Note:-</b> After Upload Your File Will Be Deleted. So Download Small Files", bot, update)
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:

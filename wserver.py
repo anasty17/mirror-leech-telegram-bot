@@ -17,6 +17,16 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 LOGGER = logging.getLogger(__name__)
 
+DOWNLOAD_DIR = os.environ.get('DOWNLOAD_DIR')
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
+
+try:
+    SHOW_WEB_INDEX = os.environ.get('SHOW_WEB_INDEX')
+    SHOW_WEB_INDEX = SHOW_WEB_INDEX.lower() == 'true'
+except KeyError:
+    SHOW_WEB_INDEX = False
+
 routes = web.RouteTableDef()
 
 page = """
@@ -723,12 +733,16 @@ async def start_server():
 
     app = web.Application(middlewares=[e404_middleware])
     app.add_routes(routes)
+    if SHOW_WEB_INDEX and DOWNLOAD_DIR:
+        app.router.add_static("/index", DOWNLOAD_DIR, show_index=True)
     return app
 
 async def start_server_async(port=80):
 
     app = web.Application(middlewares=[e404_middleware])
     app.add_routes(routes)
+    if SHOW_WEB_INDEX and DOWNLOAD_DIR:
+        app.router.add_static("/index", DOWNLOAD_DIR, show_index=True)
     runner = web.AppRunner(app)
     await runner.setup()
     await web.TCPSite(runner, "0.0.0.0", port).start()

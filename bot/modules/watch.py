@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler
 from telegram import Bot, Update
-from bot import DOWNLOAD_DIR, dispatcher, LOGGER
+from bot import DOWNLOAD_DIR, dispatcher, LOGGER, SHOW_WEB_INDEX, BASE_URL
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from .mirror import MirrorListener
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
@@ -45,6 +45,10 @@ def _watch(bot: Bot, update, isZip=False, isLeech=False):
     
     pswd = ""
     listener = MirrorListener(bot, update, pswd, isZip, isLeech=isLeech)
+    if BASE_URL is not None and SHOW_WEB_INDEX:
+      sendMessage("You Can See Your downloaded/zipped/splitted/unzipped Files And Download Files Using This Link\n"\
+                  f" {BASE_URL}/index/{listener.uid}/\n"\
+                  "<b>Note:-</b> After Upload Your File Will Be Deleted. So Download Small Files", bot, update)
     ydl = YoutubeDLHelper(listener)
     threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{listener.uid}', qual, name)).start()
     sendStatusMessage(update, bot)

@@ -368,6 +368,11 @@ try:
 except KeyError:
     EQUAL_SPLITS = False
 try:
+    SHOW_WEB_INDEX = getConfig('SHOW_WEB_INDEX')
+    SHOW_WEB_INDEX = SHOW_WEB_INDEX.lower() == 'true'
+except KeyError:
+    SHOW_WEB_INDEX = False
+try:
     CUSTOM_FILENAME = getConfig('CUSTOM_FILENAME')
     if len(CUSTOM_FILENAME) == 0:
         raise KeyError
