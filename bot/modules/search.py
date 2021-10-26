@@ -109,7 +109,6 @@ def edit_telegraph(path, telegraph_content):
                              author_name='Mirror-leech',
                              author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                              html_content=content)
-        return
 
 async def apiSearch(key, site):
     async with aiohttp.ClientSession() as session:
