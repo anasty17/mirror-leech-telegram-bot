@@ -1,8 +1,5 @@
-import aiohttp
-import asyncio
+import requests
 import itertools
-from urllib.parse import quote
-from time import sleep
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
@@ -27,14 +24,19 @@ def search(update, context):
             site = "all"
         srchmsg = sendMessage("Searching...", context.bot, update)
         LOGGER.info(f"Searching: {key} from {site}")
-        search_results = asyncio.run(apiSearch(key, site))
+        api = f"https://z09d8d7c2-z619021a9-gtw.qovery.io/api/{site}/{key}"
+        resp = requests.get(api, timeout=25)
+        search_results = resp.json()
         if site == "all":
             search_results = list(itertools.chain.from_iterable(search_results))
         if isinstance(search_results, list):
-            link = getResult(list(search_results), key)
+            link = getResult(search_results, key)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            msg = f"<b>Found {len(search_results)} result for <i>{key}</i></b>"
+            search_count = len(search_results)
+            if search_count > 200:
+                search_count = 200
+            msg = f"<b>Found {search_count} result for <i>{key}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, srchmsg, button)
         else:
@@ -47,18 +49,18 @@ def search(update, context):
 def getResult(search_results, key):
     telegraph_content = []
     path = []
-    msg = f"Search Result For {key}<br><br>"
-    for result in search_results:
+    msg = f"<h4>Search Result For {key}</h4><br><br>"
+    for index, result in enumerate(search_results, start=1):
         try:
             msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
             if "Files" in result.keys():
                 for subres in result['Files']:
                     msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
                     try:
-                        msg += f"<b>Share</b> link to <a href='http://t.me/share/url?url={subres['Torrent']}'>Telegram</a><br>"
+                        msg += f"<b>Share link to</b> <a href='http://t.me/share/url?url={subres['Torrent']}'>Telegram</a><br>"
                         msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
                     except KeyError:
-                        msg += f"<b>Share</b> Magnet to <a href='http://t.me/share/url?url={quote(subres['Magnet'])}'>Telegram</a><br>"
+                        msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={subres['Magnet']}'>Telegram</a><br>"
                         msg += f"<b>Magnet: </b><code>{subres['Magnet']}</code><br>"
             else:
                 msg += f"<b>Size: </b>{result['Size']}<br>"
@@ -66,13 +68,15 @@ def getResult(search_results, key):
         except KeyError:
             pass
         try:
-            msg += f"<b>Share</b> Magnet to <a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Telegram</a><br>"
+            msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={result['Magnet']}'>Telegram</a><br>"
             msg += f"<b>Magnet: </b><code>{result['Magnet']}</code><br><br>"
         except KeyError:
             msg += "<br>"
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
+        if index == 200:
+            break
 
     if msg != "":
         telegraph_content.append(msg)
@@ -84,7 +88,6 @@ def getResult(search_results, key):
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
-        sleep(1)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
@@ -109,16 +112,6 @@ def edit_telegraph(path, telegraph_content):
                              author_name='Mirror-leech',
                              author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                              html_content=content)
-
-async def apiSearch(key, site):
-    async with aiohttp.ClientSession() as session:
-        api = f"https://anasty17.herokuapp.com/api/{site}/{key}"
-        try:
-            async with session.get(api, timeout=15) as resp:
-                results = await resp.json()
-        except Exception as err:
-            raise err
-    return results
 
 
 search_handler = CommandHandler(BotCommands.SearchCommand, search, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

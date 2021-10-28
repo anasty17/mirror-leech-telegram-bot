@@ -49,9 +49,9 @@ def stats(update, context):
             f'<b>CPU:</b> {cpuUsage}%\n'\
             f'<b>RAM:</b> {mem_p}%\n'\
             f'<b>DISK:</b> {disk}%\n\n'\
-            f'<b>Physical cores:</b> {p_core}\n'\
-            f'<b>Total cores:</b> {t_core}\n\n'\
-            f'<b>SWAP:</b> {swap_t} - {swap_u} <b>Used</b> {swap_p}%\n'\
+            f'<b>Physical Cores:</b> {p_core}\n'\
+            f'<b>Total Cores:</b> {t_core}\n\n'\
+            f'<b>SWAP:</b> {swap_t} | <b>Used:</b> {swap_p}%\n'\
             f'<b>Memory Total:</b> {mem_t}\n'\
             f'<b>Memory Free:</b> {mem_a}\n'\
             f'<b>Memory Used:</b> {mem_u}\n'
@@ -222,7 +222,7 @@ botcmds = [
 def main():
     fs_utils.start_cleanup()
     if IS_VPS:
-        asyncio.run(start_server_async(PORT))
+        asyncio.new_event_loop().run_until_complete(start_server_async(PORT))
     # Check if the bot is restarting
     if os.path.isfile(".restartmsg"):
         with open(".restartmsg") as f:

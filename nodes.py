@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 # (c) YashDK [yash-dk@github]
 
-from anytree import NodeMixin, RenderTree, PreOrderIter
-import qbittorrentapi as qba
+from anytree import NodeMixin, RenderTree
 
 SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
 
