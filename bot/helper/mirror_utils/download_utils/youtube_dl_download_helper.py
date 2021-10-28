@@ -109,6 +109,7 @@ class YoutubeDLHelper(DownloadHelper):
         with YoutubeDL(self.opts) as ydl:
             try:
                 result = ydl.extract_info(link, download=False)
+                self.name = ydl.prepare_filename(result)
             except DownloadError as e:
                 self.onDownloadError(str(e))
                 return
@@ -119,7 +120,11 @@ class YoutubeDLHelper(DownloadHelper):
                 except KeyError:
                     pass
             self.is_playlist = True
-        self.name = result['title'] if name == "" else name
+            if name != "":
+                self.name = name
+        elif name != "":
+            ext = self.name.split('.')[-1]
+            self.name = f"{name}.{ext}"
 
     def __download(self, link):
         try:

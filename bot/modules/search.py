@@ -1,5 +1,7 @@
 import requests
 import itertools
+
+from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
@@ -61,14 +63,14 @@ def getResult(search_results, key):
                         msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
                     except KeyError:
                         msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={subres['Magnet']}'>Telegram</a><br>"
-                        msg += f"<b>Magnet: </b><code>{subres['Magnet']}</code><br>"
+                        msg += f"<b>Magnet: </b><code>{quote(subres['Magnet'])}</code><br>"
             else:
                 msg += f"<b>Size: </b>{result['Size']}<br>"
                 msg += f"<b>Seeders: </b>{result['Seeders']} | <b>Leechers: </b>{result['Leechers']}<br>"
         except KeyError:
             pass
         try:
-            msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={result['Magnet']}'>Telegram</a><br>"
+            msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Telegram</a><br>"
             msg += f"<b>Magnet: </b><code>{result['Magnet']}</code><br><br>"
         except KeyError:
             msg += "<br>"
