@@ -109,7 +109,6 @@ class YoutubeDLHelper(DownloadHelper):
         with YoutubeDL(self.opts) as ydl:
             try:
                 result = ydl.extract_info(link, download=False)
-                self.name = ydl.prepare_filename(result)
             except DownloadError as e:
                 self.onDownloadError(str(e))
                 return
@@ -120,11 +119,12 @@ class YoutubeDLHelper(DownloadHelper):
                 except KeyError:
                     pass
             self.is_playlist = True
-            if name != "":
-                self.name = name
-        elif name != "":
-            ext = self.name.split('.')[-1]
-            self.name = f"{name}.{ext}"
+            self.name = result['title'] if name == "" else name
+        else:
+            if name == "":
+                self.name = f"{result['title']}.{result['ext']}"
+            else:
+                self.name = f"{name}.{result['ext']}"
 
     def __download(self, link):
         try:
@@ -132,16 +132,16 @@ class YoutubeDLHelper(DownloadHelper):
                 try:
                     ydl.download([link])
                 except DownloadError as e:
-                    if not self.is_playlist:
-                        self.onDownloadError(str(e))
-                        return
-                    else:
-                        pass
+                    self.onDownloadError(str(e))
+                    return
                 self.__onDownloadComplete()
         except ValueError:
             self.onDownloadError("Download Cancelled by User!")
 
     def add_download(self, link, path, qual, name):
+        pattern = r'^.*(youtu\.be\/|youtube.com\/)(playlist?)'
+        if re.match(pattern, link):
+            self.opts['ignoreerrors'] = True
         if "hotstar" in link or "sonyliv" in link:
             self.opts['geo_bypass_country'] = 'IN'
         self.__onDownloadStart()
