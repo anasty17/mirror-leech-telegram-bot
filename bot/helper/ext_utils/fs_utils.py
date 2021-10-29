@@ -177,7 +177,7 @@ def take_ss(video_file):
 def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
     parts = math.ceil(size/TG_SPLIT_SIZE)
     if EQUAL_SPLITS:
-        split_size = (size // parts)
+        split_size = math.ceil(size/parts)
     if filee.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = os.path.splitext(filee)
         split_size = split_size - 2500000
