@@ -174,9 +174,9 @@ def take_ss(video_file):
     img.save(des_dir, "JPEG")
     return des_dir
 
-def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
+def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=False):
     parts = math.ceil(size/TG_SPLIT_SIZE)
-    if EQUAL_SPLITS:
+    if EQUAL_SPLITS and not inLoop:
         split_size = math.ceil(size/parts)
     if filee.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = os.path.splitext(filee)
@@ -192,7 +192,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1):
                 dif = out_size - TG_SPLIT_SIZE
                 split_size = split_size - dif + 2400000
                 os.remove(out_path)
-                return split(path, size, filee, dirpath, split_size, start_time, i)
+                return split(path, size, filee, dirpath, split_size, start_time, i, inLoop=True)
             lpd = get_media_info(out_path)[0]
             start_time += lpd - 3
             i = i + 1
