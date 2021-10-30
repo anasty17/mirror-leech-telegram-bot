@@ -189,7 +189,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=Fals
                             "-async", "1", "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
             if out_size > 2097152000:
-                dif = out_size - TG_SPLIT_SIZE
+                dif = out_size - 2097152000
                 split_size = split_size - dif + 2400000
                 os.remove(out_path)
                 return split(path, size, filee, dirpath, split_size, start_time, i, inLoop=True)
