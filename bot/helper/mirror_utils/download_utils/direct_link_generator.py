@@ -91,6 +91,8 @@ def direct_link_generator(link: str):
         return fichier(link)
     elif 'solidfiles.com' in link:
         return solidfiles(link)
+    elif 'krakenfiles.com' in link:
+        return krakenfiles(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -388,6 +390,45 @@ def solidfiles(url: str) -> str:
     mainOptions = str(re.search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
     return json.loads(mainOptions)["downloadUrl"]
 
+
+def krakenfiles(page_link: str) -> str:
+    """ krakenfiles direct links generator
+    Based on https://github.com/tha23rd/py-kraken
+    By https://github.com/junedkh """
+    page_resp = requests.session().get(page_link)
+    soup = BeautifulSoup(page_resp.text, "lxml")
+    try:
+        token = soup.find("input", id="dl-token")["value"]
+    except:
+        raise DirectDownloadLinkException(f"Page link is wrong: {page_link}")
+
+    hashes = [
+        item["data-file-hash"]
+        for item in soup.find_all("div", attrs={"data-file-hash": True})
+    ]
+    if len(hashes) < 1:
+        raise DirectDownloadLinkException(
+            f"Hash not found for : {page_link}")
+
+    dl_hash = hashes[0]
+
+    payload = f'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="token"\r\n\r\n{token}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--'
+    headers = {
+        "content-type": "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
+        "cache-control": "no-cache",
+        "hash": dl_hash,
+    }
+
+    dl_link_resp = requests.session().post(
+        f"https://krakenfiles.com/download/{hash}", data=payload, headers=headers)
+
+    dl_link_json = dl_link_resp.json()
+
+    if "url" in dl_link_json:
+        return dl_link_json["url"]
+    else:
+        raise DirectDownloadLinkException(
+            f"Failed to acquire download URL from kraken for : {page_link}")
 
 def useragent():
     """
