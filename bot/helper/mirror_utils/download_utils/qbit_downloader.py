@@ -118,7 +118,8 @@ class QbitTorrent:
                 buttons.sbutton("Done Selecting", f"done {gid} {self.ext_hash}")
                 QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
+                msg += "\n<b><i>Your download will start automatically in <u>3 Minutes</u></i></b>"
+                self.prompt = sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
             else:
                 sendStatusMessage(listener.update, listener.bot)
         except qba.UnsupportedMediaType415Error as e:
@@ -147,6 +148,12 @@ class QbitTorrent:
                     self.client.torrents_delete(torrent_hashes=self.ext_hash)
                     self.client.auth_log_out()
                     self.updater.cancel()
+            elif tor_info.state == "pausedDL":
+                if time.time() - self.stalled_time >= 180:
+                    editMessage("Opps!! You are timeout for select files", self.prompt)
+                    self.client.torrents_resume(torrent_hashes=self.ext_hash)
+                    sendStatusMessage(self.listener.update, self.listener.bot)
+                    deleteMessage(self.listener.bot, self.prompt)
             elif tor_info.state == "downloading":
                 self.stalled_time = time.time()
                 if STOP_DUPLICATE and not self.listener.isLeech and not self.dupchecked and os.path.isdir(f'{self.dire}'):
