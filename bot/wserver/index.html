@@ -1,0 +1,162 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torrent File Selector</title>
+    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css"
+        integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <style>
+        /* style1 */
+        /* style2 */
+    </style>
+</head>
+
+<body>
+    <!--© Designed and coded by @bipuldey19-Telegram-->
+    <header>
+        <div class="brand">
+            <img src="https://telegra.ph/file/cc06d0c613491080cc174.png" alt="logo" />
+        </div>
+        <h2 class="name">Qbittorrent Selection</h2>
+        <div class="social">
+            <a href="https://www.github.com/anasty17/mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
+            <a href="https://t.me/joinchat/gfXdDLnm3-FjZjZk"><i class="fab fa-telegram"></i></a>
+        </div>
+    </header>
+    <!-- pin_entry -->
+    <!-- files_list -->
+    <!-- Print -->
+    <script>
+        $(document).ready(function () {
+            var tags = $("li").filter(function () {
+                return $(this).find("ul").length !== 0;
+            });
+            tags.each(function () {
+                $(this).addClass("parent");
+            });
+            $("body").find("ul:first-child").attr("id", "treeview");
+            $(".parent").prepend("<span>▶</span>");
+            $("span").click(function (e) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                $(this).parent(".parent").find(">ul").toggle("slow");
+                if ($(this).hasClass("active")) $(this).removeClass("active");
+                else $(this).addClass("active");
+            });
+        });
+        if (document.getElementsByTagName("ul").length >= 10) {
+            var labels = document.querySelectorAll("label");
+            //Shorting the file/folder names
+            labels.forEach(function (label) {
+                if (label.innerText.toString().split(" ").length >= 6) {
+                    let FirstPart = label.innerText
+                        .toString()
+                        .split(" ")
+                        .slice(0, 3)
+                        .join(" ");
+                    let SecondPart = label.innerText
+                        .toString()
+                        .split(" ")
+                        .splice(-3)
+                        .join(" ");
+                    label.innerText = `${FirstPart}... ${SecondPart}`;
+                }
+                if (label.innerText.toString().split(".").length >= 6) {
+                    let first = label.innerText
+                        .toString()
+                        .split(".")
+                        .slice(0, 3)
+                        .join(" ");
+                    let second = label.innerText
+                        .toString()
+                        .split(".")
+                        .splice(-3)
+                        .join(".");
+                    label.innerText = `${first}... ${second}`;
+                }
+            });
+        }
+    </script>
+    <script>
+        var set_selections = function (url) {
+            $.ajax({
+                url: url,
+                type: 'POST',
+                contentType: 'application/x-www-form-urlencoded',
+                data: $("#SelectedFilesForm").serialize(),
+                success: function (data, textStatus, jQxhr) {
+                    swal("Selection Updated", "Now you can start download", "success");
+                },
+                error: function (jqXhr, textStatus, errorThrown) {
+                    swal("Something went wrong", "Check Console log!", "error");
+                    console.log(errorThrown);
+                }
+            });
+        }
+        $(document).ready(function () {
+            $("#SelectedFilesForm").on("submit", function (e) {
+                e.preventDefault();
+                var url = $("#URL").val();
+                set_selections(url);
+            });
+        });
+    </script>
+    <script>
+        $('input[type="checkbox"]').change(function (e) {
+            var checked = $(this).prop("checked"),
+                container = $(this).parent(),
+                siblings = container.siblings();
+            /*
+            $(this).attr('value', function(index, attr){
+               return attr == 'yes' ? 'noo' : 'yes';
+            });
+            */
+            container.find('input[type="checkbox"]').prop({
+                indeterminate: false,
+                checked: checked
+            });
+
+            function checkSiblings(el) {
+                var parent = el.parent().parent(),
+                    all = true;
+                el.siblings().each(function () {
+                    let returnValue = all = ($(this).children('input[type="checkbox"]').prop(
+                        "checked") === checked);
+                    return returnValue;
+                });
+
+                if (all && checked) {
+                    parent.children('input[type="checkbox"]').prop({
+                        indeterminate: false,
+                        checked: checked
+                    });
+                    checkSiblings(parent);
+                } else if (all && !checked) {
+                    parent.children('input[type="checkbox"]').prop("checked", checked);
+                    parent.children('input[type="checkbox"]').prop("indeterminate", (parent.find(
+                        'input[type="checkbox"]:checked').length > 0));
+                    checkSiblings(parent);
+                } else {
+                    el.parents("li").children('input[type="checkbox"]').prop({
+                        indeterminate: true,
+                        checked: false
+                    });
+                }
+            }
+            checkSiblings(container);
+        });
+    </script>
+</body>
+
+</html>
