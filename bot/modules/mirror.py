@@ -358,22 +358,13 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             name = ''
     except IndexError:
         name = ''
-    try:
-        ussr = urllib.parse.quote(mesg[1], safe='')
-        pssw = urllib.parse.quote(mesg[2], safe='')
-    except:
-        ussr = ''
-        pssw = ''
-    if ussr != '' and pssw != '':
-        link = link.split("://", maxsplit=1)
-        link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
+    link = re.split(r"pswd:|\|", link)[0]
+    link = link.strip()
     pswd = mesg[0].split('pswd: ')
     if len(pswd) > 1:
         pswd = pswd[1]
     else:
         pswd = None
-    link = re.split(r"pswd:|\|", link)[0]
-    link = link.strip()
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         file = None
@@ -404,8 +395,15 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 return
             else:
                 link = file.get_file().file_path
-    if link != '':
-        LOGGER.info(link)
+    if len(mesg) > 1:
+        try:
+            ussr = urllib.parse.quote(mesg[1], safe='')
+            pssw = urllib.parse.quote(mesg[2], safe='')
+            link = link.split("://", maxsplit=1)
+            link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
+        except:
+            pass
+    LOGGER.info(link)
     if bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link) and isQbit:
         try:
             resp = requests.get(link)
