@@ -8,9 +8,9 @@ import string
 import time
 import logging
 import shutil
-
+import re
 import qbittorrentapi as qba
-from urllib.parse import urlparse, parse_qs
+
 from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
@@ -245,18 +245,11 @@ def get_confirm(update, context):
 
 def get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        _, _, _, _, query, _ = urlparse(mgt)
-    qs = parse_qs(query)
-    v = qs.get('xt', None)
-    if v is None or v == []:
-        LOGGER.error('Invalid magnet URI: no "xt" query parameter.')
-        return
-    v = v[0]
-    if not v.startswith('urn:btih:'):
-        LOGGER.error('Invalid magnet URI: "xt" value not valid for BitTorrent.')
-        return
-    mgt = v[len('urn:btih:'):]
-    return mgt.lower()
+        try:
+            mHash = re.search(r'xt=urn:btih:(.*)&dn=', mgt).group(1)
+        except:
+            mHash = re.search(r'xt=urn:btih:(.*)', mgt).group(1)
+        return mHash.lower()
 
 def get_hash_file(path):
     tr = Torrent.from_file(path)

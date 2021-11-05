@@ -407,15 +407,18 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     if link != '':
         LOGGER.info(link)
     if bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link) and isQbit:
-        resp = requests.get(link)
-        if resp.status_code == 200:
-            file_name = str(time.time()).replace(".", "") + ".torrent"
-            open(file_name, "wb").write(resp.content)
-            link = f"{file_name}"
-        else:
-            sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
+        try:
+            resp = requests.get(link)
+            if resp.status_code == 200:
+                file_name = str(time.time()).replace(".", "") + ".torrent"
+                open(file_name, "wb").write(resp.content)
+                link = f"{file_name}"
+            else:
+                sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
+                return
+        except:
+            LOGGER.error(f"Invalid Link {link}")
             return
-
     elif not bot_utils.is_url(link) and not bot_utils.is_magnet(link):
         sendMessage('No download source provided', bot, update)
         return

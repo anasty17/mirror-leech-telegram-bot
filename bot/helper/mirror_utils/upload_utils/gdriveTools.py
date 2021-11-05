@@ -22,6 +22,7 @@ from tenacity import *
 from telegram import InlineKeyboardMarkup
 from bot.helper.telegram_helper import button_build
 from telegraph import Telegraph
+from telegraph.exceptions import RetryAfterError
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
     USE_SERVICE_ACCOUNTS, telegraph_token, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, SHORTENER, SHORTENER_API, VIEW_LINK, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, RECURSIVE_SEARCH
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
@@ -189,7 +190,7 @@ class GoogleDriveHelper:
         media_body = MediaFileUpload(file_path,
                                      mimetype=mime_type,
                                      resumable=True,
-                                     chunksize=50 * 1024 * 1024)
+                                     chunksize=70 * 1024 * 1024)
 
         # Insert a file
         drive_file = self.__service.files().create(supportsTeamDrives=True,
@@ -574,13 +575,17 @@ class GoogleDriveHelper:
                 if nxt_page < self.num_of_path:
                     content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
-            Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
+            while True:
+                try:
+                    Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
                                  title = 'Mirror-leech-bot Search',
                                  author_name='Mirror-leech-bot',
                                  author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                  html_content=content)
+                    break
+                except RetryAfterError as t:
+                    time.sleep(t.retry_after)
         return
-
 
     def escapes(self, str):
         chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\s', r'\t']
@@ -626,7 +631,7 @@ class GoogleDriveHelper:
                     return (
                         self.__service.files()
                         .list(q=query + " and 'me' in owners",
-                            pageSize=100,
+                            pageSize=200,
                             spaces='drive',
                             fields='files(id, name, mimeType, size, parents)',
                             orderBy='folder, name asc'
@@ -642,7 +647,7 @@ class GoogleDriveHelper:
                             q=query,
                             corpora='drive',
                             spaces='drive',
-                            pageSize=100,
+                            pageSize=200,
                             fields='files(id, name, mimeType, size, teamDriveId, parents)',
                             orderBy='folder, name asc'
                         )
@@ -681,7 +686,7 @@ class GoogleDriveHelper:
         msg = ""
         if not stopDup:
             fileName = self.escapes(str(fileName))
-        all_contents_count = 0
+        contents_count = 0
         Title = False
         if len(DRIVES_IDS) > 1:
             token_service = self.alt_authorize()
@@ -754,7 +759,7 @@ class GoogleDriveHelper:
                             if VIEW_LINK:
                                 msg += f' <b>| <a href="{urls}">View Link</a></b>'
                 msg += '<br><br>'
-                all_contents_count += 1
+                contents_count += 1
                 if len(msg.encode('utf-8')) > 40000 :
                     self.telegraph_content.append(msg)
                     msg = ""
@@ -767,19 +772,24 @@ class GoogleDriveHelper:
         if len(self.telegraph_content) == 0:
             return "", None
 
-        for content in self.telegraph_content :
-            self.path.append(Telegraph(access_token=telegraph_token).create_page(
+        for content in self.telegraph_content:
+            while True:
+                try:
+                    self.path.append(Telegraph(access_token=telegraph_token).create_page(
                                                     title = 'Mirror-leech-bot Search',
                                                     author_name='Mirror-leech-bot',
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
-        time.sleep(1)
+                    break
+                except RetryAfterError as t:
+                    time.sleep(t.retry_after)
+        time.sleep(0.5)
         self.num_of_path = len(self.path)
         if self.num_of_path > 1:
             self.edit_telegraph()
 
-        msg = f"<b>Found {all_contents_count} result for <i>{fileName}</i></b>"
+        msg = f"<b>Found {contents_count} result for <i>{fileName}</i></b>"
         buttons = button_build.ButtonMaker()
         buttons.buildbutton("🔎 VIEW", f"https://telegra.ph/{self.path[0]}")
 
@@ -962,7 +972,7 @@ class GoogleDriveHelper:
         request = self.__service.files().get_media(fileId=file_id)
         filename = filename.replace('/', '')
         fh = io.FileIO('{}{}'.format(path, filename), 'wb')
-        downloader = MediaIoBaseDownload(fh, request, chunksize = 65 * 1024 * 1024)
+        downloader = MediaIoBaseDownload(fh, request, chunksize = 70 * 1024 * 1024)
         done = False
         while not done:
             if self.is_cancelled:

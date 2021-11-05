@@ -1,10 +1,12 @@
 import requests
 import itertools
+import time
 
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
+from telegraph.exceptions import RetryAfterError
 
 from bot import dispatcher, LOGGER, telegraph_token, DEFAULT_SEARCH
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
@@ -27,7 +29,7 @@ def search(update, context):
         srchmsg = sendMessage("Searching...", context.bot, update)
         LOGGER.info(f"Searching: {key} from {site}")
         api = f"https://z09d8d7c2-z619021a9-gtw.qovery.io/api/{site}/{key}"
-        resp = requests.get(api, timeout=25)
+        resp = requests.get(api)
         search_results = resp.json()
         if site == "all":
             search_results = list(itertools.chain.from_iterable(search_results))
@@ -35,10 +37,7 @@ def search(update, context):
             link = getResult(search_results, key)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            search_count = len(search_results)
-            if search_count > 200:
-                search_count = 200
-            msg = f"<b>Found {search_count} result for <i>{key}</i></b>"
+            msg = f"<b>Found {len(search_results)} result for <i>{key}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, srchmsg, button)
         else:
@@ -52,7 +51,7 @@ def getResult(search_results, key):
     telegraph_content = []
     path = []
     msg = f"<h4>Search Result For {key}</h4><br><br>"
-    for index, result in enumerate(search_results, start=1):
+    for result in search_results:
         try:
             msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
             if "Files" in result.keys():
@@ -77,19 +76,23 @@ def getResult(search_results, key):
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
-        if index == 200:
-            break
 
     if msg != "":
         telegraph_content.append(msg)
 
     for content in telegraph_content :
-        path.append(Telegraph(access_token=telegraph_token).create_page(
+        while True:
+            try:
+                path.append(Telegraph(access_token=telegraph_token).create_page(
                                                     title = 'Mirror-leech Torrent Search',
                                                     author_name='Mirror-leech',
                                                     author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                                                     html_content=content
                                                     )['path'])
+                break
+            except RetryAfterError as t:
+                time.sleep(t.retry_after)
+    time.sleep(0.5)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
@@ -109,11 +112,17 @@ def edit_telegraph(path, telegraph_content):
             if nxt_page < num_of_path:
                 content += f'<b> | <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
                 nxt_page += 1
-        Telegraph(access_token=telegraph_token).edit_page(path = path[prev_page],
+        while True:
+            try:
+                Telegraph(access_token=telegraph_token).edit_page(path = path[prev_page],
                              title = 'Mirror-leech Torrent Search',
                              author_name='Mirror-leech',
                              author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
                              html_content=content)
+                break
+            except RetryAfterError as t:
+                time.sleep(t.retry_after)
+    return
 
 
 search_handler = CommandHandler(BotCommands.SearchCommand, search, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
