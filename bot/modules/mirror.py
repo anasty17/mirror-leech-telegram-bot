@@ -137,6 +137,7 @@ class MirrorListener(listeners.MirrorListeners):
                     else:
                         result = subprocess.run(["extract", m_path])
                     if result.returncode == 0:
+                        LOGGER.info(f"Extract Path: {path}")
                         os.remove(m_path)
                         LOGGER.info(f"Deleting archive: {m_path}")
                     else:

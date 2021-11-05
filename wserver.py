@@ -574,13 +574,11 @@ async def list_torrent_contents(request):
         res = client.torrents_files(torrent_hash=torr)
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
-    count = 0
     passw = ""
     for n in str(torr):
         if n.isdigit():
             passw += str(n)
-            count += 1
-        if count == 4:
+        if len(passw) == 4:
             break
     if isinstance(passw, bool):
         raise web.HTTPNotFound()

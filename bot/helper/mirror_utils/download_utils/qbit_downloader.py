@@ -37,7 +37,6 @@ class QbitTorrent:
         self.sizechecked = False
         self.dupchecked = False
         self.is_file = False
-        self.count = 0
         self.pincode = ""
 
     @new_thread
@@ -109,8 +108,7 @@ class QbitTorrent:
                 for n in str(self.ext_hash):
                     if n.isdigit():
                         self.pincode += str(n)
-                        self.count += 1
-                    if self.count == 4:
+                    if len(self.pincode) == 4:
                         break
                 buttons = button_build.ButtonMaker()
                 buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}")
