@@ -1,7 +1,7 @@
 from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
 import threading
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
-from bot.helper.telegram_helper.message_utils import *
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
 import os
 from bot.helper.ext_utils.bot_utils import new_thread, get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
