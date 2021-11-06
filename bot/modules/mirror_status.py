@@ -3,7 +3,7 @@ import time
 import psutil, shutil
 from telegram.ext import CommandHandler
 from bot import dispatcher, status_reply_dict, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime
-from bot.helper.telegram_helper.message_utils import *
+from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from telegram.error import BadRequest
 from bot.helper.telegram_helper.filters import CustomFilters
