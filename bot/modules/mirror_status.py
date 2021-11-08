@@ -20,12 +20,12 @@ def mirror_status(update, context):
             message += f"\n<b>CPU:</b> {psutil.cpu_percent()}% | <b>FREE:</b> {free}" \
                        f"\n<b>RAM:</b> {psutil.virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}" 
             reply_message = sendMessage(message, context.bot, update)
-            threading.Thread(target=auto_delete_message, args=(bot, update.message, reply_message)).start()
+            threading.Thread(target=auto_delete_message, args=(context.bot, update.message, reply_message)).start()
             return
     index = update.effective_chat.id
     with status_reply_dict_lock:
         if index in status_reply_dict.keys():
-            deleteMessage(bot, status_reply_dict[index])
+            deleteMessage(context.bot, status_reply_dict[index])
             del status_reply_dict[index]
     sendStatusMessage(update, context.bot)
     deleteMessage(context.bot, update.message)
