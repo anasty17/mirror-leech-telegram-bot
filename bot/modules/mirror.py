@@ -43,7 +43,7 @@ ariaDlManager.start_listener()
 
 
 class MirrorListener(listeners.MirrorListeners):
-    def __init__(self, bot, update, pswd, isZip=False, extract=False, isQbit=False, isLeech=False):
+    def __init__(self, bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
         super().__init__(bot, update)
         self.extract = extract
         self.isZip = isZip
@@ -217,19 +217,15 @@ class MirrorListener(listeners.MirrorListeners):
             else:
                 uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
             count = len(files)
+            msg = f'<b>Name: </b><code>{link}</code>\n\n'
+            msg += f'<b>Total Files: </b>{count}'
+            if typ != 0:
+                msg += f'\n<b>Corrupted Files: </b>{typ}'
             if self.message.chat.type == 'private':
-                msg = f'<code>{link}</code>\n\n'
-                msg += f'<b>Total Files: </b>{count}'
-                if typ != 0:
-                    msg += f'\n<b>Corrupted Files: </b>{typ}'
                 sendMessage(msg, self.bot, self.update)
             else:
                 chat_id = str(self.message.chat.id)[4:]
-                msg = f'<code>{link}</code>\n\n'
-                msg += f'<b>Total Files: </b>{count}\n'
-                if typ != 0:
-                    msg += f'<b>Corrupted Files: </b>{typ}\n'
-                msg += f'<b>cc: </b>{uname}\n\n'
+                msg += f'\n<b>cc: </b>{uname}\n\n'
                 fmsg = ''
                 for index, item in enumerate(list(files), start=1):
                     msg_id = files[item]
@@ -255,7 +251,7 @@ class MirrorListener(listeners.MirrorListeners):
                 update_all_messages()
             return
         with download_dict_lock:
-            msg = f'<code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
+            msg = f'<b>Name: </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{folders}'
@@ -336,7 +332,7 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             update_all_messages()
 
-def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False):
+def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
     mesg = update.message.text.split('\n')
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=2)
@@ -346,7 +342,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         if link.startswith("s ") or link == "s":
             qbitsel = True
             message_args = mesg[0].split(' ', maxsplit=2)
-            link = message_args[2]
+            link = message_args[2].strip()
         if link.startswith("|") or link.startswith("pswd: "):
             link = ''
     except IndexError:
@@ -360,11 +356,12 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         name = ''
     link = re.split(r"pswd:|\|", link)[0]
     link = link.strip()
-    pswd = mesg[0].split('pswd: ')
-    if len(pswd) > 1:
-        pswd = pswd[1]
-    else:
-        pswd = None
+    pswdMsg = mesg[0].split('pswd: ')
+    if len(pswdMsg) > 1:
+        pswd = pswdMsg[1]
+
+    listener = MirrorListener(bot, update, isZip, extract, isQbit, isLeech, pswd)
+
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         file = None
@@ -380,7 +377,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         ):
             if file is None:
                 reply_text = reply_to.text
-                reply_text = reply_text.split('\n')[0]
                 if bot_utils.is_url(reply_text) or bot_utils.is_magnet(reply_text):
                     link = reply_text.strip()
 
@@ -388,7 +384,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 file_name = str(time.time()).replace(".", "") + ".torrent"
                 link = file.get_file().download(custom_path=file_name)
             elif file.mime_type != "application/x-bittorrent":
-                listener = MirrorListener(bot, update, pswd, isZip, extract, isLeech=isLeech)
                 tg_downloader = TelegramDownloadHelper(listener)
                 ms = update.message
                 tg_downloader.add_download(ms, f'{DOWNLOAD_DIR}{listener.uid}/', name)
@@ -431,8 +426,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             if "Youtube" in str(e):
                 sendMessage(f"{e}", bot, update)
                 return
-
-    listener = MirrorListener(bot, update, pswd, isZip, extract, isQbit, isLeech)
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:

@@ -37,7 +37,10 @@ def search(update, context):
             link = getResult(search_results, key)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            msg = f"<b>Found {len(search_results)} result for <i>{key}</i></b>"
+            search_count = len(search_results)
+            if search_count > 200:
+                search_count = 200
+            msg = f"<b>Found {search_count} result for <i>{key}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, srchmsg, button)
         else:
@@ -50,8 +53,8 @@ def search(update, context):
 def getResult(search_results, key):
     telegraph_content = []
     path = []
-    msg = f"<h4>Search Result For {key}</h4><br><br>"
-    for result in search_results:
+    msg = f"<h4>Search Result For </h4>{key}<br><br>"
+    for index, result in enumerate(search_results, start=1):
         try:
             msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
             if "Files" in result.keys():
@@ -76,6 +79,8 @@ def getResult(search_results, key):
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
+        if index == 200:
+            break
 
     if msg != "":
         telegraph_content.append(msg)

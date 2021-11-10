@@ -375,7 +375,7 @@ class GoogleDriveHelper:
                     msg = self.deletefile(durl)
                     LOGGER.info(f"{msg}")
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
@@ -395,7 +395,7 @@ class GoogleDriveHelper:
                         buttons.buildbutton("⚡ Index Link", url)
             else:
                 file = self.copyFile(meta.get('id'), parent_id)
-                msg += f'<code>{file.get("name")}</code>'
+                msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = button_build.ButtonMaker()
                 if SHORTENER is not None and SHORTENER_API is not None:
@@ -562,7 +562,7 @@ class GoogleDriveHelper:
         return None
 
     def edit_telegraph(self):
-        nxt_page = 1 
+        nxt_page = 1
         prev_page = 0
         for content in self.telegraph_content :
             if nxt_page == 1 :
@@ -810,7 +810,7 @@ class GoogleDriveHelper:
             LOGGER.info(f"Counting: {name}")
             if drive_file['mimeType'] == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.gDrive_directory(**drive_file)
-                msg += f'<code>{name}</code>'
+                msg += f'<b>Name: </b><code>{name}</code>'
                 msg += f'\n\n<b>Size: </b>{get_readable_file_size(self.total_bytes)}'
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
@@ -820,7 +820,7 @@ class GoogleDriveHelper:
                 try:
                     typee = drive_file['mimeType']
                 except:
-                    typee = 'File'    
+                    typee = 'File'
                 try:
                     self.total_files += 1
                     self.gDrive_file(**drive_file)
@@ -837,7 +837,7 @@ class GoogleDriveHelper:
                 if token_service is not None:
                     self.__service = token_service
                     return self.count(link)
-                msg = "File not found." 
+                msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
         return msg
@@ -891,7 +891,7 @@ class GoogleDriveHelper:
                 if token_service is not None:
                     self.__service = token_service
                     return self.helper(link)
-                msg = "File not found."  
+                msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
             return msg, "", "", ""

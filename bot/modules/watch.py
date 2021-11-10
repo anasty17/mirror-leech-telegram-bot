@@ -1,53 +1,120 @@
-from telegram.ext import CommandHandler
-from telegram import Bot, Update
-from bot import DOWNLOAD_DIR, dispatcher, LOGGER
-from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
-from .mirror import MirrorListener
+import threading
+import re
+
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram import InlineKeyboardMarkup
+
+from bot import DOWNLOAD_DIR, dispatcher
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup
+from bot.helper.telegram_helper import button_build
+from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-import threading
+from .mirror import MirrorListener
+
+listener_dict = {}
 
 
-def _watch(bot: Bot, update, isZip=False, isLeech=False):
+def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     mssg = update.message.text
     message_args = mssg.split(' ')
-    name_args = mssg.split('|')
-    
+    name_args = mssg.split('|', 2)
+    user_id = update.message.from_user.id
+    msg_id = update.message.message_id
+
     try:
-        link = message_args[1]
-    except IndexError:
-        msg = f"/{BotCommands.WatchCommand} [youtube-dl supported link] [quality] |[CustomName] to mirror with youtube-dl.\n\n"
-        msg += "<b>Note: Quality and custom name are optional</b>\n\nExample of quality: audio, 144, 240, 360, 480, 720, 1080, 2160."
-        msg += "\n\nIf you want to use custom filename, enter it after |"
-        msg += f"\n\nExample:\n/{BotCommands.WatchCommand} https://youtu.be/Pk_TthHfLeE 720 |video.mp4\n\n"
-        msg += "This file will be downloaded in 720p quality and it's name will be <b>video.mp4</b>"
-        sendMessage(msg, bot, update)
-        return
-    
+        link = message_args[1].strip()
+        if link.startswith("|") or link.startswith("pswd: "):
+            link = ''
+    except:
+        link = ''
+    link = re.split(r"pswd:|\|", link)[0]
+    link = link.strip()
+
     try:
-      if "|" in mssg:
-        mssg = mssg.split("|")
-        qual = mssg[0].split(" ")[2]
-        if qual == "":
-          raise IndexError
-      else:
-        qual = message_args[2]
-      if qual != "audio":
-        qual = f'bestvideo[height<={qual}]+bestaudio/best[height<={qual}]'
-    except IndexError:
-      qual = "bestvideo+bestaudio/best"
-    
-    try:
-      name = name_args[1]
-    except IndexError:
-      name = ""
-    
-    pswd = ""
-    listener = MirrorListener(bot, update, pswd, isZip, isLeech=isLeech)
-    ydl = YoutubeDLHelper(listener)
-    threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{listener.uid}', qual, name)).start()
-    sendStatusMessage(update, bot)
+        name = name_args[1]
+        name = name.strip()
+        if "pswd:" in name_args[0]:
+            name = ''
+    except:
+        name = ''
+
+    pswdMsg = mssg.split('pswd: ')
+    if len(pswdMsg) > 1:
+        pswd = pswdMsg[1]
+
+    reply_to = update.message.reply_to_message
+    if reply_to is not None:
+        link = reply_to.text.strip()
+
+    listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
+    listener_dict[msg_id] = listener, user_id, link, name
+
+    buttons = button_build.ButtonMaker()
+    best_video = "bv*+ba/b"
+    best_audio = "ba/b"
+    if "/playlist" in link:
+        for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
+            video_format = f"bv*[height<={i}]+ba/b"
+            buttons.sbutton(str(i), f"quality {msg_id} {video_format}")
+        buttons.sbutton("Best Videos", f"quality {msg_id} {best_video}")
+        buttons.sbutton("Best Audios", f"quality {msg_id} {best_audio}")
+    else:
+        ydl = YoutubeDLHelper(listener)
+        try:
+            result = ydl.extractMetaData(link, name, True)
+        except Exception as e:
+            return sendMessage(e, bot, update)
+        formats = result['formats']
+        formats_dict = {}
+
+        for frmt in formats:
+            if not frmt.get('tbr'):
+                continue
+            try:
+                quality = frmt['format_note'] + "-" + frmt['ext']
+            except KeyError:
+                quality = str(frmt['height']) + "p-" + frmt['ext']
+            if (quality not in formats_dict or quality in formats_dict and \
+               formats_dict[quality][1] < frmt['tbr']) and 'p-' in quality:
+                if frmt.get('filesize'):
+                    size = frmt['filesize']
+                elif frmt.get('filesize_approx'):
+                    size = frmt['filesize_approx']
+                else:
+                    size = 0
+                formats_dict[quality] = [size, frmt['tbr']]
+
+        for forDict in formats_dict:
+            qual_ext = forDict.split('p-')
+            video_format = f"bv*[height={qual_ext[0]}][ext={qual_ext[1]}]+ba[ext=m4a]/b"
+            buttonName = f"{forDict} ({get_readable_file_size(formats_dict[forDict][0])})"
+            buttons.sbutton(str(buttonName), f"quality {msg_id} {video_format}")
+        buttons.sbutton("Best Video", f"quality {msg_id} {best_video}")
+        buttons.sbutton("Best Audio", f"quality {msg_id} {best_audio}")
+
+    buttons.sbutton("Cancel", f"ytcan {msg_id}")
+    YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
+    sendMarkup('later', bot, update, YTBUTTONS)
+
+
+def select_format(update, context):
+    query = update.callback_query
+    user_id = query.from_user.id
+    data = query.data
+    data = data.split(" ")
+    task_id = int(data[1])
+    listener, uid, link, name = listener_dict[task_id]
+    if user_id != uid:
+        return query.answer(text="Don't waste your time!", show_alert=True)
+    elif data[0] == "quality":
+        query.answer()
+        qual = data[2]
+        ydl = YoutubeDLHelper(listener)
+        threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual)).start()
+    del listener_dict[task_id]
+    query.message.delete()
 
 def watch(update, context):
     _watch(context.bot, update)
@@ -69,8 +136,12 @@ leech_watch_handler = CommandHandler(BotCommands.LeechWatchCommand, leechWatch,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 leech_zip_watch_handler = CommandHandler(BotCommands.LeechZipWatchCommand, leechWatchZip,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+quality_handler = CallbackQueryHandler(select_format, pattern="quality", run_async=True)
+ytcancel_handler = CallbackQueryHandler(select_format, pattern="ytcan", run_async=True)
 
 dispatcher.add_handler(watch_handler)
 dispatcher.add_handler(zip_watch_handler)
 dispatcher.add_handler(leech_watch_handler)
 dispatcher.add_handler(leech_zip_watch_handler)
+dispatcher.add_handler(quality_handler)
+dispatcher.add_handler(ytcancel_handler)
