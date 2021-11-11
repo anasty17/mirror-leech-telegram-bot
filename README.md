@@ -2,12 +2,12 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # Features:
 
-## By me
+## By [Anas](https://github.com/anasty17)
 - qBittorrent
 - Select files from Torrent before downloading using qbittorrent
 - Leech (splitting, thumbnail for each user, setting as document or as media for each user)
 - Size limiting for Torrent/Direct, Zip/Unzip, Mega and Clone
-- Stop duplicates for all tasks except youtube-dl tasks 
+- Stop duplicates for all tasks except youtube-dl tasks
 - Zip/Unzip G-Drive links
 - Counting files/folders from Google Drive link
 - View Link button, extra button to open file index link in broswer instead of direct download
@@ -15,12 +15,13 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Clone status
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be skipped)
-- Multi-Search by token.pickle if exists 
+- Multi-Search by token.pickle if exists
 - Extract rar, zip and 7z splits with or without password
 - Zip file/folder with or without password
 - Use Token.pickle if file not found with Service Account for all Gdrive functions
 - Random Service Account at startup
-- Mirror/Leech/clone/del by reply (soon will add for watch)
+- Mirror/Leech/Watch/Clone/Count/Del by reply
+- YT-DLP quality buttons
 - Search for torrents with Torrent Search API
 - Docker image support for `linux/amd64, linux/arm64, linux/386, linux/arm/v7, linux/arm/v6`
 - Many bugs have been fixed
@@ -111,7 +112,7 @@ pip3 install -r requirements-cli.txt
 <p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
 
 </details>
-    
+
 ------
 
 ### 2) Setting up config file
@@ -135,9 +136,9 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot
 - `GDRIVE_FOLDER_ID`: This is the folder ID of the Google Drive Folder to which you want to upload all the mirrors.
 - `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: A short interval of time in seconds after which the Mirror progress/status message is updated. (I recommend to keep it to `7` seconds at least)  
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: A short interval of time in seconds after which the Mirror progress/status message is updated. (I recommend to keep it to `7` seconds at least)
 - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. (**NOTE**: Set to `-1` to never automatically delete messages)
-- `BASE_URL_OF_BOT`: (Required for Heroku to avoid sleep/idling) Valid BASE URL of app where the bot is deployed. Format of URL should be `http://myip` (where `myip` is the IP/Domain of your bot) or if you have chosen other port than `80` then fill in this format `http://myip:port`, for Heroku fill `https://yourappname.herokuapp.com` (**NOTE**: Do not put slash at the end), still got idling? You can use http://cron-job.org to ping your Heroku app.
+- `BASE_URL_OF_BOT`: (Required for Heroku to avoid sleep/idling) Valid BASE URL of app where the bot is deployed. Format of URL should be `http://myip` (where `myip` is the IP/Domain of your bot) or if you have chosen other port than `80` then fill in this format `http://myip:port`, for Heroku fill `https://yourappname.herokuapp.com` (**NOTE**: Don't add slash at the end), still got idling? You can use http://cron-job.org to ping your Heroku app.
 </details>
 
 **2. Optional Fields**
@@ -167,7 +168,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True` it will work (Compatible with https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index Code). `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
 - `IGNORE_PENDING_REQUESTS`: If you want the bot to ignore pending requests after it restarts, set this to `True`. `Bool`
-- `STATUS_LIMIT`: Limit the no. of tasks shown in status message with button. (**NOTE**: Recommended limit is `4` tasks at max).
+- `STATUS_LIMIT`: Limit the no. of tasks shown in status message with button. (**NOTE**: Recommended limit is `4` tasks).
 - `IS_VPS`: (Only for VPS) Don't set this to `True` even if you are using VPS, unless facing error with web server. `Bool`
 - `SERVER_PORT`: Only For VPS even if `IS_VPS` is `False` --> Base URL Port
 - `RECURSIVE_SEARCH`: Set this to `True` to search in sub-folders with `/list` (**NOTE**: This will only work with Shared-Drive ID or fill `root` for main Drive. Folder IDs are not compatible with it.)
@@ -180,6 +181,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 Supported URL Shorteners:
 >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io
 - `DEFAULT_SEARCH`: Choose which default search site (still you can choose site or all while bot running), empty means `all`.
+- `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrents-Api). **Note**: Don't add slash at the end
 Supported Sites:
 >rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
 
@@ -272,7 +274,7 @@ sudo docker image prune -a
 ```
 - Tutorial video from Tortoolkit repo
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-    
+
 ------
 
 # Extras
@@ -318,7 +320,7 @@ help - All cmds with description
 >**NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 
 ### Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
-Let us create only the Service Accounts that we need. 
+Let us create only the Service Accounts that we need.
 **Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google.
 
 >**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:

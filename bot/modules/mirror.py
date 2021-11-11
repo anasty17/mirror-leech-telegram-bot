@@ -335,7 +335,7 @@ class MirrorListener(listeners.MirrorListeners):
 def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
     mesg = update.message.text.split('\n')
     message_args = mesg[0].split(' ', maxsplit=1)
-    name_args = mesg[0].split('|', maxsplit=2)
+    name_args = mesg[0].split('|', maxsplit=1)
     qbitsel = False
     try:
         link = message_args[1]
@@ -349,14 +349,13 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         link = ''
     try:
         name = name_args[1]
+        name = name.split(' pswd: ')[0]
         name = name.strip()
-        if "pswd:" in name_args[0]:
-            name = ''
     except IndexError:
         name = ''
     link = re.split(r"pswd:|\|", link)[0]
     link = link.strip()
-    pswdMsg = mesg[0].split('pswd: ')
+    pswdMsg = mesg[0].split(' pswd: ')
     if len(pswdMsg) > 1:
         pswd = pswdMsg[1]
 
@@ -396,10 +395,15 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             pssw = urllib.parse.quote(mesg[2], safe='')
             link = link.split("://", maxsplit=1)
             link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
-        except:
+        except IndexError:
             pass
     LOGGER.info(link)
-    if bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link) and isQbit:
+    if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
+        help_msg = "Send link along with command line or by reply\n"
+        help_msg += "<b>Examples:</b> \n<code>/command</code> link |newname(TG files or Direct inks) pswd: mypassword(zip/unzip)"
+        help_msg += "\nBy replying to link: <code>/command</code> |newname(TG files or Direct inks) pswd: mypassword(zip/unzip)"
+        return sendMessage(help_msg, bot, update)
+    elif bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link) and isQbit:
         try:
             resp = requests.get(link)
             if resp.status_code == 200:
@@ -409,12 +413,9 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             else:
                 sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
                 return
-        except:
-            LOGGER.error(f"Invalid Link {link}")
+        except Exception as e:
+            LOGGER.error(str(e))
             return
-    elif not bot_utils.is_url(link) and not bot_utils.is_magnet(link):
-        sendMessage('No download source provided', bot, update)
-        return
     elif not os.path.exists(link) and not bot_utils.is_mega_link(link) and not bot_utils.is_gdrive_link(link) and not bot_utils.is_magnet(link):
         try:
             link = direct_link_generator(link)
@@ -438,7 +439,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         if ZIP_UNZIP_LIMIT is not None:
             LOGGER.info('Checking File/Folder Size...')
             if size > ZIP_UNZIP_LIMIT * 1024**3:
-                msg = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
+                msg = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {bot_utils.get_readable_file_size(size)}.'
                 sendMessage(msg, bot, update)
                 return
         LOGGER.info(f"Download Name: {name}")
@@ -509,15 +510,15 @@ def qb_zip_leech(update, context):
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 unzip_mirror_handler = CommandHandler(BotCommands.UnzipMirrorCommand, unzip_mirror,
-                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 zip_mirror_handler = CommandHandler(BotCommands.ZipMirrorCommand, zip_mirror,
-                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 qb_mirror_handler = CommandHandler(BotCommands.QbMirrorCommand, qb_mirror,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 qb_unzip_mirror_handler = CommandHandler(BotCommands.QbUnzipMirrorCommand, qb_unzip_mirror,
-                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 qb_zip_mirror_handler = CommandHandler(BotCommands.QbZipMirrorCommand, qb_zip_mirror,
-                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 leech_handler = CommandHandler(BotCommands.LeechCommand, leech,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 unzip_leech_handler = CommandHandler(BotCommands.UnzipLeechCommand, unzip_leech,

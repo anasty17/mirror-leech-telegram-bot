@@ -7,6 +7,7 @@ from telegram import InlineKeyboardMarkup
 from bot import DOWNLOAD_DIR, dispatcher
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup
 from bot.helper.telegram_helper import button_build
+from bot.helper.ext_utils.bot_utils import is_url
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -18,8 +19,8 @@ listener_dict = {}
 
 def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     mssg = update.message.text
-    message_args = mssg.split(' ')
-    name_args = mssg.split('|', 2)
+    message_args = mssg.split(' ', maxsplit=2)
+    name_args = mssg.split('|', maxsplit=1)
     user_id = update.message.from_user.id
     msg_id = update.message.message_id
 
@@ -27,26 +28,31 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         link = message_args[1].strip()
         if link.startswith("|") or link.startswith("pswd: "):
             link = ''
-    except:
+    except IndexError:
         link = ''
     link = re.split(r"pswd:|\|", link)[0]
     link = link.strip()
 
     try:
         name = name_args[1]
+        name = name.split(' pswd: ')[0]
         name = name.strip()
-        if "pswd:" in name_args[0]:
-            name = ''
-    except:
+    except IndexError:
         name = ''
 
-    pswdMsg = mssg.split('pswd: ')
+    pswdMsg = mssg.split(' pswd: ')
     if len(pswdMsg) > 1:
         pswd = pswdMsg[1]
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         link = reply_to.text.strip()
+
+    if not is_url(link):
+        help_msg = "Send link along with command line or by reply\n"
+        help_msg += "<b>Examples:</b> \n<code>/command</code> link |newname pswd: mypassword(zip)"
+        help_msg += "\nBy replying to link: <code>/command</code> |newname pswd: mypassword(zip)"
+        return sendMessage(help_msg, bot, update)
 
     listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
     listener_dict[msg_id] = listener, user_id, link, name
@@ -96,7 +102,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
 
     buttons.sbutton("Cancel", f"ytcan {msg_id}")
     YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
-    sendMarkup('later', bot, update, YTBUTTONS)
+    sendMarkup('Choose video/playlist quality', bot, update, YTBUTTONS)
 
 
 def select_format(update, context):

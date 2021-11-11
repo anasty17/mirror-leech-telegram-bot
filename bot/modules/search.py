@@ -8,7 +8,7 @@ from telegram.ext import CommandHandler
 from telegraph import Telegraph
 from telegraph.exceptions import RetryAfterError
 
-from bot import dispatcher, LOGGER, telegraph_token, DEFAULT_SEARCH
+from bot import dispatcher, LOGGER, telegraph_token, DEFAULT_SEARCH, SEARCH_API_LINK
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -17,6 +17,8 @@ from bot.helper.telegram_helper import button_build
 SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
 def search(update, context):
+    if SEARCH_API_LINK is None:
+        return sendMessage("No Torrent Search Api Link. Check readme variables", context.bot, update)
     try:
         key = update.message.text.split(" ", maxsplit=1)[1]
         if key.lower().startswith(SITES):
@@ -28,7 +30,7 @@ def search(update, context):
             site = "all"
         srchmsg = sendMessage("Searching...", context.bot, update)
         LOGGER.info(f"Searching: {key} from {site}")
-        api = f"https://z09d8d7c2-z619021a9-gtw.qovery.io/api/{site}/{key}"
+        api = f"{SEARCH_API_LINK}/api/{site}/{key}"
         resp = requests.get(api)
         search_results = resp.json()
         if site == "all":
@@ -53,7 +55,7 @@ def search(update, context):
 def getResult(search_results, key):
     telegraph_content = []
     path = []
-    msg = f"<h4>Search Result For </h4>{key}<br><br>"
+    msg = f"<h4>Search Result For {key}</h4><br><br>"
     for index, result in enumerate(search_results, start=1):
         try:
             msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
