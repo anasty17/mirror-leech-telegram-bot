@@ -76,14 +76,13 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         formats_dict = {}
 
         for frmt in formats:
-            if not frmt.get('tbr'):
+            if not frmt.get('tbr') or not frmt.get('height'):
                 continue
-            try:
-                quality = frmt['format_note'] + "-" + frmt['ext']
-            except KeyError:
-                quality = str(frmt['height']) + "p-" + frmt['ext']
-            if (quality not in formats_dict or quality in formats_dict and \
-               formats_dict[quality][1] < frmt['tbr']) and 'p-' in quality:
+            if frmt.get('fps'):
+                quality = f"{frmt['height']}p{frmt['fps']}-{frmt['ext']}"
+            else:
+                quality = f"{frmt['height']}p-{frmt['ext']}"
+            if quality not in formats_dict or quality in formats_dict and formats_dict[quality][1] < frmt['tbr']:
                 if frmt.get('filesize'):
                     size = frmt['filesize']
                 elif frmt.get('filesize_approx'):
@@ -93,8 +92,11 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
                 formats_dict[quality] = [size, frmt['tbr']]
 
         for forDict in formats_dict:
-            qual_ext = forDict.split('p-')
-            video_format = f"bv*[height={qual_ext[0]}][ext={qual_ext[1]}]+ba[ext=m4a]/b"
+            qual_fps_ext = re.split(r'p|-', forDict, maxsplit=2)
+            if qual_fps_ext[1] != '':
+                video_format = f"bv*[height={qual_fps_ext[0]}][fps={qual_fps_ext[1]}][ext={qual_fps_ext[2]}]+ba/b"
+            else:
+                video_format = f"bv*[height={qual_fps_ext[0]}][ext={qual_fps_ext[2]}]+ba/b"
             buttonName = f"{forDict} ({get_readable_file_size(formats_dict[forDict][0])})"
             buttons.sbutton(str(buttonName), f"quality {msg_id} {video_format}")
         buttons.sbutton("Best Video", f"quality {msg_id} {best_video}")
