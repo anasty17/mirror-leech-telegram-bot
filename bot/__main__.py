@@ -3,6 +3,7 @@ import signal
 import os
 import asyncio
 import time
+import subprocess
 
 from pyrogram import idle
 from sys import executable
@@ -11,7 +12,7 @@ from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 from telegraph import Telegraph
 from wserver import start_server_async
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, nox, OWNER_ID, AUTHORIZED_CHATS, telegraph_token, LOGGER
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, nox, OWNER_ID, AUTHORIZED_CHATS, telegraph_token, LOGGER, UPSTREAM_REPO
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -86,6 +87,16 @@ def restart(update, context):
         proc.kill()
     process.kill()
     nox.kill()
+    if not os.path.exists('.git'):
+        subprocess.run(
+            [
+                "git", "init", "&&", "git", "remote", "add", "origin", 
+                f"{UPSTREAM_REPO}", "&&", "git", "fetch", "origin", "&&", 
+                "git", "checkout", "-f", "master", "&&", "git", "pull",
+            ]
+        )
+    else:
+        subprocess.run(['git', 'pull'])
     os.execl(executable, executable, "-m", "bot")
 
 

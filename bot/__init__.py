@@ -194,6 +194,12 @@ telegraph.create_account(short_name=sname)
 telegraph_token = telegraph.get_access_token()
 
 try:
+    UPSTREAM_REPO = getConfig('UPSTREAM_REPO')
+    if len(UPSTREAM_REPO) == 0:
+        raise KeyError
+except KeyError:
+    UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
+try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097151000:
         raise KeyError
