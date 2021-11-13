@@ -86,6 +86,7 @@ def restart(update, context):
         proc.kill()
     process.kill()
     nox.kill()
+    os.remove('bash git_init.sh')
     os.execl(executable, executable, "-m", "bot")
 
 
