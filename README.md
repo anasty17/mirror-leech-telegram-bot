@@ -291,7 +291,8 @@ unzipleech - Leech Torrent/Direct link and extract
 qbleech - Leech Torrent/Magnet using qBittorrent
 qbzipleech - Leech Torrent/Magnet and upload as .zip using qb
 qbunzipleech - Leech Torrent and extract using qb
-clone - Copy file/folder to Drive count - Count file/folder of Drive link
+clone - Copy file/folder to Drive 
+count - Count file/folder of Drive
 watch - Mirror Youtube-dl supported link
 zipwatch - Mirror Youtube playlist link and upload as .zip
 leechwatch - Leech through Youtube-dl supported link
