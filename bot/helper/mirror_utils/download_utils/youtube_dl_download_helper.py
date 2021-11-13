@@ -19,13 +19,13 @@ class MyLogger:
         self.obj = obj
 
     def debug(self, msg):
-        LOGGER.debug(msg)
         # Hack to fix changing extension
-        match = re.search(r'.ffmpeg..Merging formats into..(.*?).$', msg)
+        match = re.search(r'.Merger..Merging formats into..(.*?).$', msg) # To mkv
+        if not match and not self.obj.is_playlist:
+            match = re.search(r'.ExtractAudio..Destination..(.*?)$', msg) # To mp3
         if match and not self.obj.is_playlist:
             newname = match.group(1)
-            newname = newname.split("/")
-            newname = newname[-1]
+            newname = newname.split("/")[-1]
             self.obj.name = newname
 
     @staticmethod
@@ -165,10 +165,6 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
             self.opts['outtmpl'] = f"{path}/{self.name}/%(title)s.%(ext)s"
-        if qual == 'ba/b':
-            oldName = self.name
-            oldName = oldName.rsplit('.')[0]
-            self.name = f"{oldName}.mp3"
         self.__download(link)
 
     def cancel_download(self):
