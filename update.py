@@ -24,7 +24,7 @@ if CONFIG_FILE_URL is not None:
     except Exception as e:
         logging.error(str(e))
 
-load_dotenv('config.env')
+load_dotenv('config.env', override=True)
 
 UPSTREAM_REPO = os.environ.get('UPSTREAM_REPO', None)
 try:

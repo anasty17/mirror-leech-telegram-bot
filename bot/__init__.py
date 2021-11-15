@@ -33,7 +33,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 LOGGER = logging.getLogger(__name__)
 
-load_dotenv('config.env')
+load_dotenv('config.env', override=True)
 
 SERVER_PORT = os.environ.get('SERVER_PORT', None)
 try:
