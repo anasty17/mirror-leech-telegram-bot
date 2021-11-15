@@ -23,7 +23,8 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - YT-DLP quality buttons
 - Search for torrents with Torrent Search API
-- Docker image support for `linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6` (**Note**: Use zeroone17/mltb-oracle:latest for oracle or if u faced problem with arm64 docker run)
+- Docker image support for `linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6` (**Note**: Use notml/notdoc-oracle:latest for oracle or if u faced problem with arm64 docker run)
+- Update bot at startup or with restart command
 - Many bugs have been fixed
 
 ## From Other Repositories
@@ -173,6 +174,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
+- `UPSTREAM_REPO`: your github repository link, you can add github token in link if repo is private. (**NOTE**: Any change in docker or requirements you need to deploy again with updated repo to take effect)
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
 Supported URL Shorteners:
@@ -291,7 +293,7 @@ unzipleech - Leech Torrent/Direct link and extract
 qbleech - Leech Torrent/Magnet using qBittorrent
 qbzipleech - Leech Torrent/Magnet and upload as .zip using qb
 qbunzipleech - Leech Torrent and extract using qb
-clone - Copy file/folder to Drive 
+clone - Copy file/folder to Drive
 count - Count file/folder of Drive
 watch - Mirror Youtube-dl supported link
 zipwatch - Mirror Youtube playlist link and upload as .zip
