@@ -60,7 +60,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
-    if "/playlist" in link:
+    if "/playlist" in link or "/channel" in link:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}]+ba/b"
             buttons.sbutton(str(i), f"quality {msg_id} {video_format}")

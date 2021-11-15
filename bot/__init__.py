@@ -6,19 +6,18 @@ import random
 import string
 import subprocess
 import requests
-
-import aria2p
-import qbittorrentapi as qba
-import telegram.ext as tg
-from dotenv import load_dotenv
-from pyrogram import Client
-from telegraph import Telegraph
-
-import psycopg2
-from psycopg2 import Error
-
 import socket
 import faulthandler
+import aria2p
+import psycopg2
+import qbittorrentapi as qba
+import telegram.ext as tg
+
+from pyrogram import Client
+from telegraph import Telegraph
+from psycopg2 import Error
+from dotenv import load_dotenv
+
 faulthandler.enable()
 
 socket.setdefaulttimeout(600)
@@ -34,25 +33,19 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 LOGGER = logging.getLogger(__name__)
 
-CONFIG_FILE_URL = os.environ.get('CONFIG_FILE_URL', None)
-if CONFIG_FILE_URL is not None:
-    res = requests.get(CONFIG_FILE_URL)
-    if res.status_code == 200:
-        with open('config.env', 'wb+') as f:
-            f.write(res.content)
-            f.close()
-    else:
-        logging.error(f"Failed to download config.env {res.status_code}")
-
 load_dotenv('config.env')
 
 SERVER_PORT = os.environ.get('SERVER_PORT', None)
+try:
+    if len(SERVER_PORT) == 0:
+        raise TypeError
+except TypeError:
+    SERVER_PORT = 80
 PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 alive = subprocess.Popen(["python3", "alive.py"])
-subprocess.run(["mkdir", "-p", "qBittorrent/config"])
-subprocess.run(["cp", "qBittorrent.conf", "qBittorrent/config/qBittorrent.conf"])
 nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
+subprocess.run(["./aria.sh"], shell=True)
 time.sleep(1)
 Interval = []
 DRIVES_NAMES = []
@@ -194,12 +187,6 @@ telegraph.create_account(short_name=sname)
 telegraph_token = telegraph.get_access_token()
 
 try:
-    UPSTREAM_REPO = getConfig('UPSTREAM_REPO')
-    if len(UPSTREAM_REPO) == 0:
-        raise KeyError
-except KeyError:
-    UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
-try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097151000:
         raise KeyError
@@ -241,8 +228,7 @@ except KeyError:
 try:
     INDEX_URL = getConfig('INDEX_URL')
     if len(INDEX_URL) == 0:
-        INDEX_URL = None
-        INDEX_URLS.append(None)
+        raise KeyError
     else:
         INDEX_URLS.append(INDEX_URL)
 except KeyError:
@@ -251,13 +237,13 @@ except KeyError:
 try:
     DEFAULT_SEARCH = getConfig('DEFAULT_SEARCH')
     if len(DEFAULT_SEARCH) == 0:
-        DEFAULT_SEARCH = None
+        raise KeyError
 except KeyError:
     DEFAULT_SEARCH = None
 try:
     SEARCH_API_LINK = getConfig('SEARCH_API_LINK')
     if len(SEARCH_API_LINK) == 0:
-        SEARCH_API_LINK = None
+        raise KeyError
 except KeyError:
     SEARCH_API_LINK = None
 try:
@@ -395,7 +381,7 @@ except KeyError:
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:
-        TOKEN_PICKLE_URL = None
+        raise KeyError
     else:
         res = requests.get(TOKEN_PICKLE_URL)
         if res.status_code == 200:
@@ -410,7 +396,7 @@ except KeyError:
 try:
     ACCOUNTS_ZIP_URL = getConfig('ACCOUNTS_ZIP_URL')
     if len(ACCOUNTS_ZIP_URL) == 0:
-        ACCOUNTS_ZIP_URL = None
+        raise KeyError
     else:
         res = requests.get(ACCOUNTS_ZIP_URL)
         if res.status_code == 200:
@@ -427,7 +413,7 @@ except KeyError:
 try:
     MULTI_SEARCH_URL = getConfig('MULTI_SEARCH_URL')
     if len(MULTI_SEARCH_URL) == 0:
-        MULTI_SEARCH_URL = None
+        raise KeyError
     else:
         res = requests.get(MULTI_SEARCH_URL)
         if res.status_code == 200:
