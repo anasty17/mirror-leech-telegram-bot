@@ -2,4 +2,4 @@ build:
   docker:
     web: Dockerfile
 run:
-  web: python3 update.py && bash start.sh
+  web: bash start.sh
