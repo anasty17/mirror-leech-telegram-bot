@@ -38,6 +38,7 @@ class QbitTorrent:
         self.dupchecked = False
         self.is_file = False
         self.pincode = ""
+        self.getInfo_try = 0
 
     @new_thread
     def add_torrent(self, link, dire, listener, qbitsel):
@@ -131,8 +132,10 @@ class QbitTorrent:
     def update(self):
         tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
         if len(tor_info) == 0:
-            self.client.auth_log_out()
-            self.updater.cancel()
+            self.getInfo_try += 1
+            if self.getInfo_try > 5:
+                self.client.auth_log_out()
+                self.updater.cancel()
             return
         try:
             tor_info = tor_info[0]
@@ -220,9 +223,11 @@ class QbitTorrent:
                 self.client.torrents_delete(torrent_hashes=self.ext_hash)
                 self.client.auth_log_out()
                 self.updater.cancel()
-        except:
-            self.client.auth_log_out()
-            self.updater.cancel()
+        except (IndexError, NameError):
+            self.getInfo_try += 1
+            if self.getInfo_try > 5:
+                self.client.auth_log_out()
+                self.updater.cancel()
 
 def get_confirm(update, context):
     query = update.callback_query
