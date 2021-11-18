@@ -211,7 +211,7 @@ class QbitTorrent:
                 if self.qbitsel:
                     for dirpath, subdir, files in os.walk(f"{self.dire}", topdown=False):
                         for filee in files:
-                            if filee.endswith(".!qB"):
+                            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                                 os.remove(os.path.join(dirpath, filee))
                         for folder in subdir:
                             if folder == ".unwanted":
