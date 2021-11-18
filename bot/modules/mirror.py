@@ -75,7 +75,7 @@ class MirrorListener(listeners.MirrorListeners):
             gid = download.gid()
             size = download.size_raw()
             if name == "None" or self.isQbit:
-                name = os.listdir(f'{DOWNLOAD_DIR}{self.uid}')[0]
+                name = os.listdir(f'{DOWNLOAD_DIR}{self.uid}')[-1]
             m_path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         if self.isZip:
             try:
