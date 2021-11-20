@@ -21,10 +21,9 @@ from tenacity import *
 
 from telegram import InlineKeyboardMarkup
 from bot.helper.telegram_helper import button_build
-from telegraph import Telegraph
-from telegraph.exceptions import RetryAfterError
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, \
-    USE_SERVICE_ACCOUNTS, telegraph_token, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, SHORTENER, SHORTENER_API, VIEW_LINK, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, RECURSIVE_SEARCH
+    USE_SERVICE_ACCOUNTS, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, SHORTENER, SHORTENER_API, VIEW_LINK, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, RECURSIVE_SEARCH
+from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type, get_path_size
 from bot.helper.ext_utils.shortenurl import short_url
@@ -575,16 +574,11 @@ class GoogleDriveHelper:
                 if nxt_page < self.num_of_path:
                     content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
-            while True:
-                try:
-                    Telegraph(access_token=telegraph_token).edit_page(path = self.path[prev_page],
-                                 title = 'Mirror-leech-bot Search',
-                                 author_name='Mirror-leech-bot',
-                                 author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
-                                 html_content=content)
-                    break
-                except RetryAfterError as t:
-                    time.sleep(t.retry_after)
+            telegraph.edit_page(
+                path = self.path[prev_page],
+                title = 'Mirror-Leech-Bot Drive Search',
+                content=content
+            )
         return
 
     def escapes(self, str):
@@ -773,17 +767,12 @@ class GoogleDriveHelper:
             return "", None
 
         for content in self.telegraph_content:
-            while True:
-                try:
-                    self.path.append(Telegraph(access_token=telegraph_token).create_page(
-                                                    title = 'Mirror-leech-bot Search',
-                                                    author_name='Mirror-leech-bot',
-                                                    author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
-                                                    html_content=content
-                                                    )['path'])
-                    break
-                except RetryAfterError as t:
-                    time.sleep(t.retry_after)
+            self.path.append(
+                telegraph.create_page(
+                    title='Mirror-Leech-Bot Drive Search',
+                    content=content
+                )["path"]
+            )
         time.sleep(0.5)
         self.num_of_path = len(self.path)
         if self.num_of_path > 1:

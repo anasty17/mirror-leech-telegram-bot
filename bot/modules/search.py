@@ -5,10 +5,9 @@ import time
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
-from telegraph import Telegraph
-from telegraph.exceptions import RetryAfterError
 
-from bot import dispatcher, LOGGER, telegraph_token, DEFAULT_SEARCH, SEARCH_API_LINK
+from bot import dispatcher, LOGGER, DEFAULT_SEARCH, SEARCH_API_LINK
+from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -88,17 +87,12 @@ def getResult(search_results, key):
         telegraph_content.append(msg)
 
     for content in telegraph_content :
-        while True:
-            try:
-                path.append(Telegraph(access_token=telegraph_token).create_page(
-                                                    title = 'Mirror-leech Torrent Search',
-                                                    author_name='Mirror-leech',
-                                                    author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
-                                                    html_content=content
-                                                    )['path'])
-                break
-            except RetryAfterError as t:
-                time.sleep(t.retry_after)
+        path.append(
+            telegraph.create_page(
+                title='Mirror-Leech-Bot Torrent Search',
+                content=content
+            )["path"]
+        )
     time.sleep(0.5)
     if len(path) > 1:
         edit_telegraph(path, telegraph_content)
@@ -119,16 +113,11 @@ def edit_telegraph(path, telegraph_content):
             if nxt_page < num_of_path:
                 content += f'<b> | <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
                 nxt_page += 1
-        while True:
-            try:
-                Telegraph(access_token=telegraph_token).edit_page(path = path[prev_page],
-                             title = 'Mirror-leech Torrent Search',
-                             author_name='Mirror-leech',
-                             author_url='https://github.com/anasty17/mirror-leech-telegram-bot',
-                             html_content=content)
-                break
-            except RetryAfterError as t:
-                time.sleep(t.retry_after)
+        telegraph.edit_page(
+            path = path[prev_page],
+            title = 'Mirror-Leech-Bot Torrent Search',
+            content=content
+        )
     return
 
 
