@@ -2,8 +2,6 @@ import logging
 import os
 import threading
 import time
-import random
-import string
 import subprocess
 import requests
 import socket
@@ -14,7 +12,6 @@ import qbittorrentapi as qba
 import telegram.ext as tg
 
 from pyrogram import Client
-from telegraph import Telegraph
 from psycopg2 import Error
 from dotenv import load_dotenv
 
@@ -178,13 +175,6 @@ if DB_URI is not None:
 
 LOGGER.info("Generating USER_SESSION_STRING")
 app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, workers=343)
-
-# Generate Telegraph Token
-sname = ''.join(random.SystemRandom().choices(string.ascii_letters, k=8))
-LOGGER.info("Generating TELEGRAPH_TOKEN using '" + sname + "' name")
-telegraph = Telegraph()
-telegraph.create_account(short_name=sname)
-telegraph_token = telegraph.get_access_token()
 
 try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
