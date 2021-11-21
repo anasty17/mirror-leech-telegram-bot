@@ -4,54 +4,87 @@ import time
 
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
-from telegram.ext import CommandHandler
+from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot import dispatcher, LOGGER, DEFAULT_SEARCH, SEARCH_API_LINK
+from bot import dispatcher, LOGGER, SEARCH_API_LINK
 from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
 
-SITES = ("rarbg ", "1337x ", "yts ", "etzv ", "tgx ", "torlock ", "piratebay ", "nyaasi ", "ettv ", "all ")
 
-def search(update, context):
+SITES = {
+    "1337x" : "1337x",
+    "nyaasi" : "NyaaSi",
+    "yts" : "YTS",
+    "piratebay" : "PirateBay",
+    "torlock" : "Torlock",
+    "eztv" : "EzTvio",
+    "tgx" : "TorrentGalaxy",
+    "rarbg" : "Rarbg",
+    "ettv" : "Ettv",
+    "all" : "All"
+}
+
+def torser(update, context):
+    user_id = update.message.from_user.id
     if SEARCH_API_LINK is None:
         return sendMessage("No Torrent Search Api Link. Check readme variables", context.bot, update)
+    
     try:
         key = update.message.text.split(" ", maxsplit=1)[1]
-        if key.lower().startswith(SITES):
-            site = key.split(" ")[0]
-            key = update.message.text.split(" ", maxsplit=2)[2]
-        elif DEFAULT_SEARCH is not None:
-            site = DEFAULT_SEARCH
-        else:
-            site = "all"
-        srchmsg = sendMessage("Searching...", context.bot, update)
-        LOGGER.info(f"Searching: {key} from {site}")
-        api = f"{SEARCH_API_LINK}/api/{site}/{key}"
-        resp = requests.get(api)
-        search_results = resp.json()
-        if site == "all":
-            search_results = list(itertools.chain.from_iterable(search_results))
-        if isinstance(search_results, list):
-            link = getResult(search_results, key)
-            buttons = button_build.ButtonMaker()
-            buttons.buildbutton("🔎 VIEW", link)
-            search_count = len(search_results)
-            if search_count > 200:
-                search_count = 200
-            msg = f"<b>Found {search_count} result for <i>{key}</i></b>"
-            button = InlineKeyboardMarkup(buttons.build_menu(1))
-            editMessage(msg, srchmsg, button)
-        else:
-            editMessage(f"No result found for <i>{key}</i>", srchmsg)
+        buttons = button_build.ButtonMaker()
+        for data, name in SITES.items():
+            buttons.sbutton(name, f"torser {user_id} {data}")
+        buttons.sbutton("Cancel", f"torser {user_id} cancel")
+        button = InlineKeyboardMarkup(buttons.build_menu(2))
+        sendMarkup('Select site to search', context.bot, update, button)
     except IndexError:
         sendMessage("Send a search key along with command", context.bot, update)
     except Exception as e:
         LOGGER.error(str(e))
 
-def getResult(search_results, key):
+def torserbut(update, context):
+    query = update.callback_query
+    user_id = query.from_user.id
+    message = query.message
+    key = message.reply_to_message.text.split(" ", maxsplit=1)[1]
+    data = query.data
+    data = data.split(" ")
+    
+    if user_id != int(data[1]):
+        query.answer(text="Not Yours!", show_alert=True)
+    elif data[2] == "cancel":
+        query.answer(text="Canceled", show_alert=False)
+        editMessage("Searching Canceled.", message)
+    elif data[2] in list(SITES.keys()):
+        site = data[2]
+        query.answer(text="Searching", show_alert=False)
+        editMessage(f"<b>Searching for <i>{key}</i> from <i>{SITES.get(site)}</i></b>", message)
+        search(key, site, message)
+    else:
+        editMessage("Unknown error, check log.", message)
+        LOGGER.error(f'Unknown data {data}')
+    
+def search(key, site, message):
+    LOGGER.info(f"Searching: {key} from {site}")
+    api = f"{SEARCH_API_LINK}/api/{site}/{key}"
+    resp = requests.get(api)
+    search_results = resp.json()
+    if site == "all":
+        search_results = list(itertools.chain.from_iterable(search_results))
+    if isinstance(search_results, list):
+        link = getResult(search_results, key, message)
+        buttons = button_build.ButtonMaker()
+        buttons.buildbutton("🔎 VIEW", link)
+        msg = f"<b>Found {len(search_results)} result for <i>{key}</i> from <i>{SITES.get(site)}</i></b>"
+        button = InlineKeyboardMarkup(buttons.build_menu(1))
+        editMessage(msg, message, button)
+    else:
+        editMessage(f"No result found for <i>{key}</i> from <i>{SITES.get(site)}</i>", message)
+
+def getResult(search_results, key, message):
     telegraph_content = []
     path = []
     msg = f"<h4>Search Result For {key}</h4><br><br>"
@@ -80,21 +113,22 @@ def getResult(search_results, key):
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
-        if index == 200:
-            break
+
 
     if msg != "":
         telegraph_content.append(msg)
 
+    editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.", message)
     for content in telegraph_content :
         path.append(
             telegraph.create_page(
-                title='Mirror-Leech-Bot Torrent Search',
+                title='Mirror-leech-bot Torrent Search',
                 content=content
             )["path"]
         )
     time.sleep(0.5)
     if len(path) > 1:
+        editMessage(f"Editing <i>{len(telegraph_content)}</i> Telegraph pages.", message)
         edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
 
@@ -115,11 +149,14 @@ def edit_telegraph(path, telegraph_content):
                 nxt_page += 1
         telegraph.edit_page(
             path = path[prev_page],
-            title = 'Mirror-Leech-Bot Torrent Search',
+            title = 'Mirror-leech-bot Torrent Search',
             content=content
         )
+        time.sleep(0.5)
     return
 
+torser_handler = CommandHandler(BotCommands.SearchCommand, torser, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+torserbut_handler = CallbackQueryHandler(torserbut, pattern="torser", run_async=True)
 
-search_handler = CommandHandler(BotCommands.SearchCommand, search, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-dispatcher.add_handler(search_handler)
+dispatcher.add_handler(torser_handler)
+dispatcher.add_handler(torserbut_handler)
