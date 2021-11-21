@@ -26,6 +26,7 @@ SITES = {
     "ettv" : "Ettv",
     "all" : "All"
 }
+SEARCH_COUNT = 250
 
 def torser(update, context):
     user_id = update.message.from_user.id
@@ -61,7 +62,7 @@ def torserbut(update, context):
     elif data[2] in list(SITES.keys()):
         site = data[2]
         query.answer(text="Searching", show_alert=False)
-        editMessage(f"<b>Searching for <i>{key}</i> from <i>{SITES.get(site)}</i></b>", message)
+        editMessage(f"<b>Searching for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i></b>", message)
         search(key, site, message)
     else:
         editMessage("Unknown error, check log.", message)
@@ -78,11 +79,11 @@ def search(key, site, message):
         link = getResult(search_results, key, message)
         buttons = button_build.ButtonMaker()
         buttons.buildbutton("🔎 VIEW", link)
-        msg = f"<b>Found {len(search_results)} result for <i>{key}</i> from <i>{SITES.get(site)}</i></b>"
+        msg = f"<b>Found {SEARCH_COUNT if len(search_results) > SEARCH_COUNT else len(search_results)} result for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i></b>"
         button = InlineKeyboardMarkup(buttons.build_menu(1))
         editMessage(msg, message, button)
     else:
-        editMessage(f"No result found for <i>{key}</i> from <i>{SITES.get(site)}</i>", message)
+        editMessage(f"No result found for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i>", message)
 
 def getResult(search_results, key, message):
     telegraph_content = []
@@ -113,12 +114,14 @@ def getResult(search_results, key, message):
         if len(msg.encode('utf-8')) > 40000 :
            telegraph_content.append(msg)
            msg = ""
-
+        
+        if index == SEARCH_COUNT:
+            break
 
     if msg != "":
         telegraph_content.append(msg)
 
-    editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.", message)
+    editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
     for content in telegraph_content :
         path.append(
             telegraph.create_page(
