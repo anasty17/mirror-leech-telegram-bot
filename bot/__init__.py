@@ -225,12 +225,6 @@ except KeyError:
     INDEX_URL = None
     INDEX_URLS.append(None)
 try:
-    DEFAULT_SEARCH = getConfig('DEFAULT_SEARCH')
-    if len(DEFAULT_SEARCH) == 0:
-        raise KeyError
-except KeyError:
-    DEFAULT_SEARCH = None
-try:
     SEARCH_API_LINK = getConfig('SEARCH_API_LINK')
     if len(SEARCH_API_LINK) == 0:
         raise KeyError

@@ -179,7 +179,6 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `SHORTENER`: Shortener URL.
 Supported URL Shorteners:
 >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io
-- `DEFAULT_SEARCH`: Choose which default search site (still you can choose site or all while bot running), empty means `all`.
 - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrents-Api). **Note**: Don't add slash at the end
 Supported Sites:
 >rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
