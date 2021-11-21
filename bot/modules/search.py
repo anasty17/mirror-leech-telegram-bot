@@ -128,7 +128,7 @@ def getResult(search_results, key, message):
         )
     time.sleep(0.5)
     if len(path) > 1:
-        editMessage(f"Editing <i>{len(telegraph_content)}</i> Telegraph pages.", message)
+        editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
         edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
 
