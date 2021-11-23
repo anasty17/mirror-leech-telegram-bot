@@ -37,12 +37,12 @@ def torser(update, context):
         key = update.message.text.split(" ", maxsplit=1)[1]
     except IndexError:
         return sendMessage("Send a search key along with command", context.bot, update)
-        buttons = button_build.ButtonMaker()
-        for data, name in SITES.items():
-            buttons.sbutton(name, f"torser {user_id} {data}")
-        buttons.sbutton("Cancel", f"torser {user_id} cancel")
-        button = InlineKeyboardMarkup(buttons.build_menu(2))
-        sendMarkup('Choose site to search.', context.bot, update, button)
+    buttons = button_build.ButtonMaker()
+    for data, name in SITES.items():
+        buttons.sbutton(name, f"torser {user_id} {data}")
+    buttons.sbutton("Cancel", f"torser {user_id} cancel")
+    button = InlineKeyboardMarkup(buttons.build_menu(2))
+    sendMarkup('Choose site to search.', context.bot, update, button)
 
 
 def torserbut(update, context):
