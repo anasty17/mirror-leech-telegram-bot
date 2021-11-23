@@ -406,7 +406,7 @@ def krakenfiles(page_link: str) -> str:
         item["data-file-hash"]
         for item in soup.find_all("div", attrs={"data-file-hash": True})
     ]
-    if len(hashes) < 1:
+    if not hashes:
         raise DirectDownloadLinkException(
             f"Hash not found for : {page_link}")
 
