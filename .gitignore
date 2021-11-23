@@ -1,0 +1,13 @@
+config.env
+*auth_token.txt
+*.pyc
+data*
+.vscode
+.idea
+*.json
+*.pickle
+authorized_chats.txt
+sudo_users.txt
+accounts/*
+Thumbnails/*
+drive_folder
