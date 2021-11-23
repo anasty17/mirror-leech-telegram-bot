@@ -80,7 +80,7 @@ header:hover, section:hover{
     align-items: center;
 }
 
-img{ 
+img{
     width: 2.5rem;
     height: 2.5rem;
     border: 2px solid black;
@@ -184,11 +184,11 @@ input[type="submit"]:hover, input[type="submit"]:focus{
         width: 100%;
     }
 }
-  
+
 #treeview .parent {
     position: relative;
 }
-  
+
 #treeview .parent > ul {
     display: none;
 }
@@ -203,13 +203,13 @@ input[type="submit"]:hover, input[type="submit"]:focus{
           src="https://telegra.ph/file/cc06d0c613491080cc174.png"
           alt="logo"
         />
-        <a href="https://t.me/mirrorLeechGroup">
+        <a href="https://t.me/anas_tayyar">
           <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
         <a href="https://www.github.com/anasty17/mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
-        <a href="https://t.me/mirrorLeechGroup"><i class="fab fa-telegram"></i></a>
+        <a href="https://t.me/anas_tayyar"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
     <section>
@@ -297,7 +297,7 @@ $('input[type="checkbox"]').change(function(e) {
       let returnValue = all = ($(this).children('input[type="checkbox"]').prop("checked") === checked);
       return returnValue;
     });
-    
+
     if (all && checked) {
       parent.children('input[type="checkbox"]').prop({
         indeterminate: false,
@@ -329,7 +329,7 @@ code_page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent Code Checker</title>
-    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg"> 
+    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -378,7 +378,7 @@ header:hover, section:hover{
     align-items: center;
 }
 
-img{ 
+img{
     width: 2.5rem;
     height: 2.5rem;
     border: 2px solid black;
@@ -528,13 +528,13 @@ section span{
           src="https://telegra.ph/file/cc06d0c613491080cc174.png"
           alt="logo"
         />
-        <a href="https://t.me/mirrorLeechGroup">
+        <a href="https://t.me/anas_tayyar">
           <h2 class="name">Qbittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
         <a href="https://www.github.com/anasty17/mirror-leech-telegram-bot"><i class="fab fa-github"></i></a>
-        <a href="https://t.me/mirrorLeechGroup"><i class="fab fa-telegram"></i></a>
+        <a href="https://t.me/anas_tayyar"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
     <section>
