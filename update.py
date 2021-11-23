@@ -39,26 +39,25 @@ try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except TypeError:
-    UPSTREAM_REPO = None
+    UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
 
-if UPSTREAM_REPO is not None:
-    if not os.path.exists('.git'):
-        subprocess.run([f"git init -q \
-                          && git config --global user.email e.anastayyar@gmail.com \
-                          && git config --global user.name mltb \
-                          && git add . \
-                          && git commit -sm update -q \
-                          && git remote add origin {UPSTREAM_REPO} \
-                          && git fetch origin -q \
-                          && git reset --hard origin/master -q"], shell=True)
-    else:
-        subprocess.run([f"git init -q \
-                          && git config --global user.email e.anastayyar@gmail.com \
-                          && git config --global user.name mltb \
-                          && git add . \
-                          && git commit -m update -q \
-                          && git remote rm origin \
-                          && git remote add origin {UPSTREAM_REPO} \
-                          && git fetch origin -q \
-                          && git reset --hard origin/master -q"], shell=True)
+if not os.path.exists('.git'):
+    subprocess.run([f"git init -q \
+                      && git config --global user.email e.anastayyar@gmail.com \
+                      && git config --global user.name mltb \
+                      && git add . \
+                      && git commit -sm update -q \
+                      && git remote add origin {UPSTREAM_REPO} \
+                      && git fetch origin -q \
+                      && git reset --hard origin/master -q"], shell=True)
+else:
+    subprocess.run([f"git init -q \
+                      && git config --global user.email e.anastayyar@gmail.com \
+                      && git config --global user.name mltb \
+                      && git add . \
+                      && git commit -m update -q \
+                      && git remote rm origin \
+                      && git remote add origin {UPSTREAM_REPO} \
+                      && git fetch origin -q \
+                      && git reset --hard origin/master -q"], shell=True)
 
