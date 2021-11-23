@@ -53,18 +53,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # How to deploy?
 
-## Deploying on Heroku
-- Deploying on Heroku with Github Workflow.
-**Note**: Use heroku branch to avoid suspension or deploy master branch twice with same app name. If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only dyno or restart command is enough.
-<p><a href="https://telegra.ph/Heroku-Deployment-11-23"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
-
-- Deploying on Heroku with helper script and Goorm IDE (works on VPS too)
-<p><a href="https://telegra.ph/Deploying-your-own-Mirrorbot-10-19"> <img src="https://img.shields.io/badge/Deploy%20Guide-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
-
-- Deploying on Heroku with heroku-cli and Goorm IDE
-<p><a href="https://telegra.ph/How-to-Deploy-a-Mirror-Bot-to-Heroku-with-CLI-05-06"> <img src="https://img.shields.io/badge/Deploy%20Guide-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
-
-## Deploying on VPS
+## Prerequisites
 
 ### 1) Installing requirements
 
@@ -280,6 +269,11 @@ sudo docker image prune -a
 
 ------
 
+## Deploying on Heroku
+<p><a href="https://github.com/anasty17/mirror-leech-telegram-bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+
+------
+
 # Extras
 
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
@@ -307,7 +301,7 @@ leechset - Leech settings
 setthumb - Set Thumbnail
 status - Get Mirror Status message
 list - [query] Search files in Drive
-search - [site] [query] Search for torrents with API
+search - [query] Search for torrents with API
 cancel - Cancel a task
 cancelall - Cancel all tasks
 del - [drive_url] Delete file from Drive
@@ -392,7 +386,7 @@ For using your premium accounts in Youtube-dl or for protected Index Links, edit
 ```
 machine host login username password my_youtube_password
 ```
-**Note**: For `youtube` authentication use cookies.txt file.
+**Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
 
 For Index Link with only password without username, even http auth will not work, so this is the solution.
 ```

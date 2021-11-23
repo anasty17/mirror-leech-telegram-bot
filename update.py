@@ -42,23 +42,15 @@ except TypeError:
     UPSTREAM_REPO = None
 
 if UPSTREAM_REPO is not None:
-    if not os.path.exists('.git'):
-        subprocess.run([f"git init -q \
-                          && git config --global user.email e.anastayyar@gmail.com \
-                          && git config --global user.name mltb \
-                          && git add . \
-                          && git commit -sm update -q \
-                          && git remote add origin {UPSTREAM_REPO} \
-                          && git fetch origin -q \
-                          && git reset --hard origin/master -q"], shell=True)
-    else:
-        subprocess.run([f"rm -rf .git \
-                          && git init -q \
-                          && git config --global user.email e.anastayyar@gmail.com \
-                          && git config --global user.name mltb \
-                          && git add . \
-                          && git commit -sm update -q \
-                          && git remote add origin {UPSTREAM_REPO} \
-                          && git fetch origin -q \
-                          && git reset --hard origin/master -q"], shell=True)
+    if os.path.exists('.git'):
+        subprocess.run(["rm", "-rf", ".git"])
+
+    subprocess.run([f"git init -q \
+                      && git config --global user.email e.anastayyar@gmail.com \
+                      && git config --global user.name mltb \
+                      && git add . \
+                      && git commit -sm update -q \
+                      && git remote add origin {UPSTREAM_REPO} \
+                      && git fetch origin -q \
+                      && git reset --hard origin/master -q"], shell=True)
 
