@@ -56,7 +56,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 ## Deploying on Heroku
 - Deploying on Heroku with Github Workflow.
 **Note**: Use heroku branch to avoid suspension or deploy master branch twice with same app name. If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only dyno or restart command is enough.
-<p><a href="https://telegra.ph/Heroku-Deployment-10-04"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+<p><a href="https://telegra.ph/Heroku-Deployment-11-23"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 - Deploying on Heroku with helper script and Goorm IDE (works on VPS too)
 <p><a href="https://telegra.ph/Deploying-your-own-Mirrorbot-10-19"> <img src="https://img.shields.io/badge/Deploy%20Guide-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
