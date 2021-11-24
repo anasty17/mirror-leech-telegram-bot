@@ -24,7 +24,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - YT-DLP quality buttons
 - Search for torrents with Torrent Search API
 - Docker image support for `linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6` (**Note**: Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run)
-- Update bot at startup or with restart command
+- Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Many bugs have been fixed
 
 ## From Other Repositories
