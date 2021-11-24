@@ -354,17 +354,23 @@ python3 gen_sa_accounts.py --quick-setup 1 --new-only
 A folder named accounts will be created which will contain keys for the Service Accounts.
 
 ### a) Add Service Accounts to Google Group
+ *For Windows use PowerShell*
 - Mount accounts folder
 ```
 cd accounts
 ```
 - Grab emails form all accounts to emails.txt file that would be created in accounts folder
+- `For Windows`
+```
+$emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
+```
+- `For Linux / MacOs`
 ```
 grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
 ```
 - Unmount acounts folder
 ```
-cd -
+cd ..
 ```
 Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager.
 
