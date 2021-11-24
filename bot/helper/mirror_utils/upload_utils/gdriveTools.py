@@ -718,7 +718,7 @@ class GoogleDriveHelper:
                     else:
                         msg += f"<b><a href={furl}>Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
-                        if isRecursive:
+                        if isRecur:
                             url_path = "/".join([requests.utils.quote(n, safe='') for n in self.get_recursive_list(file, parent_id)])
                         else:
                             url_path = requests.utils.quote(f'{file.get("name")}')
@@ -741,7 +741,7 @@ class GoogleDriveHelper:
                     else:
                         msg += f"<b><a href={furl}>Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
-                        if isRecursive:
+                        if isRecur:
                             url_path = "/".join(
                                 requests.utils.quote(n, safe='')
                                 for n in self.get_recursive_list(file, parent_id)
