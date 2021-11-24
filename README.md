@@ -26,11 +26,11 @@ heroku login
 ```
 - Create heroku app
 ```
-heroku create --region us YOUAPPNAME
+heroku create --region us YOURAPPNAME
 ```
 - Add remote
 ```
-heroku git:remote -a YOUAPPNAME
+heroku git:remote -a YOURAPPNAME
 ```
 - Create container
 ```
@@ -39,6 +39,10 @@ heroku stack:set container
 - Push to heroku
 ```
 git push heroku heroku:master -f
+```
+- To delete the app
+```
+heroku apps:destroy YOURAPPNAME
 ```
 - To restart dyno
 ```
