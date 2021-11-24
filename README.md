@@ -1,4 +1,4 @@
-# Heroku Deploy:
+# Heroku Deploy
 
 **Important Note**: Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only dyno or restart command is enough. To stay up to date don't fill `UPSTREAM_REPO` on each bot restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private and fetch manually.
 
@@ -58,7 +58,7 @@ heroku config:set VARNAME=VARTEXT
 heroku logs -t
 ```
 
-## with Github Workflow.
+## With Github Workflow
 
 1. Go to Repository Settings -> Secrets
 
