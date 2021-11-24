@@ -79,8 +79,7 @@ aria2 = aria2p.API(
 )
 
 def get_client() -> qba.TorrentsAPIMixIn:
-    qb_client = qba.Client(host="localhost", port=8090)
-    return qb_client
+    return qba.Client(host="localhost", port=8090)
 
 """
 trackers = subprocess.check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all | awk '$0'"], shell=True).decode('utf-8')
@@ -90,6 +89,7 @@ trackerslist.remove("")
 trackerslist = "\n\n".join(trackerslist)
 get_client().application.set_preferences({"add_trackers":f"{trackerslist}"})
 """
+
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -360,15 +360,14 @@ try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
+    res = requests.get(TOKEN_PICKLE_URL)
+    if res.status_code == 200:
+        with open('token.pickle', 'wb+') as f:
+            f.write(res.content)
+            f.close()
     else:
-        res = requests.get(TOKEN_PICKLE_URL)
-        if res.status_code == 200:
-            with open('token.pickle', 'wb+') as f:
-                f.write(res.content)
-                f.close()
-        else:
-            logging.error(f"Failed to download token.pickle {res.status_code}")
-            raise KeyError
+        logging.error(f"Failed to download token.pickle {res.status_code}")
+        raise KeyError
 except KeyError:
     pass
 try:
@@ -392,15 +391,14 @@ try:
     MULTI_SEARCH_URL = getConfig('MULTI_SEARCH_URL')
     if len(MULTI_SEARCH_URL) == 0:
         raise KeyError
+    res = requests.get(MULTI_SEARCH_URL)
+    if res.status_code == 200:
+        with open('drive_folder', 'wb+') as f:
+            f.write(res.content)
+            f.close()
     else:
-        res = requests.get(MULTI_SEARCH_URL)
-        if res.status_code == 200:
-            with open('drive_folder', 'wb+') as f:
-                f.write(res.content)
-                f.close()
-        else:
-            logging.error(f"Failed to download drive_folder {res.status_code}")
-            raise KeyError
+        logging.error(f"Failed to download drive_folder {res.status_code}")
+        raise KeyError
 except KeyError:
     pass
 

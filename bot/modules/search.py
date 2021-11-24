@@ -75,7 +75,7 @@ def search(key, site, message):
             link = getResult(search_results, key, message)
             buttons = button_build.ButtonMaker()
             buttons.buildbutton("🔎 VIEW", link)
-            msg = f"<b>Found {SEARCH_LIMIT if len(search_results) > SEARCH_LIMIT else len(search_results)}</b>"
+            msg = f'<b>Found {min(len(search_results), SEARCH_LIMIT)}</b>'
             msg += f" <b>result for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i></b>"
             button = InlineKeyboardMarkup(buttons.build_menu(1))
             editMessage(msg, message, button)
@@ -86,7 +86,6 @@ def search(key, site, message):
 
 def getResult(search_results, key, message):
     telegraph_content = []
-    path = []
     msg = f"<h4>Search Result For {key}</h4><br><br>"
     for index, result in enumerate(search_results, start=1):
         try:
@@ -121,13 +120,10 @@ def getResult(search_results, key, message):
         telegraph_content.append(msg)
 
     editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-    for content in telegraph_content :
-        path.append(
-            telegraph.create_page(
+    path = [telegraph.create_page(
                 title='Mirror-leech-bot Torrent Search',
                 content=content
-            )["path"]
-        )
+            )["path"] for content in telegraph_content]
     time.sleep(0.5)
     if len(path) > 1:
         editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)

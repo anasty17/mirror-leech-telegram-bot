@@ -31,13 +31,12 @@ class TelegraphHelper:
 
 	def create_page(self, title, content):
 		try:
-			result = self.telegraph.create_page(
+			return self.telegraph.create_page(
 				title = title,
 				author_name=self.author_name,
 				author_url=self.author_url,
 				html_content=content
 			)
-			return result
 		except RetryAfterError as st:
 			LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
 			time.sleep(st.retry_after)
@@ -45,14 +44,13 @@ class TelegraphHelper:
 
 	def edit_page(self, path, title, content):
 		try:
-			result = self.telegraph.edit_page(
+			return self.telegraph.edit_page(
 				path = path,
 				title = title,
 				author_name=self.author_name,
 				author_url=self.author_url,
 				html_content=content
 			)
-			return result
 		except RetryAfterError as st:
 			LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
 			time.sleep(st.retry_after)
