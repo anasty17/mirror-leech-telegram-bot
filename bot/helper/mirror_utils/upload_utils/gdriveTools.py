@@ -796,7 +796,7 @@ class GoogleDriveHelper:
     def count(self, link):
         try:
             file_id = self.getIdFromUrl(link)
-        except (KeyError,IndexError):
+        except (KeyError, IndexError):
             msg = "Google Drive ID could not be found in the provided link"
             return msg
         msg = ""

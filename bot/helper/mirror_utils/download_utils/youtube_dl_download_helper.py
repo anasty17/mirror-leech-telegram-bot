@@ -34,7 +34,8 @@ class MyLogger:
 
     @staticmethod
     def error(msg):
-        LOGGER.error(msg)
+        if msg != "ERROR: Cancelling...":
+            LOGGER.error(msg)
 
 
 class YoutubeDLHelper(DownloadHelper):
@@ -58,7 +59,6 @@ class YoutubeDLHelper(DownloadHelper):
                      'continuedl': True,
                      'embedsubtitles': True,
                      'prefer_ffmpeg': True,
-                     'skip_playlist_after_errors': 10,
                      'cookiefile': 'cookies.txt' }
 
     @property
@@ -74,7 +74,7 @@ class YoutubeDLHelper(DownloadHelper):
     def __onDownloadProgress(self, d):
         self.downloading = True
         if self.is_cancelled:
-            raise ValueError("Cancelling Download..")
+            raise ValueError("Cancelling...")
         if d['status'] == "finished":
             if self.is_playlist:
                 self.last_downloaded = 0
@@ -128,7 +128,7 @@ class YoutubeDLHelper(DownloadHelper):
             for v in result['entries']:
                 try:
                     self.size += v['filesize_approx']
-                except KeyError:
+                except (KeyError, TypeError):
                     pass
             self.is_playlist = True
             if name == "":
@@ -146,13 +146,17 @@ class YoutubeDLHelper(DownloadHelper):
         try:
             with YoutubeDL(self.opts) as ydl:
                 ydl.download([link])
+                if self.is_cancelled:
+                    raise ValueError
                 self.__onDownloadComplete()
         except DownloadError as e:
             self.onDownloadError(str(e))
         except ValueError:
-            self.onDownloadError("Download Cancelled by User!")
+            self.onDownloadError("Download Stopped by User!")
 
-    def add_download(self, link, path, name, qual):
+    def add_download(self, link, path, name, qual, playlist):
+        if playlist == "true":
+            self.opts['ignoreerrors'] = True
         if "hotstar" in link or "sonyliv" in link:
             self.opts['geo_bypass_country'] = 'IN'
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))

@@ -154,7 +154,6 @@ def edit_telegraph(path, telegraph_content):
             title = 'Mirror-leech-bot Torrent Search',
             content=content
         )
-        time.sleep(0.5)
     return
 
 torser_handler = CommandHandler(BotCommands.SearchCommand, torser, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
