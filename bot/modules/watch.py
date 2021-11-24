@@ -82,7 +82,10 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
                 quality = f"{frmt['height']}p{frmt['fps']}-{frmt['ext']}"
             else:
                 quality = f"{frmt['height']}p-{frmt['ext']}"
-            if quality not in formats_dict or quality in formats_dict and formats_dict[quality][1] < frmt['tbr']:
+            if (
+                quality not in formats_dict
+                or formats_dict[quality][1] < frmt['tbr']
+            ):
                 if frmt.get('filesize'):
                     size = frmt['filesize']
                 elif frmt.get('filesize_approx'):

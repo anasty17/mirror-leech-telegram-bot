@@ -30,7 +30,7 @@ def select_type(update, context):
     data = data.split(" ")
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
-    elif data[2] == "root" or data[2] == "recu":
+    elif data[2] in ["root", "recu"]:
         query.answer()
         buttons = button_build.ButtonMaker()
         buttons.sbutton("Folders", f"types {user_id} folders {data[2]}")
@@ -39,7 +39,7 @@ def select_type(update, context):
         buttons.sbutton("Cancel", f"types {user_id} cancel")
         button = InlineKeyboardMarkup(buttons.build_menu(2))
         editMessage('Choose option to list.', msg, button)
-    elif data[2] == "files" or data[2] == "folders" or data[2] == "both":
+    elif data[2] in ["files", "folders", "both"]:
         query.answer()
         list_method = data[3]
         item_type = data[2]
@@ -52,10 +52,7 @@ def select_type(update, context):
 
 def list_drive(key, bmsg, list_method, item_type):
     LOGGER.info(f"listing: {key}")
-    if list_method == "recu":
-        list_method = True
-    else:
-        list_method = False
+    list_method = list_method == "recu"
     gdrive = GoogleDriveHelper()
     msg, button = gdrive.drive_list(key, isRecursive=list_method, itemType=item_type)
     if button:

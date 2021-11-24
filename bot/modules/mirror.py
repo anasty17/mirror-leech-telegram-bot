@@ -89,11 +89,10 @@ class MirrorListener(listeners.MirrorListeners):
                         subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])
                     else:
                         subprocess.run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
+                elif self.isLeech and int(size) > TG_SPLIT_SIZE:
+                    subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
                 else:
-                    if self.isLeech and int(size) > TG_SPLIT_SIZE:
-                        subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
-                    else:
-                        subprocess.run(["7z", "a", "-mx=0", path, m_path])
+                    subprocess.run(["7z", "a", "-mx=0", path, m_path])
             except FileNotFoundError:
                 LOGGER.info('File to archive not found!')
                 self.onUploadError('Internal error occurred!!')
