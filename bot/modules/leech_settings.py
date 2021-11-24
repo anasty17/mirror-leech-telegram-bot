@@ -104,7 +104,7 @@ def setThumb(update, context):
         photo_dir = app.download_media(photo_msg, file_name=path)
         des_dir = os.path.join(path, str(user_id) + ".jpg")
         img = Image.open(photo_dir)
-        img.thumbnail((480, 320))
+        img.thumbnail((1280, 720))
         img.save(des_dir, "JPEG")
         os.remove(photo_dir)
         sendMessage(f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a> .", context.bot, update)
