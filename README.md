@@ -53,6 +53,13 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # How to deploy?
 
+## Deploying on Heroku
+- Deploying on Heroku with helper script and Goorm IDE (works on VPS too)
+<p><a href="https://telegra.ph/Deploying-your-own-Mirrorbot-10-19"> <img src="https://img.shields.io/badge/Deploy%20Guide-grey?style=for-the-badge&logo=telegraph" width="170""/></a></p>
+
+- Deploying using Heroku branch
+<p><a href="https://github.com/anasty17/mirror-leech-telegram-bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
+
 ## Prerequisites
 
 ### 1) Installing requirements
@@ -269,11 +276,6 @@ sudo docker image prune -a
 ```
 - Tutorial video from Tortoolkit repo
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
-------
-
-## Deploying on Heroku
-<p><a href="https://github.com/anasty17/mirror-leech-telegram-bot/tree/heroku"> <img src="https://img.shields.io/badge/Deploy%20Guide-blueviolet?style=for-the-badge&logo=heroku" width="170""/></a></p>
 
 ------
 
