@@ -930,6 +930,7 @@ class GoogleDriveHelper:
         self.__listener.onDownloadComplete()
 
     def download_folder(self, folder_id, path, folder_name):
+        folder_name = folder_name.replace('/', '')
         if not os.path.exists(path + folder_name):
             os.makedirs(path + folder_name)
         path += folder_name + '/'
