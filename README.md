@@ -1,4 +1,4 @@
-# Heroku Deploy:
+# Heroku Deploy
 
 **Important Note**: Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only dyno or restart command is enough. To stay up to date don't fill `UPSTREAM_REPO` on each bot restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private and fetch manually.
 
@@ -58,7 +58,7 @@ heroku config:set VARNAME=VARTEXT
 heroku logs -t
 ```
 
-## with Github Workflow.
+## With Github Workflow
 
 1. Go to Repository Settings -> Secrets
 
@@ -77,7 +77,7 @@ heroku logs -t
 
 ![Step 5](https://telegra.ph/file/f0b208e4ea980b575dbe2.jpg)
 
-3. Remove commit id from raw link to be able to change variables without updating the CONFIG_FILE_URL in secrets. should be in this form: https://gist.githubusercontent.com/username/gist-id/raw/config.env
+3. Remove commit id from raw link to be able to change variables without updating the CONFIG_FILE_URL in secrets. Should be in this form: https://gist.githubusercontent.com/username/gist-id/raw/config.env
    - Before: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env
    - After: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env
 
