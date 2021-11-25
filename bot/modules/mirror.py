@@ -423,10 +423,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         except DirectDownloadLinkException as e:
             LOGGER.info(e)
             if "ERROR:" in str(e):
-                sendMessage(f"{e}", bot, update)
+                sendMessage(str(e), bot, update)
                 return
             if "Youtube" in str(e):
-                sendMessage(f"{e}", bot, update)
+                sendMessage(str(e), bot, update)
                 return
 
     if bot_utils.is_gdrive_link(link):

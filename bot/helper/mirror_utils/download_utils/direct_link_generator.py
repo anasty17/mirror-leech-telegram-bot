@@ -8,23 +8,29 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
-from bot import LOGGER, UPTOBOX_TOKEN
 import json
 import math
 import re
 import urllib.parse
+import lk21
+import requests
+import cfscrape
+
 from os import popen
 from random import choice
 from urllib.parse import urlparse
-
-import lk21
-import requests, cfscrape
 from bs4 import BeautifulSoup
 from js2py import EvalJs
 from lk21.extractors.bypasser import Bypass
 from base64 import standard_b64encode
+
+from bot import LOGGER, UPTOBOX_TOKEN, PHPSESSID, CRYPT
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+
+
+if CRYPT is not None:
+    cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
 
 
 def direct_link_generator(link: str):
@@ -93,12 +99,14 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
+    elif 'new.gdtot.top' in link:
+        return gdtot(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 
 def zippy_share(url: str) -> str:
-    """ ZippyShare direct links generator
+    """ ZippyShare direct link generator
     Based on https://github.com/KenHV/Mirror-Bot
              https://github.com/jovanzers/WinTenCermin """
     try:
@@ -125,7 +133,7 @@ def zippy_share(url: str) -> str:
 
 
 def yandex_disk(url: str) -> str:
-    """ Yandex.Disk direct links generator
+    """ Yandex.Disk direct link generator
     Based on https://github.com/wldhx/yadisk-direct """
     try:
         link = re.findall(r'\b(https?://.*(yadi|disk)\.(sk|yandex)*(|com.ru)\S+)', url)[0][0]
@@ -139,7 +147,7 @@ def yandex_disk(url: str) -> str:
 
 
 def uptobox(url: str) -> str:
-    """ Uptobox direct links generator
+    """ Uptobox direct link generator
     based on https://github.com/jovanzers/WinTenCermin """
     try:
         link = re.findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
@@ -162,7 +170,7 @@ def uptobox(url: str) -> str:
 
 
 def mediafire(url: str) -> str:
-    """ MediaFire direct links generator """
+    """ MediaFire direct link generator """
     try:
         link = re.findall(r'\bhttps?://.*mediafire\.com\S+', url)[0]
     except IndexError:
@@ -173,7 +181,7 @@ def mediafire(url: str) -> str:
 
 
 def osdn(url: str) -> str:
-    """ OSDN direct links generator """
+    """ OSDN direct link generator """
     osdn_link = 'https://osdn.net'
     try:
         link = re.findall(r'\bhttps?://.*osdn\.net\S+', url)[0]
@@ -301,7 +309,7 @@ def streamtape(url: str) -> str:
 
 
 def racaty(url: str) -> str:
-    """ Racaty direct links generator
+    """ Racaty direct link generator
     based on https://github.com/SlamDevs/slam-mirrorbot"""
     dl_url = ''
     try:
@@ -320,7 +328,7 @@ def racaty(url: str) -> str:
 
 
 def fichier(link: str) -> str:
-    """ 1Fichier direct links generator
+    """ 1Fichier direct link generator
     Based on https://github.com/Maujar
     """
     regex = r"^([http:\/\/|https:\/\/]+)?.*1fichier\.com\/\?.+"
@@ -380,7 +388,7 @@ def fichier(link: str) -> str:
 
 
 def solidfiles(url: str) -> str:
-    """ Solidfiles direct links generator
+    """ Solidfiles direct link generator
     Based on https://github.com/Xonshiz/SolidFiles-Downloader
     By https://github.com/Jusidama18 """
     headers = {
@@ -392,7 +400,7 @@ def solidfiles(url: str) -> str:
 
 
 def krakenfiles(page_link: str) -> str:
-    """ krakenfiles direct links generator
+    """ krakenfiles direct link generator
     Based on https://github.com/tha23rd/py-kraken
     By https://github.com/junedkh """
     page_resp = requests.session().get(page_link)
@@ -430,14 +438,36 @@ def krakenfiles(page_link: str) -> str:
         raise DirectDownloadLinkException(
             f"Failed to acquire download URL from kraken for : {page_link}")
 
-def useragent():
-    """
-    useragent random setter
-    """
-    useragents = BeautifulSoup(
-        requests.get(
-            'https://developers.whatismybrowser.com/'
-            'useragents/explore/operating_system_name/android/').content,
-        'lxml').findAll('td', {'class': 'useragent'})
-    user_agent = choice(useragents)
-    return user_agent.text
+def gdtot(url: str) -> str:
+    """ Gdtot google drive link generator
+    By https://github.com/oxosec """
+
+
+    if CRYPT is None:
+        raise DirectDownloadLinkException(f"ERROR: PHPSESSID and CRYPT variables not provided")
+
+    headers = {'upgrade-insecure-requests': '1',
+               'save-data': 'on',
+               'user-agent': 'Mozilla/5.0 (Linux; Android 10; Redmi 8A Dual) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.101 Mobile Safari/537.36',
+               'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+               'sec-fetch-site': 'same-origin',
+               'sec-fetch-mode': 'navigate',
+               'sec-fetch-dest': 'document',
+               'referer': '',
+               'prefetchAd_3621940': 'true',
+               'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'}
+
+    r1 = requests.get(url, headers=headers, cookies=cookies).content
+    s1 = BeautifulSoup(r1, 'html.parser').find('button', id="down").get('onclick').split("'")[1]
+    headers['referer'] = url
+    s2 = BeautifulSoup(requests.get(s1, headers=headers, cookies=cookies).content, 'html.parser').find('meta').get('content').split('=',1)[1]
+    headers['referer'] = s1
+    s3 = BeautifulSoup(requests.get(s2, headers=headers, cookies=cookies).content, 'html.parser').find('div', align="center")
+    if s3 is None:
+        s3 = BeautifulSoup(requests.get(r2, headers=headers, cookies=cookies).content, 'html.parser')
+        status = s3.find('h4').text
+        raise DirectDownloadLinkException(f"ERROR: {status}")
+    else:
+        gdlink = s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
+        return(gdlink)
+
