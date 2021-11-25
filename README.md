@@ -1,6 +1,6 @@
 # Heroku Deploy
 
-**Important Note**: Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only dyno or restart command is enough. To stay up to date don't fill `UPSTREAM_REPO` on each bot restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private and fetch manually.
+**Important Note**: Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). If you are using heroku branch and not using specific `UPSTREAM_REPO` so you don't need to deploy again for update, only restart is enough. To stay up to date don't fill `UPSTREAM_REPO` on each dyno restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private link and fetch manually then you can update your bot by restart cmd and dyno restart.
 
 ## With CLI
 
