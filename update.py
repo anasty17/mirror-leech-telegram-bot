@@ -18,10 +18,6 @@ CONFIG_FILE_URL = os.environ.get('CONFIG_FILE_URL', None)
 try:
     if len(CONFIG_FILE_URL) == 0:
         raise TypeError
-except TypeError:
-    CONFIG_FILE_URL = None
-
-if CONFIG_FILE_URL is not None:
     try:
         res = requests.get(CONFIG_FILE_URL)
         if res.status_code == 200:
@@ -32,6 +28,8 @@ if CONFIG_FILE_URL is not None:
             logging.error(f"Failed to download config.env {res.status_code}")
     except RequestException as e:
         logging.error(str(e))
+except TypeError:
+    pass
 
 load_dotenv('config.env', override=True)
 
