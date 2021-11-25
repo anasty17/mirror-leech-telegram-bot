@@ -3,7 +3,7 @@ import logging
 import time
 import threading
 
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, RPCError
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info
@@ -136,7 +136,7 @@ class TgUploader:
         except FloodWait as f:
             LOGGER.info(f)
             time.sleep(f.x)
-        except Exception as e:
+        except RPCError as e:
             LOGGER.error(str(e))
             self.is_cancelled = True
             self.__listener.onUploadError(str(e))
