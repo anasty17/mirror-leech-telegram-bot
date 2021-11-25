@@ -28,9 +28,7 @@ from bot import LOGGER, UPTOBOX_TOKEN, PHPSESSID, CRYPT
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
-
-if CRYPT is not None:
-    cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
+cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
 
 
 def direct_link_generator(link: str):
@@ -469,5 +467,5 @@ def gdtot(url: str) -> str:
         raise DirectDownloadLinkException(f"ERROR: {status}")
     else:
         gdlink = s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
-        return(gdlink)
+        return gdlink 
 
