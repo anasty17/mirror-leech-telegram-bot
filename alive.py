@@ -3,6 +3,8 @@ import requests
 import os
 import logging
 
+from requests.exceptions import RequestException
+
 BASE_URL = os.environ.get('BASE_URL_OF_BOT', None)
 try:
     if len(BASE_URL) == 0:
@@ -15,6 +17,6 @@ if PORT is not None and BASE_URL is not None:
         try:
             time.sleep(600)
             status = requests.get(BASE_URL).status_code
-        except Exception as err:
-            logging.error(str(err))
+        except RequestException as e:
+            logging.error(str(e))
             continue

@@ -14,6 +14,7 @@ import telegram.ext as tg
 from pyrogram import Client
 from psycopg2 import Error
 from dotenv import load_dotenv
+from requests.exceptions import RequestException
 
 faulthandler.enable()
 
@@ -360,14 +361,16 @@ try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
-    res = requests.get(TOKEN_PICKLE_URL)
-    if res.status_code == 200:
-        with open('token.pickle', 'wb+') as f:
-            f.write(res.content)
-            f.close()
-    else:
-        logging.error(f"Failed to download token.pickle {res.status_code}")
-        raise KeyError
+    try:
+        res = requests.get(TOKEN_PICKLE_URL)
+        if res.status_code == 200:
+            with open('token.pickle', 'wb+') as f:
+                f.write(res.content)
+                f.close()
+        else:
+            logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
+    except RequestException as e:
+        logging.error(str(e))
 except KeyError:
     pass
 try:
@@ -375,13 +378,16 @@ try:
     if len(ACCOUNTS_ZIP_URL) == 0:
         raise KeyError
     else:
-        res = requests.get(ACCOUNTS_ZIP_URL)
-        if res.status_code == 200:
-            with open('accounts.zip', 'wb+') as f:
-                f.write(res.content)
-                f.close()
-        else:
-            logging.error(f"Failed to download accounts.zip {res.status_code}")
+        try:
+            res = requests.get(ACCOUNTS_ZIP_URL)
+            if res.status_code == 200:
+                with open('accounts.zip', 'wb+') as f:
+                    f.write(res.content)
+                    f.close()
+            else:
+                logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
+        except RequestException as e:
+            logging.error(str(e))
             raise KeyError
         subprocess.run(["unzip", "-q", "-o", "accounts.zip"])
         os.remove("accounts.zip")
@@ -391,14 +397,16 @@ try:
     MULTI_SEARCH_URL = getConfig('MULTI_SEARCH_URL')
     if len(MULTI_SEARCH_URL) == 0:
         raise KeyError
-    res = requests.get(MULTI_SEARCH_URL)
-    if res.status_code == 200:
-        with open('drive_folder', 'wb+') as f:
-            f.write(res.content)
-            f.close()
-    else:
-        logging.error(f"Failed to download drive_folder {res.status_code}")
-        raise KeyError
+    try:
+        res = requests.get(MULTI_SEARCH_URL)
+        if res.status_code == 200:
+            with open('drive_folder', 'wb+') as f:
+                f.write(res.content)
+                f.close()
+        else:
+            logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
+    except RequestException as e:
+        logging.error(str(e))
 except KeyError:
     pass
 

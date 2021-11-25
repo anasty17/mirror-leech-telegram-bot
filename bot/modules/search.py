@@ -5,6 +5,7 @@ import time
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
+from requests.exceptions import RequestException
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK
 from bot.helper.ext_utils.telegraph_helper import telegraph
@@ -81,7 +82,7 @@ def search(key, site, message):
             editMessage(msg, message, button)
         else:
             editMessage(f"No result found for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i>", message)
-    except Exception as e:
+    except (Exception, RequestException) as e:
         editMessage(str(e), message)
 
 def getResult(search_results, key, message):
