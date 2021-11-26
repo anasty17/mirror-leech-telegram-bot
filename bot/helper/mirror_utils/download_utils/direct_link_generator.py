@@ -15,6 +15,7 @@ import urllib.parse
 import lk21
 import requests
 import cfscrape
+import time
 
 from os import popen
 from random import choice
