@@ -698,7 +698,7 @@ class GoogleDriveHelper:
                     furl = f"https://drive.google.com/drive/folders/{file.get('id')}"
                     msg += f"📁 <code>{file.get('name')}<br>(folder)</code><br>"
                     furl = short_url(furl)
-                    msg += f"<b><a href={furl}>☁️ Drive Link</a></b>"
+                    msg += f"<b><a href={furl}>Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
                         if isRecur:
                             url_path = "/".join([requests.utils.quote(n, safe='') for n in self.get_recursive_list(file, parent_id)])
@@ -706,7 +706,7 @@ class GoogleDriveHelper:
                             url_path = requests.utils.quote(f'{file.get("name")}')
                         url = f'{INDEX_URLS[index]}/{url_path}/'
                         url = short_url(url)
-                        msg += f' <b>| <a href="{url}">⚡ Index Link</a></b>'
+                        msg += f' <b>| <a href="{url}">Index Link</a></b>'
                 elif file.get('mimeType') == 'application/vnd.google-apps.shortcut':
                     msg += f"⁍<a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
                         f"</a> (shortcut)"
@@ -715,7 +715,7 @@ class GoogleDriveHelper:
                     furl = f"https://drive.google.com/uc?id={file.get('id')}&export=download"
                     msg += f"📄 <code>{file.get('name')}<br>({get_readable_file_size(int(file.get('size')))})</code><br>"
                     furl = short_url(furl)
-                    msg += f"<b><a href={furl}>☁️ Drive Link</a></b>"
+                    msg += f"<b><a href={furl}>Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
                         if isRecur:
                             url_path = "/".join(
@@ -727,11 +727,11 @@ class GoogleDriveHelper:
                             url_path = requests.utils.quote(f'{file.get("name")}')
                         url = f'{INDEX_URLS[index]}/{url_path}'
                         url = short_url(url)
-                        msg += f' <b>| <a href="{url}">⚡ Index Link</a></b>'
+                        msg += f' <b>| <a href="{url}">Index Link</a></b>'
                         if VIEW_LINK:
                             urls = f'{INDEX_URLS[index]}/{url_path}?a=view'
                             urls = short_url(urls)
-                            msg += f' <b>| <a href="{urls}">🌐 View Link</a></b>'
+                            msg += f' <b>| <a href="{urls}">View Link</a></b>'
                 msg += '<br><br>'
                 contents_count += 1
                 if len(msg.encode('utf-8')) > 40000 :
