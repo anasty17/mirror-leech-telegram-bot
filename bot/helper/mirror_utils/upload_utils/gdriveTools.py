@@ -22,8 +22,7 @@ from tenacity import *
 from telegram import InlineKeyboardMarkup
 from bot.helper.telegram_helper import button_build
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, USE_SERVICE_ACCOUNTS, BUTTON_FOUR_NAME, \
-                BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, SHORTENER, \
-                SHORTENER_API, VIEW_LINK, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS
+                BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, VIEW_LINK, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type, get_path_size
@@ -380,29 +379,20 @@ class GoogleDriveHelper:
                 msg += f'\n<b>SubFolders: </b>{self.total_folders}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
                 buttons = button_build.ButtonMaker()
-                if SHORTENER is not None and SHORTENER_API is not None:
-                    surl = short_url(durl)
-                    buttons.buildbutton("☁️ Drive Link", surl)
-                else:
-                    buttons.buildbutton("☁️ Drive Link", durl)
+                durl = short_url(durl)
+                buttons.buildbutton("☁️ Drive Link", durl)
                 if INDEX_URL is not None:
                     url_path = requests.utils.quote(f'{meta.get("name")}')
                     url = f'{INDEX_URL}/{url_path}/'
-                    if SHORTENER is not None and SHORTENER_API is not None:
-                        siurl = short_url(url)
-                        buttons.buildbutton("⚡ Index Link", siurl)
-                    else:
-                        buttons.buildbutton("⚡ Index Link", url)
+                    url = short_url(url)
+                    buttons.buildbutton("⚡ Index Link", url)
             else:
                 file = self.copyFile(meta.get('id'), parent_id)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = button_build.ButtonMaker()
-                if SHORTENER is not None and SHORTENER_API is not None:
-                    surl = short_url(durl)
-                    buttons.buildbutton("☁️ Drive Link", surl)
-                else:
-                    buttons.buildbutton("☁️ Drive Link", durl)
+                durl = short_url(durl)
+                buttons.buildbutton("☁️ Drive Link", durl)
                 try:
                     typ = file.get('mimeType')
                 except:
@@ -415,17 +405,12 @@ class GoogleDriveHelper:
                 if INDEX_URL is not None:
                     url_path = requests.utils.quote(f'{file.get("name")}')
                     url = f'{INDEX_URL}/{url_path}'
-                    urls = f'{INDEX_URL}/{url_path}?a=view'
-                    if SHORTENER is not None and SHORTENER_API is not None:
-                        siurl = short_url(url)
-                        buttons.buildbutton("⚡ Index Link", siurl)
-                        if VIEW_LINK:
-                            siurls = short_url(urls)
-                            buttons.buildbutton("🌐 View Link", siurls)
-                    else:
-                        buttons.buildbutton("⚡ Index Link", url)
-                        if VIEW_LINK:
-                            buttons.buildbutton("🌐 View Link", urls)
+                    url = short_url(url)
+                    buttons.buildbutton("⚡ Index Link", url)
+                    if VIEW_LINK:
+                        urls = f'{INDEX_URL}/{url_path}?a=view'
+                        urls = short_url(urls)
+                        buttons.buildbutton("🌐 View Link", urls)
             if BUTTON_FOUR_NAME is not None and BUTTON_FOUR_URL is not None:
                 buttons.buildbutton(f"{BUTTON_FOUR_NAME}", f"{BUTTON_FOUR_URL}")
             if BUTTON_FIVE_NAME is not None and BUTTON_FIVE_URL is not None:
@@ -712,22 +697,16 @@ class GoogleDriveHelper:
                 if file.get('mimeType') == "application/vnd.google-apps.folder":
                     furl = f"https://drive.google.com/drive/folders/{file.get('id')}"
                     msg += f"📁 <code>{file.get('name')}<br>(folder)</code><br>"
-                    if SHORTENER is not None and SHORTENER_API is not None:
-                        sfurl = short_url(furl)
-                        msg += f"<b><a href={sfurl}>Drive Link</a></b>"
-                    else:
-                        msg += f"<b><a href={furl}>Drive Link</a></b>"
+                    furl = short_url(furl)
+                    msg += f"<b><a href={furl}>☁️ Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
                         if isRecur:
                             url_path = "/".join([requests.utils.quote(n, safe='') for n in self.get_recursive_list(file, parent_id)])
                         else:
                             url_path = requests.utils.quote(f'{file.get("name")}')
                         url = f'{INDEX_URLS[index]}/{url_path}/'
-                        if SHORTENER is not None and SHORTENER_API is not None:
-                            siurl = short_url(url)
-                            msg += f' <b>| <a href="{siurl}">Index Link</a></b>'
-                        else:
-                            msg += f' <b>| <a href="{url}">Index Link</a></b>'
+                        url = short_url(url)
+                        msg += f' <b>| <a href="{url}">⚡ Index Link</a></b>'
                 elif file.get('mimeType') == 'application/vnd.google-apps.shortcut':
                     msg += f"⁍<a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
                         f"</a> (shortcut)"
@@ -735,11 +714,8 @@ class GoogleDriveHelper:
                 else:
                     furl = f"https://drive.google.com/uc?id={file.get('id')}&export=download"
                     msg += f"📄 <code>{file.get('name')}<br>({get_readable_file_size(int(file.get('size')))})</code><br>"
-                    if SHORTENER is not None and SHORTENER_API is not None:
-                        sfurl = short_url(furl)
-                        msg += f"<b><a href={sfurl}>Drive Link</a></b>"
-                    else:
-                        msg += f"<b><a href={furl}>Drive Link</a></b>"
+                    furl = short_url(furl)
+                    msg += f"<b><a href={furl}>☁️ Drive Link</a></b>"
                     if INDEX_URLS[index] is not None:
                         if isRecur:
                             url_path = "/".join(
@@ -750,17 +726,12 @@ class GoogleDriveHelper:
                         else:
                             url_path = requests.utils.quote(f'{file.get("name")}')
                         url = f'{INDEX_URLS[index]}/{url_path}'
-                        urls = f'{INDEX_URLS[index]}/{url_path}?a=view'
-                        if SHORTENER is not None and SHORTENER_API is not None:
-                            siurl = short_url(url)
-                            msg += f' <b>| <a href="{siurl}">Index Link</a></b>'
-                            if VIEW_LINK:
-                                siurls = short_url(urls)
-                                msg += f' <b>| <a href="{siurls}">View Link</a></b>'
-                        else:
-                            msg += f' <b>| <a href="{url}">Index Link</a></b>'
-                            if VIEW_LINK:
-                                msg += f' <b>| <a href="{urls}">View Link</a></b>'
+                        url = short_url(url)
+                        msg += f' <b>| <a href="{url}">⚡ Index Link</a></b>'
+                        if VIEW_LINK:
+                            urls = f'{INDEX_URLS[index]}/{url_path}?a=view'
+                            urls = short_url(urls)
+                            msg += f' <b>| <a href="{urls}">🌐 View Link</a></b>'
                 msg += '<br><br>'
                 contents_count += 1
                 if len(msg.encode('utf-8')) > 40000 :
