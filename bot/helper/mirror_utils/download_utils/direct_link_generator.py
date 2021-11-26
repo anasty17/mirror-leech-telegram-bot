@@ -26,6 +26,7 @@ from base64 import standard_b64encode
 
 from bot import LOGGER, UPTOBOX_TOKEN, PHPSESSID, CRYPT
 from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import is_gdtot_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
@@ -97,7 +98,7 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
-    elif 'new.gdtot.top' in link:
+    elif is_gdtot_link(link):
         return gdtot(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
@@ -466,5 +467,5 @@ def gdtot(url: str) -> str:
         raise DirectDownloadLinkException(f"ERROR: {status}")
     else:
         gdlink = s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
-        return gdlink 
+        return gdlink
 

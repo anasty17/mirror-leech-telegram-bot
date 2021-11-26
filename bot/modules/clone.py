@@ -21,7 +21,8 @@ def cloneNode(update, context):
         link = reply_to.text
     else:
         link = ''
-    if is_gdtot_link(link):
+    gdtot_link = is_gdtot_link(link)
+    if gdtot_link:
         try:
             link = gdtot(link)
         except DirectDownloadLinkException as e:
@@ -80,6 +81,8 @@ def cloneNode(update, context):
             sendMessage(men + result, context.bot, update)
         else:
             sendMarkup(result + cc, context.bot, update, button)
+        if gdtot_link:
+            gd.deletefile(link)
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
 
