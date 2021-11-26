@@ -55,21 +55,17 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 ## Prerequisites
 
-### 1) Installing requirements
+### 1. Installing requirements
 
 - Clone this repo:
 ```
 git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd mirrorbot
 ```
-
-- Install requirements
-For Debian based distros
+- For Debian based distros
 ```
 sudo apt install python3
 ```
-Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
-
-OR
+Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/) or by commands below.
 ```
 sudo apt install snapd
 sudo snap install docker
@@ -82,29 +78,10 @@ sudo pacman -S docker python
 ```
 pip3 install -r requirements-cli.txt
 ```
-------
-### Generate Database (optional)
-<details>
-    <summary><b>Click Here For More Details</b></summary>
-
-**1. Using ElephantSQL**
-- Go to https://elephantsql.com and create account (skip this if you already have **ElephantSQL** account)
-- Hit `Create New Instance`
-- Follow the further instructions in the screen
-- Hit `Select Region`
-- Hit `Review`
-- Hit `Create instance`
-- Select your database name
-- Copy your database url, and fill to `DATABASE_URL` in config
-
-**2. Using Heroku PostgreSQL**
-<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
-
-</details>
 
 ------
 
-### 2) Setting up config file
+### 2. Setting up config file
 
 ```
 cp config_sample.env config.env
@@ -174,9 +151,8 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrents-Api). **Note**: Don't add slash at the end.
   - Supported Sites:
   >rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
-- `PHPSESSID` and `CRYPT`: Cookies for gdtot google drive link generator. Check setup [here](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#Gdtot Cookies)
+- `PHPSESSID` and `CRYPT`: Cookies for gdtot google drive link generator. Check setup [here](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#Gdtot Cookies).
 
-### Add more buttons (Optional Field)
 Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
 - `BUTTON_FOUR_NAME`:
 - `BUTTON_FOUR_URL`:
@@ -189,7 +165,7 @@ Three buttons are already added including Drive Link, Index Link, and View Link,
 
 ------
 
-### 3) Getting Google OAuth API credential file and token.pickle
+### 3. Getting Google OAuth API credential file and token.pickle
 - Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 - Go to the OAuth Consent tab, fill it, and save.
 - Go to the Credentials tab and click Create Credentials -> OAuth Client ID
@@ -205,7 +181,7 @@ python3 generate_drive_token.py
 ```
 ------
 
-### 4) Final steps for deploying on VPS
+## Deploying on VPS Using Docker
 
 **IMPORTANT NOTE**: You must set `SERVER_PORT` variable to `80` or any other port you want to use.
 
@@ -213,7 +189,7 @@ python3 generate_drive_token.py
 ```
 sudo dockerd
 ```
-**Note**: If not started or starting do this command below then try to start.
+- **Note**: If not started or not starting, run the command below then try to start.
 ```
 sudo apt install docker.io
 ```
@@ -225,11 +201,19 @@ sudo docker build . -t mirror-bot
 ```
 sudo docker run -p 80:80 mirror-bot
 ```
-#### OR
+- To stop the image:
+```
+sudo docker ps
+```
+```
+sudo docker stop id
+```
 
-#### Using Docker-compose, you can edit and build your image in seconds:
+----
 
-**NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml)
+## Deploying on VPS Using docker-compose
+
+**NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml) also.
 
 ```
 sudo apt install docker-compose
@@ -240,35 +224,36 @@ sudo docker-compose up
 ```
 - After editing files with nano for example (nano start.sh):
 ```
+sudo docker-compose up --build
+```
+- or
+```
 sudo docker-compose build
 sudo docker-compose up
 ```
-OR
-```
-sudo docker-compose up --build
-```
-- To stop Docker:
-If docker-compose
+- To stop the image:
 ```
 sudo docker-compose stop
 ```
-**Note**: To start the docker again `sudo docker-compose start`
+- To run the image:
 ```
-sudo docker ps
+sudo docker-compose start
 ```
-```
-sudo docker stop id
-```
-- To clear the container (this will not affect the image):
+- Tutorial video from Tortoolkit repo for docker-compose and checking ports
+<p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
+
+------
+
+### Notes for docker
+
+* To clear the container (this will not affect on the image):
 ```
 sudo docker container prune
 ```
-- To delete the image:
+* To delete the images:
 ```
 sudo docker image prune -a
 ```
-- Tutorial video from Tortoolkit repo
-<p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ------
 
@@ -316,23 +301,26 @@ ping - Ping the Bot
 help - All cmds with description
 ```
 ------
+
 ## Using Service Accounts for uploading to avoid user rate limit
 >For Service Account to work, you must set `USE_SERVICE_ACCOUNTS` = "True" in config file or environment variables.
 >**NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 
-### Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
+### 1. Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
 Let us create only the Service Accounts that we need.
+
 **Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your projects banned by Google.
 
 >**NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
-
-    python3 gen_sa_accounts.py --download-keys project_id
-
+```
+python3 gen_sa_accounts.py --download-keys project_id
+```
 >**NOTE:** 1 Service Account can upload/copy around 750 GB a day, 1 project can make 100 Service Accounts so you can upload 75 TB a day or clone 2 TB from each file creator (uploader email).
 
->**NOTE:** Add Service Accounts to team drive or google group no need to add them in both.
+#### Two methods to create service accounts
+Choose one of these methods
 
-#### 1) Create Service Accounts to Current Project (Recommended Method)
+##### 1. Create Service Accounts in existed Project (Recommended Method)
 - List your projects ids
 ```
 python3 gen_sa_accounts.py --list-projects
@@ -350,20 +338,24 @@ python3 gen_sa_accounts.py --create-sas $PROJECTID
 python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
 
-#### 2) Another Quick Method
+##### 2. Create Service Accounts in New Project
 ```
 python3 gen_sa_accounts.py --quick-setup 1 --new-only
 ```
 A folder named accounts will be created which will contain keys for the Service Accounts.
 
-### a) Add Service Accounts to Google Group
- *For Windows use PowerShell*
+### 2. Add Service Accounts
+
+#### Two methods to add service accounts
+Choose one of these methods
+
+##### 1. Add Them To Google Group then to Team Drive (Recommended)
 - Mount accounts folder
 ```
 cd accounts
 ```
 - Grab emails form all accounts to emails.txt file that would be created in accounts folder
-- `For Windows`
+- `For Windows using PowerShell`
 ```
 $emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
 ```
@@ -375,21 +367,40 @@ grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
 ```
 cd ..
 ```
-Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager.
+Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to manager and delete email.txt file from accounts folder
 
-### b) Add Service Accounts to the Team Drive
+##### 2. Add Them To Team Drive Directly
 - Run:
 ```
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
 ------
+
+### Generate Database
+
+**1. Using ElephantSQL**
+- Go to https://elephantsql.com and create account (skip this if you already have **ElephantSQL** account)
+- Hit `Create New Instance`
+- Follow the further instructions in the screen
+- Hit `Select Region`
+- Hit `Review`
+- Hit `Create instance`
+- Select your database name
+- Copy your database url, and fill to `DATABASE_URL` in config
+
+**2. Using Heroku PostgreSQL**
+<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
+
+------
+
 ## Multi Search IDs
 To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate **drive_folder** file or u can simply create `drive_folder` file in working directory and fill it, check below format:
 ```
 MyTdName folderID/tdID IndexLink(if available)
 MyTdName2 folderID/tdID IndexLink(if available)
 ```
----
+-----
+
 ## Yt-dlp and Index Authentication Using .netrc File
 For using your premium accounts in yt-dlp or for protected Index Links, edit the netrc file according to following format:
 ```
@@ -403,11 +414,13 @@ machine example.workers.dev password index_password
 ```
 Where host is the name of extractor (eg. Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
----
+-----
+
 ## Gdtot Cookies
 To Clone or Leech gdtot link follow these steps:
-1. Login/Register to [gdtot](https://new.gdtot.top)
-2. Copy this script and paste it in browser bar
+1. Login/Register to [gdtot](https://new.gdtot.top).
+2. Copy this script and paste it in browser address bar.
+   - **Note**: After pasting it check at the beginning of the script in broswer address bar if `javascript:` exists or not, if not so write it as shown below.
    ```
    javascript:(function () {
      const input = document.createElement('input');
@@ -430,3 +443,5 @@ To Clone or Leech gdtot link follow these steps:
 
    ```
 4. From this you have to paste value of PHPSESSID and crypt in config.env file.
+
+-----
