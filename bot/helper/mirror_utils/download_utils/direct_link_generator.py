@@ -468,3 +468,38 @@ def gdtot(url: str) -> str:
         gdlink = s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
         return gdlink 
 
+def gplink(url: str) -> str:
+    """ GPLinks link generator
+    By https://github.com/oxosec """
+    check = re.findall(r'\bhttps?://.*gplink\S+', url)
+    if not check:
+        raise DirectDownloadLinkException("It's Not GPLinks")
+    else:
+        resp = requests.head(url).headers
+        regex = re.findall(r"(?:AppSession|app_visitor|__cf_bm)\S+;", resp['set-cookie'])
+        join_ = " ".join(regex).replace("=", ": ", 3).replace(";", ",")
+        cookies = json.loads(re.sub(r"([a-zA-Z_0-9.%+/=-]+)", r'"\1"', '{%s __viCookieActive: true, __cfduid: dca0c83db7d849cdce8d82d043f5347bd1617421634}' % join_)) 
+        headers = {
+            "app_visitor": cookies["AppSession"],
+            "user-agent": "Mozilla/5.0 (Symbian/3; Series60/5.2 NokiaN8-00/012.002; Profile/MIDP-2.1 Configuration/CLDC-1.1 ) AppleWebKit/533.4 (KHTML, like Gecko) NokiaBrowser/7.3.0 Mobile Safari/533.4 3gpp-gba",
+            "upgrade-insecure-requests": "1",
+            "referer": resp["location"],
+        }
+        resp_2 = requests.get(url, cookies=cookies, headers=headers).content
+        soup = BeautifulSoup(resp_2, 'html.parser')
+        found = soup.find_all('input')
+        dicts = {}
+        for find in found:
+            dicts[find.get('name')] = find.get('value')
+        cookies_2 = {
+            "AppSession": cookies["AppSession"], 
+            "csrfToken": dicts["_csrfToken"],
+        }
+        headers_2 = {
+            "content-type": "application/x-www-form-urlencoded; charset=UTF-8", 
+            "accept": "application/json, text/javascript, */*; q=0.01", 
+            "x-requested-with": "XMLHttpRequest",
+        }
+        time.sleep(10)
+        result = requests.post("%s/links/go"%(url.rsplit("/",1)[0]), headers=headers_2, cookies=cookies_2, data=dicts).json()
+        return result['url']
