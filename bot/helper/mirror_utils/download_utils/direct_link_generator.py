@@ -99,6 +99,8 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'new.gdtot.top' in link:
         return gdtot(link)
+    elif 'gplinks' in link:
+        return gplink(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
