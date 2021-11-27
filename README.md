@@ -92,5 +92,5 @@ heroku logs -t
 
 ![Run Workflow](https://telegra.ph/file/f44c7465d58f9f046328b.png)
 
-**NOTE**: Don't change/edit variables from Heroku if you want to change/edit do it in config.env from your gist, after it just restart your Heroku app.
+**NOTE**: Don't edit variables from Heroku, if you want to edit simply do it in config.env from your gist, after it just restart your app.
 
