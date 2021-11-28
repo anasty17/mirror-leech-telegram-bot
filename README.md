@@ -1,6 +1,12 @@
 # Heroku Deploy
 
-**Important Note**: Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). To stay up to date don't fill `UPSTREAM_REPO`, on each dyno restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private link and fetch manually then you can update your bot by restart cmd and dyno restart.
+**Important Notes**
+1. Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). To stay up to date don't fill `UPSTREAM_REPO`, on each dyno restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private link and fetch manually then you can update your bot by restart cmd and dyno restart.
+2. Don't delete .gitignore file.
+3. Read all variables definitions from master branch readme.
+4. Keep the programmer inside you away and follow the steps.
+
+------
 
 ## With CLI
 
@@ -40,6 +46,11 @@ heroku stack:set container
 ```
 git push heroku heroku:master -f
 ```
+
+------
+
+### Extras
+
 - To delete the app
 ```
 heroku apps:destroy YOURAPPNAME
@@ -57,6 +68,8 @@ heroku config:set VARNAME=VARTEXT
 ```
 heroku logs -t
 ```
+
+------
 
 ## With Github Workflow
 
