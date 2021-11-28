@@ -40,7 +40,7 @@ def direct_link_generator(link: str):
         raise DirectDownloadLinkException(f"Use /{BotCommands.WatchCommand} to mirror Youtube link\nUse /{BotCommands.ZipWatchCommand} to make zip of Youtube playlist")
     elif 'zippyshare.com' in link:
         return zippy_share(link)
-    elif 'yadi.sk' in link:
+    elif 'yadi.sk' in link or 'disk.yandex.com' in link:
         return yandex_disk(link)
     elif 'mediafire.com' in link:
         return mediafire(link)
@@ -135,7 +135,7 @@ def yandex_disk(url: str) -> str:
     """ Yandex.Disk direct link generator
     Based on https://github.com/wldhx/yadisk-direct """
     try:
-        link = re.findall(r'\bhttps?://.*yadi\.sk\S+', url)[0]
+        link = re.findall(r'\b(https?://.*(yadi|disk)\.(sk|yandex)*(|com)\S+)', url)[0][0]
     except IndexError:
         return "No Yandex.Disk links found\n"
     api = 'https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key={}'
