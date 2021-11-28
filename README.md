@@ -409,9 +409,12 @@ For using your premium accounts in yt-dlp or for protected Index Links, create .
 ```
 machine host login username password my_password
 ```
-Example: machine instagram login anas.tayyar password mypassword
-
+Example:
+```
+machine instagram login anas.tayyar password mypassword
+```
 **Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that this was you logged in from different ip(you can confirm from phone app).
+
 **Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
 
 For Index Link with only password without username, even http auth will not work, so this is the solution.
