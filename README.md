@@ -405,7 +405,10 @@ MyTdName2 folderID/tdID IndexLink(if available)
 
 ## Yt-dlp and Aria2c Authentication Using .netrc File
 For using your premium accounts in yt-dlp or for protected Index Links, create .netrc file according to following format:
+
 **Note**: Create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation.
+
+Format:
 ```
 machine host login username password my_password
 ```
@@ -415,7 +418,7 @@ machine instagram login anas.tayyar password mypassword
 ```
 **Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that this was you logged in from different ip(you can confirm from phone app).
 
-**Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
+**Youtube Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
 
 For Index Link with only password without username, even http auth will not work, so this is the solution.
 ```
