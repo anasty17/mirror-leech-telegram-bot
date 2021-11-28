@@ -62,10 +62,13 @@ PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 alive = subprocess.Popen(["python3", "alive.py"])
 nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
+if not os.path.exists('.netrc'):
+    subprocess.run(["touch", ".netrc"])
 subprocess.run(["chmod", "600", ".netrc"])
 subprocess.run(["chmod", "+x", "aria.sh"])
 subprocess.run(["./aria.sh"], shell=True)
 time.sleep(0.5)
+
 Interval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []

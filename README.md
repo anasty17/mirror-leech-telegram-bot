@@ -112,12 +112,13 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 <details>
     <summary><b>Click Here For More Details</b></summary>
 
-- `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link. Archive the accounts folder to a zip file. Fill this with the direct link of that file.
+- `ACCOUNTS_ZIP_URL`: Only if you want to load your Service Account externally from an Index Link or by any direct download link NOT webpage link. Archive the accounts folder to a zip file. Fill this with the direct download link of that file. If index need authentication so add direct download as shown below:
+  - `https://username:passwdord@example.workers.dev/...`
 - `TOKEN_PICKLE_URL`: Only if you want to load your **token.pickle** externally from an Index Link. Fill this with the direct link of that file.
 - `MULTI_SEARCH_URL`: Check `drive_folder` setup [here](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#multi-search-ids). Write **drive_folder** file [here](https://gist.github.com/). Open the raw file of that gist, it's URL will be your required variable. Should be in this form after removing commit id: https://gist.githubusercontent.com/username/gist-id/raw/drive_folder
 - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only.
-- `NETRC_URL`: Use this incase you want to deploy heroku branch without filling `UPSTREAM_REPO` variable, since after restart this file will cloned from github as empty file. Use gist raw link and remove commit id from the link, so you can edit it from gists only.
-- `DATABASE_URL`: Your Database URL. See [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your Sudo ID permanently using `/addsudo` command).
+- `NETRC_URL`: To create .netrc file contains authentication for aria2c and yt-dlp. Use gist raw link and remove commit id from the link, so you can edit it from gists only. **NOTE**: After editing .nterc you need to restart the docker or if deployed on heroku so restart dyno in case your edits related to aria2c authentication.
+- `DATABASE_URL`: Your Database URL. See [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your Sudo ID permanently).
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of groups/users you want to authorize. Separate them with space, Examples: `-0123456789 -1122334455 6915401739`.
 - `SUDO_USERS`: Fill user_id (not username) of users whom you want to give sudo permission. Separate them with space, Examples: `0123456789 1122334455 6915401739` (**NOTE**: If you want to save Sudo ID permanently without database, you must fill your Sudo Id here).
 - `IS_TEAM_DRIVE`: Set to `True` if `GDRIVE_FOLDER_ID` is from a Team Drive else `False` or Leave it empty. `Bool`
@@ -401,18 +402,21 @@ MyTdName2 folderID/tdID IndexLink(if available)
 ```
 -----
 
-## Yt-dlp and Index Authentication Using .netrc File
-For using your premium accounts in yt-dlp or for protected Index Links, edit the netrc file according to following format:
+## Yt-dlp and Aria2c Authentication Using .netrc File
+For using your premium accounts in yt-dlp or for protected Index Links, create .netrc file according to following format:
+**Note**: Create .netrc and not netrc, this file will be hidden, so view hidden files to edit it after creation.
 ```
 machine host login username password my_password
 ```
+Example: machine instagram login anas.tayyar password mypassword
+**Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that this was you logged in from different ip(you can confirm from phone app).
 **Note**: For `youtube` authentication use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
 
 For Index Link with only password without username, even http auth will not work, so this is the solution.
 ```
 machine example.workers.dev password index_password
 ```
-Where host is the name of extractor (eg. Twitch). Multiple accounts of different hosts can be added each separated by a new line.
+Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
 
 -----
 

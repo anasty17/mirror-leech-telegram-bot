@@ -15,8 +15,8 @@ PORT = os.environ.get('PORT', None)
 if PORT is not None and BASE_URL is not None:
     while True:
         try:
+            requests.get(BASE_URL).status_code
             time.sleep(600)
-            status = requests.get(BASE_URL).status_code
         except RequestException as e:
             logging.error(str(e))
             continue

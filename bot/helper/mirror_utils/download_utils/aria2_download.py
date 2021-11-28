@@ -15,7 +15,7 @@ class AriaDownloadHelper:
     @new_thread
     def __onDownloadStarted(self, api, gid):
         if STOP_DUPLICATE or TORRENT_DIRECT_LIMIT is not None or ZIP_UNZIP_LIMIT is not None:
-            sleep(1)
+            sleep(2)
             dl = getDownloadByGid(gid)
             download = api.get_download(gid)
             if STOP_DUPLICATE and dl is not None and not dl.getListener().isLeech:

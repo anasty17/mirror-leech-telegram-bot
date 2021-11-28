@@ -1,7 +1,3 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/0bfba523f095ab1dccad431d72561e0e002e7a59)
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
-
 import os
 import random
 import string
@@ -249,10 +245,7 @@ def get_confirm(update, context):
 
 def get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        try:
-            mHash = re.search(r'xt=urn:btih:(.*)&dn=', mgt).group(1)
-        except:
-            mHash = re.search(r'xt=urn:btih:(.*)', mgt).group(1)
+        mHash = re.search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+(?=&dn=|.?)', mgt).group(0)
         return mHash.lower()
 
 def get_hash_file(path):

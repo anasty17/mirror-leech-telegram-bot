@@ -56,10 +56,9 @@ class YoutubeDLHelper(DownloadHelper):
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
                      'usenetrc': True,
-                     'continuedl': True,
                      'embedsubtitles': True,
                      'prefer_ffmpeg': True,
-                     'cookiefile': 'cookies.txt' }
+                     'cookiefile': 'cookies.txt'}
 
     @property
     def download_speed(self):
