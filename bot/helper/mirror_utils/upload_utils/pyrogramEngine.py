@@ -142,7 +142,7 @@ class TgUploader:
         except Exception as err:
             LOGGER.info(str(err))
             self.is_cancelled = True
-            self.__listener.onUploadError(str(e))
+            self.__listener.onUploadError(str(err))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:

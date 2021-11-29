@@ -72,36 +72,38 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Best Videos", f"qual {msg_id} {best_video} true")
         buttons.sbutton("Best Audios", f"qual {msg_id} {best_audio} true")
     else:
-        formats = result['formats']
-        formats_dict = {}
+        formats = result.get('formats')
 
-        for frmt in formats:
-            if not frmt.get('tbr') or not frmt.get('height'):
-                continue
-            if frmt.get('fps'):
-                quality = f"{frmt['height']}p{frmt['fps']}-{frmt['ext']}"
-            else:
-                quality = f"{frmt['height']}p-{frmt['ext']}"
-            if (
-                quality not in formats_dict
-                or formats_dict[quality][1] < frmt['tbr']
-            ):
-                if frmt.get('filesize'):
-                    size = frmt['filesize']
-                elif frmt.get('filesize_approx'):
-                    size = frmt['filesize_approx']
+        if formats is not None:
+            formats_dict = {}
+
+            for frmt in formats:
+                if not frmt.get('tbr') or not frmt.get('height'):
+                    continue
+                if frmt.get('fps'):
+                    quality = f"{frmt['height']}p{frmt['fps']}-{frmt['ext']}"
                 else:
-                    size = 0
-                formats_dict[quality] = [size, frmt['tbr']]
+                    quality = f"{frmt['height']}p-{frmt['ext']}"
+                if (
+                    quality not in formats_dict
+                    or formats_dict[quality][1] < frmt['tbr']
+                ):
+                    if frmt.get('filesize'):
+                        size = frmt['filesize']
+                    elif frmt.get('filesize_approx'):
+                        size = frmt['filesize_approx']
+                    else:
+                        size = 0
+                    formats_dict[quality] = [size, frmt['tbr']]
 
-        for forDict in formats_dict:
-            qual_fps_ext = re.split(r'p|-', forDict, maxsplit=2)
-            if qual_fps_ext[1] != '':
-                video_format = f"bv*[height={qual_fps_ext[0]}][fps={qual_fps_ext[1]}][ext={qual_fps_ext[2]}]+ba/b"
-            else:
-                video_format = f"bv*[height={qual_fps_ext[0]}][ext={qual_fps_ext[2]}]+ba/b"
-            buttonName = f"{forDict} ({get_readable_file_size(formats_dict[forDict][0])})"
-            buttons.sbutton(str(buttonName), f"qual {msg_id} {video_format} f")
+            for forDict in formats_dict:
+                qual_fps_ext = re.split(r'p|-', forDict, maxsplit=2)
+                if qual_fps_ext[1] != '':
+                    video_format = f"bv*[height={qual_fps_ext[0]}][fps={qual_fps_ext[1]}][ext={qual_fps_ext[2]}]+ba/b"
+                else:
+                    video_format = f"bv*[height={qual_fps_ext[0]}][ext={qual_fps_ext[2]}]+ba/b"
+                buttonName = f"{forDict} ({get_readable_file_size(formats_dict[forDict][0])})"
+                buttons.sbutton(str(buttonName), f"qual {msg_id} {video_format} f")
         buttons.sbutton("Best Video", f"qual {msg_id} {best_video} f")
         buttons.sbutton("Best Audio", f"qual {msg_id} {best_audio} f")
 
