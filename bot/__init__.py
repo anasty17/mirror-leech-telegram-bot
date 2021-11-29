@@ -339,7 +339,7 @@ try:
 except KeyError:
     BLOCK_MEGA_LINKS = False
 try:
-    WEB_PINCODE = getconfig('WEB_PINCODE')
+    WEB_PINCODE = getConfig('WEB_PINCODE')
     WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 except KeyError:
     WEB_PINCODE = False
