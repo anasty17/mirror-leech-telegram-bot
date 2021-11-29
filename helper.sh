@@ -150,7 +150,7 @@ while true; do
             echo -e "\nDeploy number 2"
             sleep 3
             heroku create $bname
-	    heroku config:set BASE_URL_OF_BOT=https://"$appname".herokuapp.com
+	    heroku config:set BASE_URL_OF_BOT=https://"$bname".herokuapp.com
             heroku git:remote -a $bname
             heroku stack:set container -a $bname
             git commit -m "Deploy number 2"
@@ -210,7 +210,7 @@ while true; do
             echo -e "\nDeploy number 2"
             sleep 3
             heroku create $bname
-	    heroku config:set BASE_URL_OF_BOT=https://"$appname".herokuapp.com
+	    heroku config:set BASE_URL_OF_BOT=https://"$bname".herokuapp.com
             heroku git:remote -a $bname
             heroku stack:set container -a $bname
             git commit -m "Deploy number 2"
