@@ -36,10 +36,10 @@ class TgUploader:
         self.sent_msg = self.__app.get_messages(self.chat_id, self.message_id)
         self.msgs_dict = {}
         self.corrupted = 0
+        self.user_settings()
 
     def upload(self):
         path = f"{DOWNLOAD_DIR}{self.message_id}"
-        self.user_settings()
         for dirpath, subdir, files in sorted(os.walk(path)):
             for filee in sorted(files):
                 if self.is_cancelled:
@@ -49,6 +49,7 @@ class TgUploader:
                 up_path = os.path.join(dirpath, filee)
                 fsize = os.path.getsize(up_path)
                 if fsize == 0:
+                    LOGGER.error(f"{up_path} size is zero, telegram don't upload this file")
                     self.corrupted += 1
                     continue
                 self.upload_file(up_path, filee, dirpath)
@@ -134,10 +135,12 @@ class TgUploader:
                                                              disable_notification=True,
                                                              progress=self.upload_progress)
         except FloodWait as f:
-            LOGGER.info(f)
+            LOGGER.info(str(f))
             time.sleep(f.x)
         except RPCError as e:
-            LOGGER.error(str(e))
+            LOGGER.error(str(e) + str(up_path))
+        except Exception as err:
+            LOGGER.info(str(err))
             self.is_cancelled = True
             self.__listener.onUploadError(str(e))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
