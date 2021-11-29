@@ -82,7 +82,7 @@ def search(key, site, message):
             editMessage(msg, message, button)
         else:
             editMessage(f"No result found for <i>{key}</i> Torrent Site:- <i>{SITES.get(site)}</i>", message)
-    except (Exception, RequestException) as e:
+    except Exception as e:
         editMessage(str(e), message)
 
 def getResult(search_results, key, message):
