@@ -245,7 +245,7 @@ def get_confirm(update, context):
 
 def get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        mHash = re.search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+(?=&dn=|.?)', mgt).group(0)
+        mHash = re.search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+(?=&|.?)', mgt).group(0)
         return mHash.lower()
 
 def get_hash_file(path):
