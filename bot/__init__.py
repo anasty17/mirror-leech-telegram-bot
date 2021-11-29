@@ -339,6 +339,11 @@ try:
 except KeyError:
     BLOCK_MEGA_LINKS = False
 try:
+    WEB_PINCODE = getconfig('WEB_PINCODE')
+    WEB_PINCODE = WEB_PINCODE.lower() == 'true'
+except KeyError:
+    WEB_PINCODE = False
+try:
     SHORTENER = getConfig('SHORTENER')
     SHORTENER_API = getConfig('SHORTENER_API')
     if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:

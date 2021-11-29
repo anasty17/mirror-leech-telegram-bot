@@ -11,7 +11,7 @@ from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 
-from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE
+from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE, WEB_PINCODE
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage
@@ -107,8 +107,11 @@ class QbitTorrent:
                     if len(self.pincode) == 4:
                         break
                 buttons = button_build.ButtonMaker()
-                buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}")
-                buttons.sbutton("Pincode", f"pin {gid} {self.pincode}")
+                if WEB_PINCODE:
+                    buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}")
+                    buttons.sbutton("Pincode", f"pin {gid} {self.pincode}")
+                else:
+                     buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}?pin_code={self.pincode}")
                 buttons.sbutton("Done Selecting", f"done {gid} {self.ext_hash}")
                 QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
