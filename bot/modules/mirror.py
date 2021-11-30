@@ -86,10 +86,12 @@ class MirrorListener(listeners.MirrorListeners):
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                 if pswd is not None:
                     if self.isLeech and int(size) > TG_SPLIT_SIZE:
+                        path = m_path + "_zip"
                         subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])
                     else:
                         subprocess.run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
                 elif self.isLeech and int(size) > TG_SPLIT_SIZE:
+                    path = m_path + "_zip"
                     subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
                 else:
                     subprocess.run(["7z", "a", "-mx=0", path, m_path])
@@ -386,6 +388,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         except IndexError:
             pass
     LOGGER.info(link)
+    gdtot_link = bot_utils.is_gdtot_link(link)
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "➧ 𝐒𝐞𝐧𝐝 𝐥𝐢𝐧𝐤 𝐜𝐨𝐦𝐦𝐚𝐧𝐝 𝐥𝐢𝐧𝐞 𝐨𝐫 𝐛𝐲 𝐫𝐞𝐩𝐥𝐲\n"
         help_msg += "➧ <b>𝐄𝐱𝐚𝐦𝐩𝐥𝐞𝐬:</b> \n<code>/command</code> link |newname [ 𝚃𝙶 𝚏𝚒𝚕𝚎𝚜 𝚘𝚛 𝙳𝚒𝚛𝚎𝚌𝚝 𝙻𝚒𝚗𝚔𝚜 ] pswd: mypassword [ 𝚣𝚒𝚙/𝚞𝚗𝚣𝚒𝚙 ]"
@@ -403,12 +406,11 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             else:
                 sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
                 return
-        except RequestException as e:
+        except Exception as e:
             LOGGER.error(str(e))
             return
     elif not os.path.exists(link) and not bot_utils.is_mega_link(link) and not bot_utils.is_gdrive_link(link) and not bot_utils.is_magnet(link):
         try:
-            gdtot_link = bot_utils.is_gdtot_link(link)
             link = direct_link_generator(link)
         except DirectDownloadLinkException as e:
             LOGGER.info(e)

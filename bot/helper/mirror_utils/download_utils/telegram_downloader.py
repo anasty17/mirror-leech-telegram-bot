@@ -70,11 +70,14 @@ class TelegramDownloadHelper(DownloadHelper):
         self.__listener.onDownloadComplete()
 
     def __download(self, message, path):
-        download = self._bot.download_media(
-            message,
-            progress = self.__onDownloadProgress,
-            file_name = path
-        )
+        try:
+            download = self._bot.download_media(message,
+                                                progress = self.__onDownloadProgress,
+                                                file_name = path
+                                               )
+        except Exception as e:
+            LOGGER.error(str(e))
+            return self.__onDownloadError(str(e))
         if download is not None:
             self.__onDownloadComplete()
         elif not self.__is_cancelled:
@@ -106,9 +109,9 @@ class TelegramDownloadHelper(DownloadHelper):
                     if smsg:
                         sendMarkup("File/Folder is already available in Drive.\nHere are the search results:", self.__listener.bot, self.__listener.update, button)
                         return
-                sendStatusMessage(self.__listener.update, self.__listener.bot)
                 self.__onDownloadStart(name, media.file_size, media.file_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
+                sendStatusMessage(self.__listener.update, self.__listener.bot)
                 threading.Thread(target=self.__download, args=(_message, path)).start()
             else:
                 self.__onDownloadError('File already being downloaded!')

@@ -461,11 +461,10 @@ def gdtot(url: str) -> str:
     s2 = BeautifulSoup(requests.get(s1, headers=headers, cookies=cookies).content, 'html.parser').find('meta').get('content').split('=',1)[1]
     headers['referer'] = s1
     s3 = BeautifulSoup(requests.get(s2, headers=headers, cookies=cookies).content, 'html.parser').find('div', align="center")
-    if s3 is None:
-        s3 = BeautifulSoup(requests.get(s2, headers=headers, cookies=cookies).content, 'html.parser')
-        status = s3.find('h4').text
-        raise DirectDownloadLinkException(f"ERROR: {status}")
-    else:
-        gdlink = s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
-        return gdlink
+    if s3 is not None:
+        return s3.find('a', class_="btn btn-outline-light btn-user font-weight-bold").get('href')
+
+    s3 = BeautifulSoup(requests.get(s2, headers=headers, cookies=cookies).content, 'html.parser')
+    status = s3.find('h4').text
+    raise DirectDownloadLinkException(f"ERROR: {status}")
 

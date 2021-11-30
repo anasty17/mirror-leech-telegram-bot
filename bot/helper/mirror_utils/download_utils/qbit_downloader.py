@@ -120,7 +120,7 @@ class QbitTorrent:
                 sendStatusMessage(listener.update, listener.bot)
         except qba.UnsupportedMediaType415Error as e:
             LOGGER.error(str(e))
-            sendMessage("This is an unsupported/invalid link: {str(e)}", listener.bot, listener.update)
+            sendMessage(f"This is an unsupported/invalid link: {str(e)}", listener.bot, listener.update)
             self.client.auth_log_out()
         except Exception as e:
             sendMessage(str(e), listener.bot, listener.update)

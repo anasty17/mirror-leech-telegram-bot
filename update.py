@@ -4,7 +4,6 @@ import requests
 import logging
 
 from dotenv import load_dotenv
-from requests.exceptions import RequestException
 
 if os.path.exists('log.txt'):
     with open('log.txt', 'r+') as f:
@@ -26,7 +25,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download config.env {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except TypeError:
     pass

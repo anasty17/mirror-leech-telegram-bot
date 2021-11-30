@@ -14,7 +14,6 @@ import telegram.ext as tg
 from pyrogram import Client
 from psycopg2 import Error
 from dotenv import load_dotenv
-from requests.exceptions import RequestException
 
 faulthandler.enable()
 
@@ -47,7 +46,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download .netrc {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -404,7 +403,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -421,7 +420,7 @@ try:
                     f.close()
             else:
                 logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
-        except RequestException as e:
+        except Exception as e:
             logging.error(str(e))
             raise KeyError
         subprocess.run(["unzip", "-q", "-o", "accounts.zip"])
@@ -440,7 +439,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
@@ -456,7 +455,7 @@ try:
                 f.close()
         else:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
-    except RequestException as e:
+    except Exception as e:
         logging.error(str(e))
 except KeyError:
     pass
