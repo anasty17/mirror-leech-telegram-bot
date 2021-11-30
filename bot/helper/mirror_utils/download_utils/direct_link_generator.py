@@ -76,6 +76,8 @@ def direct_link_generator(link: str):
         return fembed(link)
     elif 'sbembed.com' in link:
         return sbembed(link)
+    elif 'watchsb.com' in link:
+        return sbembed(link)
     elif 'streamsb.net' in link:
         return sbembed(link)
     elif 'sbplay.org' in link:
