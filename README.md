@@ -1,10 +1,11 @@
 # Heroku Deploy
 
 **Important Notes**
-1. Use heroku branch to avoid suspension OR deploy master branch twice with same app name(check helper.sh for help). To stay up to date don't fill `UPSTREAM_REPO`, on each dyno restart you will get lastest commits or fill `UPSTREAM_REPO` by your fork public/private link and fetch manually then you can update your bot by restart cmd and dyno restart.
-2. Don't delete .gitignore file.
-3. Read all variables definitions from master branch readme.
-4. Keep the programmer inside you away and follow the steps.
+1. This Branch only for deploying, generate all your private files from master branch.
+2. Use this branch to avoid suspension `OR` deploy master branch twice with same app name (check helper.sh for help). To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository or fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
+3. Don't delete .gitignore file.
+4. Read all variables definitions from master branch readme.
+5. Keep the programmer inside you away and follow the steps.
 
 ------
 
@@ -15,6 +16,7 @@
 git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd mirrorbot
 ```
 - Switch to heroku branch
+  - **NOTE**: Don't commit changes in master branch. If you have committed your changes in master branch and after that you switched to heroku branch, the new added files will `NOT` appear in heroku branch.
 ```
 git checkout heroku
 ```
