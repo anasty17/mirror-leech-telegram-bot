@@ -3,10 +3,10 @@ import threading
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
 import os
-from bot.helper.ext_utils.bot_utils import new_thread, get_mega_link_type, get_readable_file_size
+from bot.helper.ext_utils.bot_utils import new_thread, get_mega_link_type, get_readable_file_size, checkstorage
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
+from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT, SAFE_LIMIT
 import random
 import string
 
@@ -176,16 +176,24 @@ class MegaDownloadHelper:
                     executor.continue_event.set()
                     return
         limit = None
+        size = api.getSize(node)
         if ZIP_UNZIP_LIMIT is not None and (listener.isZip or listener.extract):
-            msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
             limit = ZIP_UNZIP_LIMIT
+            msg3 = f'Failed, Tar/Unzip limit is {get_readable_file_size(limit)}.'
+            if SAFE_LIMIT and size < limit:
+                limit = checkstorage()
+                size *= 2
+                msg3 = f'Free storage is available only {get_readable_file_size(limit)}.'
         elif MEGA_LIMIT is not None:
-            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.' 
             limit = MEGA_LIMIT
+            msg3 = f'Failed, Mega limit is {get_readable_file_size(limit)}.'
+            if SAFE_LIMIT and size < limit:
+                limit = checkstorage()
+                msg3 = f'Free storage is available only {get_readable_file_size(limit)}.'
         if limit is not None:
             LOGGER.info('Checking File/Folder Size...')
-            size = api.getSize(node)
-            if size > limit * 1024**3:
+            msg3 += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+            if size > limit:
                 sendMessage(msg3, listener.bot, listener.update)
                 executor.continue_event.set()
                 return

@@ -252,35 +252,40 @@ try:
 except KeyError:
     SEARCH_API_LINK = None
 try:
+    SAFE_LIMIT = getConfig('SAFE_LIMIT')
+    SAFE_LIMIT = SAFE_LIMIT.lower() == "true"
+except KeyError:
+    SAFE_LIMIT = False
+try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
         raise KeyError
-    else:
-        TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
+    TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
+    TORRENT_DIRECT_LIMIT *= 1024 **3
 except KeyError:
     TORRENT_DIRECT_LIMIT = None
 try:
     CLONE_LIMIT = getConfig('CLONE_LIMIT')
     if len(CLONE_LIMIT) == 0:
         raise KeyError
-    else:
-        CLONE_LIMIT = float(CLONE_LIMIT)
+    CLONE_LIMIT = float(CLONE_LIMIT)
+    CLONE_LIMIT *= 1024**3
 except KeyError:
     CLONE_LIMIT = None
 try:
     MEGA_LIMIT = getConfig('MEGA_LIMIT')
     if len(MEGA_LIMIT) == 0:
         raise KeyError
-    else:
-        MEGA_LIMIT = float(MEGA_LIMIT)
+    MEGA_LIMIT = float(MEGA_LIMIT)
+    MEGA_LIMIT *= 1024 **3
 except KeyError:
     MEGA_LIMIT = None
 try:
     ZIP_UNZIP_LIMIT = getConfig('ZIP_UNZIP_LIMIT')
     if len(ZIP_UNZIP_LIMIT) == 0:
         raise KeyError
-    else:
-        ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
+    ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
+    ZIP_UNZIP_LIMIT *= 1024 **3
 except KeyError:
     ZIP_UNZIP_LIMIT = None
 try:

@@ -1,6 +1,6 @@
-from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER
+from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER, SAFE_LIMIT
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
+from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size, checkstorage
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMarkup
 from time import sleep
@@ -35,16 +35,23 @@ class AriaDownloadHelper:
                 if dl is not None and (ZIP_UNZIP_LIMIT is not None or TORRENT_DIRECT_LIMIT is not None):
                     sleep(1)
                     limit = None
+                    size = api.get_download(gid).total_length
                     if ZIP_UNZIP_LIMIT is not None and (dl.getListener().isZip or dl.getListener().extract):
-                        mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
                         limit = ZIP_UNZIP_LIMIT
+                        mssg = f'Zip/Unzip limit is {get_readable_file_size(limit)}'
+                        if SAFE_LIMIT and size < limit:
+                            limit = checkstorage()
+                            size *= 2
+                            mssg = f'Free storage is available only {get_readable_file_size(limit)}'
                     elif TORRENT_DIRECT_LIMIT is not None:
-                        mssg = f'Torrent/Direct limit is {TORRENT_DIRECT_LIMIT}GB'
                         limit = TORRENT_DIRECT_LIMIT
+                        mssg = f'Torrent/Direct limit is {get_readable_file_size(limit)}'
+                        if SAFE_LIMIT and size < limit:
+                            limit = checkstorage()
+                            mssg = f'Free storage is available only {get_readable_file_size(limit)}'
                     if limit is not None:
                         LOGGER.info('Checking File/Folder Size...')
-                        size = api.get_download(gid).total_length
-                        if size > limit * 1024**3:
+                        if size > limit:
                             dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
                             api.remove([download], force=True)
                             return

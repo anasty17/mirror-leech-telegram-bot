@@ -11,11 +11,11 @@ from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 
-from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE, WEB_PINCODE
+from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE, WEB_PINCODE, SAFE_LIMIT
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import setInterval, MirrorStatus, getDownloadByGid, get_readable_file_size, new_thread
+from bot.helper.ext_utils.bot_utils import setInterval, MirrorStatus, getDownloadByGid, get_readable_file_size, new_thread, checkstorage
 from bot.helper.telegram_helper import button_build
 
 LOGGER = logging.getLogger(__name__)
@@ -170,17 +170,24 @@ class QbitTorrent:
                     self.dupChecked = True
                 if not self.sizeChecked:
                     limit = None
+                    size = tor_info.size
                     if ZIP_UNZIP_LIMIT is not None and (self.listener.isZip or self.listener.extract):
-                        mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
                         limit = ZIP_UNZIP_LIMIT
+                        mssg = f'Zip/Unzip limit is {get_readable_file_size(limit)}'
+                        if SAFE_LIMIT and size < limit:
+                            limit = checkstorage()
+                            size *= 2
+                            mssg = f'Free storage is available only {get_readable_file_size(limit)}.'
                     elif TORRENT_DIRECT_LIMIT is not None:
-                        mssg = f'Torrent limit is {TORRENT_DIRECT_LIMIT}GB'
                         limit = TORRENT_DIRECT_LIMIT
+                        mssg = f'Torrent limit is {get_readable_file_size(limit)}'
+                        if SAFE_LIMIT and size < limit:
+                            limit = checkstorage()
+                            mssg = f'Free storage is available Only {get_readable_file_size(limit)}'
                     if limit is not None:
                         LOGGER.info('Checking File/Folder Size...')
                         time.sleep(1)
-                        size = tor_info.size
-                        if size > limit * 1024**3:
+                        if size > limit:
                             self.client.torrents_pause(torrent_hashes=self.ext_hash)
                             time.sleep(0.3)
                             self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")

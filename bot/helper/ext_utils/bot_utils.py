@@ -260,6 +260,9 @@ def new_thread(fn):
 
     return wrapper
 
+def checkstorage():
+    _, _, free = shutil.disk_usage('.')
+    return free
 
 next_handler = CallbackQueryHandler(turn, pattern="nex", run_async=True)
 previous_handler = CallbackQueryHandler(turn, pattern="pre", run_async=True)

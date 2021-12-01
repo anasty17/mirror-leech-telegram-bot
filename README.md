@@ -134,6 +134,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). `Bool`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
+- `SAFE_LIMIT`: (Leave empty if unsure) if this field is set to `True`, bot will compare with file size is free storage, if it is not enough free storage, downloading will be stopped.
 - `TORRENT_DIRECT_LIMIT`: To limit the Torrent/Direct mirror size. Don't add unit, the default unit is `GB`.
 - `ZIP_UNZIP_LIMIT`: To limit the size of zip and unzip commands. Don't add unit, the default unit is `GB`.
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True`, compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. `Bool`

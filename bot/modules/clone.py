@@ -42,8 +42,8 @@ def cloneNode(update, context):
                 return
         if CLONE_LIMIT is not None:
             LOGGER.info('Checking File/Folder Size...')
-            if size > CLONE_LIMIT * 1024**3:
-                msg2 = f'Failed, Clone limit is {CLONE_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
+            if size > CLONE_LIMIT:
+                msg2 = f'Failed, Clone limit is {get_readable_file_size(CLONE_LIMIT)}.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 sendMessage(msg2, context.bot, update)
                 return
         if files <= 10:
