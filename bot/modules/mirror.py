@@ -253,12 +253,10 @@ class MirrorListener(listeners.MirrorListeners):
             return
         with download_dict_lock:
             msg = f'<b>Name: </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
+            msg += f'\n\n<b>Type: </b>{typ}'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
-                msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
-            else:
-                msg += f'\n\n<b>Type: </b>{typ}'
             buttons = button_build.ButtonMaker()
             link = short_url(link)
             buttons.buildbutton("☁️ Drive Link", link)
