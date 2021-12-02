@@ -785,6 +785,9 @@ class GoogleDriveHelper:
                 msg += f'\n\n<b>Type: </b>{mime_type}'
                 msg += f'\n<b>Files: </b>{self.total_files}'
         except Exception as err:
+            if isinstance(err, RetryError):
+                LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
+                err = err.last_attempt.exception()
             err = str(err).replace('>', '').replace('<', '')
             LOGGER.error(err)
             if "File not found" in str(err):
@@ -839,6 +842,9 @@ class GoogleDriveHelper:
             size = self.total_bytes
             files = self.total_files
         except Exception as err:
+            if isinstance(err, RetryError):
+                LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
+                err = err.last_attempt.exception()
             err = str(err).replace('>', '').replace('<', '')
             LOGGER.error(err)
             if "File not found" in str(err):
