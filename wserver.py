@@ -693,11 +693,11 @@ async def e404_middleware(app, handler):
         try:
             response = await handler(request)
             if response.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>mirror-leech-telegram-bot</h3>", content_type="text/html")
+                return web.Response(text="<h1>404: Page not found</h2><br><h3>𝖀𝖓𝖎𝖑𝖎𝖒𝖎𝖙𝖝</h3>", content_type="text/html")
             return response
         except web.HTTPException as ex:
             if ex.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>mirror-leech-telegram-bot</h3>", content_type="text/html")
+                return web.Response(text="<h1>404: Page not found</h2><br><h3𝖀𝖓𝖎𝖑𝖎𝖒𝖎𝖙𝖝</h3>", content_type="text/html")
             raise
     return middleware_handler
 
