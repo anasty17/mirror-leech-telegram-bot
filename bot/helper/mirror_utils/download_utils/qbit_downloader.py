@@ -149,7 +149,7 @@ class QbitTorrent:
                 self.stalled_time = time.time()
                 if STOP_DUPLICATE and not self.listener.isLeech and not self.dupChecked and os.path.isdir(f'{self.dire}'):
                     LOGGER.info('Checking File/Folder if already in Drive')
-                    qbname = str(os.listdir(f'{self.dire}')[0])
+                    qbname = str(os.listdir(f'{self.dire}')[-1])
                     if qbname.endswith('.!qB'):
                         qbname = os.path.splitext(qbname)[0]
                     if self.listener.isZip:
