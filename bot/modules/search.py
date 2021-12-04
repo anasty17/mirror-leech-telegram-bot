@@ -1,6 +1,7 @@
 import requests
 import itertools
 import time
+import html
 
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
@@ -86,10 +87,10 @@ def search(key, site, message):
 
 def getResult(search_results, key, message):
     telegraph_content = []
-    msg = f"<h4>Search Result For {key}</h4><br><br>"
+    msg = f"<h4>Search Result For {key}</h4>"
     for index, result in enumerate(search_results, start=1):
         try:
-            msg += f"<code><a href='{result['Url']}'>{result['Name']}</a></code><br>"
+            msg += f"<code><a href='{result['Url']}'>{html.escape(result['Name'])}</a></code><br>"
             if "Files" in result.keys():
                 for subres in result['Files']:
                     msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
