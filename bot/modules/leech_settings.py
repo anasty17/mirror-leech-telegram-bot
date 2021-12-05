@@ -1,7 +1,4 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/d888a1e7237f4633c066f7c2bbfba030b83ad616)
 # Leech Settings V2 Implement By - @VarnaX-279
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
 
 import os
 import threading
@@ -32,16 +29,16 @@ def getleechinfo(from_user):
     else:
         ltype = "MEDIA"
         buttons.sbutton("Send As Document", f"doc {user_id}")
-    
+
     if os.path.exists(thumbpath):
         thumbmsg = "Exists"
         buttons.sbutton("Delete Thumbnail", f"thumb {user_id}")
     else:
         thumbmsg = "Not Exists"
-    
+
     if AUTO_DELETE_MESSAGE_DURATION == -1:
         buttons.sbutton("Close", f"closeset {user_id}")
-    
+
     button = InlineKeyboardMarkup(buttons.build_menu(1))
 
     text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
@@ -103,9 +100,7 @@ def setThumb(update, context):
         photo_msg = app.get_messages(update.message.chat.id, reply_to_message_ids=update.message.message_id)
         photo_dir = app.download_media(photo_msg, file_name=path)
         des_dir = os.path.join(path, str(user_id) + ".jpg")
-        img = Image.open(photo_dir)
-        img.thumbnail((480, 320))
-        img.save(des_dir, "JPEG")
+        Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         os.remove(photo_dir)
         sendMessage(f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a> .", context.bot, update)
     else:

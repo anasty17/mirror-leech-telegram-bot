@@ -415,12 +415,9 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             link = direct_link_generator(link)
         except DirectDownloadLinkException as e:
             LOGGER.info(e)
-            if "ERROR:" in str(e):
-                sendMessage(str(e), bot, update)
-                return
-            if "Youtube" in str(e):
-                sendMessage(str(e), bot, update)
-                return
+            if "ERROR:" in str(e) or "Youtube" in str(e):
+                return sendMessage(str(e), bot, update)
+
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:

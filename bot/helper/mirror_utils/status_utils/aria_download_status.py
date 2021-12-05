@@ -73,7 +73,7 @@ class AriaDownloadStatus(Status):
 
     def getListener(self):
         return self.__listener
-    
+
     def uid(self):
         return self.__uid
 

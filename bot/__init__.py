@@ -112,6 +112,23 @@ trackerslist = "\n\n".join(trackerslist)
 get_client().application.set_preferences({"add_trackers":f"{trackerslist}"})
 """
 
+def aria2c_init():
+    try:
+        if not os.path.isfile(".restartmsg"):
+            logging.info("Initializing Aria2c")
+            link = "https://releases.ubuntu.com/21.10/ubuntu-21.10-desktop-amd64.iso.torrent"
+            path = "/usr/src/app/"
+            aria2.add_uris([link], {'dir': path})
+            time.sleep(3)
+            downloads = aria2.get_downloads()
+            time.sleep(30)
+            for download in downloads:
+                aria2.remove([download], force=True, files=True)
+    except Exception as e:
+        logging.error(f"Aria2c initializing error: {e}")
+        pass
+
+threading.Thread(target=aria2c_init).start()
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None

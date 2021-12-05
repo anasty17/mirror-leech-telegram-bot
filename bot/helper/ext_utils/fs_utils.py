@@ -29,7 +29,7 @@ def start_cleanup():
 
 def clean_all():
     aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes="all", delete_files=True)
+    get_client().torrents_delete(torrent_hashes="all")
     try:
         shutil.rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
@@ -167,10 +167,7 @@ def take_ss(video_file):
     if not os.path.lexists(des_dir):
         return None
 
-    Image.open(des_dir).convert("RGB").save(des_dir)
-    img = Image.open(des_dir)
-    img.resize((480, 320))
-    img.save(des_dir, "JPEG")
+    Image.open(des_dir).convert("RGB").save(des_dir, "JPEG")
     return des_dir
 
 def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=False):

@@ -39,6 +39,8 @@ def cloneNode(update, context):
             if smsg:
                 msg3 = "File/Folder is already available in Drive.\nHere are the search results:"
                 sendMarkup(msg3, context.bot, update, button)
+                if gdtot_link:
+                    gd.deletefile(link)
                 return
         if CLONE_LIMIT is not None:
             LOGGER.info('Checking File/Folder Size...')

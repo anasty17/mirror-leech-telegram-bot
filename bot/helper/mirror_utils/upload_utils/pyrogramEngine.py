@@ -4,6 +4,7 @@ import time
 import threading
 
 from pyrogram.errors import FloodWait, RPCError
+from PIL import Image
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info
@@ -83,6 +84,8 @@ class TgUploader:
                             if self.thumb is None and thumb is not None and os.path.lexists(thumb):
                                 os.remove(thumb)
                             return
+                    img = Image.open(thumb)
+                    width, height = img.size
                     if not filee.upper().endswith(("MKV", "MP4")):
                         filee = os.path.splitext(filee)[0] + '.mp4'
                         new_path = os.path.join(dirpath, filee)
@@ -93,8 +96,8 @@ class TgUploader:
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
-                                                              width=480,
-                                                              height=320,
+                                                              width=width,
+                                                              height=height,
                                                               thumb=thumb,
                                                               supports_streaming=True,
                                                               disable_notification=True,

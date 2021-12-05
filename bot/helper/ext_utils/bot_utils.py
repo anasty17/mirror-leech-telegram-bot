@@ -167,7 +167,7 @@ def get_readable_message():
                     dlspeed_bytes += float(speedy.split('M')[0]) * 1048576
             if download.status() == MirrorStatus.STATUS_UPLOADING:
                 if 'KB/s' in speedy:
-            	    uldl_bytes += float(speedy.split('K')[0]) * 1024
+                    uldl_bytes += float(speedy.split('K')[0]) * 1024
                 elif 'MB/s' in speedy:
                     uldl_bytes += float(speedy.split('M')[0]) * 1048576
         dlspeed = get_readable_file_size(dlspeed_bytes)
