@@ -2,10 +2,9 @@
 
 import re
 import time
-import cloudscraper
+import cfscrape
 from bs4 import BeautifulSoup
 
-from cloudscraper.exceptions import CloudflareChallengeError
 
 from bot.helper.ext_utils import bot_utils
 from bot.helper.ext_utils.exceptions import DirectTorrentMagnetException
@@ -34,7 +33,7 @@ def get_1337x(link):
     return get_torrent_magnet(x1337_link)
 
 def get_torrent_magnet(url, is2nd=False):
-    scraper = cloudscraper.create_scraper()
+    scraper = cfscrape.create_scraper()
     try:
         source = scraper.get(url)
         soup = BeautifulSoup(source.content, 'lxml')
@@ -42,11 +41,12 @@ def get_torrent_magnet(url, is2nd=False):
         magnet = magnet_soup.get('href')
         return magnet
     except AttributeError:
-        print('AttributeError')
         return url
-    except CloudflareChallengeError:
-        if is2nd:
-            raise DirectTorrentMagnetException('Detected a Cloudflare version 2 challenge, Try again')
+    except ValueError as e:
+        if str(e).startswith('Unable to identify Cloudflare'):
+            if is2nd:
+                raise DirectTorrentMagnetException('Detected a Cloudflare version 2 challenge, Unable to bypass this challenge.')
+            else:
+                return get_torrent_magnet(url, is2nd=True)
         else:
-            time.sleep(3)
-            return get_torrent_magnet(url, is2nd=True)
+            raise ValueError(e)
