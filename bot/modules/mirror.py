@@ -19,11 +19,12 @@ from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_F
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, TG_SPLIT_SIZE, LOGGER
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, DirectTorrentMagnetException, NotSupportedExtractionArchive
 from bot.helper.mirror_utils.download_utils.aria2_download import AriaDownloadHelper
 from bot.helper.mirror_utils.download_utils.mega_downloader import MegaDownloadHelper
 from bot.helper.mirror_utils.download_utils.qbit_downloader import QbitTorrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
+from bot.helper.mirror_utils.download_utils.direct_magnet_generator import direct_magnet_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.status_utils import listeners
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
@@ -385,7 +386,18 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
         except IndexError:
             pass
+    
+    try:
+        if bot_utils.is_url(link) and not bot_utils.is_magnet(link):
+            link = direct_magnet_generator(link)
+    except DirectTorrentMagnetException as e:
+        sendMessage(str(e), bot, update)
+        return
+    except Exception as e:
+        LOGGER.error(f'Magnet extracting error:- {e}')
+
     LOGGER.info(link)
+
     gdtot_link = bot_utils.is_gdtot_link(link)
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
