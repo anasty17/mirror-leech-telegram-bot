@@ -164,7 +164,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.opts['format'] = qual
         if qual == 'ba/b':
           self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '340'}]
-        LOGGER.info(f"Downloading with YT-DL: {link}")
+        LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name)
         if self.is_cancelled:
             return
