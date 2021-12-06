@@ -26,6 +26,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Docker image support for `linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6` (**Note**: Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run)
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Clone/Zip/Unzip/Count from gdtot links (main script from [Yusuf](https://github.com/oxosec)) and delete first cloned file from main drive or TeamDrive
+- Magnet link extractor by [VarnaX-279](https://github.com/VarnaX-279)
 - Many bugs have been fixed
 
 ## From Other Repositories
