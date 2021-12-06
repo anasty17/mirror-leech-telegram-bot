@@ -8,6 +8,7 @@ import socket
 import faulthandler
 import aria2p
 import psycopg2
+import json
 import qbittorrentapi as qba
 import telegram.ext as tg
 
@@ -494,7 +495,20 @@ if os.path.exists('drive_folder'):
                 INDEX_URLS.append(temp[2])
             except IndexError as e:
                 INDEX_URLS.append(None)
-
+try:
+    SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
+    if len(SEARCH_PLUGINS) == 0:
+        raise KeyError
+    SEARCH_PLUGINS = json.loads(SEARCH_PLUGINS)
+    qbclient = get_client()
+    qb_plugins = qbclient.search_plugins()
+    if qb_plugins:
+        for plugin in qb_plugins:
+            p = plugin['name']
+            qbclient.search_uninstall_plugin(names=p)
+    qbclient.search_install_plugin(SEARCH_PLUGINS)
+except KeyError:
+    SEARCH_PLUGINS = None
 
 updater = tg.Updater(token=BOT_TOKEN, request_kwargs={'read_timeout': 30, 'connect_timeout': 15})
 bot = updater.bot
