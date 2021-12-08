@@ -19,12 +19,11 @@ from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_F
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, TG_SPLIT_SIZE, LOGGER
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, DirectTorrentMagnetException, NotSupportedExtractionArchive
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
 from bot.helper.mirror_utils.download_utils.aria2_download import AriaDownloadHelper
 from bot.helper.mirror_utils.download_utils.mega_downloader import MegaDownloadHelper
 from bot.helper.mirror_utils.download_utils.qbit_downloader import QbitTorrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
-from bot.helper.mirror_utils.download_utils.direct_magnet_generator import direct_magnet_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.status_utils import listeners
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
@@ -376,7 +375,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 reply_text = reply_to.text
                 if bot_utils.is_url(reply_text) or bot_utils.is_magnet(reply_text):
                     link = reply_text.strip()
-
             elif isQbit:
                 file_name = str(time.time()).replace(".", "") + ".torrent"
                 link = file.get_file().download(custom_path=file_name)
@@ -387,6 +385,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 return
             else:
                 link = file.get_file().file_path
+
     if len(mesg) > 1:
         try:
             ussr = urllib.parse.quote(mesg[1], safe='')
@@ -395,6 +394,9 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
         except IndexError:
             pass
+
+    LOGGER.info(link)
+    gdtot_link = bot_utils.is_gdtot_link(link)
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -406,36 +408,15 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         help_msg += "\n\n<b>Qbittorrent selection:</b>"
         help_msg += "\n<code>/qbcommand</code> <b>s</b> {link} or by replying to {file}"
         return sendMessage(help_msg, bot, update)
-
-    LOGGER.info(link)
-    gdtot_link = bot_utils.is_gdtot_link(link)
-
-    if not os.path.exists(link) and not bot_utils.is_mega_link(link) \
-       and not bot_utils.is_gdrive_link(link) and not bot_utils.is_magnet(link):
-        headers = None
+    elif not bot_utils.is_mega_link(link) and not isQbit and not bot_utils.is_magnet(link) \
+         and not os.path.exists(link) and not bot_utils.is_gdrive_link(link):
         try:
-            res = requests.head(link, allow_redirects=True)
-            headers = res.headers.get('content-type')
-        except:
-            pass
-        if headers is not None and 'text/html' in headers:
-            is_direct = False
-            try:
-                link = direct_link_generator(link)
-                is_direct = True
-            except DirectDownloadLinkException as e:
-                LOGGER.info(str(e))
-                if str(e).startswith('ERROR:'):
-                    return sendMessage(str(e), bot, update)
-            if not is_direct:
-                try:
-                    link = direct_magnet_generator(link)
-                except DirectTorrentMagnetException as e:
-                    LOGGER.info(str(e))
-                    if str(e).startswith('ERROR:'):
-                        return sendMessage(str(e), bot, update)
-
-    if isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
+            link = direct_link_generator(link)
+        except DirectDownloadLinkException as e:
+            LOGGER.info(str(e))
+            if str(e).startswith('ERROR:'):
+                return sendMessage(str(e), bot, update)
+    elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
         try:
             resp = requests.get(link)
             if resp.status_code == 200:
