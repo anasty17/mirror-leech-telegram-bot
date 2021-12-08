@@ -230,7 +230,6 @@ class QbitTorrent:
                     with download_dict_lock:
                         download_dict[self.listener.uid] = QbDownloadStatus(self.gid, self.listener, self.ext_hash, self.client)
                     update_all_messages()
-                    self.client.torrents_set_super_seeding(enable=True, torrent_hashes=self.ext_hash)
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
                     self.client.torrents_delete(torrent_hashes=self.ext_hash)
