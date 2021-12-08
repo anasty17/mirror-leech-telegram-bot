@@ -397,6 +397,11 @@ try:
 except KeyError:
     EQUAL_SPLITS = False
 try:
+    QB_SEED = getConfig('QB_SEED')
+    QB_SEED = QB_SEED.lower() == 'true'
+except KeyError:
+    QB_SEED = False
+try:
     CUSTOM_FILENAME = getConfig('CUSTOM_FILENAME')
     if len(CUSTOM_FILENAME) == 0:
         raise KeyError

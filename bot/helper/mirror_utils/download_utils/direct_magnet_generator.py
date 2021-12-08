@@ -11,7 +11,7 @@ from bot.helper.ext_utils.exceptions import DirectTorrentMagnetException
 def direct_magnet_generator(link: str):
     if 'thepiratebay.org/' in link:
         return get_tpy(link)
-    elif re.match(r'https?://.*1337x\S+', link):
+    elif re.match(r'https?://.*1337x.*\/torrent\/\S+', link):
         return get_1337x(link)
     elif re.match(r'https?://.*rarbg.*\/torrent\/\S+', link):
         raise DirectTorrentMagnetException("Can't extract magnet from rarbg official domains.\nUse rargb.to")
