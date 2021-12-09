@@ -64,9 +64,11 @@ def torserbut(update, context):
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == 'api':
+        query.answer()
         button = api_buttons(user_id)
         editMessage('Choose site to search:', message, button)
     elif data[2] == 'plugin':
+        query.answer()
         button = plugin_buttons(user_id)
         editMessage('Choose site to search:', message, button)
     elif data[2] != "cancel":
