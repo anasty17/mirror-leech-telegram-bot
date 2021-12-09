@@ -70,6 +70,8 @@ def direct_link_generator(link: str):
         return fembed(link)
     elif 'naniplay.com' in link:
         return fembed(link)
+    elif 'mm9842.com' in link:
+        return fembed(link)
     elif 'layarkacaxxi.icu' in link:
         return fembed(link)
     elif 'sbembed.com' in link:
