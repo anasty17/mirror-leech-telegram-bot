@@ -192,9 +192,22 @@ python3 generate_drive_token.py
 ```
 ------
 
-## Deploying on VPS Using Docker
+## Deploying on VPS
 
-**IMPORTANT NOTE**: You must set `SERVER_PORT` variable to `80` or any other port you want to use.
+**IMPORTANT NOTES**:
+1. You must set `SERVER_PORT` variable to `80` or any other port you want to use.
+2. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run
+3. To clear the container (this will not affect on the image):
+```
+sudo docker container prune
+```
+4. To delete the images:
+```
+sudo docker image prune -a
+```
+------
+
+### Deploying on VPS Using Docker
 
 - Start Docker daemon (skip if already running):
 ```
@@ -222,7 +235,7 @@ sudo docker stop id
 
 ----
 
-## Deploying on VPS Using docker-compose
+### Deploying on VPS Using docker-compose
 
 **NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml) also.
 
@@ -252,19 +265,6 @@ sudo docker-compose start
 ```
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
-------
-
-### Notes for docker
-
-* To clear the container (this will not affect on the image):
-```
-sudo docker container prune
-```
-* To delete the images:
-```
-sudo docker image prune -a
-```
 
 ------
 
