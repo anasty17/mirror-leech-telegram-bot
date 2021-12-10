@@ -458,7 +458,11 @@ def gdtot(url: str) -> str:
                'accept-language': 'en-IN,en-GB;q=0.9,en-US;q=0.8,en;q=0.7'}
 
     r1 = requests.get(url, headers=headers, cookies=cookies).content
-    s1 = BeautifulSoup(r1, 'html.parser').find('button', id="down").get('onclick').split("'")[1]
+    s1 = BeautifulSoup(r1, 'html.parser').find('button', id="down")
+    if s1 is not None:
+        s1 = s1.get('onclick').split("'")[1]
+    else:
+        raise DirectDownloadLinkException("ERROR: Check Your GDTot Link Maybe Not Found !")
     headers['referer'] = url
     s2 = BeautifulSoup(requests.get(s1, headers=headers, cookies=cookies).content, 'html.parser').find('meta').get('content').split('=',1)[1]
     headers['referer'] = s1
