@@ -66,10 +66,10 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}]+ba/b"
-            buttons.sbutton(str(i), f"qual {msg_id} {video_format} true")
-        buttons.sbutton("Best Videos", f"qual {msg_id} {best_video} true")
-        buttons.sbutton("Best Audios", f"qual {msg_id} {best_audio} true")
-        buttons.sbutton("Cancel", f"qual {msg_id} cancel")
+            buttons.sbutton(str(i), f"qu {msg_id} {video_format} t")
+        buttons.sbutton("Best Videos", f"qu {msg_id} {best_video} t")
+        buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
+        buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
         listener_dict[msg_id] = [listener, user_id, link, name]
         sendMarkup('Choose Playlist Quality:', bot, update, YTBUTTONS)
@@ -113,12 +113,12 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
                         video_format = f"bv*[height={height}][ext={ext}]+ba/b"
                     size = list(formats_dict[forDict].values())[0]
                     buttonName = f"{forDict} ({get_readable_file_size(size)})"
-                    buttons.sbutton(str(buttonName), f"qual {msg_id} {video_format} f")
+                    buttons.sbutton(str(buttonName), f"qu {msg_id} {video_format}")
                 else:
-                    buttons.sbutton(str(forDict), f"qual {msg_id} dict {forDict}")
-        buttons.sbutton("Best Video", f"qual {msg_id} {best_video} f")
-        buttons.sbutton("Best Audio", f"qual {msg_id} {best_audio} f")
-        buttons.sbutton("Cancel", f"qual {msg_id} cancel")
+                    buttons.sbutton(str(forDict), f"qu {msg_id} dict {forDict}")
+        buttons.sbutton("Best Video", f"qu {msg_id} {best_video}")
+        buttons.sbutton("Best Audio", f"qu {msg_id} {best_audio}")
+        buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
         listener_dict[msg_id] = [listener, user_id, link, name, formats_dict, YTBUTTONS]
         sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
@@ -147,9 +147,9 @@ def qual_subbuttons(task_id, qual, msg):
             video_format = f"bv*[height={height}][ext={ext}][tbr{tbr}]+ba/b"
         size = formats_dict[qual][br]
         buttonName = f"{br} ({get_readable_file_size(size)})"
-        buttons.sbutton(str(buttonName), f"qual {task_id} {video_format} f")
-    buttons.sbutton("Back", f"qual {task_id} back")
-    buttons.sbutton("Cancel", f"qual {task_id} cancel")
+        buttons.sbutton(str(buttonName), f"qu {task_id} {video_format}")
+    buttons.sbutton("Back", f"qu {task_id} back")
+    buttons.sbutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
     editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
 
@@ -177,7 +177,10 @@ def select_format(update, context):
         link = task_info[2]
         name = task_info[3]
         qual = data[2]
-        playlist = data[3]
+        if len(data) == 4:
+            playlist = True
+        else:
+            playlist = False
         ydl = YoutubeDLHelper(listener)
         threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
@@ -203,7 +206,7 @@ leech_watch_handler = CommandHandler(BotCommands.LeechWatchCommand, leechWatch,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 leech_zip_watch_handler = CommandHandler(BotCommands.LeechZipWatchCommand, leechWatchZip,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-quality_handler = CallbackQueryHandler(select_format, pattern="qual", run_async=True)
+quality_handler = CallbackQueryHandler(select_format, pattern="qu", run_async=True)
 
 dispatcher.add_handler(watch_handler)
 dispatcher.add_handler(zip_watch_handler)

@@ -154,7 +154,7 @@ class YoutubeDLHelper(DownloadHelper):
             self.onDownloadError("Download Stopped by User!")
 
     def add_download(self, link, path, name, qual, playlist):
-        if playlist == "true":
+        if playlist:
             self.opts['ignoreerrors'] = True
         if "hotstar" in link or "sonyliv" in link:
             self.opts['geo_bypass_country'] = 'IN'
