@@ -1,13 +1,9 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/pull/220)
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
-
 from .status import Status
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from bot import DOWNLOAD_DIR
 
 
-class DownloadStatus(Status):
+class GdDownloadStatus(Status):
     def __init__(self, obj, size, listener, gid):
         self.dobj = obj
         self.__dsize = size

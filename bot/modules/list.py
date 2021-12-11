@@ -1,8 +1,10 @@
+import threading
+
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot import LOGGER, dispatcher
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -44,7 +46,7 @@ def select_type(update, context):
         list_method = data[3]
         item_type = data[2]
         editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        list_drive(key, msg, list_method, item_type)
+        threading.Thread(target=list_drive, args=(key, msg, list_method, item_type)).start()
     else:
         query.answer()
         editMessage("list has been canceled!", msg)

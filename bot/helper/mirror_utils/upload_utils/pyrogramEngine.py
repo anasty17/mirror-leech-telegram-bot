@@ -138,12 +138,12 @@ class TgUploader:
                                                              disable_notification=True,
                                                              progress=self.upload_progress)
         except FloodWait as f:
-            LOGGER.info(str(f))
+            LOGGER.warning(str(f))
             time.sleep(f.x)
         except RPCError as e:
             LOGGER.error(str(e) + str(up_path))
         except Exception as err:
-            LOGGER.info(str(err))
+            LOGGER.error(str(err))
             self.is_cancelled = True
             self.__listener.onUploadError(str(err))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
