@@ -131,7 +131,7 @@ def aria2c_init():
         pass
 
 threading.Thread(target=aria2c_init).start()
-time.sleep(0.5)
+time.sleep(1)
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
