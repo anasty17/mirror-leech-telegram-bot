@@ -143,9 +143,7 @@ class TgUploader:
         except RPCError as e:
             LOGGER.error(str(e) + str(up_path))
         except Exception as err:
-            LOGGER.error(str(err))
-            self.is_cancelled = True
-            self.__listener.onUploadError(str(err))
+            LOGGER.error(str(err) + str(up_path))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
             os.remove(thumb)
         if not self.is_cancelled:
