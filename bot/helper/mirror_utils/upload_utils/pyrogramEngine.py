@@ -141,7 +141,7 @@ class TgUploader:
             LOGGER.warning(str(f))
             time.sleep(f.x)
         except RPCError as e:
-            LOGGER.error(str(e) + str(up_path))
+            LOGGER.error(f"RPCError: {e} {up_path}")
         except Exception as err:
             LOGGER.error(str(err) + str(up_path))
         if self.thumb is None and thumb is not None and os.path.lexists(thumb):
