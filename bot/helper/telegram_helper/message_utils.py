@@ -17,7 +17,7 @@ def sendMessage(text: str, bot, update: Update):
                             text=text, allow_sending_without_reply=True, parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.error(str(r))
-        time.sleep(r.retry_after)
+        time.sleep(r.retry_after * 1.5)
         return sendMessage(text, bot, update)
     except Exception as e:
         LOGGER.error(str(e))
@@ -30,7 +30,7 @@ def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarku
                             parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.error(str(r))
-        time.sleep(r.retry_after)
+        time.sleep(r.retry_after * 1.5)
         return sendMarkup(text, bot, update, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
@@ -42,7 +42,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
                               parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.error(str(r))
-        time.sleep(r.retry_after)
+        time.sleep(r.retry_after * 1.5)
         return editMessage(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
