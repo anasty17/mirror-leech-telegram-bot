@@ -75,7 +75,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS]
-        sendMarkup('Choose Playlist Quality:', bot, update, YTBUTTONS)
+        sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
     else:
         formats = result.get('formats')
         if formats is not None:
