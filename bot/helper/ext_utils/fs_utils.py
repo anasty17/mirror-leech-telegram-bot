@@ -166,7 +166,6 @@ def take_ss(video_file):
 
     if not os.path.lexists(des_dir):
         return None
-
     Image.open(des_dir).convert("RGB").save(des_dir, "JPEG")
     return des_dir
 
@@ -202,6 +201,7 @@ def get_media_info(path):
                                           "json", "-show_format", path]).decode('utf-8')
         fields = json.loads(result)['format']
     except Exception as e:
+        LOGGER.error(f"get_media_info: {e}")
         return 0, None, None
     try:
         duration = round(float(fields['duration']))
@@ -216,4 +216,17 @@ def get_media_info(path):
     except:
         title = None
     return duration, artist, title
+
+def get_video_resolution(path):
+    try:
+        result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-select_streams", "v:0",
+                                          "-show_entries", "stream=width,height", "-of", "json", path]).decode('utf-8')
+        fields = json.loads(result)['streams'][0]
+
+        width = int(fields['width'])
+        height = int(fields['height'])
+        return width, height
+    except Exception as e:
+        LOGGER.error(f"get_video_resolution: {e}")
+        return 480, 320
 
