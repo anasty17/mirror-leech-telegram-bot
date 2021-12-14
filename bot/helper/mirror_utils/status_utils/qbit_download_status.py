@@ -79,5 +79,6 @@ class QbDownloadStatus(Status):
         LOGGER.info(f"Cancelling Download: {self.name()}")
         self.client.torrents_pause(torrent_hashes=self.__hash)
         sleep(0.3)
-        self.listener.onDownloadError('Download stopped by user!')
-        self.client.torrents_delete(torrent_hashes=self.__hash)
+        if self.status() != MirrorStatus.STATUS_SEEDING:
+            self.listener.onDownloadError('Download stopped by user!')
+            self.client.torrents_delete(torrent_hashes=self.__hash)

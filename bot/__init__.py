@@ -59,7 +59,7 @@ except KeyError:
 PORT = os.environ.get('PORT', SERVER_PORT)
 web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 alive = subprocess.Popen(["python3", "alive.py"])
-subprocess.Popen(["qbittorrent-nox", "--profile=."])
+nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
 if not os.path.exists('.netrc'):
     subprocess.run(["touch", ".netrc"])
 subprocess.run(["cp", ".netrc", "/root/.netrc"])

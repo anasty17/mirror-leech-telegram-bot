@@ -11,7 +11,7 @@ from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
 from wserver import start_server_async
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, IS_VPS, PORT, alive, web, OWNER_ID, AUTHORIZED_CHATS, LOGGER, Interval, nox
 from bot.helper.ext_utils import fs_utils
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -76,14 +76,17 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
 
 def restart(update, context):
     restart_message = sendMessage("Restarting...", context.bot, update)
-    fs_utils.clean_all()
+    if Interval:
+        Interval[0].cancel()
     alive.kill()
     process = psutil.Process(web.pid)
     for proc in process.children(recursive=True):
         proc.kill()
     process.kill()
+    fs_utils.clean_all()
     subprocess.run(["python3", "update.py"])
     # Save restart message object in order to reply to it after restarting
+    nox.kill()
     with open(".restartmsg", "w") as f:
         f.truncate(0)
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")

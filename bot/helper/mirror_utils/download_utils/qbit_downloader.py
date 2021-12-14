@@ -236,7 +236,7 @@ class QbitTorrent:
                     self.client.auth_log_out()
                     self.updater.cancel()
             elif tor_info.state == 'pausedUP' and QB_SEED:
-                self.listener.onUploadError(f"Seeding finished with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
+                self.listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
                 self.client.torrents_delete(torrent_hashes=self.ext_hash)
                 self.client.auth_log_out()
                 self.updater.cancel()

@@ -558,10 +558,10 @@ class GoogleDriveHelper:
         return
 
     def escapes(self, str):
-        chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\s', r'\t']
+        chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\t']
         for char in chars:
-            str = str.replace(char, ' ')
-        return str
+            str = str.replace(char, '\\' + char)
+        return str.strip()
 
     def get_recursive_list(self, file, rootid = "root"):
         rtnlist = []
@@ -660,8 +660,7 @@ class GoogleDriveHelper:
 
     def drive_list(self, fileName, stopDup=False, noMulti=False, isRecursive=True, itemType=""):
         msg = ""
-        if not stopDup:
-            fileName = self.escapes(str(fileName))
+        fileName = self.escapes(str(fileName))
         contents_count = 0
         Title = False
         if len(DRIVES_IDS) > 1:
