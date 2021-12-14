@@ -395,12 +395,15 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     LOGGER.info(link)
     gdtot_link = bot_utils.is_gdtot_link(link)
+    pmsg = None
+    if gdtot_link:
+        pmsg = sendMessage(f"Processing: <code>{link}</code>", bot, update)
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
-        help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [𝚣𝚒𝚙/𝚞𝚗𝚣𝚒𝚙]"
+        help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [zip/unzip]"
         help_msg += "\n\n<b>By replying to link or file:</b>"
-        help_msg += "\n<code>/command</code> |newname pswd: mypassword [𝚣𝚒𝚙/𝚞𝚗𝚣𝚒𝚙]"
+        help_msg += "\n<code>/command</code> |newname pswd: mypassword [zip/unzip]"
         help_msg += "\n\n<b>Direct link authorization:</b>"
         help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword\nusername\npassword"
         help_msg += "\n\n<b>Qbittorrent selection:</b>"
@@ -436,7 +439,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             sendMessage(gmsg, bot, update)
             return
         gd_dl = GdDownloadHelper()
-        gd_dl.add_download(link, listener, gdtot_link)
+        gd_dl.add_download(link, listener, gdtot_link, pmsg)
 
     elif bot_utils.is_mega_link(link):
         if BLOCK_MEGA_LINKS:

@@ -31,7 +31,7 @@ def short_url(longurl):
         disable_warnings()
         link = requests.get(f'http://ouo.io/api/{SHORTENER_API}?s={longurl}', verify=False).text
     else:
-        link = requests.get(f'https://{SHORTENER}/api?api={SHORTENER_API}&url={longurl}&format=text').text
+        link = requests.get(f'https://{SHORTENER}/api?api={SHORTENER_API}&url={quote(longurl)}&format=text').text
 
     if len(link) == 0:
         LOGGER.error("Something is Wrong with the url shortener")
