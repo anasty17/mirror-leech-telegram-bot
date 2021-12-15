@@ -10,7 +10,6 @@ import shutil
 
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
-from requests.exceptions import RequestException
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
@@ -33,7 +32,7 @@ from bot.helper.mirror_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_utils.upload_utils import gdriveTools, pyrogramEngine
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, sendStatusMessage, deleteMessage
 from bot.helper.telegram_helper import button_build
 
 ariaDlManager = AriaDownloadHelper()
@@ -395,12 +394,14 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     LOGGER.info(link)
     gdtot_link = bot_utils.is_gdtot_link(link)
+    if gdtot_link:
+        pmsg = sendMessage(f"Processing: <code>{link}</code>", bot, update)
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
-        help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [𝚣𝚒𝚙/𝚞𝚗𝚣𝚒𝚙]"
+        help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [zip/unzip]"
         help_msg += "\n\n<b>By replying to link or file:</b>"
-        help_msg += "\n<code>/command</code> |newname pswd: mypassword [𝚣𝚒𝚙/𝚞𝚗𝚣𝚒𝚙]"
+        help_msg += "\n<code>/command</code> |newname pswd: mypassword [zip/unzip]"
         help_msg += "\n\n<b>Direct link authorization:</b>"
         help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword\nusername\npassword"
         help_msg += "\n\n<b>Qbittorrent selection:</b>"
@@ -412,6 +413,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             link = direct_link_generator(link)
         except DirectDownloadLinkException as e:
             LOGGER.info(str(e))
+            if gdtot_link:
+                deleteMessage(bot, pmsg)
             if str(e).startswith('ERROR:'):
                 return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
@@ -436,6 +439,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             sendMessage(gmsg, bot, update)
             return
         gd_dl = GdDownloadHelper()
+        if gdtot_link:
+            deleteMessage(bot, pmsg)
         gd_dl.add_download(link, listener, gdtot_link)
 
     elif bot_utils.is_mega_link(link):
