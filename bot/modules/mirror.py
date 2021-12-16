@@ -437,6 +437,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             sendMessage(gmsg, bot, update)
+            if gdtot_link:
+                deleteMessage(bot, pmsg)
             return
         gd_dl = GdDownloadHelper()
         if gdtot_link:
