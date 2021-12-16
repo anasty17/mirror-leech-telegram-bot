@@ -177,7 +177,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=Fals
         base_name, extension = os.path.splitext(filee)
         split_size = split_size - 2500000
         while i <= parts :
-            parted_name = "{}_part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
+            parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = os.path.join(dirpath, parted_name)
             subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
                             path, "-ss", str(start_time), "-fs", str(split_size),
@@ -192,7 +192,7 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=Fals
             start_time += lpd - 3
             i = i + 1
     else:
-        out_path = os.path.join(dirpath, filee + "_")
+        out_path = os.path.join(dirpath, filee + ".")
         subprocess.run(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
 
 def get_media_info(path):
