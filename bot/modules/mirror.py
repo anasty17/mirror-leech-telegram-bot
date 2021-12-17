@@ -394,8 +394,14 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     LOGGER.info(link)
     gdtot_link = bot_utils.is_gdtot_link(link)
+    gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
+    gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
+    gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts archive Google Drive file"
     if gdtot_link:
         pmsg = sendMessage(f"Processing: <code>{link}</code>", bot, update)
+    if gdtot_link and not isZip and not extract and not isLeech:
+        deleteMessage(bot, pmsg)
+        return sendMessage(gmsg, bot, update)
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -433,13 +439,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:
-            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-            gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
-            gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
-            sendMessage(gmsg, bot, update)
-            if gdtot_link:
-                deleteMessage(bot, pmsg)
-            return
+            return sendMessage(gmsg, bot, update)
         gd_dl = GdDownloadHelper()
         if gdtot_link:
             deleteMessage(bot, pmsg)
