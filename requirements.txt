@@ -10,7 +10,6 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-js2py
 lk21
 lxml
 pillow
