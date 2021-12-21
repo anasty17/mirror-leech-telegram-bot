@@ -43,9 +43,9 @@ def authorize(update, context):
             msg = 'User Already Authorized!'
         elif DB_URI is not None:
             msg = DbManger().user_auth(user_id)
-            AUTHORIZED_CHATS.add(chat_id)
+            AUTHORIZED_CHATS.add(user_id)
         else:
-            AUTHORIZED_CHATS.add(chat_id)
+            AUTHORIZED_CHATS.add(user_id)
             with open('authorized_chats.txt', 'a') as file:
                 file.write(f'{user_id}\n')
                 msg = 'User Authorized'
@@ -85,7 +85,7 @@ def unauthorize(update, context):
                 msg = DbManger().user_unauth(user_id)
             else:
                 msg = 'User Unauthorized'
-            AUTHORIZED_CHATS.remove(chat_id)
+            AUTHORIZED_CHATS.remove(user_id)
         else:
             msg = 'User Already Unauthorized!'
     if DB_URI is None:
