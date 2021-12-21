@@ -97,7 +97,7 @@ class TgUploader:
                         os.rename(up_path, new_path)
                         up_path = new_path
                     self.sent_msg = self.sent_msg.reply_video(video=up_path,
-                                                              quote=False,
+                                                              quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
@@ -110,7 +110,7 @@ class TgUploader:
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.sent_msg = self.sent_msg.reply_audio(audio=up_path,
-                                                              quote=False,
+                                                              quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               duration=duration,
@@ -121,7 +121,7 @@ class TgUploader:
                                                               progress=self.upload_progress)
                 elif filee.upper().endswith(IMAGE_SUFFIXES):
                     self.sent_msg = self.sent_msg.reply_photo(photo=up_path,
-                                                              quote=False,
+                                                              quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
                                                               disable_notification=True,
@@ -136,7 +136,7 @@ class TgUploader:
                             os.remove(thumb)
                         return
                 self.sent_msg = self.sent_msg.reply_document(document=up_path,
-                                                             quote=False,
+                                                             quote=True,
                                                              thumb=thumb,
                                                              caption=cap_mono,
                                                              parse_mode="html",
