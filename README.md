@@ -55,6 +55,10 @@ git push heroku heroku:master -f
 
 ### Extras
 
+- To heroku-postgresql database
+```
+heroku addons:create heroku-postgresql
+```
 - To delete the app
 ```
 heroku apps:destroy YOURAPPNAME
