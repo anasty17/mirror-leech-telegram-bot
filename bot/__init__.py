@@ -7,13 +7,11 @@ import requests
 import socket
 import faulthandler
 import aria2p
-import psycopg2
 import json
 import qbittorrentapi as qba
 import telegram.ext as tg
 
 from pyrogram import Client
-from psycopg2 import Error
 from dotenv import load_dotenv
 
 faulthandler.enable()
@@ -73,18 +71,6 @@ DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
 
-def mktable():
-    try:
-        conn = psycopg2.connect(DB_URI)
-        cur = conn.cursor()
-        sql = "CREATE TABLE users (uid bigint, sudo boolean DEFAULT FALSE);"
-        cur.execute(sql)
-        conn.commit()
-        logging.info("Table Created!")
-    except Error as e:
-        logging.error(e)
-        exit(1)
-
 try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
         logging.error('The README.md file there to be read! Exiting now!')
@@ -112,30 +98,12 @@ trackerslist = "\n\n".join(trackerslist)
 get_client().application.set_preferences({"add_trackers":f"{trackerslist}"})
 """
 
-def aria2c_init():
-    try:
-        logging.info("Initializing Aria2c")
-        link = "https://releases.ubuntu.com/21.10/ubuntu-21.10-desktop-amd64.iso.torrent"
-        path = "/usr/src/app/"
-        aria2.add_uris([link], {'dir': path})
-        time.sleep(3)
-        downloads = aria2.get_downloads()
-        time.sleep(30)
-        for download in downloads:
-            aria2.remove([download], force=True, files=True)
-    except Exception as e:
-        logging.error(f"Aria2c initializing error: {e}")
-        pass
-
-if not os.path.isfile(".restartmsg"):
-    threading.Thread(target=aria2c_init).start()
-    time.sleep(1)
-
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 
 download_dict_lock = threading.Lock()
 status_reply_dict_lock = threading.Lock()
+rss_dict_lock = threading.Lock()
 # Key: update.effective_chat.id
 # Value: telegram.Message
 status_reply_dict = {}
@@ -143,6 +111,9 @@ status_reply_dict = {}
 # Value: An object of Status
 download_dict = {}
 # Stores list of users and chats the bot is authorized to use in
+rss_dict = {}
+# key: rss_title
+# value: [rss_feed, last_link, last_title]
 AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
 AS_DOC_USERS = set()
@@ -185,36 +156,46 @@ try:
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
+
+LOGGER.info("Generating USER_SESSION_STRING")
+app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, workers=343)
+
+try:
+    USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
+    if len(USER_STRING_SESSION) == 0:
+        raise KeyError
+except KeyError:
+    USER_STRING_SESSION = None
+
+if USER_STRING_SESSION is not None:
+    rss_session = Client(USER_STRING_SESSION, api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH)
+else:
+    rss_session = None
+
+def aria2c_init():
+    try:
+        logging.info("Initializing Aria2c")
+        link = "https://releases.ubuntu.com/21.10/ubuntu-21.10-desktop-amd64.iso.torrent"
+        aria2.add_uris([link], {'dir': DOWNLOAD_DIR})
+        time.sleep(3)
+        downloads = aria2.get_downloads()
+        time.sleep(30)
+        for download in downloads:
+            aria2.remove([download], force=True, files=True)
+    except Exception as e:
+        logging.error(f"Aria2c initializing error: {e}")
+        pass
+
+if not os.path.isfile(".restartmsg"):
+    threading.Thread(target=aria2c_init).start()
+    time.sleep(1)
+
 try:
     DB_URI = getConfig('DATABASE_URL')
     if len(DB_URI) == 0:
         raise KeyError
 except KeyError:
     DB_URI = None
-if DB_URI is not None:
-    try:
-        conn = psycopg2.connect(DB_URI)
-        cur = conn.cursor()
-        sql = "SELECT * from users;"
-        cur.execute(sql)
-        rows = cur.fetchall()  #returns a list ==> (uid, sudo)
-        for row in rows:
-            AUTHORIZED_CHATS.add(row[0])
-            if row[1]:
-                SUDO_USERS.add(row[0])
-    except Error as e:
-        if 'relation "users" does not exist' in str(e):
-            mktable()
-        else:
-            LOGGER.error(e)
-            exit(1)
-    finally:
-        cur.close()
-        conn.close()
-
-LOGGER.info("Generating USER_SESSION_STRING")
-app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, workers=343)
-
 try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097151000:
@@ -252,7 +233,6 @@ try:
     if len(UPTOBOX_TOKEN) == 0:
         raise KeyError
 except KeyError:
-    logging.warning('UPTOBOX_TOKEN not provided!')
     UPTOBOX_TOKEN = None
 try:
     INDEX_URL = getConfig('INDEX_URL')
@@ -269,6 +249,12 @@ try:
         raise KeyError
 except KeyError:
     SEARCH_API_LINK = None
+try:
+    RSS_COMMAND = getConfig('RSS_COMMAND')
+    if len(RSS_COMMAND) == 0:
+        raise KeyError
+except KeyError:
+    RSS_COMMAND = None
 try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
@@ -301,6 +287,22 @@ try:
         ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
 except KeyError:
     ZIP_UNZIP_LIMIT = None
+try:
+    RSS_CHAT_ID = getConfig('RSS_CHAT_ID')
+    if len(RSS_CHAT_ID) == 0:
+        raise KeyError
+    else:
+        RSS_CHAT_ID = int(RSS_CHAT_ID)
+except KeyError:
+    RSS_CHAT_ID = None
+try:
+    RSS_DELAY = getConfig('RSS_DELAY')
+    if len(RSS_DELAY) == 0:
+        raise KeyError
+    else:
+        RSS_DELAY = int(RSS_DELAY)
+except KeyError:
+    RSS_DELAY = 900
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
@@ -517,3 +519,4 @@ except KeyError:
 updater = tg.Updater(token=BOT_TOKEN)
 bot = updater.bot
 dispatcher = updater.dispatcher
+job_queue = updater.job_queue

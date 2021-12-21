@@ -185,9 +185,12 @@ def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=Fals
             out_size = get_path_size(out_path)
             if out_size > 2097152000:
                 dif = out_size - 2097152000
-                split_size = split_size - dif + 2400000
+                split_size = split_size - dif + 2500000
                 os.remove(out_path)
                 return split(path, size, filee, dirpath, split_size, start_time, i, inLoop=True)
+            elif out_size < 1000:
+                os.remove(out_path)
+                break
             lpd = get_media_info(out_path)[0]
             start_time += lpd - 3
             i = i + 1

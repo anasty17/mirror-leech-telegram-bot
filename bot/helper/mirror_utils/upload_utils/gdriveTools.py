@@ -311,7 +311,7 @@ class GoogleDriveHelper:
                 reason = json.loads(err.content).get('error').get('errors')[0].get('reason')
                 if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     if USE_SERVICE_ACCOUNTS:
-                        if self.sa_count == len(os.listdir("accounts")):
+                        if self.sa_count == len(os.listdir("accounts")) or self.sa_count > 50:
                             self.is_cancelled = True
                             raise err
                         else:
@@ -939,7 +939,7 @@ class GoogleDriveHelper:
                     ]:
                         raise err
                     if USE_SERVICE_ACCOUNTS:
-                        if self.sa_count == len(os.listdir("accounts")):
+                        if self.sa_count == len(os.listdir("accounts")) or self.sa_count > 50:
                             self.is_cancelled = True
                             raise err
                         else:

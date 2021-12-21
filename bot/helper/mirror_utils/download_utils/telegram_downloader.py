@@ -36,6 +36,7 @@ class TelegramDownloadHelper(DownloadHelper):
     def __onDownloadStart(self, name, size, file_id):
         with download_dict_lock:
             download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener)
+        sendStatusMessage(self.__listener.update, self.__listener.bot)
         with global_lock:
             GLOBAL_GID.add(file_id)
         with self.__resource_lock:
@@ -111,7 +112,6 @@ class TelegramDownloadHelper(DownloadHelper):
                         return
                 self.__onDownloadStart(name, media.file_size, media.file_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
-                sendStatusMessage(self.__listener.update, self.__listener.bot)
                 threading.Thread(target=self.__download, args=(_message, path)).start()
             else:
                 self.__onDownloadError('File already being downloaded!')

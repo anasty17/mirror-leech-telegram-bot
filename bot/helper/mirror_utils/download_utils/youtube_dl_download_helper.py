@@ -100,6 +100,7 @@ class YoutubeDLHelper(DownloadHelper):
     def __onDownloadStart(self):
         with download_dict_lock:
             download_dict[self.__listener.uid] = YoutubeDLDownloadStatus(self, self.__listener)
+        sendStatusMessage(self.__listener.update, self.__listener.bot)
 
     def __onDownloadComplete(self):
         self.__listener.onDownloadComplete()
@@ -160,7 +161,6 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['geo_bypass_country'] = 'IN'
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
         self.__onDownloadStart()
-        sendStatusMessage(self.__listener.update, self.__listener.bot)
         if qual.startswith('ba/b'):
             audio_info = qual.split('-')
             qual = audio_info[0]

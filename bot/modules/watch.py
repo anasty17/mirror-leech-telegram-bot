@@ -80,7 +80,6 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         formats = result.get('formats')
         if formats is not None:
             formats_dict = {}
-            tbr = []
             for frmt in formats:
                 if not frmt.get('tbr') or not frmt.get('height'):
                     continue
@@ -209,7 +208,7 @@ def select_format(update, context):
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
+        threading.Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
     query.message.delete()
 
