@@ -45,7 +45,7 @@ def rss_get(update, context):
         else:
             sendMessage("Enter a vaild title/value.", context.bot, update)
     except (IndexError, ValueError):
-        sendMessage("Use this format to fetch:\n/rssget Title value", context.bot, update)
+        sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand} Title value", context.bot, update)
 
 def rss_sub(update, context):
     try:
@@ -58,7 +58,7 @@ def rss_sub(update, context):
             return sendMessage("This title already subscribed! Choose another title!", context.bot, update)
         try:
             rss_d = feedparser.parse(feed_link)
-            sub_msg = f"<b>Subscribed!</b>"
+            sub_msg = "<b>Subscribed!</b>"
             sub_msg += f"\n\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
             sub_msg += f"\n\n<b>latest record for </b>{rss_d.feed.title}:"
             sub_msg += f"\n\n<b>Name: </b><code>{rss_d.entries[0]['title']}</code>"
@@ -78,7 +78,7 @@ def rss_sub(update, context):
             LOGGER.error(str(e))
             sendMessage(str(e), context.bot, update)
     except IndexError:
-        sendMessage("Use this format to add feed url:\n/rsssub Title https://www.rss-url.com", context.bot, update)
+        sendMessage(f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com", context.bot, update)
 
 def rss_unsub(update, context):
     try:
@@ -95,7 +95,7 @@ def rss_unsub(update, context):
             sendMessage(f"Rss link with Title: {title} removed!", context.bot, update)
             LOGGER.info(f"Rss link with Title: {title} removed!")
     except IndexError:
-        sendMessage("Use this format to remove feed url:\n/rssunsub Title", context.bot, update)
+        sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update)
 
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
@@ -131,10 +131,7 @@ def rss_monitor(context):
                         feed_last.append(rss_d.entries[feed_count]['link'])
                         feed_count += 1
                     for url in feed_last:
-                        if RSS_COMMAND is not None:
-                            feed_msg = f"{RSS_COMMAND} {url}"
-                        else:
-                            feed_msg = f"{url}"
+                        feed_msg = f"{RSS_COMMAND} {url}" if RSS_COMMAND is not None else f"{url}"
                         sendRss(feed_msg, context.bot)
                         sleep(2)
                     DbManger().rss_update(name, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
@@ -162,4 +159,3 @@ if DB_URI is not None and RSS_CHAT_ID is not None:
     dispatcher.add_handler(rss_unsub_handler)
     dispatcher.add_handler(rss_unsub_all_handler)
     rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=20, name="RSS")
-
