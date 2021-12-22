@@ -122,7 +122,6 @@ class MirrorListener(listeners.MirrorListeners):
                                     result = subprocess.run(["7z", "x", m_path, f"-o{dirpath}"])
                                 if result.returncode != 0:
                                     LOGGER.warning('Unable to extract archive!')
-                                break
                         for filee in files:
                             if filee.endswith(".rar") or re.search(r'\.r\d+$', filee) \
                                or re.search(r'\.7z.\d+$', filee) or re.search(r'\.z\d+$', filee) \
