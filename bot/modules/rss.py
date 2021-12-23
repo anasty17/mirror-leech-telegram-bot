@@ -8,6 +8,7 @@ from telegram.ext import CommandHandler
 
 from bot import dispatcher, job_queue, rss_dict, rss_dict_lock, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
+from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -47,6 +48,7 @@ def rss_get(update, context):
     except (IndexError, ValueError):
         sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand} Title value", context.bot, update)
 
+@new_thread
 def rss_sub(update, context):
     try:
         args = update.message.text.split(" ", maxsplit=2)
@@ -80,6 +82,7 @@ def rss_sub(update, context):
     except IndexError:
         sendMessage(f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com", context.bot, update)
 
+@new_thread
 def rss_unsub(update, context):
     try:
         args = update.message.text.split(" ")
@@ -97,6 +100,7 @@ def rss_unsub(update, context):
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update)
 
+@new_thread
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
         DbManger().rss_delete_all()
@@ -116,7 +120,7 @@ def rss_monitor(context):
         for name, url_list in rss_dict.items():
             """
             try:
-                resp = requests.get(url_list[0], timeout=20)
+                resp = requests.get(url_list[0], timeout=15)
             except RequestException as e:
                 LOGGER.error(f"{e} for feed: {name} - {url_list[0]}")
                 continue
