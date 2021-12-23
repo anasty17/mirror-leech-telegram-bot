@@ -126,7 +126,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, formats_dict]
         sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
 
-def qual_subbuttons(task_id, qual, msg):
+def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[5]
@@ -156,7 +156,7 @@ def qual_subbuttons(task_id, qual, msg):
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
     editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
 
-def audio_subbuttons(task_id, msg, playlist=False):
+def _audio_subbuttons(task_id, msg, playlist=False):
     buttons = button_build.ButtonMaker()
     audio_qualities = [64, 128, 320]
     for q in audio_qualities:
@@ -186,7 +186,7 @@ def select_format(update, context):
     elif data[2] == "dict":
         query.answer()
         qual = data[3]
-        return qual_subbuttons(task_id, qual, msg)
+        return _qual_subbuttons(task_id, qual, msg)
     elif data[2] == "back":
         query.answer()
         return editMessage('Choose Video Quality:', msg, task_info[4])
@@ -196,7 +196,7 @@ def select_format(update, context):
             playlist = True
         else:
             playlist = False
-        return audio_subbuttons(task_id, msg, playlist)
+        return _audio_subbuttons(task_id, msg, playlist)
     elif data[2] != "cancel":
         query.answer()
         listener = task_info[0]

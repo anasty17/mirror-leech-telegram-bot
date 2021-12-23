@@ -49,8 +49,8 @@ class YoutubeDLHelper(DownloadHelper):
         self.downloaded_bytes = 0
         self.size = 0
         self.is_playlist = False
-        self.last_downloaded = 0
-        self.is_cancelled = False
+        self._last_downloaded = 0
+        self.__is_cancelled = False
         self.downloading = False
         self.__resource_lock = threading.RLock()
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
@@ -72,11 +72,11 @@ class YoutubeDLHelper(DownloadHelper):
 
     def __onDownloadProgress(self, d):
         self.downloading = True
-        if self.is_cancelled:
+        if self.__is_cancelled:
             raise ValueError("Cancelling...")
         if d['status'] == "finished":
             if self.is_playlist:
-                self.last_downloaded = 0
+                self._last_downloaded = 0
         elif d['status'] == "downloading":
             with self.__resource_lock:
                 self.__download_speed = d['speed']
@@ -86,8 +86,8 @@ class YoutubeDLHelper(DownloadHelper):
                     tbyte = d['total_bytes_estimate']
                 if self.is_playlist:
                     downloadedBytes = d['downloaded_bytes']
-                    chunk_size = downloadedBytes - self.last_downloaded
-                    self.last_downloaded = downloadedBytes
+                    chunk_size = downloadedBytes - self._last_downloaded
+                    self._last_downloaded = downloadedBytes
                     self.downloaded_bytes += chunk_size
                 else:
                     self.size = tbyte
@@ -146,7 +146,7 @@ class YoutubeDLHelper(DownloadHelper):
         try:
             with YoutubeDL(self.opts) as ydl:
                 ydl.download([link])
-                if self.is_cancelled:
+                if self.__is_cancelled:
                     raise ValueError
                 self.__onDownloadComplete()
         except DownloadError as e:
@@ -172,7 +172,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name)
-        if self.is_cancelled:
+        if self.__is_cancelled:
             return
         if not self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}"
@@ -181,7 +181,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.__download(link)
 
     def cancel_download(self):
-        self.is_cancelled = True
+        self.__is_cancelled = True
         if not self.downloading:
             self.onDownloadError("Download Cancelled by User!")
 

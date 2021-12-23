@@ -1,14 +1,16 @@
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
-import threading
-from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
 import os
+import random
+import string
+import threading
+
+from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
+
+from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import new_thread, get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
-import random
-import string
 
 
 class MegaAppListener(MegaListener):
@@ -54,9 +56,6 @@ class MegaAppListener(MegaListener):
     def downloaded_bytes(self):
         return self.__bytes_transferred
 
-    def onRequestStart(self, api, request):
-        pass
-
     def onRequestFinish(self, api, request, error):
         if str(error).lower() != "no error":
             self.error = error.copy()
@@ -81,12 +80,10 @@ class MegaAppListener(MegaListener):
         self.error = error.toString()
         self.continue_event.set()
 
-    def onTransferStart(self, api: MegaApi, transfer: MegaTransfer):
-        pass
-
     def onTransferUpdate(self, api: MegaApi, transfer: MegaTransfer):
         if self.is_cancelled:
             api.cancelTransfer(transfer, None)
+            self.continue_event.set()
             return
         self.__speed = transfer.getSpeed()
         self.__bytes_transferred = transfer.getTransferredBytes()
@@ -120,7 +117,6 @@ class MegaAppListener(MegaListener):
     def cancel_download(self):
         self.is_cancelled = True
         self.listener.onDownloadError("Download Canceled by user")
-        self.continue_event.set()
 
 
 class AsyncExecutor:
@@ -132,6 +128,8 @@ class AsyncExecutor:
         self.continue_event.clear()
         function(*args)
         self.continue_event.wait()
+
+listeners = []
 
 
 class MegaDownloadHelper:
@@ -152,11 +150,13 @@ class MegaDownloadHelper:
             node = mega_listener.public_node
         else:
             LOGGER.info("Folder. If your download didn't start, then check your link if it's available to download")
-            folder_api = MegaApi(MEGA_API_KEY,None,None,'TgBot')
+            folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
             folder_api.addListener(mega_listener)
             executor.do(folder_api.loginToFolder, (mega_link,))
             node = folder_api.authorizeNode(mega_listener.node)
         if mega_listener.error is not None:
+            global listeners
+            listeners.append(mega_listener)
             return sendMessage(str(mega_listener.error), listener.bot, listener.update)
         if STOP_DUPLICATE and not listener.isLeech:
             LOGGER.info('Checking File/Folder if already in Drive')
