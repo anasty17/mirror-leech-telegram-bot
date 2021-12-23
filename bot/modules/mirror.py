@@ -9,12 +9,12 @@ import time
 import shutil
 
 from telegram.ext import CommandHandler
-from telegram import InlineKeyboardMarkup
+from telegram import InlineKeyboardMarkup, ParseMode
 from requests.exceptions import RequestException
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
-                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
+                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, LOGS_CHATS
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
@@ -33,7 +33,7 @@ from bot.helper.mirror_utils.status_utils.tg_upload_status import TgUploadStatus
 from bot.helper.mirror_utils.upload_utils import gdriveTools, pyrogramEngine
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
+from bot.helper.telegram_helper.message_utils import *
 from bot.helper.telegram_helper import button_build
 
 ariaDlManager = AriaDownloadHelper()
@@ -112,15 +112,14 @@ class MirrorListener(listeners.MirrorListeners):
                 if os.path.isdir(m_path):
                     for dirpath, subdir, files in os.walk(m_path, topdown=False):
                         for filee in files:
-                            LOGGER.info(files)
                             if re.search(r'\.part0*1.rar$', filee) or re.search(r'\.7z.0*1$', filee) \
                                or (filee.endswith(".rar") and not re.search(r'\.part\d+.rar$', filee)) \
                                or filee.endswith(".zip") or re.search(r'\.zip.0*1$', filee):
                                 m_path = os.path.join(dirpath, filee)
                                 if pswd is not None:
-                                    result = subprocess.run(["7z", "x", f"-p{pswd}", m_path, f"-o{dirpath}", "-aot"])
+                                    result = subprocess.run(["7z", "x", f"-p{pswd}", m_path, f"-o{dirpath}"])
                                 else:
-                                    result = subprocess.run(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
+                                    result = subprocess.run(["7z", "x", m_path, f"-o{dirpath}"])
                                 if result.returncode != 0:
                                     LOGGER.warning('Unable to extract archive!')
                         for filee in files:
@@ -288,7 +287,15 @@ class MirrorListener(listeners.MirrorListeners):
             else:
                 uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
             if uname is not None:
-                msg += f'\n\n<b>cc: </b>{uname}'
+                msg += f'\n\n<b>#Uploded by: </b>{uname}'
+            if LOGS_CHATS:
+                    try:
+                        for i in LOGS_CHATS:
+                            msg1 = f'<b>File Uploaded: </b> <code>{download_dict[self.uid].name()}</code>\n'                    msg1 += f'<b>Size: </b>{size}\n'
+                            msg1 += f'<b>#Uploaded by: </b>{uname}\n,
+                            bot.sendMessage(chat_id=i, text=msg1, reply_markup=InlineKeyboardMarkup(buttons.build_menu(2)), parse_mode=ParseMode.HTML)
+                    except Exception as e:
+                        LOGGER.warning(e)
 
         sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
         if self.isQbit and QB_SEED:
