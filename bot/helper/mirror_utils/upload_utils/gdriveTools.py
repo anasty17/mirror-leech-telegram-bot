@@ -68,7 +68,7 @@ class GoogleDriveHelper:
         self.__total_bytes = 0
         self.__total_files = 0
         self.__total_folders = 0
-        self.__transferred_size = 0
+        self.transferred_size = 0
         self.__sa_count = 0
         self.alt_auth = False
 
@@ -90,7 +90,7 @@ class GoogleDriveHelper:
 
     def cspeed(self):
         try:
-            return self.__transferred_size / int(time.time() - self.start_time)
+            return self.transferred_size / int(time.time() - self.start_time)
         except ZeroDivisionError:
             return 0
 
@@ -372,7 +372,7 @@ class GoogleDriveHelper:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.deletefile(durl)
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.__transferred_size)}'
+                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.__total_folders}'
                 msg += f'\n<b>Files: </b>{self.__total_files}'
@@ -442,7 +442,7 @@ class GoogleDriveHelper:
                 self.cloneFolder(file.get('name'), file_path, file.get('id'), current_dir_id)
             else:
                 self.__total_files += 1
-                self.__transferred_size += int(file.get('size', 0))
+                self.transferred_size += int(file.get('size', 0))
                 self.copyFile(file.get('id'), parent_id)
             if self.is_cancelled:
                 break
