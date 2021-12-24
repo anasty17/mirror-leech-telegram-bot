@@ -140,7 +140,9 @@ class MegaDownloadHelper:
         executor = AsyncExecutor()
         api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
         mega_listener = MegaAppListener(executor.continue_event, listener)
+        global listeners
         api.addListener(mega_listener)
+        listeners.append(mega_listener)
         if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
             executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
         link_type = get_mega_link_type(mega_link)
@@ -155,8 +157,6 @@ class MegaDownloadHelper:
             executor.do(folder_api.loginToFolder, (mega_link,))
             node = folder_api.authorizeNode(mega_listener.node)
         if mega_listener.error is not None:
-            global listeners
-            listeners.append(mega_listener)
             return sendMessage(str(mega_listener.error), listener.bot, listener.update)
         if STOP_DUPLICATE and not listener.isLeech:
             LOGGER.info('Checking File/Folder if already in Drive')
