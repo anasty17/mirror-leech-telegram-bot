@@ -191,7 +191,7 @@ class QbitTorrent:
                             self.updater.cancel()
                     self.sizeChecked = True
             elif tor_info.state == "stalledDL":
-                if tor_info.downloaded >= tor_info.size and tor_info.progress >= 1:
+                if tor_info.downloaded >= tor_info.size and tor_info.progress > 0.99989:
                     self.client.torrents_recheck(torrent_hashes=self.ext_hash)
                 elif time.time() - self.stalled_time >= 999999999: # timeout after downloading metadata
                     self.client.torrents_pause(torrent_hashes=self.ext_hash)

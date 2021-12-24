@@ -10,7 +10,6 @@ import shutil
 
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
-from requests.exceptions import RequestException
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
@@ -211,6 +210,20 @@ class MirrorListener(listeners.MirrorListeners):
 
     def onUploadComplete(self, link: str, size, files, folders, typ):
         if self.isLeech:
+            if self.isQbit and QB_SEED:
+                pass
+            else:
+                with download_dict_lock:
+                    try:
+                        fs_utils.clean_download(download_dict[self.uid].path())
+                    except FileNotFoundError:
+                        pass
+                    del download_dict[self.uid]
+                    dcount = len(download_dict)
+                if dcount == 0:
+                    self.clean()
+                else:
+                    update_all_messages()
             if self.message.from_user.username:
                 uname = f"@{self.message.from_user.username}"
             else:
@@ -237,21 +250,7 @@ class MirrorListener(listeners.MirrorListeners):
                 if fmsg != '':
                     time.sleep(1.5)
                     sendMessage(msg + fmsg, self.bot, self.update)
-            if self.isQbit and QB_SEED:
-                return
-            else:
-                with download_dict_lock:
-                    try:
-                        fs_utils.clean_download(download_dict[self.uid].path())
-                    except FileNotFoundError:
-                        pass
-                    del download_dict[self.uid]
-                    count = len(download_dict)
-                if count == 0:
-                    self.clean()
-                else:
-                    update_all_messages()
-                return
+            return
 
         with download_dict_lock:
             msg = f'<b>Name: </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
@@ -289,22 +288,20 @@ class MirrorListener(listeners.MirrorListeners):
                 uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
             if uname is not None:
                 msg += f'\n\n<b>cc: </b>{uname}'
-
-        sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
-        if self.isQbit and QB_SEED:
-            return
-        else:
-            with download_dict_lock:
+            if self.isQbit and QB_SEED:
+               pass
+            else:
                 try:
                     fs_utils.clean_download(download_dict[self.uid].path())
                 except FileNotFoundError:
                     pass
                 del download_dict[self.uid]
                 count = len(download_dict)
-            if count == 0:
-                self.clean()
-            else:
-                update_all_messages()
+        sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
+        if count == 0:
+            self.clean()
+        else:
+            update_all_messages()
 
     def onUploadError(self, error):
         e_str = error.replace('<', '').replace('>', '')
@@ -408,34 +405,39 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         return sendMessage(help_msg, bot, update)
     elif not bot_utils.is_mega_link(link) and not isQbit and not bot_utils.is_magnet(link) \
          and not os.path.exists(link) and not bot_utils.is_gdrive_link(link):
+        header = None
         try:
-            link = direct_link_generator(link)
-        except DirectDownloadLinkException as e:
-            LOGGER.info(str(e))
-            if str(e).startswith('ERROR:'):
-                return sendMessage(str(e), bot, update)
+            res = requests.head(link, timeout=5)
+            header = res.headers.get('content-type')
+        except:
+            pass
+        if header is not None and 'text/html' in header:
+            try:
+                link = direct_link_generator(link)
+            except DirectDownloadLinkException as e:
+                LOGGER.info(str(e))
+                if str(e).startswith('ERROR:'):
+                    return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
         try:
-            resp = requests.get(link)
+            resp = requests.get(link, timeout=5)
             if resp.status_code == 200:
                 file_name = str(time.time()).replace(".", "") + ".torrent"
                 open(file_name, "wb").write(resp.content)
                 link = f"{file_name}"
             else:
-                sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
-                return
+                return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
         except Exception as e:
             LOGGER.error(str(e))
-            sendMessage(str(e), bot, update)
-            return
+            error = str(e).replace('<', ' ').replace('>', ' ')
+            return sendMessage(error, bot, update)
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:
             gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
-            sendMessage(gmsg, bot, update)
-            return
+            return sendMessage(gmsg, bot, update)
         gd_dl = GdDownloadHelper()
         gd_dl.add_download(link, listener, gdtot_link)
 

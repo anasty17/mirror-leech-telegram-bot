@@ -2,7 +2,7 @@ from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORREN
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage
 from time import sleep
 import threading
 
@@ -77,9 +77,12 @@ class AriaDownloadHelper:
         LOGGER.info(f"onDownloadError: {gid}")
         sleep(0.5)
         dl = getDownloadByGid(gid)
-        download = api.get_download(gid)
-        error = download.error_message
-        LOGGER.info(f"Download Error: {error}")
+        try:
+            download = api.get_download(gid)
+            error = download.error_message
+            LOGGER.info(f"Download Error: {error}")
+        except:
+            pass
         if dl:
             dl.getListener().onDownloadError(error)
 
@@ -96,8 +99,9 @@ class AriaDownloadHelper:
         else:
             download = aria2.add_uris([link], {'dir': path, 'out': filename})
         if download.error_message:
-            listener.onDownloadError(download.error_message)
-            return
+            error = str(download.error_message).replace('<', ' ').replace('>', ' ')
+            LOGGER.info(f"Download Error: {error}")
+            return sendMessage(error, listener.bot, listener.update)
         with download_dict_lock:
             download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
             LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")

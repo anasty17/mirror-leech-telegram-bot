@@ -51,7 +51,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.is_playlist = False
         self._last_downloaded = 0
         self.__is_cancelled = False
-        self.downloading = False
+        self.__downloading = False
         self.__resource_lock = threading.RLock()
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
@@ -71,7 +71,7 @@ class YoutubeDLHelper(DownloadHelper):
             return self.__gid
 
     def __onDownloadProgress(self, d):
-        self.downloading = True
+        self.__downloading = True
         if self.__is_cancelled:
             raise ValueError("Cancelling...")
         if d['status'] == "finished":
@@ -145,14 +145,17 @@ class YoutubeDLHelper(DownloadHelper):
     def __download(self, link):
         try:
             with YoutubeDL(self.opts) as ydl:
-                ydl.download([link])
-                if self.__is_cancelled:
-                    raise ValueError
-                self.__onDownloadComplete()
-        except DownloadError as e:
-            self.onDownloadError(str(e))
+                try:
+                    ydl.download([link])
+                except DownloadError as e:
+                    if not self.__is_cancelled:
+                        self.onDownloadError(str(e))
+                    return
+            if self.__is_cancelled:
+                raise ValueError
+            self.__onDownloadComplete()
         except ValueError:
-            self.onDownloadError("Download Stopped by User!")
+            pass
 
     def add_download(self, link, path, name, qual, playlist):
         if playlist:
@@ -182,6 +185,9 @@ class YoutubeDLHelper(DownloadHelper):
 
     def cancel_download(self):
         self.__is_cancelled = True
-        if not self.downloading:
+        LOGGER.info(f"Cancelling Download: {self.name}")
+        if not self.__downloading:
             self.onDownloadError("Download Cancelled by User!")
+        else:
+            self.onDownloadError("Download Stopped by User!")
 

@@ -22,6 +22,7 @@ def sendMessage(text: str, bot, update: Update):
         return sendMessage(text, bot, update)
     except Exception as e:
         LOGGER.error(str(e))
+        return
 
 def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarkup):
     try:
@@ -35,6 +36,7 @@ def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarku
         return sendMarkup(text, bot, update, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
+        return
 
 def editMessage(text: str, message: Message, reply_markup=None):
     try:
@@ -47,6 +49,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
         return editMessage(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
+        return
 
 def sendRss(text: str, bot):
     if rss_session is None:
@@ -58,6 +61,7 @@ def sendRss(text: str, bot):
             return sendRss(text, bot)
         except Exception as e:
             LOGGER.error(str(e))
+            return
     else:
         try:
             return rss_session.send_message(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
@@ -67,6 +71,7 @@ def sendRss(text: str, bot):
             return sendRss(text, bot)
         except Exception as e:
             LOGGER.error(str(e))
+            return
 
 def deleteMessage(bot, message: Message):
     try:
