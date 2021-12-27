@@ -276,7 +276,7 @@ def pixeldrain(url: str) -> str:
     url = url.strip("/ ")
     file_id = url.split("/")[-1]
     info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
-    dl_link = f"https://pixeldrain.com/api/file/{file_id}"
+    dl_link = f"https://pixeldrain.com/api/file/{file_id}?download"
     resp = requests.get(info_link).json()
     if resp["success"]:
         return dl_link
