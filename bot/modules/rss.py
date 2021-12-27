@@ -24,7 +24,7 @@ def rss_list(update, context):
 
 def rss_get(update, context):
     try:
-        args = update.message.text.split(" ", maxsplit=2)
+        args = update.message.text.split(" ")
         title = args[1]
         count = int(args[2])
         feed_url = rss_dict.get(title)
@@ -55,7 +55,7 @@ def rss_get(update, context):
 @new_thread
 def rss_sub(update, context):
     try:
-        args = update.message.text.split(" ", maxsplit=2)
+        args = update.message.text.split(" ")
         title = str(args[1])
         feed_link = str(args[2])
         exists = rss_dict.get(title)

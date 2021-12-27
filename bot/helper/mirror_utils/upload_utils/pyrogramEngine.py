@@ -7,7 +7,7 @@ from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
-from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution
+from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
 
 LOGGER = logging.getLogger(__name__)
 logging.getLogger("pyrogram").setLevel(logging.ERROR)
@@ -41,6 +41,7 @@ class TgUploader:
 
     def upload(self):
         path = f"{DOWNLOAD_DIR}{self.__message_id}"
+        size = get_path_size(path)
         for dirpath, subdir, files in sorted(os.walk(path)):
             for filee in sorted(files):
                 if self.__is_cancelled:
@@ -62,7 +63,7 @@ class TgUploader:
         if len(self.__msgs_dict) <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")
-        self.__listener.onUploadComplete(self.name, None, self.__msgs_dict, None, self.__corrupted)
+        self.__listener.onUploadComplete(self.name, size, self.__msgs_dict, None, self.__corrupted)
 
     def __upload_file(self, up_path, filee, dirpath):
         if CUSTOM_FILENAME is not None:

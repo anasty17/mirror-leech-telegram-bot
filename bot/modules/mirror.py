@@ -227,6 +227,7 @@ class MirrorListener(listeners.MirrorListeners):
                 uname = f'<a href="tg://user?id={self.message.from_user.id}">{self.message.from_user.first_name}</a>'
             count = len(files)
             msg = f'<b>Name: </b><code>{link}</code>\n\n'
+            msg += f'<b>Size: </b>{bot_utils.get_readable_file_size(size)}\n'
             msg += f'<b>Total Files: </b>{count}'
             if typ != 0:
                 msg += f'\n<b>Corrupted Files: </b>{typ}'
@@ -421,7 +422,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         try:
             res = requests.head(link, allow_redirects=True, timeout=5)
             header = res.headers.get('content-type')
-            LOGGER.info(header)
         except:
             pass
         if header is not None and any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):

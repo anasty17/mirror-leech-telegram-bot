@@ -232,7 +232,7 @@ class QbitTorrent:
                 self.__listener.onDownloadComplete()
                 if QB_SEED:
                     with download_dict_lock:
-                        download_dict[self.__listener.uid] = QbDownloadStatus(self.gid, self.__listener, self.ext_hash, self.__client)
+                        download_dict[self.__listener.uid] = QbDownloadStatus(self.gid, self.__listener, self.ext_hash, self.__client, self.__qbitsel)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
