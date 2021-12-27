@@ -150,7 +150,7 @@ def rss_monitor(context):
                             feed_msg += f"<b>Link: </b><code>{url}</code>"
                         sendRss(feed_msg, context.bot)
                         feed_count += 1
-                        sleep(2)
+                        sleep(5)
                     DbManger().rss_update(name, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
                     rss_dict[name] = [url_list[0], str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title'])]
                     LOGGER.info(f"Feed Name: {name}")

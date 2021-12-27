@@ -25,83 +25,86 @@ logging.getLogger('urllib3').setLevel(logging.ERROR)
 
 
 class QbitTorrent:
-    def __init__(self):
+    def __init__(self, listener, qbitsel):
         self.update_interval = 4
-        self.client = get_client()
+        self.__listener = listener
+        self.__client = get_client()
+        self.__qbitsel = qbitsel
         self.meta_time = time.time()
         self.stalled_time = time.time()
         self.uploaded = False
         self.sizeChecked = False
         self.dupChecked = False
+        self.recheck = False
         self.is_file = False
         self.pincode = ""
         self.get_info = 0
 
-    def add_torrent(self, link, dire, listener, qbitsel):
-        self.listener = listener
+    def add_torrent(self, link, dire):
         self.dire = dire
-        self.qbitsel = qbitsel
         try:
             if os.path.exists(link):
                 self.is_file = True
                 self.ext_hash = get_hash_file(link)
             else:
                 self.ext_hash = get_hash_magnet(link)
-            tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
+            tor_info = self.__client.torrents_info(torrent_hashes=self.ext_hash)
             if len(tor_info) > 0:
-                sendMessage("This Torrent is already in list.", listener.bot, listener.update)
-                self.client.auth_log_out()
+                sendMessage("This Torrent is already in list.", self.__listener.bot, self.__listener.update)
+                self.__client.auth_log_out()
                 return
             if self.is_file:
-                op = self.client.torrents_add(torrent_files=[link], save_path=dire)
+                op = self.__client.torrents_add(torrent_files=[link], save_path=dire)
                 os.remove(link)
             else:
-                op = self.client.torrents_add(link, save_path=dire)
+                op = self.__client.torrents_add(link, save_path=dire)
             time.sleep(0.3)
             if op.lower() == "ok.":
-                tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
+                tor_info = self.__client.torrents_info(torrent_hashes=self.ext_hash)
                 if len(tor_info) == 0:
                     while True:
                         if time.time() - self.meta_time >= 20:
-                            sendMessage("The Torrent was not added. Report when you see this error", listener.bot, listener.update)
-                            self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                            self.client.auth_log_out()
-                            return False
-                        tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
+                            ermsg = "The Torrent was not added. Report when you see this error"
+                            sendMessage(ermsg, self.__listener.bot, self.__listener.update)
+                            self.__client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
+                            self.__client.auth_log_out()
+                            return
+                        tor_info = self.__client.torrents_info(torrent_hashes=self.ext_hash)
                         if len(tor_info) > 0:
                             break
             else:
-                sendMessage("This is an unsupported/invalid link.", listener.bot, listener.update)
-                self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                self.client.auth_log_out()
+                sendMessage("This is an unsupported/invalid link.", self.__listener.bot, self.__listener.update)
+                self.__client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
+                self.__client.auth_log_out()
                 return
             tor_info = tor_info[0]
             self.ext_hash = tor_info.hash
             self.gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=14))
             with download_dict_lock:
-                download_dict[listener.uid] = QbDownloadStatus(self.gid, listener, self.ext_hash, self.client)
+                download_dict[self.__listener.uid] = QbDownloadStatus(self.gid, self.__listener, self.ext_hash, self.__client, self.__qbitsel)
             LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {self.ext_hash}")
             self.updater = setInterval(self.update_interval, self.update)
-            if BASE_URL is not None and qbitsel:
+            if BASE_URL is not None and self.__qbitsel:
                 if not self.is_file:
-                    meta = sendMessage("Downloading Metadata, wait then you can select files or mirror Torrent file if it have low seeders", listener.bot, listener.update)
+                    metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
+                    meta = sendMessage(metamsg, self.__listener.bot, self.__listener.update)
                     while True:
-                        tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
+                        tor_info = self.__client.torrents_info(torrent_hashes=self.ext_hash)
                         if len(tor_info) == 0:
-                            deleteMessage(listener.bot, meta)
-                            return False
+                            deleteMessage(self.__listener.bot, meta)
+                            return
                         try:
                             tor_info = tor_info[0]
                             if tor_info.state in ["metaDL", "checkingResumeData"]:
                                 time.sleep(1)
                             else:
-                                deleteMessage(listener.bot, meta)
+                                deleteMessage(self.__listener.bot, meta)
                                 break
                         except:
-                            deleteMessage(listener.bot, meta)
-                            return False
+                            deleteMessage(self.__listener.bot, meta)
+                            return
                 time.sleep(0.5)
-                self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                 for n in str(self.ext_hash):
                     if n.isdigit():
                         self.pincode += str(n)
@@ -116,23 +119,23 @@ class QbitTorrent:
                 buttons.sbutton("Done Selecting", f"done {self.gid} {self.ext_hash}")
                 QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
+                sendMarkup(msg, self.__listener.bot, self.__listener.update, QBBUTTONS)
             else:
-                sendStatusMessage(listener.update, listener.bot)
+                sendStatusMessage(self.__listener.update, self.__listener.bot)
         except qba.UnsupportedMediaType415Error as e:
             LOGGER.error(str(e))
-            sendMessage(f"This is an unsupported/invalid link: {str(e)}", listener.bot, listener.update)
-            self.client.auth_log_out()
+            sendMessage(f"This is an unsupported/invalid link: {str(e)}", self.__listener.bot, self.__listener.update)
+            self.__client.auth_log_out()
         except Exception as e:
-            sendMessage(str(e), listener.bot, listener.update)
-            self.client.auth_log_out()
+            sendMessage(str(e), self.__listener.bot, self.__listener.update)
+            self.__client.auth_log_out()
 
     def update(self):
-        tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
+        tor_info = self.__client.torrents_info(torrent_hashes=self.ext_hash)
         if len(tor_info) == 0:
             self.get_info += 1
             if self.get_info > 10:
-                self.client.auth_log_out()
+                self.__client.auth_log_out()
                 self.updater.cancel()
             return
         self.get_info = 0
@@ -141,38 +144,38 @@ class QbitTorrent:
             if tor_info.state == "metaDL":
                 self.stalled_time = time.time()
                 if time.time() - self.meta_time >= 999999999: # timeout while downloading metadata
-                    self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                    self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                     time.sleep(0.3)
-                    self.listener.onDownloadError("Dead Torrent!")
-                    self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                    self.client.auth_log_out()
+                    self.__listener.onDownloadError("Dead Torrent!")
+                    self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                    self.__client.auth_log_out()
                     self.updater.cancel()
             elif tor_info.state == "downloading":
                 self.stalled_time = time.time()
-                if STOP_DUPLICATE and not self.listener.isLeech and not self.dupChecked and os.path.isdir(f'{self.dire}'):
+                if STOP_DUPLICATE and not self.__listener.isLeech and not self.dupChecked and os.path.isdir(f'{self.dire}'):
                     LOGGER.info('Checking File/Folder if already in Drive')
                     qbname = str(os.listdir(f'{self.dire}')[-1])
                     if qbname.endswith('.!qB'):
                         qbname = os.path.splitext(qbname)[0]
-                    if self.listener.isZip:
+                    if self.__listener.isZip:
                         qbname = qbname + ".zip"
-                    if not self.listener.extract:
+                    if not self.__listener.extract:
                         gd = GoogleDriveHelper()
                         qbmsg, button = gd.drive_list(qbname, True)
                         if qbmsg:
                             msg = "File/Folder is already available in Drive."
-                            self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                            self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                             time.sleep(0.3)
-                            self.listener.onDownloadError(msg)
-                            sendMarkup("Here are the search results:", self.listener.bot, self.listener.update, button)
-                            self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                            self.client.auth_log_out()
+                            self.__listener.onDownloadError(msg)
+                            sendMarkup("Here are the search results:", self.__listener.bot, self.__listener.update, button)
+                            self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                            self.__client.auth_log_out()
                             self.updater.cancel()
                             return
                     self.dupChecked = True
                 if not self.sizeChecked:
                     limit = None
-                    if ZIP_UNZIP_LIMIT is not None and (self.listener.isZip or self.listener.extract):
+                    if ZIP_UNZIP_LIMIT is not None and (self.__listener.isZip or self.__listener.extract):
                         mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
                         limit = ZIP_UNZIP_LIMIT
                     elif TORRENT_DIRECT_LIMIT is not None:
@@ -183,37 +186,39 @@ class QbitTorrent:
                         time.sleep(1)
                         size = tor_info.size
                         if size > limit * 1024**3:
-                            self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                            self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                             time.sleep(0.3)
-                            self.listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
-                            self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                            self.client.auth_log_out()
+                            self.__listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
+                            self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                            self.__client.auth_log_out()
                             self.updater.cancel()
                     self.sizeChecked = True
             elif tor_info.state == "stalledDL":
-                if tor_info.downloaded >= tor_info.size and tor_info.progress > 0.99989:
-                    self.client.torrents_recheck(torrent_hashes=self.ext_hash)
+                if not self.recheck and 0.99989999999999999 < tor_info.progress < 1:
+                    LOGGER.info(f"Force recheck - Name: {tor_info.name} Hash: {self.ext_hash} Downloaded Bytes: {tor_info.downloaded} Size: {tor_info.size} Total Size: {tor_info.total_size}")
+                    self.__client.torrents_recheck(torrent_hashes=self.ext_hash)
+                    self.recheck = True
                 elif time.time() - self.stalled_time >= 999999999: # timeout after downloading metadata
-                    self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                    self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                     time.sleep(0.3)
-                    self.listener.onDownloadError("Dead Torrent!")
-                    self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                    self.client.auth_log_out()
+                    self.__listener.onDownloadError("Dead Torrent!")
+                    self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                    self.__client.auth_log_out()
                     self.updater.cancel()
             elif tor_info.state == "missingFiles":
-                self.client.torrents_recheck(torrent_hashes=self.ext_hash)
+                self.__client.torrents_recheck(torrent_hashes=self.ext_hash)
             elif tor_info.state == "error":
-                self.client.torrents_pause(torrent_hashes=self.ext_hash)
+                self.__client.torrents_pause(torrent_hashes=self.ext_hash)
                 time.sleep(0.3)
-                self.listener.onDownloadError("No enough space for this torrent on device")
-                self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                self.client.auth_log_out()
+                self.__listener.onDownloadError("No enough space for this torrent on device")
+                self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                self.__client.auth_log_out()
                 self.updater.cancel()
             elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "forcedUP"] and not self.uploaded:
                 self.uploaded = True
                 if not QB_SEED:
-                    self.client.torrents_pause(torrent_hashes=self.ext_hash)
-                if self.qbitsel:
+                    self.__client.torrents_pause(torrent_hashes=self.ext_hash)
+                if self.__qbitsel:
                     for dirpath, subdir, files in os.walk(f"{self.dire}", topdown=False):
                         for filee in files:
                             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
@@ -224,20 +229,20 @@ class QbitTorrent:
                     for dirpath, subdir, files in os.walk(f"{self.dire}", topdown=False):
                         if not os.listdir(dirpath):
                             os.rmdir(dirpath)
-                self.listener.onDownloadComplete()
+                self.__listener.onDownloadComplete()
                 if QB_SEED:
                     with download_dict_lock:
-                        download_dict[self.listener.uid] = QbDownloadStatus(self.gid, self.listener, self.ext_hash, self.client)
+                        download_dict[self.__listener.uid] = QbDownloadStatus(self.gid, self.__listener, self.ext_hash, self.__client)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
-                    self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                    self.client.auth_log_out()
+                    self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                    self.__client.auth_log_out()
                     self.updater.cancel()
             elif tor_info.state == 'pausedUP' and QB_SEED:
-                self.listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
-                self.client.torrents_delete(torrent_hashes=self.ext_hash)
-                self.client.auth_log_out()
+                self.__listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
+                self.__client.torrents_delete(torrent_hashes=self.ext_hash)
+                self.__client.auth_log_out()
                 self.updater.cancel()
         except:
             pass

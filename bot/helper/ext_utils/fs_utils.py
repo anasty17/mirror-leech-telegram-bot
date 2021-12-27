@@ -19,7 +19,10 @@ VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV"
 def clean_download(path: str):
     if os.path.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
-        shutil.rmtree(path)
+        try:
+            shutil.rmtree(path)
+        except FileNotFoundError:
+            pass
 
 def start_cleanup():
     try:

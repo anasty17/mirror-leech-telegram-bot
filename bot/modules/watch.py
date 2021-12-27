@@ -4,11 +4,10 @@ import re
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 
-from bot import DOWNLOAD_DIR, dispatcher
+from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.telegram_helper import button_build
-from bot.helper.ext_utils.bot_utils import is_url
-from bot.helper.ext_utils.bot_utils import get_readable_file_size
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -54,6 +53,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         help_msg += "\n<code>/command</code> |newname pswd: mypassword [𝚣𝚒𝚙]"
         return sendMessage(help_msg, bot, update)
 
+    LOGGER.info(link)
     listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
@@ -78,8 +78,8 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
     else:
         formats = result.get('formats')
+        formats_dict = {}
         if formats is not None:
-            formats_dict = {}
             for frmt in formats:
                 if not frmt.get('tbr') or not frmt.get('height'):
                     continue

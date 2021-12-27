@@ -168,7 +168,7 @@ except KeyError:
     USER_STRING_SESSION = None
 
 if USER_STRING_SESSION is not None:
-    rss_session = Client(USER_STRING_SESSION, api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, no_updates=True)
+    rss_session = Client(USER_STRING_SESSION, api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH)
 else:
     rss_session = None
 

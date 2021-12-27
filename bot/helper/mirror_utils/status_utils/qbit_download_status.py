@@ -6,10 +6,11 @@ from time import sleep
 
 class QbDownloadStatus(Status):
 
-    def __init__(self, gid, listener, qbhash, client):
+    def __init__(self, gid, listener, qbhash, client, qbsel):
         super().__init__()
         self.__gid = gid
         self.__hash = qbhash
+        self.__qbsel = qbsel
         self.client = client
         self.__uid = listener.uid
         self.listener = listener
@@ -21,14 +22,17 @@ class QbDownloadStatus(Status):
         Calculates the progress of the mirror (upload or download)
         :return: returns progress in percentage
         """
-        return f'{round(self.torrent_info().progress*100,2)}%'
+        return f'{round(self.torrent_info().progress*100, 2)}%'
 
     def size_raw(self):
         """
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        return self.torrent_info().size
+        if self.__qbsel:
+            return self.torrent_info().size
+        else:
+            return self.torrent_info().total_size
 
     def processed_bytes(self):
         return self.torrent_info().downloaded
@@ -54,7 +58,7 @@ class QbDownloadStatus(Status):
             return MirrorStatus.STATUS_WAITING
         elif download in ["metaDL", "checkingResumeData"]:
             return MirrorStatus.STATUS_DOWNLOADING + " (Metadata)"
-        elif download == "pausedDL":
+        elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSE
         elif download in ["checkingUP", "checkingDL"]:
             return MirrorStatus.STATUS_CHECKING

@@ -17,9 +17,9 @@ from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_F
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
-from bot.helper.mirror_utils.download_utils.aria2_download import AriaDownloadHelper
-from bot.helper.mirror_utils.download_utils.mega_downloader import MegaDownloadHelper
-from bot.helper.mirror_utils.download_utils.gd_downloader import GdDownloadHelper
+from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
+from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
+from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import QbitTorrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
@@ -34,9 +34,6 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
 from bot.helper.telegram_helper import button_build
-
-ariaDlManager = AriaDownloadHelper()
-ariaDlManager.start_listener()
 
 
 class MirrorListener(listeners.MirrorListeners):
@@ -393,6 +390,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     LOGGER.info(link)
     gdtot_link = bot_utils.is_gdtot_link(link)
+    header = None
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -406,32 +404,41 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         return sendMessage(help_msg, bot, update)
     elif not bot_utils.is_mega_link(link) and not isQbit and not bot_utils.is_magnet(link) \
          and not os.path.exists(link) and not bot_utils.is_gdrive_link(link):
-        header = None
         try:
             res = requests.head(link, timeout=5)
             header = res.headers.get('content-type')
         except:
             pass
-        if header is not None and 'text/html' in header:
+        if header is not None and any(x in header for x in ['text/html', 'text/plain']):
             try:
                 link = direct_link_generator(link)
+                LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
         try:
-            resp = requests.get(link, timeout=5)
-            if resp.status_code == 200:
-                file_name = str(time.time()).replace(".", "") + ".torrent"
-                open(file_name, "wb").write(resp.content)
-                link = f"{file_name}"
-            else:
-                return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
-        except Exception as e:
-            LOGGER.error(str(e))
-            error = str(e).replace('<', ' ').replace('>', ' ')
-            return sendMessage(error, bot, update)
+            res = requests.head(link, allow_redirects=True, timeout=5)
+            header = res.headers.get('content-type')
+            LOGGER.info(header)
+        except:
+            pass
+        if header is not None and any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):
+            try:
+                resp = requests.get(link, timeout=5)
+                if resp.status_code == 200:
+                    file_name = str(time.time()).replace(".", "") + ".torrent"
+                    open(file_name, "wb").write(resp.content)
+                    link = f"{file_name}"
+                else:
+                    return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
+            except Exception as e:
+                LOGGER.error(str(e))
+                error = str(e).replace('<', ' ').replace('>', ' ')
+                return sendMessage(error, bot, update)
+        else:
+            return sendMessage("Qb commands for torrents only. if you are trying to dowload torrent then report.", bot, update)
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:
@@ -439,8 +446,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, update)
-        gd_dl = GdDownloadHelper()
-        gd_dl.add_download(link, listener, gdtot_link)
+        threading.Thread(target=add_gd_download, args=(link, listener, gdtot_link)).start()
 
     elif bot_utils.is_mega_link(link):
         if BLOCK_MEGA_LINKS:
@@ -450,15 +456,14 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         if link_type == "folder" and BLOCK_MEGA_FOLDER:
             sendMessage("Mega folder are blocked!", bot, update)
         else:
-            mega_dl = MegaDownloadHelper()
-            mega_dl.add_download(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)
+            threading.Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (bot_utils.is_magnet(link) or os.path.exists(link)):
-        qbit = QbitTorrent()
-        threading.Thread(target=qbit.add_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
+        qbit = QbitTorrent(listener, qbitsel)
+        threading.Thread(target=qbit.add_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/')).start()
 
     else:
-        ariaDlManager.add_download(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)
+        threading.Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
 
 def mirror(update, context):
     _mirror(context.bot, update)

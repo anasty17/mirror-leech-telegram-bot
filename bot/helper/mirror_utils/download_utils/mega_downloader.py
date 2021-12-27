@@ -7,7 +7,7 @@ from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
 from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import new_thread, get_mega_link_type, get_readable_file_size
+from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
@@ -93,7 +93,7 @@ class MegaAppListener(MegaListener):
             if self.is_cancelled:
                 self.continue_event.set()
             elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
-                threading.Thread(target=self.listener.onDownloadComplete).start()
+                self.listener.onDownloadComplete
                 self.continue_event.set()
         except Exception as e:
             LOGGER.error(e)
@@ -131,62 +131,57 @@ class AsyncExecutor:
 
 listeners = []
 
-
-class MegaDownloadHelper:
-
-    @staticmethod
-    @new_thread
-    def add_download(mega_link: str, path: str, listener):
-        executor = AsyncExecutor()
-        api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
-        mega_listener = MegaAppListener(executor.continue_event, listener)
-        global listeners
-        api.addListener(mega_listener)
-        listeners.append(mega_listener)
-        if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
-            executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
-        link_type = get_mega_link_type(mega_link)
-        if link_type == "file":
-            LOGGER.info("File. If your download didn't start, then check your link if it's available to download")
-            executor.do(api.getPublicNode, (mega_link,))
-            node = mega_listener.public_node
-        else:
-            LOGGER.info("Folder. If your download didn't start, then check your link if it's available to download")
-            folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
-            folder_api.addListener(mega_listener)
-            executor.do(folder_api.loginToFolder, (mega_link,))
-            node = folder_api.authorizeNode(mega_listener.node)
-        if mega_listener.error is not None:
-            return sendMessage(str(mega_listener.error), listener.bot, listener.update)
-        if STOP_DUPLICATE and not listener.isLeech:
-            LOGGER.info('Checking File/Folder if already in Drive')
-            mname = node.getName()
-            if listener.isZip:
-                mname = mname + ".zip"
-            if not listener.extract:
-                gd = GoogleDriveHelper()
-                smsg, button = gd.drive_list(mname, True)
-                if smsg:
-                    msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
-                    sendMarkup(msg1, listener.bot, listener.update, button)
-                    return
-        limit = None
-        if ZIP_UNZIP_LIMIT is not None and (listener.isZip or listener.extract):
-            msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
-            limit = ZIP_UNZIP_LIMIT
-        elif MEGA_LIMIT is not None:
-            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
-            limit = MEGA_LIMIT
-        if limit is not None:
-            LOGGER.info('Checking File/Folder Size...')
-            size = api.getSize(node)
-            if size > limit * 1024**3:
-                sendMessage(msg3, listener.bot, listener.update)
+def add_mega_download(mega_link: str, path: str, listener):
+    executor = AsyncExecutor()
+    api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
+    mega_listener = MegaAppListener(executor.continue_event, listener)
+    global listeners
+    api.addListener(mega_listener)
+    listeners.append(mega_listener)
+    if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
+        executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
+    link_type = get_mega_link_type(mega_link)
+    if link_type == "file":
+        LOGGER.info("File. If your download didn't start, then check your link if it's available to download")
+        executor.do(api.getPublicNode, (mega_link,))
+        node = mega_listener.public_node
+    else:
+        LOGGER.info("Folder. If your download didn't start, then check your link if it's available to download")
+        folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
+        folder_api.addListener(mega_listener)
+        executor.do(folder_api.loginToFolder, (mega_link,))
+        node = folder_api.authorizeNode(mega_listener.node)
+    if mega_listener.error is not None:
+        return sendMessage(str(mega_listener.error), listener.bot, listener.update)
+    if STOP_DUPLICATE and not listener.isLeech:
+        LOGGER.info('Checking File/Folder if already in Drive')
+        mname = node.getName()
+        if listener.isZip:
+            mname = mname + ".zip"
+        if not listener.extract:
+            gd = GoogleDriveHelper()
+            smsg, button = gd.drive_list(mname, True)
+            if smsg:
+                msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
+                sendMarkup(msg1, listener.bot, listener.update, button)
                 return
-        with download_dict_lock:
-            download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
-        os.makedirs(path)
-        gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
-        mega_listener.setValues(node.getName(), api.getSize(node), gid)
-        sendStatusMessage(listener.update, listener.bot)
-        executor.do(api.startDownload, (node, path))
+    limit = None
+    if ZIP_UNZIP_LIMIT is not None and (listener.isZip or listener.extract):
+        msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
+        limit = ZIP_UNZIP_LIMIT
+    elif MEGA_LIMIT is not None:
+        msg3 = f'Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
+        limit = MEGA_LIMIT
+    if limit is not None:
+        LOGGER.info('Checking File/Folder Size...')
+        size = api.getSize(node)
+        if size > limit * 1024**3:
+            sendMessage(msg3, listener.bot, listener.update)
+            return
+    with download_dict_lock:
+        download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
+    os.makedirs(path)
+    gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
+    mega_listener.setValues(node.getName(), api.getSize(node), gid)
+    sendStatusMessage(listener.update, listener.bot)
+    executor.do(api.startDownload, (node, path))
