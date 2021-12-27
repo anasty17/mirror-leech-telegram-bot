@@ -93,7 +93,7 @@ class MegaAppListener(MegaListener):
             if self.is_cancelled:
                 self.continue_event.set()
             elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
-                self.listener.onDownloadComplete
+                self.listener.onDownloadComplete()
                 self.continue_event.set()
         except Exception as e:
             LOGGER.error(e)

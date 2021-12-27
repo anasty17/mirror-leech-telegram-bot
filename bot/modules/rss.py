@@ -136,7 +136,9 @@ def rss_monitor(context):
             """
             try:
                 rss_d = feedparser.parse(url_list[0])
-                if (url_list[1] != rss_d.entries[0]['link'] and url_list[2] != rss_d.entries[0]['title']):
+                last_link = rss_d.entries[0]['link']
+                last_title = rss_d.entries[0]['title']
+                if (url_list[1] != last_link and url_list[2] != last_title):
                     feed_count = 0
                     while (url_list[1] != rss_d.entries[feed_count]['link'] and url_list[2] != rss_d.entries[feed_count]['title']):
                         try:
@@ -151,8 +153,8 @@ def rss_monitor(context):
                         sendRss(feed_msg, context.bot)
                         feed_count += 1
                         sleep(5)
-                    DbManger().rss_update(name, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
-                    rss_dict[name] = [url_list[0], str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title'])]
+                    DbManger().rss_update(name, str(last_link), str(last_title))
+                    rss_dict[name] = [url_list[0], str(last_link), str(last_title)]
                     LOGGER.info(f"Feed Name: {name}")
                     LOGGER.info(f"Last item: {rss_d.entries[0]['link']}")
             except IndexError as e:
