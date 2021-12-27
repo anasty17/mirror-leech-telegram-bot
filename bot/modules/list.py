@@ -46,13 +46,13 @@ def select_type(update, context):
         list_method = data[3]
         item_type = data[2]
         editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        threading.Thread(target=list_drive, args=(key, msg, list_method, item_type)).start()
+        threading.Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
     else:
         query.answer()
         editMessage("list has been canceled!", msg)
 
 
-def list_drive(key, bmsg, list_method, item_type):
+def _list_drive(key, bmsg, list_method, item_type):
     LOGGER.info(f"listing: {key}")
     list_method = list_method == "recu"
     gdrive = GoogleDriveHelper()

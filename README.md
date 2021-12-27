@@ -27,6 +27,8 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Clone/Zip/Unzip/Count from gdtot links (main script from [Yusuf](https://github.com/oxosec)) and delete first cloned file from main drive or TeamDrive
 - Qbittorrent seed until reaching specific ratio or time
+- Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
+- Save leech settings including thumbnails in database
 - Many bugs have been fixed
 
 ## From Other Repositories
@@ -108,7 +110,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot
 - `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder to which you want to upload all the mirrors.
 - `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: A short interval of time in seconds after which the Mirror progress/status message is updated. (I recommend to keep it to `10` seconds at least)
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least.
 - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message (and command message) which is expected to be viewed instantly. (**NOTE**: Set to `-1` to disable auto message deletion)
 - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). This Var is optional on VPS and required for Heroku specially to avoid app sleeping/idling. For Heroku fill `https://yourappname.herokuapp.com`. Still got idling? You can use http://cron-job.org to ping your Heroku app. (**NOTE**: Don't add slash at the end).
 </details>
@@ -125,9 +127,9 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only.
 - `NETRC_URL`: To create .netrc file contains authentication for aria2c and yt-dlp. Use gist raw link and remove commit id from the link, so you can edit it from gists only. **NOTE**: After editing .nterc you need to restart the docker or if deployed on heroku so restart dyno in case your edits related to aria2c authentication.
   - **NOTE**: All above url variables used incase you want edit them in future easily without deploying again or if you want to deploy from public fork. If deploying using cli or private fork you can leave these variables empty add token.pickle, accounts folder, drive_folder, .netrc and cookies.txt directly to root but you can't update them without rebuild OR simply leave all above variables and use private UPSTREAM_REPO.
-- `DATABASE_URL`: (NOT RECOMMENDED FOR NOW) Your Database URL. See [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database (**NOTE**: If you use database you can save your Sudo ID permanently).
-- `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of groups/users you want to authorize. Separate them with space, Examples: `-0123456789 -1122334455 6915401739`.
-- `SUDO_USERS`: Fill user_id (not username) of users whom you want to give sudo permission. Separate them with space, Examples: `0123456789 1122334455 6915401739` (**NOTE**: If you want to save Sudo ID permanently without database, you must fill your Sudo Id here).
+- `DATABASE_URL`: Your Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user and rss data.
+- `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of groups/users you want to authorize. Separate them by space, Examples: `-0123456789 -1122334455 6915401739`.
+- `SUDO_USERS`: Fill user_id (not username) of users whom you want to give sudo permission. Separate them by space, Examples: `0123456789 1122334455 6915401739`.
 - `IS_TEAM_DRIVE`: Set to `False` or leave it empty to get public google drive links else `True` so only who have access to your Folder/TeamDrive can open the links. `Bool`
 - `USE_SERVICE_ACCOUNTS`: (Leave empty if unsure) Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below.
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index The URL should not have any trailing '/' at the end.
@@ -164,14 +166,18 @@ Fill up rest of the fields. Meaning of each field is discussed below:
   >rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
 - `PHPSESSID` and `CRYPT`: Cookies for gdtot google drive link generator. Follow these [steps](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#gdtot-cookies).
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).
-
-Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
-- `BUTTON_FOUR_NAME`:
-- `BUTTON_FOUR_URL`:
-- `BUTTON_FIVE_NAME`:
-- `BUTTON_FIVE_URL`:
-- `BUTTON_SIX_NAME`:
-- `BUTTON_SIX_URL`:
+- `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` seconds at least. Empty means 900 s (default time).
+- `RSS_COMMAND`: Choose command for the desired action.
+- `RSS_CHAT_ID`: Chat ID where bot will send the rss links.
+- `USER_STRING_SESSION`: To send rss links from your telegram account instead of adding bot to channel then adding channel to group to get rss link since bot will not read command from itself or other bot. To generate string session use this command `python3 generate_string_session.py` after mounting repo folder for sure.
+  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work.
+- Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
+  - `BUTTON_FOUR_NAME`:
+  - `BUTTON_FOUR_URL`:
+  - `BUTTON_FIVE_NAME`:
+  - `BUTTON_FIVE_URL`:
+  - `BUTTON_SIX_NAME`:
+  - `BUTTON_SIX_URL`:
 
 </details>
 
@@ -257,11 +263,6 @@ sudo docker-compose up
 ```
 sudo docker-compose up --build
 ```
-- or
-```
-sudo docker-compose build
-sudo docker-compose up
-```
 - To stop the image:
 ```
 sudo docker-compose stop
@@ -306,6 +307,11 @@ leechzipwatch - Leech yt-dlp support link as zip
 leechset - Leech settings
 setthumb - Set thumbnail
 status - Get Mirror Status message
+rsslist - List all subscribed rss feed info
+rssget - Get specific No. of links from specific rss feed
+rsssub - Subscribe new rss feed
+rssunsub - Unsubscribe rss feed by title
+rssunsuball - Remove all rss feed subscriptions
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
@@ -396,18 +402,26 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 
 ### Generate Database
 
-**1. Using ElephantSQL**
-- Go to https://elephantsql.com and create account (skip this if you already have **ElephantSQL** account)
+**1. Using Railway**
+- Go to [railway](https://railway.app) and create account
+- Start new project
+- Press on `Provision PostgreSQL`
+- After creating database press on `PostgresSQL`
+- Go to `Connect` column
+- Copy `Postgres Connection URL` and fill `DATABASE_URL` variable with it
+
+**2. Using Heroku PostgreSQL**
+<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
+
+**3. Using ElephantSQL**
+- Go to [elephantsql](https://elephantsql.com) and create account
 - Hit `Create New Instance`
 - Follow the further instructions in the screen
 - Hit `Select Region`
 - Hit `Review`
 - Hit `Create instance`
 - Select your database name
-- Copy your database url, and fill to `DATABASE_URL` in config
-
-**2. Using Heroku PostgreSQL**
-<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
+- Copy your database url, and fill `DATABASE_URL` variable with it
 
 ------
 

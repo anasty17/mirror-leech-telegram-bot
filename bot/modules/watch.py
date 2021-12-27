@@ -4,11 +4,10 @@ import re
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 
-from bot import DOWNLOAD_DIR, dispatcher
+from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.telegram_helper import button_build
-from bot.helper.ext_utils.bot_utils import is_url
-from bot.helper.ext_utils.bot_utils import get_readable_file_size
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -54,6 +53,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         help_msg += "\n<code>/command</code> |newname pswd: mypassword [𝚣𝚒𝚙]"
         return sendMessage(help_msg, bot, update)
 
+    LOGGER.info(link)
     listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
@@ -78,9 +78,8 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
     else:
         formats = result.get('formats')
+        formats_dict = {}
         if formats is not None:
-            formats_dict = {}
-            tbr = []
             for frmt in formats:
                 if not frmt.get('tbr') or not frmt.get('height'):
                     continue
@@ -127,7 +126,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, formats_dict]
         sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
 
-def qual_subbuttons(task_id, qual, msg):
+def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[5]
@@ -157,7 +156,7 @@ def qual_subbuttons(task_id, qual, msg):
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
     editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
 
-def audio_subbuttons(task_id, msg, playlist=False):
+def _audio_subbuttons(task_id, msg, playlist=False):
     buttons = button_build.ButtonMaker()
     audio_qualities = [64, 128, 320]
     for q in audio_qualities:
@@ -187,7 +186,7 @@ def select_format(update, context):
     elif data[2] == "dict":
         query.answer()
         qual = data[3]
-        return qual_subbuttons(task_id, qual, msg)
+        return _qual_subbuttons(task_id, qual, msg)
     elif data[2] == "back":
         query.answer()
         return editMessage('Choose Video Quality:', msg, task_info[4])
@@ -197,7 +196,7 @@ def select_format(update, context):
             playlist = True
         else:
             playlist = False
-        return audio_subbuttons(task_id, msg, playlist)
+        return _audio_subbuttons(task_id, msg, playlist)
     elif data[2] != "cancel":
         query.answer()
         listener = task_info[0]
@@ -209,7 +208,7 @@ def select_format(update, context):
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        threading.Thread(target=ydl.add_download,args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
+        threading.Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
     query.message.delete()
 

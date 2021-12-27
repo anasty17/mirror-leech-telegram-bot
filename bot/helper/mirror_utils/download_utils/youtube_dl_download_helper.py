@@ -49,9 +49,9 @@ class YoutubeDLHelper(DownloadHelper):
         self.downloaded_bytes = 0
         self.size = 0
         self.is_playlist = False
-        self.last_downloaded = 0
-        self.is_cancelled = False
-        self.downloading = False
+        self._last_downloaded = 0
+        self.__is_cancelled = False
+        self.__downloading = False
         self.__resource_lock = threading.RLock()
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
@@ -71,12 +71,12 @@ class YoutubeDLHelper(DownloadHelper):
             return self.__gid
 
     def __onDownloadProgress(self, d):
-        self.downloading = True
-        if self.is_cancelled:
+        self.__downloading = True
+        if self.__is_cancelled:
             raise ValueError("Cancelling...")
         if d['status'] == "finished":
             if self.is_playlist:
-                self.last_downloaded = 0
+                self._last_downloaded = 0
         elif d['status'] == "downloading":
             with self.__resource_lock:
                 self.__download_speed = d['speed']
@@ -86,8 +86,8 @@ class YoutubeDLHelper(DownloadHelper):
                     tbyte = d['total_bytes_estimate']
                 if self.is_playlist:
                     downloadedBytes = d['downloaded_bytes']
-                    chunk_size = downloadedBytes - self.last_downloaded
-                    self.last_downloaded = downloadedBytes
+                    chunk_size = downloadedBytes - self._last_downloaded
+                    self._last_downloaded = downloadedBytes
                     self.downloaded_bytes += chunk_size
                 else:
                     self.size = tbyte
@@ -100,6 +100,7 @@ class YoutubeDLHelper(DownloadHelper):
     def __onDownloadStart(self):
         with download_dict_lock:
             download_dict[self.__listener.uid] = YoutubeDLDownloadStatus(self, self.__listener)
+        sendStatusMessage(self.__listener.update, self.__listener.bot)
 
     def __onDownloadComplete(self):
         self.__listener.onDownloadComplete()
@@ -144,14 +145,17 @@ class YoutubeDLHelper(DownloadHelper):
     def __download(self, link):
         try:
             with YoutubeDL(self.opts) as ydl:
-                ydl.download([link])
-                if self.is_cancelled:
-                    raise ValueError
-                self.__onDownloadComplete()
-        except DownloadError as e:
-            self.onDownloadError(str(e))
+                try:
+                    ydl.download([link])
+                except DownloadError as e:
+                    if not self.__is_cancelled:
+                        self.onDownloadError(str(e))
+                    return
+            if self.__is_cancelled:
+                raise ValueError
+            self.__onDownloadComplete()
         except ValueError:
-            self.onDownloadError("Download Stopped by User!")
+            pass
 
     def add_download(self, link, path, name, qual, playlist):
         if playlist:
@@ -160,7 +164,6 @@ class YoutubeDLHelper(DownloadHelper):
             self.opts['geo_bypass_country'] = 'IN'
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
         self.__onDownloadStart()
-        sendStatusMessage(self.__listener.update, self.__listener.bot)
         if qual.startswith('ba/b'):
             audio_info = qual.split('-')
             qual = audio_info[0]
@@ -172,7 +175,7 @@ class YoutubeDLHelper(DownloadHelper):
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name)
-        if self.is_cancelled:
+        if self.__is_cancelled:
             return
         if not self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}"
@@ -181,7 +184,10 @@ class YoutubeDLHelper(DownloadHelper):
         self.__download(link)
 
     def cancel_download(self):
-        self.is_cancelled = True
-        if not self.downloading:
+        self.__is_cancelled = True
+        LOGGER.info(f"Cancelling Download: {self.name}")
+        if not self.__downloading:
             self.onDownloadError("Download Cancelled by User!")
+        else:
+            self.onDownloadError("Download Stopped by User!")
 

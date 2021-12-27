@@ -34,7 +34,7 @@ SITES = {
 
 SEARCH_LIMIT = 200
 
-def srch_client() -> qba.SearchAPIMixIn:
+def _srch_client() -> qba.SearchAPIMixIn:
     return qba.Client(host="localhost", port=8090)
 
 def torser(update, context):
@@ -51,10 +51,10 @@ def torser(update, context):
         button = InlineKeyboardMarkup(buttons.build_menu(2))
         sendMarkup('Choose tool to search:', context.bot, update, button)
     elif SEARCH_API_LINK is not None and SEARCH_PLUGINS is None:
-        button = api_buttons(user_id)
+        button = _api_buttons(user_id)
         sendMarkup('Choose site to search:', context.bot, update, button)
     elif SEARCH_API_LINK is None and SEARCH_PLUGINS is not None:
-        button = plugin_buttons(user_id)
+        button = _plugin_buttons(user_id)
         sendMarkup('Choose site to search:', context.bot, update, button)
     else:
         return sendMessage("No API link or search PLUGINS added for this function", context.bot, update)
@@ -70,11 +70,11 @@ def torserbut(update, context):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == 'api':
         query.answer()
-        button = api_buttons(user_id)
+        button = _api_buttons(user_id)
         editMessage('Choose site to search:', message, button)
     elif data[2] == 'plugin':
         query.answer()
-        button = plugin_buttons(user_id)
+        button = _plugin_buttons(user_id)
         editMessage('Choose site to search:', message, button)
     elif data[2] != "cancel":
         query.answer()
@@ -84,12 +84,12 @@ def torserbut(update, context):
             editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
         else:
             editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>", message)
-        threading.Thread(target=search, args=(key, site, message, tool)).start()
+        threading.Thread(target=_search, args=(key, site, message, tool)).start()
     else:
         query.answer()
         editMessage("Search has been canceled!", message)
 
-def search(key, site, message, tool):
+def _search(key, site, message, tool):
     LOGGER.info(f"Searching: {key} from {site}")
     if tool == 'api':
         api = f"{SEARCH_API_LINK}/api/{site}/{key}"
@@ -106,7 +106,7 @@ def search(key, site, message, tool):
         except Exception as e:
             editMessage(str(e), message)
     else:
-        client = srch_client()
+        client = _srch_client()
         search = client.search_start(pattern=str(key), plugins=str(site), category='all')
         search_id = search.id
         while True:
@@ -122,7 +122,7 @@ def search(key, site, message, tool):
             msg += f" <b>result for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
         else:
             return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
-    link = getResult(search_results, key, message, tool)
+    link = _getResult(search_results, key, message, tool)
     buttons = button_build.ButtonMaker()
     buttons.buildbutton("🔎 VIEW", link)
     button = InlineKeyboardMarkup(buttons.build_menu(1))
@@ -130,7 +130,7 @@ def search(key, site, message, tool):
     if tool != 'api':
         client.search_delete(search_id=search_id)
 
-def getResult(search_results, key, message, tool):
+def _getResult(search_results, key, message, tool):
     telegraph_content = []
     msg = f"<h4>Search Result For {key}</h4>"
     for index, result in enumerate(search_results, start=1):
@@ -182,10 +182,10 @@ def getResult(search_results, key, message, tool):
     time.sleep(0.5)
     if len(path) > 1:
         editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-        edit_telegraph(path, telegraph_content)
+        _edit_telegraph(path, telegraph_content)
     return f"https://telegra.ph/{path[0]}"
 
-def edit_telegraph(path, telegraph_content):
+def _edit_telegraph(path, telegraph_content):
     nxt_page = 1
     prev_page = 0
     num_of_path = len(path)
@@ -207,7 +207,7 @@ def edit_telegraph(path, telegraph_content):
         )
     return
 
-def api_buttons(user_id):
+def _api_buttons(user_id):
     buttons = button_build.ButtonMaker()
     for data, name in SITES.items():
         buttons.sbutton(name, f"torser {user_id} {data} api")
@@ -215,10 +215,10 @@ def api_buttons(user_id):
     button = InlineKeyboardMarkup(buttons.build_menu(2))
     return button
 
-def plugin_buttons(user_id):
+def _plugin_buttons(user_id):
     buttons = button_build.ButtonMaker()
     if not PLUGINS:
-        client = srch_client()
+        client = _srch_client()
         sites = client.search_plugins()
         for name in sites:
             PLUGINS.append(name['name'])
