@@ -43,39 +43,40 @@ def stats(update, context):
     mem_t = get_readable_file_size(memory.total)
     mem_a = get_readable_file_size(memory.available)
     mem_u = get_readable_file_size(memory.used)
-    stats = f'<b>Bot Uptime:</b> {currentTime}\n\n'\
-            f'<b>Total Disk Space:</b> {total}\n'\
-            f'<b>Used:</b> {used} | <b>Free:</b> {free}\n\n'\
-            f'<b>Upload:</b> {sent}\n'\
-            f'<b>Download:</b> {recv}\n\n'\
-            f'<b>CPU:</b> {cpuUsage}%\n'\
-            f'<b>RAM:</b> {mem_p}%\n'\
-            f'<b>DISK:</b> {disk}%\n\n'\
-            f'<b>Physical Cores:</b> {p_core}\n'\
-            f'<b>Total Cores:</b> {t_core}\n\n'\
-            f'<b>SWAP:</b> {swap_t} | <b>Used:</b> {swap_p}%\n'\
-            f'<b>Memory Total:</b> {mem_t}\n'\
-            f'<b>Memory Free:</b> {mem_a}\n'\
-            f'<b>Memory Used:</b> {mem_u}\n'
+    stats = f'Haloo, Saya Akan Memberikan Informasi Bot 𝓥𝓮𝓷𝓲א || MirrorBot 🦋
+            f'<b>Bot Berjalan Selama ⏱:</b> {currentTime}\n\n'\
+            f'<b>Total Penyimpanan 💾:</b> {total}\n'\
+            f'<b>Digunakan 🌀:</b> {used} | <b>Bebas ♻️:</b> {free}\n\n'\
+            f'<b>Upload 📤:</b> {sent}\n'\
+            f'<b>Download 📥:</b> {recv}\n\n'\
+            f'<b>CPU 🔥:</b> {cpuUsage}%\n'\
+            f'<b>RAM ⚙️:</b> {mem_p}%\n'\
+            f'<b>DISK 📦:</b> {disk}%\n\n'\
+            f'<b>Physical Cores 🔥:</b> {p_core}\n'\
+            f'<b>Total Cores 🔥:</b> {t_core}\n\n'\
+            f'<b>SWAP ✅:</b> {swap_t} | <b>Used:</b> {swap_p}%\n'\
+            f'<b>Memory Total 🔫:</b> {mem_t}\n'\
+            f'<b>Memory Free 🛡:</b> {mem_a}\n'\
+            f'<b>Memory Used ⚡️:</b> {mem_u}\n'
     sendMessage(stats, context.bot, update)
 
 
 def start(update, context):
     buttons = button_build.ButtonMaker()
-    buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.buildbutton("Report Group", "https://t.me/+MwgSi5vmQEA2N2Vk")
+    buttons.buildbutton("𝓥𝓮𝓷𝓲א 🦋", "t.me/vmxone")
+    buttons.buildbutton("Support Group Indonesian Only 🇮🇩", "https://t.me/cringedeath")
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
-This bot can mirror all your links to Google Drive!
-Type /{BotCommands.HelpCommand} to get a list of available commands
+Haloo 👋, Saya Bot 𝓥𝓮𝓷𝓲א || MirrorBot 🦋. Saya bisa memirror semua file yang anda berikan kepada saya bisa berformat link atau langsung mengirim file .apk .mp4 .mp3 atau format yang lainnya.
+Ketik /{BotCommands.HelpCommand} untuk mendapatkan semua commands dri bot ini ^^
 '''
         sendMarkup(start_string, context.bot, update, reply_markup)
     else:
-        sendMarkup('Not Authorized user, deploy your own mirror-leech bot', context.bot, update, reply_markup)
+        sendMarkup('Bukan user terpercaya !', context.bot, update, reply_markup)
 
 def restart(update, context):
-    restart_message = sendMessage("Restarting...", context.bot, update)
+    restart_message = sendMessage("Memulai Ulang 💘...", context.bot, update)
     if Interval:
         Interval[0].cancel()
     alive.kill()
@@ -173,7 +174,7 @@ help_string_telegraph = f'''<br>
 '''
 
 help = telegraph.create_page(
-        title='Mirror-Leech-Bot Help',
+        title='𝓥𝓮𝓷𝓲א || MirrorBot 🦋',
         content=help_string_telegraph,
     )["path"]
 
@@ -203,7 +204,7 @@ help_string = f'''
 
 def bot_help(update, context):
     button = button_build.ButtonMaker()
-    button.buildbutton("Other Commands", f"https://telegra.ph/{help}")
+    button.buildbutton("Commands Lainnya", f"https://telegra.ph/{help}")
     reply_markup = InlineKeyboardMarkup(button.build_menu(1))
     sendMarkup(help_string, context.bot, update, reply_markup)
 
