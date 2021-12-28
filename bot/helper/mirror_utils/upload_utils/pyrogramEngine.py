@@ -66,14 +66,27 @@ class TgUploader:
         self.__listener.onUploadComplete(self.name, size, self.__msgs_dict, None, self.__corrupted)
 
     def __upload_file(self, up_path, filee, dirpath):
+        besic=filee
+        if len(filee)>60:
+         ext=filee.split('.')[-1]
+         filee='.'.join(filee.split('.')[:-1])
+         filee=filee.replace('_','.')
+         if len(filee)>(59-len(ext)):
+                filee=filee[:(59-len(ext))]
+         filee=filee+'.'+ext
+        print('saef ' +filee)
+        new_path = os.path.join(dirpath, filee)
+        os.rename(up_path, new_path)
+        up_path = new_path
+        
         if CUSTOM_FILENAME is not None:
-            cap_mono = f"{CUSTOM_FILENAME} <code>{filee}</code>"
+            cap_mono = f"{CUSTOM_FILENAME} <b>{filee}\n\n┏━━━━•❅•°•❈•°•❅•━━━━┓\n👑ᴍᴏᷱᴠͤɪᴇ ᴄʟͣᴜͬʙͤ ғᐃᴍɪʟʏ👑✰\n┗━━━━•❅•°•❈•°•❅•━━━━┛\n🎭Proudly Presented By🎭\n@MovieClubFamily</b>"
             filee = f"{CUSTOM_FILENAME} {filee}"
             new_path = os.path.join(dirpath, filee)
             os.rename(up_path, new_path)
             up_path = new_path
         else:
-            cap_mono = f"<code>{filee}</code>"
+            cap_mono = f"<b>{besic}\n\n┏━━━━•❅•°•❈•°•❅•━━━━┓\n👑ᴍᴏᷱᴠͤɪᴇ ᴄʟͣᴜͬʙͤ ғᐃᴍɪʟʏ👑✰\n┗━━━━•❅•°•❈•°•❅•━━━━┛\n🎭Proudly Presented By🎭\n@MovieClubFamily</b>"
         notMedia = False
         thumb = self.__thumb
         try:
