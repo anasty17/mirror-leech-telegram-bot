@@ -2,7 +2,7 @@ from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORREN
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage
 from time import sleep
 import threading
 
@@ -10,7 +10,7 @@ import threading
 class AriaDownloadHelper:
 
     def __init__(self):
-        super().__init__()
+        pass
 
     @new_thread
     def __onDownloadStarted(self, api, gid):
@@ -51,6 +51,7 @@ class AriaDownloadHelper:
             except:
                 LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
 
+    @new_thread
     def __onDownloadComplete(self, api, gid):
         dl = getDownloadByGid(gid)
         download = api.get_download(gid)
@@ -77,9 +78,12 @@ class AriaDownloadHelper:
         LOGGER.info(f"onDownloadError: {gid}")
         sleep(0.5)
         dl = getDownloadByGid(gid)
-        download = api.get_download(gid)
-        error = download.error_message
-        LOGGER.info(f"Download Error: {error}")
+        try:
+            download = api.get_download(gid)
+            error = download.error_message
+            LOGGER.info(f"Download Error: {error}")
+        except:
+            pass
         if dl:
             dl.getListener().onDownloadError(error)
 
@@ -87,18 +91,20 @@ class AriaDownloadHelper:
         aria2.listen_to_notifications(threaded=True, on_download_start=self.__onDownloadStarted,
                                       on_download_error=self.__onDownloadError,
                                       on_download_stop=self.__onDownloadStopped,
-                                      on_download_complete=self.__onDownloadComplete,
-                                      timeout=30)
+                                      on_download_complete=self.__onDownloadComplete)
 
-    def add_download(self, link: str, path, listener, filename):
-        if is_magnet(link):
-            download = aria2.add_magnet(link, {'dir': path, 'out': filename})
-        else:
-            download = aria2.add_uris([link], {'dir': path, 'out': filename})
-        if download.error_message:
-            listener.onDownloadError(download.error_message)
-            return
-        with download_dict_lock:
-            download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
-            LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")
-        sendStatusMessage(listener.update, listener.bot)
+def add_aria2c_download(link: str, path, listener, filename):
+    if is_magnet(link):
+        download = aria2.add_magnet(link, {'dir': path, 'out': filename})
+    else:
+        download = aria2.add_uris([link], {'dir': path, 'out': filename})
+    if download.error_message:
+        error = str(download.error_message).replace('<', ' ').replace('>', ' ')
+        LOGGER.info(f"Download Error: {error}")
+        return sendMessage(error, listener.bot, listener.update)
+    with download_dict_lock:
+        download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
+        LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")
+    sendStatusMessage(listener.update, listener.bot)
+
+AriaDownloadHelper().start_listener()
