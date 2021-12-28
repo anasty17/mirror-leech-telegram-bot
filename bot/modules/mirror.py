@@ -424,7 +424,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             header = res.headers.get('content-type')
         except:
             pass
-        if header is not None and any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):
+        if header is None or any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):
             try:
                 resp = requests.get(link, timeout=5)
                 if resp.status_code == 200:
