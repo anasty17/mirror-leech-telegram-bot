@@ -65,7 +65,14 @@ heroku apps:destroy YOURAPPNAME
 ```
 - To restart dyno
 ```
+heroku restart
+```
+- To turn off dyno
+```
 heroku ps:scale web=0
+```
+- To turn on dyno
+```
 heroku ps:scale web=1
 ```
 - To set heroku variable
