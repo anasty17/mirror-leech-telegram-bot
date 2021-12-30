@@ -67,7 +67,6 @@ def __onDownloadComplete(api, gid):
 
 @new_thread
 def __onDownloadStopped(api, gid):
-    LOGGER.info(f"onDownloadStopped: {gid}")
     sleep(4)
     dl = getDownloadByGid(gid)
     if dl:
