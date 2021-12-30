@@ -5,21 +5,21 @@ from .status import Status
 
 class TelegramDownloadStatus(Status):
     def __init__(self, obj, listener):
-        self.obj = obj
-        self.uid = listener.uid
+        self.__obj = obj
+        self.__uid = listener.uid
         self.message = listener.message
 
     def gid(self):
-        return self.obj.gid
+        return self.__obj.gid
 
     def path(self):
-        return f"{DOWNLOAD_DIR}{self.uid}"
+        return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def processed_bytes(self):
-        return self.obj.downloaded_bytes
+        return self.__obj.downloaded_bytes
 
     def size_raw(self):
-        return self.obj.size
+        return self.__obj.size
 
     def size(self):
         return get_readable_file_size(self.size_raw())
@@ -28,10 +28,10 @@ class TelegramDownloadStatus(Status):
         return MirrorStatus.STATUS_DOWNLOADING
 
     def name(self):
-        return self.obj.name
+        return self.__obj.name
 
     def progress_raw(self):
-        return self.obj.progress
+        return self.__obj.progress
 
     def progress(self):
         return f'{round(self.progress_raw(), 2)}%'
@@ -40,7 +40,7 @@ class TelegramDownloadStatus(Status):
         """
         :return: Download speed in Bytes/Seconds
         """
-        return self.obj.download_speed
+        return self.__obj.download_speed
 
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'
@@ -53,4 +53,4 @@ class TelegramDownloadStatus(Status):
             return '-'
 
     def download(self):
-        return self.obj
+        return self.__obj

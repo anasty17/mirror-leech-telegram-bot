@@ -20,7 +20,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupp
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
-from bot.helper.mirror_utils.download_utils.qbit_downloader import QbitTorrent
+from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.status_utils import listeners
@@ -168,6 +168,7 @@ class MirrorListener(listeners.MirrorListeners):
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
             tg.upload()
+            del tg
         else:
             LOGGER.info(f"Upload Name: {up_name}")
             drive = gdriveTools.GoogleDriveHelper(up_name, self)
@@ -176,6 +177,7 @@ class MirrorListener(listeners.MirrorListeners):
                 download_dict[self.uid] = upload_status
             update_all_messages()
             drive.upload(up_name)
+            del drive
 
     def onDownloadError(self, error):
         error = error.replace('<', ' ')
@@ -391,7 +393,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     LOGGER.info(link)
     gdtot_link = bot_utils.is_gdtot_link(link)
-    header = None
 
     if not bot_utils.is_url(link) and not bot_utils.is_magnet(link) and not os.path.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -405,12 +406,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         return sendMessage(help_msg, bot, update)
     elif not bot_utils.is_mega_link(link) and not isQbit and not bot_utils.is_magnet(link) \
          and not os.path.exists(link) and not bot_utils.is_gdrive_link(link):
-        try:
-            res = requests.head(link, timeout=5)
-            header = res.headers.get('content-type')
-        except:
-            pass
-        if header is not None and any(x in header for x in ['text/html', 'text/plain']):
+        content_type = bot_utils.get_content_type(link)
+        if content_type is None or any(x in content_type for x in ['text/html', 'text/plain']):
             try:
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
@@ -419,12 +416,17 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
+<<<<<<< HEAD
+        content_type = bot_utils.get_content_type(link)
+        if content_type is None or any(x in content_type for x in ['application/x-bittorrent', 'application/octet-stream']):
+=======
         try:
             res = requests.head(link, allow_redirects=True, timeout=5)
             header = res.headers.get('content-type')
         except:
             pass
         if header is None or any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):
+>>>>>>> 39f1e81ed3441c08378f288ff96b64aa59636b99
             try:
                 resp = requests.get(link, timeout=5)
                 if resp.status_code == 200:
@@ -459,8 +461,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             threading.Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (bot_utils.is_magnet(link) or os.path.exists(link)):
-        qbit = QbitTorrent(listener, qbitsel)
-        threading.Thread(target=qbit.add_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/')).start()
+        threading.Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
 
     else:
         threading.Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()

@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+
 from bot import LOGGER, download_dict, download_dict_lock, app, STOP_DUPLICATE
 from .download_helper import DownloadHelper
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
@@ -107,9 +108,10 @@ class TelegramDownloadHelper(DownloadHelper):
                     LOGGER.info('Checking File/Folder if already in Drive...')
                     gd = GoogleDriveHelper()
                     smsg, button = gd.drive_list(name, True, True)
+                    del gd
                     if smsg:
-                        sendMarkup("File/Folder is already available in Drive.\nHere are the search results:", self.__listener.bot, self.__listener.update, button)
-                        return
+                        msg = "File/Folder is already available in Drive.\nHere are the search results:"
+                        return sendMarkup(msg, self.__listener.bot, self.__listener.update, button)
                 self.__onDownloadStart(name, media.file_size, media.file_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
                 threading.Thread(target=self.__download, args=(_message, path)).start()

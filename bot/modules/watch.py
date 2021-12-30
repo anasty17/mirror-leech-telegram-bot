@@ -3,6 +3,7 @@ import re
 
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
+from time import sleep
 
 from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -17,7 +18,7 @@ listener_dict = {}
 
 def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     mssg = update.message.text
-    message_args = mssg.split(' ', maxsplit=2)
+    message_args = mssg.split(' ')
     name_args = mssg.split('|', maxsplit=1)
     user_id = update.message.from_user.id
     msg_id = update.message.message_id
@@ -28,8 +29,6 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
             link = ''
     except IndexError:
         link = ''
-    link = re.split(r"pswd:|\|", link)[0]
-    link = link.strip()
 
     try:
         name = name_args[1]
@@ -75,7 +74,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS]
-        sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
+        bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
     else:
         formats = result.get('formats')
         formats_dict = {}
@@ -124,7 +123,9 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, formats_dict]
-        sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
+        bmsg = sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
+
+    threading.Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
 def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
@@ -179,7 +180,10 @@ def select_format(update, context):
     msg = query.message
     data = data.split(" ")
     task_id = int(data[1])
-    task_info = listener_dict[task_id]
+    try:
+        task_info = listener_dict[task_id]
+    except:
+        return editMessage("This is old task", msg)
     uid = task_info[1]
     if user_id != uid:
         return query.answer(text="Don't waste your time!", show_alert=True)
@@ -211,6 +215,14 @@ def select_format(update, context):
         threading.Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
     query.message.delete()
+
+def _auto_cancel(msg, msg_id):
+    sleep(60)
+    try:
+        del listener_dict[msg_id]
+        editMessage('Timed out! Task has been cancelled.', msg)
+    except:
+        pass
 
 def watch(update, context):
     _watch(context.bot, update)

@@ -6,16 +6,14 @@ from time import sleep
 
 class QbDownloadStatus(Status):
 
-    def __init__(self, gid, listener, qbhash, client, qbsel):
-        super().__init__()
+    def __init__(self, listener, client, gid, qbhash, select):
         self.__gid = gid
         self.__hash = qbhash
-        self.__qbsel = qbsel
-        self.client = client
+        self.__select = select
+        self.__client = client
+        self.__listener = listener
         self.__uid = listener.uid
-        self.listener = listener
         self.message = listener.message
-
 
     def progress(self):
         """
@@ -29,7 +27,7 @@ class QbDownloadStatus(Status):
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        if self.__qbsel:
+        if self.__select:
             return self.torrent_info().size
         else:
             return self.torrent_info().total_size
@@ -68,7 +66,7 @@ class QbDownloadStatus(Status):
             return MirrorStatus.STATUS_DOWNLOADING
 
     def torrent_info(self):
-        return self.client.torrents_info(torrent_hashes=self.__hash)[0]
+        return self.__client.torrents_info(torrent_hashes=self.__hash)[0]
 
     def download(self):
         return self
@@ -79,13 +77,19 @@ class QbDownloadStatus(Status):
     def gid(self):
         return self.__gid
 
+    def client(self):
+        return self.__client
+
+    def listener(self):
+        return self.__listener
+
     def cancel_download(self):
         if self.status() == MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
-            self.client.torrents_pause(torrent_hashes=self.__hash)
+            self.__client.torrents_pause(torrent_hashes=self.__hash)
         else:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-            self.client.torrents_pause(torrent_hashes=self.__hash)
+            self.__client.torrents_pause(torrent_hashes=self.__hash)
             sleep(0.3)
-            self.listener.onDownloadError('Download stopped by user!')
-            self.client.torrents_delete(torrent_hashes=self.__hash)
+            self.__listener.onDownloadError('Download stopped by user!')
+            self.__client.torrents_delete(torrent_hashes=self.__hash)

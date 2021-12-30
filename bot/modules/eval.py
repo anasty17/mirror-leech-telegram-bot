@@ -2,16 +2,17 @@ import io
 import os
 import textwrap
 import traceback
+
+from telegram import ParseMode
+from telegram.ext import CommandHandler
 from contextlib import redirect_stdout
+
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage
 from bot import LOGGER, dispatcher
-from telegram import ParseMode
-from telegram.ext import CommandHandler
 
 namespaces = {}
-
 
 def namespace_of(chat, update, bot):
     if chat not in namespaces:
@@ -26,13 +27,11 @@ def namespace_of(chat, update, bot):
 
     return namespaces[chat]
 
-
 def log_input(update):
     user = update.effective_user.id
     chat = update.effective_chat.id
     LOGGER.info(
         f"IN: {update.effective_message.text} (user={user}, chat={chat})")
-
 
 def send(msg, bot, update):
     if len(str(msg)) > 2000:
@@ -47,22 +46,18 @@ def send(msg, bot, update):
             text=f"`{msg}`",
             parse_mode=ParseMode.MARKDOWN)
 
-
 def evaluate(update, context):
     bot = context.bot
     send(do(eval, bot, update), bot, update)
-
 
 def execute(update, context):
     bot = context.bot
     send(do(exec, bot, update), bot, update)
 
-
 def cleanup_code(code):
     if code.startswith('```') and code.endswith('```'):
         return '\n'.join(code.split('\n')[1:-1])
     return code.strip('` \n')
-
 
 def do(func, bot, update):
     log_input(update)
@@ -110,7 +105,6 @@ def do(func, bot, update):
         if result:
             return result
 
-
 def clear(update, context):
     bot = context.bot
     log_input(update)
@@ -118,7 +112,6 @@ def clear(update, context):
     if update.message.chat_id in namespaces:
         del namespaces[update.message.chat_id]
     send("Cleared locals.", bot, update)
-
 
 def exechelp(update, context):
     help_string = '''

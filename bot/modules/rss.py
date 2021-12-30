@@ -73,7 +73,9 @@ def rss_sub(update, context):
             except IndexError:
                 link = rss_d.entries[0]['link']
             sub_msg += f"\n\n<b>Link: </b><code>{link}</code>"
-            DbManger().rss_add(title, feed_link, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
+            db = DbManger()
+            db.rss_add(title, feed_link, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
+            del db
             with rss_dict_lock:
                 if len(rss_dict) == 0:
                     rss_job.enabled = True
@@ -100,7 +102,9 @@ def rss_unsub(update, context):
             LOGGER.error("Rss link not exists! Nothing removed!")
             sendMessage("Rss link not exists! Nothing removed!", context.bot, update)
         else:
-            DbManger().rss_delete(title)
+            db = DbManger()
+            db.rss_delete(title)
+            del db
             with rss_dict_lock:
                 del rss_dict[title]
             sendMessage(f"Rss link with Title: {title} removed!", context.bot, update)
@@ -111,7 +115,9 @@ def rss_unsub(update, context):
 @new_thread
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
-        DbManger().rss_delete_all()
+        db = DbManger()
+        db.rss_delete_all()
+        del db
         with rss_dict_lock:
             rss_dict.clear()
         rss_job.enabled = False
@@ -153,7 +159,9 @@ def rss_monitor(context):
                         sendRss(feed_msg, context.bot)
                         feed_count += 1
                         sleep(5)
-                    DbManger().rss_update(name, str(last_link), str(last_title))
+                    db = DbManger()
+                    db.rss_update(name, str(last_link), str(last_title))
+                    del db
                     rss_dict[name] = [url_list[0], str(last_link), str(last_title)]
                     LOGGER.info(f"Feed Name: {name}")
                     LOGGER.info(f"Last item: {rss_d.entries[0]['link']}")
@@ -163,7 +171,6 @@ def rss_monitor(context):
             except Exception as e:
                 LOGGER.error(str(e))
                 continue
-
 
 if DB_URI is not None and RSS_CHAT_ID is not None:
     rss_list_handler = CommandHandler(BotCommands.RssListCommand, rss_list, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)

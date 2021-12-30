@@ -212,7 +212,8 @@ sudo docker container prune
 ```
 sudo docker image prune -a
 ```
-4. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run.
+4. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
+5. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run.
    - Tutorial Video for Deploying on Oracle VPS:
      - Thanks to [Wiszky](https://github.com/vishnoe115)
      - No need to use sudo su, you can also use sudo before each cmd!

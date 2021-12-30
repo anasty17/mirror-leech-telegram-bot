@@ -1,5 +1,5 @@
-from bot.helper.telegram_helper.message_utils import sendMessage
 from bot import AUTHORIZED_CHATS, SUDO_USERS, dispatcher, DB_URI
+from bot.helper.telegram_helper.message_utils import sendMessage
 from telegram.ext import CommandHandler
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -16,7 +16,9 @@ def authorize(update, context):
         if user_id in AUTHORIZED_CHATS:
             msg = 'User Already Authorized!'
         elif DB_URI is not None:
-            msg = DbManger().user_auth(user_id)
+            db = DbManger()
+            msg = db.user_auth(user_id)
+            del db
             AUTHORIZED_CHATS.add(user_id)
         else:
             AUTHORIZED_CHATS.add(user_id)
@@ -29,7 +31,9 @@ def authorize(update, context):
         if chat_id in AUTHORIZED_CHATS:
             msg = 'Chat Already Authorized!'
         elif DB_URI is not None:
-            msg = DbManger().user_auth(chat_id)
+            db = DbManger()
+            msg = db.user_auth(chat_id)
+            del db
             AUTHORIZED_CHATS.add(chat_id)
         else:
             AUTHORIZED_CHATS.add(chat_id)
@@ -42,7 +46,9 @@ def authorize(update, context):
         if user_id in AUTHORIZED_CHATS:
             msg = 'User Already Authorized!'
         elif DB_URI is not None:
-            msg = DbManger().user_auth(user_id)
+            db = DbManger()
+            msg = db.user_auth(user_id)
+            del db
             AUTHORIZED_CHATS.add(user_id)
         else:
             AUTHORIZED_CHATS.add(user_id)
@@ -60,7 +66,9 @@ def unauthorize(update, context):
         user_id = int(message_[1])
         if user_id in AUTHORIZED_CHATS:
             if DB_URI is not None:
-                msg = DbManger().user_unauth(user_id)
+                db = DbManger()
+                msg = db.user_unauth(user_id)
+                del db
             else:
                 msg = 'User Unauthorized'
             AUTHORIZED_CHATS.remove(user_id)
@@ -71,7 +79,9 @@ def unauthorize(update, context):
         chat_id = update.effective_chat.id
         if chat_id in AUTHORIZED_CHATS:
             if DB_URI is not None:
-                msg = DbManger().user_unauth(chat_id)
+                db = DbManger()
+                msg = db.user_unauth(chat_id)
+                del db
             else:
                 msg = 'Chat Unauthorized'
             AUTHORIZED_CHATS.remove(chat_id)
@@ -82,7 +92,9 @@ def unauthorize(update, context):
         user_id = reply_message.from_user.id
         if user_id in AUTHORIZED_CHATS:
             if DB_URI is not None:
-                msg = DbManger().user_unauth(user_id)
+                db = DbManger()
+                msg = db.user_unauth(user_id)
+                del db
             else:
                 msg = 'User Unauthorized'
             AUTHORIZED_CHATS.remove(user_id)
@@ -105,7 +117,9 @@ def addSudo(update, context):
         if user_id in SUDO_USERS:
             msg = 'Already Sudo!'
         elif DB_URI is not None:
-            msg = DbManger().user_addsudo(user_id)
+            db = DbManger()
+            msg = db.user_addsudo(user_id)
+            del db
             SUDO_USERS.add(user_id)
         else:
             SUDO_USERS.add(user_id)
@@ -120,7 +134,9 @@ def addSudo(update, context):
         if user_id in SUDO_USERS:
             msg = 'Already Sudo!'
         elif DB_URI is not None:
-            msg = DbManger().user_addsudo(user_id)
+            db = DbManger()
+            msg = db.user_addsudo(user_id)
+            del db
             SUDO_USERS.add(user_id)
         else:
             SUDO_USERS.add(user_id)
@@ -138,7 +154,9 @@ def removeSudo(update, context):
         user_id = int(message_[1])
         if user_id in SUDO_USERS:
             if DB_URI is not None:
-                msg = DbManger().user_rmsudo(user_id)
+                db = DbManger()
+                msg = db.user_rmsudo(user_id)
+                del db
             else:
                 msg = 'Demoted'
             SUDO_USERS.remove(user_id)
@@ -150,7 +168,9 @@ def removeSudo(update, context):
         user_id = reply_message.from_user.id
         if user_id in SUDO_USERS:
             if DB_URI is not None:
-                msg = DbManger().user_rmsudo(user_id)
+                db = DbManger()
+                msg = db.user_rmsudo(user_id)
+                del db
             else:
                 msg = 'Demoted'
             SUDO_USERS.remove(user_id)
@@ -165,9 +185,9 @@ def removeSudo(update, context):
 
 def sendAuthChats(update, context):
     user = sudo = ''
-    user += '\n'.join(str(id) for id in AUTHORIZED_CHATS)
-    sudo += '\n'.join(str(id) for id in SUDO_USERS)
-    sendMessage(f'<b><u>Authorized Chats</u></b>\n<code>{user}</code>\n<b><u>Sudo Users</u></b>\n<code>{sudo}</code>', context.bot, update)
+    user += '\n'.join(f"<code>{uid}</code>" for uid in AUTHORIZED_CHATS)
+    sudo += '\n'.join(f"<code>{uid}</code>" for uid in SUDO_USERS)
+    sendMessage(f'<b><u>Authorized Chats:</u></b>\n{user}\n<b><u>Sudo Users:</u></b>\n{sudo}', context.bot, update)
 
 
 send_auth_handler = CommandHandler(command=BotCommands.AuthorizedUsersCommand, callback=sendAuthChats,

@@ -5,17 +5,17 @@ from bot import DOWNLOAD_DIR
 
 class UploadStatus(Status):
     def __init__(self, obj, size, gid, listener):
-        self.obj = obj
+        self.__obj = obj
         self.__size = size
-        self.uid = listener.uid
-        self.message = listener.message
+        self.__uid = listener.uid
         self.__gid = gid
+        self.message = listener.message
 
     def path(self):
-        return f"{DOWNLOAD_DIR}{self.uid}"
+        return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def processed_bytes(self):
-        return self.obj.uploaded_bytes
+        return self.__obj.uploaded_bytes
 
     def size_raw(self):
         return self.__size
@@ -27,11 +27,11 @@ class UploadStatus(Status):
         return MirrorStatus.STATUS_UPLOADING
 
     def name(self):
-        return self.obj.name
+        return self.__obj.name
 
     def progress_raw(self):
         try:
-            return self.obj.uploaded_bytes / self.__size * 100
+            return self.__obj.uploaded_bytes / self.__size * 100
         except ZeroDivisionError:
             return 0
 
@@ -42,14 +42,14 @@ class UploadStatus(Status):
         """
         :return: Upload speed in Bytes/Seconds
         """
-        return self.obj.speed()
+        return self.__obj.speed()
 
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'
 
     def eta(self):
         try:
-            seconds = (self.__size - self.obj.uploaded_bytes) / self.speed_raw()
+            seconds = (self.__size - self.__obj.uploaded_bytes) / self.speed_raw()
             return f'{get_readable_time(seconds)}'
         except ZeroDivisionError:
             return '-'
@@ -58,4 +58,4 @@ class UploadStatus(Status):
         return self.__gid
 
     def download(self):
-        return self.obj
+        return self.__obj

@@ -194,5 +194,7 @@ class DbManger:
         self.disconnect()
 
 if DB_URI is not None:
-    DbManger().db_init()
+    db = DbManger()
+    db.db_init()
+    del db
 
