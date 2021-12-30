@@ -285,7 +285,7 @@ def get_content_type(link: str):
 
     if content_type is None:
         try:
-            res = utllib.request.urlopen(link, timeout=5)
+            res = urllib.request.urlopen(link, timeout=5)
             info = res.info()
             content_type = info.get_content_type()
         except:
