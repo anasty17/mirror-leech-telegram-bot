@@ -35,8 +35,8 @@ def cloneNode(update, context):
     if is_gdrive_link(link):
         gd = gdriveTools.GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
-        del gd
         if res != "":
+            del gd
             return sendMessage(res, context.bot, update)
         if STOP_DUPLICATE:
             LOGGER.info('Checking File/Folder if already in Drive...')
@@ -46,6 +46,7 @@ def cloneNode(update, context):
                 sendMarkup(msg3, context.bot, update, button)
                 if gdtot_link:
                     gd.deletefile(link)
+                del gd
                 return
         if CLONE_LIMIT is not None:
             LOGGER.info('Checking File/Folder Size...')
@@ -90,6 +91,7 @@ def cloneNode(update, context):
             sendMarkup(result + cc, context.bot, update, button)
         if gdtot_link:
             gd.deletefile(link)
+            del gd
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
 
