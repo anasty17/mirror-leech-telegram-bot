@@ -416,17 +416,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
-<<<<<<< HEAD
         content_type = bot_utils.get_content_type(link)
         if content_type is None or any(x in content_type for x in ['application/x-bittorrent', 'application/octet-stream']):
-=======
-        try:
-            res = requests.head(link, allow_redirects=True, timeout=5)
-            header = res.headers.get('content-type')
-        except:
-            pass
-        if header is None or any(x in header for x in ['application/x-bittorrent', 'application/octet-stream']):
->>>>>>> 39f1e81ed3441c08378f288ff96b64aa59636b99
             try:
                 resp = requests.get(link, timeout=5)
                 if resp.status_code == 200:
@@ -440,7 +431,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 error = str(e).replace('<', ' ').replace('>', ' ')
                 return sendMessage(error, bot, update)
         else:
-            return sendMessage("Qb commands for torrents only. if you are trying to dowload torrent then report.", bot, update)
+            msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
+            return sendMessage(msg, bot, update)
 
     if bot_utils.is_gdrive_link(link):
         if not isZip and not extract and not isLeech:
