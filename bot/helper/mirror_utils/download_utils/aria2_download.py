@@ -24,7 +24,6 @@ def __onDownloadStarted(api, gid):
                 if not dl.getListener().extract:
                     gdrive = GoogleDriveHelper()
                     smsg, button = gdrive.drive_list(sname, True)
-                    del gdrive
                     if smsg:
                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
                         api.remove([download], force=True)

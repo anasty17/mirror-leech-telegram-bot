@@ -11,7 +11,6 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size
 def add_gd_download(link: str, listener, gdtot):
     gd = gdriveTools.GoogleDriveHelper()
     res, size, name, files = gd.helper(link)
-    del gd
     if res != "":
         sendMessage(res, listener.bot, listener.update)
         return
@@ -31,4 +30,3 @@ def add_gd_download(link: str, listener, gdtot):
     drive.download(link)
     if gdtot:
         drive.deletefile(link)
-    del drive

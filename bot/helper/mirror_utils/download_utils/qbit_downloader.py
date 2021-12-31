@@ -131,7 +131,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
         tor_info = client.torrents_info(torrent_hashes=ext_hash)
         if len(tor_info) == 0:
             get_info += 1
-            if get_info > 1:
+            if get_info > 2:
                 client.auth_log_out()
                 break
             continue
@@ -159,7 +159,6 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     if not listener.extract:
                         gd = GoogleDriveHelper()
                         qbmsg, button = gd.drive_list(qbname, True)
-                        del gd
                         if qbmsg:
                             msg = "File/Folder is already available in Drive."
                             client.torrents_pause(torrent_hashes=ext_hash)

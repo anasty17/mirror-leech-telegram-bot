@@ -73,9 +73,7 @@ def rss_sub(update, context):
             except IndexError:
                 link = rss_d.entries[0]['link']
             sub_msg += f"\n\n<b>Link: </b><code>{link}</code>"
-            db = DbManger()
-            db.rss_add(title, feed_link, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
-            del db
+            DbManger().rss_add(title, feed_link, str(rss_d.entries[0]['link']), str(rss_d.entries[0]['title']))
             with rss_dict_lock:
                 if len(rss_dict) == 0:
                     rss_job.enabled = True
@@ -102,9 +100,7 @@ def rss_unsub(update, context):
             LOGGER.error("Rss link not exists! Nothing removed!")
             sendMessage("Rss link not exists! Nothing removed!", context.bot, update)
         else:
-            db = DbManger()
-            db.rss_delete(title)
-            del db
+            DbManger().rss_delete(title)
             with rss_dict_lock:
                 del rss_dict[title]
             sendMessage(f"Rss link with Title: {title} removed!", context.bot, update)
@@ -115,9 +111,7 @@ def rss_unsub(update, context):
 @new_thread
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
-        db = DbManger()
-        db.rss_delete_all()
-        del db
+        DbManger().rss_delete_all()
         with rss_dict_lock:
             rss_dict.clear()
         rss_job.enabled = False
@@ -159,9 +153,7 @@ def rss_monitor(context):
                         sendRss(feed_msg, context.bot)
                         feed_count += 1
                         sleep(5)
-                    db = DbManger()
-                    db.rss_update(name, str(last_link), str(last_title))
-                    del db
+                    DbManger().rss_update(name, str(last_link), str(last_title))
                     rss_dict[name] = [url_list[0], str(last_link), str(last_title)]
                     LOGGER.info(f"Feed Name: {name}")
                     LOGGER.info(f"Last item: {rss_d.entries[0]['link']}")

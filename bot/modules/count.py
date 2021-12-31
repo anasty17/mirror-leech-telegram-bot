@@ -30,7 +30,6 @@ def countNode(update, context):
         gd = GoogleDriveHelper()
         result = gd.count(link)
         deleteMessage(context.bot, msg)
-        del gd
         if update.message.from_user.username:
             uname = f'@{update.message.from_user.username}'
         else:

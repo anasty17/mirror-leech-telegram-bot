@@ -161,7 +161,6 @@ def add_mega_download(mega_link: str, path: str, listener):
         if not listener.extract:
             gd = GoogleDriveHelper()
             smsg, button = gd.drive_list(mname, True)
-            del gd
             if smsg:
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMarkup(msg1, listener.bot, listener.update, button)

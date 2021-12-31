@@ -168,7 +168,6 @@ class MirrorListener(listeners.MirrorListeners):
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
             tg.upload()
-            del tg
         else:
             LOGGER.info(f"Upload Name: {up_name}")
             drive = gdriveTools.GoogleDriveHelper(up_name, self)
@@ -177,7 +176,6 @@ class MirrorListener(listeners.MirrorListeners):
                 download_dict[self.uid] = upload_status
             update_all_messages()
             drive.upload(up_name)
-            del drive
 
     def onDownloadError(self, error):
         error = error.replace('<', ' ')

@@ -56,7 +56,6 @@ def _list_drive(key, bmsg, list_method, item_type):
     list_method = list_method == "recu"
     gdrive = GoogleDriveHelper()
     msg, button = gdrive.drive_list(key, isRecursive=list_method, itemType=item_type)
-    del gdrive
     if button:
         editMessage(msg, bmsg, button)
     else:

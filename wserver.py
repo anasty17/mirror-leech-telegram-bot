@@ -213,7 +213,7 @@ input[type="submit"]:hover, input[type="submit"]:focus{
       </div>
     </header>
     <section>
-      <h2 class="intro">Select the files you want to download</h2>
+      <h2 class="size">Selected Files Size: {size}</h2>
       <form action="{form_url}" method="POST">
        {My_content}
        <input type="submit" name="Select these files ;)">
@@ -570,6 +570,7 @@ async def list_torrent_contents(request):
     client = qba.Client(host="localhost", port="8090")
     try:
         res = client.torrents_files(torrent_hash=torr)
+        info = client.torrents_info(torrent_hashes=torr)[0]
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
     passw = ""
@@ -588,8 +589,8 @@ async def list_torrent_contents(request):
 
     cont = ["", 0]
     nodes.create_list(par, cont)
-
-    rend_page = page.replace("{My_content}", cont[0])
+    fsize = nodes.get_readable_file_size(info.size)
+    rend_page = page.replace("{My_content}", cont[0]).replace("{size}", fsize)
     rend_page = rend_page.replace("{form_url}", f"/app/files/{torr}?pin_code={pincode}")
     client.auth_log_out()
     return web.Response(text=rend_page, content_type='text/html')
@@ -633,6 +634,7 @@ async def re_verfiy(paused, resumed, client, torr):
             LOGGER.error("Errored in reverification resumed")
         k += 1
         if k > 5:
+            client.auth_log_out()
             return False
     client.auth_log_out()
     LOGGER.info("Verified")

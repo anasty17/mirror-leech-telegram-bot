@@ -69,9 +69,7 @@ def setLeechType(update, context):
             AS_MEDIA_USERS.remove(user_id)
         AS_DOC_USERS.add(user_id)
         if DB_URI is not None:
-            db = DbManger()
-            db.user_doc(user_id)
-            del db
+            DbManger().user_doc(user_id)
         query.answer(text="Your File Will Deliver As Document!", show_alert=True)
         editLeechType(message, query)
     elif data[2] == "med":
@@ -79,9 +77,7 @@ def setLeechType(update, context):
             AS_DOC_USERS.remove(user_id)
         AS_MEDIA_USERS.add(user_id)
         if DB_URI is not None:
-            db = DbManger()
-            db.user_media(user_id)
-            del db
+            DbManger().user_media(user_id)
         query.answer(text="Your File Will Deliver As Media!", show_alert=True)
         editLeechType(message, query)
     elif data[2] == "thumb":
@@ -89,9 +85,7 @@ def setLeechType(update, context):
         if os.path.lexists(path):
             os.remove(path)
             if DB_URI is not None:
-                db = DbManger()
-                db.user_rm_thumb(user_id, path)
-                del db
+                DbManger().user_rm_thumb(user_id, path)
             query.answer(text="Thumbnail Removed!", show_alert=True)
             editLeechType(message, query)
         else:
@@ -116,9 +110,7 @@ def setThumb(update, context):
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         os.remove(photo_dir)
         if DB_URI is not None:
-            db = DbManger()
-            db.user_save_thumb(user_id, des_dir)
-            del db
+            DbManger().user_save_thumb(user_id, des_dir)
         msg = f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a>."
         sendMessage(msg, context.bot, update)
     else:
