@@ -8,7 +8,7 @@ import requests
 import urllib.request
 
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, LOGGER
+from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 from bot.helper.telegram_helper import button_build, message_utils

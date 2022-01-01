@@ -19,8 +19,16 @@ def cloneNode(update, context):
     reply_to = update.message.reply_to_message
     if len(args) > 1:
         link = args[1]
+        if update.message.from_user.username:
+            tag = f"@{update.message.from_user.username}"
+        else:
+            tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
     elif reply_to is not None:
         link = reply_to.text
+        if reply_to.from_user.username:
+            tag = f"@{reply_to.from_user.username}"
+        else:
+            tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
     else:
         link = ''
     gdtot_link = is_gdtot_link(link)
@@ -75,15 +83,9 @@ def cloneNode(update, context):
                     update_all_messages()
             except IndexError:
                 pass
-        if update.message.from_user.username:
-            uname = f'@{update.message.from_user.username}'
-        else:
-            uname = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
-        if uname is not None:
-            cc = f'\n\n<b>cc: </b>{uname}'
-            men = f'{uname} '
+            cc = f'\n\n<b>cc: </b>{tag}'
         if button in ["cancelled", ""]:
-            sendMessage(men + result, context.bot, update)
+            sendMessage(f"{tag} {result}", context.bot, update)
         else:
             sendMarkup(result + cc, context.bot, update, button)
         if gdtot_link:

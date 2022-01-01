@@ -16,7 +16,7 @@ from .mirror import MirrorListener
 
 listener_dict = {}
 
-def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
+def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     mssg = update.message.text
     message_args = mssg.split(' ')
     name_args = mssg.split('|', maxsplit=1)
@@ -41,9 +41,18 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     if len(pswdMsg) > 1:
         pswd = pswdMsg[1]
 
+    if update.message.from_user.username:
+        tag = f"@{update.message.from_user.username}"
+    else:
+        tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         link = reply_to.text.strip()
+        if reply_to.from_user.username:
+            tag = f"@{reply_to.from_user.username}"
+        else:
+            tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
 
     if not is_url(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -53,7 +62,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         return sendMessage(help_msg, bot, update)
 
     LOGGER.info(link)
-    listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
+    listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
