@@ -29,6 +29,9 @@ SITES = {
     "tgx": "TorrentGalaxy",
     "rarbg": "Rarbg",
     "ettv": "Ettv",
+    "zooqle": "Zooqle",
+    "kickass": "KickAss",
+    "bitsearch": "Bitsearch",
     "all": "All"
 }
 
