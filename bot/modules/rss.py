@@ -125,6 +125,7 @@ def rss_monitor(context):
         if len(rss_dict) == 0:
             rss_job.enabled = False
             return
+        rss_saver = {}
         for name, url_list in rss_dict.items():
             """
             try:
@@ -154,15 +155,17 @@ def rss_monitor(context):
                         feed_count += 1
                         sleep(5)
                     DbManger().rss_update(name, str(last_link), str(last_title))
-                    rss_dict[name] = [url_list[0], str(last_link), str(last_title)]
+                    rss_saver[name] = [url_list[0], str(last_link), str(last_title)]
                     LOGGER.info(f"Feed Name: {name}")
                     LOGGER.info(f"Last item: {rss_d.entries[0]['link']}")
-            except IndexError as e:
-                LOGGER.error(f"There was an error while parsing this feed: {name} - {url_list[0]} - Error: {e}")
+            except IndexError:
+                LOGGER.error(f"There was an error while parsing this feed: {name} - {url_list[0]}")
                 continue
             except Exception as e:
                 LOGGER.error(str(e))
                 continue
+        for key, values in rss_saver.items():
+            rss_dict[key] = values
 
 if DB_URI is not None and RSS_CHAT_ID is not None:
     rss_list_handler = CommandHandler(BotCommands.RssListCommand, rss_list, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)

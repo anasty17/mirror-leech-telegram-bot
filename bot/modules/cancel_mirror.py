@@ -41,9 +41,6 @@ def cancel_mirror(update, context):
         sendMessage("Split in Progress, You Can't Cancel It.", context.bot, update)
     else:
         dl.download().cancel_download()
-        sleep(1)  # incase of any error with ondownloaderror listener
-        clean_download(f'{DOWNLOAD_DIR}{mirror_message.message_id}')
-
 
 def cancel_all(update, context):
     count = 0
