@@ -8,7 +8,7 @@ from time import sleep
 from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.telegram_helper import button_build
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, is_magnet
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -48,7 +48,9 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
-        link = reply_to.text.strip()
+        reply_text = reply_to.text
+        if is_url(reply_text) or is_magnet(reply_text):
+            link = reply_text.strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
