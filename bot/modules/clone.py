@@ -87,7 +87,11 @@ def cloneNode(update, context):
         if button in ["cancelled", ""]:
             sendMessage(f"{tag} {result}", context.bot, update)
         else:
-            sendMarkup(result + cc, context.bot, update, button)
+            log_msg = f"Donwload Owner {uname}\n\n"
+            logmsg = sendLog(log_msg + result , context.bot, update, button)
+            if logmsg:
+                log_msg = f"\n\nOr <b>Your File has been Successfully Copied, Click Below Button to get Download Links.</b>"
+                sendMarkup(log_msg, context.bot, update, InlineKeyboardMarkup([[InlineKeyboardButton(text="CLICK HERE", url=logmsg.link)]]))
         if gdtot_link:
             gd.deletefile(link)
     else:
