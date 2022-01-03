@@ -102,12 +102,18 @@ def rss_sub(update, context):
             sendMessage(str(e), context.bot, update)
     except IndexError:
         msg = f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com"
-        msg += " f: 1080 or 720 or 144p|web or mp4|hvec (optional).\n\nThis filter will parse links that it's titles"
-        msg += " contains `(1080 or 720 or 144p) and (web or mp4) and hvec` words. You can add whatever you want"
+        msg += " f: 1080 or 720 or 144p|mkv or mp4|hvec (optional).\n\nThis filter will parse links that it's titles"
+        msg += " contains `(1080 or 720 or 144p) and (mkv or mp4) and hvec` words. You can add whatever you want.\n\n"
+        msg += "Another example: f:  1080  or 720p|.web. or .webrip.|hvec or x264 .. This will parse titles that contains"
+        msg += " ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264).. i have added space before and after 1080"
+        msg += " to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without"
+        msg += " spaces after it."
         msg += "\n\nFilters Notes:\n\n1. | means and.\n\n2. Add `or` between similar keys, you can add it"
         msg += " between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web"
         msg += " because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
         msg += "\n\n3. You can add `or` and `|` as much as you want."
+        msg += "\n\n4. Take look on title if it has static special character after or before the qualities or extensions"
+        msg += " or whatever and use them in filter to avoid wrong match"
         sendMessage(msg, context.bot, update)
 
 @new_thread
