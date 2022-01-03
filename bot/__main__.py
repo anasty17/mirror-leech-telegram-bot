@@ -153,7 +153,7 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.RssGetCommand}</b>: [Title] [Number](last N links): Force fetch last N links
 <br><br>
-<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link] f:[filter]: Subscribe new rss feed
+<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link] f: [filter]: Subscribe new rss feed
 <br><br>
 <b>/{BotCommands.RssUnSubCommand}</b>: [Title]: Unubscribe rss feed by title
 <br><br>
