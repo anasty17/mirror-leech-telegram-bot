@@ -109,7 +109,6 @@ class MirrorListener(listeners.MirrorListeners):
                 if os.path.isdir(m_path):
                     for dirpath, subdir, files in os.walk(m_path, topdown=False):
                         for filee in files:
-                            LOGGER.info(files)
                             if re.search(r'\.part0*1.rar$', filee) or re.search(r'\.7z.0*1$', filee) \
                                or (filee.endswith(".rar") and not re.search(r'\.part\d+.rar$', filee)) \
                                or filee.endswith(".zip") or re.search(r'\.zip.0*1$', filee):
@@ -235,11 +234,11 @@ class MirrorListener(listeners.MirrorListeners):
                     link = f"https://t.me/c/{chat_id}/{msg_id}"
                     fmsg += f"{index}. <a href='{link}'>{item}</a>\n"
                     if len(fmsg.encode('utf-8') + msg.encode('utf-8')) > 4000:
-                        time.sleep(1.5)
+                        time.sleep(2)
                         sendMessage(msg + fmsg, self.bot, self.update)
                         fmsg = ''
                 if fmsg != '':
-                    time.sleep(1.5)
+                    time.sleep(2)
                     sendMessage(msg + fmsg, self.bot, self.update)
             return
 
@@ -335,7 +334,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     if update.message.from_user.username:
         tag = f"@{update.message.from_user.username}"
     else:
-        tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+        tag = update.message.from_user.mention_html(update.message.from_user.first_name)
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
@@ -350,10 +349,11 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             and not bot_utils.is_magnet(link)
             or len(link) == 0
         ):
-            if reply_to.from_user.username:
-                tag = f"@{reply_to.from_user.username}"
-            else:
-                tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
+            if not reply_to.from_user.is_bot:
+                if reply_to.from_user.username:
+                    tag = f"@{reply_to.from_user.username}"
+                else:
+                    tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
             if file is None:
                 reply_text = reply_to.text
@@ -397,7 +397,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     if not bot_utils.is_mega_link(link) and not isQbit and not bot_utils.is_magnet(link) \
          and not os.path.exists(link) and not bot_utils.is_gdrive_link(link):
         content_type = bot_utils.get_content_type(link)
-        if content_type is None or any(x in content_type for x in ['text/html', 'text/plain']):
+        if content_type is None or re.match(r'text/html|text/plain', content_type):
             try:
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
@@ -407,7 +407,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                     return sendMessage(str(e), bot, update)
     elif isQbit and not bot_utils.is_magnet(link) and not os.path.exists(link):
         content_type = bot_utils.get_content_type(link)
-        if content_type is None or any(x in content_type for x in ['application/x-bittorrent', 'application/octet-stream']):
+        if content_type is None or re.match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
                 resp = requests.get(link, timeout=10)
                 if resp.status_code == 200:
