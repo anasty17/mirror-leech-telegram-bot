@@ -223,13 +223,28 @@ sudo docker image prune -a
 
 ### Deploying on VPS Using Docker
 
-- Start Docker daemon (skip if already running):
+- Update the apt package index and install packages to allow apt to use a repository over HTTPS:
 ```
-sudo dockerd
+ sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
 ```
-- **Note**: If not started or not starting, run the command below then try to start.
+- Add Docker’s official GPG key:
 ```
-sudo apt install docker.io
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+```
+- Use the following command to set up the stable repository:
+```
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+```
+- Update/Upgrade the apt package index:
+```
+sudo apt-get update
+sudo apt-get upgrade
 ```
 - Build Docker image:
 ```
@@ -244,7 +259,7 @@ sudo docker run -p 80:80 mirror-bot
 sudo docker ps
 ```
 ```
-sudo docker stop id
+sudo docker stop "id"
 ```
 
 ----
