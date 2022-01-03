@@ -284,7 +284,11 @@ class MirrorListener(listeners.MirrorListeners):
                     pass
                 del download_dict[self.uid]
                 count = len(download_dict)
-            sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
+            log_msg = f"Donwload Owner {uname}\n"
+            logmsg = sendLog(log_msg + msg , self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
+            if logmsg:
+                log_msg = f"\n\nOr <b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
+            sendMarkup(log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text="CLICK HERE", url=logmsg.link)]]))
             if count == 0:
                 self.clean()
             else:
