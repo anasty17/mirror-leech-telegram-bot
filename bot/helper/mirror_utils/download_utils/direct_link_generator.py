@@ -281,7 +281,7 @@ def pixeldrain(url: str) -> str:
     if resp["success"]:
         return dl_link
     else:
-        raise DirectDownloadLinkException("ERROR: Cant't download due {}.".format(resp.text["value"]))
+        raise DirectDownloadLinkException(f"ERROR: Cant't download due: {resp['message']}")
 
 def antfiles(url: str) -> str:
     """ Antfiles direct link generator
