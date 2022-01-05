@@ -95,7 +95,6 @@ def getAllDownload():
                     MirrorStatus.STATUS_CLONING,
                     MirrorStatus.STATUS_UPLOADING,
                     MirrorStatus.STATUS_CHECKING,
-                    MirrorStatus.STATUS_SEEDING,
                 ]
                 and dlDetails
             ):

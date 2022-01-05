@@ -5,7 +5,6 @@ from telegram.ext import CommandHandler
 
 from bot import dispatcher, job_queue, rss_dict, rss_dict_lock, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
-from bot.helper.ext_utils.bot_utils import new_thread
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -49,7 +48,6 @@ def rss_get(update, context):
     except (IndexError, ValueError):
         sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand} Title value", context.bot, update)
 
-@new_thread
 def rss_sub(update, context):
     try:
         args = update.message.text.split(" ", 3)
@@ -102,10 +100,10 @@ def rss_sub(update, context):
             sendMessage(str(e), context.bot, update)
     except IndexError:
         msg = f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com"
-        msg += " f: 1080 or 720 or 144p|mkv or mp4|hvec (optional).\n\nThis filter will parse links that it's titles"
-        msg += " contains `(1080 or 720 or 144p) and (mkv or mp4) and hvec` words. You can add whatever you want.\n\n"
+        msg += " f: 1080 or 720 or 144p|mkv or mp4|hevc (optional)\n\nThis filter will parse links that it's titles"
+        msg += " contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` words. You can add whatever you want.\n\n"
         msg += "Another example: f:  1080  or 720p|.web. or .webrip.|hvec or x264 .. This will parse titles that contains"
-        msg += " ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264).. i have added space before and after 1080"
+        msg += " ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080"
         msg += " to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without"
         msg += " spaces after it."
         msg += "\n\nFilters Notes:\n\n1. | means and.\n\n2. Add `or` between similar keys, you can add it"
@@ -116,7 +114,6 @@ def rss_sub(update, context):
         msg += " or whatever and use them in filter to avoid wrong match"
         sendMessage(msg, context.bot, update)
 
-@new_thread
 def rss_unsub(update, context):
     try:
         args = update.message.text.split(" ")
@@ -134,7 +131,6 @@ def rss_unsub(update, context):
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update)
 
-@new_thread
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
         DbManger().rss_delete_all()

@@ -1,12 +1,7 @@
-# Implement By - @anasty17 (https://github.com/SlamDevs/slam-mirrorbot/commit/80d33430715b4296cd253f62cefc089a81937ebf)
-# (c) https://github.com/SlamDevs/slam-mirrorbot
-# All rights reserved
-
-from .status import Status
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 
-class CloneStatus(Status):
+class CloneStatus:
     def __init__(self, obj, size, update, gid):
         self.__obj = obj
         self.__size = size

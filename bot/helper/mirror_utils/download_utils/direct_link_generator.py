@@ -24,6 +24,8 @@ from bot.helper.ext_utils.bot_utils import is_gdtot_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 cookies = {"PHPSESSID": PHPSESSID, "crypt": CRYPT}
+fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
+             'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
 
 
 def direct_link_generator(link: str):
@@ -48,33 +50,9 @@ def direct_link_generator(link: str):
         return anonfiles(link)
     elif 'letsupload.io' in link:
         return letsupload(link)
-    elif 'fembed.net' in link:
+    elif any(x in link for x in fmed_list):
         return fembed(link)
-    elif 'fembed.com' in link:
-        return fembed(link)
-    elif 'femax20.com' in link:
-        return fembed(link)
-    elif 'fcdn.stream' in link:
-        return fembed(link)
-    elif 'feurl.com' in link:
-        return fembed(link)
-    elif 'naniplay.nanime.in' in link:
-        return fembed(link)
-    elif 'naniplay.nanime.biz' in link:
-        return fembed(link)
-    elif 'naniplay.com' in link:
-        return fembed(link)
-    elif 'mm9842.com' in link:
-        return fembed(link)
-    elif 'layarkacaxxi.icu' in link:
-        return fembed(link)
-    elif 'sbembed.com' in link:
-        return sbembed(link)
-    elif 'watchsb.com' in link:
-        return sbembed(link)
-    elif 'streamsb.net' in link:
-        return sbembed(link)
-    elif 'sbplay.org' in link:
+    elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
     elif '1drv.ms' in link:
         return onedrive(link)
@@ -265,7 +243,7 @@ def onedrive(link: str) -> str:
     direct_link1 = f"https://api.onedrive.com/v1.0/shares/u!{direct_link_encoded}/root/content"
     resp = requests.head(direct_link1)
     if resp.status_code != 302:
-        return "ERROR: Unauthorized link, the link may be private"
+        raise DirectDownloadLinkException("ERROR: Unauthorized link, the link may be private")
     dl_link = resp.next.url
     file_name = dl_link.rsplit("/", 1)[1]
     resp2 = requests.head(dl_link)
@@ -281,7 +259,7 @@ def pixeldrain(url: str) -> str:
     if resp["success"]:
         return dl_link
     else:
-        raise DirectDownloadLinkException(f"ERROR: Cant't download due: {resp['message']}")
+        raise DirectDownloadLinkException("ERROR: Cant't download due {}.".format(resp["message"]))
 
 def antfiles(url: str) -> str:
     """ Antfiles direct link generator

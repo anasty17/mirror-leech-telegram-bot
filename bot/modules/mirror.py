@@ -23,7 +23,6 @@ from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
-from bot.helper.mirror_utils.status_utils import listeners
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_utils.status_utils.split_status import SplitStatus
@@ -36,22 +35,18 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, de
 from bot.helper.telegram_helper import button_build
 
 
-class MirrorListener(listeners.MirrorListeners):
+class MirrorListener:
     def __init__(self, bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None):
-        super().__init__(bot, update)
+        self.bot = bot
+        self.update = update
+        self.message = update.message
+        self.uid = self.message.message_id
         self.extract = extract
         self.isZip = isZip
         self.isQbit = isQbit
         self.isLeech = isLeech
         self.pswd = pswd
         self.tag = tag
-
-    def onDownloadStarted(self):
-        pass
-
-    def onDownloadProgress(self):
-        # We are handling this on our own!
-        pass
 
     def clean(self):
         try:
@@ -194,12 +189,6 @@ class MirrorListener(listeners.MirrorListeners):
             self.clean()
         else:
             update_all_messages()
-
-    def onUploadStarted(self):
-        pass
-
-    def onUploadProgress(self):
-        pass
 
     def onUploadComplete(self, link: str, size, files, folders, typ):
         if self.isLeech:
