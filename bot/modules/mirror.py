@@ -7,13 +7,15 @@ import threading
 import re
 import time
 import shutil
+import glob
 
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
+from ftplib import FTP
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
-                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
+                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER , FTP_SERVER, FTP_USER, FTP_PASSWORD
 from bot.helper.ext_utils import fs_utils, bot_utils
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
@@ -37,7 +39,7 @@ from bot.helper.telegram_helper import button_build
 
 
 class MirrorListener(listeners.MirrorListeners):
-    def __init__(self, bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None):
+    def __init__(self, bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, isFtp=False, tag=None):
         super().__init__(bot, update)
         self.extract = extract
         self.isZip = isZip
@@ -45,6 +47,7 @@ class MirrorListener(listeners.MirrorListeners):
         self.isLeech = isLeech
         self.pswd = pswd
         self.tag = tag
+        self.isFtp = isFtp
 
     def onDownloadStarted(self):
         pass
@@ -146,7 +149,7 @@ class MirrorListener(listeners.MirrorListeners):
         up_name = pathlib.PurePath(path).name
         up_path = f'{DOWNLOAD_DIR}{self.uid}/{up_name}'
         size = fs_utils.get_path_size(f'{DOWNLOAD_DIR}{self.uid}')
-        if self.isLeech and not self.isZip:
+        if self.isLeech and not self.isZip and not self.isFtp:
             checked = False
             for dirpath, subdir, files in os.walk(f'{DOWNLOAD_DIR}{self.uid}', topdown=False):
                 for filee in files:
@@ -168,6 +171,35 @@ class MirrorListener(listeners.MirrorListeners):
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
             tg.upload()
+            
+        elif self.isFtp:
+          LOGGER.info(f"FTP name: {up_name}")
+          ftp = FTP(FTP_SERVER)
+          ftp.login(FTP_USER,FTP_PASSWORD)
+          def files(path):
+            for file in os.listdir(path):
+              if os.path.isfile(os.path.join(path, file)):
+                 yield file
+          path ="downloads"
+          up_file = up_name
+          up_path = glob.glob(os.path.join(path, '*'))
+          total_files = len(up_path)
+          loop = 0
+          while not total_files == loop:
+            file_name=up_path[loop]
+            path2 = glob.glob(os.path.join(file_name, '*'))
+            path2 = str(path2[0])
+            loop = loop+1
+            for file in files(file_name):
+              if file == up_file:
+                ftp.set_pasv(True)
+                file = open(path2, 'rb')
+                up = "Uploading to FTP Server 📤"
+                sendMessage(up, self.bot, self.update)
+                ftp.storbinary(f"STOR {up_name}", file)
+                up = "Uploaded ✅"
+                sendMessage(up, self.bot, self.update)
+                update_all_messages()
         else:
             LOGGER.info(f"Upload Name: {up_name}")
             drive = gdriveTools.GoogleDriveHelper(up_name, self)
@@ -304,7 +336,7 @@ class MirrorListener(listeners.MirrorListeners):
         else:
             update_all_messages()
 
-def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
+def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False, isFtp=False, pswd=None):
     mesg = update.message.text.split('\n')
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=1)
@@ -424,10 +456,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
             return sendMessage(msg, bot, update)
 
-    listener = MirrorListener(bot, update, isZip, extract, isQbit, isLeech, pswd, tag)
+    listener = MirrorListener(bot, update, isZip, extract, isQbit, isLeech, pswd, isFtp, tag)
 
     if bot_utils.is_gdrive_link(link):
-        if not isZip and not extract and not isLeech:
+        if not isZip and not extract and not isLeech and not isFtp:
             gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
@@ -485,6 +517,20 @@ def qb_unzip_leech(update, context):
 
 def qb_zip_leech(update, context):
     _mirror(context.bot, update, True, isQbit=True, isLeech=True)
+    
+def zip_ftp(update, context):
+  if not FTP_SERVER == False and not FTP_USER == False and not FTP_PASSWORD == False:
+    _mirror(context.bot, update, True, isFtp=True)
+  else:
+    ftpmsg = "<b>FTP</b> env not provided"
+    sendMessage(ftpmsg, context.bot, update)
+ 
+def qb_zip_ftp(update, context):
+    if not FTP_SERVER == False and not FTP_USER == False and not FTP_PASSWORD == False:
+       _mirror(context.bot, update, True, isQbit=True, isFtp=True)
+    else:
+      ftpmsg = "<b>FTP</b> env not provided"
+      sendMessage(ftpmsg, context.bot, update)
 
 mirror_handler = CommandHandler(BotCommands.MirrorCommand, mirror,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
@@ -510,6 +556,10 @@ qb_unzip_leech_handler = CommandHandler(BotCommands.QbUnzipLeechCommand, qb_unzi
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 qb_zip_leech_handler = CommandHandler(BotCommands.QbZipLeechCommand, qb_zip_leech,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+zip_ftp_handler = CommandHandler(BotCommands.ZipFtpCommand, zip_ftp,
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+qb_zip_ftp_handler = CommandHandler(BotCommands.QbZipFtpCommand, qb_zip_ftp,
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 
 dispatcher.add_handler(mirror_handler)
 dispatcher.add_handler(unzip_mirror_handler)
@@ -523,3 +573,5 @@ dispatcher.add_handler(zip_leech_handler)
 dispatcher.add_handler(qb_leech_handler)
 dispatcher.add_handler(qb_unzip_leech_handler)
 dispatcher.add_handler(qb_zip_leech_handler)
+dispatcher.add_handler(zip_ftp_handler)
+dispatcher.add_handler(qb_zip_ftp_handler)
