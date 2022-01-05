@@ -393,6 +393,15 @@ try:
 except KeyError:
     AS_DOCUMENT = False
 try:
+    FTP_SERVER = getConfig('FTP_SERVER')
+    FTP_USER = getConfig('FTP_USER')
+    FTP_PASSWORD = getConfig('FTP_PASSWORD')
+except KeyError:
+    FTP_SERVER = False
+    FTP_USER = False
+    FTP_PASSWORD = False
+    logging.warning('FTP not provided')
+try:
     EQUAL_SPLITS = getConfig('EQUAL_SPLITS')
     EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 except KeyError:
