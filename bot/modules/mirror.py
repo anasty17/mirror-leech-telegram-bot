@@ -272,7 +272,7 @@ class MirrorListener:
                     pass
                 del download_dict[self.uid]
                 count = len(download_dict)
-            log_msg = f"Donwload Owner {uname}\n"
+            log_msg = f"Donwload Owner {self.tag}\n"
             logmsg = sendLog(log_msg + msg , self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
             if logmsg:
                 log_msg = f"\n\nOr <b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
