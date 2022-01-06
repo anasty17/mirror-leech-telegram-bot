@@ -1,18 +1,17 @@
-from .status import Status
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 from bot import DOWNLOAD_DIR
 
 
-class GdDownloadStatus(Status):
+class GdDownloadStatus:
     def __init__(self, obj, size, listener, gid):
         self.__obj = obj
         self.__size = size
-        self.uid = listener.uid
+        self.__uid = listener.uid
         self.message = listener.message
         self.__gid = gid
 
     def path(self):
-        return f"{DOWNLOAD_DIR}{self.uid}"
+        return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def processed_bytes(self):
         return self.__obj.downloaded_bytes

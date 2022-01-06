@@ -34,7 +34,15 @@ class DbManger:
               )
               """
         self.cur.execute(sql)
-        self.cur.execute("CREATE TABLE IF NOT EXISTS rss (name text, link text, last text, title text)")
+        sql = """CREATE TABLE IF NOT EXISTS rss (
+                 name text,
+                 link text,
+                 last text,
+                 title text,
+                 filters text
+              )
+              """
+        self.cur.execute(sql)
         self.conn.commit()
         LOGGER.info("Database Initiated")
         self.db_load()
@@ -63,10 +71,16 @@ class DbManger:
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
         self.cur.execute("SELECT * FROM rss")
-        rows = self.cur.fetchall()  #returns a list ==> (name, feed_link, last_link, last_title)
+        rows = self.cur.fetchall()  #returns a list ==> (name, feed_link, last_link, last_title, filters)
         if rows:
             for row in rows:
-                rss_dict[row[0]] = [row[1], row[2], row[3]]
+                f_lists = []
+                if row[4] is not None:
+                    filters_list = row[4].split('|')
+                    for x in filters_list:
+                        y = x.split(' or ')
+                        f_lists.append(y)
+                rss_dict[row[0]] = [row[1], row[2], row[3], f_lists]
             LOGGER.info("Rss data has been imported from Database.")
         self.disconnect()
 
@@ -163,11 +177,11 @@ class DbManger:
         res = self.cur.fetchone()
         return res
 
-    def rss_add(self, name, link, last, title):
+    def rss_add(self, name, link, last, title, filters):
         if self.err:
             return
-        q = (name, link, last, title)
-        self.cur.execute("INSERT INTO rss (name, link, last, title) VALUES (%s, %s, %s, %s)", q)
+        q = (name, link, last, title, filters)
+        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES (%s, %s, %s, %s, %s)", q)
         self.conn.commit()
         self.disconnect()
 

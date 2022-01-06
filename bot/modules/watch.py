@@ -44,7 +44,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     if update.message.from_user.username:
         tag = f"@{update.message.from_user.username}"
     else:
-        tag = f'<a href="tg://user?id={update.message.from_user.id}">{update.message.from_user.first_name}</a>'
+        tag = update.message.from_user.mention_html(update.message.from_user.first_name)
 
     reply_to = update.message.reply_to_message
     if reply_to is not None:
@@ -52,7 +52,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
-            tag = f'<a href="tg://user?id={reply_to.from_user.id}">{reply_to.from_user.first_name}</a>'
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     if not is_url(link):
         help_msg = "<b>Send link along with command line:</b>"

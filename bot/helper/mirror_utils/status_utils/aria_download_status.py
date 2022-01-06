@@ -1,12 +1,11 @@
 from bot import aria2, DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus
-from .status import Status
 
 def get_download(gid):
     return aria2.get_download(gid)
 
 
-class AriaDownloadStatus(Status):
+class AriaDownloadStatus:
 
     def __init__(self, gid, listener):
         self.__gid = gid

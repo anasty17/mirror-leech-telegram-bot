@@ -59,7 +59,7 @@ class TgUploader:
                     return
                 self.__msgs_dict[filee] = self.__sent_msg.message_id
                 self._last_uploaded = 0
-                time.sleep(1.5)
+                time.sleep(2)
         if len(self.__msgs_dict) <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")

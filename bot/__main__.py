@@ -153,7 +153,7 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.RssGetCommand}</b>: [Title] [Number](last N links): Force fetch last N links
 <br><br>
-<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link]: Subscribe new rss feed
+<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link] f: [filter]: Subscribe new rss feed
 <br><br>
 <b>/{BotCommands.RssUnSubCommand}</b>: [Title]: Unubscribe rss feed by title
 <br><br>
@@ -245,7 +245,7 @@ def main():
     # bot.set_my_commands(botcmds)
     fs_utils.start_cleanup()
     if IS_VPS:
-        asyncio.new_event_loop().run_until_complete(start_server_async(PORT))
+        asyncio.run(start_server_async(PORT))
     # Check if the bot is restarting
     if os.path.isfile(".restartmsg"):
         with open(".restartmsg") as f:
