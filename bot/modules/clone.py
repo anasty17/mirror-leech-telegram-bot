@@ -87,7 +87,7 @@ def cloneNode(update, context):
         if button in ["cancelled", ""]:
             sendMessage(f"{tag} {result}", context.bot, update)
         else:
-            log_msg = f"Donwload Owner {uname}\n\n"
+            log_msg = f"Donwload Owner {tag}\n\n"
             logmsg = sendLog(log_msg + result , context.bot, update, button)
             if logmsg:
                 log_msg = f"\n\nOr <b>Your File has been Successfully Copied, Click Below Button to get Download Links.</b>"
