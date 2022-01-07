@@ -156,7 +156,7 @@ class MirrorListener:
                         fs_utils.split(f_path, f_size, filee, dirpath, TG_SPLIT_SIZE)
                         os.remove(f_path)
         if self.isLeech:
-            LOGGER.info(f"Leech Name: {up_name}")
+            LOGGER.info(f"Leech Name : {up_name}")
             tg = pyrogramEngine.TgUploader(up_name, self)
             tg_upload_status = TgUploadStatus(tg, size, gid, self)
             with download_dict_lock:
@@ -207,16 +207,16 @@ class MirrorListener:
                 else:
                     update_all_messages()
             count = len(files)
-            msg = f'<b>Name: </b><code>{link}</code>\n\n'
-            msg += f'<b>Size: </b>{bot_utils.get_readable_file_size(size)}\n'
-            msg += f'<b>Total Files: </b>{count}'
+            msg = f'<b>Name : </b><code>{link}</code>\n\n'
+            msg += f'<b>Size : </b>{bot_utils.get_readable_file_size(size)}\n'
+            msg += f'<b>Total Files : </b>{count}'
             if typ != 0:
                 msg += f'\n<b>Corrupted Files: </b>{typ}'
             if self.message.chat.type == 'private':
                 sendMessage(msg, self.bot, self.update)
             else:
                 chat_id = str(self.message.chat.id)[4:]
-                msg += f'\n<b>cc: </b>{self.tag}\n\n'
+                msg += f'\n<b>Requested By : {self.tag}</b>\n\n'
                 fmsg = ''
                 for index, item in enumerate(list(files), start=1):
                     msg_id = files[item]
@@ -232,11 +232,11 @@ class MirrorListener:
             return
 
         with download_dict_lock:
-            msg = f'<b>Name: </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size: </b>{size}'
-            msg += f'\n\n<b>Type: </b>{typ}'
+            msg = f'<b>Name : </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size : </b>{size}'
+            msg += f'\n\n<b>Type : </b>{typ}'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
-                msg += f'\n<b>SubFolders: </b>{folders}'
-                msg += f'\n<b>Files: </b>{files}'
+                msg += f'\n<b>SubFolders : </b>{folders}'
+                msg += f'\n<b>Files : </b>{files}'
             buttons = button_build.ButtonMaker()
             link = short_url(link)
             buttons.buildbutton("☁️ Drive Link", link)
@@ -261,7 +261,7 @@ class MirrorListener:
                 buttons.buildbutton(f"{BUTTON_FIVE_NAME}", f"{BUTTON_FIVE_URL}")
             if BUTTON_SIX_NAME is not None and BUTTON_SIX_URL is not None:
                 buttons.buildbutton(f"{BUTTON_SIX_NAME}", f"{BUTTON_SIX_URL}")
-        msg += f'\n\n<b>cc: </b>{self.tag}'
+        msg += f'\n\n<b>Requested By : {self.tag}</b>
         if self.isQbit and QB_SEED:
            return sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
         else:
@@ -272,11 +272,11 @@ class MirrorListener:
                     pass
                 del download_dict[self.uid]
                 count = len(download_dict)
-            log_msg = f"Donwload Owner {self.tag}\n"
+            log_msg = f"<b>Donwload Owner {self.tag}<b>\n\n"
             logmsg = sendLog(log_msg + msg , self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
             if logmsg:
-                log_msg = f"\n\nOr <b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
-            sendMarkup(log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text="CLICK HERE", url=logmsg.link)]]))
+                log_msg = f"\n\n<b>Name : </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size : </b>{size}\n\n<b>Requested By : {self.tag}</b>\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
+            sendMarkup(log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text= "Click Here To Get Download Links", url=logmsg.link)]]))
             if count == 0:
                 self.clean()
             else:
