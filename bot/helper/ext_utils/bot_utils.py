@@ -143,6 +143,7 @@ def get_readable_message():
                 else:
                     msg += f"\n<b>Downloaded:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 msg += f"\n<b>Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
+                else:
                      msg += f"\n<b>Added By : <a href='tg://user?id={download.message.from_user.id}'>{download.message.from_user.first_name}</a></b>"
                 else:
                     msg += f"\n<b>Added By : <a href='tg://user?id={download.message.from_user.id}'>{download.message.from_user.first_name}</a></b>"
