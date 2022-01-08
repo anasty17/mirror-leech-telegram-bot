@@ -144,12 +144,12 @@ def get_readable_message():
                     msg += f"\n<b>Downloaded : {get_readable_file_size(download.processed_bytes())} of {download.size()}</b>"
                 msg += f"\n<b>Speed : {download.speed()}</b> || <b>ETA : {download.eta()}</b>"
                 try:
-                    msg += f"\n<b>Seeders : {download.aria_download().num_seeders}"</b> \
-                           f" | <b>Peers : {download.aria_download().connections}"</b>
+                    msg += f"\n<b>Seeders : {download.aria_download().num_seeders}</b>" \
+                           f" | <b>Peers : {download.aria_download().connections}</b>"
                 except:
                     pass
                 try:
-                    msg += f"\n<b>Seeders : {download.torrent_info().num_seeds}" </b>\
+                    msg += f"\n<b>Seeders : {download.torrent_info().num_seeds}</b>" \
                            f" | <b>Leechers : {download.torrent_info().num_leechs}</b>"
                 except:
                     pass
