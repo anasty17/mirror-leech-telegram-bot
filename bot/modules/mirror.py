@@ -276,7 +276,7 @@ class MirrorListener:
             logmsg = sendLog(log_msg + msg , self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
             if logmsg:
                 log_msg = f"\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
-            sendMarkup(msg + log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text= "Click Here 🔗", url=logmsg.link)]]))
+            sendMarkup(msg + log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text= "Click Here 🔗", url=logmsg.link)],[InlineKeyboardButton("Subscribe 🧐", url="https://youtube.com/c/LNtechnical") ]  ]  )
             if count == 0:
                 self.clean()
             else:
