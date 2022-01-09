@@ -486,5 +486,16 @@ To Clone or Leech gdtot link follow these steps:
 
    ```
 4. From this you have to paste value of PHPSESSID and crypt in config.env file.
+<details>
+    <summary><b>Using Chrome for Android</b></summary>
+
+- Bookmark any webpage. Now go to that bookmark and edit it, give any name(say devtool) and fill this URL:
+   ```
+   javascript:(function () { var script = document.createElement('script'); script.src="//cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script); script.onload = function () { eruda.init() } })();
+   ```
+- Login/Register to [gdtot](https://new.gdtot.top).
+- On the home page of gdtot website, click on URL bar and search for devtool(name of the saved bookmark) and open it. It will not redirect you anywhere, wait 2-3 sec and you will see an setting-icon-tool on bottom right side of the screen. 
+- Click on that tool and go to resources, you will see the cookie data.
+- Take a screenshot and extract the cookie-code using Google Lens(since you can't copy from there).
 
 -----
