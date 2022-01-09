@@ -3,13 +3,14 @@ from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size,
 
 
 class TelegramDownloadStatus:
-    def __init__(self, obj, listener):
+    def __init__(self, obj, listener, gid):
         self.__obj = obj
         self.__uid = listener.uid
+        self.__gid = gid
         self.message = listener.message
 
     def gid(self):
-        return self.__obj.gid
+        return self.__gid
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"

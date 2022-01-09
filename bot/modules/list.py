@@ -1,5 +1,4 @@
-import threading
-
+from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
@@ -46,7 +45,7 @@ def select_type(update, context):
         list_method = data[3]
         item_type = data[2]
         editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        threading.Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
+        Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
     else:
         query.answer()
         editMessage("list has been canceled!", msg)

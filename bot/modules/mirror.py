@@ -1,13 +1,13 @@
 import requests
-import urllib
-import pathlib
 import os
-import subprocess
-import threading
 import re
 import time
-import shutil
 
+from shutil import rmtree
+from threading import Thread
+from subprocess import run
+from pathlib import PurePath
+from urllib.parse import quote
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
 
@@ -77,20 +77,20 @@ class MirrorListener:
                 if pswd is not None:
                     if self.isLeech and int(size) > TG_SPLIT_SIZE:
                         path = m_path + ".zip"
-                        subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])
+                        run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{pswd}", path, m_path])
                     else:
-                        subprocess.run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
+                        run(["7z", "a", "-mx=0", f"-p{pswd}", path, m_path])
                 elif self.isLeech and int(size) > TG_SPLIT_SIZE:
                     path = m_path + ".zip"
-                    subprocess.run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
+                    run(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
                 else:
-                    subprocess.run(["7z", "a", "-mx=0", path, m_path])
+                    run(["7z", "a", "-mx=0", path, m_path])
             except FileNotFoundError:
                 LOGGER.info('File to archive not found!')
                 self.onUploadError('Internal error occurred!!')
                 return
             try:
-                shutil.rmtree(m_path)
+                rmtree(m_path)
             except:
                 os.remove(m_path)
         elif self.extract:
@@ -109,9 +109,9 @@ class MirrorListener:
                                or filee.endswith(".zip") or re.search(r'\.zip.0*1$', filee):
                                 m_path = os.path.join(dirpath, filee)
                                 if pswd is not None:
-                                    result = subprocess.run(["7z", "x", f"-p{pswd}", m_path, f"-o{dirpath}", "-aot"])
+                                    result = run(["7z", "x", f"-p{pswd}", m_path, f"-o{dirpath}", "-aot"])
                                 else:
-                                    result = subprocess.run(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
+                                    result = run(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
                                 if result.returncode != 0:
                                     LOGGER.warning('Unable to extract archive!')
                         for filee in files:
@@ -123,9 +123,9 @@ class MirrorListener:
                     path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
                 else:
                     if pswd is not None:
-                        result = subprocess.run(["bash", "pextract", m_path, pswd])
+                        result = run(["bash", "pextract", m_path, pswd])
                     else:
-                        result = subprocess.run(["bash", "extract", m_path])
+                        result = run(["bash", "extract", m_path])
                     if result.returncode == 0:
                         LOGGER.info(f"Extract Path: {path}")
                         os.remove(m_path)
@@ -138,7 +138,7 @@ class MirrorListener:
                 path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         else:
             path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
-        up_name = pathlib.PurePath(path).name
+        up_name = PurePath(path).name
         up_path = f'{DOWNLOAD_DIR}{self.uid}/{up_name}'
         size = fs_utils.get_path_size(f'{DOWNLOAD_DIR}{self.uid}')
         if self.isLeech and not self.isZip:
@@ -314,7 +314,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         name = name.strip()
     except IndexError:
         name = ''
-    link = re.split(r"pswd:|\|", link)[0]
+    link = re.split(r"pswd:| \|", link)[0]
     link = link.strip()
     pswdMsg = mesg[0].split(' pswd: ')
     if len(pswdMsg) > 1:
@@ -362,8 +362,8 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
 
     if len(mesg) > 1:
         try:
-            ussr = urllib.parse.quote(mesg[1], safe='')
-            pssw = urllib.parse.quote(mesg[2], safe='')
+            ussr = quote(mesg[1], safe='')
+            pssw = quote(mesg[2], safe='')
             link = link.split("://", maxsplit=1)
             link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
         except IndexError:
@@ -421,7 +421,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, update)
-        threading.Thread(target=add_gd_download, args=(link, listener, gdtot_link)).start()
+        Thread(target=add_gd_download, args=(link, listener, gdtot_link)).start()
 
     elif bot_utils.is_mega_link(link):
         if BLOCK_MEGA_LINKS:
@@ -431,13 +431,13 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         if link_type == "folder" and BLOCK_MEGA_FOLDER:
             sendMessage("Mega folder are blocked!", bot, update)
         else:
-            threading.Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
+            Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (bot_utils.is_magnet(link) or os.path.exists(link)):
-        threading.Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
+        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
 
     else:
-        threading.Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
+        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
 
 def mirror(update, context):
     _mirror(context.bot, update)

@@ -130,8 +130,12 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
         time.sleep(4)
         tor_info = client.torrents_info(torrent_hashes=ext_hash)
         if len(tor_info) == 0:
+            with download_dict_lock:
+                if listener.uid not in list(download_dict.keys()):
+                    client.auth_log_out()
+                    break
             get_info += 1
-            if get_info > 2:
+            if get_info > 10:
                 client.auth_log_out()
                 break
             continue
@@ -144,7 +148,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     client.torrents_pause(torrent_hashes=ext_hash)
                     time.sleep(0.3)
                     listener.onDownloadError("Dead Torrent!")
-                    client.torrents_delete(torrent_hashes=ext_hash)
+                    client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                     client.auth_log_out()
                     break
             elif tor_info.state == "downloading":
@@ -165,7 +169,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                             time.sleep(0.3)
                             listener.onDownloadError(msg)
                             sendMarkup("Here are the search results:", listener.bot, listener.update, button)
-                            client.torrents_delete(torrent_hashes=ext_hash)
+                            client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
                             break
                     dupChecked = True
@@ -185,7 +189,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                             client.torrents_pause(torrent_hashes=ext_hash)
                             time.sleep(0.3)
                             listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
-                            client.torrents_delete(torrent_hashes=ext_hash)
+                            client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
                             break
                     sizeChecked = True
@@ -198,7 +202,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     client.torrents_pause(torrent_hashes=ext_hash)
                     time.sleep(0.3)
                     listener.onDownloadError("Dead Torrent!")
-                    client.torrents_delete(torrent_hashes=ext_hash)
+                    client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                     client.auth_log_out()
                     break
             elif tor_info.state == "missingFiles":
@@ -207,7 +211,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                 client.torrents_pause(torrent_hashes=ext_hash)
                 time.sleep(0.3)
                 listener.onDownloadError("No enough space for this torrent on device")
-                client.torrents_delete(torrent_hashes=ext_hash)
+                client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                 client.auth_log_out()
                 break
             elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "forcedUP"] and not uploaded:
@@ -232,12 +236,12 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
-                    client.torrents_delete(torrent_hashes=ext_hash)
+                    client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                     client.auth_log_out()
                     break
             elif tor_info.state == 'pausedUP' and QB_SEED:
                 listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
-                client.torrents_delete(torrent_hashes=ext_hash)
+                client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                 client.auth_log_out()
                 break
         except:

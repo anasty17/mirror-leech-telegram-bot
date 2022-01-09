@@ -1,8 +1,8 @@
-import io
 import os
-import textwrap
-import traceback
 
+from traceback import format_exc
+from textwrap import indent
+from io import StringIO, BytesIO
 from telegram import ParseMode
 from telegram.ext import CommandHandler
 from contextlib import redirect_stdout
@@ -35,7 +35,7 @@ def log_input(update):
 
 def send(msg, bot, update):
     if len(str(msg)) > 2000:
-        with io.BytesIO(str.encode(msg)) as out_file:
+        with BytesIO(str.encode(msg)) as out_file:
             out_file.name = "output.txt"
             bot.send_document(
                 chat_id=update.effective_chat.id, document=out_file)
@@ -72,9 +72,9 @@ def do(func, bot, update):
             'w') as temp:
         temp.write(body)
 
-    stdout = io.StringIO()
+    stdout = StringIO()
 
-    to_compile = f'def func():\n{textwrap.indent(body, "  ")}'
+    to_compile = f'def func():\n{indent(body, "  ")}'
 
     try:
         exec(to_compile, env)
@@ -88,7 +88,7 @@ def do(func, bot, update):
             func_return = func()
     except Exception as e:
         value = stdout.getvalue()
-        return f'{value}{traceback.format_exc()}'
+        return f'{value}{format_exc()}'
     else:
         value = stdout.getvalue()
         result = None

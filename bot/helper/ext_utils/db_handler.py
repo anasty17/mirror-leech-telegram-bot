@@ -1,6 +1,5 @@
 import os
 import psycopg2
-from psycopg2 import Error
 
 from bot import DB_URI, AUTHORIZED_CHATS, SUDO_USERS, AS_DOC_USERS, AS_MEDIA_USERS, rss_dict, LOGGER
 

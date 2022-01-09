@@ -9,7 +9,7 @@ class AriaDownloadStatus:
 
     def __init__(self, gid, listener):
         self.__gid = gid
-        self.__download = get_download(self.__gid)
+        self.__download = get_download(gid)
         self.__uid = listener.uid
         self.__listener = listener
         self.message = listener.message
@@ -31,28 +31,29 @@ class AriaDownloadStatus:
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        return self.aria_download().total_length
+        return self.__download.total_length
 
     def processed_bytes(self):
-        return self.aria_download().completed_length
+        return self.__download.completed_length
 
     def speed(self):
-        return self.aria_download().download_speed_string()
+        return self.__download.download_speed_string()
 
     def name(self):
-        return self.aria_download().name
+        self.__update()
+        return self.__download.name
 
     def path(self):
         return f"{DOWNLOAD_DIR}{self.__uid}"
 
     def size(self):
-        return self.aria_download().total_length_string()
+        return self.__download.total_length_string()
 
     def eta(self):
-        return self.aria_download().eta_string()
+        return self.__download.eta_string()
 
     def status(self):
-        download = self.aria_download()
+        download = self.__download
         if download.is_waiting:
             return MirrorStatus.STATUS_WAITING
         elif download.has_failed:
@@ -61,7 +62,6 @@ class AriaDownloadStatus:
             return MirrorStatus.STATUS_DOWNLOADING
 
     def aria_download(self):
-        self.__update()
         return self.__download
 
     def download(self):
@@ -78,16 +78,17 @@ class AriaDownloadStatus:
 
     def cancel_download(self):
         LOGGER.info(f"Cancelling Download: {self.name()}")
-        download = self.aria_download()
+        self.__update()
+        download = self.__download
         if download.is_waiting:
             self.__listener.onDownloadError("Cancelled by user")
-            aria2.remove([download], force=True)
+            aria2.remove([download], force=True, files=True)
             return
         if len(download.followed_by_ids) != 0:
             downloads = aria2.get_downloads(download.followed_by_ids)
             self.__listener.onDownloadError('Download stopped by user!')
-            aria2.remove(downloads, force=True)
-            aria2.remove([download], force=True)
+            aria2.remove(downloads, force=True, files=True)
+            aria2.remove([download], force=True, files=True)
             return
         self.__listener.onDownloadError('Download stopped by user!')
-        aria2.remove([download], force=True)
+        aria2.remove([download], force=True, files=True)

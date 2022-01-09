@@ -26,7 +26,7 @@ def __onDownloadStarted(api, gid):
                     smsg, button = gdrive.drive_list(sname, True)
                     if smsg:
                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                        api.remove([download], force=True)
+                        api.remove([download], force=True, files=True)
                         sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
                         return
             if dl is not None and (ZIP_UNZIP_LIMIT is not None or TORRENT_DIRECT_LIMIT is not None):
@@ -43,7 +43,7 @@ def __onDownloadStarted(api, gid):
                     size = api.get_download(gid).total_length
                     if size > limit * 1024**3:
                         dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                        api.remove([download], force=True)
+                        api.remove([download], force=True, files=True)
                         return
         except:
             LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
@@ -102,7 +102,7 @@ def add_aria2c_download(link: str, path, listener, filename):
         return sendMessage(error, listener.bot, listener.update)
     with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
-        LOGGER.info(f"Started: {download.gid} DIR:{download.dir} ")
+        LOGGER.info(f"Started: {download.gid} DIR: {download.dir} ")
     sendStatusMessage(listener.update, listener.bot)
 
 start_listener()

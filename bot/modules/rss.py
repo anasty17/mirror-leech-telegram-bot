@@ -2,12 +2,15 @@ import feedparser
 
 from time import sleep
 from telegram.ext import CommandHandler
+from threading import Lock
 
-from bot import dispatcher, job_queue, rss_dict, rss_dict_lock, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
+from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
+
+rss_dict_lock = Lock()
 
 def rss_list(update, context):
     if len(rss_dict) > 0:
@@ -183,6 +186,8 @@ def rss_monitor(context):
                 LOGGER.info(f"Last item: {last_link}")
         except IndexError:
             LOGGER.error(f"There was an error while parsing this feed: {name} - {data[0]}")
+            LOGGER.error(f"Current item: {rss_d.entries[feed_count]['link']} {rss_d.entries[feed_count]['title']}")
+            LOGGER.error(f"Last item: {last_link} {last_title}")
             continue
         except Exception as e:
             LOGGER.error(str(e))

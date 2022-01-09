@@ -41,7 +41,7 @@ class TgUploadStatus:
         """
         :return: Upload speed in Bytes/Seconds
         """
-        return self.__obj.speed()
+        return self.__obj.speed
 
     def speed(self):
         return f'{get_readable_file_size(self.speed_raw())}/s'

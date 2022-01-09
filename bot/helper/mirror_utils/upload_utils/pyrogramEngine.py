@@ -1,10 +1,13 @@
+#!/usr/bin/env python3
+
 import os
 import logging
-import time
-import threading
+import asyncio
 
+from time import time, sleep
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
+from asgiref.sync import async_to_sync
 
 from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
@@ -20,27 +23,21 @@ IMAGE_SUFFIXES = ("JPG", "JPX", "PNG", "WEBP", "CR2", "TIF", "BMP", "JXR", "PSD"
 class TgUploader:
 
     def __init__(self, name=None, listener=None):
-        self.__listener = listener
         self.name = name
-        self.__app = app
-        self.total_bytes = 0
         self.uploaded_bytes = 0
         self._last_uploaded = 0
-        self.__start_time = time.time()
-        self.__resource_lock = threading.RLock()
+        self.__listener = listener
+        self.__start_time = time()
         self.__is_cancelled = False
-        self.__chat_id = listener.message.chat.id
-        self.__message_id = listener.uid
-        self.__user_id = listener.message.from_user.id
         self.__as_doc = AS_DOCUMENT
-        self.__thumb = f"Thumbnails/{self.__user_id}.jpg"
-        self.__sent_msg = self.__app.get_messages(self.__chat_id, self.__message_id)
+        self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
+        self.__sent_msg = app.get_messages(listener.message.chat.id, listener.uid)
         self.__msgs_dict = {}
         self.__corrupted = 0
         self.__user_settings()
 
     def upload(self):
-        path = f"{DOWNLOAD_DIR}{self.__message_id}"
+        path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_path_size(path)
         for dirpath, subdir, files in sorted(os.walk(path)):
             for filee in sorted(files):
@@ -54,18 +51,18 @@ class TgUploader:
                     LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                     self.__corrupted += 1
                     continue
-                self.__upload_file(up_path, filee, dirpath)
+                async_to_sync(self.__upload_file)(up_path, filee, dirpath)
                 if self.__is_cancelled:
                     return
                 self.__msgs_dict[filee] = self.__sent_msg.message_id
                 self._last_uploaded = 0
-                time.sleep(2)
+                sleep(1)
         if len(self.__msgs_dict) <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")
         self.__listener.onUploadComplete(self.name, size, self.__msgs_dict, None, self.__corrupted)
 
-    def __upload_file(self, up_path, filee, dirpath):
+    async def __upload_file(self, up_path, filee, dirpath):
         if CUSTOM_FILENAME is not None:
             cap_mono = f"{CUSTOM_FILENAME} <code>{filee}</code>"
             filee = f"{CUSTOM_FILENAME} {filee}"
@@ -97,7 +94,7 @@ class TgUploader:
                         new_path = os.path.join(dirpath, filee)
                         os.rename(up_path, new_path)
                         up_path = new_path
-                    self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
+                    self.__sent_msg = await self.__sent_msg.reply_video(video=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
@@ -110,7 +107,7 @@ class TgUploader:
                                                               progress=self.__upload_progress)
                 elif filee.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
-                    self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
+                    self.__sent_msg = await self.__sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
@@ -121,7 +118,7 @@ class TgUploader:
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
                 elif filee.upper().endswith(IMAGE_SUFFIXES):
-                    self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
+                    self.__sent_msg = await self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
                                                               parse_mode="html",
@@ -136,7 +133,7 @@ class TgUploader:
                         if self.__thumb is None and thumb is not None and os.path.lexists(thumb):
                             os.remove(thumb)
                         return
-                self.__sent_msg = self.__sent_msg.reply_document(document=up_path,
+                self.__sent_msg = await self.__sent_msg.reply_document(document=up_path,
                                                              quote=True,
                                                              thumb=thumb,
                                                              caption=cap_mono,
@@ -145,7 +142,7 @@ class TgUploader:
                                                              progress=self.__upload_progress)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            time.sleep(f.x * 1.5)
+            await asyncio.sleep(f.x * 1.5)
         except RPCError as e:
             LOGGER.error(f"RPCError: {e} File: {up_path}")
             self.__corrupted += 1
@@ -157,26 +154,26 @@ class TgUploader:
         if not self.__is_cancelled:
             os.remove(up_path)
 
-    def __upload_progress(self, current, total):
+    async def __upload_progress(self, current, total):
         if self.__is_cancelled:
-            self.__app.stop_transmission()
+            await app.stop_transmission()
             return
-        with self.__resource_lock:
-            chunk_size = current - self._last_uploaded
-            self._last_uploaded = current
-            self.uploaded_bytes += chunk_size
+        chunk_size = current - self._last_uploaded
+        self._last_uploaded = current
+        self.uploaded_bytes += chunk_size
 
     def __user_settings(self):
-        if self.__user_id in AS_DOC_USERS:
+        if self.__listener.message.from_user.id in AS_DOC_USERS:
             self.__as_doc = True
-        elif self.__user_id in AS_MEDIA_USERS:
+        elif self.__listener.message.from_user.id in AS_MEDIA_USERS:
             self.__as_doc = False
         if not os.path.lexists(self.__thumb):
             self.__thumb = None
 
+    @property
     def speed(self):
         try:
-            return self.uploaded_bytes / (time.time() - self.__start_time)
+            return self.uploaded_bytes / (time() - self.__start_time)
         except ZeroDivisionError:
             return 0
 

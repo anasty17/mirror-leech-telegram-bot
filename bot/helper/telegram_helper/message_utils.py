@@ -17,7 +17,7 @@ def sendMessage(text: str, bot, update: Update):
                             reply_to_message_id=update.message.message_id,
                             text=text, allow_sending_without_reply=True, parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
-        LOGGER.error(str(r))
+        LOGGER.warning(str(r))
         time.sleep(r.retry_after * 1.5)
         return sendMessage(text, bot, update)
     except Exception as e:
