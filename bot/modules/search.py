@@ -21,17 +21,18 @@ PLUGINS = []
 
 SITES = {
     "1337x": "1337x",
-    "nyaasi": "NyaaSi",
     "yts": "YTS",
-    "piratebay": "PirateBay",
-    "torlock": "Torlock",
-    "eztv": "EzTvio",
+    "eztv": "EzTv",
     "tgx": "TorrentGalaxy",
+    "torlock": "Torlock",
+    "piratebay": "PirateBay",
+    "nyaasi": "NyaaSi", 
     "rarbg": "Rarbg",
     "ettv": "Ettv",
     "zooqle": "Zooqle",
     "kickass": "KickAss",
     "bitsearch": "Bitsearch",
+    "glodls":"Glodls",
     "all": "All"
 }
 
