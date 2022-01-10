@@ -232,7 +232,7 @@ class MirrorListener:
             return
 
         with download_dict_lock:
-            msg = f'<b>Name : </b><code>{download_dict[self.uid].name()}</code>\n\n<b>Size : </b>{size}'
+            msg = f'<b>Name : {download_dict[self.uid].name()}</b>\n\n<b>Size : </b>{size}'
             msg += f'\n\n<b>Type : </b>{typ}'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
                 msg += f'\n<b>SubFolders : </b>{folders}'
@@ -275,7 +275,7 @@ class MirrorListener:
             log_msg = f"\n\n<b>═══════ @KristyCloud ═══════</b>\n\n"
             logmsg = sendLog(log_msg + msg , self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
             if logmsg:
-                log_msg = f"\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
+                log_msg = f"\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.👇</b>"
             sendMarkup(msg + log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text= "Click Here 🔗", url=logmsg.link)]]))            
             if count == 0:
                 self.clean()
