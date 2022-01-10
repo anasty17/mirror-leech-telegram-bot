@@ -4,10 +4,10 @@ import urllib.parse
 import json
 import requests
 import logging
+import time
 
 from io import FileIO
 from re import search
-from time import sleep, time
 from random import randrange
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -89,7 +89,7 @@ class GoogleDriveHelper:
 
     def cspeed(self):
         try:
-            return self.transferred_size / int(time() - self.start_time)
+            return self.transferred_size / int(time.time() - self.start_time)
         except ZeroDivisionError:
             return 0
 
@@ -332,7 +332,7 @@ class GoogleDriveHelper:
 
     def clone(self, link):
         self.is_cloning = True
-        self.start_time = time()
+        self.start_time = time.time()
         self.__total_files = 0
         self.__total_folders = 0
         try:
@@ -722,7 +722,7 @@ class GoogleDriveHelper:
                     content=content
                 )["path"]
             )
-        sleep(0.5)
+        time.sleep(0.5)
         self.num_of_path = len(self.path)
         if self.num_of_path > 1:
             self.__edit_telegraph()
