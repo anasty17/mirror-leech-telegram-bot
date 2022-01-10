@@ -2,6 +2,7 @@ import random
 import string
 
 from telegram.ext import CommandHandler
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot.helper.mirror_utils.upload_utils import gdriveTools
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, delete_all_messages, update_all_messages, sendStatusMessage, sendLog
@@ -83,15 +84,15 @@ def cloneNode(update, context):
                     update_all_messages()
             except IndexError:
                 pass
-        cc = f'\n\n<b>cc: </b>{tag}'
+        cc = f'\n\n<b>Requested By : {self.tag}</b>'
         if button in ["cancelled", ""]:
             sendMessage(f"{tag} {result}", context.bot, update)
         else:
-            log_msg = f"Donwload Owner {tag}\n\n"
+            log_msg = f"<b>═══════ @KristyCloud ═══════</b>\n\n"
             logmsg = sendLog(log_msg + result , context.bot, update, button)
             if logmsg:
-                log_msg = f"\n\nOr <b>Your File has been Successfully Copied, Click Below Button to get Download Links.</b>"
-                sendMarkup(log_msg, context.bot, update, InlineKeyboardMarkup([[InlineKeyboardButton(text="CLICK HERE", url=logmsg.link)]]))
+                log_msg = f"\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.👇</b>"
+                sendMarkup(log_msg, context.bot, update, InlineKeyboardMarkup([[InlineKeyboardButton(text="Click Here 🔗", url=logmsg.link)]]))
         if gdtot_link:
             gd.deletefile(link)
     else:
