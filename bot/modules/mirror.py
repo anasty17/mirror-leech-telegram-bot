@@ -277,7 +277,7 @@ class MirrorListener:
             if logmsg:
                 log_msg = f"\n\n══════════════════════════\n\n<b>Your File has been Successfully Uploaded, Click Below Button to get Download Links.</b>"
             sendMarkup(msg + log_msg, self.bot, self.update, InlineKeyboardMarkup([[InlineKeyboardButton(text= "Click Here 🔗", url=logmsg.link)]]))            
-              if count == 0:
+            if count == 0:
                 self.clean()
             else:
                 update_all_messages()
