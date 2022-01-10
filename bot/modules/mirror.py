@@ -232,11 +232,11 @@ class MirrorListener:
             return
 
         with download_dict_lock:
-            msg = f'<b>Name : {download_dict[self.uid].name()}</b>\n\n<b>Size : </b>{size}'
-            msg += f'\n\n<b>Type : </b>{typ}'
+            msg = f'<b>Name : {download_dict[self.uid].name()}</b>\n\n<b>Size : {size}</b>'
+            msg += f'\n\n<b>Type : {typ}</b>'
             if os.path.isdir(f'{DOWNLOAD_DIR}/{self.uid}/{download_dict[self.uid].name()}'):
-                msg += f'\n<b>SubFolders : </b>{folders}'
-                msg += f'\n<b>Files : </b>{files}'
+                msg += f'\n<b>SubFolders : {folders}</b>'
+                msg += f'\n<b>Files : {files}</b>'
             buttons = button_build.ButtonMaker()
             link = short_url(link)
             buttons.buildbutton("☁️ Drive Link", link)
