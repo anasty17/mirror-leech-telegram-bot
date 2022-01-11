@@ -1,5 +1,4 @@
-from psutil import cpu_percent, virtual_memory
-from shutil import disk_usage
+from psutil import cpu_percent, virtual_memory, disk_usage
 from time import time
 from threading import Thread
 from telegram.ext import CommandHandler
@@ -15,7 +14,7 @@ def mirror_status(update, context):
     with download_dict_lock:
         if len(download_dict) == 0:
             currentTime = get_readable_time(time() - botStartTime)
-            total, used, free = disk_usage('.')
+            total, used, free, _ = disk_usage('.')
             free = get_readable_file_size(free)
             message = 'No Active Downloads !\n___________________________'
             message += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" \

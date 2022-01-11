@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
-import os
 import logging
-import asyncio
 
+from os import remove as osremove, walk, path as ospath, rename as osrename
+from asyncio import sleep as asysleep
 from time import time, sleep
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
@@ -39,14 +39,14 @@ class TgUploader:
     def upload(self):
         path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_path_size(path)
-        for dirpath, subdir, files in sorted(os.walk(path)):
+        for dirpath, subdir, files in sorted(walk(path)):
             for filee in sorted(files):
                 if self.__is_cancelled:
                     return
                 if filee.endswith('.torrent'):
                     continue
-                up_path = os.path.join(dirpath, filee)
-                fsize = os.path.getsize(up_path)
+                up_path = ospath.join(dirpath, filee)
+                fsize = ospath.getsize(up_path)
                 if fsize == 0:
                     LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                     self.__corrupted += 1
@@ -66,8 +66,8 @@ class TgUploader:
         if CUSTOM_FILENAME is not None:
             cap_mono = f"{CUSTOM_FILENAME} <code>{filee}</code>"
             filee = f"{CUSTOM_FILENAME} {filee}"
-            new_path = os.path.join(dirpath, filee)
-            os.rename(up_path, new_path)
+            new_path = ospath.join(dirpath, filee)
+            osrename(up_path, new_path)
             up_path = new_path
         else:
             cap_mono = f"<code>{filee}</code>"
@@ -81,8 +81,8 @@ class TgUploader:
                     if thumb is None:
                         thumb = take_ss(up_path)
                         if self.__is_cancelled:
-                            if self.__thumb is None and thumb is not None and os.path.lexists(thumb):
-                                os.remove(thumb)
+                            if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
+                                osremove(thumb)
                             return
                     if thumb is not None:
                         img = Image.open(thumb)
@@ -90,9 +90,9 @@ class TgUploader:
                     else:
                         width, height = get_video_resolution(up_path)
                     if not filee.upper().endswith(("MKV", "MP4")):
-                        filee = os.path.splitext(filee)[0] + '.mp4'
-                        new_path = os.path.join(dirpath, filee)
-                        os.rename(up_path, new_path)
+                        filee = ospath.splitext(filee)[0] + '.mp4'
+                        new_path = ospath.join(dirpath, filee)
+                        osrename(up_path, new_path)
                         up_path = new_path
                     self.__sent_msg = await self.__sent_msg.reply_video(video=up_path,
                                                               quote=True,
@@ -130,8 +130,8 @@ class TgUploader:
                 if filee.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
                     thumb = take_ss(up_path)
                     if self.__is_cancelled:
-                        if self.__thumb is None and thumb is not None and os.path.lexists(thumb):
-                            os.remove(thumb)
+                        if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
+                            osremove(thumb)
                         return
                 self.__sent_msg = await self.__sent_msg.reply_document(document=up_path,
                                                              quote=True,
@@ -142,17 +142,17 @@ class TgUploader:
                                                              progress=self.__upload_progress)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            await asyncio.sleep(f.x * 1.5)
+            await asysleep(f.x * 1.5)
         except RPCError as e:
             LOGGER.error(f"RPCError: {e} File: {up_path}")
             self.__corrupted += 1
         except Exception as err:
             LOGGER.error(f"{err} File: {up_path}")
             self.__corrupted += 1
-        if self.__thumb is None and thumb is not None and os.path.lexists(thumb):
-            os.remove(thumb)
+        if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
+            osremove(thumb)
         if not self.__is_cancelled:
-            os.remove(up_path)
+            osremove(up_path)
 
     async def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -167,7 +167,7 @@ class TgUploader:
             self.__as_doc = True
         elif self.__listener.message.from_user.id in AS_MEDIA_USERS:
             self.__as_doc = False
-        if not os.path.lexists(self.__thumb):
+        if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
     @property

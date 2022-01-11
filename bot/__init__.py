@@ -1,14 +1,14 @@
 import logging
-import os
-import requests
 import socket
 import faulthandler
 import aria2p
-import json
 import qbittorrentapi as qba
 import telegram.ext as tg
 
-from subprocess import Popen, run
+from os import remove as osremove, path as ospath, environ
+from requests import get as rget
+from json import loads as jsnloads
+from subprocess import Popen, run as srun
 from time import sleep, time
 from threading import Thread, Lock
 from pyrogram import Client
@@ -29,14 +29,14 @@ LOGGER = logging.getLogger(__name__)
 load_dotenv('config.env', override=True)
 
 def getConfig(name: str):
-    return os.environ[name]
+    return environ[name]
 
 try:
     NETRC_URL = getConfig('NETRC_URL')
     if len(NETRC_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(NETRC_URL)
+        res = rget(NETRC_URL)
         if res.status_code == 200:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
@@ -54,16 +54,16 @@ try:
 except KeyError:
     SERVER_PORT = 80
 
-PORT = os.environ.get('PORT', SERVER_PORT)
+PORT = environ.get('PORT', SERVER_PORT)
 web = Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
 alive = Popen(["python3", "alive.py"])
 nox = Popen(["qbittorrent-nox", "--profile=."])
-if not os.path.exists('.netrc'):
-    run(["touch", ".netrc"])
-run(["cp", ".netrc", "/root/.netrc"])
-run(["chmod", "600", ".netrc"])
-run(["chmod", "+x", "aria.sh"])
-run(["./aria.sh"], shell=True)
+if not ospath.exists('.netrc'):
+    srun(["touch", ".netrc"])
+srun(["cp", ".netrc", "/root/.netrc"])
+srun(["chmod", "600", ".netrc"])
+srun(["chmod", "+x", "aria.sh"])
+srun(["./aria.sh"], shell=True)
 sleep(0.5)
 
 Interval = []
@@ -117,12 +117,12 @@ AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
-if os.path.exists('authorized_chats.txt'):
+if ospath.exists('authorized_chats.txt'):
     with open('authorized_chats.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
             AUTHORIZED_CHATS.add(int(line.split()[0]))
-if os.path.exists('sudo_users.txt'):
+if ospath.exists('sudo_users.txt'):
     with open('sudo_users.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
@@ -185,7 +185,7 @@ def aria2c_init():
         logging.error(f"Aria2c initializing error: {e}")
         pass
 
-if not os.path.isfile(".restartmsg"):
+if not ospath.isfile(".restartmsg"):
     Thread(target=aria2c_init).start()
     sleep(1)
 
@@ -420,7 +420,7 @@ try:
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(TOKEN_PICKLE_URL)
+        res = rget(TOKEN_PICKLE_URL)
         if res.status_code == 200:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
@@ -437,7 +437,7 @@ try:
         raise KeyError
     else:
         try:
-            res = requests.get(ACCOUNTS_ZIP_URL)
+            res = rget(ACCOUNTS_ZIP_URL)
             if res.status_code == 200:
                 with open('accounts.zip', 'wb+') as f:
                     f.write(res.content)
@@ -447,8 +447,8 @@ try:
         except Exception as e:
             logging.error(f"ACCOUNTS_ZIP_URL: {e}")
             raise KeyError
-        run(["unzip", "-q", "-o", "accounts.zip"])
-        os.remove("accounts.zip")
+        srun(["unzip", "-q", "-o", "accounts.zip"])
+        osremove("accounts.zip")
 except KeyError:
     pass
 try:
@@ -456,7 +456,7 @@ try:
     if len(MULTI_SEARCH_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(MULTI_SEARCH_URL)
+        res = rget(MULTI_SEARCH_URL)
         if res.status_code == 200:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
@@ -472,7 +472,7 @@ try:
     if len(YT_COOKIES_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(YT_COOKIES_URL)
+        res = rget(YT_COOKIES_URL)
         if res.status_code == 200:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
@@ -486,7 +486,7 @@ except KeyError:
 
 DRIVES_NAMES.append("Main")
 DRIVES_IDS.append(parent_id)
-if os.path.exists('drive_folder'):
+if ospath.exists('drive_folder'):
     with open('drive_folder', 'r+') as f:
         lines = f.readlines()
         for line in lines:
@@ -504,7 +504,7 @@ try:
     SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
     if len(SEARCH_PLUGINS) == 0:
         raise KeyError
-    SEARCH_PLUGINS = json.loads(SEARCH_PLUGINS)
+    SEARCH_PLUGINS = jsnloads(SEARCH_PLUGINS)
     qbclient = get_client()
     qb_plugins = qbclient.search_plugins()
     if qb_plugins:

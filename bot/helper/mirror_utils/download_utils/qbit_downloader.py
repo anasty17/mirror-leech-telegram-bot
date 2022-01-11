@@ -1,13 +1,12 @@
-import os
 import random
 import string
-import time
 import logging
-import shutil
-import re
-import threading
-import qbittorrentapi as qba
 
+from os import remove as osremove, path as ospath, listdir, rmdir, walk
+from time import sleep, time
+from shutil import rmtree
+from re import search
+from threading import Thread
 from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
@@ -30,7 +29,7 @@ def add_qb_torrent(link, path, listener, select):
     client = get_client()
     pincode = ""
     try:
-        if os.path.exists(link):
+        if ospath.exists(link):
             is_file = True
             ext_hash = _get_hash_file(link)
         else:
@@ -43,16 +42,16 @@ def add_qb_torrent(link, path, listener, select):
             return
         if is_file:
             op = client.torrents_add(torrent_files=[link], save_path=path)
-            os.remove(link)
+            osremove(link)
         else:
             op = client.torrents_add(link, save_path=path)
-        time.sleep(0.3)
+        sleep(0.3)
         if op.lower() == "ok.":
-            meta_time = time.time()
+            meta_time = time()
             tor_info = client.torrents_info(torrent_hashes=ext_hash)
             if len(tor_info) == 0:
                 while True:
-                    if time.time() - meta_time >= 30:
+                    if time() - meta_time >= 30:
                         ermsg = "The Torrent was not added. Report when you see this error"
                         sendMessage(ermsg, listener.bot, listener.update)
                         client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
@@ -72,7 +71,7 @@ def add_qb_torrent(link, path, listener, select):
         with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        threading.Thread(target=_qb_listener, args=(listener, client, gid, ext_hash, select, meta_time, path)).start()
+        Thread(target=_qb_listener, args=(listener, client, gid, ext_hash, select, meta_time, path)).start()
         if BASE_URL is not None and select:
             if not is_file:
                 metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
@@ -85,14 +84,14 @@ def add_qb_torrent(link, path, listener, select):
                     try:
                         tor_info = tor_info[0]
                         if tor_info.state in ["metaDL", "checkingResumeData"]:
-                            time.sleep(1)
+                            sleep(1)
                         else:
                             deleteMessage(listener.bot, meta)
                             break
                     except:
                         deleteMessage(listener.bot, meta)
                         return
-            time.sleep(0.5)
+            sleep(0.5)
             client.torrents_pause(torrent_hashes=ext_hash)
             for n in str(ext_hash):
                 if n.isdigit():
@@ -111,23 +110,19 @@ def add_qb_torrent(link, path, listener, select):
             sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
         else:
             sendStatusMessage(listener.update, listener.bot)
-    except qba.UnsupportedMediaType415Error as e:
-        LOGGER.error(str(e))
-        sendMessage(f"This is an unsupported/invalid link: {str(e)}", listener.bot, listener.update)
-        client.auth_log_out()
     except Exception as e:
         sendMessage(str(e), listener.bot, listener.update)
         client.auth_log_out()
 
 def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
-    stalled_time = time.time()
+    stalled_time = time()
     uploaded = False
     sizeChecked = False
     dupChecked = False
     rechecked = False
     get_info = 0
     while True:
-        time.sleep(4)
+        sleep(4)
         tor_info = client.torrents_info(torrent_hashes=ext_hash)
         if len(tor_info) == 0:
             with download_dict_lock:
@@ -143,30 +138,29 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
         try:
             tor_info = tor_info[0]
             if tor_info.state == "metaDL":
-                stalled_time = time.time()
-                if time.time() - meta_time >= 999999999: # timeout while downloading metadata
+                stalled_time = time()
+                if time() - meta_time >= 999999999: # timeout while downloading metadata
                     client.torrents_pause(torrent_hashes=ext_hash)
-                    time.sleep(0.3)
+                    sleep(0.3)
                     listener.onDownloadError("Dead Torrent!")
                     client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                     client.auth_log_out()
                     break
             elif tor_info.state == "downloading":
-                stalled_time = time.time()
-                if STOP_DUPLICATE and not listener.isLeech and not dupChecked and os.path.isdir(f'{path}'):
+                stalled_time = time()
+                if STOP_DUPLICATE and not listener.isLeech and not dupChecked and ospath.isdir(f'{path}'):
                     LOGGER.info('Checking File/Folder if already in Drive')
-                    qbname = str(os.listdir(f'{path}')[-1])
+                    qbname = str(listdir(f'{path}')[-1])
                     if qbname.endswith('.!qB'):
-                        qbname = os.path.splitext(qbname)[0]
+                        qbname = ospath.splitext(qbname)[0]
                     if listener.isZip:
                         qbname = qbname + ".zip"
                     if not listener.extract:
-                        gd = GoogleDriveHelper()
-                        qbmsg, button = gd.drive_list(qbname, True)
+                        qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
                         if qbmsg:
                             msg = "File/Folder is already available in Drive."
                             client.torrents_pause(torrent_hashes=ext_hash)
-                            time.sleep(0.3)
+                            sleep(0.3)
                             listener.onDownloadError(msg)
                             sendMarkup("Here are the search results:", listener.bot, listener.update, button)
                             client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
@@ -183,11 +177,11 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                         limit = TORRENT_DIRECT_LIMIT
                     if limit is not None:
                         LOGGER.info('Checking File/Folder Size...')
-                        time.sleep(1)
+                        sleep(1)
                         size = tor_info.size
                         if size > limit * 1024**3:
                             client.torrents_pause(torrent_hashes=ext_hash)
-                            time.sleep(0.3)
+                            sleep(0.3)
                             listener.onDownloadError(f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}")
                             client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
@@ -198,9 +192,9 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     LOGGER.info(f"Force recheck - Name: {tor_info.name} Hash: {ext_hash} Downloaded Bytes: {tor_info.downloaded} Size: {tor_info.size} Total Size: {tor_info.total_size}")
                     client.torrents_recheck(torrent_hashes=ext_hash)
                     rechecked = True
-                elif time.time() - stalled_time >= 999999999: # timeout after downloading metadata
+                elif time() - stalled_time >= 999999999: # timeout after downloading metadata
                     client.torrents_pause(torrent_hashes=ext_hash)
-                    time.sleep(0.3)
+                    sleep(0.3)
                     listener.onDownloadError("Dead Torrent!")
                     client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                     client.auth_log_out()
@@ -209,7 +203,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                 client.torrents_recheck(torrent_hashes=ext_hash)
             elif tor_info.state == "error":
                 client.torrents_pause(torrent_hashes=ext_hash)
-                time.sleep(0.3)
+                sleep(0.3)
                 listener.onDownloadError("No enough space for this torrent on device")
                 client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                 client.auth_log_out()
@@ -219,19 +213,23 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                 if not QB_SEED:
                     client.torrents_pause(torrent_hashes=ext_hash)
                 if select:
-                    for dirpath, subdir, files in os.walk(f"{path}", topdown=False):
+                    for dirpath, subdir, files in walk(f"{path}", topdown=False):
                         for filee in files:
                             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
-                                os.remove(os.path.join(dirpath, filee))
+                                osremove(ospath.join(dirpath, filee))
                         for folder in subdir:
                             if folder == ".unwanted":
-                                shutil.rmtree(os.path.join(dirpath, folder))
-                    for dirpath, subdir, files in os.walk(f"{path}", topdown=False):
-                        if not os.listdir(dirpath):
-                            os.rmdir(dirpath)
+                                rmtree(ospath.join(dirpath, folder))
+                    for dirpath, subdir, files in walk(f"{path}", topdown=False):
+                        if not listdir(dirpath):
+                            rmdir(dirpath)
                 listener.onDownloadComplete()
                 if QB_SEED:
                     with download_dict_lock:
+                        if listener.uid not in list(download_dict.keys()):
+                            client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
+                            client.auth_log_out()
+                            break
                         download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
@@ -268,7 +266,7 @@ def get_confirm(update, context):
 
 def _get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        mHash = re.search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
+        mHash = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
         return mHash.lower()
 
 def _get_hash_file(path):

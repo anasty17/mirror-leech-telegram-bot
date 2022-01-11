@@ -1,5 +1,6 @@
 import os
 
+from os import path as ospath, getcwd, chdir
 from traceback import format_exc
 from textwrap import indent
 from io import StringIO, BytesIO
@@ -65,9 +66,9 @@ def do(func, bot, update):
     body = cleanup_code(content)
     env = namespace_of(update.message.chat_id, update, bot)
 
-    os.chdir(os.getcwd())
+    chdir(getcwd())
     with open(
-            os.path.join(os.getcwd(),
+            ospath.join(getcwd(),
                          'bot/modules/temp.txt'),
             'w') as temp:
         temp.write(body)

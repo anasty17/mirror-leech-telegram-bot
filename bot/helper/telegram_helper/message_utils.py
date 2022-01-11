@@ -1,5 +1,4 @@
-import time
-
+from time import sleep
 from telegram import InlineKeyboardMarkup
 from telegram.message import Message
 from telegram.update import Update
@@ -18,7 +17,7 @@ def sendMessage(text: str, bot, update: Update):
                             text=text, allow_sending_without_reply=True, parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
-        time.sleep(r.retry_after * 1.5)
+        sleep(r.retry_after * 1.5)
         return sendMessage(text, bot, update)
     except Exception as e:
         LOGGER.error(str(e))
@@ -32,7 +31,7 @@ def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarku
                             parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
-        time.sleep(r.retry_after * 1.5)
+        sleep(r.retry_after * 1.5)
         return sendMarkup(text, bot, update, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
@@ -45,7 +44,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
                               parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
-        time.sleep(r.retry_after * 1.5)
+        sleep(r.retry_after * 1.5)
         return editMessage(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
@@ -57,7 +56,7 @@ def sendRss(text: str, bot):
             return bot.send_message(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
         except RetryAfter as r:
             LOGGER.warning(str(r))
-            time.sleep(r.retry_after * 1.5)
+            sleep(r.retry_after * 1.5)
             return sendRss(text, bot)
         except Exception as e:
             LOGGER.error(str(e))
@@ -67,7 +66,7 @@ def sendRss(text: str, bot):
             return rss_session.send_message(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
         except FloodWait as e:
             LOGGER.warning(str(e))
-            time.sleep(e.x * 1.5)
+            sleep(e.x * 1.5)
             return sendRss(text, bot)
         except Exception as e:
             LOGGER.error(str(e))
@@ -88,7 +87,7 @@ def sendLogFile(bot, update: Update):
 
 def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
-        time.sleep(AUTO_DELETE_MESSAGE_DURATION)
+        sleep(AUTO_DELETE_MESSAGE_DURATION)
         try:
             # Skip if None is passed meaning we don't want to delete bot xor cmd message
             deleteMessage(bot, cmd_message)

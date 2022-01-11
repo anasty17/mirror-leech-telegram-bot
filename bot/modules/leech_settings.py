@@ -1,7 +1,6 @@
 # Leech Settings V2 Implement By - @VarnaX-279
 
-import os
-
+from os import remove as osremove, path as ospath, mkdir
 from threading import Thread
 from PIL import Image
 from telegram.ext import CommandHandler, CallbackQueryHandler
@@ -31,7 +30,7 @@ def getleechinfo(from_user):
         ltype = "MEDIA"
         buttons.sbutton("Send As Document", f"leechset {user_id} doc")
 
-    if os.path.exists(thumbpath):
+    if ospath.exists(thumbpath):
         thumbmsg = "Exists"
         buttons.sbutton("Delete Thumbnail", f"leechset {user_id} thumb")
     else:
@@ -82,8 +81,8 @@ def setLeechType(update, context):
         editLeechType(message, query)
     elif data[2] == "thumb":
         path = f"Thumbnails/{user_id}.jpg"
-        if os.path.lexists(path):
-            os.remove(path)
+        if ospath.lexists(path):
+            osremove(path)
             if DB_URI is not None:
                 DbManger().user_rm_thumb(user_id, path)
             query.answer(text="Thumbnail Removed!", show_alert=True)
@@ -102,13 +101,13 @@ def setThumb(update, context):
     reply_to = update.message.reply_to_message
     if reply_to is not None and reply_to.photo:
         path = "Thumbnails/"
-        if not os.path.isdir(path):
-            os.mkdir(path)
+        if not ospath.isdir(path):
+            mkdir(path)
         photo_msg = app.get_messages(update.message.chat.id, reply_to_message_ids=update.message.message_id)
         photo_dir = app.download_media(photo_msg, file_name=path)
-        des_dir = os.path.join(path, str(user_id) + ".jpg")
+        des_dir = ospath.join(path, str(user_id) + ".jpg")
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
-        os.remove(photo_dir)
+        osremove(photo_dir)
         if DB_URI is not None:
             DbManger().user_save_thumb(user_id, des_dir)
         msg = f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a>."

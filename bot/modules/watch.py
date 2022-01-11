@@ -2,7 +2,7 @@ from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from time import sleep
-from re import split
+from re import split as resplit
 
 from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -112,7 +112,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
 
             for forDict in formats_dict:
                 if len(formats_dict[forDict]) == 1:
-                    qual_fps_ext = split(r'p|-', forDict, maxsplit=2)
+                    qual_fps_ext = resplit(r'p|-', forDict, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
@@ -139,7 +139,7 @@ def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[5]
-    qual_fps_ext = split(r'p|-', qual, maxsplit=2)
+    qual_fps_ext = resplit(r'p|-', qual, maxsplit=2)
     height = qual_fps_ext[0]
     fps = qual_fps_ext[1]
     ext = qual_fps_ext[2]

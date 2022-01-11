@@ -8,13 +8,13 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
-import json
-import re
-import urllib.parse
-import lk21
 import requests
-import cfscrape
+import re
 
+from urllib.parse import urlparse, unquote
+from json import loads as jsnloads
+from lk21 import Bypass
+from cfscrape import create_scraper
 from bs4 import BeautifulSoup
 from base64 import standard_b64encode
 
@@ -50,10 +50,6 @@ def direct_link_generator(link: str):
         return anonfiles(link)
     elif 'letsupload.io' in link:
         return letsupload(link)
-    elif any(x in link for x in fmed_list):
-        return fembed(link)
-    elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
-        return sbembed(link)
     elif '1drv.ms' in link:
         return onedrive(link)
     elif 'pixeldrain.com' in link:
@@ -74,6 +70,10 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif is_gdtot_link(link):
         return gdtot(link)
+    elif any(x in link for x in fmed_list):
+        return fembed(link)
+    elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
+        return sbembed(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -168,7 +168,7 @@ def osdn(url: str) -> str:
     page = BeautifulSoup(
         requests.get(link, allow_redirects=True).content, 'lxml')
     info = page.find('a', {'class': 'mirror_link'})
-    link = urllib.parse.unquote(osdn_link + info['href'])
+    link = unquote(osdn_link + info['href'])
     mirrors = page.find('form', {'id': 'mirror-select-form'}).findAll('tr')
     urls = []
     for data in mirrors[1:]:
@@ -238,7 +238,7 @@ def sbembed(link: str) -> str:
 def onedrive(link: str) -> str:
     """ Onedrive direct link generator
     Based on https://github.com/UsergeTeam/Userge """
-    link_without_query = urllib.parse.urlparse(link)._replace(query=None).geturl()
+    link_without_query = urlparse(link)._replace(query=None).geturl()
     direct_link_encoded = str(standard_b64encode(bytes(link_without_query, "utf-8")), "utf-8")
     direct_link1 = f"https://api.onedrive.com/v1.0/shares/u!{direct_link_encoded}/root/content"
     resp = requests.head(direct_link1)
@@ -283,7 +283,7 @@ def racaty(url: str) -> str:
         link = re.findall(r'\bhttps?://.*racaty\.net\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Racaty links found\n")
-    scraper = cfscrape.create_scraper()
+    scraper = create_scraper()
     r = scraper.get(url)
     soup = BeautifulSoup(r.text, "lxml")
     op = soup.find("input", {"name": "op"})["value"]
@@ -361,7 +361,7 @@ def solidfiles(url: str) -> str:
     }
     pageSource = requests.get(url, headers = headers).text
     mainOptions = str(re.search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
-    return json.loads(mainOptions)["downloadUrl"]
+    return jsnloads.loads(mainOptions)["downloadUrl"]
 
 def krakenfiles(page_link: str) -> str:
     """ krakenfiles direct link generator

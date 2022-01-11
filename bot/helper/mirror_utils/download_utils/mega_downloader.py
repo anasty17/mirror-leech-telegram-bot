@@ -1,16 +1,15 @@
-import os
 import random
 import string
 
+from os import makedirs
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
+from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD, MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot import MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT
 
 
 class MegaAppListener(MegaListener):
@@ -159,8 +158,7 @@ def add_mega_download(mega_link: str, path: str, listener):
         if listener.isZip:
             mname = mname + ".zip"
         if not listener.extract:
-            gd = GoogleDriveHelper()
-            smsg, button = gd.drive_list(mname, True)
+            smsg, button = GoogleDriveHelper().drive_list(mname, True)
             if smsg:
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMarkup(msg1, listener.bot, listener.update, button)
@@ -178,7 +176,7 @@ def add_mega_download(mega_link: str, path: str, listener):
             return sendMessage(msg3, listener.bot, listener.update)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
-    os.makedirs(path)
+    makedirs(path)
     gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
     mega_listener.setValues(node.getName(), api.getSize(node), gid)
     sendStatusMessage(listener.update, listener.bot)

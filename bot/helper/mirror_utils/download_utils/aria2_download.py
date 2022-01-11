@@ -1,6 +1,5 @@
-import threading
-
 from time import sleep
+from threading import Thread
 
 from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, LOGGER
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -22,8 +21,7 @@ def __onDownloadStarted(api, gid):
                 if dl.getListener().isZip:
                     sname = sname + ".zip"
                 if not dl.getListener().extract:
-                    gdrive = GoogleDriveHelper()
-                    smsg, button = gdrive.drive_list(sname, True)
+                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
                     if smsg:
                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
                         api.remove([download], force=True, files=True)
@@ -62,7 +60,7 @@ def __onDownloadComplete(api, gid):
             download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
         LOGGER.info(f'Changed gid from {gid} to {new_gid}')
     elif dl:
-        threading.Thread(target=dl.getListener().onDownloadComplete).start()
+        Thread(target=dl.getListener().onDownloadComplete).start()
 
 @new_thread
 def __onDownloadStopped(api, gid):

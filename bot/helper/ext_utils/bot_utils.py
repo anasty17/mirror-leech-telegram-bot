@@ -1,16 +1,15 @@
-import re
-
+from re import match, findall
 from threading import Thread, Event
 from time import time
 from math import ceil
-from psutil import virtual_memory, cpu_percent
-from shutil import disk_usage
-from requests import head
+from psutil import virtual_memory, cpu_percent, disk_usage
+from requests import head as rhead
 from urllib.request import urlopen
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
+
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime
 from bot.helper.telegram_helper import button_build, message_utils
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
@@ -166,7 +165,7 @@ def get_readable_message():
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
-        total, used, free = disk_usage('.')
+        total, used, free, _ = disk_usage('.')
         free = get_readable_file_size(free)
         currentTime = get_readable_time(time() - botStartTime)
         bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
@@ -240,14 +239,14 @@ def get_readable_time(seconds: int) -> str:
     return result
 
 def is_url(url: str):
-    url = re.findall(URL_REGEX, url)
+    url = findall(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url: str):
     return "drive.google.com" in url
 
 def is_gdtot_link(url: str):
-    url = re.match(r'https?://.*\.gdtot\.\S+', url)
+    url = match(r'https?://.*\.gdtot\.\S+', url)
     return bool(url)
 
 def is_mega_link(url: str):
@@ -263,7 +262,7 @@ def get_mega_link_type(url: str):
     return "file"
 
 def is_magnet(url: str):
-    magnet = re.findall(MAGNET_REGEX, url)
+    magnet = findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def new_thread(fn):
@@ -280,7 +279,7 @@ def new_thread(fn):
 
 def get_content_type(link: str):
     try:
-        res = head(link, allow_redirects=True, timeout=5)
+        res = rhead(link, allow_redirects=True, timeout=5)
         content_type = res.headers.get('content-type')
     except:
         content_type = None

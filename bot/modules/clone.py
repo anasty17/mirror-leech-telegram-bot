@@ -3,7 +3,7 @@ import string
 
 from telegram.ext import CommandHandler
 
-from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, delete_all_messages, update_all_messages, sendStatusMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -41,7 +41,7 @@ def cloneNode(update, context):
             deleteMessage(context.bot, msg)
             return sendMessage(str(e), context.bot, update)
     if is_gdrive_link(link):
-        gd = gdriveTools.GoogleDriveHelper()
+        gd = GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
         if res != "":
             return sendMessage(res, context.bot, update)
@@ -64,7 +64,7 @@ def cloneNode(update, context):
             result, button = gd.clone(link)
             deleteMessage(context.bot, msg)
         else:
-            drive = gdriveTools.GoogleDriveHelper(name)
+            drive = GoogleDriveHelper(name)
             gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
             clone_status = CloneStatus(drive, size, update, gid)
             with download_dict_lock:

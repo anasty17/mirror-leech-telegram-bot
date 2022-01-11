@@ -2,15 +2,14 @@ import random
 import string
 
 from bot import download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, LOGGER
-from bot.helper.mirror_utils.upload_utils import gdriveTools
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
 
 def add_gd_download(link: str, listener, gdtot):
-    gd = gdriveTools.GoogleDriveHelper()
-    res, size, name, files = gd.helper(link)
+    res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
         sendMessage(res, listener.bot, listener.update)
         return
@@ -21,7 +20,7 @@ def add_gd_download(link: str, listener, gdtot):
             sendMessage(msg, listener.bot, listener.update)
             return
     LOGGER.info(f"Download Name: {name}")
-    drive = gdriveTools.GoogleDriveHelper(name, listener)
+    drive = GoogleDriveHelper(name, listener)
     gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
     download_status = GdDownloadStatus(drive, size, listener, gid)
     with download_dict_lock:
