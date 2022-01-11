@@ -214,7 +214,10 @@ input[type="submit"]:hover, input[type="submit"]:focus{
       </div>
     </header>
     <section>
-      <h2 class="size">Selected Files Size: {size}</h2>
+      <div class="intro">
+        <h4>Selected files size: <b id="checked_size">0</b> of <b id="total_size">0</b></h4>
+        <h4>Selected files: <b id="checked_files">0</b> of <b id="total_files">0</b></h4>
+      </div>
       <form action="{form_url}" method="POST">
        {My_content}
        <input type="submit" name="Select these files ;)">
@@ -318,6 +321,54 @@ $('input[type="checkbox"]').change(function(e) {
   }
   checkSiblings(container);
 });
+</script>
+<script>
+$(document).ready(function () {
+    function checkingfiles() {
+        var total_files = $("input[name^='filenode_']").length;
+        $("#total_files").text(total_files / 2);
+        var checked_files = $("input[name^='filenode_']:checked").length;
+        $("#checked_files").text(checked_files);
+        $("input[name^='filenode_']").change(function () {
+            checked_size();
+            var checked_files = $("input[name^='filenode_']:checked").length;
+            $("#checked_files").text(checked_files);
+        });
+    }
+    checked_size();
+    checkingfiles();
+    $("input[name^='foldernode_']").change(function () {
+        checkingfiles();
+        checked_size();
+    });
+});
+function humanFileSize(size) {
+    var i = -1;
+    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+    do {
+        size = size / 1024;
+        i++;
+    } while (size > 1024);
+    return Math.max(size, 0).toFixed(1) + byteUnits[i];
+}
+$(document).ready(function () {
+    var total_size = 0;
+    $(".size").each(function () {
+        var size = parseFloat($(this).text());
+        total_size += size;
+        $(this).parent().append("<i class='hsize'>" + humanFileSize(size) + "</i>");
+        $(this).text(size).hide();
+    });
+    $("#total_size").text(humanFileSize(total_size));
+});
+function checked_size() {
+    var checked_size = 0;
+    $("input[name^='filenode_']:checked").each(function () {
+        var size = parseFloat($(this).parent().find(".size").text());
+        checked_size += size;
+    });
+    $("#checked_size").text(humanFileSize(checked_size));
+}
 </script>
 </body>
 </html>
@@ -571,7 +622,6 @@ async def list_torrent_contents(request):
     client = qba.Client(host="localhost", port="8090")
     try:
         res = client.torrents_files(torrent_hash=torr)
-        info = client.torrents_info(torrent_hashes=torr)[0]
     except qba.NotFound404Error:
         raise web.HTTPNotFound()
     passw = ""
@@ -590,8 +640,7 @@ async def list_torrent_contents(request):
 
     cont = ["", 0]
     nodes.create_list(par, cont)
-    fsize = nodes.get_readable_file_size(info.size)
-    rend_page = page.replace("{My_content}", cont[0]).replace("{size}", fsize)
+    rend_page = page.replace("{My_content}", cont[0])
     rend_page = rend_page.replace("{form_url}", f"/app/files/{torr}?pin_code={pincode}")
     client.auth_log_out()
     return web.Response(text=rend_page, content_type='text/html')
