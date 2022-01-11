@@ -1,5 +1,4 @@
-import feedparser
-
+from feedparser import parse as feedparse
 from time import sleep
 from telegram.ext import CommandHandler
 from threading import Lock
@@ -30,7 +29,7 @@ def rss_get(update, context):
         if feed_url is not None and count > 0:
             try:
                 msg = sendMessage(f"Getting the last <b>{count}</b> item(s) from {title}", context.bot, update)
-                rss_d = feedparser.parse(feed_url[0])
+                rss_d = feedparse(feed_url[0])
                 item_info = ""
                 for item_num in range(count):
                     try:
@@ -74,7 +73,7 @@ def rss_sub(update, context):
             LOGGER.error("This title already subscribed! Choose another title!")
             return sendMessage("This title already subscribed! Choose another title!", context.bot, update)
         try:
-            rss_d = feedparser.parse(feed_link)
+            rss_d = feedparse(feed_link)
             sub_msg = "<b>Subscribed!</b>"
             sub_msg += f"\n\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
             sub_msg += f"\n\n<b>latest record for </b>{rss_d.feed.title}:"
@@ -153,44 +152,47 @@ def rss_monitor(context):
         rss_saver = rss_dict
     for name, data in rss_saver.items():
         try:
-            rss_d = feedparser.parse(data[0])
+            rss_d = feedparse(data[0])
             last_link = rss_d.entries[0]['link']
             last_title = rss_d.entries[0]['title']
-            if (data[1] != last_link and data[2] != last_title):
-                feed_count = 0
-                while (data[1] != rss_d.entries[feed_count]['link'] and data[2] != rss_d.entries[feed_count]['title']):
-                    parse = True
-                    for list in data[3]:
-                        if not any(x in str(rss_d.entries[feed_count]['title']).lower() for x in list):
-                            parse = False
-                            feed_count += 1
-                            break
-                    if not parse:
-                        continue
-                    try:
-                        url = rss_d.entries[feed_count]['links'][1]['href']
-                    except IndexError:
-                        url = rss_d.entries[feed_count]['link']
-                    if RSS_COMMAND is not None:
-                        feed_msg = f"{RSS_COMMAND} {url}"
-                    else:
-                        feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title']}</code>\n\n"
-                        feed_msg += f"<b>Link: </b><code>{url}</code>"
-                    sendRss(feed_msg, context.bot)
-                    feed_count += 1
-                    sleep(5)
-                DbManger().rss_update(name, str(last_link), str(last_title))
-                with rss_dict_lock:
-                    rss_dict[name] = [data[0], str(last_link), str(last_title), data[3]]
-                LOGGER.info(f"Feed Name: {name}")
-                LOGGER.info(f"Last item: {last_link}")
-        except IndexError:
-            LOGGER.error(f"There was an error while parsing this feed: {name} - {data[0]}")
-            LOGGER.error(f"Current item: {rss_d.entries[feed_count]['link']} {rss_d.entries[feed_count]['title']}")
-            LOGGER.error(f"Last item: {last_link} {last_title}")
-            continue
+            if data[1] == last_link or data[2] == last_title:
+                continue
+            feed_count = 0
+            while True:
+                try:
+                    if data[1] == rss_d.entries[feed_count]['link'] or data[2] == rss_d.entries[feed_count]['title']:
+                        break
+                except IndexError:
+                    LOGGER.info(f"Reached Max index no. {feed_count} for this feed: {name}. \
+                          Maybe you need to add less RSS_DELAY to not miss some torrents")
+                    break
+                parse = True
+                for list in data[3]:
+                    if not any(x in str(rss_d.entries[feed_count]['title']).lower() for x in list):
+                        parse = False
+                        feed_count += 1
+                        break
+                if not parse:
+                    continue
+                try:
+                    url = rss_d.entries[feed_count]['links'][1]['href']
+                except IndexError:
+                    url = rss_d.entries[feed_count]['link']
+                if RSS_COMMAND is not None:
+                    feed_msg = f"{RSS_COMMAND} {url}"
+                else:
+                    feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title']}</code>\n\n"
+                    feed_msg += f"<b>Link: </b><code>{url}</code>"
+                sendRss(feed_msg, context.bot)
+                feed_count += 1
+                sleep(5)
+            DbManger().rss_update(name, str(last_link), str(last_title))
+            with rss_dict_lock:
+                rss_dict[name] = [data[0], str(last_link), str(last_title), data[3]]
+            LOGGER.info(f"Feed Name: {name}")
+            LOGGER.info(f"Last item: {last_link}")
         except Exception as e:
-            LOGGER.error(str(e))
+            LOGGER.error(f"{e} Feed Name: {name} - Feed Link: {data[0]}")
             continue
 
 if DB_URI is not None and RSS_CHAT_ID is not None:
