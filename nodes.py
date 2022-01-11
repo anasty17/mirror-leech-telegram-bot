@@ -3,8 +3,6 @@
 
 from anytree import NodeMixin, RenderTree
 
-SIZE_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-
 class TorNode(NodeMixin):
     def __init__(self, name, is_folder=False, is_file=False, parent=None, progress=None, size=None, priority=None, file_id=None):
         super().__init__()
@@ -84,7 +82,7 @@ def print_tree(parent):
 
 def create_list(par, msg):
     if par.name != ".unwanted":
-        msg[0] += "<ul>"
+        msg[0] += '<ul>'
     for i in par.children:
         if i.is_folder:
             msg[0] += "<li>"
@@ -94,26 +92,14 @@ def create_list(par, msg):
             msg[0] += "</li>"
             msg[1] += 1
         else:
-            msg[0] += "<li>"
+            msg[0] += '<li>'
             if i.priority == 0:
-                msg[0] += f"<input type=\"checkbox\" name=\"filenode_{i.file_id}\"> <label for=\"filenode_{i.file_id}\">{i.name} - {get_readable_file_size(i.size)}</label>"
+                msg[0] += f"<input type=\"checkbox\" name=\"filenode_{i.file_id}\"> <label for=\"filenode_{i.file_id}\">{i.name} - <i class='size'>{i.size}</i></label>"
             else:
-                msg[0] += f"<input type=\"checkbox\" checked name=\"filenode_{i.file_id}\"> <label for=\"filenode_{i.file_id}\">{i.name} - {get_readable_file_size(i.size)}</label>"
+                msg[0] += f"<input type=\"checkbox\" checked name=\"filenode_{i.file_id}\"> <label for=\"filenode_{i.file_id}\">{i.name} - <i class='size'>{i.size}</i></label>"
             msg[0] += f"<input type=\"hidden\" value=\"off\" name=\"filenode_{i.file_id}\">"
 
             msg[0] += "</li>"
 
     if par.name != ".unwanted":
         msg[0] += "</ul>"
-
-def get_readable_file_size(size_in_bytes) -> str:
-    if size_in_bytes is None:
-        return '0B'
-    index = 0
-    while size_in_bytes >= 1024:
-        size_in_bytes /= 1024
-        index += 1
-    try:
-        return f'{round(size_in_bytes, 2)}{SIZE_UNITS[index]}'
-    except IndexError:
-        return 'File too large'
