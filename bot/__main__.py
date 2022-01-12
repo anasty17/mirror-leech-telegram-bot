@@ -1,10 +1,11 @@
-import shutil, psutil
 import signal
 import os
-import asyncio
-import time
-import subprocess
 
+from os import path as ospath, remove as osremove, execl as osexecl
+from subprocess import run as srun
+from asyncio import run as asyrun
+from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, Process
+from time import time
 from pyrogram import idle
 from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
@@ -23,22 +24,21 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 
 def stats(update, context):
-    currentTime = get_readable_time(time.time() - botStartTime)
-    total, used, free = shutil.disk_usage('.')
+    currentTime = get_readable_time(time() - botStartTime)
+    total, used, free, disk= disk_usage('/')
     total = get_readable_file_size(total)
     used = get_readable_file_size(used)
     free = get_readable_file_size(free)
-    sent = get_readable_file_size(psutil.net_io_counters().bytes_sent)
-    recv = get_readable_file_size(psutil.net_io_counters().bytes_recv)
-    cpuUsage = psutil.cpu_percent(interval=0.5)
-    disk = psutil.disk_usage('/').percent
-    p_core = psutil.cpu_count(logical=False)
-    t_core = psutil.cpu_count(logical=True)
-    swap = psutil.swap_memory()
+    sent = get_readable_file_size(net_io_counters().bytes_sent)
+    recv = get_readable_file_size(net_io_counters().bytes_recv)
+    cpuUsage = cpu_percent(interval=0.5)
+    p_core = cpu_count(logical=False)
+    t_core = cpu_count(logical=True)
+    swap = swap_memory()
     swap_p = swap.percent
     swap_t = get_readable_file_size(swap.total)
     swap_u = get_readable_file_size(swap.used)
-    memory = psutil.virtual_memory()
+    memory = virtual_memory()
     mem_p = memory.percent
     mem_t = get_readable_file_size(memory.total)
     mem_a = get_readable_file_size(memory.available)
@@ -79,24 +79,24 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    process = psutil.Process(web.pid)
-    for proc in process.children(recursive=True):
+    procs = Process(web.pid)
+    for proc in procs.children(recursive=True):
         proc.kill()
-    process.kill()
+    procs.kill()
     fs_utils.clean_all()
-    subprocess.run(["python3", "update.py"])
+    srun(["python3", "update.py"])
     # Save restart message object in order to reply to it after restarting
     nox.kill()
     with open(".restartmsg", "w") as f:
         f.truncate(0)
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
-    os.execl(executable, executable, "-m", "bot")
+    osexecl(executable, executable, "-m", "bot")
 
 
 def ping(update, context):
-    start_time = int(round(time.time() * 1000))
+    start_time = int(round(time() * 1000))
     reply = sendMessage("Starting Ping", context.bot, update)
-    end_time = int(round(time.time() * 1000))
+    end_time = int(round(time() * 1000))
     editMessage(f'{end_time - start_time} ms', reply)
 
 
@@ -153,7 +153,7 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.RssGetCommand}</b>: [Title] [Number](last N links): Force fetch last N links
 <br><br>
-<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link]: Subscribe new rss feed
+<b>/{BotCommands.RssSubCommand}</b>: [Title] [Rss Link] f: [filter]: Subscribe new rss feed
 <br><br>
 <b>/{BotCommands.RssUnSubCommand}</b>: [Title]: Unubscribe rss feed by title
 <br><br>
@@ -245,13 +245,13 @@ def main():
     # bot.set_my_commands(botcmds)
     fs_utils.start_cleanup()
     if IS_VPS:
-        asyncio.new_event_loop().run_until_complete(start_server_async(PORT))
+        asyrun(start_server_async(PORT))
     # Check if the bot is restarting
-    if os.path.isfile(".restartmsg"):
+    if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
         bot.edit_message_text("Restarted successfully!", chat_id, msg_id)
-        os.remove(".restartmsg")
+        osremove(".restartmsg")
     elif OWNER_ID:
         try:
             text = "<b>Bot Restarted!</b>"

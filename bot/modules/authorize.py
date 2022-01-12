@@ -1,5 +1,5 @@
-from bot.helper.telegram_helper.message_utils import sendMessage
 from bot import AUTHORIZED_CHATS, SUDO_USERS, dispatcher, DB_URI
+from bot.helper.telegram_helper.message_utils import sendMessage
 from telegram.ext import CommandHandler
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -165,9 +165,9 @@ def removeSudo(update, context):
 
 def sendAuthChats(update, context):
     user = sudo = ''
-    user += '\n'.join(str(id) for id in AUTHORIZED_CHATS)
-    sudo += '\n'.join(str(id) for id in SUDO_USERS)
-    sendMessage(f'<b><u>Authorized Chats</u></b>\n<code>{user}</code>\n<b><u>Sudo Users</u></b>\n<code>{sudo}</code>', context.bot, update)
+    user += '\n'.join(f"<code>{uid}</code>" for uid in AUTHORIZED_CHATS)
+    sudo += '\n'.join(f"<code>{uid}</code>" for uid in SUDO_USERS)
+    sendMessage(f'<b><u>Authorized Chats:</u></b>\n{user}\n<b><u>Sudo Users:</u></b>\n{sudo}', context.bot, update)
 
 
 send_auth_handler = CommandHandler(command=BotCommands.AuthorizedUsersCommand, callback=sendAuthChats,

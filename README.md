@@ -27,7 +27,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Clone/Zip/Unzip/Count from gdtot links (main script from [Yusuf](https://github.com/oxosec)) and delete first cloned file from main drive or TeamDrive
 - Qbittorrent seed until reaching specific ratio or time
-- Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
+- Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Save leech settings including thumbnails in database
 - Many bugs have been fixed
 
@@ -127,7 +127,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `YT_COOKIES_URL`: Youtube authentication cookies. Check setup [Here](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl). Use gist raw link and remove commit id from the link, so you can edit it from gists only.
 - `NETRC_URL`: To create .netrc file contains authentication for aria2c and yt-dlp. Use gist raw link and remove commit id from the link, so you can edit it from gists only. **NOTE**: After editing .nterc you need to restart the docker or if deployed on heroku so restart dyno in case your edits related to aria2c authentication.
   - **NOTE**: All above url variables used incase you want edit them in future easily without deploying again or if you want to deploy from public fork. If deploying using cli or private fork you can leave these variables empty add token.pickle, accounts folder, drive_folder, .netrc and cookies.txt directly to root but you can't update them without rebuild OR simply leave all above variables and use private UPSTREAM_REPO.
-- `DATABASE_URL`: Your Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user and rss data.
+- `DATABASE_URL`: Your Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user and rss data. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables.
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id (not username) of groups/users you want to authorize. Separate them by space, Examples: `-0123456789 -1122334455 6915401739`.
 - `SUDO_USERS`: Fill user_id (not username) of users whom you want to give sudo permission. Separate them by space, Examples: `0123456789 1122334455 6915401739`.
 - `IS_TEAM_DRIVE`: Set to `False` or leave it empty to get public google drive links else `True` so only who have access to your Folder/TeamDrive can open the links. `Bool`
@@ -151,7 +151,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `SERVER_PORT`: Only For VPS even if `IS_VPS` is `False`, which is the **BASE_URL_OF_BOT** Port.
 - `WEB_PINCODE`: If empty or `False` means no more pincode required while qbit web selection. `Bool`
 - `QB_SEED`: If `True` qbit torrent will be seeded after and while uploading until reaching specific ratio or time, edit `MaxRatio` or `GlobalMaxSeedingMinutes` or both from qbittorrent.conf (`-1` means no limit, but u can cancel manually by gid). **NOTE**: Don't change `MaxRatioAction`. `Bool`
-  - **Qbittorrent Note**: To auto cancel dead torrents after specific time, edit these two numbers (999999) in seconds. [1st](https://github.com/anasty17/mirror-leech-telegram-bot/blob/0a8a237295b86cc7ad01291657f8127820871a8f/bot/helper/mirror_utils/download_utils/qbit_downloader.py#L144) for metadata download timeout and [2nd](https://github.com/anasty17/mirror-leech-telegram-bot/blob/0a8a237295b86cc7ad01291657f8127820871a8f/bot/helper/mirror_utils/download_utils/qbit_downloader.py#L197) for stalled downlaod timeout.
+  - **Qbittorrent Note**: To auto cancel dead torrents after specific time, edit these two numbers (999999) in seconds. [1st](https://github.com/anasty17/mirror-leech-telegram-bot/blob/0a8a237295b86cc7ad01291657f8127820871a8f/bot/helper/mirror_utils/download_utils/qbit_downloader.py#L144) for metadata download timeout and [2nd](https://github.com/anasty17/mirror-leech-telegram-bot/blob/0a8a237295b86cc7ad01291657f8127820871a8f/bot/helper/mirror_utils/download_utils/qbit_downloader.py#L197) for stalled download timeout.
 - `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`.
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
@@ -163,7 +163,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
   >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io
 - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrents-Api). **Note**: Don't add slash at the end.
   - Supported Sites:
-  >rarbg, 1337x, yts, etzv, tgx, torlock, piratebay, nyaasi, ettv
+  >1337x, YTS, Eztv, Torrent Galaxy, Torlock, Piratebay, Nyaasi, Rarbg, Ettv, Zooqle, KickAss, Bitsearch, Glodls
 - `PHPSESSID` and `CRYPT`: Cookies for gdtot google drive link generator. Follow these [steps](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#gdtot-cookies).
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` seconds at least. Empty means 900 s (default time).
@@ -212,7 +212,8 @@ sudo docker container prune
 ```
 sudo docker image prune -a
 ```
-4. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run.
+4. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
+5. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run.
    - Tutorial Video for Deploying on Oracle VPS:
      - Thanks to [Wiszky](https://github.com/vishnoe115)
      - No need to use sudo su, you can also use sudo before each cmd!

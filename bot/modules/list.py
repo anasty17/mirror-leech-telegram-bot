@@ -1,5 +1,4 @@
-import threading
-
+from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
@@ -46,11 +45,10 @@ def select_type(update, context):
         list_method = data[3]
         item_type = data[2]
         editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        threading.Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
+        Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
     else:
         query.answer()
         editMessage("list has been canceled!", msg)
-
 
 def _list_drive(key, bmsg, list_method, item_type):
     LOGGER.info(f"listing: {key}")
@@ -61,7 +59,6 @@ def _list_drive(key, bmsg, list_method, item_type):
         editMessage(msg, bmsg, button)
     else:
         editMessage(f'No result found for <i>{key}</i>', bmsg)
-
 
 list_handler = CommandHandler(BotCommands.ListCommand, list_buttons, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 list_type_handler = CallbackQueryHandler(select_type, pattern="types", run_async=True)

@@ -1,14 +1,15 @@
-import re
-import threading
-import time
-import math
-import psutil
-import shutil
-
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, LOGGER
+from re import match, findall
+from threading import Thread, Event
+from time import time
+from math import ceil
+from psutil import virtual_memory, cpu_percent, disk_usage
+from requests import head as rhead
+from urllib.request import urlopen
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
+
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot import dispatcher, download_dict, download_dict_lock, STATUS_LIMIT, botStartTime
 from bot.helper.telegram_helper import button_build, message_utils
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
@@ -39,13 +40,13 @@ class setInterval:
     def __init__(self, interval, action):
         self.interval = interval
         self.action = action
-        self.stopEvent = threading.Event()
-        thread = threading.Thread(target=self.__setInterval)
+        self.stopEvent = Event()
+        thread = Thread(target=self.__setInterval)
         thread.start()
 
     def __setInterval(self):
-        nextTime = time.time() + self.interval
-        while not self.stopEvent.wait(nextTime - time.time()):
+        nextTime = time() + self.interval
+        while not self.stopEvent.wait(nextTime - time()):
             nextTime += self.interval
             self.action()
 
@@ -66,7 +67,7 @@ def get_readable_file_size(size_in_bytes) -> str:
 
 def getDownloadByGid(gid):
     with download_dict_lock:
-        for dl in download_dict.values():
+        for dl in list(download_dict.values()):
             status = dl.status()
             if (
                 status
@@ -82,7 +83,7 @@ def getDownloadByGid(gid):
 
 def getAllDownload():
     with download_dict_lock:
-        for dlDetails in download_dict.values():
+        for dlDetails in list(download_dict.values()):
             status = dlDetails.status()
             if (
                 status
@@ -93,7 +94,6 @@ def getAllDownload():
                     MirrorStatus.STATUS_CLONING,
                     MirrorStatus.STATUS_UPLOADING,
                     MirrorStatus.STATUS_CHECKING,
-                    MirrorStatus.STATUS_SEEDING,
                 ]
                 and dlDetails
             ):
@@ -120,7 +120,7 @@ def get_readable_message():
         if STATUS_LIMIT is not None:
             tasks = len(download_dict)
             global pages
-            pages = math.ceil(tasks/STATUS_LIMIT)
+            pages = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > pages and pages != 0:
                 globals()['COUNT'] -= STATUS_LIMIT
                 globals()['PAGE_NO'] -= 1
@@ -165,10 +165,10 @@ def get_readable_message():
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
-        total, used, free = shutil.disk_usage('.')
+        total, used, free, _ = disk_usage('.')
         free = get_readable_file_size(free)
-        currentTime = get_readable_time(time.time() - botStartTime)
-        bmsg = f"<b>CPU:</b> {psutil.cpu_percent()}% | <b>FREE:</b> {free}"
+        currentTime = get_readable_time(time() - botStartTime)
+        bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
         for download in list(download_dict.values()):
             speedy = download.speed()
             if download.status() == MirrorStatus.STATUS_DOWNLOADING:
@@ -183,7 +183,7 @@ def get_readable_message():
                     uldl_bytes += float(speedy.split('M')[0]) * 1048576
         dlspeed = get_readable_file_size(dlspeed_bytes)
         ulspeed = get_readable_file_size(uldl_bytes)
-        bmsg += f"\n<b>RAM:</b> {psutil.virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
+        bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
         bmsg += f"\n<b>DL:</b> {dlspeed}/s | <b>UL:</b> {ulspeed}/s"
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{pages} | <b>Tasks:</b> {tasks}\n"
@@ -199,23 +199,26 @@ def turn(update, context):
     data = query.data
     data = data.split(' ')
     query.answer()
-    with download_dict_lock:
-        global COUNT, PAGE_NO
-        if data[1] == "nex":
-           if PAGE_NO == pages:
-                COUNT = 0
-                PAGE_NO = 1
-           else:
-                COUNT += STATUS_LIMIT
-                PAGE_NO += 1
-        elif data[1] == "pre":
-            if PAGE_NO == 1:
-                COUNT = STATUS_LIMIT * (pages - 1)
-                PAGE_NO = pages
-            else:
-                COUNT -= STATUS_LIMIT
-                PAGE_NO -= 1
-    message_utils.update_all_messages()
+    try:
+        with download_dict_lock:
+            global COUNT, PAGE_NO
+            if data[1] == "nex":
+                if PAGE_NO == pages:
+                    COUNT = 0
+                    PAGE_NO = 1
+                else:
+                    COUNT += STATUS_LIMIT
+                    PAGE_NO += 1
+            elif data[1] == "pre":
+                if PAGE_NO == 1:
+                    COUNT = STATUS_LIMIT * (pages - 1)
+                    PAGE_NO = pages
+                else:
+                    COUNT -= STATUS_LIMIT
+                    PAGE_NO -= 1
+        message_utils.update_all_messages()
+    except:
+        query.message.delete()
 
 def get_readable_time(seconds: int) -> str:
     result = ''
@@ -236,14 +239,14 @@ def get_readable_time(seconds: int) -> str:
     return result
 
 def is_url(url: str):
-    url = re.findall(URL_REGEX, url)
+    url = findall(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url: str):
     return "drive.google.com" in url
 
 def is_gdtot_link(url: str):
-    url = re.match(r'https?://.*\.gdtot\.\S+', url)
+    url = match(r'https?://.*\.gdtot\.\S+', url)
     return bool(url)
 
 def is_mega_link(url: str):
@@ -259,7 +262,7 @@ def get_mega_link_type(url: str):
     return "file"
 
 def is_magnet(url: str):
-    magnet = re.findall(MAGNET_REGEX, url)
+    magnet = findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def new_thread(fn):
@@ -268,11 +271,27 @@ def new_thread(fn):
     from threading import Thread"""
 
     def wrapper(*args, **kwargs):
-        thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+        thread = Thread(target=fn, args=args, kwargs=kwargs)
         thread.start()
         return thread
 
     return wrapper
+
+def get_content_type(link: str):
+    try:
+        res = rhead(link, allow_redirects=True, timeout=5)
+        content_type = res.headers.get('content-type')
+    except:
+        content_type = None
+
+    if content_type is None:
+        try:
+            res = urlopen(link, timeout=5)
+            info = res.info()
+            content_type = info.get_content_type()
+        except:
+            content_type = None
+    return content_type
 
 status_handler = CallbackQueryHandler(turn, pattern="status", run_async=True)
 dispatcher.add_handler(status_handler)

@@ -1,15 +1,12 @@
-import sys
-import shutil
-import os
-import pathlib
-import magic
-import tarfile
-import subprocess
-import time
-import math
-import json
-
+from os import remove as osremove, path as ospath, mkdir, walk
+from sys import exit as sysexit
+from json import loads as jsnloads
+from shutil import rmtree
 from PIL import Image
+from magic import Magic
+from subprocess import run, check_output
+from time import time
+from math import ceil
 
 from .exceptions import NotSupportedExtractionArchive
 from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SPLITS
@@ -17,16 +14,16 @@ from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SP
 VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
 
 def clean_download(path: str):
-    if os.path.exists(path):
+    if ospath.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
         try:
-            shutil.rmtree(path)
+            rmtree(path)
         except FileNotFoundError:
             pass
 
 def start_cleanup():
     try:
-        shutil.rmtree(DOWNLOAD_DIR)
+        rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
         pass
 
@@ -34,7 +31,7 @@ def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
     try:
-        shutil.rmtree(DOWNLOAD_DIR)
+        rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
         pass
 
@@ -42,31 +39,20 @@ def exit_clean_up(signal, frame):
     try:
         LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
         clean_all()
-        sys.exit(0)
+        sysexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        sys.exit(1)
+        sysexit(1)
 
 def get_path_size(path):
-    if os.path.isfile(path):
-        return os.path.getsize(path)
+    if ospath.isfile(path):
+        return ospath.getsize(path)
     total_size = 0
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in walk(path):
         for f in files:
-            abs_path = os.path.join(root, f)
-            total_size += os.path.getsize(abs_path)
+            abs_path = ospath.join(root, f)
+            total_size += ospath.getsize(abs_path)
     return total_size
-
-"""
-def tar(org_path):
-    tar_path = org_path + ".tar"
-    path = pathlib.PurePath(org_path)
-    LOGGER.info(f'Tar: orig_path: {org_path}, tar_path: {tar_path}')
-    tar = tarfile.open(tar_path, "w")
-    tar.add(org_path, arcname=path.name)
-    tar.close()
-    return tar_path
-"""
 
 def get_base_name(orig_path: str):
     if orig_path.endswith(".tar.bz2"):
@@ -147,65 +133,65 @@ def get_base_name(orig_path: str):
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
 def get_mime_type(file_path):
-    mime = magic.Magic(mime=True)
+    mime = Magic(mime=True)
     mime_type = mime.from_file(file_path)
     mime_type = mime_type or "text/plain"
     return mime_type
 
 def take_ss(video_file):
     des_dir = 'Thumbnails'
-    if not os.path.exists(des_dir):
-        os.mkdir(des_dir)
-    des_dir = os.path.join(des_dir, f"{time.time()}.jpg")
+    if not ospath.exists(des_dir):
+        mkdir(des_dir)
+    des_dir = ospath.join(des_dir, f"{time()}.jpg")
     duration = get_media_info(video_file)[0]
     if duration == 0:
         duration = 3
     duration = duration // 2
     try:
-        subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
+        run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
                         "-i", video_file, "-vframes", "1", des_dir])
     except:
         return None
 
-    if not os.path.lexists(des_dir):
+    if not ospath.lexists(des_dir):
         return None
     Image.open(des_dir).convert("RGB").save(des_dir, "JPEG")
     return des_dir
 
-def split(path, size, filee, dirpath, split_size, start_time=0, i=1, inLoop=False):
-    parts = math.ceil(size/TG_SPLIT_SIZE)
+def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):
+    parts = ceil(size/TG_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
-        split_size = math.ceil(size/parts)
-    if filee.upper().endswith(VIDEO_SUFFIXES):
-        base_name, extension = os.path.splitext(filee)
+        split_size = ceil(size/parts)
+    if file_.upper().endswith(VIDEO_SUFFIXES):
+        base_name, extension = ospath.splitext(file_)
         split_size = split_size - 2500000
         while i <= parts :
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
-            out_path = os.path.join(dirpath, parted_name)
-            subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
+            out_path = ospath.join(dirpath, parted_name)
+            run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
                             path, "-ss", str(start_time), "-fs", str(split_size),
                             "-async", "1", "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
             if out_size > 2097152000:
                 dif = out_size - 2097152000
                 split_size = split_size - dif + 2500000
-                os.remove(out_path)
-                return split(path, size, filee, dirpath, split_size, start_time, i, inLoop=True)
+                osremove(out_path)
+                return split(path, size, file_, dirpath, split_size, start_time, i, inLoop=True)
             lpd = get_media_info(out_path)[0]
             if lpd <= 4 or out_size < 1000000:
-                os.remove(out_path)
+                osremove(out_path)
                 break
             start_time += lpd - 3
             i = i + 1
     else:
-        out_path = os.path.join(dirpath, filee + ".")
-        subprocess.run(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        out_path = ospath.join(dirpath, file_ + ".")
+        run(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
 
 def get_media_info(path):
     try:
-        result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
+        result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                           "json", "-show_format", path]).decode('utf-8')
-        fields = json.loads(result)['format']
+        fields = jsnloads(result)['format']
     except Exception as e:
         LOGGER.error(f"get_media_info: {e}")
         return 0, None, None
@@ -225,9 +211,9 @@ def get_media_info(path):
 
 def get_video_resolution(path):
     try:
-        result = subprocess.check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-select_streams", "v:0",
+        result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-select_streams", "v:0",
                                           "-show_entries", "stream=width,height", "-of", "json", path]).decode('utf-8')
-        fields = json.loads(result)['streams'][0]
+        fields = jsnloads(result)['streams'][0]
 
         width = int(fields['width'])
         height = int(fields['height'])

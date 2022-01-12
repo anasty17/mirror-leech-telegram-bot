@@ -1,8 +1,8 @@
-import threading
-import re
-
+from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
+from time import sleep
+from re import split as resplit
 
 from bot import DOWNLOAD_DIR, dispatcher, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -15,9 +15,9 @@ from .mirror import MirrorListener
 
 listener_dict = {}
 
-def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
+def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     mssg = update.message.text
-    message_args = mssg.split(' ', maxsplit=2)
+    message_args = mssg.split(' ')
     name_args = mssg.split('|', maxsplit=1)
     user_id = update.message.from_user.id
     msg_id = update.message.message_id
@@ -28,8 +28,6 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
             link = ''
     except IndexError:
         link = ''
-    link = re.split(r"pswd:|\|", link)[0]
-    link = link.strip()
 
     try:
         name = name_args[1]
@@ -42,9 +40,18 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
     if len(pswdMsg) > 1:
         pswd = pswdMsg[1]
 
+    if update.message.from_user.username:
+        tag = f"@{update.message.from_user.username}"
+    else:
+        tag = update.message.from_user.mention_html(update.message.from_user.first_name)
+
     reply_to = update.message.reply_to_message
     if reply_to is not None:
         link = reply_to.text.strip()
+        if reply_to.from_user.username:
+            tag = f"@{reply_to.from_user.username}"
+        else:
+            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     if not is_url(link):
         help_msg = "<b>Send link along with command line:</b>"
@@ -54,7 +61,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         return sendMessage(help_msg, bot, update)
 
     LOGGER.info(link)
-    listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd)
+    listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -75,7 +82,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS]
-        sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
+        bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, update, YTBUTTONS)
     else:
         formats = result.get('formats')
         formats_dict = {}
@@ -105,7 +112,7 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
 
             for forDict in formats_dict:
                 if len(formats_dict[forDict]) == 1:
-                    qual_fps_ext = re.split(r'p|-', forDict, maxsplit=2)
+                    qual_fps_ext = resplit(r'p|-', forDict, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
@@ -124,13 +131,15 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, formats_dict]
-        sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
+        bmsg = sendMarkup('Choose Video Quality:', bot, update, YTBUTTONS)
+
+    Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
 def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[5]
-    qual_fps_ext = re.split(r'p|-', qual, maxsplit=2)
+    qual_fps_ext = resplit(r'p|-', qual, maxsplit=2)
     height = qual_fps_ext[0]
     fps = qual_fps_ext[1]
     ext = qual_fps_ext[2]
@@ -179,7 +188,10 @@ def select_format(update, context):
     msg = query.message
     data = data.split(" ")
     task_id = int(data[1])
-    task_info = listener_dict[task_id]
+    try:
+        task_info = listener_dict[task_id]
+    except:
+        return editMessage("This is old task", msg)
     uid = task_info[1]
     if user_id != uid:
         return query.answer(text="Don't waste your time!", show_alert=True)
@@ -208,9 +220,17 @@ def select_format(update, context):
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        threading.Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
+        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist)).start()
     del listener_dict[task_id]
     query.message.delete()
+
+def _auto_cancel(msg, msg_id):
+    sleep(60)
+    try:
+        del listener_dict[msg_id]
+        editMessage('Timed out! Task has been cancelled.', msg)
+    except:
+        pass
 
 def watch(update, context):
     _watch(context.bot, update)

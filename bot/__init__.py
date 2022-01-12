@@ -1,16 +1,16 @@
 import logging
-import os
-import threading
-import time
-import subprocess
-import requests
 import socket
 import faulthandler
 import aria2p
-import json
 import qbittorrentapi as qba
 import telegram.ext as tg
 
+from os import remove as osremove, path as ospath, environ
+from requests import get as rget
+from json import loads as jsnloads
+from subprocess import Popen, run as srun
+from time import sleep, time
+from threading import Thread, Lock
 from pyrogram import Client
 from dotenv import load_dotenv
 
@@ -18,7 +18,7 @@ faulthandler.enable()
 
 socket.setdefaulttimeout(600)
 
-botStartTime = time.time()
+botStartTime = time()
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
@@ -29,14 +29,14 @@ LOGGER = logging.getLogger(__name__)
 load_dotenv('config.env', override=True)
 
 def getConfig(name: str):
-    return os.environ[name]
+    return environ[name]
 
 try:
     NETRC_URL = getConfig('NETRC_URL')
     if len(NETRC_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(NETRC_URL)
+        res = rget(NETRC_URL)
         if res.status_code == 200:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
@@ -44,7 +44,7 @@ try:
         else:
             logging.error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"NETRC_URL: {e}")
 except KeyError:
     pass
 try:
@@ -54,17 +54,17 @@ try:
 except KeyError:
     SERVER_PORT = 80
 
-PORT = os.environ.get('PORT', SERVER_PORT)
-web = subprocess.Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
-alive = subprocess.Popen(["python3", "alive.py"])
-nox = subprocess.Popen(["qbittorrent-nox", "--profile=."])
-if not os.path.exists('.netrc'):
-    subprocess.run(["touch", ".netrc"])
-subprocess.run(["cp", ".netrc", "/root/.netrc"])
-subprocess.run(["chmod", "600", ".netrc"])
-subprocess.run(["chmod", "+x", "aria.sh"])
-subprocess.run(["./aria.sh"], shell=True)
-time.sleep(0.5)
+PORT = environ.get('PORT', SERVER_PORT)
+web = Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
+alive = Popen(["python3", "alive.py"])
+nox = Popen(["qbittorrent-nox", "--profile=."])
+if not ospath.exists('.netrc'):
+    srun(["touch", ".netrc"])
+srun(["cp", ".netrc", "/root/.netrc"])
+srun(["chmod", "600", ".netrc"])
+srun(["chmod", "+x", "aria.sh"])
+srun(["./aria.sh"], shell=True)
+sleep(0.5)
 
 Interval = []
 DRIVES_NAMES = []
@@ -101,29 +101,28 @@ get_client().application.set_preferences({"add_trackers":f"{trackerslist}"})
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
 
-download_dict_lock = threading.Lock()
-status_reply_dict_lock = threading.Lock()
-rss_dict_lock = threading.Lock()
+download_dict_lock = Lock()
+status_reply_dict_lock = Lock()
 # Key: update.effective_chat.id
 # Value: telegram.Message
 status_reply_dict = {}
 # Key: update.message.message_id
 # Value: An object of Status
 download_dict = {}
-# Stores list of users and chats the bot is authorized to use in
-rss_dict = {}
 # key: rss_title
 # value: [rss_feed, last_link, last_title]
+rss_dict = {}
+
 AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
-if os.path.exists('authorized_chats.txt'):
+if ospath.exists('authorized_chats.txt'):
     with open('authorized_chats.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
             AUTHORIZED_CHATS.add(int(line.split()[0]))
-if os.path.exists('sudo_users.txt'):
+if ospath.exists('sudo_users.txt'):
     with open('sudo_users.txt', 'r+') as f:
         lines = f.readlines()
         for line in lines:
@@ -177,18 +176,18 @@ def aria2c_init():
         logging.info("Initializing Aria2c")
         link = "https://releases.ubuntu.com/21.10/ubuntu-21.10-desktop-amd64.iso.torrent"
         aria2.add_uris([link], {'dir': DOWNLOAD_DIR})
-        time.sleep(3)
+        sleep(3)
         downloads = aria2.get_downloads()
-        time.sleep(30)
+        sleep(30)
         for download in downloads:
             aria2.remove([download], force=True, files=True)
     except Exception as e:
         logging.error(f"Aria2c initializing error: {e}")
         pass
 
-if not os.path.isfile(".restartmsg"):
-    threading.Thread(target=aria2c_init).start()
-    time.sleep(1)
+if not ospath.isfile(".restartmsg"):
+    Thread(target=aria2c_init).start()
+    sleep(1)
 
 try:
     DB_URI = getConfig('DATABASE_URL')
@@ -421,7 +420,7 @@ try:
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(TOKEN_PICKLE_URL)
+        res = rget(TOKEN_PICKLE_URL)
         if res.status_code == 200:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
@@ -429,7 +428,7 @@ try:
         else:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"TOKEN_PICKLE_URL: {e}")
 except KeyError:
     pass
 try:
@@ -438,7 +437,7 @@ try:
         raise KeyError
     else:
         try:
-            res = requests.get(ACCOUNTS_ZIP_URL)
+            res = rget(ACCOUNTS_ZIP_URL)
             if res.status_code == 200:
                 with open('accounts.zip', 'wb+') as f:
                     f.write(res.content)
@@ -446,10 +445,10 @@ try:
             else:
                 logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
         except Exception as e:
-            logging.error(str(e))
+            logging.error(f"ACCOUNTS_ZIP_URL: {e}")
             raise KeyError
-        subprocess.run(["unzip", "-q", "-o", "accounts.zip"])
-        os.remove("accounts.zip")
+        srun(["unzip", "-q", "-o", "accounts.zip"])
+        osremove("accounts.zip")
 except KeyError:
     pass
 try:
@@ -457,7 +456,7 @@ try:
     if len(MULTI_SEARCH_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(MULTI_SEARCH_URL)
+        res = rget(MULTI_SEARCH_URL)
         if res.status_code == 200:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
@@ -465,7 +464,7 @@ try:
         else:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"MULTI_SEARCH_URL: {e}")
 except KeyError:
     pass
 try:
@@ -473,7 +472,7 @@ try:
     if len(YT_COOKIES_URL) == 0:
         raise KeyError
     try:
-        res = requests.get(YT_COOKIES_URL)
+        res = rget(YT_COOKIES_URL)
         if res.status_code == 200:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
@@ -481,13 +480,13 @@ try:
         else:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"YT_COOKIES_URL: {e}")
 except KeyError:
     pass
 
 DRIVES_NAMES.append("Main")
 DRIVES_IDS.append(parent_id)
-if os.path.exists('drive_folder'):
+if ospath.exists('drive_folder'):
     with open('drive_folder', 'r+') as f:
         lines = f.readlines()
         for line in lines:
@@ -505,7 +504,7 @@ try:
     SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
     if len(SEARCH_PLUGINS) == 0:
         raise KeyError
-    SEARCH_PLUGINS = json.loads(SEARCH_PLUGINS)
+    SEARCH_PLUGINS = jsnloads(SEARCH_PLUGINS)
     qbclient = get_client()
     qb_plugins = qbclient.search_plugins()
     if qb_plugins:
