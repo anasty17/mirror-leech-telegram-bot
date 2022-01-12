@@ -1,7 +1,8 @@
-import subprocess
-from bot import LOGGER, dispatcher
+from subprocess import run
 from telegram import ParseMode
 from telegram.ext import CommandHandler
+
+from bot import LOGGER, dispatcher
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage
@@ -13,7 +14,7 @@ def shell(update, context):
     if len(cmd) == 1:
         return sendMessage('No command to execute was given.', context.bot, update)
     cmd = cmd[1]
-    process = subprocess.run(cmd, capture_output=True, shell=True)
+    process = run(cmd, capture_output=True, shell=True)
     reply = ''
     stderr = process.stderr.decode('utf-8')
     stdout = process.stdout.decode('utf-8')
