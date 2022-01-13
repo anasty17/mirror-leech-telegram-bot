@@ -5,7 +5,7 @@ import aria2p
 import qbittorrentapi as qba
 import telegram.ext as tg
 
-from os import remove as osremove, path as ospath, environ, mkdir
+from os import remove as osremove, path as ospath, environ
 from requests import get as rget
 from json import loads as jsnloads
 from subprocess import Popen, run as srun
@@ -447,8 +447,8 @@ try:
         except Exception as e:
             logging.error(f"ACCOUNTS_ZIP_URL: {e}")
             raise KeyError
-        mkdir("accounts")
         srun(["unzip", "-q", "-o", "accounts.zip"])
+        srun(["chmod", "777", "accounts"])
         osremove("accounts.zip")
 except KeyError:
     pass
