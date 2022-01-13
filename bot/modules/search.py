@@ -34,6 +34,9 @@ SITES = {
     "bitsearch": "Bitsearch",
     "glodls": "Glodls",
     "magnetdl": "MagnetDL",
+    "limetorrent": "LimeTorrent",
+    "torrentfunk": "TorrentFunk",
+    "torrentproject": "TorrentProject",
     "all": "All"
 }
 
