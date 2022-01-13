@@ -40,21 +40,21 @@ class TgUploader:
         path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_path_size(path)
         for dirpath, subdir, files in sorted(walk(path)):
-            for filee in sorted(files):
+            for file_ in sorted(files):
                 if self.__is_cancelled:
                     return
-                if filee.endswith('.torrent'):
+                if file_.endswith('.torrent'):
                     continue
-                up_path = ospath.join(dirpath, filee)
+                up_path = ospath.join(dirpath, file_)
                 fsize = ospath.getsize(up_path)
                 if fsize == 0:
                     LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                     self.__corrupted += 1
                     continue
-                async_to_sync(self.__upload_file)(up_path, filee, dirpath)
+                async_to_sync(self.__upload_file)(up_path, file_, dirpath)
                 if self.__is_cancelled:
                     return
-                self.__msgs_dict[filee] = self.__sent_msg.message_id
+                self.__msgs_dict[file_] = self.__sent_msg.message_id
                 self._last_uploaded = 0
                 sleep(1)
         if len(self.__msgs_dict) <= self.__corrupted:
@@ -62,21 +62,21 @@ class TgUploader:
         LOGGER.info(f"Leech Completed: {self.name}")
         self.__listener.onUploadComplete(self.name, size, self.__msgs_dict, None, self.__corrupted)
 
-    async def __upload_file(self, up_path, filee, dirpath):
+    async def __upload_file(self, up_path, file_, dirpath):
         if CUSTOM_FILENAME is not None:
-            cap_mono = f"{CUSTOM_FILENAME} <code>{filee}</code>"
-            filee = f"{CUSTOM_FILENAME} {filee}"
-            new_path = ospath.join(dirpath, filee)
+            cap_mono = f"{CUSTOM_FILENAME} <code>{file_}</code>"
+            file_ = f"{CUSTOM_FILENAME} {file_}"
+            new_path = ospath.join(dirpath, file_)
             osrename(up_path, new_path)
             up_path = new_path
         else:
-            cap_mono = f"<code>{filee}</code>"
+            cap_mono = f"<code>{file_}</code>"
         notMedia = False
         thumb = self.__thumb
         try:
             if not self.__as_doc:
                 duration = 0
-                if filee.upper().endswith(VIDEO_SUFFIXES):
+                if file_.upper().endswith(VIDEO_SUFFIXES):
                     duration = get_media_info(up_path)[0]
                     if thumb is None:
                         thumb = take_ss(up_path)
@@ -89,9 +89,9 @@ class TgUploader:
                         width, height = img.size
                     else:
                         width, height = get_video_resolution(up_path)
-                    if not filee.upper().endswith(("MKV", "MP4")):
-                        filee = ospath.splitext(filee)[0] + '.mp4'
-                        new_path = ospath.join(dirpath, filee)
+                    if not file_.upper().endswith(("MKV", "MP4")):
+                        file_ = ospath.splitext(file_)[0] + '.mp4'
+                        new_path = ospath.join(dirpath, file_)
                         osrename(up_path, new_path)
                         up_path = new_path
                     self.__sent_msg = await self.__sent_msg.reply_video(video=up_path,
@@ -105,7 +105,7 @@ class TgUploader:
                                                               supports_streaming=True,
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
-                elif filee.upper().endswith(AUDIO_SUFFIXES):
+                elif file_.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = await self.__sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
@@ -117,7 +117,7 @@ class TgUploader:
                                                               thumb=thumb,
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
-                elif filee.upper().endswith(IMAGE_SUFFIXES):
+                elif file_.upper().endswith(IMAGE_SUFFIXES):
                     self.__sent_msg = await self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
@@ -127,7 +127,7 @@ class TgUploader:
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:
-                if filee.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
+                if file_.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
                     thumb = take_ss(up_path)
                     if self.__is_cancelled:
                         if self.__thumb is None and thumb is not None and ospath.lexists(thumb):

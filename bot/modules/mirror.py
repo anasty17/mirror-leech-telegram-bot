@@ -29,7 +29,8 @@ from bot.helper.mirror_utils.status_utils.zip_status import ZipStatus
 from bot.helper.mirror_utils.status_utils.split_status import SplitStatus
 from bot.helper.mirror_utils.status_utils.upload_status import UploadStatus
 from bot.helper.mirror_utils.status_utils.tg_upload_status import TgUploadStatus
-from bot.helper.mirror_utils.upload_utils import gdriveTools, pyrogramEngine
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
@@ -114,7 +115,7 @@ class MirrorListener:
                                 else:
                                     result = srun(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
                                 if result.returncode != 0:
-                                    LOGGER.warning('Unable to extract archive!')
+                                    LOGGER.error('Unable to extract archive!')
                         for file_ in files:
                             if file_.endswith(".rar") or search(r'\.r\d+$', file_) \
                                or search(r'\.7z.\d+$', file_) or search(r'\.z\d+$', file_) \
@@ -132,7 +133,7 @@ class MirrorListener:
                         osremove(m_path)
                         LOGGER.info(f"Deleting archive: {m_path}")
                     else:
-                        LOGGER.warning('Unable to extract archive! Uploading anyway')
+                        LOGGER.error('Unable to extract archive! Uploading anyway')
                         path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
             except NotSupportedExtractionArchive:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
@@ -158,7 +159,7 @@ class MirrorListener:
                         osremove(f_path)
         if self.isLeech:
             LOGGER.info(f"Leech Name: {up_name}")
-            tg = pyrogramEngine.TgUploader(up_name, self)
+            tg = TgUploader(up_name, self)
             tg_upload_status = TgUploadStatus(tg, size, gid, self)
             with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
@@ -166,7 +167,7 @@ class MirrorListener:
             tg.upload()
         else:
             LOGGER.info(f"Upload Name: {up_name}")
-            drive = gdriveTools.GoogleDriveHelper(up_name, self)
+            drive = GoogleDriveHelper(up_name, self)
             upload_status = UploadStatus(drive, size, gid, self)
             with download_dict_lock:
                 download_dict[self.uid] = upload_status

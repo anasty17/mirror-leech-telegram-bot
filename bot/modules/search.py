@@ -32,7 +32,8 @@ SITES = {
     "zooqle": "Zooqle",
     "kickass": "KickAss",
     "bitsearch": "Bitsearch",
-    "glodls":"Glodls",
+    "glodls": "Glodls",
+    "magnetdl": "MagnetDL",
     "all": "All"
 }
 

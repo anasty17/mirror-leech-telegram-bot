@@ -447,7 +447,9 @@ try:
         except Exception as e:
             logging.error(f"ACCOUNTS_ZIP_URL: {e}")
             raise KeyError
-        srun(["unzip", "-q", "-o", "accounts.zip"])
+        result = srun(["bash", "extract", "accounts.zip"])
+        if result.returncode != 0:
+            logging.error('Unable to extract archive!')
         osremove("accounts.zip")
 except KeyError:
     pass
