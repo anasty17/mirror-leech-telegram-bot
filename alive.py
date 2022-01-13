@@ -3,7 +3,7 @@ from requests import get as rget
 from os import environ
 from logging import error as logerror
 
-BASE_URL = environ.get('BASE_URL_OF_BOT', None)
+BASE_URL = environ.get('BASE_URL_OF_BOT', None).rstrip("/")
 try:
     if len(BASE_URL) == 0:
         raise TypeError
