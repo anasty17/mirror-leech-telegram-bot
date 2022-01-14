@@ -234,7 +234,7 @@ try:
 except KeyError:
     UPTOBOX_TOKEN = None
 try:
-    INDEX_URL = getConfig('INDEX_URL')
+    INDEX_URL = getConfig('INDEX_URL').rstrip("/")
     if len(INDEX_URL) == 0:
         raise KeyError
     else:
@@ -243,7 +243,7 @@ except KeyError:
     INDEX_URL = None
     INDEX_URLS.append(None)
 try:
-    SEARCH_API_LINK = getConfig('SEARCH_API_LINK')
+    SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip("/")
     if len(SEARCH_API_LINK) == 0:
         raise KeyError
 except KeyError:
@@ -375,7 +375,7 @@ try:
 except KeyError:
     IGNORE_PENDING_REQUESTS = False
 try:
-    BASE_URL = getConfig('BASE_URL_OF_BOT')
+    BASE_URL = getConfig('BASE_URL_OF_BOT').rstrip("/")
     if len(BASE_URL) == 0:
         raise KeyError
 except KeyError:
@@ -448,6 +448,7 @@ try:
             logging.error(f"ACCOUNTS_ZIP_URL: {e}")
             raise KeyError
         srun(["unzip", "-q", "-o", "accounts.zip"])
+        srun(["chmod", "-R", "777", "accounts"])
         osremove("accounts.zip")
 except KeyError:
     pass

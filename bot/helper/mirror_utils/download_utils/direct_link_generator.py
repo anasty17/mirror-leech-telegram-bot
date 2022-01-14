@@ -192,14 +192,14 @@ def hxfile(url: str) -> str:
     """ Hxfile direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     return bypasser.bypass_filesIm(url)
 
 def anonfiles(url: str) -> str:
     """ Anonfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     return bypasser.bypass_anonfiles(url)
 
 def letsupload(url: str) -> str:
@@ -211,7 +211,7 @@ def letsupload(url: str) -> str:
         link = re.findall(r'\bhttps?://.*letsupload\.io\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Letsupload links found\n")
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     dl_url=bypasser.bypass_url(link)
     return dl_url
 
@@ -219,7 +219,7 @@ def fembed(link: str) -> str:
     """ Fembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     dl_url=bypasser.bypass_fembed(link)
     count = len(dl_url)
     lst_link = [dl_url[i] for i in dl_url]
@@ -229,7 +229,7 @@ def sbembed(link: str) -> str:
     """ Sbembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     dl_url=bypasser.bypass_sbembed(link)
     count = len(dl_url)
     lst_link = [dl_url[i] for i in dl_url]
@@ -265,14 +265,14 @@ def antfiles(url: str) -> str:
     """ Antfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     return bypasser.bypass_antfiles(url)
 
 def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = lk21.Bypass()
+    bypasser = Bypass()
     return bypasser.bypass_streamtape(url)
 
 def racaty(url: str) -> str:
@@ -361,7 +361,7 @@ def solidfiles(url: str) -> str:
     }
     pageSource = requests.get(url, headers = headers).text
     mainOptions = str(re.search(r'viewerOptions\'\,\ (.*?)\)\;', pageSource).group(1))
-    return jsnloads.loads(mainOptions)["downloadUrl"]
+    return jsnloads(mainOptions)["downloadUrl"]
 
 def krakenfiles(page_link: str) -> str:
     """ krakenfiles direct link generator
