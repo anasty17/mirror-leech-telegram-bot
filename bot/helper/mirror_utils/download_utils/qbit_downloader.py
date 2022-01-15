@@ -2,9 +2,8 @@ import random
 import string
 import logging
 
-from os import remove as osremove, path as ospath, listdir, rmdir, walk
+from os import remove as osremove, path as ospath, listdir
 from time import sleep, time
-from shutil import rmtree
 from re import search
 from threading import Thread
 from torrentool.api import Torrent
@@ -16,14 +15,10 @@ from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownload
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import MirrorStatus, getDownloadByGid, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.fs_utils import clean_unwanted
 from bot.helper.telegram_helper import button_build
 
 LOGGER = logging.getLogger(__name__)
-logging.getLogger('qbittorrentapi').setLevel(logging.ERROR)
-logging.getLogger('requests').setLevel(logging.ERROR)
-logging.getLogger('urllib3').setLevel(logging.ERROR)
-
-
 
 def add_qb_torrent(link, path, listener, select):
     client = get_client()
@@ -57,7 +52,7 @@ def add_qb_torrent(link, path, listener, select):
                         client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                         client.auth_log_out()
                         return
-                    tor_info = client.torrents_info(torrent_hashes=ext_hash)
+                    tor_info = client.torrents_info(torrent_hashes=ext_hash, delete_files=True)
                     if len(tor_info) > 0:
                         break
         else:
@@ -120,22 +115,16 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
     sizeChecked = False
     dupChecked = False
     rechecked = False
-    get_info = 0
     while True:
         sleep(4)
-        tor_info = client.torrents_info(torrent_hashes=ext_hash)
-        if len(tor_info) == 0:
-            with download_dict_lock:
-                if listener.uid not in list(download_dict.keys()):
-                    client.auth_log_out()
-                    break
-            get_info += 1
-            if get_info > 10:
-                client.auth_log_out()
-                break
-            continue
-        get_info = 0
         try:
+            tor_info = client.torrents_info(torrent_hashes=ext_hash)
+            if len(tor_info) == 0:
+                with download_dict_lock:
+                    if listener.uid not in list(download_dict.keys()):
+                        client.auth_log_out()
+                        break
+                continue
             tor_info = tor_info[0]
             if tor_info.state == "metaDL":
                 stalled_time = time()
@@ -209,20 +198,12 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                 client.auth_log_out()
                 break
             elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "forcedUP"] and not uploaded:
+                LOGGER.info(f"onQbDownloadComplete: {ext_hash}")
                 uploaded = True
                 if not QB_SEED:
                     client.torrents_pause(torrent_hashes=ext_hash)
                 if select:
-                    for dirpath, subdir, files in walk(f"{path}", topdown=False):
-                        for filee in files:
-                            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
-                                osremove(ospath.join(dirpath, filee))
-                        for folder in subdir:
-                            if folder == ".unwanted":
-                                rmtree(ospath.join(dirpath, folder))
-                    for dirpath, subdir, files in walk(f"{path}", topdown=False):
-                        if not listdir(dirpath):
-                            rmdir(dirpath)
+                    clean_unwanted(path)
                 listener.onDownloadComplete()
                 if QB_SEED:
                     with download_dict_lock:
@@ -242,8 +223,8 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                 client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                 client.auth_log_out()
                 break
-        except:
-            pass
+        except Exception as e:
+            LOGGER.error(str(e))
 
 def get_confirm(update, context):
     query = update.callback_query

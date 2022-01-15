@@ -1,10 +1,10 @@
-from os import remove as osremove, path as ospath, mkdir, walk
+from os import remove as osremove, path as ospath, mkdir, walk, listdir, rmdir
 from sys import exit as sysexit
 from json import loads as jsnloads
 from shutil import rmtree
 from PIL import Image
 from magic import Magic
-from subprocess import run, check_output
+from subprocess import run as srun, check_output
 from time import time
 from math import ceil
 
@@ -17,21 +17,21 @@ def clean_download(path: str):
     if ospath.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
         try:
-            rmtree(path)
+            rmtree(path, ignore_errors=True)
         except FileNotFoundError:
             pass
 
 def start_cleanup():
     try:
-        rmtree(DOWNLOAD_DIR)
+        rmtree(DOWNLOAD_DIR, ignore_errors=True)
     except FileNotFoundError:
         pass
 
 def clean_all():
     aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes="all")
+    get_client().torrents_delete(torrent_hashes="all", delete_files=True)
     try:
-        rmtree(DOWNLOAD_DIR)
+        rmtree(DOWNLOAD_DIR, ignore_errors=True)
     except FileNotFoundError:
         pass
 
@@ -43,6 +43,19 @@ def exit_clean_up(signal, frame):
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
         sysexit(1)
+
+def clean_unwanted(path: str):
+    LOGGER.info(f"Cleaning unwanted files/folder: {path}")
+    for dirpath, subdir, files in walk(path, topdown=False):
+        for filee in files:
+            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
+                osremove(ospath.join(dirpath, filee))
+        for folder in subdir:
+            if folder == ".unwanted":
+                rmtree(ospath.join(dirpath, folder), ignore_errors=True)
+    for dirpath, subdir, files in walk(path, topdown=False):
+        if not listdir(dirpath):
+            rmdir(dirpath)
 
 def get_path_size(path):
     if ospath.isfile(path):
@@ -138,17 +151,16 @@ def get_mime_type(file_path):
     mime_type = mime_type or "text/plain"
     return mime_type
 
-def take_ss(video_file):
+def take_ss(video_file, duration):
     des_dir = 'Thumbnails'
     if not ospath.exists(des_dir):
         mkdir(des_dir)
     des_dir = ospath.join(des_dir, f"{time()}.jpg")
-    duration = get_media_info(video_file)[0]
     if duration == 0:
         duration = 3
     duration = duration // 2
     try:
-        run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
+        srun(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
                         "-i", video_file, "-vframes", "1", des_dir])
     except:
         return None
@@ -168,7 +180,7 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
         while i <= parts :
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = ospath.join(dirpath, parted_name)
-            run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
+            srun(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
                             path, "-ss", str(start_time), "-fs", str(split_size),
                             "-async", "1", "-strict", "-2", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
@@ -185,7 +197,7 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
             i = i + 1
     else:
         out_path = ospath.join(dirpath, file_ + ".")
-        run(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        srun(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
 
 def get_media_info(path):
     try:

@@ -92,7 +92,7 @@ class MirrorListener:
                 self.onUploadError('Internal error occurred!!')
                 return
             try:
-                rmtree(m_path)
+                rmtree(m_path, ignore_errors=True)
             except:
                 osremove(m_path)
         elif self.extract:
@@ -397,9 +397,11 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, update)
     elif isQbit and not is_magnet(link) and not ospath.exists(link):
-        content_type = get_content_type(link)
-        if content_type is None  or link.endswith('.torrent') \
-           or match(r'application/x-bittorrent|application/octet-stream', content_type):
+        if link.endswith('.torrent'):
+            content_type = None
+        else:
+            content_type = get_content_type(link)
+        if content_type is None or match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
                 resp = requests.get(link, timeout=10)
                 if resp.status_code == 200:
@@ -409,9 +411,12 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 else:
                     return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
             except Exception as e:
-                LOGGER.error(str(e))
                 error = str(e).replace('<', ' ').replace('>', ' ')
-                return sendMessage(error, bot, update)
+                if error.startswith('No connection adapters were found for'):
+                    link = error.split("'")[1]
+                else:
+                    LOGGER.error(str(e))
+                    return sendMessage(error, bot, update)
         else:
             msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
             return sendMessage(msg, bot, update)

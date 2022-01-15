@@ -4,7 +4,7 @@ import os
 from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun
 from asyncio import run as asyrun
-from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, Process
+from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, Process as psprocess
 from time import time
 from pyrogram import idle
 from sys import executable
@@ -79,7 +79,7 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    procs = Process(web.pid)
+    procs = psprocess(web.pid)
     for proc in procs.children(recursive=True):
         proc.kill()
     procs.kill()

@@ -2,7 +2,6 @@ aiohttp
 anytree
 appdirs
 aria2p
-asgiref
 attrdict
 beautifulsoup4
 cfscrape
