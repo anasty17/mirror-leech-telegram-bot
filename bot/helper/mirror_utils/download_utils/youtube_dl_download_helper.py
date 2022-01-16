@@ -113,7 +113,7 @@ class YoutubeDLHelper:
                 if get_info:
                     return result
                 realName = ydl.prepare_filename(result)
-            except DownloadError as e:
+            except Exception as e:
                 if get_info:
                     raise e
                 self.__onDownloadError(str(e))
@@ -123,7 +123,7 @@ class YoutubeDLHelper:
             for v in result['entries']:
                 try:
                     self.size += v['filesize_approx']
-                except (KeyError, TypeError):
+                except:
                     pass
             self.is_playlist = True
             if name == "":

@@ -45,7 +45,7 @@ def exit_clean_up(signal, frame):
         sysexit(1)
 
 def clean_unwanted(path: str):
-    LOGGER.info(f"Cleaning unwanted files/folder: {path}")
+    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, subdir, files in walk(path, topdown=False):
         for filee in files:
             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):

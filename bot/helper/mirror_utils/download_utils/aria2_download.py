@@ -6,27 +6,33 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage
+from bot.helper.ext_utils.fs_utils import get_base_name
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 @new_thread
 def __onDownloadStarted(api, gid):
-    if STOP_DUPLICATE or TORRENT_DIRECT_LIMIT is not None or ZIP_UNZIP_LIMIT is not None:
-        sleep(1.5)
-        dl = getDownloadByGid(gid)
-        download = api.get_download(gid)
-        try:
+    try:
+        if STOP_DUPLICATE or TORRENT_DIRECT_LIMIT is not None or ZIP_UNZIP_LIMIT is not None:
+            sleep(1.5)
+            dl = getDownloadByGid(gid)
+            download = api.get_download(gid)
             if STOP_DUPLICATE and dl is not None and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name
                 if dl.getListener().isZip:
                     sname = sname + ".zip"
-                if not dl.getListener().extract:
-                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
-                    if smsg:
-                        dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                        api.remove([download], force=True, files=True)
-                        sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
-                        return
+                elif dl.getListener().extract:
+                    try:
+                        sname = get_base_name(sname)
+                    except NotSupportedExtractionArchive:
+                        dl.getListener().onDownloadError("Not any valid archive.")
+                        return api.remove([download], force=True, files=True)
+                smsg, button = GoogleDriveHelper().drive_list(sname, True)
+                if smsg:
+                    dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
+                    api.remove([download], force=True, files=True)
+                    return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
             if dl is not None and (ZIP_UNZIP_LIMIT is not None or TORRENT_DIRECT_LIMIT is not None):
                 sleep(1)
                 limit = None
@@ -41,10 +47,9 @@ def __onDownloadStarted(api, gid):
                     size = api.get_download(gid).total_length
                     if size > limit * 1024**3:
                         dl.getListener().onDownloadError(f'{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}')
-                        api.remove([download], force=True, files=True)
-                        return
-        except:
-            LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
+                        return api.remove([download], force=True, files=True)
+    except:
+        LOGGER.error(f"onDownloadStart: {gid} stop duplicate and size check didn't pass")
 
 @new_thread
 def __onDownloadComplete(api, gid):

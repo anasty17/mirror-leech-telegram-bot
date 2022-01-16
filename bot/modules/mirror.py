@@ -175,8 +175,7 @@ class MirrorListener:
             drive.upload(up_name)
 
     def onDownloadError(self, error):
-        error = error.replace('<', ' ')
-        error = error.replace('>', ' ')
+        error = error.replace('<', ' ').replace('>', ' ')
         with download_dict_lock:
             try:
                 download = download_dict[self.uid]
@@ -416,7 +415,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                     link = error.split("'")[1]
                 else:
                     LOGGER.error(str(e))
-                    return sendMessage(error, bot, update)
+                    return sendMessage(tag + " " + error, bot, update)
         else:
             msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
             return sendMessage(msg, bot, update)

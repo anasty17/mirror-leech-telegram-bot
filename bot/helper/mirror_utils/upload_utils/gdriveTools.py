@@ -253,8 +253,6 @@ class GoogleDriveHelper:
                     raise Exception('Upload has been manually cancelled!')
                 link = f"https://drive.google.com/folderview?id={dir_id}"
                 if self.is_cancelled:
-                    LOGGER.info("Deleting uploaded data from Drive...")
-                    self.deletefile(link)
                     return
                 LOGGER.info("Uploaded To G-Drive: " + file_name)
         except Exception as e:
@@ -269,6 +267,10 @@ class GoogleDriveHelper:
         finally:
             self.updater.cancel()
             if self.is_cancelled:
+                if mime_type == 'Folder':
+                    LOGGER.info("Deleting uploaded data from Drive...")
+                    link = f"https://drive.google.com/folderview?id={dir_id}"
+                    self.deletefile(link)
                 return
         self.__listener.onUploadComplete(link, size, self.__total_files, self.__total_folders, mime_type)
 
