@@ -1,6 +1,6 @@
 import itertools
-import qbittorrentapi as qba
 
+from qbittorrentapi import SearchAPIMixIn, Client as qbClient
 from requests import get as rget
 from time import sleep
 from threading import Thread
@@ -42,8 +42,8 @@ SITES = {
 
 SEARCH_LIMIT = 200
 
-def _srch_client() -> qba.SearchAPIMixIn:
-    return qba.Client(host="localhost", port=8090)
+def _srch_client() -> SearchAPIMixIn:
+    return qbClient(host="localhost", port=8090)
 
 def torser(update, context):
     user_id = update.message.from_user.id
