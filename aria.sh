@@ -1,6 +1,6 @@
 tracker_list=$(curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all https://raw.githubusercontent.com/hezhijie0327/Trackerslist/main/trackerslist_tracker.txt https://raw.githubusercontent.com/hezhijie0327/Trackerslist/main/trackerslist_exclude.txt | awk '$0' | tr '\n\n' ',')
 aria2c --enable-rpc=true --check-certificate=false --daemon=true \
-   --max-connection-per-server=10 --rpc-max-request-size=1024M --http-auth-challenge=true \
+   --max-connection-per-server=10 --rpc-max-request-size=1024M \
    --bt-stop-timeout=0 --min-split-size=10M --split=10 --allow-overwrite=true \
    --max-overall-download-limit=0 --bt-tracker="[$tracker_list]" --disk-cache=32M \
    --max-overall-upload-limit=1K --max-concurrent-downloads=15 --summary-interval=0 \
