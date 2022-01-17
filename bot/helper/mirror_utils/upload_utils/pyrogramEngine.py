@@ -66,8 +66,8 @@ class TgUploader:
         else:
             self.__sent_msg = app.get_messages(self.__sent_msg.chat.id, self.__sent_msg.message_id)
         if CUSTOM_FILENAME is not None:
-            cap_mono = f"{CUSTOM_FILENAME} <code>{file_}</code>"
-            file_ = f"{CUSTOM_FILENAME} {file_}"
+            cap_mono = f"{CUSTOM_FILENAME}<code>{file_}</code>"
+            file_ = f"{CUSTOM_FILENAME}{file_}"
             new_path = ospath.join(dirpath, file_)
             osrename(up_path, new_path)
             up_path = new_path
