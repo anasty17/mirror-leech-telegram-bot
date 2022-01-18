@@ -75,17 +75,17 @@ class YoutubeDLHelper:
         elif d['status'] == "downloading":
             with self.__resource_lock:
                 self.__download_speed = d['speed']
-                try:
-                    tbyte = d['total_bytes']
-                except KeyError:
-                    tbyte = d['total_bytes_estimate']
                 if self.is_playlist:
                     downloadedBytes = d['downloaded_bytes']
                     chunk_size = downloadedBytes - self._last_downloaded
                     self._last_downloaded = downloadedBytes
                     self.downloaded_bytes += chunk_size
                 else:
-                    self.size = tbyte
+                    try:
+                        self.size = d['total_bytes']
+                    except KeyError:
+                        if d.get('total_bytes_estimate'):
+                            self.size = d['total_bytes_estimate']
                     self.downloaded_bytes = d['downloaded_bytes']
                 try:
                     self.progress = (self.downloaded_bytes / self.size) * 100

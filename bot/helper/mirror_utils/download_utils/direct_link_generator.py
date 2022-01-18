@@ -80,7 +80,7 @@ def direct_link_generator(link: str):
 def zippy_share(url: str) -> str:
     """ ZippyShare direct link generator
     Based on https://github.com/KenHV/Mirror-Bot
-             https://github.com/jovanzers/WinTenCermin """
+             https://github.com/jovanzers/WinTenCermin
     try:
         link = re.findall(r'\bhttps?://.*zippyshare\.com\S+', url)[0]
     except IndexError:
@@ -113,7 +113,8 @@ def zippy_share(url: str) -> str:
         math_ = int(math[0]) % int(math[1]) + int(math[2]) % int(math[3])
         return base_url + str(js_content[0]) + str(math_) + str(js_content[2])
     except IndexError:
-        raise DirectDownloadLinkException("ERROR: Can't find download button")
+        raise DirectDownloadLinkException("ERROR: Can't find download button")"""
+    return Bypass().bypass_zippyshare(url)
 
 def yandex_disk(url: str) -> str:
     """ Yandex.Disk direct link generator
@@ -194,15 +195,13 @@ def hxfile(url: str) -> str:
     """ Hxfile direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    return bypasser.bypass_filesIm(url)
+    return Bypass().bypass_filesIm(url)
 
 def anonfiles(url: str) -> str:
     """ Anonfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    return bypasser.bypass_anonfiles(url)
+    return Bypass().bypass_anonfiles(url)
 
 def letsupload(url: str) -> str:
     """ Letsupload direct link generator
@@ -213,16 +212,13 @@ def letsupload(url: str) -> str:
         link = re.findall(r'\bhttps?://.*letsupload\.io\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Letsupload links found\n")
-    bypasser = Bypass()
-    dl_url=bypasser.bypass_url(link)
-    return dl_url
+    return Bypass().bypass_url(link)
 
 def fembed(link: str) -> str:
     """ Fembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    dl_url=bypasser.bypass_fembed(link)
+    dl_url= Bypass().bypass_fembed(link)
     count = len(dl_url)
     lst_link = [dl_url[i] for i in dl_url]
     return lst_link[count-1]
@@ -231,8 +227,7 @@ def sbembed(link: str) -> str:
     """ Sbembed direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    dl_url=bypasser.bypass_sbembed(link)
+    dl_url= Bypass().bypass_sbembed(link)
     count = len(dl_url)
     lst_link = [dl_url[i] for i in dl_url]
     return lst_link[count-1]
@@ -267,15 +262,13 @@ def antfiles(url: str) -> str:
     """ Antfiles direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    return bypasser.bypass_antfiles(url)
+    return Bypass().bypass_antfiles(url)
 
 def streamtape(url: str) -> str:
     """ Streamtape direct link generator
     Based on https://github.com/zevtyardt/lk21
     """
-    bypasser = Bypass()
-    return bypasser.bypass_streamtape(url)
+    return Bypass().bypass_streamtape(url)
 
 def racaty(url: str) -> str:
     """ Racaty direct link generator
