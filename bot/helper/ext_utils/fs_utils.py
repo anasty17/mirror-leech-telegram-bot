@@ -17,13 +17,13 @@ def clean_download(path: str):
     if ospath.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
         try:
-            rmtree(path, ignore_errors=True)
+            rmtree(path)
         except FileNotFoundError:
             pass
 
 def start_cleanup():
     try:
-        rmtree(DOWNLOAD_DIR, ignore_errors=True)
+        rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
         pass
 
@@ -31,7 +31,7 @@ def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all", delete_files=True)
     try:
-        rmtree(DOWNLOAD_DIR, ignore_errors=True)
+        rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
         pass
 
@@ -52,7 +52,7 @@ def clean_unwanted(path: str):
                 osremove(ospath.join(dirpath, filee))
         for folder in subdir:
             if folder == ".unwanted":
-                rmtree(ospath.join(dirpath, folder), ignore_errors=True)
+                rmtree(ospath.join(dirpath, folder))
     for dirpath, subdir, files in walk(path, topdown=False):
         if not listdir(dirpath):
             rmdir(dirpath)

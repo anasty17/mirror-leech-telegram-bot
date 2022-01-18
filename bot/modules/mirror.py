@@ -91,11 +91,9 @@ class MirrorListener:
                 LOGGER.info('File to archive not found!')
                 self.onUploadError('Internal error occurred!!')
                 return
-            if self.isQbit and QB_SEED and not self.isLeech:
-                pass
-            else:
+            if not self.isQbit or not QB_SEED or self.isLeech:
                 try:
-                    rmtree(m_path, ignore_errors=True)
+                    rmtree(m_path)
                 except:
                     osremove(m_path)
         elif self.extract:
