@@ -1,6 +1,6 @@
 import itertools
-import qbittorrentapi as qba
 
+from qbittorrentapi import SearchAPIMixIn, Client as qbClient
 from requests import get as rget
 from time import sleep
 from threading import Thread
@@ -32,14 +32,18 @@ SITES = {
     "zooqle": "Zooqle",
     "kickass": "KickAss",
     "bitsearch": "Bitsearch",
-    "glodls":"Glodls",
+    "glodls": "Glodls",
+    "magnetdl": "MagnetDL",
+    "limetorrent": "LimeTorrent",
+    "torrentfunk": "TorrentFunk",
+    "torrentproject": "TorrentProject",
     "all": "All"
 }
 
 SEARCH_LIMIT = 200
 
-def _srch_client() -> qba.SearchAPIMixIn:
-    return qba.Client(host="localhost", port=8090)
+def _srch_client() -> SearchAPIMixIn:
+    return qbClient(host="localhost", port=8090)
 
 def torser(update, context):
     user_id = update.message.from_user.id
@@ -145,8 +149,7 @@ def _getResult(search_results, key, message, tool):
                     for subres in result['Files']:
                         msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
                         try:
-                            msg += f"<b>Share link to</b> <a href='http://t.me/share/url?url={subres['Torrent']}'>Telegram</a><br>"
-                            msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
+                            msg += f"<a href='{subres['Torrent']}'>Direct Link</a><br>"
                         except KeyError:
                             msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={subres['Magnet']}'>Telegram</a><br>"
                 else:
@@ -156,6 +159,10 @@ def _getResult(search_results, key, message, tool):
                 pass
             try:
                 msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Telegram</a><br><br>"
+            except KeyError:
+                pass
+            try:
+                msg += f"<a href='{result['Torrent']}'>Direct Link</a><br><br>"
             except KeyError:
                 msg += "<br>"
         else:

@@ -69,7 +69,8 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
     try:
         result = ydl.extractMetaData(link, name, True)
     except Exception as e:
-        return sendMessage(str(e), bot, update)
+        msg = str(e).replace('<', ' ').replace('>', ' ')
+        return sendMessage(tag + " " + msg, bot, update)
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]+ba/b"

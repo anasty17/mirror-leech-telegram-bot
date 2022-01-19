@@ -10,6 +10,8 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, se
 from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.ext_utils.fs_utils import get_base_name
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 class MegaAppListener(MegaListener):
@@ -157,11 +159,15 @@ def add_mega_download(mega_link: str, path: str, listener):
         mname = node.getName()
         if listener.isZip:
             mname = mname + ".zip"
-        if not listener.extract:
-            smsg, button = GoogleDriveHelper().drive_list(mname, True)
-            if smsg:
-                msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
-                return sendMarkup(msg1, listener.bot, listener.update, button)
+        elif listener.extract:
+            try:
+                mname = get_base_name(mname)
+            except NotSupportedExtractionArchive:
+                return sendMessage("Not any valid archive.", listener.bot, listener.update)
+        smsg, button = GoogleDriveHelper().drive_list(mname, True)
+        if smsg:
+            msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
+            return sendMarkup(msg1, listener.bot, listener.update, button)
     limit = None
     if ZIP_UNZIP_LIMIT is not None and (listener.isZip or listener.extract):
         msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
