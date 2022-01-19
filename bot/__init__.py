@@ -3,7 +3,7 @@ import socket
 import faulthandler
 
 from telegram.ext import Updater as tgUpdater
-from qbittorrentapi import TorrentsAPIMixIn, Client as qbClient
+from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from os import remove as osremove, path as ospath, environ
 from requests import get as rget
@@ -86,7 +86,7 @@ aria2 = ariaAPI(
     )
 )
 
-def get_client() -> TorrentsAPIMixIn:
+def get_client():
     return qbClient(host="localhost", port=8090)
 
 """
@@ -506,13 +506,6 @@ try:
     if len(SEARCH_PLUGINS) == 0:
         raise KeyError
     SEARCH_PLUGINS = jsnloads(SEARCH_PLUGINS)
-    qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
-    if qb_plugins:
-        for plugin in qb_plugins:
-            p = plugin['name']
-            qbclient.search_uninstall_plugin(names=p)
-    qbclient.search_install_plugin(SEARCH_PLUGINS)
 except KeyError:
     SEARCH_PLUGINS = None
 
