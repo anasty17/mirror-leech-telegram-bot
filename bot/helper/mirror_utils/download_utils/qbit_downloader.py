@@ -17,7 +17,6 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, de
 from bot.helper.ext_utils.bot_utils import MirrorStatus, getDownloadByGid, get_readable_file_size, get_readable_time
 from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
 from bot.helper.telegram_helper import button_build
-from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 LOGGER = logging.getLogger(__name__)
 
@@ -144,15 +143,15 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
                     elif listener.extract:
                         try:
                            qbname = get_base_name(qbname)
-                        except NotSupportedExtractionArchive:
-                            _onDownloadError("Not any valid archive.", client, ext_hash, listener)
+                        except:
+                            qbname = None
+                    if qbname is not None:
+                        qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
+                        if qbmsg:
+                            msg = "File/Folder is already available in Drive."
+                            _onDownloadError(msg, client, ext_hash, listener)
+                            sendMarkup("Here are the search results:", listener.bot, listener.update, button)
                             break
-                    qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
-                    if qbmsg:
-                        msg = "File/Folder is already available in Drive."
-                        _onDownloadError(msg, client, ext_hash, listener)
-                        sendMarkup("Here are the search results:", listener.bot, listener.update, button)
-                        break
                     dupChecked = True
                 if not sizeChecked:
                     limit = None

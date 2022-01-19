@@ -7,7 +7,6 @@ from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thre
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage
 from bot.helper.ext_utils.fs_utils import get_base_name
-from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 @new_thread
@@ -25,14 +24,14 @@ def __onDownloadStarted(api, gid):
                 elif dl.getListener().extract:
                     try:
                         sname = get_base_name(sname)
-                    except NotSupportedExtractionArchive:
-                        dl.getListener().onDownloadError("Not any valid archive.")
-                        return api.remove([download], force=True, files=True)
-                smsg, button = GoogleDriveHelper().drive_list(sname, True)
-                if smsg:
-                    dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
-                    api.remove([download], force=True, files=True)
-                    return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
+                    except:
+                        sname = None
+                if sname is not None:
+                    smsg, button = GoogleDriveHelper().drive_list(sname, True)
+                    if smsg:
+                        dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
+                        api.remove([download], force=True, files=True)
+                        return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().update, button)
             if dl is not None and (ZIP_UNZIP_LIMIT is not None or TORRENT_DIRECT_LIMIT is not None):
                 sleep(1)
                 limit = None
