@@ -186,7 +186,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, meta_time, path):
             elif tor_info.state == "error":
                 _onDownloadError("No enough space for this torrent on device", client, ext_hash, listener)
                 break
-            elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "forcedUP"] and not uploaded:
+            elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "pausedUP"] and not uploaded:
                 LOGGER.info(f"onQbDownloadComplete: {ext_hash}")
                 uploaded = True
                 if not QB_SEED:
