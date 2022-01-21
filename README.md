@@ -9,7 +9,3 @@
 ### • [Deploy Guide](https://github.com/anasty17/mirror-leech-telegram-bot/wiki/Deploy-Guide)
 
 ### • [Extras](https://github.com/anasty17/mirror-leech-telegram-bot/wiki/Extras)
-
-## 🔰 Credits:
-
-[Anas](https://github.com/anasty17), [Shivam Jha (lzzy)](https://github.com/lzzy12), [JaskaranSM (Zero Cool)](https://github.com/jaskaranSM), [Sreeraj V R](https://github.com/SVR666) and [many more](https://github.com/anasty17/mirror-leech-telegram-bot/graphs/contributors).
