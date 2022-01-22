@@ -10,6 +10,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, se
 from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.ext_utils.fs_utils import get_base_name
 
 
 class MegaAppListener(MegaListener):
@@ -157,7 +158,12 @@ def add_mega_download(mega_link: str, path: str, listener):
         mname = node.getName()
         if listener.isZip:
             mname = mname + ".zip"
-        if not listener.extract:
+        elif listener.extract:
+            try:
+                mname = get_base_name(mname)
+            except:
+                mname = None
+        if mname is not None:
             smsg, button = GoogleDriveHelper().drive_list(mname, True)
             if smsg:
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"

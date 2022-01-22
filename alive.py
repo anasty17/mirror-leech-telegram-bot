@@ -7,6 +7,7 @@ BASE_URL = environ.get('BASE_URL_OF_BOT', None)
 try:
     if len(BASE_URL) == 0:
         raise TypeError
+    BASE_URL = BASE_URL.rstrip("/")
 except TypeError:
     BASE_URL = None
 PORT = environ.get('PORT', None)

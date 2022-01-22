@@ -226,6 +226,7 @@ input[type="submit"]:hover, input[type="submit"]:focus{
 
     <script>
       $(document).ready(function () {
+        docready();
         var tags = $("li").filter(function () {
           return $(this).find("ul").length !== 0;
         });
@@ -323,52 +324,50 @@ $('input[type="checkbox"]').change(function(e) {
 });
 </script>
 <script>
-$(document).ready(function () {
+    function docready () {
+        checked_size();
+        checkingfiles();
+        var total_files = $("label[for^='filenode_']").length;
+        $("#total_files").text(total_files);
+        var total_size = 0;
+        var ffilenode = $("label[for^='filenode_']");
+        ffilenode.each(function () {
+            var size = parseFloat($(this).data("size"));
+            total_size += size;
+            $(this).append(" - " + humanFileSize(size));
+        });
+        $("#total_size").text(humanFileSize(total_size));
+    };
+    function checked_size() {
+        var checked_size = 0;
+        var checkedboxes = $("input[name^='filenode_']:checked");
+        checkedboxes.each(function () {
+            var size = parseFloat($(this).data("size"));
+            checked_size += size;
+        });
+        $("#checked_size").text(humanFileSize(checked_size));
+    }
     function checkingfiles() {
-        var total_files = $("input[name^='filenode_']").length;
-        $("#total_files").text(total_files / 2);
         var checked_files = $("input[name^='filenode_']:checked").length;
         $("#checked_files").text(checked_files);
-        $("input[name^='filenode_']").change(function () {
-            checked_size();
-            var checked_files = $("input[name^='filenode_']:checked").length;
-            $("#checked_files").text(checked_files);
-        });
     }
-    checked_size();
-    checkingfiles();
     $("input[name^='foldernode_']").change(function () {
         checkingfiles();
         checked_size();
     });
-});
-function humanFileSize(size) {
-    var i = -1;
-    var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
-    do {
-        size = size / 1024;
-        i++;
-    } while (size > 1024);
-    return Math.max(size, 0).toFixed(1) + byteUnits[i];
-}
-$(document).ready(function () {
-    var total_size = 0;
-    $(".size").each(function () {
-        var size = parseFloat($(this).text());
-        total_size += size;
-        $(this).parent().append("<i class='hsize'>" + humanFileSize(size) + "</i>");
-        $(this).text(size).hide();
+    $("input[name^='filenode_']").change(function () {
+        checkingfiles();
+        checked_size();
     });
-    $("#total_size").text(humanFileSize(total_size));
-});
-function checked_size() {
-    var checked_size = 0;
-    $("input[name^='filenode_']:checked").each(function () {
-        var size = parseFloat($(this).parent().find(".size").text());
-        checked_size += size;
-    });
-    $("#checked_size").text(humanFileSize(checked_size));
-}
+    function humanFileSize(size) {
+        var i = -1;
+        var byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+        do {
+            size = size / 1024;
+            i++;
+        } while (size > 1024);
+        return Math.max(size, 0).toFixed(1) + byteUnits[i];
+    }
 </script>
 </body>
 </html>

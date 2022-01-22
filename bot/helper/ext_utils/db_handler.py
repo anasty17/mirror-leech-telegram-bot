@@ -1,5 +1,5 @@
-import os
-import psycopg2
+from os import path as ospath, makedirs
+from psycopg2 import connect, DatabaseError
 
 from bot import DB_URI, AUTHORIZED_CHATS, SUDO_USERS, AS_DOC_USERS, AS_MEDIA_USERS, rss_dict, LOGGER
 
@@ -10,9 +10,9 @@ class DbManger:
 
     def connect(self):
         try:
-            self.conn = psycopg2.connect(DB_URI)
+            self.conn = connect(DB_URI)
             self.cur = self.conn.cursor()
-        except psycopg2.DatabaseError as error:
+        except DatabaseError as error:
             LOGGER.error(f"Error in DB connection: {error}")
             self.err = True
 
@@ -61,9 +61,9 @@ class DbManger:
                 elif row[4]:
                     AS_DOC_USERS.add(row[0])
                 path = f"Thumbnails/{row[0]}.jpg"
-                if row[5] is not None and not os.path.exists(path):
-                    if not os.path.exists('Thumbnails'):
-                        os.makedirs('Thumbnails')
+                if row[5] is not None and not ospath.exists(path):
+                    if not ospath.exists('Thumbnails'):
+                        makedirs('Thumbnails')
                     with open(path, 'wb+') as f:
                         f.write(row[5])
                         f.close()

@@ -1,5 +1,4 @@
 import itertools
-import qbittorrentapi as qba
 
 from requests import get as rget
 from time import sleep
@@ -9,7 +8,7 @@ from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS
+from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -17,7 +16,15 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.telegram_helper import button_build
 
-PLUGINS = []
+if SEARCH_PLUGINS is not None:
+    PLUGINS = []
+    qbclient = get_client()
+    qb_plugins = qbclient.search_plugins()
+    if qb_plugins:
+        for plugin in qb_plugins:
+            qbclient.search_uninstall_plugin(names=plugin['name'])
+    qbclient.search_install_plugin(SEARCH_PLUGINS)
+    qbclient.auth_log_out()
 
 SITES = {
     "1337x": "1337x",
@@ -32,14 +39,16 @@ SITES = {
     "zooqle": "Zooqle",
     "kickass": "KickAss",
     "bitsearch": "Bitsearch",
-    "glodls":"Glodls",
+    "glodls": "Glodls",
+    "magnetdl": "MagnetDL",
+    "limetorrent": "LimeTorrent",
+    "torrentfunk": "TorrentFunk",
+    "torrentproject": "TorrentProject",
     "all": "All"
 }
 
 SEARCH_LIMIT = 200
 
-def _srch_client() -> qba.SearchAPIMixIn:
-    return qba.Client(host="localhost", port=8090)
 
 def torser(update, context):
     user_id = update.message.from_user.id
@@ -110,7 +119,7 @@ def _search(key, site, message, tool):
         except Exception as e:
             editMessage(str(e), message)
     else:
-        client = _srch_client()
+        client = get_client()
         search = client.search_start(pattern=str(key), plugins=str(site), category='all')
         search_id = search.id
         while True:
@@ -145,8 +154,7 @@ def _getResult(search_results, key, message, tool):
                     for subres in result['Files']:
                         msg += f"<b>Quality: </b>{subres['Quality']} | <b>Size: </b>{subres['Size']}<br>"
                         try:
-                            msg += f"<b>Share link to</b> <a href='http://t.me/share/url?url={subres['Torrent']}'>Telegram</a><br>"
-                            msg += f"<b>Link: </b><code>{subres['Torrent']}</code><br>"
+                            msg += f"<a href='{subres['Torrent']}'>Direct Link</a><br>"
                         except KeyError:
                             msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={subres['Magnet']}'>Telegram</a><br>"
                 else:
@@ -156,6 +164,10 @@ def _getResult(search_results, key, message, tool):
                 pass
             try:
                 msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(result['Magnet'])}'>Telegram</a><br><br>"
+            except KeyError:
+                pass
+            try:
+                msg += f"<a href='{result['Torrent']}'>Direct Link</a><br><br>"
             except KeyError:
                 msg += "<br>"
         else:
@@ -222,10 +234,11 @@ def _api_buttons(user_id):
 def _plugin_buttons(user_id):
     buttons = button_build.ButtonMaker()
     if not PLUGINS:
-        client = _srch_client()
-        sites = client.search_plugins()
-        for name in sites:
+        qbclient = get_client()
+        pl = qbclient.search_plugins()
+        for name in pl:
             PLUGINS.append(name['name'])
+        qbclient.auth_log_out()
     for siteName in PLUGINS:
         buttons.sbutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.sbutton('All', f"torser {user_id} all plugin")
