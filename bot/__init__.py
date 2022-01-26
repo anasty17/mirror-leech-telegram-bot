@@ -64,7 +64,7 @@ srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 a2c = Popen(["./aria.sh"], shell=True)
-sleep(0.5)
+sleep(1)
 
 Interval = []
 DRIVES_NAMES = []
