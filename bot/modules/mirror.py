@@ -443,10 +443,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
-        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
+        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, qbitsel)).start()
 
     else:
-        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
+        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
 
 def mirror(update, context):
     _mirror(context.bot, update)
