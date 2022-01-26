@@ -63,7 +63,7 @@ if not ospath.exists('.netrc'):
 srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
-srun(["./aria.sh"], shell=True)
+a2c = Popen(["./aria.sh"], shell=True)
 sleep(0.5)
 
 Interval = []
@@ -302,6 +302,14 @@ try:
         RSS_DELAY = int(RSS_DELAY)
 except KeyError:
     RSS_DELAY = 900
+try:
+    QB_TIMEOUT = getConfig('QB_TIMEOUT')
+    if len(QB_TIMEOUT) == 0:
+        raise KeyError
+    else:
+        QB_TIMEOUT = int(QB_TIMEOUT)
+except KeyError:
+    QB_TIMEOUT = None
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
