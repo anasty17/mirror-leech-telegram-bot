@@ -32,6 +32,12 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Many bugs have been fixed
 
 ## From Other Repositories
+- Create splitted RAR archives
+  - use `/zipmirror@yourbotname <filesizeinMB>`
+  - for example if you want to split a Google Drive folder to 500MB parts then first send the folder link in chat then reply with `/zipmirror@yourbotname 512`
+  - Works with Telegram files too
+  - to use it with /qbzipmirror command use `/qbzipmirror@yourbotname s <filesizeinMB>` for use with file selection or `/qbzipmirror@yourbotname <filesizeinMB>` without file selection.
+  - Always put `<filesizeinMB>` at the end
 - Mirror direct download links, Torrent, and Telegram files to Google Drive
 - Mirror Mega.nz links to Google Drive (If you have non-premium Mega account, it will limit download to 5GB per 6 hours)
 - Copy files from someone's Drive to your Drive (Using Autorclone)
