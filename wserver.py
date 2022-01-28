@@ -248,37 +248,37 @@ input[type="submit"]:hover, input[type="submit"]:focus{
       });
 
       if(document.getElementsByTagName("ul").length >= 10){
-      var labels = document.querySelectorAll("label");
-      //Shorting the file/folder names
-      labels.forEach(function (label) {
-        if (label.innerText.toString().split(" ").length >= 6) {
-          let FirstPart = label.innerText
-            .toString()
-            .split(" ")
-            .slice(0, 3)
-            .join(" ");
-          let SecondPart = label.innerText
-            .toString()
-            .split(" ")
-            .splice(-3)
-            .join(" ");
-          label.innerText = `${FirstPart}... ${SecondPart}`;
-        }
-        if (label.innerText.toString().split(".").length >= 6) {
-          let first = label.innerText
-            .toString()
-            .split(".")
-            .slice(0, 3)
-            .join(" ");
-          let second = label.innerText
-            .toString()
-            .split(".")
-            .splice(-3)
-            .join(".");
-          label.innerText = `${first}... ${second}`;
-        }
-      });
-     }
+        var labels = document.querySelectorAll("label");
+        //Shorting the file/folder names
+        labels.forEach(function (label) {
+            if (label.innerText.toString().split(" ").length >= 9) {
+                let FirstPart = label.innerText
+                    .toString()
+                    .split(" ")
+                    .slice(0, 5)
+                    .join(" ");
+                let SecondPart = label.innerText
+                    .toString()
+                    .split(" ")
+                    .splice(-5)
+                    .join(" ");
+                label.innerText = `${FirstPart}... ${SecondPart}`;
+            }
+            if (label.innerText.toString().split(".").length >= 9) {
+                let first = label.innerText
+                    .toString()
+                    .split(".")
+                    .slice(0, 5)
+                    .join(" ");
+                let second = label.innerText
+                    .toString()
+                    .split(".")
+                    .splice(-5)
+                    .join(".");
+                label.innerText = `${first}... ${second}`;
+            }
+        });
+    }
     </script>
 
 <script>
