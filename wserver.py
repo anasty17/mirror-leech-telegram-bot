@@ -325,6 +325,10 @@ $('input[type="checkbox"]').change(function(e) {
 </script>
 <script>
     function docready () {
+        $("label[for^='filenode_']").css("cursor", "pointer");
+        $("label[for^='filenode_']").click(function () {
+            $(this).prev().click();
+        });
         checked_size();
         checkingfiles();
         var total_files = $("label[for^='filenode_']").length;
