@@ -164,7 +164,7 @@ def rss_monitor(context):
                     if data[1] == rss_d.entries[feed_count]['link'] or data[2] == rss_d.entries[feed_count]['title']:
                         break
                 except IndexError:
-                    LOGGER.info(f"Reached Max index no. {feed_count} for this feed: {name}. \
+                    LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. \
                           Maybe you need to add less RSS_DELAY to not miss some torrents")
                     break
                 parse = True
