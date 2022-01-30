@@ -1,5 +1,3 @@
-import random
-import string
 import logging
 
 from os import remove as osremove, path as ospath, listdir
@@ -62,11 +60,11 @@ def add_qb_torrent(link, path, listener, select):
             return
         tor_info = tor_info[0]
         ext_hash = tor_info.hash
-        gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=14))
+        gid = ext_hash[:12]
         with download_dict_lock:
-            download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
+            download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        Thread(target=_qb_listener, args=(listener, client, gid, ext_hash, select, path)).start()
+        Thread(target=_qb_listener, args=(listener, client, ext_hash, select, path)).start()
         if BASE_URL is not None and select:
             if not is_file:
                 metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
@@ -109,7 +107,7 @@ def add_qb_torrent(link, path, listener, select):
         sendMessage(str(e), listener.bot, listener.update)
         client.auth_log_out()
 
-def _qb_listener(listener, client, gid, ext_hash, select, path):
+def _qb_listener(listener, client, ext_hash, select, path):
     stalled_time = time()
     uploaded = False
     sizeChecked = False
@@ -186,7 +184,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, path):
             elif tor_info.state == "error":
                 _onDownloadError("No enough space for this torrent on device", client, ext_hash, listener)
                 break
-            elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "pausedUP"] and not uploaded:
+            elif tor_info.state.lower().endswith("up") and not uploaded:
                 LOGGER.info(f"onQbDownloadComplete: {ext_hash}")
                 uploaded = True
                 if not QB_SEED:
@@ -200,7 +198,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, path):
                             client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
                             break
-                        download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
+                        download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
