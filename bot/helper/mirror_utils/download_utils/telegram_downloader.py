@@ -1,4 +1,5 @@
 import logging
+import random
 
 from time import time
 from threading import RLock, Lock, Thread
@@ -38,8 +39,9 @@ class TelegramDownloadHelper:
             self.name = name
             self.size = size
             self.__id = file_id
+        gid = ''.join(random.choices(file_id, k=12))
         with download_dict_lock:
-            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, file_id[:14])
+            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
         sendStatusMessage(self.__listener.update, self.__listener.bot)
 
     def __onDownloadProgress(self, current, total):
