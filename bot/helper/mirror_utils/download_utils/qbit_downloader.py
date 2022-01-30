@@ -96,10 +96,10 @@ def add_qb_torrent(link, path, listener, select):
             buttons = button_build.ButtonMaker()
             if WEB_PINCODE:
                 buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{ext_hash}")
-                buttons.sbutton("Pincode", f"pin {gid} {pincode}")
+                buttons.sbutton("Pincode", f"qbs pin {gid} {pincode}")
             else:
                 buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{ext_hash}?pin_code={pincode}")
-            buttons.sbutton("Done Selecting", f"done {gid} {ext_hash}")
+            buttons.sbutton("Done Selecting", f"qbs done {gid} {ext_hash}")
             QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
             sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
@@ -221,17 +221,17 @@ def get_confirm(update, context):
     user_id = query.from_user.id
     data = query.data
     data = data.split(" ")
-    qbdl = getDownloadByGid(data[1])
+    qbdl = getDownloadByGid(data[2])
     if qbdl is None:
         query.answer(text="This task has been cancelled!", show_alert=True)
         query.message.delete()
     elif user_id != qbdl.listener().message.from_user.id:
         query.answer(text="Don't waste your time!", show_alert=True)
-    elif data[0] == "pin":
-        query.answer(text=data[2], show_alert=True)
-    elif data[0] == "done":
+    elif data[1] == "pin":
+        query.answer(text=data[3], show_alert=True)
+    elif data[1] == "done":
         query.answer()
-        qbdl.client().torrents_resume(torrent_hashes=data[2])
+        qbdl.client().torrents_resume(torrent_hashes=data[3])
         sendStatusMessage(qbdl.listener().update, qbdl.listener().bot)
         query.message.delete()
 
@@ -253,7 +253,5 @@ def _onDownloadError(err: str, client, ext_hash, listener):
     client.auth_log_out()
 
 
-pin_handler = CallbackQueryHandler(get_confirm, pattern="pin", run_async=True)
-done_handler = CallbackQueryHandler(get_confirm, pattern="done", run_async=True)
-dispatcher.add_handler(pin_handler)
-dispatcher.add_handler(done_handler)
+qbs_handler = CallbackQueryHandler(get_confirm, pattern="qbs", run_async=True)
+dispatcher.add_handler(qbs_handler)
