@@ -127,13 +127,17 @@ class YoutubeDLHelper:
                     pass
             self.is_playlist = True
             if name == "":
-                self.name = str(realName).split(f" [{result['id']}]")[0]
+                self.name = str(realName).split(f" [{result['id'].replace('*', '_')}]")[0]
             else:
                 self.name = name
         else:
             ext = realName.split('.')[-1]
             if name == "":
-                self.name = str(realName).split(f" [{result['id']}]")[0] + '.' + ext
+                newname = str(realName).split(f" [{result['id'].replace('*', '_')}]")
+                if len(newname) > 1:
+                    self.name = newname[0] + '.' + ext
+                else:
+                    self.name = newname[0]
             else:
                 self.name = f"{name}.{ext}"
 

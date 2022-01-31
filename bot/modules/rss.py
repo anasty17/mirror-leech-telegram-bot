@@ -36,7 +36,7 @@ def rss_get(update, context):
                         link = rss_d.entries[item_num]['links'][1]['href']
                     except IndexError:
                         link = rss_d.entries[item_num]['link']
-                    item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title']}</code>\n"
+                    item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
                     item_info += f"<b>Link: </b><code>{link}</code>\n\n"
                 editMessage(item_info, msg)
             except IndexError as e:
@@ -77,7 +77,7 @@ def rss_sub(update, context):
             sub_msg = "<b>Subscribed!</b>"
             sub_msg += f"\n\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
             sub_msg += f"\n\n<b>latest record for </b>{rss_d.feed.title}:"
-            sub_msg += f"\n\n<b>Name: </b><code>{rss_d.entries[0]['title']}</code>"
+            sub_msg += f"\n\n<b>Name: </b><code>{rss_d.entries[0]['title'].replace('>', '').replace('<', '')}</code>"
             try:
                 link = rss_d.entries[0]['links'][1]['href']
             except IndexError:
@@ -182,7 +182,7 @@ def rss_monitor(context):
                 if RSS_COMMAND is not None:
                     feed_msg = f"{RSS_COMMAND} {url}"
                 else:
-                    feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title']}</code>\n\n"
+                    feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"
                 sendRss(feed_msg, context.bot)
                 feed_count += 1
