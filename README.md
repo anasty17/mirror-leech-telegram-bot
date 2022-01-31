@@ -2,7 +2,7 @@
 
 **Important Notes**
 1. This Branch only for deploying, generate all your private files from master branch.
-2. If you want to edit aria.sh or qBittorrent.conf or any other file in bot folder you must add `UPSTREAM_REPO` of your edited public or private fork else you will get official code all your will not take effect.
+2. If you want to edit aria.sh or qBittorrent.conf or any other file in bot folder you must add `UPSTREAM_REPO` of your edited public or private fork else you will get official code and all your changes will not take effect.
 3. Use this branch to avoid suspension `OR` deploy master branch twice with same app name (check helper.sh for help). To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository or fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
 4. Don't delete .gitignore file.
 5. Read all variables definitions from master branch readme.
