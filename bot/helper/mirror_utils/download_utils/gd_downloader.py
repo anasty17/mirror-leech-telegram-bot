@@ -7,7 +7,6 @@ from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadSt
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendMarkup
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.ext_utils.fs_utils import get_base_name
-from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 def add_gd_download(link: str, listener, gdtot):
@@ -22,12 +21,13 @@ def add_gd_download(link: str, listener, gdtot):
         elif listener.extract:
             try:
                 gname = get_base_name(name)
-            except NotSupportedExtractionArchive:
-                return sendMessage("Not any valid archive.", listener.bot, listener.update)
-        gmsg, button = GoogleDriveHelper().drive_list(gname, True)
-        if gmsg:
-            msg = "File/Folder is already available in Drive.\nHere are the search results:"
-            return sendMarkup(msg, listener.bot, listener.update, button)
+            except:
+                gname = None
+        if gname is not None:
+            gmsg, button = GoogleDriveHelper().drive_list(gname, True)
+            if gmsg:
+                msg = "File/Folder is already available in Drive.\nHere are the search results:"
+                return sendMarkup(msg, listener.bot, listener.update, button)
     if ZIP_UNZIP_LIMIT is not None:
         LOGGER.info('Checking File/Folder Size...')
         if size > ZIP_UNZIP_LIMIT * 1024**3:

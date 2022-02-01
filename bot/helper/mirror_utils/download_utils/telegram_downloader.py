@@ -1,4 +1,5 @@
 import logging
+import random
 
 from time import time
 from threading import RLock, Lock, Thread
@@ -21,7 +22,7 @@ class TelegramDownloadHelper:
         self.downloaded_bytes = 0
         self.__start_time = time()
         self.__listener = listener
-        self.__gid = ""
+        self.__id = ""
         self.__user_bot = app
         self.__is_cancelled = False
         self.__resource_lock = RLock()
@@ -37,9 +38,10 @@ class TelegramDownloadHelper:
         with self.__resource_lock:
             self.name = name
             self.size = size
-            self.__gid = file_id
+            self.__id = file_id
+        gid = ''.join(random.choices(file_id, k=12))
         with download_dict_lock:
-            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, file_id)
+            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
         sendStatusMessage(self.__listener.update, self.__listener.bot)
 
     def __onDownloadProgress(self, current, total):
@@ -57,14 +59,14 @@ class TelegramDownloadHelper:
     def __onDownloadError(self, error):
         with global_lock:
             try:
-                GLOBAL_GID.remove(self.__gid)
+                GLOBAL_GID.remove(self.__id)
             except KeyError:
                 pass
         self.__listener.onDownloadError(error)
 
     def __onDownloadComplete(self):
         with global_lock:
-            GLOBAL_GID.remove(self.__gid)
+            GLOBAL_GID.remove(self.__id)
         self.__listener.onDownloadComplete()
 
     def __download(self, message, path):
@@ -115,5 +117,5 @@ class TelegramDownloadHelper:
             self.__onDownloadError('No document in the replied message')
 
     def cancel_download(self):
-        LOGGER.info(f'Cancelling download on user request: {self.__gid}')
+        LOGGER.info(f'Cancelling download on user request: {self.__id}')
         self.__is_cancelled = True

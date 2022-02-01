@@ -11,14 +11,14 @@ def get_download(client, hash_):
 
 class QbDownloadStatus:
 
-    def __init__(self, listener, client, gid, qbhash, select):
-        self.__gid = gid
-        self.__hash = qbhash
+    def __init__(self, listener, client, hash_, select):
+        self.__gid = hash_[:12]
+        self.__hash = hash_
         self.__select = select
         self.__client = client
         self.__listener = listener
         self.__uid = listener.uid
-        self.__info = get_download(client, qbhash)
+        self.__info = get_download(client, hash_)
         self.message = listener.message
 
     def __update(self):

@@ -143,7 +143,6 @@ class MirrorListener:
             path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
         up_name = PurePath(path).name
         up_path = f'{DOWNLOAD_DIR}{self.uid}/{up_name}'
-        size = get_path_size(f'{DOWNLOAD_DIR}{self.uid}')
         if self.isLeech and not self.isZip:
             checked = False
             for dirpath, subdir, files in walk(f'{DOWNLOAD_DIR}{self.uid}', topdown=False):
@@ -159,6 +158,7 @@ class MirrorListener:
                         fssplit(f_path, f_size, file_, dirpath, TG_SPLIT_SIZE)
                         osremove(f_path)
         if self.isLeech:
+            size = get_path_size(f'{DOWNLOAD_DIR}{self.uid}')
             LOGGER.info(f"Leech Name: {up_name}")
             tg = TgUploader(up_name, self)
             tg_upload_status = TgUploadStatus(tg, size, gid, self)
@@ -167,6 +167,7 @@ class MirrorListener:
             update_all_messages()
             tg.upload()
         else:
+            size = get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
             drive = GoogleDriveHelper(up_name, self)
             upload_status = UploadStatus(drive, size, gid, self)
@@ -211,11 +212,10 @@ class MirrorListener:
                     link = f"https://t.me/c/{chat_id}/{msg_id}"
                     fmsg += f"{index}. <a href='{link}'>{item}</a>\n"
                     if len(fmsg.encode('utf-8') + msg.encode('utf-8')) > 4000:
-                        sleep(1.5)
                         sendMessage(msg + fmsg, self.bot, self.update)
+                        sleep(1.5)
                         fmsg = ''
                 if fmsg != '':
-                    sleep(1.5)
                     sendMessage(msg + fmsg, self.bot, self.update)
             try:
                 clean_download(f'{DOWNLOAD_DIR}{self.uid}')
@@ -260,12 +260,12 @@ class MirrorListener:
             if BUTTON_SIX_NAME is not None and BUTTON_SIX_URL is not None:
                 buttons.buildbutton(f"{BUTTON_SIX_NAME}", f"{BUTTON_SIX_URL}")
             if self.isQbit and QB_SEED and not self.extract:
-               if self.isZip:
-                   try:
-                       osremove(f'{DOWNLOAD_DIR}{self.uid}/{name}')
-                   except:
-                       pass
-               return sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
+                if self.isZip:
+                    try:
+                        osremove(f'{DOWNLOAD_DIR}{self.uid}/{name}')
+                    except:
+                        pass
+                return sendMarkup(msg, self.bot, self.update, InlineKeyboardMarkup(buttons.build_menu(2)))
             else:
                 try:
                     clean_download(f'{DOWNLOAD_DIR}{self.uid}')
@@ -335,16 +335,18 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             if i is not None:
                 file = i
                 break
+
+        if not reply_to.from_user.is_bot:
+            if reply_to.from_user.username:
+                tag = f"@{reply_to.from_user.username}"
+            else:
+                tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
+
         if (
             not is_url(link)
             and not is_magnet(link)
             or len(link) == 0
         ):
-            if not reply_to.from_user.is_bot:
-                if reply_to.from_user.username:
-                    tag = f"@{reply_to.from_user.username}"
-                else:
-                    tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
             if file is None:
                 reply_text = reply_to.text
@@ -442,10 +444,10 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
 
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
-        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, qbitsel)).start()
+        Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, qbitsel)).start()
 
     else:
-        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
+        Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
 
 def mirror(update, context):
     _mirror(context.bot, update)
