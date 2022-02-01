@@ -194,6 +194,23 @@ input[type="submit"]:hover, input[type="submit"]:focus{
     display: none;
 }
 
+#sticks {
+  margin: 0vh 1vw;
+  margin-bottom: 1vh;
+  padding: 1vh 3vw;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  background-color: #161b22;
+  align-items: center;
+}
+
+#sticks.stick {
+  position: sticky;
+  top: 0;
+  z-index: 10000;
+}
 </style>
 </head>
 <body>
@@ -213,11 +230,11 @@ input[type="submit"]:hover, input[type="submit"]:focus{
         <a href="https://t.me/anas_tayyar"><i class="fab fa-telegram"></i></a>
       </div>
     </header>
-    <section>
-      <div class="intro">
-        <h4>Selected files size: <b id="checked_size">0</b> of <b id="total_size">0</b></h4>
+    <div id="sticks">
         <h4>Selected files: <b id="checked_files">0</b> of <b id="total_files">0</b></h4>
-      </div>
+        <h4>Selected files size: <b id="checked_size">0</b> of <b id="total_size">0</b></h4>
+    </div>
+      <section>
       <form action="{form_url}" method="POST">
        {My_content}
        <input type="submit" name="Select these files ;)">
@@ -372,6 +389,19 @@ $('input[type="checkbox"]').change(function(e) {
         } while (size > 1024);
         return Math.max(size, 0).toFixed(1) + byteUnits[i];
     }
+    function sticking() {
+        var window_top = $(window).scrollTop();
+        var div_top = $('.brand').offset().top;
+        if (window_top > div_top) {
+            $('#sticks').addClass('stick');
+        } else {
+            $('#sticks').removeClass('stick');
+        }
+    }
+    $(function () {
+        $(window).scroll(sticking);
+        sticking();
+    });
 </script>
 </body>
 </html>
