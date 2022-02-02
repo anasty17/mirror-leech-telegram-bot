@@ -415,12 +415,10 @@ try:
 except KeyError:
     CUSTOM_FILENAME = None
 try:
-    PHPSESSID = getConfig('PHPSESSID')
     CRYPT = getConfig('CRYPT')
-    if len(PHPSESSID) == 0 or len(CRYPT) == 0:
+    if len(CRYPT) == 0:
         raise KeyError
 except KeyError:
-    PHPSESSID = None
     CRYPT = None
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
