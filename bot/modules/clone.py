@@ -1,6 +1,3 @@
-import random
-import string
-
 from telegram.ext import CommandHandler
 
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -17,6 +14,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 def cloneNode(update, context):
     args = update.message.text.split(" ", maxsplit=1)
     reply_to = update.message.reply_to_message
+    link = ''
     if len(args) > 1:
         link = args[1]
         if update.message.from_user.username:
@@ -24,15 +22,13 @@ def cloneNode(update, context):
         else:
             tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     elif reply_to is not None:
-        link = reply_to.text
+        if len(link) == 0:
+            link = reply_to.text
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-    else:
-        link = ''
-    gdtot_link = is_gdtot_link(link)
-    if gdtot_link:
+    if is_gdtot_link(link):
         try:
             msg = sendMessage(f"Processing: <code>{link}</code>", context.bot, update)
             link = gdtot(link)
@@ -50,22 +46,19 @@ def cloneNode(update, context):
             smsg, button = gd.drive_list(name, True, True)
             if smsg:
                 msg3 = "File/Folder is already available in Drive.\nHere are the search results:"
-                sendMarkup(msg3, context.bot, update, button)
-                if gdtot_link:
-                    gd.deletefile(link)
-                return
+                return sendMarkup(msg3, context.bot, update, button)
         if CLONE_LIMIT is not None:
             LOGGER.info('Checking File/Folder Size...')
             if size > CLONE_LIMIT * 1024**3:
                 msg2 = f'Failed, Clone limit is {CLONE_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 return sendMessage(msg2, context.bot, update)
-        if files <= 10:
+        if files <= 20:
             msg = sendMessage(f"Cloning: <code>{link}</code>", context.bot, update)
             result, button = gd.clone(link)
             deleteMessage(context.bot, msg)
         else:
             drive = GoogleDriveHelper(name)
-            gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
+            gid = link.split('id=')[-1][:12]
             clone_status = CloneStatus(drive, size, update, gid)
             with download_dict_lock:
                 download_dict[update.message.message_id] = clone_status
@@ -88,8 +81,6 @@ def cloneNode(update, context):
             sendMessage(f"{tag} {result}", context.bot, update)
         else:
             sendMarkup(result + cc, context.bot, update, button)
-        if gdtot_link:
-            gd.deletefile(link)
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
 

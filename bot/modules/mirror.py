@@ -385,7 +385,6 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         return sendMessage(help_msg, bot, update)
 
     LOGGER.info(link)
-    gdtot_link = is_gdtot_link(link)
 
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
        and not ospath.exists(link) and not is_gdrive_link(link) and not link.endswith('.torrent'):
@@ -431,7 +430,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, update)
-        Thread(target=add_gd_download, args=(link, listener, gdtot_link)).start()
+        Thread(target=add_gd_download, args=(link, listener)).start()
 
     elif is_mega_link(link):
         if BLOCK_MEGA_LINKS:

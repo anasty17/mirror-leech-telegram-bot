@@ -13,6 +13,7 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 def countNode(update, context):
     args = update.message.text.split(" ", maxsplit=1)
     reply_to = update.message.reply_to_message
+    link = ''
     if len(args) > 1:
         link = args[1]
         if update.message.from_user.username:
@@ -20,13 +21,12 @@ def countNode(update, context):
         else:
             tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     elif reply_to is not None:
-        link = reply_to.text
+        if len(link) ==0:
+            link = reply_to.text
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-    else:
-        link = ''
     gdtot_link = is_gdtot_link(link)
     if gdtot_link:
         try:
