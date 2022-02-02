@@ -55,7 +55,7 @@ git push heroku heroku:master -f
 
 ### Extras
 
-- To heroku-postgresql database
+- To create heroku-postgresql database
 ```
 heroku addons:create heroku-postgresql
 ```
