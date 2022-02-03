@@ -82,7 +82,10 @@ class YoutubeDLHelper:
                     self.downloaded_bytes += chunk_size
                 else:
                     try:
-                        self.size = d['total_bytes']
+                        if d.get('total_bytes'):
+                            self.size = d['total_bytes']
+                        else:
+                            raise KeyError
                     except KeyError:
                         if d.get('total_bytes_estimate'):
                             self.size = d['total_bytes_estimate']

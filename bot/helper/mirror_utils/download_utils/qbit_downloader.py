@@ -72,18 +72,15 @@ def add_qb_torrent(link, path, listener, select):
                 while True:
                     tor_info = client.torrents_info(torrent_hashes=ext_hash)
                     if len(tor_info) == 0:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
                     try:
                         tor_info = tor_info[0]
-                        if tor_info.state in ["metaDL", "checkingResumeData"]:
-                            sleep(1)
-                        else:
+                        if tor_info.state not in ["metaDL", "checkingResumeData", "pausedDL"]:
                             deleteMessage(listener.bot, meta)
                             break
+                        sleep(1)
                     except:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
             sleep(0.5)
             client.torrents_pause(torrent_hashes=ext_hash)
             for n in str(ext_hash):

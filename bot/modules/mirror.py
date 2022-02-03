@@ -298,6 +298,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=1)
     qbitsel = False
+    is_gdtot = False
     try:
         link = message_args[1]
         if link.startswith("s ") or link == "s":
@@ -389,6 +390,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         content_type = get_content_type(link)
         if content_type is None or match(r'text/html|text/plain', content_type):
             try:
+                is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
@@ -405,8 +407,9 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 resp = requests.get(link, timeout=10)
                 if resp.status_code == 200:
                     file_name = str(time()).replace(".", "") + ".torrent"
-                    open(file_name, "wb").write(resp.content)
-                    link = f"{file_name}"
+                    with open(file_name, "wb") as t:
+                        t.write(resp.content)
+                    link = str(file_name)
                 else:
                     return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
             except Exception as e:
@@ -428,7 +431,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, update)
-        Thread(target=add_gd_download, args=(link, listener)).start()
+        Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
 
     elif is_mega_link(link):
         if BLOCK_MEGA_LINKS:
