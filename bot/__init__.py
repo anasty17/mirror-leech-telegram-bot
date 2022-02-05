@@ -333,6 +333,11 @@ except KeyError:
     BUTTON_SIX_NAME = None
     BUTTON_SIX_URL = None
 try:
+    BLOCK_HTML_FILE = getConfig('BLOCK_HTML_FILE')
+    BLOCK_HTML_FILE = BLOCK_HTML_FILE.lower() == 'true'
+except KeyError:
+    BLOCK_HTML_FILE = False
+try:
     STOP_DUPLICATE = getConfig('STOP_DUPLICATE')
     STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
 except KeyError:

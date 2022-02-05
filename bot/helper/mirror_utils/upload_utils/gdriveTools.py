@@ -7,7 +7,7 @@ from os import makedirs, path as ospath, listdir
 from urllib.parse import parse_qs, urlparse
 from requests.utils import quote as rquote
 from io import FileIO
-from re import search
+from re import search, match
 from random import randrange
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -21,7 +21,7 @@ from tenacity import *
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, USE_SERVICE_ACCOUNTS, BUTTON_FOUR_NAME, \
                 BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, BUTTON_SIX_NAME, BUTTON_SIX_URL, VIEW_LINK, \
-                DRIVES_NAMES, DRIVES_IDS, INDEX_URLS
+                DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, BLOCK_HTML_FILE
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type, get_path_size
@@ -239,6 +239,11 @@ class GoogleDriveHelper:
         try:
             if ospath.isfile(file_path):
                 mime_type = get_mime_type(file_path)
+                if BLOCK_HTML_FILE is True:
+                    if match(r'text/html|text/plain', str(mime_type)):
+                        LOGGER.info(f"Upload cancelled because: mimeType = {mime_type}")
+                        self.__listener.onUploadError("Upload cancelled because: Html or Text file are blocked!")
+                        return
                 link = self.__upload_file(file_path, file_name, mime_type, parent_id)
                 if self.is_cancelled:
                     return
