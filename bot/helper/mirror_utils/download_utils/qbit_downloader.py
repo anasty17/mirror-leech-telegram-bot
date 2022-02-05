@@ -166,7 +166,7 @@ def _qb_listener(listener, client, ext_hash, select, path):
                             break
                     sizeChecked = True
             elif tor_info.state == "stalledDL":
-                if not rechecked and 0.99989999999999999 < tor_info.progress < 1:
+                if not rechecked and 0.1 < tor_info.progress < 1:
                     msg = f"Force recheck - Name: {tor_info.name} Hash: "
                     msg += f"{ext_hash} Downloaded Bytes: {tor_info.downloaded} "
                     msg += f"Size: {tor_info.size} Total Size: {tor_info.total_size}"
