@@ -82,7 +82,10 @@ class YoutubeDLHelper:
                     self.downloaded_bytes += chunk_size
                 else:
                     try:
-                        self.size = d['total_bytes']
+                        if d.get('total_bytes'):
+                            self.size = d['total_bytes']
+                        else:
+                            raise KeyError
                     except KeyError:
                         if d.get('total_bytes_estimate'):
                             self.size = d['total_bytes_estimate']
@@ -127,13 +130,17 @@ class YoutubeDLHelper:
                     pass
             self.is_playlist = True
             if name == "":
-                self.name = str(realName).split(f" [{result['id']}]")[0]
+                self.name = str(realName).split(f" [{result['id'].replace('*', '_')}]")[0]
             else:
                 self.name = name
         else:
             ext = realName.split('.')[-1]
             if name == "":
-                self.name = str(realName).split(f" [{result['id']}]")[0] + '.' + ext
+                newname = str(realName).split(f" [{result['id'].replace('*', '_')}]")
+                if len(newname) > 1:
+                    self.name = newname[0] + '.' + ext
+                else:
+                    self.name = newname[0]
             else:
                 self.name = f"{name}.{ext}"
 

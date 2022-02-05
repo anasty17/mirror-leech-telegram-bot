@@ -1,5 +1,3 @@
-import random
-import string
 import logging
 
 from os import remove as osremove, path as ospath, listdir
@@ -62,11 +60,11 @@ def add_qb_torrent(link, path, listener, select):
             return
         tor_info = tor_info[0]
         ext_hash = tor_info.hash
-        gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=14))
+        gid = ext_hash[:12]
         with download_dict_lock:
-            download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
+            download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        Thread(target=_qb_listener, args=(listener, client, gid, ext_hash, select, path)).start()
+        Thread(target=_qb_listener, args=(listener, client, ext_hash, select, path)).start()
         if BASE_URL is not None and select:
             if not is_file:
                 metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
@@ -74,18 +72,15 @@ def add_qb_torrent(link, path, listener, select):
                 while True:
                     tor_info = client.torrents_info(torrent_hashes=ext_hash)
                     if len(tor_info) == 0:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
                     try:
                         tor_info = tor_info[0]
-                        if tor_info.state in ["metaDL", "checkingResumeData"]:
-                            sleep(1)
-                        else:
+                        if tor_info.state not in ["metaDL", "checkingResumeData", "pausedDL"]:
                             deleteMessage(listener.bot, meta)
                             break
+                        sleep(1)
                     except:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
             sleep(0.5)
             client.torrents_pause(torrent_hashes=ext_hash)
             for n in str(ext_hash):
@@ -96,10 +91,10 @@ def add_qb_torrent(link, path, listener, select):
             buttons = button_build.ButtonMaker()
             if WEB_PINCODE:
                 buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{ext_hash}")
-                buttons.sbutton("Pincode", f"pin {gid} {pincode}")
+                buttons.sbutton("Pincode", f"qbs pin {gid} {pincode}")
             else:
                 buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{ext_hash}?pin_code={pincode}")
-            buttons.sbutton("Done Selecting", f"done {gid} {ext_hash}")
+            buttons.sbutton("Done Selecting", f"qbs done {gid} {ext_hash}")
             QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
             sendMarkup(msg, listener.bot, listener.update, QBBUTTONS)
@@ -109,7 +104,7 @@ def add_qb_torrent(link, path, listener, select):
         sendMessage(str(e), listener.bot, listener.update)
         client.auth_log_out()
 
-def _qb_listener(listener, client, gid, ext_hash, select, path):
+def _qb_listener(listener, client, ext_hash, select, path):
     stalled_time = time()
     uploaded = False
     sizeChecked = False
@@ -186,7 +181,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, path):
             elif tor_info.state == "error":
                 _onDownloadError("No enough space for this torrent on device", client, ext_hash, listener)
                 break
-            elif tor_info.state in ["uploading", "queuedUP", "stalledUP", "pausedUP"] and not uploaded:
+            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and not uploaded:
                 LOGGER.info(f"onQbDownloadComplete: {ext_hash}")
                 uploaded = True
                 if not QB_SEED:
@@ -200,7 +195,7 @@ def _qb_listener(listener, client, gid, ext_hash, select, path):
                             client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
                             break
-                        download_dict[listener.uid] = QbDownloadStatus(listener, client, gid, ext_hash, select)
+                        download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
@@ -221,17 +216,17 @@ def get_confirm(update, context):
     user_id = query.from_user.id
     data = query.data
     data = data.split(" ")
-    qbdl = getDownloadByGid(data[1])
+    qbdl = getDownloadByGid(data[2])
     if qbdl is None:
         query.answer(text="This task has been cancelled!", show_alert=True)
         query.message.delete()
     elif user_id != qbdl.listener().message.from_user.id:
         query.answer(text="Don't waste your time!", show_alert=True)
-    elif data[0] == "pin":
-        query.answer(text=data[2], show_alert=True)
-    elif data[0] == "done":
+    elif data[1] == "pin":
+        query.answer(text=data[3], show_alert=True)
+    elif data[1] == "done":
         query.answer()
-        qbdl.client().torrents_resume(torrent_hashes=data[2])
+        qbdl.client().torrents_resume(torrent_hashes=data[3])
         sendStatusMessage(qbdl.listener().update, qbdl.listener().bot)
         query.message.delete()
 
@@ -253,7 +248,5 @@ def _onDownloadError(err: str, client, ext_hash, listener):
     client.auth_log_out()
 
 
-pin_handler = CallbackQueryHandler(get_confirm, pattern="pin", run_async=True)
-done_handler = CallbackQueryHandler(get_confirm, pattern="done", run_async=True)
-dispatcher.add_handler(pin_handler)
-dispatcher.add_handler(done_handler)
+qbs_handler = CallbackQueryHandler(get_confirm, pattern="qbs", run_async=True)
+dispatcher.add_handler(qbs_handler)

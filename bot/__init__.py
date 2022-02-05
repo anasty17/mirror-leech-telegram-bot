@@ -8,7 +8,7 @@ from aria2p import API as ariaAPI, Client as ariaClient
 from os import remove as osremove, path as ospath, environ
 from requests import get as rget
 from json import loads as jsnloads
-from subprocess import Popen, run as srun
+from subprocess import Popen, run as srun, check_output
 from time import sleep, time
 from threading import Thread, Lock
 from pyrogram import Client
@@ -40,7 +40,6 @@ try:
         if res.status_code == 200:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
@@ -89,14 +88,11 @@ aria2 = ariaAPI(
 def get_client():
     return qbClient(host="localhost", port=8090)
 
-"""
-trackers = subprocess.check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all | awk '$0'"], shell=True).decode('utf-8')
-
+trackers = check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all | awk '$0'"], shell=True).decode('utf-8')
 trackerslist = set(trackers.split("\n"))
 trackerslist.remove("")
 trackerslist = "\n\n".join(trackerslist)
-get_client().application.set_preferences({"add_trackers":f"{trackerslist}"})
-"""
+get_client().application.set_preferences({"add_trackers": f"{trackerslist}"})
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -110,7 +106,7 @@ status_reply_dict = {}
 # Value: An object of Status
 download_dict = {}
 # key: rss_title
-# value: [rss_feed, last_link, last_title]
+# value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
 AUTHORIZED_CHATS = set()
@@ -187,8 +183,9 @@ def aria2c_init():
         pass
 
 if not ospath.isfile(".restartmsg"):
-    Thread(target=aria2c_init).start()
     sleep(1)
+    Thread(target=aria2c_init).start()
+    sleep(1.5)
 
 try:
     DB_URI = getConfig('DATABASE_URL')
@@ -417,12 +414,10 @@ try:
 except KeyError:
     CUSTOM_FILENAME = None
 try:
-    PHPSESSID = getConfig('PHPSESSID')
     CRYPT = getConfig('CRYPT')
-    if len(PHPSESSID) == 0 or len(CRYPT) == 0:
+    if len(CRYPT) == 0:
         raise KeyError
 except KeyError:
-    PHPSESSID = None
     CRYPT = None
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
@@ -433,7 +428,6 @@ try:
         if res.status_code == 200:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
@@ -450,7 +444,6 @@ try:
             if res.status_code == 200:
                 with open('accounts.zip', 'wb+') as f:
                     f.write(res.content)
-                    f.close()
             else:
                 logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
         except Exception as e:
@@ -470,7 +463,6 @@ try:
         if res.status_code == 200:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
@@ -486,7 +478,6 @@ try:
         if res.status_code == 200:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:

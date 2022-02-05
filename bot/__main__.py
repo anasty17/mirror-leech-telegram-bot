@@ -1,5 +1,4 @@
 import signal
-import os
 
 from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun
