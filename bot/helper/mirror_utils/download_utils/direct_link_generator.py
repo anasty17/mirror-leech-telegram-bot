@@ -30,53 +30,67 @@ fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.co
 
 def direct_link_generator(link: str):
     """ direct links generator """
-    if 'youtube.com' in link or 'youtu.be' in link:
+    host = urlparse(link).netloc
+    if 'youtube.com' in host or 'youtu.be' in host:
         raise DirectDownloadLinkException(f"ERROR: Use /{BotCommands.WatchCommand} to mirror Youtube link\nUse /{BotCommands.ZipWatchCommand} to make zip of Youtube playlist")
-    elif 'zippyshare.com' in link:
+    elif 'zippyshare.com' in host:
         return zippy_share(link)
-    elif 'yadi.sk' in link or 'disk.yandex.com' in link:
+    elif 'yadi.sk' in host or 'disk.yandex.com' in host:
         return yandex_disk(link)
-    elif 'mediafire.com' in link:
+    elif 'mediafire.com' in host:
         return mediafire(link)
-    elif 'uptobox.com' in link:
+    elif 'uptobox.com' in host:
         return uptobox(link)
-    elif 'osdn.net' in link:
+    elif 'osdn.net' in host:
         return osdn(link)
-    elif 'github.com' in link:
+    elif 'github.com' in host:
         return github(link)
-    elif 'hxfile.co' in link:
+    elif 'hxfile.co' in host:
         return hxfile(link)
-    elif 'anonfiles.com' in link:
+    elif 'anonfiles.com' in host:
         return anonfiles(link)
-    elif 'letsupload.io' in link:
+    elif 'letsupload.io' in host:
         return letsupload(link)
-    elif '1drv.ms' in link:
+    elif '1drv.ms' in host:
         return onedrive(link)
-    elif 'pixeldrain.com' in link:
+    elif 'pixeldrain.com' in host:
         return pixeldrain(link)
-    elif 'antfiles.com' in link:
+    elif 'antfiles.com' in host:
         return antfiles(link)
-    elif 'streamtape.com' in link:
+    elif 'streamtape.com' in host:
         return streamtape(link)
-    elif 'bayfiles.com' in link:
+    elif 'bayfiles.com' in host:
         return anonfiles(link)
-    elif 'racaty.net' in link:
+    elif 'racaty.net' in host:
         return racaty(link)
-    elif '1fichier.com' in link:
+    elif '1fichier.com' in host:
         return fichier(link)
-    elif 'solidfiles.com' in link:
+    elif 'solidfiles.com' in host:
         return solidfiles(link)
-    elif 'krakenfiles.com' in link:
+    elif 'krakenfiles.com' in host:
         return krakenfiles(link)
+    elif 'sourceforge.net' in host:
+        return sourceforge(link)
     elif is_gdtot_link(link):
         return gdtot(link)
-    elif any(x in link for x in fmed_list):
+    elif any(x in host for x in fmed_list):
         return fembed(link)
-    elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
+    elif any(x in host for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
+def sourceforge(url: str) -> str:
+    header = {'user-agent':'Mozilla/5.0 (Linux; Android 11; SAMSUNG SM-G973U) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/14.2 Chrome/87.0.4280.141 Mobile Safari/537.36'}
+    req = requests.get(url, headers=header)
+    bs = BeautifulSoup(req.text, 'html.parser')
+    try:
+        dlb = bs.find('a', {'class':'button green'})
+        return dlb.get('href')
+    except Exception as e:
+        LOGGER.error(e)
+        raise DirectDownloadLinkException("ERROR: Can't find download link")
+        
 def zippy_share(url: str) -> str:
     """ ZippyShare direct link generator
     Based on https://github.com/KenHV/Mirror-Bot
