@@ -3,6 +3,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from time import sleep
 from re import split as resplit
+from requests import head as rhead
 
 from bot import DOWNLOAD_DIR, dispatcher
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -60,6 +61,13 @@ def _watch(bot, update, isZip=False, isLeech=False, pswd=None, tag=None):
         help_msg += "\n\n<b>By replying to link:</b>"
         help_msg += "\n<code>/command</code> |newname pswd: mypassword [𝚣𝚒𝚙]"
         return sendMessage(help_msg, bot, update)
+
+    if 'tiktok.com' in link:
+        try:
+            res = rhead(link, allow_redirects=True, timeout=5)
+            link = res.url
+        except:
+            link = link
 
     listener = MirrorListener(bot, update, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = button_build.ButtonMaker()
