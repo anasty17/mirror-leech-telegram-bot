@@ -162,8 +162,6 @@ class YoutubeDLHelper:
     def add_download(self, link, path, name, qual, playlist):
         if playlist:
             self.opts['ignoreerrors'] = True
-        if "hotstar" in link or "sonyliv" in link:
-            self.opts['geo_bypass_country'] = 'IN'
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
         self.__onDownloadStart()
         if qual.startswith('ba/b'):
