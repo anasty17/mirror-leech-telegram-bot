@@ -1,8 +1,9 @@
+from hashlib import sha1
+from bencoding import bencode, bdecode
 from os import remove as osremove, path as ospath, listdir
 from time import sleep, time
 from re import search
 from threading import Thread
-from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 
@@ -229,13 +230,14 @@ def get_confirm(update, context):
 
 def _get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        mHash = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
-        return mHash.lower()
+        hash_ = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
+        return hash_
 
 def _get_hash_file(path):
-    tr = Torrent.from_file(path)
-    mgt = tr.magnet_link
-    return _get_hash_magnet(mgt)
+    with open(path, "rb") as f:
+        decodedDict = bdecode(f.read())
+    hash_ = sha1(bencode(decodedDict[b'info'])).hexdigest()
+    return str(hash_)
 
 def _onDownloadError(err: str, client, ext_hash, listener):
     client.torrents_pause(torrent_hashes=ext_hash)
