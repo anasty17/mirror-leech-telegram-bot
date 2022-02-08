@@ -238,6 +238,13 @@ sudo docker build . -t mirror-bot
 ```
 sudo docker run -p 80:80 mirror-bot
 ```
+- **Bonus**: If you want use config file from external sources.
+```sh
+sudo docker run -d -p 80:80 --name mirror-bot \
+    --restart=always \
+    -e CONFIG_FILE_URL='https://gist.githubusercontent.com/anasty17/xyzfijkajskdwjdafngneg/config.env' \
+    mirror-bot
+```
 - To stop the image:
 ```
 sudo docker ps
