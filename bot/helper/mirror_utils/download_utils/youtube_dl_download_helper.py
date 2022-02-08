@@ -81,14 +81,10 @@ class YoutubeDLHelper:
                     self._last_downloaded = downloadedBytes
                     self.downloaded_bytes += chunk_size
                 else:
-                    try:
-                        if d.get('total_bytes'):
-                            self.size = d['total_bytes']
-                        else:
-                            raise KeyError
-                    except KeyError:
-                        if d.get('total_bytes_estimate'):
-                            self.size = d['total_bytes_estimate']
+                    if d.get('total_bytes'):
+                        self.size = d['total_bytes']
+                    elif d.get('total_bytes_estimate'):
+                        self.size = d['total_bytes_estimate']
                     self.downloaded_bytes = d['downloaded_bytes']
                 try:
                     self.progress = (self.downloaded_bytes / self.size) * 100
@@ -159,7 +155,7 @@ class YoutubeDLHelper:
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
-    def add_download(self, link, path, name, qual, playlist):
+    def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts['ignoreerrors'] = True
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
@@ -173,6 +169,17 @@ class YoutubeDLHelper:
                 rate = 320
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': f'{rate}'}]
         self.opts['format'] = qual
+        if args is not None:
+            args = args.split('|')
+            for arg in args:
+                xy = arg.split(':')
+                if xy[1].startswith('^'):
+                    xy[1] = int(xy[1].split('^')[1])
+                elif xy[1].lower() == 'true':
+                    xy[1] = True
+                elif xy[1].lower() == 'false':
+                    xy[1] = False
+                self.opts[xy[0]] = xy[1]
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name)
         if self.__is_cancelled:

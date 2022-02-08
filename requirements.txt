@@ -28,6 +28,6 @@ six
 telegraph
 tenacity
 TgCrypto
-torrentool==1.1.0
+torrentool
 urllib3
 yt-dlp
