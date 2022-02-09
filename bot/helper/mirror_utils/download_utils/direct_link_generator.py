@@ -407,7 +407,7 @@ def gdtot(url: str) -> str:
     with requests.Session() as client:
         client.cookies.update({'crypt': CRYPT})
         res = client.get(url)
-        res = client.get(f"https://new.gdtot.top/dld?id={url.split('/')[-1]}")
+        res = client.get(f"https://new.gdtot.eu/dld?id={url.split('/')[-1]}")
     matches = re.findall('gd=(.*?)&', res.text)
     try:
         decoded_id = b64decode(str(matches[0])).decode('utf-8')

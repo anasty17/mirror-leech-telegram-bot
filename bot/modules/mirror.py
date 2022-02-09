@@ -7,6 +7,7 @@ from shutil import rmtree
 from threading import Thread
 from subprocess import run as srun
 from pathlib import PurePath
+from html import escape
 from urllib.parse import quote
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
@@ -194,7 +195,7 @@ class MirrorListener:
             update_all_messages()
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
-        msg = f'<b>Name: </b><code>{name.replace("<", "")}</code>\n\n<b>Size: </b>{size}'
+        msg = f'<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}'
         if self.isLeech:
             count = len(files)
             msg += f'\n<b>Total Files: </b>{count}'
