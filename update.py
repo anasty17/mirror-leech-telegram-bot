@@ -26,7 +26,7 @@ try:
         else:
             logging.error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
-        logging.error(str(e))
+        logging.error(f"CONFIG_FILE_URL: {e}")
 except TypeError:
     pass
 
