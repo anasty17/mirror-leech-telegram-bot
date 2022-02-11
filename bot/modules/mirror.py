@@ -214,7 +214,7 @@ class MirrorListener:
                     if len(fmsg.encode('utf-8') + msg.encode('utf-8')) > 4000:
                         sendMessage(msg + fmsg, self.bot, self.update)
                         sleep(1.5)
-                        fmsg = ''
+                        fmsg = '\n\n'
                 if fmsg != '':
                     sendMessage(msg + fmsg, self.bot, self.update)
             try:
