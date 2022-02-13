@@ -7,6 +7,7 @@ beautifulsoup4
 bencoding
 cfscrape
 feedparser
+flask
 gc-python-utils
 google-api-python-client
 google-auth-httplib2
