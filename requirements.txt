@@ -4,6 +4,7 @@ appdirs
 aria2p
 attrdict
 beautifulsoup4
+bencoding
 cfscrape
 feedparser
 gc-python-utils
@@ -27,7 +28,6 @@ speedtest-cli
 six
 telegraph
 tenacity
-TgCrypto
-torrentool==1.1.0
+tgCrypto
 urllib3
 yt-dlp

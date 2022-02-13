@@ -66,7 +66,6 @@ class DbManger:
                         makedirs('Thumbnails')
                     with open(path, 'wb+') as f:
                         f.write(row[5])
-                        f.close()
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
         self.cur.execute("SELECT * FROM rss")

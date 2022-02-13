@@ -4,7 +4,7 @@ import random
 
 from requests import get as rget, post as rpost
 from base64 import b64encode
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from urllib3 import disable_warnings
 
 from bot import LOGGER, SHORTENER, SHORTENER_API
@@ -13,7 +13,10 @@ from bot import LOGGER, SHORTENER, SHORTENER_API
 def short_url(longurl):
     if SHORTENER is None and SHORTENER_API is None:
         return longurl
-
+    try:
+        unquote(longurl).encode('ascii')
+    except UnicodeEncodeError:
+        longurl = rget('http://tinyurl.com/api-create.php', params=dict(url=longurl)).text
     if "shorte.st" in SHORTENER:
         disable_warnings()
         link = rget(f'http://api.shorte.st/stxt/{SHORTENER_API}/{longurl}', verify=False).text

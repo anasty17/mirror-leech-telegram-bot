@@ -9,11 +9,10 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.ext_utils.fs_utils import get_base_name
 
 
-def add_gd_download(link: str, listener, gdtot):
+def add_gd_download(link, listener, is_gdtot):
     res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
-        sendMessage(res, listener.bot, listener.update)
-        return
+        return sendMessage(res, listener.bot, listener.update)
     if STOP_DUPLICATE and not listener.isLeech:
         LOGGER.info('Checking File/Folder if already in Drive...')
         if listener.isZip:
@@ -41,5 +40,5 @@ def add_gd_download(link: str, listener, gdtot):
         download_dict[listener.uid] = download_status
     sendStatusMessage(listener.update, listener.bot)
     drive.download(link)
-    if gdtot:
+    if is_gdtot:
         drive.deletefile(link)

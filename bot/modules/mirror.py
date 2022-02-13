@@ -7,6 +7,7 @@ from shutil import rmtree
 from threading import Thread
 from subprocess import run as srun
 from pathlib import PurePath
+from html import escape
 from urllib.parse import quote
 from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
@@ -194,18 +195,17 @@ class MirrorListener:
             update_all_messages()
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
+        msg = f'<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}'
         if self.isLeech:
             count = len(files)
-            msg = f'<b>Name: </b><code>{name}</code>\n\n'
-            msg += f'<b>Size: </b>{size}\n'
-            msg += f'<b>Total Files: </b>{count}'
+            msg += f'\n<b>Total Files: </b>{count}'
             if typ != 0:
                 msg += f'\n<b>Corrupted Files: </b>{typ}'
+            msg += f'\n<b>cc: </b>{self.tag}\n\n'
             if self.message.chat.type == 'private':
                 sendMessage(msg, self.bot, self.update)
             else:
                 chat_id = str(self.message.chat.id)[4:]
-                msg += f'\n<b>cc: </b>{self.tag}\n\n'
                 fmsg = ''
                 for index, item in enumerate(list(files), start=1):
                     msg_id = files[item]
@@ -229,7 +229,6 @@ class MirrorListener:
             else:
                 update_all_messages()
         else:
-            msg = f'<b>Name: </b><code>{name}</code>\n\n<b>Size: </b>{size}'
             msg += f'\n\n<b>Type: </b>{typ}'
             if ospath.isdir(f'{DOWNLOAD_DIR}{self.uid}/{name}'):
                 msg += f'\n<b>SubFolders: </b>{folders}'
@@ -300,6 +299,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=1)
     qbitsel = False
+    is_gdtot = False
     try:
         link = message_args[1]
         if link.startswith("s ") or link == "s":
@@ -385,13 +385,13 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         return sendMessage(help_msg, bot, update)
 
     LOGGER.info(link)
-    gdtot_link = is_gdtot_link(link)
 
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
        and not ospath.exists(link) and not is_gdrive_link(link) and not link.endswith('.torrent'):
         content_type = get_content_type(link)
         if content_type is None or match(r'text/html|text/plain', content_type):
             try:
+                is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
@@ -408,8 +408,9 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
                 resp = requests.get(link, timeout=10)
                 if resp.status_code == 200:
                     file_name = str(time()).replace(".", "") + ".torrent"
-                    open(file_name, "wb").write(resp.content)
-                    link = f"{file_name}"
+                    with open(file_name, "wb") as t:
+                        t.write(resp.content)
+                    link = str(file_name)
                 else:
                     return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, update)
             except Exception as e:
@@ -431,7 +432,7 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
             gmsg += f"Use /{BotCommands.ZipMirrorCommand} to make zip of Google Drive folder\n\n"
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, update)
-        Thread(target=add_gd_download, args=(link, listener, gdtot_link)).start()
+        Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
 
     elif is_mega_link(link):
         if BLOCK_MEGA_LINKS:
