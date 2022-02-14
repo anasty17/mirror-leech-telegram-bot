@@ -1,12 +1,12 @@
 import random
 import string
 
-from bot import download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, LOGGER, STOP_DUPLICATE
+from bot import download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, LOGGER, STOP_DUPLICATE, STORAGE_THRESHOLD
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendMarkup
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
-from bot.helper.ext_utils.fs_utils import get_base_name
+from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 
 
 def add_gd_download(link, listener, is_gdtot):
@@ -27,10 +27,16 @@ def add_gd_download(link, listener, is_gdtot):
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMarkup(msg, listener.bot, listener.update, button)
+    if STORAGE_THRESHOLD is not None:
+        acpt = check_storage_threshold(size, True)
+        if not acpt:
+            msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+            msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+            return sendMessage(msg, listener.bot, listener.update)
     if ZIP_UNZIP_LIMIT is not None:
         LOGGER.info('Checking File/Folder Size...')
         if size > ZIP_UNZIP_LIMIT * 1024**3:
-            msg = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
+            msg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
             return sendMessage(msg, listener.bot, listener.update)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, listener)
