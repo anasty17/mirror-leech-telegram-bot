@@ -1,22 +1,22 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # (c) YashDK [yash-dk@github]
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
 import logging
-import qbittorrentapi as qba
-import asyncio
 
-from aiohttp import web
-import nodes
+from time import sleep
+from qbittorrentapi import NotFound404Error, Client as qbClient
+from flask import Flask, request
+
+from web import nodes
+
+app = Flask(__name__)
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
                     level=logging.INFO)
 
 LOGGER = logging.getLogger(__name__)
-
-routes = web.RouteTableDef()
 
 page = """
 <html lang="en">
@@ -642,43 +642,7 @@ section span{
 </html>
 """
 
-@routes.get('/app/files/{hash_id}')
-async def list_torrent_contents(request):
-
-    torr = request.match_info["hash_id"]
-    gets = request.query
-
-    if "pin_code" not in gets.keys():
-        rend_page = code_page.replace("{form_url}", f"/app/files/{torr}")
-        return web.Response(text=rend_page, content_type='text/html')
-
-    client = qba.Client(host="localhost", port="8090")
-    try:
-        res = client.torrents_files(torrent_hash=torr)
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
-    passw = ""
-    for n in str(torr):
-        if n.isdigit():
-            passw += str(n)
-        if len(passw) == 4:
-            break
-    if isinstance(passw, bool):
-        raise web.HTTPNotFound()
-    pincode = passw
-    if gets["pin_code"] != pincode:
-        return web.Response(text="Incorrect pin code")
-
-    par = nodes.make_tree(res)
-
-    cont = ["", 0]
-    nodes.create_list(par, cont)
-    rend_page = page.replace("{My_content}", cont[0])
-    rend_page = rend_page.replace("{form_url}", f"/app/files/{torr}?pin_code={pincode}")
-    client.auth_log_out()
-    return web.Response(text=rend_page, content_type='text/html')
-
-async def re_verfiy(paused, resumed, client, torr):
+def re_verfiy(paused, resumed, client, hash_id):
 
     paused = paused.strip()
     resumed = resumed.strip()
@@ -689,7 +653,7 @@ async def re_verfiy(paused, resumed, client, torr):
     k = 0
     while True:
 
-        res = client.torrents_files(torrent_hash=torr)
+        res = client.torrents_files(torrent_hash=hash_id)
         verify = True
 
         for i in res:
@@ -705,34 +669,58 @@ async def re_verfiy(paused, resumed, client, torr):
             break
         LOGGER.info("Reverification Failed: correcting stuff...")
         client.auth_log_out()
-        await asyncio.sleep(1)
-        client = qba.Client(host="localhost", port="8090")
+        sleep(1)
+        client = qbClient(host="localhost", port="8090")
         try:
-            client.torrents_file_priority(torrent_hash=torr, file_ids=paused, priority=0)
+            client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
+        except NotFound404Error:
+            raise NotFound404Error
         except:
             LOGGER.error("Errored in reverification paused")
         try:
-            client.torrents_file_priority(torrent_hash=torr, file_ids=resumed, priority=1)
+            client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
+        except NotFound404Error:
+            raise NotFound404Error
         except:
             LOGGER.error("Errored in reverification resumed")
         k += 1
         if k > 5:
-            client.auth_log_out()
             return False
-    client.auth_log_out()
     LOGGER.info("Verified")
     return True
 
-@routes.post('/app/files/{hash_id}')
-async def set_priority(request):
+@app.route('/app/files/<string:hash_id>', methods=['GET'])
+def list_torrent_contents(hash_id):
 
-    torr = request.match_info["hash_id"]
-    client = qba.Client(host="localhost", port="8090")
+    if "pin_code" not in request.args.keys():
+        return code_page.replace("{form_url}", f"/app/files/{hash_id}")
 
-    data = await request.post()
+    pincode = ""
+    for nbr in hash_id:
+        if nbr.isdigit():
+            pincode += str(nbr)
+        if len(pincode) == 4:
+            break
+    if request.args["pin_code"] != pincode:
+        return "<h1>Incorrect pin code</h1>"
+
+    client = qbClient(host="localhost", port="8090")
+    res = client.torrents_files(torrent_hash=hash_id)
+
+    par = nodes.make_tree(res)
+    cont = ["", 0]
+    nodes.create_list(par, cont)
+
+    client.auth_log_out()
+    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{hash_id}?pin_code={pincode}")
+
+@app.route('/app/files/<string:hash_id>', methods=['POST'])
+def set_priority(hash_id):
+
+    client = qbClient(host="localhost", port="8090")
     resume = ""
     pause = ""
-    data = dict(data)
+    data = dict(request.form)
 
     for i, value in data.items():
         if i.find("filenode") != -1:
@@ -747,55 +735,31 @@ async def set_priority(request):
     resume = resume.strip("|")
 
     try:
-        client.torrents_file_priority(torrent_hash=torr, file_ids=pause, priority=0)
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
+        client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
+    except NotFound404Error:
+        raise NotFound404Error
     except:
         LOGGER.error("Errored in paused")
-
     try:
-        client.torrents_file_priority(torrent_hash=torr, file_ids=resume, priority=1)
-    except qba.NotFound404Error:
-        raise web.HTTPNotFound()
+        client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
+    except NotFound404Error:
+        raise NotFound404Error
     except:
         LOGGER.error("Errored in resumed")
-
-    await asyncio.sleep(2)
-    if not await re_verfiy(pause, resume, client, torr):
+    sleep(2)
+    if not re_verfiy(pause, resume, client, hash_id):
         LOGGER.error("Verification Failed")
-    return await list_torrent_contents(request)
+    client.auth_log_out()
+    return list_torrent_contents(hash_id)
 
+@app.route('/')
+def homepage():
+    return "<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>"
 
-@routes.get('/')
-async def homepage(request):
+@app.errorhandler(NotFound404Error)
+def page_not_found(e):
+    return "<h1>404: Torrent not found. Mostly wrong hash input</h2>", 404
 
-    return web.Response(text="<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>", content_type="text/html")
+if __name__ == "__main__":
+    app.run()
 
-async def e404_middleware(app, handler):
-
-    async def middleware_handler(request):
-
-        try:
-            response = await handler(request)
-            if response.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>mirror-leech-telegram-bot</h3>", content_type="text/html")
-            return response
-        except web.HTTPException as ex:
-            if ex.status == 404:
-                return web.Response(text="<h1>404: Page not found</h2><br><h3>mirror-leech-telegram-bot</h3>", content_type="text/html")
-            raise
-    return middleware_handler
-
-async def start_server():
-
-    app = web.Application(middlewares=[e404_middleware])
-    app.add_routes(routes)
-    return app
-
-async def start_server_async(port=80):
-
-    app = web.Application(middlewares=[e404_middleware])
-    app.add_routes(routes)
-    runner = web.AppRunner(app)
-    await runner.setup()
-    await web.TCPSite(runner, "0.0.0.0", port).start()

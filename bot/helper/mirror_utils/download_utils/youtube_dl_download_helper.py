@@ -7,9 +7,11 @@ from threading import RLock
 from time import time
 from re import search
 
-from bot import download_dict_lock, download_dict
+from bot import download_dict_lock, download_dict, STORAGE_THRESHOLD
+from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
+from bot.helper.ext_utils.fs_utils import check_storage_threshold
 
 LOGGER = logging.getLogger(__name__)
 
@@ -184,6 +186,12 @@ class YoutubeDLHelper:
         self.extractMetaData(link, name)
         if self.__is_cancelled:
             return
+        if STORAGE_THRESHOLD is not None:
+            acpt = check_storage_threshold(self.size, self.__listener.isZip)
+            if not acpt:
+                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                msg += f'\nYour File/Folder size is {get_readable_file_size(self.size)}'
+                return self.__onDownloadError(msg)
         if not self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
@@ -195,4 +203,3 @@ class YoutubeDLHelper:
         LOGGER.info(f"Cancelling Download: {self.name}")
         if not self.__downloading:
             self.__onDownloadError("Download Cancelled by User!")
-

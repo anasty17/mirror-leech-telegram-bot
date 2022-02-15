@@ -4,10 +4,12 @@ import random
 from time import time
 from threading import RLock, Lock, Thread
 
-from bot import LOGGER, download_dict, download_dict_lock, app, STOP_DUPLICATE
+from bot import LOGGER, download_dict, download_dict_lock, app, STOP_DUPLICATE, STORAGE_THRESHOLD
+from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMarkup, sendMessage, sendStatusMessage
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.ext_utils.fs_utils import check_storage_threshold
 
 global_lock = Lock()
 GLOBAL_GID = set()
@@ -101,13 +103,21 @@ class TelegramDownloadHelper:
                 path = path + name
 
             if download:
+                size = media.file_size
                 if STOP_DUPLICATE and not self.__listener.isLeech:
                     LOGGER.info('Checking File/Folder if already in Drive...')
                     smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                     if smsg:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
                         return sendMarkup(msg, self.__listener.bot, self.__listener.update, button)
-                self.__onDownloadStart(name, media.file_size, media.file_id)
+                if STORAGE_THRESHOLD is not None:
+                    arch = any([self.__listener.isZip, self.__listener.extract])
+                    acpt = check_storage_threshold(size, arch)
+                    if not acpt:
+                        msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                        msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                        return sendMessage(msg, self.__listener.bot, self.__listener.update)
+                self.__onDownloadStart(name, size, media.file_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
                 Thread(target=self.__download, args=(_message, path)).start()
             else:

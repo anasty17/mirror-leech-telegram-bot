@@ -3,7 +3,7 @@ from time import time
 from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
-from bot import dispatcher, status_reply_dict, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime
+from bot import dispatcher, status_reply_dict, status_reply_dict_lock, download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, turn
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -14,7 +14,7 @@ def mirror_status(update, context):
     with download_dict_lock:
         if len(download_dict) == 0:
             currentTime = get_readable_time(time() - botStartTime)
-            total, used, free, _ = disk_usage('.')
+            total, used, free, _ = disk_usage(DOWNLOAD_DIR)
             free = get_readable_file_size(free)
             message = 'No Active Downloads !\n___________________________'
             message += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" \

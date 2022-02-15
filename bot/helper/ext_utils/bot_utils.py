@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from telegram import InlineKeyboardMarkup
 
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime
+from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, DOWNLOAD_DIR
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
@@ -165,7 +165,7 @@ def get_readable_message():
             msg += "\n\n"
             if STATUS_LIMIT is not None and index == STATUS_LIMIT:
                 break
-        total, used, free, _ = disk_usage('.')
+        total, used, free, _ = disk_usage(DOWNLOAD_DIR)
         free = get_readable_file_size(free)
         currentTime = get_readable_time(time() - botStartTime)
         bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
@@ -242,7 +242,7 @@ def is_gdrive_link(url: str):
     return "drive.google.com" in url
 
 def is_gdtot_link(url: str):
-    url = match(r'https?://.*\.gdtot\.\S+', url)
+    url = match(r'https?://.+\.gdtot\.\S+', url)
     return bool(url)
 
 def is_mega_link(url: str):
