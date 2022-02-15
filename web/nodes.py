@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # (c) YashDK [yash-dk@github]
 
-from anytree import NodeMixin, RenderTree
+from anytree import NodeMixin
 
 class TorNode(NodeMixin):
     def __init__(self, name, is_folder=False, is_file=False, parent=None, progress=None, size=None, priority=None, file_id=None):
@@ -9,7 +9,7 @@ class TorNode(NodeMixin):
         self.name = name
         self.is_folder = is_folder
         self.is_file = is_file
-        
+
         if parent is not None:
             self.parent = parent
         if progress is not None:
@@ -20,7 +20,7 @@ class TorNode(NodeMixin):
             self.priority = priority
         if file_id is not None:
             self.file_id = file_id
-        
+
 
 def get_folders(path):
     path_seperator = "/"
@@ -45,7 +45,7 @@ def make_tree(res):
         if len(folders) > 1:
             # Enter here if in folder
 
-            # Set the parent 
+            # Set the parent
             previous_node = parent
 
             # Traverse till second last assuming the last is a file.
@@ -55,30 +55,30 @@ def make_tree(res):
                 # As we are traversing the folder from top to bottom we are searching
                 # the first folder (folders list) under the parent node in first iteration.
                 # If the node is found then it becomes the current node else the current node
-                # is left None. 
+                # is left None.
                 for k in previous_node.children:
                     if k.name == folders[j]:
-                        current_node = k 
+                        current_node = k
                         break
                 # if the node is not found then create the folder node
-                # if the node is found then use it as base for the next 
+                # if the node is found then use it as base for the next
                 if current_node is None:
                     previous_node = TorNode(folders[j],parent=previous_node,is_folder=True)
                 else:
                     previous_node = current_node
-            # at this point the previous_node will contain the deepest folder in it so add the file to it 
+            # at this point the previous_node will contain the deepest folder in it so add the file to it
             TorNode(folders[-1],is_file=True,parent=previous_node,progress=i.progress,size=i.size,priority=i.priority,file_id=l)
         else:
-            # at the file to the parent if no folders are there 
+            # at the file to the parent if no folders are there
             TorNode(folders[-1],is_file=True,parent=parent,progress=i.progress,size=i.size,priority=i.priority,file_id=l)
     return parent
 
-
+"""
 def print_tree(parent):
     for pre, _, node in RenderTree(parent):
         treestr = u"%s%s" % (pre, node.name)
         print(treestr.ljust(8), node.is_folder, node.is_file)
-
+"""
 
 def create_list(par, msg):
     if par.name != ".unwanted":
