@@ -40,7 +40,6 @@ try:
         if res.status_code == 200:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
@@ -55,9 +54,9 @@ except KeyError:
     SERVER_PORT = 80
 
 PORT = environ.get('PORT', SERVER_PORT)
-web = Popen([f"gunicorn wserver:start_server --bind 0.0.0.0:{PORT} --worker-class aiohttp.GunicornWebWorker"], shell=True)
+web = Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
 alive = Popen(["python3", "alive.py"])
-nox = Popen(["qbittorrent-nox", "--profile=."])
+srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
@@ -254,6 +253,12 @@ try:
 except KeyError:
     RSS_COMMAND = None
 try:
+    CMD_INDEX = getConfig('CMD_INDEX')
+    if len(CMD_INDEX) == 0:
+        raise KeyError
+except KeyError:
+    CMD_INDEX = ''
+try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
         raise KeyError
@@ -277,6 +282,14 @@ try:
         MEGA_LIMIT = float(MEGA_LIMIT)
 except KeyError:
     MEGA_LIMIT = None
+try:
+    STORAGE_THRESHOLD = getConfig('STORAGE_THRESHOLD')
+    if len(STORAGE_THRESHOLD) == 0:
+        raise KeyError
+    else:
+        STORAGE_THRESHOLD = float(STORAGE_THRESHOLD)
+except KeyError:
+    STORAGE_THRESHOLD = None
 try:
     ZIP_UNZIP_LIMIT = getConfig('ZIP_UNZIP_LIMIT')
     if len(ZIP_UNZIP_LIMIT) == 0:
@@ -389,11 +402,6 @@ except KeyError:
     logging.warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
 try:
-    IS_VPS = getConfig('IS_VPS')
-    IS_VPS = IS_VPS.lower() == 'true'
-except KeyError:
-    IS_VPS = False
-try:
     AS_DOCUMENT = getConfig('AS_DOCUMENT')
     AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 except KeyError:
@@ -415,12 +423,10 @@ try:
 except KeyError:
     CUSTOM_FILENAME = None
 try:
-    PHPSESSID = getConfig('PHPSESSID')
     CRYPT = getConfig('CRYPT')
-    if len(PHPSESSID) == 0 or len(CRYPT) == 0:
+    if len(CRYPT) == 0:
         raise KeyError
 except KeyError:
-    PHPSESSID = None
     CRYPT = None
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
@@ -431,7 +437,6 @@ try:
         if res.status_code == 200:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
@@ -448,7 +453,6 @@ try:
             if res.status_code == 200:
                 with open('accounts.zip', 'wb+') as f:
                     f.write(res.content)
-                    f.close()
             else:
                 logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
         except Exception as e:
@@ -468,7 +472,6 @@ try:
         if res.status_code == 200:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
@@ -484,7 +487,6 @@ try:
         if res.status_code == 200:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:
@@ -516,7 +518,7 @@ try:
 except KeyError:
     SEARCH_PLUGINS = None
 
-updater = tgUpdater(token=BOT_TOKEN)
+updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue

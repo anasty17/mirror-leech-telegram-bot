@@ -7,9 +7,10 @@ from threading import RLock
 from time import time
 from re import search
 
-from bot import download_dict_lock, download_dict
+from bot import download_dict_lock, download_dict, STORAGE_THRESHOLD
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
+from bot.helper.ext_utils.fs_utils import check_storage_threshold
 
 LOGGER = logging.getLogger(__name__)
 
@@ -81,11 +82,10 @@ class YoutubeDLHelper:
                     self._last_downloaded = downloadedBytes
                     self.downloaded_bytes += chunk_size
                 else:
-                    try:
+                    if d.get('total_bytes'):
                         self.size = d['total_bytes']
-                    except KeyError:
-                        if d.get('total_bytes_estimate'):
-                            self.size = d['total_bytes_estimate']
+                    elif d.get('total_bytes_estimate'):
+                        self.size = d['total_bytes_estimate']
                     self.downloaded_bytes = d['downloaded_bytes']
                 try:
                     self.progress = (self.downloaded_bytes / self.size) * 100
@@ -156,11 +156,9 @@ class YoutubeDLHelper:
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
-    def add_download(self, link, path, name, qual, playlist):
+    def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts['ignoreerrors'] = True
-        if "hotstar" in link or "sonyliv" in link:
-            self.opts['geo_bypass_country'] = 'IN'
         self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
         self.__onDownloadStart()
         if qual.startswith('ba/b'):
@@ -172,10 +170,27 @@ class YoutubeDLHelper:
                 rate = 320
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': f'{rate}'}]
         self.opts['format'] = qual
+        if args is not None:
+            args = args.split('|')
+            for arg in args:
+                xy = arg.split(':')
+                if xy[1].startswith('^'):
+                    xy[1] = int(xy[1].split('^')[1])
+                elif xy[1].lower() == 'true':
+                    xy[1] = True
+                elif xy[1].lower() == 'false':
+                    xy[1] = False
+                self.opts[xy[0]] = xy[1]
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name)
         if self.__is_cancelled:
             return
+        if STORAGE_THRESHOLD is not None:
+            acpt = check_storage_threshold(self.size, self.__listener.isZip)
+            if not acpt:
+                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                msg += f'\nYour File/Folder size is {get_readable_file_size(self.size)}'
+                return self.__onDownloadError(msg)
         if not self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:

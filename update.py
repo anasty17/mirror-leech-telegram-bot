@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
                     level=logging.INFO)
 
-CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL', None)
+CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
 try:
     if len(CONFIG_FILE_URL) == 0:
         raise TypeError
@@ -22,7 +22,6 @@ try:
         if res.status_code == 200:
             with open('config.env', 'wb+') as f:
                 f.write(res.content)
-                f.close()
         else:
             logging.error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
@@ -32,23 +31,29 @@ except TypeError:
 
 load_dotenv('config.env', override=True)
 
-UPSTREAM_REPO = environ.get('UPSTREAM_REPO', None)
+UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
+UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
 try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except TypeError:
     UPSTREAM_REPO = None
+try:
+    if len(UPSTREAM_BRANCH) == 0:
+       raise TypeError
+except TypeError:
+    UPSTREAM_BRANCH = 'master'
 
 if UPSTREAM_REPO is not None:
     if ospath.exists('.git'):
         srun(["rm", "-rf", ".git"])
 
     srun([f"git init -q \
-                      && git config --global user.email e.anastayyar@gmail.com \
-                      && git config --global user.name mltb \
-                      && git add . \
-                      && git commit -sm update -q \
-                      && git remote add origin {UPSTREAM_REPO} \
-                      && git fetch origin -q \
-                      && git reset --hard origin/master -q"], shell=True)
+            && git config --global user.email e.anastayyar@gmail.com \
+            && git config --global user.name mltb \
+            && git add . \
+            && git commit -sm update -q \
+            && git remote add origin {UPSTREAM_REPO} \
+            && git fetch origin -q \
+            && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
 

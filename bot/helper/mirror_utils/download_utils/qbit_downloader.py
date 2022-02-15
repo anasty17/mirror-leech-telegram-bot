@@ -1,22 +1,20 @@
-import logging
-
+from hashlib import sha1
+from bencoding import bencode, bdecode
 from os import remove as osremove, path as ospath, listdir
 from time import sleep, time
 from re import search
 from threading import Thread
-from torrentool.api import Torrent
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
 
-from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE, WEB_PINCODE, QB_SEED, QB_TIMEOUT
+from bot import download_dict, download_dict_lock, BASE_URL, dispatcher, get_client, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STOP_DUPLICATE, WEB_PINCODE, QB_SEED, QB_TIMEOUT, LOGGER, STORAGE_THRESHOLD
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import MirrorStatus, getDownloadByGid, get_readable_file_size, get_readable_time
-from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
+from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name, check_storage_threshold
 from bot.helper.telegram_helper import button_build
 
-LOGGER = logging.getLogger(__name__)
 
 def add_qb_torrent(link, path, listener, select):
     client = get_client()
@@ -72,18 +70,15 @@ def add_qb_torrent(link, path, listener, select):
                 while True:
                     tor_info = client.torrents_info(torrent_hashes=ext_hash)
                     if len(tor_info) == 0:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
                     try:
                         tor_info = tor_info[0]
-                        if tor_info.state in ["metaDL", "checkingResumeData"]:
-                            sleep(1)
-                        else:
+                        if tor_info.state not in ["metaDL", "checkingResumeData", "pausedDL"]:
                             deleteMessage(listener.bot, meta)
                             break
+                        sleep(1)
                     except:
-                        deleteMessage(listener.bot, meta)
-                        return
+                        return deleteMessage(listener.bot, meta)
             sleep(0.5)
             client.torrents_pause(torrent_hashes=ext_hash)
             for n in str(ext_hash):
@@ -152,8 +147,18 @@ def _qb_listener(listener, client, ext_hash, select, path):
                             break
                     dupChecked = True
                 if not sizeChecked:
+                    sleep(1)
+                    size = tor_info.size
+                    arch = any([listener.isZip, listener.extract])
+                    if STORAGE_THRESHOLD is not None:
+                        acpt = check_storage_threshold(size, arch)
+                        if not acpt:
+                            msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
+                            msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                            _onDownloadError(msg, client, ext_hash, listener)
+                            break
                     limit = None
-                    if ZIP_UNZIP_LIMIT is not None and (listener.isZip or listener.extract):
+                    if ZIP_UNZIP_LIMIT is not None and arch:
                         mssg = f'Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB'
                         limit = ZIP_UNZIP_LIMIT
                     elif TORRENT_DIRECT_LIMIT is not None:
@@ -161,8 +166,6 @@ def _qb_listener(listener, client, ext_hash, select, path):
                         limit = TORRENT_DIRECT_LIMIT
                     if limit is not None:
                         LOGGER.info('Checking File/Folder Size...')
-                        sleep(1)
-                        size = tor_info.size
                         if size > limit * 1024**3:
                             fmsg = f"{mssg}.\nYour File/Folder size is {get_readable_file_size(size)}"
                             _onDownloadError(fmsg, client, ext_hash, listener)
@@ -235,13 +238,14 @@ def get_confirm(update, context):
 
 def _get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        mHash = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
-        return mHash.lower()
+        hash_ = search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
+        return hash_
 
 def _get_hash_file(path):
-    tr = Torrent.from_file(path)
-    mgt = tr.magnet_link
-    return _get_hash_magnet(mgt)
+    with open(path, "rb") as f:
+        decodedDict = bdecode(f.read())
+    hash_ = sha1(bencode(decodedDict[b'info'])).hexdigest()
+    return str(hash_)
 
 def _onDownloadError(err: str, client, ext_hash, listener):
     client.torrents_pause(torrent_hashes=ext_hash)
