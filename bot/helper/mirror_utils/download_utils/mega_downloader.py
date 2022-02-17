@@ -1,20 +1,25 @@
 import random
 import string
-
 from os import makedirs
 from threading import Event
-from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
-
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD, MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
-from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
+from mega import MegaApi, MegaError, MegaRequest, MegaListener, MegaTransfer
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
+from bot.helper.ext_utils.fs_utils import (
+    get_base_name, check_storage_threshold)
+from bot.helper.ext_utils.bot_utils import (
+    get_mega_link_type, get_readable_file_size)
+from bot.helper.mirror_utils.status_utils.mega_download_status import (
+    MegaDownloadStatus)
+from bot.helper.telegram_helper.message_utils import (
+    sendMarkup, sendMessage, sendStatusMessage)
+from bot import (
+    LOGGER, MEGA_LIMIT, MEGA_API_KEY, MEGA_EMAIL_ID, MEGA_PASSWORD,
+    STOP_DUPLICATE, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD, download_dict,
+    download_dict_lock)
 
 
 class MegaAppListener(MegaListener):
-    _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN,MegaRequest.TYPE_FETCH_NODES)
+    _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN, MegaRequest.TYPE_FETCH_NODES)
     NO_ERROR = "no error"
 
     def __init__(self, continue_event: Event, listener):
@@ -26,7 +31,7 @@ class MegaAppListener(MegaListener):
         self.__bytes_transferred = 0
         self.is_cancelled = False
         self.__speed = 0
-        self.__name = ''
+        self.__name = ""
         self.__size = 0
         self.error = None
         self.gid = ""
@@ -69,11 +74,15 @@ class MegaAppListener(MegaListener):
             LOGGER.info("Fetching Root Node.")
             self.node = api.getRootNode()
             LOGGER.info(f"Node Name: {self.node.getName()}")
-        if request_type not in self._NO_EVENT_ON or self.node and "cloud drive" not in self.node.getName().lower():
+        if (
+            request_type not in self._NO_EVENT_ON
+            or self.node
+            and "cloud drive" not in self.node.getName().lower()
+        ):
             self.continue_event.set()
 
     def onRequestTemporaryError(self, api, request, error: MegaError):
-        LOGGER.error(f'Mega Request error in {error}')
+        LOGGER.error(f"Mega Request error in {error}")
         if not self.is_cancelled:
             self.is_cancelled = True
             self.listener.onDownloadError("RequestTempError: " + error.toString())
@@ -92,7 +101,9 @@ class MegaAppListener(MegaListener):
         try:
             if self.is_cancelled:
                 self.continue_event.set()
-            elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
+            elif transfer.isFinished() and (
+                transfer.isFolderTransfer() or transfer.getFileName() == self.name
+            ):
                 self.listener.onDownloadComplete()
                 self.continue_event.set()
         except Exception as e:
@@ -102,10 +113,11 @@ class MegaAppListener(MegaListener):
         filen = transfer.getFileName()
         state = transfer.getState()
         errStr = error.toString()
-        LOGGER.error(f'Mega download error in file {transfer} {filen}: {error}')
+        LOGGER.error(f"Mega download error in file {transfer} {filen}: {error}")
         if state in [1, 4]:
             # Sometimes MEGA (offical client) can't stream a node either and raises a temp failed error.
-            # Don't break the transfer queue if transfer's in queued (1) or retrying (4) state [causes seg fault]
+            # Don't break the transfer queue if transfer's in queued (1) or
+            # retrying (4) state [causes seg fault]
             return
 
         self.error = errStr
@@ -120,7 +132,6 @@ class MegaAppListener(MegaListener):
 
 
 class AsyncExecutor:
-
     def __init__(self):
         self.continue_event = Event()
 
@@ -129,11 +140,13 @@ class AsyncExecutor:
         function(*args)
         self.continue_event.wait()
 
+
 listeners = []
+
 
 def add_mega_download(mega_link: str, path: str, listener):
     executor = AsyncExecutor()
-    api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
+    api = MegaApi(MEGA_API_KEY, None, None, "mirror-leech-telegram-bot")
     mega_listener = MegaAppListener(executor.continue_event, listener)
     global listeners
     api.addListener(mega_listener)
@@ -142,26 +155,30 @@ def add_mega_download(mega_link: str, path: str, listener):
         executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
     link_type = get_mega_link_type(mega_link)
     if link_type == "file":
-        LOGGER.info("File. If your download didn't start, then check your link if it's available to download")
+        LOGGER.info(
+            "File. If your download didn't start, then check your link if it's available to download"
+        )
         executor.do(api.getPublicNode, (mega_link,))
         node = mega_listener.public_node
     else:
-        LOGGER.info("Folder. If your download didn't start, then check your link if it's available to download")
-        folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
+        LOGGER.info(
+            "Folder. If your download didn't start, then check your link if it's available to download"
+        )
+        folder_api = MegaApi(MEGA_API_KEY, None, None, "mltb")
         folder_api.addListener(mega_listener)
         executor.do(folder_api.loginToFolder, (mega_link,))
         node = folder_api.authorizeNode(mega_listener.node)
     if mega_listener.error is not None:
         return sendMessage(str(mega_listener.error), listener.bot, listener.update)
     if STOP_DUPLICATE and not listener.isLeech:
-        LOGGER.info('Checking File/Folder if already in Drive')
+        LOGGER.info("Checking File/Folder if already in Drive")
         mname = node.getName()
         if listener.isZip:
             mname = mname + ".zip"
         elif listener.extract:
             try:
                 mname = get_base_name(mname)
-            except:
+            except BaseException:
                 mname = None
         if mname is not None:
             smsg, button = GoogleDriveHelper().drive_list(mname, True)
@@ -174,24 +191,26 @@ def add_mega_download(mega_link: str, path: str, listener):
         if STORAGE_THRESHOLD is not None:
             acpt = check_storage_threshold(size, arch)
             if not acpt:
-                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
+                msg = f"You must leave {STORAGE_THRESHOLD}GB free storage."
+                msg += f"\nYour File/Folder size is {get_readable_file_size(size)}"
                 return sendMessage(msg, listener.bot, listener.update)
         limit = None
         if ZIP_UNZIP_LIMIT is not None and arch:
-            msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
+            msg3 = f"Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}."
             limit = ZIP_UNZIP_LIMIT
         elif MEGA_LIMIT is not None:
-            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
+            msg3 = f"Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}."
             limit = MEGA_LIMIT
         if limit is not None:
-            LOGGER.info('Checking File/Folder Size...')
+            LOGGER.info("Checking File/Folder Size...")
             if size > limit * 1024**3:
                 return sendMessage(msg3, listener.bot, listener.update)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
     makedirs(path)
-    gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=8))
+    gid = "".join(
+        random.SystemRandom().choices(string.ascii_letters + string.digits, k=8)
+    )
     mega_listener.setValues(node.getName(), api.getSize(node), gid)
     sendStatusMessage(listener.update, listener.bot)
     executor.do(api.startDownload, (node, path))

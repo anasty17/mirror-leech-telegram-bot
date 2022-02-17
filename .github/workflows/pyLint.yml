@@ -1,0 +1,39 @@
+name: pyLint
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  pyLint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: pip install autopep8 autoflake isort black
+      - name: "[autopep8] Format fixes"
+        run: |
+          find -name "*.py" -not -path "./venv/*" -exec autopep8 --verbose --in-place --recursive --aggressive --aggressive '{}' \;
+      - name: "[autoflake] Remove unused imports and variables"
+        run: |
+          find . -regex "^.\/\Main\/\w+\/.+\.py$" -exec autoflake --in-place --recursive --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports -v -v '{}' \;
+      - name: "[black] lint"
+        run: |
+          black -v .
+      - name: "[isort] lint"
+        run: |
+          isort -v --cs --ca --ls --lss --ds --fss --lai 2 -m 4 .
+      - name: Commit Checkout
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          repository: .
+          commit_user_name: anasty17
+          commit_user_email: e.anastayyar@gmail.com
+          commit_options: '--no-verify'
+          commit_message: 'auto: refactor'
+          commit_author: anasty17 <e.anastayyar@gmail.com>

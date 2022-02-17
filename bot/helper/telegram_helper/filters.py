@@ -1,6 +1,7 @@
-from telegram.ext import MessageFilter
 from telegram import Message
-from bot import AUTHORIZED_CHATS, SUDO_USERS, OWNER_ID, download_dict, download_dict_lock
+from telegram.ext import MessageFilter
+from bot import (
+    OWNER_ID, SUDO_USERS, AUTHORIZED_CHATS, download_dict, download_dict_lock)
 
 
 class CustomFilters:
@@ -34,12 +35,15 @@ class CustomFilters:
             user_id = message.from_user.id
             if user_id == OWNER_ID:
                 return True
-            args = str(message.text).split(' ')
+            args = str(message.text).split(" ")
             if len(args) > 1:
                 # Cancelling by gid
                 with download_dict_lock:
                     for message_id, status in download_dict.items():
-                        if status.gid() == args[1] and status.message.from_user.id == user_id:
+                        if (
+                            status.gid() == args[1]
+                            and status.message.from_user.id == user_id
+                        ):
                             return True
                     else:
                         return False
@@ -48,4 +52,5 @@ class CustomFilters:
             # Cancelling by replying to original mirror message
             reply_user = message.reply_to_message.from_user.id
             return bool(reply_user == user_id)
+
     mirror_owner_filter = _MirrorOwner()

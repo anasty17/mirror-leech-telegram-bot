@@ -1,7 +1,9 @@
 from os import path as ospath, makedirs
-from psycopg2 import connect, DatabaseError
+from psycopg2 import DatabaseError, connect
+from bot import (
+    DB_URI, LOGGER, SUDO_USERS, AS_DOC_USERS, AS_MEDIA_USERS, AUTHORIZED_CHATS,
+    rss_dict)
 
-from bot import DB_URI, AUTHORIZED_CHATS, SUDO_USERS, AS_DOC_USERS, AS_MEDIA_USERS, rss_dict, LOGGER
 
 class DbManger:
     def __init__(self):
@@ -49,7 +51,9 @@ class DbManger:
     def db_load(self):
         # User Data
         self.cur.execute("SELECT * from users")
-        rows = self.cur.fetchall()  #returns a list ==> (uid, sudo, auth, media, doc, thumb)
+        rows = (
+            self.cur.fetchall()
+        )  # returns a list ==> (uid, sudo, auth, media, doc, thumb)
         if rows:
             for row in rows:
                 if row[1] and row[0] not in SUDO_USERS:
@@ -62,21 +66,22 @@ class DbManger:
                     AS_DOC_USERS.add(row[0])
                 path = f"Thumbnails/{row[0]}.jpg"
                 if row[5] is not None and not ospath.exists(path):
-                    if not ospath.exists('Thumbnails'):
-                        makedirs('Thumbnails')
-                    with open(path, 'wb+') as f:
+                    if not ospath.exists("Thumbnails"):
+                        makedirs("Thumbnails")
+                    with open(path, "wb+") as f:
                         f.write(row[5])
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
         self.cur.execute("SELECT * FROM rss")
-        rows = self.cur.fetchall()  #returns a list ==> (name, feed_link, last_link, last_title, filters)
+        # returns a list ==> (name, feed_link, last_link, last_title, filters)
+        rows = self.cur.fetchall()
         if rows:
             for row in rows:
                 f_lists = []
                 if row[4] is not None:
-                    filters_list = row[4].split('|')
+                    filters_list = row[4].split("|")
                     for x in filters_list:
-                        y = x.split(' or ')
+                        y = x.split(" or ")
                         f_lists.append(y)
                 rss_dict[row[0]] = [row[1], row[2], row[3], f_lists]
             LOGGER.info("Rss data has been imported from Database.")
@@ -86,53 +91,55 @@ class DbManger:
         if self.err:
             return "Error in DB connection, check log for details"
         elif not self.user_check(chat_id):
-            sql = 'INSERT INTO users (uid, auth) VALUES ({}, TRUE)'.format(chat_id)
+            sql = "INSERT INTO users (uid, auth) VALUES ({}, TRUE)".format(chat_id)
         else:
-            sql = 'UPDATE users SET auth = TRUE WHERE uid = {}'.format(chat_id)
+            sql = "UPDATE users SET auth = TRUE WHERE uid = {}".format(chat_id)
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
-        return 'Authorized successfully'
+        return "Authorized successfully"
 
     def user_unauth(self, chat_id: int):
         if self.err:
             return "Error in DB connection, check log for details"
         elif self.user_check(chat_id):
-            sql = 'UPDATE users SET auth = FALSE WHERE uid = {}'.format(chat_id)
+            sql = "UPDATE users SET auth = FALSE WHERE uid = {}".format(chat_id)
             self.cur.execute(sql)
             self.conn.commit()
             self.disconnect()
-            return 'Unauthorized successfully'
+            return "Unauthorized successfully"
 
     def user_addsudo(self, user_id: int):
         if self.err:
             return "Error in DB connection, check log for details"
         elif not self.user_check(user_id):
-            sql = 'INSERT INTO users (uid, sudo) VALUES ({}, TRUE)'.format(user_id)
+            sql = "INSERT INTO users (uid, sudo) VALUES ({}, TRUE)".format(user_id)
         else:
-            sql = 'UPDATE users SET sudo = TRUE WHERE uid = {}'.format(user_id)
+            sql = "UPDATE users SET sudo = TRUE WHERE uid = {}".format(user_id)
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
-        return 'Successfully Promoted as Sudo'
+        return "Successfully Promoted as Sudo"
 
     def user_rmsudo(self, user_id: int):
         if self.err:
             return "Error in DB connection, check log for details"
         elif self.user_check(user_id):
-             sql = 'UPDATE users SET sudo = FALSE WHERE uid = {}'.format(user_id)
-             self.cur.execute(sql)
-             self.conn.commit()
-             self.disconnect()
-             return 'Successfully removed from Sudo'
+            sql = "UPDATE users SET sudo = FALSE WHERE uid = {}".format(user_id)
+            self.cur.execute(sql)
+            self.conn.commit()
+            self.disconnect()
+            return "Successfully removed from Sudo"
 
     def user_media(self, user_id: int):
         if self.err:
             return
         elif not self.user_check(user_id):
-            sql = 'INSERT INTO users (uid, media) VALUES ({}, TRUE)'.format(user_id)
+            sql = "INSERT INTO users (uid, media) VALUES ({}, TRUE)".format(user_id)
         else:
-            sql = 'UPDATE users SET media = TRUE, doc = FALSE WHERE uid = {}'.format(user_id)
+            sql = "UPDATE users SET media = TRUE, doc = FALSE WHERE uid = {}".format(
+                user_id
+            )
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
@@ -141,9 +148,11 @@ class DbManger:
         if self.err:
             return
         elif not self.user_check(user_id):
-            sql = 'INSERT INTO users (uid, doc) VALUES ({}, TRUE)'.format(user_id)
+            sql = "INSERT INTO users (uid, doc) VALUES ({}, TRUE)".format(user_id)
         else:
-            sql = 'UPDATE users SET media = FALSE, doc = TRUE WHERE uid = {}'.format(user_id)
+            sql = "UPDATE users SET media = FALSE, doc = TRUE WHERE uid = {}".format(
+                user_id
+            )
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
@@ -151,12 +160,12 @@ class DbManger:
     def user_save_thumb(self, user_id: int, path):
         if self.err:
             return
-        image = open(path, 'rb+')
+        image = open(path, "rb+")
         image_bin = image.read()
         if not self.user_check(user_id):
-            sql = 'INSERT INTO users (thumb, uid) VALUES (%s, %s)'
+            sql = "INSERT INTO users (thumb, uid) VALUES (%s, %s)"
         else:
-            sql = 'UPDATE users SET thumb = %s WHERE uid = %s'
+            sql = "UPDATE users SET thumb = %s WHERE uid = %s"
         self.cur.execute(sql, (image_bin, user_id))
         self.conn.commit()
         self.disconnect()
@@ -165,7 +174,7 @@ class DbManger:
         if self.err:
             return
         elif self.user_check(user_id):
-            sql = 'UPDATE users SET thumb = NULL WHERE uid = {}'.format(user_id)
+            sql = "UPDATE users SET thumb = NULL WHERE uid = {}".format(user_id)
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
@@ -179,7 +188,10 @@ class DbManger:
         if self.err:
             return
         q = (name, link, last, title, filters)
-        self.cur.execute("INSERT INTO rss (name, link, last, title, filters) VALUES (%s, %s, %s, %s, %s)", q)
+        self.cur.execute(
+            "INSERT INTO rss (name, link, last, title, filters) VALUES (%s, %s, %s, %s, %s)",
+            q,
+        )
         self.conn.commit()
         self.disconnect()
 
@@ -205,6 +217,6 @@ class DbManger:
         self.conn.commit()
         self.disconnect()
 
+
 if DB_URI is not None:
     DbManger().db_init()
-
