@@ -39,7 +39,7 @@ try:
 except TypeError:
     UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
 try:
-    if len(UPSTREAM_BRANCH) == 0:
+    if len(UPSTREAM_BRANCH) == 0 or UPSTREAM_BRANCH == 'heroku':
        raise TypeError
 except TypeError:
     UPSTREAM_BRANCH = 'master'
