@@ -39,7 +39,7 @@ try:
 except TypeError:
     UPSTREAM_REPO = None
 try:
-    if len(UPSTREAM_BRANCH) == 0:
+    if len(UPSTREAM_BRANCH) == 0 or UPSTREAM_BRANCH == 'heroku':
        raise TypeError
 except TypeError:
     UPSTREAM_BRANCH = 'master'
