@@ -5,9 +5,7 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import deleteMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_gdrive_link, is_gdtot_link, new_thread
-from bot.helper.mirror_utils.download_utils.direct_link_generator import gdtot
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.bot_utils import new_thread, is_gdrive_link
 
 @new_thread
 def countNode(update, context):
@@ -27,12 +25,6 @@ def countNode(update, context):
             tag = f"@{reply_to.from_user.username}"
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-    gdtot_link = is_gdtot_link(link)
-    if gdtot_link:
-        try:
-            link = gdtot(link)
-        except DirectDownloadLinkException as e:
-            return sendMessage(str(e), context.bot, update)
     if is_gdrive_link(link):
         msg = sendMessage(f"Counting: <code>{link}</code>", context.bot, update)
         gd = GoogleDriveHelper()
@@ -40,8 +32,6 @@ def countNode(update, context):
         deleteMessage(context.bot, msg)
         cc = f'\n\n<b>cc: </b>{tag}'
         sendMessage(result + cc, context.bot, update)
-        if gdtot_link:
-            gd.deletefile(link)
     else:
         sendMessage('Send Gdrive link along with command or by replying to the link by command', context.bot, update)
 

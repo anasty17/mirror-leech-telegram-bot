@@ -423,11 +423,19 @@ try:
 except KeyError:
     CUSTOM_FILENAME = None
 try:
-    CRYPT = getConfig('CRYPT')
-    if len(CRYPT) == 0:
+    APPDRIVE_EMAIL = getConfig('APPDRIVE_EMAIL')
+    APPDRIVE_PASS = getConfig('APPDRIVE_PASS')
+    if len(APPDRIVE_EMAIL) == 0 or len(APPDRIVE_PASS) == 0:
         raise KeyError
 except KeyError:
-    CRYPT = None
+    APPDRIVE_EMAIL = None
+    APPDRIVE_PASS = None
+try:
+    GDTOT_CRYPT = getConfig('GDTOT_CRYPT')
+    if len(GDTOT_CRYPT) == 0:
+        raise KeyError
+except KeyError:
+    GDTOT_CRYPT = None
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:

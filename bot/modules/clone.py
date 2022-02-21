@@ -9,8 +9,8 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
 from bot import dispatcher, LOGGER, CLONE_LIMIT, STOP_DUPLICATE, download_dict, download_dict_lock, Interval
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_gdrive_link, is_gdtot_link, new_thread
-from bot.helper.mirror_utils.download_utils.direct_link_generator import gdtot
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_gdrive_link, is_gdtot_link, new_thread, is_appdrive_link
+from bot.helper.ext_utils.parser import appdrive, gdtot
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 @new_thread
@@ -31,14 +31,21 @@ def cloneNode(update, context):
             tag = f"@{reply_to.from_user.username}"
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-    is_gdtot = is_gdtot_link(link)
-    if is_gdtot:
-        try:
-            msg = sendMessage(f"Processing: <code>{link}</code>", context.bot, update)
+    try:
+        msg = sendMessage(f"<b>Processing:</b> <code>{link}</code>", context.bot, update)
+        LOGGER.info(f"Processing: {link}")
+        is_gdtot = is_gdtot_link(link)
+        is_appdrive = is_appdrive_link(link)
+        if is_gdtot:            
             link = gdtot(link)
             deleteMessage(context.bot, msg)
-        except DirectDownloadLinkException as e:
+        elif is_appdrive:
+            apdict = appdrive(link)
+            link = apdict.get('gdrive_link')
             deleteMessage(context.bot, msg)
+    except DirectDownloadLinkException as e:
+            deleteMessage(context.bot, msg)
+            LOGGER.error(e)
             return sendMessage(str(e), context.bot, update)
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
@@ -87,6 +94,10 @@ def cloneNode(update, context):
             sendMarkup(result + cc, context.bot, update, button)
         if is_gdtot:
             gd.deletefile(link)
+        elif is_appdrive:
+            if apdict.get('link_type') == 'login':
+                LOGGER.info(f"Deleting: {link}")
+                gd.deletefile(link)
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
 

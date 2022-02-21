@@ -15,7 +15,7 @@ from telegram import InlineKeyboardMarkup
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
-from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
+from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type, is_appdrive_link
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
@@ -23,7 +23,7 @@ from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_dow
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
-from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
+from bot.helper.ext_utils.parser import appdrive, gdtot
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
 from bot.helper.mirror_utils.status_utils.zip_status import ZipStatus
@@ -392,7 +392,13 @@ def _mirror(bot, update, isZip=False, extract=False, isQbit=False, isLeech=False
         if content_type is None or match(r'text/html|text/plain', content_type):
             try:
                 is_gdtot = is_gdtot_link(link)
-                link = direct_link_generator(link)
+                is_appdrive = is_appdrive_link(link)
+                if is_gdtot:            
+                    link = gdtot(link)
+                elif is_appdrive:
+                    apdict = appdrive(link)
+                    link = apdict.get('gdrive_link')
+                
                 LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
