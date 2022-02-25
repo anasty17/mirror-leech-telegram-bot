@@ -14,8 +14,7 @@ def mirror_status(update, context):
     with download_dict_lock:
         if len(download_dict) == 0:
             currentTime = get_readable_time(time() - botStartTime)
-            total, used, free, _ = disk_usage(DOWNLOAD_DIR)
-            free = get_readable_file_size(free)
+            free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
             message = 'No Active Downloads !\n___________________________'
             message += f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}" \
                        f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {currentTime}"
