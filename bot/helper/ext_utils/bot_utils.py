@@ -115,7 +115,7 @@ def get_readable_message():
     with download_dict_lock:
         msg = ""
         dlspeed_bytes = 0
-        uldl_bytes = 0
+        upspeed_bytes = 0
         START = 0
         if STATUS_LIMIT is not None:
             tasks = len(download_dict)
