@@ -6,7 +6,7 @@ from bot import download_dict, dispatcher, download_dict_lock, DOWNLOAD_DIR, QB_
 from bot.helper.ext_utils.fs_utils import clean_download
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, getAllDownload
 from bot.helper.telegram_helper import button_build
 
@@ -45,6 +45,7 @@ def cancel_mirror(update, context):
         dl.download().cancel_download()
 
 def cancel_all(status):
+    cancelled = 0
     gid = ''
     while True:
         dl = getAllDownload(status)
@@ -52,9 +53,11 @@ def cancel_all(status):
             if dl.gid() != gid:
                 gid = dl.gid()
                 dl.download().cancel_download()
+                cancelled += 1
                 sleep(1)
         else:
             break
+    return cancelled
 
 def cancell_all_buttons(update, context):
     buttons = button_build.ButtonMaker()
@@ -70,12 +73,14 @@ def cancell_all_buttons(update, context):
 def cancel_all_update(update, context):
     query = update.callback_query
     user_id = query.from_user.id
+    name = query.from_user.full_name
     data = query.data
     data = data.split(" ")
     if CustomFilters._owner_query(user_id):
         query.answer()
-        query.message.delete()
-        cancel_all(data[1])
+        editMessage('Canceling ...', query.message)
+        cancelled = cancel_all(data[1])
+        editMessage(f"<a href='tg://user?id={user_id}'>{name}</a>, <b>{cancelled}</b> Item(s) has been Cancelled!", query.message)
     else:
         query.answer(text="You don't have permission to use these buttons!", show_alert=True)
 
