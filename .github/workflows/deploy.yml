@@ -14,7 +14,7 @@ jobs:
           heroku_email: ${{secrets.HEROKU_EMAIL}}
           usedocker: true
           docker_heroku_process_type: web
-          stack: "container"
+          stack: "heroku-20"
           region: "us"
         env:
           HD_CONFIG_FILE_URL: ${{secrets.CONFIG_FILE_URL}}
