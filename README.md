@@ -1,29 +1,47 @@
 # Heroku Deploy
 
-**Important Notes**
-1. This Branch only for deploying, generate all your private files from master branch.
-2. If you want to edit aria.sh or qBittorrent.conf or any other file in bot folder you must add `UPSTREAM_REPO` of your edited public or private fork else YOU WILL GET THE OFFICIAL CODE AND ALL YOUR CHANGES WILL NOT TAKE EFFECT.
-3. Use this branch to avoid suspension `OR` deploy master branch twice with same app name.
-4. To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository or fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`. BUT any change in requirements you need to deploy again and your bot will not boot after dyno restart, so if you have problem with this then fill `UPSTREAM_REPO`.
-5. Don't delete .gitignore file.
-6. Read all variables definitions from master branch readme.
-7. Don't edit variables from Heroku, if you want to edit simply do it in config.env from gists if using gists or from private repository if added in it, then restart your app.
-8. Keep the programmer inside you away and follow the steps.
+## How This Branch Works
+
+* We all know most of mirror/leech repository is banned from heroku. What heroku ban exactly ?
+  - Heroku ban specific layer from docker and not all docker layers. In this repository heroku banned `COPY` layer that copy all repository files to docker container. So changing `COPY` layer by removing files, suspension will not occure.
+
+* But how to get repository files to run the code ?
+  - We are using update feature that clone the files from master branch of official repository to docker container before bot startup.
+
+* Is there any other way to avoid suspension?
+  - Yes! deploy master branch twice. But how this works ?! When you deploy heroku app with specific name, heroku store docker cache for next time deploy for this app with it's specific name, so docker image will not be downloaded again and again for this app since already downloaded first time unless there is a change in docker layers.
+  - If You have deployed an app for first time and after deploying done, you have deleted the app directly, what will happen? Heroku will store docker cache and your app will not suspened since app already deleted.
+  - Heroku have issue in this case. When you deploy from same docker with same app name your app will not got suspened. If you are cli user you will notice at layers pushing step that some of layers marked as `layer already exists`.
+
+**Important Notes for Both Branches**
+1. Don't delete .gitignore file.
+2. Read all variables definitions from master branch readme.
+3. Don't edit/add variables from Heroku, if you want to edit/add simply do it in config.env from gists if using gists or from private repository if added in it, then restart your app. Yuo can only add `CONFIG_FILE_URL` variable from heroku.
+4. Keep the programmer inside you away and follow the steps.
+5. Don't deploy from browser or hmanager app, only from cli or workflow.
+
+**Important Notes for Heroku Branch**
+1. This Branch only for DEPLOYING! Don't use it for update!
+2. Generate all your private files from master branch (token.pickle, config.env, drive_folder, cookies.txt ...).
+3. If you want to edit aria.sh or qBittorrent.conf or any other file in repository you must add `UPSTREAM_REPO` of your edited public or private fork else YOU WILL GET THE OFFICIAL CODE AND ALL YOUR CHANGES WILL NOT TAKE EFFECT.
+4. To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository. BUT any change in requirements of official repository you need to update you code and deploy again or your bot will not boot after dyno restart, so if you have problem with this then fill `UPSTREAM_REPO`.
+5. You can fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
+6. If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
 
 ------
 
-## With CLI
+## Deploy With CLI
 
 - Clone this repo:
 ```
 git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd mirrorbot
 ```
 - Switch to heroku branch
-  - **NOTE**: Don't commit changes in master branch. If you have committed your changes in master branch and after that you switched to heroku branch, the new added files will `NOT` appear in heroku branch.
+  - **NOTE**: Don't commit changes in master branch. If you have committed your changes in master branch and after that you switched to heroku branch, the new added files will `NOT` appear in heroku branch. Skip this step if you are deploying master branch.
 ```
 git checkout heroku
 ```
-- After adding your private data
+- After adding your private files
 ```
 git add . -f
 ```
@@ -48,8 +66,12 @@ heroku git:remote -a YOURAPPNAME
 heroku stack:set container
 ```
 - Push to heroku
+  - 1st cmd for heroku branch and 2nd for master branch
 ```
 git push heroku heroku:master -f
+```
+```
+git push heroku master -f
 ```
 
 ------
@@ -87,7 +109,7 @@ heroku logs -t
 
 ------
 
-## With Github Workflow
+## Deploy With Github Workflow
 
 1. Go to Repository Settings -> Secrets
 
@@ -110,13 +132,11 @@ heroku logs -t
    - Before: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env
    - After: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env
 
-   - You only need to restart your bot after editing config.env Gist secret.
-
 4. After adding all the above Required Variables go to Github Actions tab in your repository.
    - Select Manually Deploy to Heroku workflow as shown below:
 
 ![Select Manual Deploy](https://telegra.ph/file/cff1c24de42c271b23239.jpg)
 
-5. Then click on Run workflow
+5. Choose branch then click on Run workflow
 
 ![Run Workflow](https://telegra.ph/file/f44c7465d58f9f046328b.png)
