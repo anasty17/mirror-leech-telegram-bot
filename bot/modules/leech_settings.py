@@ -52,7 +52,7 @@ def editLeechType(message, query):
 
 def leechSet(update, context):
     msg, button = getleechinfo(update.message.from_user)
-    choose_msg = sendMarkup(msg, context.bot, update, button)
+    choose_msg = sendMarkup(msg, context.bot, update.message, button)
     Thread(target=auto_delete_message, args=(context.bot, update.message, choose_msg)).start()
 
 def setLeechType(update, context):
@@ -111,9 +111,9 @@ def setThumb(update, context):
         if DB_URI is not None:
             DbManger().user_save_thumb(user_id, des_dir)
         msg = f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a>."
-        sendMessage(msg, context.bot, update)
+        sendMessage(msg, context.bot, update.message)
     else:
-        sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update)
+        sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update.message)
 
 leech_set_handler = CommandHandler(BotCommands.LeechSetCommand, leechSet, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 set_thumbnail_handler = CommandHandler(BotCommands.SetThumbCommand, setThumb, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

@@ -16,9 +16,9 @@ def rss_list(update, context):
         list_feed = "<b>Your subscriptions: </b>\n\n"
         for title, url in list(rss_dict.items()):
             list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{url[0]}</code>\n\n"
-        sendMessage(list_feed, context.bot, update)
+        sendMessage(list_feed, context.bot, update.message)
     else:
-        sendMessage("No subscriptions.", context.bot, update)
+        sendMessage("No subscriptions.", context.bot, update.message)
 
 def rss_get(update, context):
     try:
@@ -28,7 +28,7 @@ def rss_get(update, context):
         feed_url = rss_dict.get(title)
         if feed_url is not None and count > 0:
             try:
-                msg = sendMessage(f"Getting the last <b>{count}</b> item(s) from {title}", context.bot, update)
+                msg = sendMessage(f"Getting the last <b>{count}</b> item(s) from {title}", context.bot, update.message)
                 rss_d = feedparse(feed_url[0])
                 item_info = ""
                 for item_num in range(count):
@@ -46,9 +46,9 @@ def rss_get(update, context):
                 LOGGER.error(str(e))
                 editMessage(str(e), msg)
         else:
-            sendMessage("Enter a vaild title/value.", context.bot, update)
+            sendMessage("Enter a vaild title/value.", context.bot, update.message)
     except (IndexError, ValueError):
-        sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand} Title value", context.bot, update)
+        sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand} Title value", context.bot, update.message)
 
 def rss_sub(update, context):
     try:
@@ -71,7 +71,7 @@ def rss_sub(update, context):
         exists = rss_dict.get(title)
         if exists is not None:
             LOGGER.error("This title already subscribed! Choose another title!")
-            return sendMessage("This title already subscribed! Choose another title!", context.bot, update)
+            return sendMessage("This title already subscribed! Choose another title!", context.bot, update.message)
         try:
             rss_d = feedparse(feed_link)
             sub_msg = "<b>Subscribed!</b>"
@@ -91,15 +91,15 @@ def rss_sub(update, context):
                 if len(rss_dict) == 0:
                     rss_job.enabled = True
                 rss_dict[title] = [feed_link, last_link, last_title, f_lists]
-            sendMessage(sub_msg, context.bot, update)
+            sendMessage(sub_msg, context.bot, update.message)
             LOGGER.info(f"Rss Feed Added: {title} - {feed_link} - {filters}")
         except (IndexError, AttributeError) as e:
             LOGGER.error(str(e))
             msg = "The link doesn't seem to be a RSS feed or it's region-blocked!"
-            sendMessage(msg, context.bot, update)
+            sendMessage(msg, context.bot, update.message)
         except Exception as e:
             LOGGER.error(str(e))
-            sendMessage(str(e), context.bot, update)
+            sendMessage(str(e), context.bot, update.message)
     except IndexError:
         msg = f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com"
         msg += " f: 1080 or 720 or 144p|mkv or mp4|hevc (optional)\n\nThis filter will parse links that it's titles"
@@ -114,7 +114,7 @@ def rss_sub(update, context):
         msg += "\n\n3. You can add `or` and `|` as much as you want."
         msg += "\n\n4. Take look on title if it has static special character after or before the qualities or extensions"
         msg += " or whatever and use them in filter to avoid wrong match"
-        sendMessage(msg, context.bot, update)
+        sendMessage(msg, context.bot, update.message)
 
 def rss_unsub(update, context):
     try:
@@ -124,15 +124,15 @@ def rss_unsub(update, context):
         if exists is None:
             msg = "Rss link not exists! Nothing removed!"
             LOGGER.error(msg)
-            sendMessage(msg, context.bot, update)
+            sendMessage(msg, context.bot, update.message)
         else:
             DbManger().rss_delete(title)
             with rss_dict_lock:
                 del rss_dict[title]
-            sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", context.bot, update)
+            sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", context.bot, update.message)
             LOGGER.info(f"Rss link with Title: {title} has been removed!")
     except IndexError:
-        sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update)
+        sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update.message)
 
 def rss_unsuball(update, context):
     if len(rss_dict) > 0:
@@ -140,10 +140,10 @@ def rss_unsuball(update, context):
         with rss_dict_lock:
             rss_dict.clear()
         rss_job.enabled = False
-        sendMessage("All subscriptions deleted.", context.bot, update)
+        sendMessage("All subscriptions deleted.", context.bot, update.message)
         LOGGER.info("All Rss Subscriptions has been removed")
     else:
-        sendMessage("No subscriptions to remove!", context.bot, update)
+        sendMessage("No subscriptions to remove!", context.bot, update.message)
 
 def rss_monitor(context):
     with rss_dict_lock:

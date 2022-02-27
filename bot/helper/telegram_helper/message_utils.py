@@ -1,7 +1,6 @@
 from time import sleep
 from telegram import InlineKeyboardMarkup
 from telegram.message import Message
-from telegram.update import Update
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
 
@@ -10,29 +9,29 @@ from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
-def sendMessage(text: str, bot, update: Update):
+def sendMessage(text: str, bot, message: Message):
     try:
-        return bot.send_message(update.message.chat_id,
-                            reply_to_message_id=update.message.message_id,
+        return bot.send_message(message.chat_id,
+                            reply_to_message_id=message.message_id,
                             text=text, allow_sending_without_reply=True, parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMessage(text, bot, update)
+        return sendMessage(text, bot, message)
     except Exception as e:
         LOGGER.error(str(e))
         return
 
-def sendMarkup(text: str, bot, update: Update, reply_markup: InlineKeyboardMarkup):
+def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMarkup):
     try:
-        return bot.send_message(update.message.chat_id,
-                            reply_to_message_id=update.message.message_id,
+        return bot.send_message(message.chat_id,
+                            reply_to_message_id=message.message_id,
                             text=text, reply_markup=reply_markup, allow_sending_without_reply=True,
                             parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMarkup(text, bot, update, reply_markup)
+        return sendMarkup(text, bot, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
         return
@@ -79,11 +78,11 @@ def deleteMessage(bot, message: Message):
     except Exception as e:
         LOGGER.error(str(e))
 
-def sendLogFile(bot, update: Update):
+def sendLogFile(bot, message: Message):
     with open('log.txt', 'rb') as f:
         bot.send_document(document=f, filename=f.name,
-                          reply_to_message_id=update.message.message_id,
-                          chat_id=update.message.chat_id)
+                          reply_to_message_id=message.message_id,
+                          chat_id=message.chat_id)
 
 def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
@@ -120,16 +119,16 @@ def sendStatusMessage(msg, bot):
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
     progress, buttons = get_readable_message()
     with status_reply_dict_lock:
-        if msg.message.chat.id in list(status_reply_dict.keys()):
+        if msg.chat.id in list(status_reply_dict.keys()):
             try:
-                message = status_reply_dict[msg.message.chat.id]
+                message = status_reply_dict[msg.chat.id]
                 deleteMessage(bot, message)
-                del status_reply_dict[msg.message.chat.id]
+                del status_reply_dict[msg.chat.id]
             except Exception as e:
                 LOGGER.error(str(e))
-                del status_reply_dict[msg.message.chat.id]
+                del status_reply_dict[msg.chat.id]
         if buttons == "":
             message = sendMessage(progress, bot, msg)
         else:
             message = sendMarkup(progress, bot, msg, buttons)
-        status_reply_dict[msg.message.chat.id] = message
+        status_reply_dict[msg.chat.id] = message

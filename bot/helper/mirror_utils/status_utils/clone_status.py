@@ -2,10 +2,10 @@ from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size,
 
 
 class CloneStatus:
-    def __init__(self, obj, size, update, gid):
+    def __init__(self, obj, size, message, gid):
         self.__obj = obj
         self.__size = size
-        self.message = update.message
+        self.message = message
         self.__gid = gid
 
     def processed_bytes(self):

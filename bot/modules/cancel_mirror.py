@@ -18,7 +18,7 @@ def cancel_mirror(update, context):
         gid = args[1]
         dl = getDownloadByGid(gid)
         if not dl:
-            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, update)
+            sendMessage(f"GID: <code>{gid}</code> Not Found.", context.bot, update.message)
             return
         mirror_message = dl.message
     elif update.message.reply_to_message:
@@ -33,14 +33,14 @@ def cancel_mirror(update, context):
         not mirror_message or mirror_message.message_id not in keys
     ):
         msg = f"Reply to active <code>/{BotCommands.MirrorCommand}</code> message which was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
-        sendMessage(msg, context.bot, update)
+        sendMessage(msg, context.bot, update.message)
         return
     if dl.status() == MirrorStatus.STATUS_ARCHIVING:
-        sendMessage("Archival in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Archival in Progress, You Can't Cancel It.", context.bot, update.message)
     elif dl.status() == MirrorStatus.STATUS_EXTRACTING:
-        sendMessage("Extract in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Extract in Progress, You Can't Cancel It.", context.bot, update.message)
     elif dl.status() == MirrorStatus.STATUS_SPLITTING:
-        sendMessage("Split in Progress, You Can't Cancel It.", context.bot, update)
+        sendMessage("Split in Progress, You Can't Cancel It.", context.bot, update.message)
     else:
         dl.download().cancel_download()
 
@@ -65,7 +65,7 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("Cloning", "canall clone")
     buttons.sbutton("All", "canall all")
     button = InlineKeyboardMarkup(buttons.build_menu(2))
-    sendMarkup('Choose tasks to cancel.', context.bot, update, button)
+    sendMarkup('Choose tasks to cancel.', context.bot, update.message, button)
 
 def cancel_all_update(update, context):
     query = update.callback_query
