@@ -55,22 +55,22 @@ def torser(update, context):
     try:
         key = update.message.text.split(" ", maxsplit=1)[1]
     except IndexError:
-        return sendMessage("Send a search key along with command", context.bot, update)
+        return sendMessage("Send a search key along with command", context.bot, update.message)
     if SEARCH_API_LINK is not None and SEARCH_PLUGINS is not None:
         buttons = button_build.ButtonMaker()
         buttons.sbutton('Api', f"torser {user_id} api")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = InlineKeyboardMarkup(buttons.build_menu(2))
-        sendMarkup('Choose tool to search:', context.bot, update, button)
+        sendMarkup('Choose tool to search:', context.bot, update.message, button)
     elif SEARCH_API_LINK is not None and SEARCH_PLUGINS is None:
         button = _api_buttons(user_id)
-        sendMarkup('Choose site to search:', context.bot, update, button)
+        sendMarkup('Choose site to search:', context.bot, update.message, button)
     elif SEARCH_API_LINK is None and SEARCH_PLUGINS is not None:
         button = _plugin_buttons(user_id)
-        sendMarkup('Choose site to search:', context.bot, update, button)
+        sendMarkup('Choose site to search:', context.bot, update.message, button)
     else:
-        return sendMessage("No API link or search PLUGINS added for this function", context.bot, update)
+        return sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
 
 def torserbut(update, context):
     query = update.callback_query

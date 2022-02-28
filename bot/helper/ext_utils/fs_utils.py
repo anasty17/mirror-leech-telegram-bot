@@ -85,80 +85,80 @@ def check_storage_threshold(size: int, arch=False, alloc=False):
     return True
 
 def get_base_name(orig_path: str):
-    if orig_path.endswith(".tar.bz2"):
-        return orig_path.rsplit(".tar.bz2", 1)[0]
-    elif orig_path.endswith(".tar.gz"):
-        return orig_path.rsplit(".tar.gz", 1)[0]
-    elif orig_path.endswith(".bz2"):
-        return orig_path.rsplit(".bz2", 1)[0]
-    elif orig_path.endswith(".gz"):
-        return orig_path.rsplit(".gz", 1)[0]
-    elif orig_path.endswith(".tar.xz"):
-        return orig_path.rsplit(".tar.xz", 1)[0]
-    elif orig_path.endswith(".tar"):
-        return orig_path.rsplit(".tar", 1)[0]
-    elif orig_path.endswith(".tbz2"):
-        return orig_path.rsplit("tbz2", 1)[0]
-    elif orig_path.endswith(".tgz"):
-        return orig_path.rsplit(".tgz", 1)[0]
-    elif orig_path.endswith(".zip"):
-        return orig_path.rsplit(".zip", 1)[0]
-    elif orig_path.endswith(".7z"):
-        return orig_path.rsplit(".7z", 1)[0]
-    elif orig_path.endswith(".Z"):
-        return orig_path.rsplit(".Z", 1)[0]
-    elif orig_path.endswith(".rar"):
-        return orig_path.rsplit(".rar", 1)[0]
-    elif orig_path.endswith(".iso"):
-        return orig_path.rsplit(".iso", 1)[0]
-    elif orig_path.endswith(".wim"):
-        return orig_path.rsplit(".wim", 1)[0]
-    elif orig_path.endswith(".cab"):
-        return orig_path.rsplit(".cab", 1)[0]
-    elif orig_path.endswith(".apm"):
-        return orig_path.rsplit(".apm", 1)[0]
-    elif orig_path.endswith(".arj"):
-        return orig_path.rsplit(".arj", 1)[0]
-    elif orig_path.endswith(".chm"):
-        return orig_path.rsplit(".chm", 1)[0]
-    elif orig_path.endswith(".cpio"):
-        return orig_path.rsplit(".cpio", 1)[0]
-    elif orig_path.endswith(".cramfs"):
-        return orig_path.rsplit(".cramfs", 1)[0]
-    elif orig_path.endswith(".deb"):
-        return orig_path.rsplit(".deb", 1)[0]
-    elif orig_path.endswith(".dmg"):
-        return orig_path.rsplit(".dmg", 1)[0]
-    elif orig_path.endswith(".fat"):
-        return orig_path.rsplit(".fat", 1)[0]
-    elif orig_path.endswith(".hfs"):
-        return orig_path.rsplit(".hfs", 1)[0]
-    elif orig_path.endswith(".lzh"):
-        return orig_path.rsplit(".lzh", 1)[0]
-    elif orig_path.endswith(".lzma"):
-        return orig_path.rsplit(".lzma", 1)[0]
-    elif orig_path.endswith(".lzma2"):
-        return orig_path.rsplit(".lzma2", 1)[0]
-    elif orig_path.endswith(".mbr"):
-        return orig_path.rsplit(".mbr", 1)[0]
-    elif orig_path.endswith(".msi"):
-        return orig_path.rsplit(".msi", 1)[0]
-    elif orig_path.endswith(".mslz"):
-        return orig_path.rsplit(".mslz", 1)[0]
-    elif orig_path.endswith(".nsis"):
-        return orig_path.rsplit(".nsis", 1)[0]
-    elif orig_path.endswith(".ntfs"):
-        return orig_path.rsplit(".ntfs", 1)[0]
-    elif orig_path.endswith(".rpm"):
-        return orig_path.rsplit(".rpm", 1)[0]
-    elif orig_path.endswith(".squashfs"):
-        return orig_path.rsplit(".squashfs", 1)[0]
-    elif orig_path.endswith(".udf"):
-        return orig_path.rsplit(".udf", 1)[0]
-    elif orig_path.endswith(".vhd"):
-        return orig_path.rsplit(".vhd", 1)[0]
-    elif orig_path.endswith(".xar"):
-        return orig_path.rsplit(".xar", 1)[0]
+    if orig_path.lower().endswith(".tar.bz2"):
+        return orig_path.lower().rsplit(".tar.bz2", 1)[0]
+    elif orig_path.lower().endswith(".tar.gz"):
+        return orig_path.lower().rsplit(".tar.gz", 1)[0]
+    elif orig_path.lower().endswith(".bz2"):
+        return orig_path.lower().rsplit(".bz2", 1)[0]
+    elif orig_path.lower().endswith(".gz"):
+        return orig_path.lower().rsplit(".gz", 1)[0]
+    elif orig_path.lower().endswith(".tar.xz"):
+        return orig_path.lower().rsplit(".tar.xz", 1)[0]
+    elif orig_path.lower().endswith(".tar"):
+        return orig_path.lower().rsplit(".tar", 1)[0]
+    elif orig_path.lower().endswith(".tbz2"):
+        return orig_path.lower().rsplit("tbz2", 1)[0]
+    elif orig_path.lower().endswith(".tgz"):
+        return orig_path.lower().rsplit(".tgz", 1)[0]
+    elif orig_path.lower().endswith(".zip"):
+        return orig_path.lower().rsplit(".zip", 1)[0]
+    elif orig_path.lower().endswith(".7z"):
+        return orig_path.lower().rsplit(".7z", 1)[0]
+    elif orig_path.lower().endswith(".Z"):
+        return orig_path.lower().rsplit(".Z", 1)[0]
+    elif orig_path.lower().endswith(".rar"):
+        return orig_path.lower().rsplit(".rar", 1)[0]
+    elif orig_path.lower().endswith(".iso"):
+        return orig_path.lower().rsplit(".iso", 1)[0]
+    elif orig_path.lower().endswith(".wim"):
+        return orig_path.lower().rsplit(".wim", 1)[0]
+    elif orig_path.lower().endswith(".cab"):
+        return orig_path.lower().rsplit(".cab", 1)[0]
+    elif orig_path.lower().endswith(".apm"):
+        return orig_path.lower().rsplit(".apm", 1)[0]
+    elif orig_path.lower().endswith(".arj"):
+        return orig_path.lower().rsplit(".arj", 1)[0]
+    elif orig_path.lower().endswith(".chm"):
+        return orig_path.lower().rsplit(".chm", 1)[0]
+    elif orig_path.lower().endswith(".cpio"):
+        return orig_path.lower().rsplit(".cpio", 1)[0]
+    elif orig_path.lower().endswith(".cramfs"):
+        return orig_path.lower().rsplit(".cramfs", 1)[0]
+    elif orig_path.lower().endswith(".deb"):
+        return orig_path.lower().rsplit(".deb", 1)[0]
+    elif orig_path.lower().endswith(".dmg"):
+        return orig_path.lower().rsplit(".dmg", 1)[0]
+    elif orig_path.lower().endswith(".fat"):
+        return orig_path.lower().rsplit(".fat", 1)[0]
+    elif orig_path.lower().endswith(".hfs"):
+        return orig_path.lower().rsplit(".hfs", 1)[0]
+    elif orig_path.lower().endswith(".lzh"):
+        return orig_path.lower().rsplit(".lzh", 1)[0]
+    elif orig_path.lower().endswith(".lzma"):
+        return orig_path.lower().rsplit(".lzma", 1)[0]
+    elif orig_path.lower().endswith(".lzma2"):
+        return orig_path.lower().rsplit(".lzma2", 1)[0]
+    elif orig_path.lower().endswith(".mbr"):
+        return orig_path.lower().rsplit(".mbr", 1)[0]
+    elif orig_path.lower().endswith(".msi"):
+        return orig_path.lower().rsplit(".msi", 1)[0]
+    elif orig_path.lower().endswith(".mslz"):
+        return orig_path.lower().rsplit(".mslz", 1)[0]
+    elif orig_path.lower().endswith(".nsis"):
+        return orig_path.lower().rsplit(".nsis", 1)[0]
+    elif orig_path.lower().endswith(".ntfs"):
+        return orig_path.lower().rsplit(".ntfs", 1)[0]
+    elif orig_path.lower().endswith(".rpm"):
+        return orig_path.lower().rsplit(".rpm", 1)[0]
+    elif orig_path.lower().endswith(".squashfs"):
+        return orig_path.lower().rsplit(".squashfs", 1)[0]
+    elif orig_path.lower().endswith(".udf"):
+        return orig_path.lower().rsplit(".udf", 1)[0]
+    elif orig_path.lower().endswith(".vhd"):
+        return orig_path.lower().rsplit(".vhd", 1)[0]
+    elif orig_path.lower().endswith(".xar"):
+        return orig_path.lower().rsplit(".xar", 1)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
@@ -191,7 +191,7 @@ def take_ss(video_file):
 def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):
     parts = ceil(size/TG_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
-        split_size = ceil(size/parts)
+        split_size = ceil(size/parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 2500000

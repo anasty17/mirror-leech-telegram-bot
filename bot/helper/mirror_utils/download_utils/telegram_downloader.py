@@ -43,7 +43,7 @@ class TelegramDownloadHelper:
         gid = ''.join(random.choices(file_id, k=12))
         with download_dict_lock:
             download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
-        sendStatusMessage(self.__listener.update, self.__listener.bot)
+        sendStatusMessage(self.__listener.message, self.__listener.bot)
 
     def __onDownloadProgress(self, current, total):
         if self.__is_cancelled:
@@ -109,14 +109,14 @@ class TelegramDownloadHelper:
                     smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                     if smsg:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                        return sendMarkup(msg, self.__listener.bot, self.__listener.update, button)
+                        return sendMarkup(msg, self.__listener.bot, self.__listener.message, button)
                 if STORAGE_THRESHOLD is not None:
                     arch = any([self.__listener.isZip, self.__listener.extract])
                     acpt = check_storage_threshold(size, arch)
                     if not acpt:
                         msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                        return sendMessage(msg, self.__listener.bot, self.__listener.update)
+                        return sendMessage(msg, self.__listener.bot, self.__listener.message)
                 self.__onDownloadStart(name, size, media.file_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
                 Thread(target=self.__download, args=(_message, path)).start()

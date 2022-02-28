@@ -675,14 +675,14 @@ def re_verfiy(paused, resumed, client, hash_id):
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
         except NotFound404Error:
             raise NotFound404Error
-        except:
-            LOGGER.error("Errored in reverification paused")
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in reverification paused")
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
         except NotFound404Error:
             raise NotFound404Error
-        except:
-            LOGGER.error("Errored in reverification resumed")
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in reverification resumed")
         k += 1
         if k > 5:
             return False
@@ -738,14 +738,14 @@ def set_priority(hash_id):
         client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
     except NotFound404Error:
         raise NotFound404Error
-    except:
-        LOGGER.error("Errored in paused")
+    except Exception as e:
+        LOGGER.error(f"{e} Errored in paused")
     try:
         client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
     except NotFound404Error:
         raise NotFound404Error
-    except:
-        LOGGER.error("Errored in resumed")
+    except Exception as e:
+        LOGGER.error(f"{e} Errored in resumed")
     sleep(2)
     if not re_verfiy(pause, resume, client, hash_id):
         LOGGER.error("Verification Failed")
