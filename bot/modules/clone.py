@@ -34,17 +34,17 @@ def cloneNode(update, context):
     is_gdtot = is_gdtot_link(link)
     if is_gdtot:
         try:
-            msg = sendMessage(f"Processing: <code>{link}</code>", context.bot, update)
+            msg = sendMessage(f"Processing: <code>{link}</code>", context.bot, update.message)
             link = gdtot(link)
             deleteMessage(context.bot, msg)
         except DirectDownloadLinkException as e:
             deleteMessage(context.bot, msg)
-            return sendMessage(str(e), context.bot, update)
+            return sendMessage(str(e), context.bot, update.message)
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
         if res != "":
-            return sendMessage(res, context.bot, update)
+            return sendMessage(res, context.bot, update.message)
         if STOP_DUPLICATE:
             LOGGER.info('Checking File/Folder if already in Drive...')
             smsg, button = gd.drive_list(name, True, True)
@@ -63,10 +63,10 @@ def cloneNode(update, context):
         else:
             drive = GoogleDriveHelper(name)
             gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
-            clone_status = CloneStatus(drive, size, update, gid)
+            clone_status = CloneStatus(drive, size, update.message, gid)
             with download_dict_lock:
                 download_dict[update.message.message_id] = clone_status
-            sendStatusMessage(update, context.bot)
+            sendStatusMessage(update.message, context.bot)
             result, button = drive.clone(link)
             with download_dict_lock:
                 del download_dict[update.message.message_id]
@@ -82,13 +82,13 @@ def cloneNode(update, context):
                 pass
         cc = f'\n\n<b>cc: </b>{tag}'
         if button in ["cancelled", ""]:
-            sendMessage(f"{tag} {result}", context.bot, update)
+            sendMessage(f"{tag} {result}", context.bot, update.message)
         else:
-            sendMarkup(result + cc, context.bot, update, button)
+            sendMarkup(result + cc, context.bot, update.message, button)
         if is_gdtot:
             gd.deletefile(link)
     else:
-        sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update)
+        sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', context.bot, update.message)
 
 clone_handler = CommandHandler(BotCommands.CloneCommand, cloneNode, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 dispatcher.add_handler(clone_handler)

@@ -146,7 +146,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `WEB_PINCODE`: If empty or `False` means no more pincode required while qbit web selection. `Bool`
 - `QB_SEED`: If `True` QB torrent will be seeded after and while uploading until reaching specific ratio or time, edit `MaxRatio` or `GlobalMaxSeedingMinutes` or both from qbittorrent.conf (`-1` means no limit, but u can cancel manually by gid). **NOTE**: 1. Don't change `MaxRatioAction`, 2. Only works with `/qbmirror` and `/qbzipmirror`. `Bool`
 - `QB_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent in seconds.
-  - **Qbittorrent NOTE**: If your facing ram exceeded issue then set limit for `MaxConnecs` in qbittorrent config.
+  - **Qbittorrent NOTE**: If your facing ram exceeded issue then set limit for `MaxConnecs` and decrease `AsyncIOThreadsCount` in qbittorrent config.
 - `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`.
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`

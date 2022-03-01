@@ -191,7 +191,7 @@ def take_ss(video_file):
 def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):
     parts = ceil(size/TG_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
-        split_size = ceil(size/parts)
+        split_size = ceil(size/parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 2500000

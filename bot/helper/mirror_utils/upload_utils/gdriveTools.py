@@ -16,7 +16,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from telegram import InlineKeyboardMarkup
-from tenacity import *
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, before_log, RetryError
 
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot import parent_id, DOWNLOAD_DIR, IS_TEAM_DRIVE, INDEX_URL, USE_SERVICE_ACCOUNTS, BUTTON_FOUR_NAME, \
