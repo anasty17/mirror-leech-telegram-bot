@@ -1,6 +1,7 @@
 anytree
 appdirs
 aria2p
+aiohttp
 attrdict
 beautifulsoup4
 bencoding
