@@ -272,7 +272,7 @@ def new_thread(fn):
 
     return wrapper
 
-def get_content_type(link: str):
+def get_content_type(link: str) -> str:
     try:
         res = rhead(link, allow_redirects=True, timeout=5)
         content_type = res.headers.get('content-type')
