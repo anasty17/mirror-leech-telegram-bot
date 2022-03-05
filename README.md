@@ -70,7 +70,7 @@ git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd
 ```
 - For Debian based distros
 ```
-sudo apt install python3
+sudo apt install python3 python3-pip
 ```
 Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/) or by commands below.
 ```
@@ -178,20 +178,27 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle
-- Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
-- Go to the OAuth Consent tab, fill it, and save.
-- Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-- Choose Desktop and Create.
-- Publish your OAuth consent screen App to prevent **token.pickle** from expire
-- Use the download button to download your credentials.
-- Move that file to the root of mirrorbot, and rename it to **credentials.json**
-- Visit [Google API page](https://console.developers.google.com/apis/library)
-- Search for Drive and enable it if it is disabled
-- Finally, run the script to generate **token.pickle** file for Google Drive:
+
+**NOTES**
+- Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
+- You should set default broswer. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
+- Windows users should install python and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+
+1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to the OAuth Consent tab, fill it, and save.
+3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
+4. Choose Desktop and Create.
+5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
+6. Use the download button to download your credentials.
+7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
+8. Visit [Google API page](https://console.developers.google.com/apis/library)
+9. Search for Google Drive Api and enable it
+10. Finally, run the script to generate **token.pickle** file for Google Drive:
 ```
 pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 python3 generate_drive_token.py
 ```
+- For linux user use pip3 instead of pip.
 ------
 
 ## Deploying on VPS
@@ -217,9 +224,12 @@ sudo docker image prune -a
 
 ### Deploying on VPS Using Docker
 
-- Start Docker daemon (skip if already running):
+- Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
 ```
 sudo dockerd
+```
+```
+sudo snap start docker
 ```
 - **Note**: If not started or not starting, run the command below then try to start.
 ```

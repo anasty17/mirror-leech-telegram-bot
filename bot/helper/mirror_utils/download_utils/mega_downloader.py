@@ -140,8 +140,7 @@ def add_mega_download(mega_link: str, path: str, listener):
     listeners.append(mega_listener)
     if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
         executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
-    link_type = get_mega_link_type(mega_link)
-    if link_type == "file":
+    if get_mega_link_type(mega_link) == "file":
         LOGGER.info("File. If your download didn't start, then check your link if it's available to download")
         executor.do(api.getPublicNode, (mega_link,))
         node = mega_listener.public_node
