@@ -182,7 +182,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 **NOTES**
 - Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
 - You should set default broswer. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
-- Windows users should install python and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+- Windows users should install python3 (not python) and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
 
 1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 2. Go to the OAuth Consent tab, fill it, and save.
