@@ -153,7 +153,7 @@ def rss_set_update(update, context):
     data = query.data
     data = data.split(" ")
     if not CustomFilters._owner_query(user_id):
-        return query.answer(text="You don't have permission to use these buttons!", show_alert=True)
+        query.answer(text="You don't have permission to use these buttons!", show_alert=True)
     elif data[1] == 'unsuball':
         query.answer()
         if len(rss_dict) > 0:
