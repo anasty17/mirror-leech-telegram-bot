@@ -10,7 +10,7 @@
 
 * Is there any other way to avoid suspension?
   - Yes! deploy master branch twice. But how this works ?! When you deploy heroku app with specific name, heroku store docker cache for next time deploy for this app with it's specific name, so docker image will not be downloaded again and again for this app since already downloaded first time unless there is a change in docker layers.
-  - If You have deployed an app for first time and after deploying done, you have deleted the app directly, what will happen? Heroku will store docker cache and your app will not suspened since app already deleted.
+  - If You have deployed an app for first time and after deploying done, you have deleted the app immediately, what will happen? Heroku will store docker cache and your app will not suspened since app already deleted.
   - Heroku have issue in this case. When you deploy from same docker with same app name your app will not got suspened. If you are cli user you will notice at layers pushing step that some of layers marked as `layer already exists`.
 
 **Important Notes for Both Branches**
@@ -26,7 +26,8 @@
 3. If you want to edit aria.sh or qBittorrent.conf or any other file in repository you must add `UPSTREAM_REPO` of your edited public or private fork else YOU WILL GET THE OFFICIAL CODE AND ALL YOUR CHANGES WILL NOT TAKE EFFECT.
 4. To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository. BUT any change in requirements of official repository you need to update you code and deploy again or your bot will not boot after dyno restart, so if you have problem with this then fill `UPSTREAM_REPO`.
 5. You can fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
-6. If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
+6. If want to add private files before deploying then add them to heroku branch not master branch!
+7. If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
 
 ------
 
