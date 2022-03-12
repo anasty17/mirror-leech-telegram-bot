@@ -220,7 +220,7 @@ except KeyError:
 try:
     MEGA_EMAIL_ID = getConfig('MEGA_EMAIL_ID')
     MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
-    if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+    if 0 in (len(MEGA_EMAIL_ID), len(MEGA_PASSWORD)):
         raise KeyError
 except KeyError:
     logging.warning('MEGA Credentials not provided!')
@@ -326,7 +326,7 @@ except KeyError:
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
-    if len(BUTTON_FOUR_NAME) == 0 or len(BUTTON_FOUR_URL) == 0:
+    if 0 in (len(BUTTON_FOUR_NAME), len(BUTTON_FOUR_URL)):
         raise KeyError
 except KeyError:
     BUTTON_FOUR_NAME = None
@@ -334,7 +334,7 @@ except KeyError:
 try:
     BUTTON_FIVE_NAME = getConfig('BUTTON_FIVE_NAME')
     BUTTON_FIVE_URL = getConfig('BUTTON_FIVE_URL')
-    if len(BUTTON_FIVE_NAME) == 0 or len(BUTTON_FIVE_URL) == 0:
+    if 0 in (len(BUTTON_FIVE_NAME), len(BUTTON_FIVE_URL)):
         raise KeyError
 except KeyError:
     BUTTON_FIVE_NAME = None
@@ -342,7 +342,7 @@ except KeyError:
 try:
     BUTTON_SIX_NAME = getConfig('BUTTON_SIX_NAME')
     BUTTON_SIX_URL = getConfig('BUTTON_SIX_URL')
-    if len(BUTTON_SIX_NAME) == 0 or len(BUTTON_SIX_URL) == 0:
+    if 0 in (len(BUTTON_SIX_NAME), len(BUTTON_SIX_URL)):
         raise KeyError
 except KeyError:
     BUTTON_SIX_NAME = None
@@ -385,7 +385,7 @@ except KeyError:
 try:
     SHORTENER = getConfig('SHORTENER')
     SHORTENER_API = getConfig('SHORTENER_API')
-    if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
+    if 0 in (len(SHORTENER), len(SHORTENER_API)):
         raise KeyError
 except KeyError:
     SHORTENER = None
