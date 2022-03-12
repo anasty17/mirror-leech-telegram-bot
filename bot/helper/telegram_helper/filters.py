@@ -41,8 +41,8 @@ class CustomFilters:
                     for message_id, status in download_dict.items():
                         if status.gid() == args[1] and status.message.from_user.id == user_id:
                             return True
-                    else:
-                        return False
+                        
+                    return False
             elif not message.reply_to_message:
                 return True
             # Cancelling by replying to original mirror message
