@@ -22,10 +22,9 @@ if os.path.exists('drive_folder'):
             if choice in ['y', 'Y']:
                 msg = f'{lines}'
                 break
-            elif choice in ['n', 'N']:
+            if choice in ['n', 'N']:
                 break
-            else:
-                print("\n\n      DO YOU WISH TO KEEP THE ABOVE DETAILS ???? y/n <=== this is option ..... OPEN YOUR EYES & READ...")
+            print("\n\n      DO YOU WISH TO KEEP THE ABOVE DETAILS ???? y/n <=== this is option ..... OPEN YOUR EYES & READ...")
 num = int(input("    How Many Drive/Folder You Likes To Add : "))
 for count in range(1, num + 1):
     print(f"\n        > DRIVE - {count}\n")

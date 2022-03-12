@@ -657,7 +657,7 @@ class GoogleDriveHelper:
             response = self.__drive_query(parent_id, fileName, stopDup, isRecur, itemType)
             if not response["files"] and noMulti:
                 break
-            elif not response["files"]:
+            if not response["files"]:
                 continue
             if not Title:
                 msg += f'<h4>Search Result For {fileName}</h4>'
