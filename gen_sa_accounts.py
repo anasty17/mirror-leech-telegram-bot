@@ -166,11 +166,13 @@ def serviceaccountfactory(
         create_projects=None,
         max_projects=12,
         enable_services=None,
-        services=['iam', 'drive'],
+        services=None,
         create_sas=None,
         delete_sas=None,
         download_keys=None
 ):
+    if services is None:
+        services = ['iam', 'drive']
     selected_projects = []
     proj_id = loads(open(credentials, 'r').read())['installed']['project_id']
     creds = None
