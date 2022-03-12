@@ -2,7 +2,6 @@
 
 import string
 import random
-import logging
 
 from time import sleep
 from telegraph import Telegraph

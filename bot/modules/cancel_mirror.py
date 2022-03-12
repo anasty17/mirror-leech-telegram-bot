@@ -2,8 +2,7 @@ from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from time import sleep
 
-from bot import download_dict, dispatcher, download_dict_lock, DOWNLOAD_DIR, QB_SEED
-from bot.helper.ext_utils.fs_utils import clean_download
+from bot import download_dict, dispatcher, download_dict_lock, QB_SEED
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup
