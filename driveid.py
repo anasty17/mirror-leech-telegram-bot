@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 print("\n\n"\
       "        Bot can search files recursively, but you have to add the list of drives you want to search.\n"\
       "        Use the following format: (You can use 'root' in the ID in case you wan to use main drive.)\n"\
@@ -33,7 +34,7 @@ for count in range(1, num + 1):
     index = input("    Enter Drive INDEX URL (optional) : ")
     if not name or not id:
         print("\n\n        ERROR : Dont leave the name/id without filling.")
-        exit(1)
+        sys.exit(1)
     name=name.replace(" ", "_")
     if index:
         if index[-1] == "/":

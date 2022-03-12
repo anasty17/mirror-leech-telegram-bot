@@ -300,7 +300,7 @@ if __name__ == '__main__':
               'https://developers.google.com/drive/api/v3/quickstart/python\n'
               'and save the json file as credentials.json' % args.credentials)
         if len(options) < 1:
-            exit(-1)
+            sys.exit(-1)
         else:
             print('Select a credentials file below.')
             inp_options = [str(i) for i in list(range(1, len(options) + 1))] + options

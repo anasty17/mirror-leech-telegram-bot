@@ -1,6 +1,7 @@
 import logging
 import socket
 import faulthandler
+import sys
 
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
@@ -73,7 +74,7 @@ INDEX_URLS = []
 try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
         logging.error('The README.md file there to be read! Exiting now!')
-        exit()
+        sys.exit()
 except KeyError:
     pass
 
@@ -150,7 +151,7 @@ try:
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
 except KeyError as e:
     LOGGER.error("One or more env variables missing! Exiting now")
-    exit(1)
+    sys.exit(1)
 
 LOGGER.info("Generating BOT_STRING_SESSION")
 app = Client('pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, no_updates=True)
