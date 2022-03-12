@@ -63,7 +63,6 @@ def _def_batch_resp(id, resp, exception):
 
 # Project Creation Batch Handler
 def _pc_resp(id, resp, exception):
-    global project_create_ops
     if exception is not None:
         print(str(exception))
     else:
@@ -73,7 +72,6 @@ def _pc_resp(id, resp, exception):
 
 # Project Creation
 def _create_projects(cloud, count):
-    global project_create_ops
     batch = cloud.new_batch_http_request(callback=_pc_resp)
     new_projs = []
     for _ in range(count):

@@ -135,7 +135,6 @@ def add_mega_download(mega_link: str, path: str, listener):
     executor = AsyncExecutor()
     api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
     mega_listener = MegaAppListener(executor.continue_event, listener)
-    global listeners
     api.addListener(mega_listener)
     listeners.append(mega_listener)
     if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
