@@ -47,6 +47,6 @@ class _BotCommands:
         self.RssGetCommand = f'rssget{CMD_INDEX}'
         self.RssSubCommand = f'rsssub{CMD_INDEX}'
         self.RssUnSubCommand = f'rssunsub{CMD_INDEX}'
-        self.RssUnSubAllCommand = f'rssunsuball{CMD_INDEX}'
+        self.RssSettingsCommand = f'rssset{CMD_INDEX}'
 
 BotCommands = _BotCommands()

@@ -1,13 +1,15 @@
 from feedparser import parse as feedparse
 from time import sleep
-from telegram.ext import CommandHandler
+from telegram.ext import CommandHandler, CallbackQueryHandler
+from telegram import InlineKeyboardMarkup
 from threading import Lock
 
 from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendMarkup
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.telegram_helper import button_build
 
 rss_dict_lock = Lock()
 
@@ -134,16 +136,45 @@ def rss_unsub(update, context):
     except IndexError:
         sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand} Title", context.bot, update.message)
 
-def rss_unsuball(update, context):
-    if len(rss_dict) > 0:
-        DbManger().rss_delete_all()
-        with rss_dict_lock:
-            rss_dict.clear()
-        rss_job.enabled = False
-        sendMessage("All subscriptions deleted.", context.bot, update.message)
-        LOGGER.info("All Rss Subscriptions has been removed")
+def rss_settings(update, context):
+    buttons = button_build.ButtonMaker()
+    buttons.sbutton("Unsubscribe All", "rss unsuball")
+    if rss_job.enabled:
+        buttons.sbutton("Pause", "rss pause")
     else:
-        sendMessage("No subscriptions to remove!", context.bot, update.message)
+        buttons.sbutton("Start", "rss start")
+    button = InlineKeyboardMarkup(buttons.build_menu(2))
+    sendMarkup('Rss Settings', context.bot, update.message, button)
+
+def rss_set_update(update, context):
+    query = update.callback_query
+    user_id = query.from_user.id
+    msg = query.message
+    data = query.data
+    data = data.split(" ")
+    if not CustomFilters._owner_query(user_id):
+        query.answer(text="You don't have permission to use these buttons!", show_alert=True)
+    elif data[1] == 'unsuball':
+        query.answer()
+        if len(rss_dict) > 0:
+            DbManger().rss_delete_all()
+            with rss_dict_lock:
+                rss_dict.clear()
+            rss_job.enabled = False
+            editMessage("All Rss Subscriptions have been removed.", msg)
+            LOGGER.info("All Rss Subscriptions have been removed.")
+        else:
+            editMessage("No subscriptions to remove!", msg)
+    elif data[1] == 'pause':
+        query.answer()
+        rss_job.enabled = False
+        editMessage("Rss Paused", msg)
+        LOGGER.info("Rss Paused")
+    elif data[1] == 'start':
+        query.answer()
+        rss_job.enabled = True
+        editMessage("Rss Started", msg)
+        LOGGER.info("Rss Started")
 
 def rss_monitor(context):
     with rss_dict_lock:
@@ -201,11 +232,14 @@ if DB_URI is not None and RSS_CHAT_ID is not None:
     rss_get_handler = CommandHandler(BotCommands.RssGetCommand, rss_get, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_sub_handler = CommandHandler(BotCommands.RssSubCommand, rss_sub, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_unsub_handler = CommandHandler(BotCommands.RssUnSubCommand, rss_unsub, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
-    rss_unsub_all_handler = CommandHandler(BotCommands.RssUnSubAllCommand, rss_unsuball, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    rss_settings_handler = CommandHandler(BotCommands.RssSettingsCommand, rss_settings, filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+    rss_buttons_handler = CallbackQueryHandler(rss_set_update, pattern="rss", run_async=True)
 
     dispatcher.add_handler(rss_list_handler)
     dispatcher.add_handler(rss_get_handler)
     dispatcher.add_handler(rss_sub_handler)
     dispatcher.add_handler(rss_unsub_handler)
-    dispatcher.add_handler(rss_unsub_all_handler)
+    dispatcher.add_handler(rss_settings_handler)
+    dispatcher.add_handler(rss_buttons_handler)
     rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=20, name="RSS")
+    rss_job.enabled = True

@@ -156,7 +156,7 @@ help_string_telegraph = f'''<br>
 <br><br>
 <b>/{BotCommands.RssUnSubCommand}</b>: [Title]: Unubscribe rss feed by title
 <br><br>
-<b>/{BotCommands.RssUnSubAllCommand}</b>: Remove all rss feed subscriptions
+<b>/{BotCommands.RssSettingsCommand}</b>: Rss Settings
 <br><br>
 <b>/{BotCommands.CancelMirror}</b>: Reply to the message by which the download was initiated and that download will be cancelled
 <br><br>

@@ -151,7 +151,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
-- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file.
+- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file. Read [this](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended) also.
 - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means `master`.
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
@@ -164,9 +164,9 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` seconds at least. Empty means 900 s (default time).
 - `RSS_COMMAND`: Choose command for the desired action.
-- `RSS_CHAT_ID`: Chat ID where bot will send the rss links.
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent.
 - `USER_STRING_SESSION`: To send rss links from your telegram account instead of adding bot to channel then adding channel to group to get rss link since bot will not read command from itself or other bot. To generate string session use this command `python3 generate_string_session.py` after mounting repo folder for sure.
-  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work.
+  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. Add the bot in grop for better experience, since if you are using `USER_STRING_SESSION` you need to send a private message to bot after each restart. You can add the bot to a channel and add this channel to group so messages sent by bot to channel will be forwarded to group without using `USER_STRING_SESSION`.
 - Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
   - `BUTTON_FOUR_NAME`:
   - `BUTTON_FOUR_URL`:
@@ -181,8 +181,8 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 
 **NOTES**
 - Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
-- You should set default broswer. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
-- Windows users should install python3 (not python) and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+- You should set default browser. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
+- Windows users should install python3 and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
 
 1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 2. Go to the OAuth Consent tab, fill it, and save.
@@ -316,7 +316,7 @@ rsslist - List all subscribed rss feed info
 rssget - Get specific No. of links from specific rss feed
 rsssub - Subscribe new rss feed
 rssunsub - Unsubscribe rss feed by title
-rssunsuball - Remove all rss feed subscriptions
+rssset - Rss Settings
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
@@ -329,6 +329,15 @@ stats - Bot Usage Stats
 ping - Ping the Bot
 help - All cmds with description
 ```
+------
+
+## UPSTREAM REPO (Recommended)
+
+- `UPSTREAM_REPO` variable can be used for edit/add/update any file in repository.
+- You can add private/public repository link to grab all files from it.
+- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except config.env, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
+- `UPSTREAM_BRANCH` don't ever fill heroku here.
+
 ------
 
 ## Using Service Accounts for uploading to avoid user rate limit
