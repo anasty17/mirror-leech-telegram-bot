@@ -143,7 +143,7 @@ def rss_settings(update, context):
         buttons.sbutton("Pause", "rss pause")
     else:
         buttons.sbutton("Start", "rss start")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
+    button = InlineKeyboardMarkup(buttons.build_menu(1))
     sendMarkup('Rss Settings', context.bot, update.message, button)
 
 def rss_set_update(update, context):
