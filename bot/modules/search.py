@@ -111,6 +111,7 @@ def _search(key, site, message, tool):
             if "error" not in search_results.keys():
                 msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
                 msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                search_results = search_results['data']
             else:
                 return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
         except Exception as e:
@@ -143,7 +144,7 @@ def _search(key, site, message, tool):
 def _getResult(search_results, key, message, tool):
     telegraph_content = []
     msg = f"<h4>Search Result(s) For {key}</h4>"
-    for index, result in enumerate(search_results['data'], start=1):
+    for index, result in enumerate(search_results, start=1):
         if tool == 'api':
             if 'name' in result.keys():
                 msg += f"<code><a href='{result['url']}'>{escape(result['name'])}</a></code><br>"
