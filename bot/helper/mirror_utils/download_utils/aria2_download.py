@@ -33,7 +33,7 @@ def __onDownloadStarted(api, gid):
                     if smsg:
                         dl.getListener().onDownloadError('File/Folder already available in Drive.\n\n')
                         api.remove([download], force=True, files=True)
-                        return sendMarkup("Here are the search results:", dl.getListener().bot, dl.getListener().message, button)
+                        return sendMarkup("Here are the search results:", dl.getListener().message, button)
             if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
                 limit = None
@@ -113,10 +113,10 @@ def add_aria2c_download(link: str, path, listener, filename):
     if download.error_message:
         error = str(download.error_message).replace('<', ' ').replace('>', ' ')
         LOGGER.info(f"Download Error: {error}")
-        return sendMessage(error, listener.bot, listener.message)
+        return sendMessage(error, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
         LOGGER.info(f"Started: {download.gid} DIR: {download.dir} ")
-    sendStatusMessage(listener.message, listener.bot)
+    sendStatusMessage(listener.message)
 
 start_listener()

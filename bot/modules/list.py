@@ -12,14 +12,14 @@ from bot.helper.telegram_helper import button_build
 def list_buttons(update, context):
     user_id = update.message.from_user.id
     if len(update.message.text.split(" ", maxsplit=1)) < 2:
-        return sendMessage('Send a search key along with command', context.bot, update.message)
+        return sendMessage('Send a search key along with command', update.message)
     buttons = button_build.ButtonMaker()
     buttons.sbutton("Folders", f"types {user_id} folders")
     buttons.sbutton("Files", f"types {user_id} files")
     buttons.sbutton("Both", f"types {user_id} both")
     buttons.sbutton("Cancel", f"types {user_id} cancel")
     button = InlineKeyboardMarkup(buttons.build_menu(2))
-    sendMarkup('Choose option to list.', context.bot, update.message, button)
+    sendMarkup('Choose option to list.', update.message, button)
 
 def select_type(update, context):
     query = update.callback_query

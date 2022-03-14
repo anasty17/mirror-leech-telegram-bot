@@ -15,7 +15,7 @@ from .mirror import MirrorListener
 
 listener_dict = {}
 
-def _watch(bot, message, isZip=False, isLeech=False):
+def _watch(message, isZip=False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
@@ -71,9 +71,9 @@ def _watch(bot, message, isZip=False, isLeech=False):
         help_msg += " Like playlist_items:10 works with string so no need to add `^` before the number"
         help_msg += " but playlistend works only with integer so you must add `^` before the number like example above."
         help_msg += "\n\nCheck all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/a3125791c7a5cdf2c8c025b99788bf686edd1a8a/yt_dlp/YoutubeDL.py#L194'>FILE</a>."
-        return sendMessage(help_msg, bot, message)
+        return sendMessage(help_msg, message)
 
-    listener = MirrorListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
+    listener = MirrorListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -82,7 +82,7 @@ def _watch(bot, message, isZip=False, isLeech=False):
         result = ydl.extractMetaData(link, name, args, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        return sendMessage(tag + " " + msg, bot, message)
+        return sendMessage(tag + " " + msg, message)
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]"
@@ -95,7 +95,7 @@ def _watch(bot, message, isZip=False, isLeech=False):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args]
-        bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
+        bmsg = sendMarkup('Choose Playlist Videos Quality:', message, YTBUTTONS)
     else:
         formats = result.get('formats')
         formats_dict = {}
@@ -144,7 +144,7 @@ def _watch(bot, message, isZip=False, isLeech=False):
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args, formats_dict]
-        bmsg = sendMarkup('Choose Video Quality:', bot, message, YTBUTTONS)
+        bmsg = sendMarkup('Choose Video Quality:', message, YTBUTTONS)
 
     Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
@@ -250,16 +250,16 @@ def _auto_cancel(msg, msg_id):
         pass
 
 def watch(update, context):
-    _watch(context.bot, update.message)
+    _watch(update.message)
 
 def watchZip(update, context):
-    _watch(context.bot, update.message, True)
+    _watch(update.message, True)
 
 def leechWatch(update, context):
-    _watch(context.bot, update.message, isLeech=True)
+    _watch(update.message, isLeech=True)
 
 def leechWatchZip(update, context):
-    _watch(context.bot, update.message, True, True)
+    _watch(update.message, True, True)
 
 watch_handler = CommandHandler(BotCommands.WatchCommand, watch,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

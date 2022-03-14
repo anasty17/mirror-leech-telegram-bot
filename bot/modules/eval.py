@@ -121,7 +121,7 @@ def exechelp(update, context):
 • /exec <i>Run Commands In Exec</i>
 • /clearlocals <i>Cleared locals</i>
 '''
-    sendMessage(help_string, context.bot, update.message)
+    sendMessage(help_string, update.message)
 
 
 EVAL_HANDLER = CommandHandler(('eval'), evaluate, filters=CustomFilters.owner_filter, run_async=True)

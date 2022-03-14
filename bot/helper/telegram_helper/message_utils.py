@@ -9,7 +9,7 @@ from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
-def sendMessage(text: str, bot, message: Message):
+def sendMessage(text: str, message: Message):
     try:
         return bot.send_message(message.chat_id,
                             reply_to_message_id=message.message_id,
@@ -17,12 +17,12 @@ def sendMessage(text: str, bot, message: Message):
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMessage(text, bot, message)
+        return sendMessage(text, message)
     except Exception as e:
         LOGGER.error(str(e))
         return
 
-def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMarkup):
+def sendMarkup(text: str, message: Message, reply_markup: InlineKeyboardMarkup):
     try:
         return bot.send_message(message.chat_id,
                             reply_to_message_id=message.message_id,
@@ -31,7 +31,7 @@ def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMar
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMarkup(text, bot, message, reply_markup)
+        return sendMarkup(text, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
         return
@@ -49,14 +49,14 @@ def editMessage(text: str, message: Message, reply_markup=None):
         LOGGER.error(str(e))
         return
 
-def sendRss(text: str, bot):
+def sendRss(text: str):
     if rss_session is None:
         try:
             return bot.send_message(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
         except RetryAfter as r:
             LOGGER.warning(str(r))
             sleep(r.retry_after * 1.5)
-            return sendRss(text, bot)
+            return sendRss(text)
         except Exception as e:
             LOGGER.error(str(e))
             return
@@ -66,31 +66,31 @@ def sendRss(text: str, bot):
         except FloodWait as e:
             LOGGER.warning(str(e))
             sleep(e.x * 1.5)
-            return sendRss(text, bot)
+            return sendRss(text)
         except Exception as e:
             LOGGER.error(str(e))
             return
 
-def deleteMessage(bot, message: Message):
+def deleteMessage(message: Message):
     try:
         bot.delete_message(chat_id=message.chat.id,
                            message_id=message.message_id)
     except Exception as e:
         LOGGER.error(str(e))
 
-def sendLogFile(bot, message: Message):
+def sendLogFile(message: Message):
     with open('log.txt', 'rb') as f:
         bot.send_document(document=f, filename=f.name,
                           reply_to_message_id=message.message_id,
                           chat_id=message.chat_id)
 
-def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
+def auto_delete_message(cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
         sleep(AUTO_DELETE_MESSAGE_DURATION)
         try:
             # Skip if None is passed meaning we don't want to delete bot xor cmd message
-            deleteMessage(bot, cmd_message)
-            deleteMessage(bot, bot_message)
+            deleteMessage(cmd_message)
+            deleteMessage(bot_message)
         except AttributeError:
             pass
 
@@ -98,7 +98,7 @@ def delete_all_messages():
     with status_reply_dict_lock:
         for message in list(status_reply_dict.values()):
             try:
-                deleteMessage(bot, message)
+                deleteMessage(message)
                 del status_reply_dict[message.chat.id]
             except Exception as e:
                 LOGGER.error(str(e))
@@ -114,7 +114,7 @@ def update_all_messages():
                     editMessage(msg, status_reply_dict[chat_id], buttons)
                 status_reply_dict[chat_id].text = msg
 
-def sendStatusMessage(msg, bot):
+def sendStatusMessage(msg):
     if len(Interval) == 0:
         Interval.append(setInterval(DOWNLOAD_STATUS_UPDATE_INTERVAL, update_all_messages))
     progress, buttons = get_readable_message()
@@ -122,13 +122,13 @@ def sendStatusMessage(msg, bot):
         if msg.chat.id in list(status_reply_dict.keys()):
             try:
                 message = status_reply_dict[msg.chat.id]
-                deleteMessage(bot, message)
+                deleteMessage(message)
                 del status_reply_dict[msg.chat.id]
             except Exception as e:
                 LOGGER.error(str(e))
                 del status_reply_dict[msg.chat.id]
         if buttons == "":
-            message = sendMessage(progress, bot, msg)
+            message = sendMessage(progress, msg)
         else:
-            message = sendMarkup(progress, bot, msg, buttons)
+            message = sendMarkup(progress, msg, buttons)
         status_reply_dict[msg.chat.id] = message
