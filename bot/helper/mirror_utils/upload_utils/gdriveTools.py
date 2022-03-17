@@ -358,38 +358,38 @@ class GoogleDriveHelper:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.deletefile(durl)
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
-                msg += '\n\n<b>Type: </b>Folder'
-                msg += f'\n<b>SubFolders: </b>{self.__total_folders}'
-                msg += f'\n<b>Files: </b>{self.__total_files}'
+                msg += f'<b>𝐅𝐢𝐥𝐞𝐍𝐚𝐦𝐞: </b><code>{meta.get("name")}</code>\n\n<b>𝐒𝐢𝐳𝐞: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += '\n\n<b>𝐓𝐲𝐩𝐞: </b>Folder'
+                msg += f'\n<b>𝐒𝐮𝐛𝐅𝐨𝐥𝐝𝐞𝐫𝐬: </b>{self.__total_folders}'
+                msg += f'\n<b>𝐅𝐢𝐥𝐞𝐬: </b>{self.__total_files}'
                 buttons = ButtonMaker()
                 durl = short_url(durl)
-                buttons.buildbutton("☁️ Drive Link", durl)
+                buttons.buildbutton("𝐃𝐫𝐢𝐯𝐞 𝐋𝐢𝐧𝐤", durl)
                 if INDEX_URL is not None:
                     url_path = rquote(f'{meta.get("name")}')
                     url = f'{INDEX_URL}/{url_path}/'
                     url = short_url(url)
-                    buttons.buildbutton("⚡ Index Link", url)
+                    buttons.buildbutton("𝐈𝐧𝐝𝐞𝐱 𝐋𝐢𝐧𝐤", url)
             else:
                 file = self.__copyFile(meta.get('id'), parent_id)
-                msg += f'<b>Name: </b><code>{file.get("name")}</code>'
+                msg += f'<b>𝐅𝐢𝐥𝐞𝐍𝐚𝐦𝐞: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = ButtonMaker()
                 durl = short_url(durl)
-                buttons.buildbutton("☁️ Drive Link", durl)
+                buttons.buildbutton("𝐃𝐫𝐢𝐯𝐞 𝐋𝐢𝐧𝐤", durl)
                 if mime_type is None:
                     mime_type = 'File'
-                msg += f'\n\n<b>Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
-                msg += f'\n\n<b>Type: </b>{mime_type}'
+                msg += f'\n\n<b>𝐒𝐢𝐳𝐞: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
+                msg += f'\n\n<b>𝐓𝐲𝐩𝐞: </b>{mime_type}'
                 if INDEX_URL is not None:
                     url_path = rquote(f'{file.get("name")}')
                     url = f'{INDEX_URL}/{url_path}'
                     url = short_url(url)
-                    buttons.buildbutton("⚡ Index Link", url)
+                    buttons.buildbutton("𝐈𝐧𝐝𝐞𝐱 𝐋𝐢𝐧𝐤", url)
                     if VIEW_LINK:
                         urls = f'{INDEX_URL}/{url_path}?a=view'
                         urls = short_url(urls)
-                        buttons.buildbutton("🌐 View Link", urls)
+                        buttons.buildbutton("𝐕𝐢𝐞𝐰 𝐋𝐢𝐧𝐤", urls)
             if BUTTON_FOUR_NAME is not None and BUTTON_FOUR_URL is not None:
                 buttons.buildbutton(f"{BUTTON_FOUR_NAME}", f"{BUTTON_FOUR_URL}")
             if BUTTON_FIVE_NAME is not None and BUTTON_FIVE_URL is not None:
@@ -753,20 +753,20 @@ class GoogleDriveHelper:
             mime_type = meta.get('mimeType')
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__gDrive_directory(meta)
-                msg += f'<b>Name: </b><code>{name}</code>'
-                msg += f'\n\n<b>Size: </b>{get_readable_file_size(self.__total_bytes)}'
-                msg += '\n\n<b>Type: </b>Folder'
-                msg += f'\n<b>SubFolders: </b>{self.__total_folders}'
-                msg += f'\n<b>Files: </b>{self.__total_files}'
+                msg += f'<b>𝐅𝐢𝐥𝐞𝐍𝐚𝐦𝐞: </b><code>{name}</code>'
+                msg += f'\n\n<b>𝐒𝐢𝐳𝐞: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += '\n\n<b>𝐓𝐲𝐩𝐞: </b>Folder'
+                msg += f'\n<b>𝐒𝐮𝐛𝐅𝐨𝐥𝐝𝐞𝐫𝐬: </b>{self.__total_folders}'
+                msg += f'\n<b>𝐅𝐢𝐥𝐞𝐬: </b>{self.__total_files}'
             else:
-                msg += f'<b>Name: </b><code>{name}</code>'
+                msg += f'<b>𝐅𝐢𝐥𝐞𝐍𝐚𝐦𝐞: </b><code>{name}</code>'
                 if mime_type is None:
                     mime_type = 'File'
                 self.__total_files += 1
                 self.__gDrive_file(meta)
-                msg += f'\n\n<b>Size: </b>{get_readable_file_size(self.__total_bytes)}'
-                msg += f'\n\n<b>Type: </b>{mime_type}'
-                msg += f'\n<b>Files: </b>{self.__total_files}'
+                msg += f'\n\n<b>𝐒𝐢𝐳𝐞: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += f'\n\n<b>𝐓𝐲𝐩𝐞: </b>{mime_type}'
+                msg += f'\n<b>𝐅𝐢𝐥𝐞𝐬: </b>{self.__total_files}'
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
