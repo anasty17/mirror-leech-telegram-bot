@@ -40,27 +40,30 @@ def stats(update, context):
     mem_t = get_readable_file_size(memory.total)
     mem_a = get_readable_file_size(memory.available)
     mem_u = get_readable_file_size(memory.used)
-    stats = f'<b>Bot Uptime:</b> {currentTime}\n\n'\
-            f'<b>Total Disk Space:</b> {total}\n'\
-            f'<b>Used:</b> {used} | <b>Free:</b> {free}\n\n'\
-            f'<b>Upload:</b> {sent}\n'\
-            f'<b>Download:</b> {recv}\n\n'\
-            f'<b>CPU:</b> {cpuUsage}%\n'\
-            f'<b>RAM:</b> {mem_p}%\n'\
-            f'<b>DISK:</b> {disk}%\n\n'\
-            f'<b>Physical Cores:</b> {p_core}\n'\
-            f'<b>Total Cores:</b> {t_core}\n\n'\
-            f'<b>SWAP:</b> {swap_t} | <b>Used:</b> {swap_p}%\n'\
-            f'<b>Memory Total:</b> {mem_t}\n'\
-            f'<b>Memory Free:</b> {mem_a}\n'\
-            f'<b>Memory Used:</b> {mem_u}\n'
+    stats = f'<b>╭──《🌐 𝐁𝐎𝐓 𝐒𝐓𝐀𝐓𝐈𝐒𝐓𝐈𝐂𝐒 🌐》</b>\n' \
+            f'<b>│</b>\n' \
+            f'<b>├─🤖𝐁𝐨𝐭 𝐔𝐩𝐭𝐢𝐦𝐞:</b> {currentTime}\n'\
+            f'<b>├─💾𝐓𝐨𝐭𝐚𝐥 𝐃𝐢𝐬𝐤 𝐒𝐩𝐚𝐜𝐞 : {total}</b>\n' \
+            f'<b>├─📀𝐔𝐬𝐞 : {used}</b>\n' \
+            f'<b>├─💿𝐅𝐫𝐞𝐞 : {free}</b>\n' \
+            f'<b>│</b>\n' \
+            f'<b>├─📤𝐔𝐩𝐥𝐨𝐚𝐝:</b> {sent}\n'\
+            f'<b>├─📥𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝:</b> {recv}\n'\
+            f'<b>│</b>\n' \
+            f'<b>├─🖥𝐂𝐏𝐔:</b> {cpuUsage}%\n'\
+            f'<b>├─🎮𝐑𝐀𝐌:</b> {mem_p}%\n'\
+            f'<b>├─💽𝐃𝐈𝐒𝐊:</b> {disk}%\n'\
+            f'<b>│</b>\n' \
+            f'<b>├─💾𝐌𝐞𝐦𝐨𝐫𝐲 𝐓𝐨𝐭𝐚𝐥:</b> {mem_t}\n'\
+            f'<b>├─💿𝐌𝐞𝐦𝐨𝐫𝐲 𝐅𝐫𝐞𝐞:</b> {mem_a}\n'\
+            f'<b>╰──《 @Daxcez 》</b>'
     sendMessage(stats, context.bot, update.message)
 
 
 def start(update, context):
     buttons = ButtonMaker()
-    buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.buildbutton("Report Group", "https://t.me/+PRRzqHd31XY3ZWZk")
+    buttons.buildbutton("𝐀𝐮𝐭𝐡𝐨𝐫 🇮🇩", "https://t.me/Daxcez")
+    
     reply_markup = InlineKeyboardMarkup(buttons.build_menu(2))
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
