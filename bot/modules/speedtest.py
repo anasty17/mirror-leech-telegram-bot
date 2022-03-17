@@ -16,17 +16,18 @@ def speedtest(update, context):
     test.results.share()
     result = test.results.dict()
     string_speed = f'''
-<b>Server</b>
-<b>Name:</b> <code>{result['server']['name']}</code>
-<b>Country:</b> <code>{result['server']['country']}, {result['server']['cc']}</code>
-<b>Sponsor:</b> <code>{result['server']['sponsor']}</code>
-<b>ISP:</b> <code>{result['client']['isp']}</code>
-
-<b>SpeedTest Results</b>
-<b>Upload:</b> <code>{speed_convert(result['upload'] / 8)}</code>
-<b>Download:</b>  <code>{speed_convert(result['download'] / 8)}</code>
-<b>Ping:</b> <code>{result['ping']} ms</code>
-<b>ISP Rating:</b> <code>{result['client']['isprating']}</code>
+<b>╭──《 𝐒𝐞𝐫𝐯𝐞𝐫 》</b>
+<b>├💳𝐍𝐚𝐦𝐞:</b> <code>{result['server']['name']}</code>
+<b>├🌎𝐂𝐨𝐮𝐧𝐭𝐫𝐲:</b> <code>{result['server']['country']}, {result['server']['cc']}</code>
+<b>├🏴‍☠𝐒𝐩𝐨𝐧𝐬𝐨𝐫:</b> <code>{result['server']['sponsor']}</code>
+<b>├🏬𝐈𝐒𝐏:</b> <code>{result['client']['isp']}</code>
+<b>│</b>
+<b>├《 𝐒𝐩𝐞𝐞𝐝𝐓𝐞𝐬𝐭 𝐑𝐞𝐬𝐮𝐥𝐭𝐬 》</b>
+<b>├📤𝐔𝐩𝐥𝐨𝐚𝐝:</b> <code>{speed_convert(result['upload'] / 8)}</code>
+<b>├📥𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝:</b>  <code>{speed_convert(result['download'] / 8)}</code>
+<b>├📊𝐏𝐢𝐧𝐠:</b> <code>{result['ping']} ms</code>
+<b>├📈𝐈𝐒𝐏 𝐑𝐚𝐭𝐢𝐧𝐠:</b> <code>{result['client']['isprating']}</code>
+<b>╰──《 @Daxcez 》</b>
 '''
     editMessage(string_speed, speed)
 
