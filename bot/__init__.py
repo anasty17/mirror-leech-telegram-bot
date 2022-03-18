@@ -253,7 +253,7 @@ try:
     else:
         SEARCH_LIMIT = int(SEARCH_LIMIT)
 except KeyError:
-    SEARCH_LIMIT = 10
+    SEARCH_LIMIT = 0
 try:
     RSS_COMMAND = getConfig('RSS_COMMAND')
     if len(RSS_COMMAND) == 0:
