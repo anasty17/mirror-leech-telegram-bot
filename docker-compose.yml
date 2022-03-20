@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  app:
+  worker:
     build: .
-    command: bash start.sh
-    restart: on-failure
-    ports:
-      - "80:80"
+   # command: bash start.sh
+   # restart: on-failure
+   # ports:
+   #   - "80:80"
     environment:
       GDRIVE_FOLDER_ID: $GDRIVE_FOLDER_ID
       BOT_TOKEN: $BOT_TOKEN
