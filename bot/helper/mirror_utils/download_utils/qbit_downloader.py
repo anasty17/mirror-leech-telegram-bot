@@ -223,7 +223,7 @@ def get_confirm(update, context):
     data = query.data
     data = data.split(" ")
     qbdl = getDownloadByGid(data[2])
-    if qbdl is None:
+    if not qbdl:
         query.answer(text="This task has been cancelled!", show_alert=True)
         query.message.delete()
     elif user_id != qbdl.listener().message.from_user.id:
