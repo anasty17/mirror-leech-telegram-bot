@@ -287,6 +287,12 @@ sudo docker-compose start
 
 ------
 
+## Deploying on Okteto 
+
+[![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/anasty17/mirror-leech-telegram-bot&branch=master&vars=[{"name":"CONFIG_FILE_URL","value":""}])
+
+------
+
 # Extras
 
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
