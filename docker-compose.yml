@@ -3,20 +3,9 @@ version: "3.9"
 services:
   worker:
     build: .
-   # command: bash start.sh
-   # restart: on-failure
-   # ports:
-   #   - "80:80"
+    command: bash start.sh
+    restart: on-failure
+    ports:
+      - "80:80"
     environment:
-      GDRIVE_FOLDER_ID: $GDRIVE_FOLDER_ID
-      BOT_TOKEN: $BOT_TOKEN
-      OWNER_ID: $OWNER_ID
-      DOWNLOAD_DIR: $DOWNLOAD_DIR
-      TELEGRAM_API: $TELEGRAM_API
-      TELEGRAM_HASH: $TELEGRAM_HASH
-      IS_TEAM_DRIVE: $IS_TEAM_DRIVE
-      DOWNLOAD_STATUS_UPDATE_INTERVAL: $DOWNLOAD_STATUS_UPDATE_INTERVAL
-      AUTO_DELETE_MESSAGE_DURATION: $AUTO_DELETE_MESSAGE_DURATION
-      TOKEN_PICKLE_URL: $TOKEN_PICKLE_URL
-      AUTHORIZED_CHATS: $AUTHORIZED_CHATS
-      INDEX_URL: $INDEX_URL
+      CONFIG_FILE_URL: $CONFIG_FILE_URL
