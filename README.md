@@ -287,6 +287,31 @@ sudo docker-compose start
 
 ------
 
+## Deploying on Okteto 
+
+**NOTES**:
+1. Deploy Directly By Clicking On the Deploy Button
+2. ReDeploy and Replace `Your Config File URL` in Variable ( Without Commit ID ) with Yours
+3. Click on `Launch`
+
+**OR**:
+
+1. Fork This Repo ( Fetch and Merge )
+2. Go to Okteto.com `NameSpace` `Dashboard`
+3. Click on `Lauch Dev Environment`
+4. Choose GitHub and Your Forked Repo of [mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot)
+5. Add `CONFIG_FILE_URL` ( Without Commit ID ) in Variable
+6. Click on `Launch`
+
+**EXTRA NOTES**:
+
+- If Your App is Sleeping, Wake Them All By `Wake All` in Okteto Dashboard 
+- Click on `app` in Side Development Tab to Check Logs
+
+[![Develop on Okteto](https://okteto.com/develop-okteto.svg)](https://cloud.okteto.com/deploy?repository=https://github.com/anasty17/mirror-leech-telegram-bot&branch=master&vars=[{"name":"CONFIG_FILE_URL","value":"Your%20Config%20File%20URL"}])
+
+------
+
 # Extras
 
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)

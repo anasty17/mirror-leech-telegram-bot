@@ -7,3 +7,5 @@ services:
     restart: on-failure
     ports:
       - "80:80"
+    environment: 
+      CONFIG_FILE_URL: $CONFIG_FILE_URL
