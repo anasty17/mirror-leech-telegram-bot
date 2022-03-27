@@ -70,7 +70,7 @@ git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd
 ```
 - For Debian based distros
 ```
-sudo apt install python3
+sudo apt install python3 python3-pip
 ```
 Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/) or by commands below.
 ```
@@ -151,22 +151,23 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
-- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file.
+- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file. Read [this](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended) also.
 - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means `master`.
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
   - Supported URL Shorteners:
-  >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io
-- `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrents-Api).
+  >exe.io, gplinks.in, shrinkme.io, urlshortx.com, shortzon.com, bit.ly, shorte.st, linkvertise.com , ouo.io, adfoc.us
+- `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py).
   - Supported Sites:
   >1337x, YTS, Eztv, Torrent Galaxy, Torlock, Piratebay, Nyaasi, Rarbg, Ettv, Zooqle, KickAss, Bitsearch, Glodls, MagnetDL, TorrentProject, TorrentFunk, LimeTorrent
+- `SEARCH_LIMIT`: Search limit for search api, limit for each site and not overall result limit. Default is zero (Default api limit for each site).
 - `CRYPT`: Cookie for gdtot google drive link generator. Follow these [steps](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#gdtot-cookies).
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins).
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` seconds at least. Empty means 900 s (default time).
 - `RSS_COMMAND`: Choose command for the desired action.
-- `RSS_CHAT_ID`: Chat ID where bot will send the rss links.
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent.
 - `USER_STRING_SESSION`: To send rss links from your telegram account instead of adding bot to channel then adding channel to group to get rss link since bot will not read command from itself or other bot. To generate string session use this command `python3 generate_string_session.py` after mounting repo folder for sure.
-  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work.
+  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. Add the bot in grop for better experience, since if you are using `USER_STRING_SESSION` you need to send a private message to bot after each restart. You can add the bot to a channel and add this channel to group so messages sent by bot to channel will be forwarded to group without using `USER_STRING_SESSION`.
 - Three buttons are already added including Drive Link, Index Link, and View Link, you can add extra buttons, if you don't know what are the below entries, simply leave them empty.
   - `BUTTON_FOUR_NAME`:
   - `BUTTON_FOUR_URL`:
@@ -178,20 +179,27 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 ------
 
 ### 3. Getting Google OAuth API credential file and token.pickle
-- Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
-- Go to the OAuth Consent tab, fill it, and save.
-- Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-- Choose Desktop and Create.
-- Publish your OAuth consent screen App to prevent **token.pickle** from expire
-- Use the download button to download your credentials.
-- Move that file to the root of mirrorbot, and rename it to **credentials.json**
-- Visit [Google API page](https://console.developers.google.com/apis/library)
-- Search for Drive and enable it if it is disabled
-- Finally, run the script to generate **token.pickle** file for Google Drive:
+
+**NOTES**
+- Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
+- You should set default browser. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
+- Windows users should install python3 and pip. You can find how to install them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+
+1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to the OAuth Consent tab, fill it, and save.
+3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
+4. Choose Desktop and Create.
+5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
+6. Use the download button to download your credentials.
+7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
+8. Visit [Google API page](https://console.developers.google.com/apis/library)
+9. Search for Google Drive Api and enable it
+10. Finally, run the script to generate **token.pickle** file for Google Drive:
 ```
 pip install google-api-python-client google-auth-httplib2 google-auth-oauthlib
 python3 generate_drive_token.py
 ```
+- For linux user use pip3 instead of pip.
 ------
 
 ## Deploying on VPS
@@ -217,9 +225,12 @@ sudo docker image prune -a
 
 ### Deploying on VPS Using Docker
 
-- Start Docker daemon (skip if already running):
+- Start Docker daemon (skip if already running), if installed by snap then use 2nd command:
 ```
 sudo dockerd
+```
+```
+sudo snap start docker
 ```
 - **Note**: If not started or not starting, run the command below then try to start.
 ```
@@ -306,7 +317,7 @@ rsslist - List all subscribed rss feed info
 rssget - Get specific No. of links from specific rss feed
 rsssub - Subscribe new rss feed
 rssunsub - Unsubscribe rss feed by title
-rssunsuball - Remove all rss feed subscriptions
+rssset - Rss Settings
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
@@ -319,6 +330,15 @@ stats - Bot Usage Stats
 ping - Ping the Bot
 help - All cmds with description
 ```
+------
+
+## UPSTREAM REPO (Recommended)
+
+- `UPSTREAM_REPO` variable can be used for edit/add/update any file in repository.
+- You can add private/public repository link to grab all files from it.
+- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except config.env, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
+- `UPSTREAM_BRANCH` don't ever fill heroku here.
+
 ------
 
 ## Using Service Accounts for uploading to avoid user rate limit

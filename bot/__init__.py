@@ -247,6 +247,14 @@ try:
 except KeyError:
     SEARCH_API_LINK = None
 try:
+    SEARCH_LIMIT = getConfig('SEARCH_LIMIT')
+    if len(SEARCH_LIMIT) == 0:
+        raise KeyError
+    else:
+        SEARCH_LIMIT = int(SEARCH_LIMIT)
+except KeyError:
+    SEARCH_LIMIT = 0
+try:
     RSS_COMMAND = getConfig('RSS_COMMAND')
     if len(RSS_COMMAND) == 0:
         raise KeyError

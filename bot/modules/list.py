@@ -14,8 +14,9 @@ def list_buttons(update, context):
     if len(update.message.text.split(" ", maxsplit=1)) < 2:
         return sendMessage('Send a search key along with command', context.bot, update.message)
     buttons = button_build.ButtonMaker()
-    buttons.sbutton("Drive Root", f"types {user_id} root")
-    buttons.sbutton("Recursive", f"types {user_id} recu")
+    buttons.sbutton("Folders", f"types {user_id} folders")
+    buttons.sbutton("Files", f"types {user_id} files")
+    buttons.sbutton("Both", f"types {user_id} both")
     buttons.sbutton("Cancel", f"types {user_id} cancel")
     button = InlineKeyboardMarkup(buttons.build_menu(2))
     sendMarkup('Choose option to list.', context.bot, update.message, button)
@@ -28,31 +29,19 @@ def select_type(update, context):
     data = query.data
     data = data.split(" ")
     if user_id != int(data[1]):
-        query.answer(text="Not Yours!", show_alert=True)
-    elif data[2] in ["root", "recu"]:
+        return query.answer(text="Not Yours!", show_alert=True)
+    elif data[2] == 'cancel':
         query.answer()
-        buttons = button_build.ButtonMaker()
-        buttons.sbutton("Folders", f"types {user_id} folders {data[2]}")
-        buttons.sbutton("Files", f"types {user_id} files {data[2]}")
-        buttons.sbutton("Both", f"types {user_id} both {data[2]}")
-        buttons.sbutton("Cancel", f"types {user_id} cancel")
-        button = InlineKeyboardMarkup(buttons.build_menu(2))
-        editMessage('Choose option to list.', msg, button)
-    elif data[2] in ["files", "folders", "both"]:
-        query.answer()
-        list_method = data[3]
-        item_type = data[2]
-        editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-        Thread(target=_list_drive, args=(key, msg, list_method, item_type)).start()
-    else:
-        query.answer()
-        editMessage("list has been canceled!", msg)
+        return editMessage("list has been canceled!", msg)
+    query.answer()
+    item_type = data[2]
+    editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
+    Thread(target=_list_drive, args=(key, msg, item_type)).start()
 
-def _list_drive(key, bmsg, list_method, item_type):
+def _list_drive(key, bmsg, item_type):
     LOGGER.info(f"listing: {key}")
-    list_method = list_method == "recu"
     gdrive = GoogleDriveHelper()
-    msg, button = gdrive.drive_list(key, isRecursive=list_method, itemType=item_type)
+    msg, button = gdrive.drive_list(key, isRecursive=True, itemType=item_type)
     if button:
         editMessage(msg, bmsg, button)
     else:
