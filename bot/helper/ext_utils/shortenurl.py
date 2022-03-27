@@ -40,6 +40,9 @@ def short_url(longurl):
     elif "ouo.io" in SHORTENER:
         disable_warnings()
         link = cget(f'http://ouo.io/api/{SHORTENER_API}?s={longurl}', verify=False).text
+    elif "adfoc.us" in SHORTENER:
+        disable_warnings()
+        link = cget(f'http://adfoc.us/api/?key={SHORTENER_API}&url={longurl}', verify=False).text
     else:
         link = cget(f'https://{SHORTENER}/api?api={SHORTENER_API}&url={quote(longurl)}&format=text').text
 
