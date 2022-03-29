@@ -40,6 +40,7 @@ SITES = {
     "torrentfunk": "TorrentFunk",
     "torrentproject": "TorrentProject",
     "libgen": "Libgen",
+    "ybt": "YourBittorrent",
     "all": "All"
 }
 
