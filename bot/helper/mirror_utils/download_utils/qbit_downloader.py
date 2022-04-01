@@ -48,7 +48,7 @@ def add_qb_torrent(link, path, listener, select):
                         client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                         client.auth_log_out()
                         return
-                    tor_info = client.torrents_info(torrent_hashes=ext_hash, delete_files=True)
+                    tor_info = client.torrents_info(torrent_hashes=ext_hash)
                     if len(tor_info) > 0:
                         break
         else:
@@ -126,7 +126,7 @@ def _qb_listener(listener, client, ext_hash, select, path):
                     break
             elif tor_info.state == "downloading":
                 stalled_time = time()
-                if STOP_DUPLICATE and not dupChecked and ospath.isdir(f'{path}') and not listener.isLeech:
+                if not dupChecked and STOP_DUPLICATE and ospath.isdir(f'{path}') and not listener.isLeech:
                     LOGGER.info('Checking File/Folder if already in Drive')
                     qbname = str(listdir(f'{path}')[-1])
                     if qbname.endswith('.!qB'):
@@ -147,7 +147,6 @@ def _qb_listener(listener, client, ext_hash, select, path):
                             break
                     dupChecked = True
                 if not sizeChecked:
-                    sleep(1)
                     size = tor_info.size
                     arch = any([listener.isZip, listener.extract])
                     if STORAGE_THRESHOLD is not None:
