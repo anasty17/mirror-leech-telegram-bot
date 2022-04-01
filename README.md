@@ -27,7 +27,6 @@
 4. To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository. BUT any change in requirements of official repository you need to update you code and deploy again or your bot will not boot after dyno restart, so if you have problem with this then fill `UPSTREAM_REPO`.
 5. You can fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
 6. If want to add private files before deploying then add them to heroku branch not master branch!
-7. If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
 
 ------
 
