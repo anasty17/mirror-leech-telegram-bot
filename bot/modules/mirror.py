@@ -14,7 +14,7 @@ from telegram import InlineKeyboardMarkup
 
 from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_FIVE_NAME, BUTTON_FIVE_URL, \
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
-                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
+                dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, app, LOGGER
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
@@ -285,7 +285,7 @@ class MirrorListener:
         else:
             update_all_messages()
 
-def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None):
+def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, multi=0):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(' ', maxsplit=1)
     name_args = mesg[0].split('|', maxsplit=1)
@@ -297,15 +297,18 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             qbitsel = True
             message_args = mesg[0].split(' ', maxsplit=2)
             link = message_args[2].strip()
+        elif link.isdigit():
+            multi = int(link)
+            raise IndexError
         if link.startswith(("|", "pswd: ")):
-            link = ''
+            raise IndexError
     except IndexError:
         link = ''
     try:
         name = name_args[1]
         name = name.split(' pswd: ')[0]
         name = name.strip()
-    except IndexError:
+    except:
         name = ''
     link = resplit(r"pswd:| \|", link)[0]
     link = link.strip()
@@ -360,7 +363,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             pssw = quote(mesg[2], safe='')
             link = link.split("://", maxsplit=1)
             link = f'{link[0]}://{ussr}:{pssw}@{link[1]}'
-        except IndexError:
+        except:
             pass
 
     if not is_url(link) and not is_magnet(link) and not ospath.exists(link):
@@ -372,6 +375,8 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
         help_msg += "\n<code>/command</code> {link} |newname pswd: xx\nusername\npassword"
         help_msg += "\n\n<b>Qbittorrent selection:</b>"
         help_msg += "\n<code>/qbcommand</code> <b>s</b> {link} or by replying to {file}"
+        help_msg += "\n\n<b>Multi links only by replying to first link or torrent file:</b>"
+        help_msg += "\n<code>/command</code> 10(number of links/torrent-files)"
         return sendMessage(help_msg, bot, message)
 
     LOGGER.info(link)
@@ -395,14 +400,14 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             content_type = get_content_type(link)
         if content_type is None or match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
-                resp = requests.get(link, timeout=10)
+                resp = requests.get(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
                 if resp.status_code == 200:
                     file_name = str(time()).replace(".", "") + ".torrent"
                     with open(file_name, "wb") as t:
                         t.write(resp.content)
                     link = str(file_name)
                 else:
-                    return sendMessage(f"ERROR: link got HTTP response: {resp.status_code}", bot, message)
+                    return sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
             except Exception as e:
                 error = str(e).replace('<', ' ').replace('>', ' ')
                 if error.startswith('No connection adapters were found for'):
@@ -423,22 +428,27 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             return sendMessage(gmsg, bot, message)
         Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
-
     elif is_mega_link(link):
         if BLOCK_MEGA_LINKS:
-            sendMessage("Mega links are blocked!", bot, message)
-            return
+            return sendMessage("Mega links are blocked!", bot, message)
         link_type = get_mega_link_type(link)
         if link_type == "folder" and BLOCK_MEGA_FOLDER:
             sendMessage("Mega folder are blocked!", bot, message)
         else:
             Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
-
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
         Thread(target=add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, qbitsel)).start()
-
     else:
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name)).start()
+
+    if multi > 1:
+        sleep(3)
+        message = app.get_messages(message.chat.id, message.reply_to_message.message_id + 1)
+        message.chat_id = message.chat.id
+        message = sendMessage(message_args[0], bot, message)
+        multi -= 1
+        Thread(target=_mirror, args=(bot, message, isZip, extract, isQbit, isLeech, pswd, multi)).start()
+
 
 def mirror(update, context):
     _mirror(context.bot, update.message)
