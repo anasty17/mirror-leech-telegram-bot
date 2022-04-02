@@ -19,7 +19,6 @@ faulthandler.enable()
 socket.setdefaulttimeout(600)
 
 botStartTime = time()
-botVersion = check_output(["git log -1 --date=format:v%Y.%M.%d --pretty=format:%cd"],shell=True).decode()
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
