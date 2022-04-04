@@ -8,6 +8,6 @@ if [[ -n $RCLONE_CONFIG_URL ]]; then
 	wget $RCLONE_CONFIG_URL -O /usr/src/app/.config/rclone/rclone.conf
 fi
 
-sed -i "47s/.*/WebUI\\\Port=${PORT}/" /user/src/app/qBittorrent/config/qBittorrent.conf
+sed -i "47s/.*/WebUI\\\Port=${PORT}/" /usr/src/app/qBittorrent/config/qBittorrent.conf
 
 python3 update.py && python3 -m bot
