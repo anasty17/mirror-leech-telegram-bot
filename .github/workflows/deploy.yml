@@ -1,8 +1,8 @@
 name: Manually Deploy to Heroku
 
 on:
-  - workflow_dispatch:
-    - inputs:
+  workflow_dispatch:
+    inputs:
       region:
         type: choice
         description: Which region to deploy to
