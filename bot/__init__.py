@@ -54,9 +54,9 @@ except KeyError:
     SERVER_PORT = 80
 
 PORT = environ.get('PORT', SERVER_PORT)
-web = Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
+# web = Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
 alive = Popen(["python3", "alive.py"])
-srun(["qbittorrent-nox", "-d", "--profile=."])
+nox = Popen(["qbittorrent-nox", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
@@ -86,7 +86,7 @@ aria2 = ariaAPI(
 )
 
 def get_client():
-    return qbClient(host="localhost", port=8090)
+    return qbClient(host="localhost", port=environ["PORT"], username=environ["QB_USERNAME"], password=environ["QB_PASSWORD"])
 
 trackers = check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all | awk '$0'"], shell=True).decode('utf-8')
 trackerslist = set(trackers.split("\n"))

@@ -3,6 +3,7 @@
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
 import logging
+import os
 
 from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
@@ -670,7 +671,7 @@ def re_verfiy(paused, resumed, client, hash_id):
         LOGGER.info("Reverification Failed: correcting stuff...")
         client.auth_log_out()
         sleep(1)
-        client = qbClient(host="localhost", port="8090")
+        client = qbClient(host="localhost", port=os.environ["PORT"], username=os.environ["QB_USERNAME"], password=os.environ["QB_PASSWORD"])
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
         except NotFound404Error:
@@ -704,7 +705,7 @@ def list_torrent_contents(hash_id):
     if request.args["pin_code"] != pincode:
         return "<h1>Incorrect pin code</h1>"
 
-    client = qbClient(host="localhost", port="8090")
+    client = qbClient(host="localhost", port=os.environ["PORT"], username=os.environ["QB_USERNAME"], password=os.environ["QB_PASSWORD"])
     res = client.torrents_files(torrent_hash=hash_id)
 
     par = nodes.make_tree(res)
@@ -717,7 +718,7 @@ def list_torrent_contents(hash_id):
 @app.route('/app/files/<string:hash_id>', methods=['POST'])
 def set_priority(hash_id):
 
-    client = qbClient(host="localhost", port="8090")
+    client = qbClient(host="localhost", port=os.environ["PORT"], username=os.environ["QB_USERNAME"], password=os.environ["QB_PASSWORD"])
     resume = ""
     pause = ""
     data = dict(request.form)

@@ -9,7 +9,7 @@ from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, web, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, a2c
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, nox, a2c
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -80,12 +80,13 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    procs = psprocess(web.pid)
-    for proc in procs.children(recursive=True):
-        proc.kill()
-    procs.kill()
+    # procs = psprocess(web.pid)
+    # for proc in procs.children(recursive=True):
+    #     proc.kill()
+    # procs.kill()
     clean_all()
     srun(["python3", "update.py"])
+    nox.kill()
     a2cproc = psprocess(a2c.pid)
     for proc in a2cproc.children(recursive=True):
         proc.kill()
