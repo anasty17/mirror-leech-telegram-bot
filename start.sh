@@ -1,3 +1,5 @@
+python3 update.py
+
 wget -q https://github.com/dogbutcat/gclone/releases/download/v1.57.0-mod1.4.0/gclone-v1.57.0-mod1.4.0-linux-amd64.zip
 unzip -q gclone-v1.57.0-mod1.4.0-linux-amd64.zip
 export PATH=$PWD/gclone-v1.57.0-mod1.4.0-linux-amd64:$PATH
@@ -8,4 +10,6 @@ if [[ -n $RCLONE_CONFIG_URL ]]; then
 	wget $RCLONE_CONFIG_URL -O /usr/src/app/.config/rclone/rclone.conf
 fi
 
-python3 update.py && sed -i "47s/.*/WebUI\\\Port=${PORT}/" /usr/src/app/qBittorrent/config/qBittorrent.conf && python3 -m bot
+sed -i "47s/.*/WebUI\\\Port=${PORT}/" /usr/src/app/qBittorrent/config/qBittorrent.conf
+
+python3 -m bot
