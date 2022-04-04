@@ -1,6 +1,15 @@
 name: Manually Deploy to Heroku
 
-on: workflow_dispatch
+on:
+  - workflow_dispatch:
+    - inputs:
+      region:
+        type: choice
+        description: Which region to deploy to
+        required: true
+        options: 
+        - eu
+        - us
 
 jobs:
   deploy:
@@ -15,6 +24,6 @@ jobs:
           usedocker: true
           docker_heroku_process_type: web
           stack: "container"
-          region: "us"
+          region: ${{ github.event.inputs.region }}
         env:
           HD_CONFIG_FILE_URL: ${{secrets.CONFIG_FILE_URL}}
