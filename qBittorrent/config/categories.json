@@ -1,0 +1,11 @@
+{
+    "lidarr": {
+        "save_path": ""
+    },
+    "radarr": {
+        "save_path": ""
+    },
+    "tv-sonarr": {
+        "save_path": ""
+    }
+}
