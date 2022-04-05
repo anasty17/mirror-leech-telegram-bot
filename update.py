@@ -48,12 +48,16 @@ if UPSTREAM_REPO is not None:
     if ospath.exists('.git'):
         srun(["rm", "-rf", ".git"])
 
-    srun([f"git init -q \
-            && git config --global user.email e.anastayyar@gmail.com \
-            && git config --global user.name mltb \
-            && git add . \
-            && git commit -sm update -q \
-            && git remote add origin {UPSTREAM_REPO} \
-            && git fetch origin -q \
-            && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
+    update = srun([f"git init -q \
+                     && git config --global user.email e.anastayyar@gmail.com \
+                     && git config --global user.name mltb \
+                     && git add . \
+                     && git commit -sm update -q \
+                     && git remote add origin {UPSTREAM_REPO} \
+                     && git fetch origin -q \
+                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
 
+    if update.returncode == 0:
+        logging.info('Successfully updated with latest commit from UPSTREAM_REPO')
+    else:
+        logging.error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
