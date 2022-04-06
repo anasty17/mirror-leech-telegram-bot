@@ -21,8 +21,7 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 
 def stats(update, context):
-    rlast_commit = check_output(["git log -1 --date=relative --pretty=format:%cd"], shell=True).decode()
-    slast_commit = check_output(["git log -1 --date=short --pretty=format:%cd"], shell=True).decode()
+    last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
     currentTime = get_readable_time(time() - botStartTime)
     osUptime = get_readable_time(time() - boot_time())
     total, used, free, disk= disk_usage('/')
@@ -43,7 +42,7 @@ def stats(update, context):
     mem_t = get_readable_file_size(memory.total)
     mem_a = get_readable_file_size(memory.available)
     mem_u = get_readable_file_size(memory.used)
-    stats = f'<b>Commit Date:</b> {slast_commit} <b>From</b> {rlast_commit}\n\n'\
+    stats = f'<b>Commit Date:</b> {last_commit}\n\n'\
             f'<b>Bot Uptime:</b> {currentTime}\n'\
             f'<b>OS Uptime:</b> {osUptime}\n\n'\
             f'<b>Total Disk Space:</b> {total}\n'\
