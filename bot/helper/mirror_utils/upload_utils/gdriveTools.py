@@ -366,7 +366,7 @@ class GoogleDriveHelper:
                 durl = short_url(durl)
                 buttons.buildbutton("☁️ Drive Link", durl)
                 if INDEX_URL is not None:
-                    url_path = rquote(f'{meta.get("name")}')
+                    url_path = rquote(f'{meta.get("name")}', safe='')
                     url = f'{INDEX_URL}/{url_path}/'
                     url = short_url(url)
                     buttons.buildbutton("⚡ Index Link", url)
@@ -382,7 +382,7 @@ class GoogleDriveHelper:
                 msg += f'\n\n<b>Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
                 msg += f'\n\n<b>Type: </b>{mime_type}'
                 if INDEX_URL is not None:
-                    url_path = rquote(f'{file.get("name")}')
+                    url_path = rquote(f'{file.get("name")}', safe='')
                     url = f'{INDEX_URL}/{url_path}'
                     url = short_url(url)
                     buttons.buildbutton("⚡ Index Link", url)
@@ -520,27 +520,6 @@ class GoogleDriveHelper:
                 return build('drive', 'v3', credentials=credentials, cache_discovery=False)
         return None
 
-    def __edit_telegraph(self):
-        nxt_page = 1
-        prev_page = 0
-        for content in self.telegraph_content :
-            if nxt_page == 1 :
-                content += f'<b><a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
-                nxt_page += 1
-            else :
-                if prev_page <= self.num_of_path:
-                    content += f'<b><a href="https://telegra.ph/{self.path[prev_page]}">Prev</a></b>'
-                    prev_page += 1
-                if nxt_page < self.num_of_path:
-                    content += f'<b> | <a href="https://telegra.ph/{self.path[nxt_page]}">Next</a></b>'
-                    nxt_page += 1
-            telegraph.edit_page(
-                path = self.path[prev_page],
-                title = 'Mirror-Leech-Bot Drive Search',
-                content=content
-            )
-        return
-
     def __escapes(self, str):
         chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\t']
         for char in chars:
@@ -677,7 +656,7 @@ class GoogleDriveHelper:
                         if isRecur:
                             url_path = "/".join([rquote(n, safe='') for n in self.__get_recursive_list(file, parent_id)])
                         else:
-                            url_path = rquote(f'{file.get("name")}')
+                            url_path = rquote(f'{file.get("name")}', safe='')
                         url = f'{INDEX_URLS[index]}/{url_path}/'
                         url = short_url(url)
                         msg += f' <b>| <a href="{url}">Index Link</a></b>'
@@ -728,9 +707,8 @@ class GoogleDriveHelper:
                 )["path"]
             )
         time.sleep(0.5)
-        self.num_of_path = len(self.path)
-        if self.num_of_path > 1:
-            self.__edit_telegraph()
+        if len(self.path) > 1:
+            telegraph.edit_telegraph(self.path, self.telegraph_content)
 
         msg = f"<b>Found {contents_count} result for <i>{fileName}</i></b>"
         buttons = ButtonMaker()
