@@ -44,13 +44,13 @@ try:
             logging.error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
         logging.error(f"NETRC_URL: {e}")
-except KeyError:
+except:
     pass
 try:
     SERVER_PORT = getConfig('SERVER_PORT')
     if len(SERVER_PORT) == 0:
         raise KeyError
-except KeyError:
+except:
     SERVER_PORT = 80
 
 PORT = environ.get('PORT', SERVER_PORT)
@@ -62,8 +62,7 @@ if not ospath.exists('.netrc'):
 srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
-a2c = Popen(["./aria.sh"], shell=True)
-sleep(1)
+srun(["./aria.sh"], shell=True)
 
 Interval = []
 DRIVES_NAMES = []
@@ -74,7 +73,7 @@ try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
         logging.error('The README.md file there to be read! Exiting now!')
         exit()
-except KeyError:
+except:
     pass
 
 aria2 = ariaAPI(
@@ -124,17 +123,17 @@ if ospath.exists('sudo_users.txt'):
         for line in lines:
             SUDO_USERS.add(int(line.split()[0]))
 try:
-    achats = getConfig('AUTHORIZED_CHATS')
-    achats = achats.split(" ")
-    for chats in achats:
-        AUTHORIZED_CHATS.add(int(chats))
+    aid = getConfig('AUTHORIZED_CHATS')
+    aid = aid.split(" ")
+    for _id in aid:
+        AUTHORIZED_CHATS.add(int(_id))
 except:
     pass
 try:
-    schats = getConfig('SUDO_USERS')
-    schats = schats.split(" ")
-    for chats in schats:
-        SUDO_USERS.add(int(chats))
+    aid = getConfig('SUDO_USERS')
+    aid = aid.split(" ")
+    for _id in aid:
+        SUDO_USERS.add(int(_id))
 except:
     pass
 try:
@@ -148,7 +147,7 @@ try:
     AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
     TELEGRAM_API = getConfig('TELEGRAM_API')
     TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
-except KeyError as e:
+except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
@@ -159,12 +158,9 @@ try:
     USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
     if len(USER_STRING_SESSION) == 0:
         raise KeyError
-except KeyError:
-    USER_STRING_SESSION = None
-
-if USER_STRING_SESSION is not None:
     rss_session = Client(USER_STRING_SESSION, api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH)
-else:
+except:
+    USER_STRING_SESSION = None
     rss_session = None
 
 def aria2c_init():
@@ -182,38 +178,34 @@ def aria2c_init():
         logging.error(f"Aria2c initializing error: {e}")
         pass
 
-if not ospath.isfile(".restartmsg"):
-    sleep(1)
-    Thread(target=aria2c_init).start()
-    sleep(1.5)
+Thread(target=aria2c_init).start()
+sleep(1.5)
 
 try:
     DB_URI = getConfig('DATABASE_URL')
     if len(DB_URI) == 0:
         raise KeyError
-except KeyError:
+except:
     DB_URI = None
 try:
     TG_SPLIT_SIZE = getConfig('TG_SPLIT_SIZE')
     if len(TG_SPLIT_SIZE) == 0 or int(TG_SPLIT_SIZE) > 2097151000:
         raise KeyError
-    else:
-        TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
-except KeyError:
+    TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
+except:
     TG_SPLIT_SIZE = 2097151000
 try:
     STATUS_LIMIT = getConfig('STATUS_LIMIT')
     if len(STATUS_LIMIT) == 0:
         raise KeyError
-    else:
-        STATUS_LIMIT = int(STATUS_LIMIT)
-except KeyError:
+    STATUS_LIMIT = int(STATUS_LIMIT)
+except:
     STATUS_LIMIT = None
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
         raise KeyError
-except KeyError:
+except:
     logging.warning('MEGA API KEY not provided!')
     MEGA_API_KEY = None
 try:
@@ -221,7 +213,7 @@ try:
     MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
     if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
         raise KeyError
-except KeyError:
+except:
     logging.warning('MEGA Credentials not provided!')
     MEGA_EMAIL_ID = None
     MEGA_PASSWORD = None
@@ -229,113 +221,103 @@ try:
     UPTOBOX_TOKEN = getConfig('UPTOBOX_TOKEN')
     if len(UPTOBOX_TOKEN) == 0:
         raise KeyError
-except KeyError:
+except:
     UPTOBOX_TOKEN = None
 try:
     INDEX_URL = getConfig('INDEX_URL').rstrip("/")
     if len(INDEX_URL) == 0:
         raise KeyError
-    else:
-        INDEX_URLS.append(INDEX_URL)
-except KeyError:
+    INDEX_URLS.append(INDEX_URL)
+except:
     INDEX_URL = None
     INDEX_URLS.append(None)
 try:
     SEARCH_API_LINK = getConfig('SEARCH_API_LINK').rstrip("/")
     if len(SEARCH_API_LINK) == 0:
         raise KeyError
-except KeyError:
+except:
     SEARCH_API_LINK = None
 try:
     SEARCH_LIMIT = getConfig('SEARCH_LIMIT')
     if len(SEARCH_LIMIT) == 0:
         raise KeyError
-    else:
-        SEARCH_LIMIT = int(SEARCH_LIMIT)
-except KeyError:
+    SEARCH_LIMIT = int(SEARCH_LIMIT)
+except:
     SEARCH_LIMIT = 0
 try:
     RSS_COMMAND = getConfig('RSS_COMMAND')
     if len(RSS_COMMAND) == 0:
         raise KeyError
-except KeyError:
+except:
     RSS_COMMAND = None
 try:
     CMD_INDEX = getConfig('CMD_INDEX')
     if len(CMD_INDEX) == 0:
         raise KeyError
-except KeyError:
+except:
     CMD_INDEX = ''
 try:
     TORRENT_DIRECT_LIMIT = getConfig('TORRENT_DIRECT_LIMIT')
     if len(TORRENT_DIRECT_LIMIT) == 0:
         raise KeyError
-    else:
-        TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
-except KeyError:
+    TORRENT_DIRECT_LIMIT = float(TORRENT_DIRECT_LIMIT)
+except:
     TORRENT_DIRECT_LIMIT = None
 try:
     CLONE_LIMIT = getConfig('CLONE_LIMIT')
     if len(CLONE_LIMIT) == 0:
         raise KeyError
-    else:
-        CLONE_LIMIT = float(CLONE_LIMIT)
-except KeyError:
+    CLONE_LIMIT = float(CLONE_LIMIT)
+except:
     CLONE_LIMIT = None
 try:
     MEGA_LIMIT = getConfig('MEGA_LIMIT')
     if len(MEGA_LIMIT) == 0:
         raise KeyError
-    else:
-        MEGA_LIMIT = float(MEGA_LIMIT)
-except KeyError:
+    MEGA_LIMIT = float(MEGA_LIMIT)
+except:
     MEGA_LIMIT = None
 try:
     STORAGE_THRESHOLD = getConfig('STORAGE_THRESHOLD')
     if len(STORAGE_THRESHOLD) == 0:
         raise KeyError
-    else:
-        STORAGE_THRESHOLD = float(STORAGE_THRESHOLD)
-except KeyError:
+    STORAGE_THRESHOLD = float(STORAGE_THRESHOLD)
+except:
     STORAGE_THRESHOLD = None
 try:
     ZIP_UNZIP_LIMIT = getConfig('ZIP_UNZIP_LIMIT')
     if len(ZIP_UNZIP_LIMIT) == 0:
         raise KeyError
-    else:
-        ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
-except KeyError:
+    ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT)
+except:
     ZIP_UNZIP_LIMIT = None
 try:
     RSS_CHAT_ID = getConfig('RSS_CHAT_ID')
     if len(RSS_CHAT_ID) == 0:
         raise KeyError
-    else:
-        RSS_CHAT_ID = int(RSS_CHAT_ID)
-except KeyError:
+    RSS_CHAT_ID = int(RSS_CHAT_ID)
+except:
     RSS_CHAT_ID = None
 try:
     RSS_DELAY = getConfig('RSS_DELAY')
     if len(RSS_DELAY) == 0:
         raise KeyError
-    else:
-        RSS_DELAY = int(RSS_DELAY)
-except KeyError:
+    RSS_DELAY = int(RSS_DELAY)
+except:
     RSS_DELAY = 900
 try:
     QB_TIMEOUT = getConfig('QB_TIMEOUT')
     if len(QB_TIMEOUT) == 0:
         raise KeyError
-    else:
-        QB_TIMEOUT = int(QB_TIMEOUT)
-except KeyError:
+    QB_TIMEOUT = int(QB_TIMEOUT)
+except:
     QB_TIMEOUT = None
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
     if len(BUTTON_FOUR_NAME) == 0 or len(BUTTON_FOUR_URL) == 0:
         raise KeyError
-except KeyError:
+except:
     BUTTON_FOUR_NAME = None
     BUTTON_FOUR_URL = None
 try:
@@ -343,7 +325,7 @@ try:
     BUTTON_FIVE_URL = getConfig('BUTTON_FIVE_URL')
     if len(BUTTON_FIVE_NAME) == 0 or len(BUTTON_FIVE_URL) == 0:
         raise KeyError
-except KeyError:
+except:
     BUTTON_FIVE_NAME = None
     BUTTON_FIVE_URL = None
 try:
@@ -351,90 +333,90 @@ try:
     BUTTON_SIX_URL = getConfig('BUTTON_SIX_URL')
     if len(BUTTON_SIX_NAME) == 0 or len(BUTTON_SIX_URL) == 0:
         raise KeyError
-except KeyError:
+except:
     BUTTON_SIX_NAME = None
     BUTTON_SIX_URL = None
 try:
     STOP_DUPLICATE = getConfig('STOP_DUPLICATE')
     STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
-except KeyError:
+except:
     STOP_DUPLICATE = False
 try:
     VIEW_LINK = getConfig('VIEW_LINK')
     VIEW_LINK = VIEW_LINK.lower() == 'true'
-except KeyError:
+except:
     VIEW_LINK = False
 try:
     IS_TEAM_DRIVE = getConfig('IS_TEAM_DRIVE')
     IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
-except KeyError:
+except:
     IS_TEAM_DRIVE = False
 try:
     USE_SERVICE_ACCOUNTS = getConfig('USE_SERVICE_ACCOUNTS')
     USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
-except KeyError:
+except:
     USE_SERVICE_ACCOUNTS = False
 try:
     BLOCK_MEGA_FOLDER = getConfig('BLOCK_MEGA_FOLDER')
     BLOCK_MEGA_FOLDER = BLOCK_MEGA_FOLDER.lower() == 'true'
-except KeyError:
+except:
     BLOCK_MEGA_FOLDER = False
 try:
     BLOCK_MEGA_LINKS = getConfig('BLOCK_MEGA_LINKS')
     BLOCK_MEGA_LINKS = BLOCK_MEGA_LINKS.lower() == 'true'
-except KeyError:
+except:
     BLOCK_MEGA_LINKS = False
 try:
     WEB_PINCODE = getConfig('WEB_PINCODE')
     WEB_PINCODE = WEB_PINCODE.lower() == 'true'
-except KeyError:
+except:
     WEB_PINCODE = False
 try:
     SHORTENER = getConfig('SHORTENER')
     SHORTENER_API = getConfig('SHORTENER_API')
     if len(SHORTENER) == 0 or len(SHORTENER_API) == 0:
         raise KeyError
-except KeyError:
+except:
     SHORTENER = None
     SHORTENER_API = None
 try:
     IGNORE_PENDING_REQUESTS = getConfig("IGNORE_PENDING_REQUESTS")
     IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
-except KeyError:
+except:
     IGNORE_PENDING_REQUESTS = False
 try:
     BASE_URL = getConfig('BASE_URL_OF_BOT').rstrip("/")
     if len(BASE_URL) == 0:
         raise KeyError
-except KeyError:
+except:
     logging.warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
 try:
     AS_DOCUMENT = getConfig('AS_DOCUMENT')
     AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
-except KeyError:
+except:
     AS_DOCUMENT = False
 try:
     EQUAL_SPLITS = getConfig('EQUAL_SPLITS')
     EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
-except KeyError:
+except:
     EQUAL_SPLITS = False
 try:
     QB_SEED = getConfig('QB_SEED')
     QB_SEED = QB_SEED.lower() == 'true'
-except KeyError:
+except:
     QB_SEED = False
 try:
     CUSTOM_FILENAME = getConfig('CUSTOM_FILENAME')
     if len(CUSTOM_FILENAME) == 0:
         raise KeyError
-except KeyError:
+except:
     CUSTOM_FILENAME = None
 try:
     CRYPT = getConfig('CRYPT')
     if len(CRYPT) == 0:
         raise KeyError
-except KeyError:
+except:
     CRYPT = None
 try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
@@ -449,27 +431,26 @@ try:
             logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
         logging.error(f"TOKEN_PICKLE_URL: {e}")
-except KeyError:
+except:
     pass
 try:
     ACCOUNTS_ZIP_URL = getConfig('ACCOUNTS_ZIP_URL')
     if len(ACCOUNTS_ZIP_URL) == 0:
         raise KeyError
-    else:
-        try:
-            res = rget(ACCOUNTS_ZIP_URL)
-            if res.status_code == 200:
-                with open('accounts.zip', 'wb+') as f:
-                    f.write(res.content)
-            else:
-                logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
-        except Exception as e:
-            logging.error(f"ACCOUNTS_ZIP_URL: {e}")
-            raise KeyError
-        srun(["unzip", "-q", "-o", "accounts.zip"])
-        srun(["chmod", "-R", "777", "accounts"])
-        osremove("accounts.zip")
-except KeyError:
+    try:
+        res = rget(ACCOUNTS_ZIP_URL)
+        if res.status_code == 200:
+            with open('accounts.zip', 'wb+') as f:
+                f.write(res.content)
+        else:
+            logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
+    except Exception as e:
+        logging.error(f"ACCOUNTS_ZIP_URL: {e}")
+        raise KeyError
+    srun(["unzip", "-q", "-o", "accounts.zip"])
+    srun(["chmod", "-R", "777", "accounts"])
+    osremove("accounts.zip")
+except:
     pass
 try:
     MULTI_SEARCH_URL = getConfig('MULTI_SEARCH_URL')
@@ -484,7 +465,7 @@ try:
             logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
         logging.error(f"MULTI_SEARCH_URL: {e}")
-except KeyError:
+except:
     pass
 try:
     YT_COOKIES_URL = getConfig('YT_COOKIES_URL')
@@ -499,7 +480,7 @@ try:
             logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:
         logging.error(f"YT_COOKIES_URL: {e}")
-except KeyError:
+except:
     pass
 
 DRIVES_NAMES.append("Main")
@@ -516,14 +497,14 @@ if ospath.exists('drive_folder'):
                 pass
             try:
                 INDEX_URLS.append(temp[2])
-            except IndexError as e:
+            except:
                 INDEX_URLS.append(None)
 try:
     SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
     if len(SEARCH_PLUGINS) == 0:
         raise KeyError
     SEARCH_PLUGINS = jsnloads(SEARCH_PLUGINS)
-except KeyError:
+except:
     SEARCH_PLUGINS = None
 
 updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
