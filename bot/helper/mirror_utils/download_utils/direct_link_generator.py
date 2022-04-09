@@ -250,8 +250,12 @@ def pixeldrain(url: str) -> str:
     """ Based on https://github.com/yash-dk/TorToolkit-Telegram """
     url = url.strip("/ ")
     file_id = url.split("/")[-1]
-    info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
-    dl_link = f"https://pixeldrain.com/api/file/{file_id}"
+    if url.split("/")[-2] == "l":
+        info_link = f"https://pixeldrain.com/api/list/{file_id}"
+        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip"
+    else:
+        info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
+        dl_link = f"https://pixeldrain.com/api/file/{file_id}"
     resp = requests.get(info_link).json()
     if resp["success"]:
         return dl_link
