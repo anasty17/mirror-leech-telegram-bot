@@ -15,16 +15,19 @@ from .mirror import MirrorListener
 
 listener_dict = {}
 
-def _watch(bot, message, isZip=False, isLeech=False):
+def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
 
     try:
         link = mssg.split(' ')[1].strip()
-        if link.startswith(("|", "pswd:", "args:")):
-            link = ''
-    except IndexError:
+        if link.isdigit():
+            multi = int(link)
+            raise IndexError
+        elif link.startswith(("|", "pswd:", "args:")):
+            raise IndexError
+    except:
         link = ''
     try:
         name_arg = mssg.split('|', maxsplit=1)
@@ -34,17 +37,17 @@ def _watch(bot, message, isZip=False, isLeech=False):
             name = name_arg[1]
         name = resplit(r' pswd: | args: ', name)[0]
         name = name.strip()
-    except IndexError:
+    except:
         name = ''
     try:
         pswd = mssg.split(' pswd: ')[1]
         pswd = pswd.split(' args: ')[0]
-    except IndexError:
+    except:
         pswd = None
 
     try:
         args = mssg.split(' args: ')[1]
-    except IndexError:
+    except:
         args = None
 
     if message.from_user.username:
@@ -147,6 +150,13 @@ def _watch(bot, message, isZip=False, isLeech=False):
         bmsg = sendMarkup('Choose Video Quality:', bot, message, YTBUTTONS)
 
     Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
+    if multi > 1:
+        sleep(3)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
+        nextmsg = sendMessage(mssg.split(' ')[0], bot, nextmsg)
+        multi -= 1
+        sleep(3)
+        Thread(target=_watch, args=(bot, nextmsg, isZip, pswd, multi)).start()
 
 def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
@@ -206,7 +216,7 @@ def select_format(update, context):
     except:
         return editMessage("This is old task", msg)
     uid = task_info[1]
-    if user_id != uid:
+    if user_id != uid and not msg.reply_to_message.from_user.is_bot and not CustomFilters._owner_query(user_id):
         return query.answer(text="Don't waste your time!", show_alert=True)
     elif data[2] == "dict":
         query.answer()
@@ -242,7 +252,7 @@ def select_format(update, context):
     query.message.delete()
 
 def _auto_cancel(msg, msg_id):
-    sleep(60)
+    sleep(120)
     try:
         del listener_dict[msg_id]
         editMessage('Timed out! Task has been cancelled.', msg)

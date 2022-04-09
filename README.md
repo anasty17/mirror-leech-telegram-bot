@@ -28,7 +28,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Qbittorrent seed until reaching specific ratio or time
 - Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Save leech settings including thumbnails in database
-- Mirror/Leech multi links/torrent-files with one command. **Note**: This feature will not work for clone, count, tg-files or watch commands
+- Mirror/Leech/Clone multi links/files with one command.
 - Many bugs have been fixed
 
 ## From Other Repositories
@@ -123,7 +123,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `DATABASE_URL`: Your Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user and rss data. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables.
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space.
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space.
-- `IS_TEAM_DRIVE`: Set to `False` or leave it empty to get public google drive links else `True` so only who have access to your Folder/TeamDrive can open the links. `Bool`
+- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. `Bool`
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below.
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index.
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk)
