@@ -8,3 +8,4 @@ aria2c --enable-rpc=true --check-certificate=false --daemon=true \
    --bt-enable-lpd=true --seed-time=0 --max-file-not-found=0 --max-tries=20 \
    --auto-file-renaming=true --reuse-uri=true --http-accept-gzip=true --continue=true \
    --content-disposition-default-utf8=true --netrc-path=/usr/src/app/.netrc
+   
