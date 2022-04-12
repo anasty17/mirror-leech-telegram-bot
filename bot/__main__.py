@@ -2,14 +2,14 @@ import signal
 
 from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun, check_output
-from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time, Process as psprocess
+from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from time import time
 from pyrogram import idle
 from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, web, AUTHORIZED_CHATS, LOGGER, Interval, rss_session
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, AUTHORIZED_CHATS, LOGGER, Interval, rss_session
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -83,10 +83,7 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    procs = psprocess(web.pid)
-    for proc in procs.children(recursive=True):
-        proc.kill()
-    procs.kill()
+    srun(["pkill", "-f", "gunicorn"])
     clean_all()
     srun(["pkill", "-f", "aria2c"])
     srun(["python3", "update.py"])

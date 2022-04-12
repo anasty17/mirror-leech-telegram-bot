@@ -215,10 +215,10 @@ def select_format(update, context):
     try:
         task_info = listener_dict[task_id]
     except:
-        return editMessage("This is old task", msg)
+        return editMessage("This is an old task", msg)
     uid = task_info[1]
     if user_id != uid and not CustomFilters._owner_query(user_id):
-        return query.answer(text="Don't waste your time!", show_alert=True)
+        return query.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
         query.answer()
         qual = data[3]

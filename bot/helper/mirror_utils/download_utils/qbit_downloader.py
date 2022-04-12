@@ -226,7 +226,7 @@ def get_confirm(update, context):
         query.answer(text="This task has been cancelled!", show_alert=True)
         query.message.delete()
     elif user_id != qbdl.listener().message.from_user.id:
-        query.answer(text="Don't waste your time!", show_alert=True)
+        query.answer(text="This task is not for you!", show_alert=True)
     elif data[1] == "pin":
         query.answer(text=data[3], show_alert=True)
     elif data[1] == "done":
