@@ -102,6 +102,7 @@ class YoutubeDLHelper:
         self.__listener.onDownloadComplete()
 
     def __onDownloadError(self, error):
+        self.__is_cancelled = True
         self.__listener.onDownloadError(error)
 
     def extractMetaData(self, link, name, args, get_info=False):
@@ -114,12 +115,13 @@ class YoutubeDLHelper:
                 result = ydl.extract_info(link, download=False)
                 if get_info:
                     return result
+                elif result is None:
+                    raise ValueError('Info result is None')
                 realName = ydl.prepare_filename(result)
             except Exception as e:
                 if get_info:
                     raise e
-                self.__onDownloadError(str(e))
-                return
+                return self.__onDownloadError(str(e))
         if 'entries' in result:
             for v in result['entries']:
                 try:
