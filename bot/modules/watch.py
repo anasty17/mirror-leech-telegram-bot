@@ -154,6 +154,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         sleep(3)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
         nextmsg = sendMessage(mssg.split(' ')[0], bot, nextmsg)
+        nextmsg.from_user.id = message.from_user.id
         multi -= 1
         sleep(3)
         Thread(target=_watch, args=(bot, nextmsg, isZip, pswd, multi)).start()
@@ -214,10 +215,10 @@ def select_format(update, context):
     try:
         task_info = listener_dict[task_id]
     except:
-        return editMessage("This is old task", msg)
+        return editMessage("This is an old task", msg)
     uid = task_info[1]
-    if user_id != uid and not msg.reply_to_message.from_user.is_bot and not CustomFilters._owner_query(user_id):
-        return query.answer(text="Don't waste your time!", show_alert=True)
+    if user_id != uid and not CustomFilters._owner_query(user_id):
+        return query.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
         query.answer()
         qual = data[3]

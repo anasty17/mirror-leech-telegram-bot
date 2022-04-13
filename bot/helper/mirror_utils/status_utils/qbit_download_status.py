@@ -5,8 +5,8 @@ from time import sleep
 def get_download(client, hash_):
     try:
         return client.torrents_info(torrent_hashes=hash_)[0]
-    except:
-        pass
+    except Exception as e:
+        LOGGER.error(f'{e}: while getting torrent info')
 
 
 class QbDownloadStatus:
@@ -45,6 +45,7 @@ class QbDownloadStatus:
         return self.__info.downloaded
 
     def speed(self):
+        self.__update()
         return f"{get_readable_file_size(self.__info.dlspeed)}/s"
 
     def name(self):
