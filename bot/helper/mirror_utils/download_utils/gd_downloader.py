@@ -1,5 +1,5 @@
-import random
-import string
+from random import SystemRandom
+from string import ascii_letters, digits
 
 from bot import download_dict, download_dict_lock, ZIP_UNZIP_LIMIT, LOGGER, STOP_DUPLICATE, STORAGE_THRESHOLD, TORRENT_DIRECT_LIMIT
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -49,7 +49,7 @@ def add_gd_download(link, listener, is_gdtot):
                 return sendMessage(msg, listener.bot, listener.message)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, listener)
-    gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=12))
+    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     download_status = GdDownloadStatus(drive, size, listener, gid)
     with download_dict_lock:
         download_dict[listener.uid] = download_status
