@@ -306,12 +306,12 @@ try:
 except:
     RSS_DELAY = 900
 try:
-    QB_TIMEOUT = getConfig('QB_TIMEOUT')
-    if len(QB_TIMEOUT) == 0:
+    TORRENT_TIMEOUT = getConfig('TORRENT_TIMEOUT')
+    if len(TORRENT_TIMEOUT) == 0:
         raise KeyError
-    QB_TIMEOUT = int(QB_TIMEOUT)
+    TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 except:
-    QB_TIMEOUT = None
+    TORRENT_TIMEOUT = None
 try:
     BUTTON_FOUR_NAME = getConfig('BUTTON_FOUR_NAME')
     BUTTON_FOUR_URL = getConfig('BUTTON_FOUR_URL')
