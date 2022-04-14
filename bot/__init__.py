@@ -1,6 +1,6 @@
-import logging
-import socket
-import faulthandler
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig as log_Config, error as log_error, info as log_info, warning as log_warning
+from socket import setdefaulttimeout
+from faulthandler import enable as faulthandler_enable
 
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
@@ -14,17 +14,17 @@ from threading import Thread, Lock
 from pyrogram import Client
 from dotenv import load_dotenv
 
-faulthandler.enable()
+faulthandler_enable()
 
-socket.setdefaulttimeout(600)
+setdefaulttimeout(600)
 
 botStartTime = time()
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
+log_Config(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[FileHandler('log.txt'), StreamHandler()],
+                    level=INFO)
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = getLogger(__name__)
 
 load_dotenv('config.env', override=True)
 
@@ -41,9 +41,9 @@ try:
             with open('.netrc', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download .netrc {res.status_code}")
+            log_error(f"Failed to download .netrc {res.status_code}")
     except Exception as e:
-        logging.error(f"NETRC_URL: {e}")
+        log_error(f"NETRC_URL: {e}")
 except:
     pass
 try:
@@ -71,7 +71,7 @@ INDEX_URLS = []
 
 try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
-        logging.error('The README.md file there to be read! Exiting now!')
+        log_error('The README.md file there to be read! Exiting now!')
         exit()
 except:
     pass
@@ -165,7 +165,7 @@ except:
 
 def aria2c_init():
     try:
-        logging.info("Initializing Aria2c")
+        log_info("Initializing Aria2c")
         link = "https://releases.ubuntu.com/21.10/ubuntu-21.10-desktop-amd64.iso.torrent"
         dire = DOWNLOAD_DIR.rstrip("/")
         aria2.add_uris([link], {'dir': dire})
@@ -175,8 +175,7 @@ def aria2c_init():
         for download in downloads:
             aria2.remove([download], force=True, files=True)
     except Exception as e:
-        logging.error(f"Aria2c initializing error: {e}")
-        pass
+        log_error(f"Aria2c initializing error: {e}")
 
 Thread(target=aria2c_init).start()
 sleep(1.5)
@@ -206,7 +205,7 @@ try:
     if len(MEGA_API_KEY) == 0:
         raise KeyError
 except:
-    logging.warning('MEGA API KEY not provided!')
+    log_warning('MEGA API KEY not provided!')
     MEGA_API_KEY = None
 try:
     MEGA_EMAIL_ID = getConfig('MEGA_EMAIL_ID')
@@ -214,7 +213,7 @@ try:
     if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
         raise KeyError
 except:
-    logging.warning('MEGA Credentials not provided!')
+    log_warning('MEGA Credentials not provided!')
     MEGA_EMAIL_ID = None
     MEGA_PASSWORD = None
 try:
@@ -389,7 +388,7 @@ try:
     if len(BASE_URL) == 0:
         raise KeyError
 except:
-    logging.warning('BASE_URL_OF_BOT not provided!')
+    log_warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
 try:
     AS_DOCUMENT = getConfig('AS_DOCUMENT')
@@ -428,9 +427,9 @@ try:
             with open('token.pickle', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
+            log_error(f"Failed to download token.pickle, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(f"TOKEN_PICKLE_URL: {e}")
+        log_error(f"TOKEN_PICKLE_URL: {e}")
 except:
     pass
 try:
@@ -443,9 +442,9 @@ try:
             with open('accounts.zip', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
+            log_error(f"Failed to download accounts.zip, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(f"ACCOUNTS_ZIP_URL: {e}")
+        log_error(f"ACCOUNTS_ZIP_URL: {e}")
         raise KeyError
     srun(["unzip", "-q", "-o", "accounts.zip"])
     srun(["chmod", "-R", "777", "accounts"])
@@ -462,9 +461,9 @@ try:
             with open('drive_folder', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
+            log_error(f"Failed to download drive_folder, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(f"MULTI_SEARCH_URL: {e}")
+        log_error(f"MULTI_SEARCH_URL: {e}")
 except:
     pass
 try:
@@ -477,9 +476,9 @@ try:
             with open('cookies.txt', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
+            log_error(f"Failed to download cookies.txt, link got HTTP response: {res.status_code}")
     except Exception as e:
-        logging.error(f"YT_COOKIES_URL: {e}")
+        log_error(f"YT_COOKIES_URL: {e}")
 except:
     pass
 

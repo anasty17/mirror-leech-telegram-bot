@@ -1,5 +1,3 @@
-import os
-
 from os import path as ospath, getcwd, chdir
 from traceback import format_exc
 from textwrap import indent

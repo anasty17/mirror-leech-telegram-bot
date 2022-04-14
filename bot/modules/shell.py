@@ -1,5 +1,4 @@
 from subprocess import run
-from telegram import ParseMode
 from telegram.ext import CommandHandler
 
 from bot import LOGGER, dispatcher

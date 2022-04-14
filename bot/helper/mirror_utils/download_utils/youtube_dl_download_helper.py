@@ -1,6 +1,6 @@
-import random
-import string
-import logging
+from random import SystemRandom
+from string import ascii_letters, digits
+from logging import getLogger
 
 from yt_dlp import YoutubeDL, DownloadError
 from threading import RLock
@@ -13,7 +13,7 @@ from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
 from bot.helper.ext_utils.fs_utils import check_storage_threshold
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = getLogger(__name__)
 
 
 class MyLogger:
@@ -162,7 +162,7 @@ class YoutubeDLHelper:
     def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts['ignoreerrors'] = True
-        self.__gid = ''.join(random.SystemRandom().choices(string.ascii_letters + string.digits, k=10))
+        self.__gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         self.__onDownloadStart()
         if qual.startswith('ba/b'):
             audio_info = qual.split('-')
