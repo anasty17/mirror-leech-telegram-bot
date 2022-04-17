@@ -13,9 +13,9 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - View Link button, extra button to open file index link in broswer instead of direct download
 - Status Pages for unlimited tasks
 - Clone status
-- Search in multiple Drive folder/TeamDrive (Recursive Search)
+- Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
-- Multi-Search by token.pickle if exists
+- Multi-TD list by token.pickle if exists
 - Extract rar, zip and 7z splits with or without password
 - Zip file/folder with or without password
 - Use Token.pickle if file not found with Service Account for all Gdrive functions
@@ -182,8 +182,8 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 
 **NOTES**
 - Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
-- You should set default browser. For linux refer to this [link](https://askubuntu.com/questions/609863/what-environment-variable-should-i-use-to-set-a-default-web-browser).
 - Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+- You can ONLY open the generated link from local broswer.
 
 1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 2. Go to the OAuth Consent tab, fill it, and save.

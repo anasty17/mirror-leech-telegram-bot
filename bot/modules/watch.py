@@ -2,7 +2,7 @@ from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from time import sleep
-from re import split as resplit
+from re import split as re_split
 
 from bot import DOWNLOAD_DIR, dispatcher
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
@@ -35,7 +35,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
             raise IndexError
         else:
             name = name_arg[1]
-        name = resplit(r' pswd: | args: ', name)[0]
+        name = re_split(r' pswd: | args: ', name)[0]
         name = name.strip()
     except:
         name = ''
@@ -126,9 +126,9 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
                     subformat[frmt['tbr']] = size
                     formats_dict[quality] = subformat
 
-            for forDict in formats_dict:
-                if len(formats_dict[forDict]) == 1:
-                    qual_fps_ext = resplit(r'p|-', forDict, maxsplit=2)
+            for _format in formats_dict:
+                if len(formats_dict[_format]) == 1:
+                    qual_fps_ext = re_split(r'p|-', _format, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
@@ -136,11 +136,11 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
                         video_format = f"bv*[height={height}][fps={fps}][ext={ext}]"
                     else:
                         video_format = f"bv*[height={height}][ext={ext}]"
-                    size = list(formats_dict[forDict].values())[0]
-                    buttonName = f"{forDict} ({get_readable_file_size(size)})"
+                    size = list(formats_dict[_format].values())[0]
+                    buttonName = f"{_format} ({get_readable_file_size(size)})"
                     buttons.sbutton(str(buttonName), f"qu {msg_id} {video_format}")
                 else:
-                    buttons.sbutton(str(forDict), f"qu {msg_id} dict {forDict}")
+                    buttons.sbutton(str(_format), f"qu {msg_id} dict {_format}")
         buttons.sbutton("Audios", f"qu {msg_id} audio")
         buttons.sbutton("Best Video", f"qu {msg_id} {best_video}")
         buttons.sbutton("Best Audio", f"qu {msg_id} {best_audio}")
@@ -163,7 +163,7 @@ def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[6]
-    qual_fps_ext = resplit(r'p|-', qual, maxsplit=2)
+    qual_fps_ext = re_split(r'p|-', qual, maxsplit=2)
     height = qual_fps_ext[0]
     fps = qual_fps_ext[1]
     ext = qual_fps_ext[2]
@@ -233,7 +233,10 @@ def select_format(update, context):
         else:
             playlist = False
         return _audio_subbuttons(task_id, msg, playlist)
-    elif data[2] != "cancel":
+    elif data[2] == "cancel":
+        query.answer()
+        editMessage('Task has been cancelled.', msg)
+    else:
         query.answer()
         listener = task_info[0]
         link = task_info[2]
@@ -241,7 +244,7 @@ def select_format(update, context):
         args = task_info[5]
         qual = data[2]
         if qual.startswith('bv*['): # To not exceed telegram button bytes limits. Temp solution.
-            height = resplit(r'\[|\]', qual, maxsplit=2)[1]
+            height = re_split(r'\[|\]', qual, maxsplit=2)[1]
             qual = qual + f"+ba/b[{height}]"
         if len(data) == 4:
             playlist = True
@@ -249,8 +252,8 @@ def select_format(update, context):
             playlist = False
         ydl = YoutubeDLHelper(listener)
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, args)).start()
+        query.message.delete()
     del listener_dict[task_id]
-    query.message.delete()
 
 def _auto_cancel(msg, msg_id):
     sleep(120)

@@ -1,6 +1,5 @@
 from requests import get as rget, utils as rutils
-
-from re import match, search, split as resplit
+from re import match as re_match, search as re_search, split as re_split
 from time import sleep, time
 from os import path as ospath, remove as osremove, listdir, walk
 from shutil import rmtree
@@ -16,7 +15,7 @@ from bot import Interval, INDEX_URL, BUTTON_FOUR_NAME, BUTTON_FOUR_URL, BUTTON_F
                 BUTTON_SIX_NAME, BUTTON_SIX_URL, BLOCK_MEGA_FOLDER, BLOCK_MEGA_LINKS, VIEW_LINK, aria2, QB_SEED, \
                 dispatcher, DOWNLOAD_DIR, download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_gdtot_link, is_mega_link, is_gdrive_link, get_content_type, get_mega_link_type
-from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fssplit, clean_download
+from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split as fs_split, clean_download
 from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
@@ -103,8 +102,8 @@ class MirrorListener:
                 if ospath.isdir(m_path):
                     for dirpath, subdir, files in walk(m_path, topdown=False):
                         for file_ in files:
-                            if file_.endswith(".zip") or search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file_) \
-                               or (file_.endswith(".rar") and not search(r'\.part\d+\.rar$', file_)):
+                            if file_.endswith(".zip") or re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file_) \
+                               or (file_.endswith(".rar") and not re_search(r'\.part\d+\.rar$', file_)):
                                 m_path = ospath.join(dirpath, file_)
                                 if self.pswd is not None:
                                     result = srun(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])
@@ -113,7 +112,7 @@ class MirrorListener:
                                 if result.returncode != 0:
                                     LOGGER.error('Unable to extract archive!')
                         for file_ in files:
-                            if file_.endswith((".rar", ".zip")) or search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file_):
+                            if file_.endswith((".rar", ".zip")) or re_search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file_):
                                 del_path = ospath.join(dirpath, file_)
                                 osremove(del_path)
                     path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
@@ -147,7 +146,7 @@ class MirrorListener:
                             with download_dict_lock:
                                 download_dict[self.uid] = SplitStatus(up_name, up_path, size)
                             LOGGER.info(f"Splitting: {up_name}")
-                        fssplit(f_path, f_size, file_, dirpath, TG_SPLIT_SIZE)
+                        fs_split(f_path, f_size, file_, dirpath, TG_SPLIT_SIZE)
                         osremove(f_path)
         if self.isLeech:
             size = get_path_size(f'{DOWNLOAD_DIR}{self.uid}')
@@ -310,7 +309,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
         name = name.strip()
     except:
         name = ''
-    link = resplit(r"pswd:| \|", link)[0]
+    link = re_split(r"pswd:| \|", link)[0]
     link = link.strip()
     pswdMsg = mesg[0].split(' pswd: ')
     if len(pswdMsg) > 1:
@@ -365,7 +364,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             else:
                 link = file.get_file().file_path
 
-    if len(mesg) > 1:
+    if len(mesg) > 2:
         try:
             ussr = quote(mesg[1], safe='')
             pssw = quote(mesg[2], safe='')
@@ -392,7 +391,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
         and not is_gdrive_link(link) and not link.endswith('.torrent'):
         content_type = get_content_type(link)
-        if content_type is None or match(r'text/html|text/plain', content_type):
+        if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
                 is_gdtot = is_gdtot_link(link)
                 link = direct_link_generator(link)
@@ -406,7 +405,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             content_type = None
         else:
             content_type = get_content_type(link)
-        if content_type is None or match(r'application/x-bittorrent|application/octet-stream', content_type):
+        if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
             try:
                 resp = rget(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
                 if resp.status_code == 200:
@@ -452,7 +451,10 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
     if multi > 1:
         sleep(3)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        nextmsg = sendMessage(message_args[0], bot, nextmsg)
+        msg = message_args[0]
+        if len(mesg) > 2:
+            msg += '\n' + mesg[1] + '\n' + mesg[2]
+        nextmsg = sendMessage(msg, bot, nextmsg)
         nextmsg.from_user.id = message.from_user.id
         multi -= 1
         sleep(3)

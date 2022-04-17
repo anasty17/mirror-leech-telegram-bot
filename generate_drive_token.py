@@ -19,7 +19,7 @@ if os.path.exists(__G_DRIVE_TOKEN_FILE):
 else:
     flow = InstalledAppFlow.from_client_secrets_file(
         'credentials.json', __OAUTH_SCOPE)
-    credentials = flow.run_local_server(port=0)
+    credentials = flow.run_local_server(port=0, open_browser=False)
 
 # Save the credentials for the next run
 with open(__G_DRIVE_TOKEN_FILE, 'wb') as token:

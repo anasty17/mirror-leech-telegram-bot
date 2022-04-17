@@ -2,7 +2,7 @@ from hashlib import sha1
 from bencoding import bencode, bdecode
 from os import remove as osremove, path as ospath, listdir
 from time import sleep, time
-from re import search
+from re import search as re_search
 from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CallbackQueryHandler
@@ -186,8 +186,8 @@ def _qb_listener(listener, client, ext_hash, select, path):
             elif tor_info.state == "error":
                 _onDownloadError("No enough space for this torrent on device", client, ext_hash, listener)
                 break
-            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and not uploaded:
-                LOGGER.info(f"onQbDownloadComplete: {ext_hash}")
+            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and \
+                 not uploaded and len(listdir(path)) != 0:
                 uploaded = True
                 if not QB_SEED:
                     client.torrents_pause(torrent_hashes=ext_hash)
@@ -237,7 +237,7 @@ def get_confirm(update, context):
 
 def _get_hash_magnet(mgt):
     if mgt.startswith('magnet:'):
-        return search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
+        return re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
 
 def _get_hash_file(path):
     with open(path, "rb") as f:
