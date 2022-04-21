@@ -1,7 +1,6 @@
-from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig as log_Config, error as log_error, info as log_info, warning as log_warning
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info, warning as log_warning
 from socket import setdefaulttimeout
 from faulthandler import enable as faulthandler_enable
-
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
@@ -20,7 +19,7 @@ setdefaulttimeout(600)
 
 botStartTime = time()
 
-log_Config(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[FileHandler('log.txt'), StreamHandler()],
                     level=INFO)
 

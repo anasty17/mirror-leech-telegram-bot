@@ -1,11 +1,10 @@
 from random import SystemRandom
 from string import ascii_letters, digits
 from logging import getLogger
-
 from yt_dlp import YoutubeDL, DownloadError
 from threading import RLock
 from time import time
-from re import search
+from re import search as re_search
 
 from bot import download_dict_lock, download_dict, STORAGE_THRESHOLD
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
@@ -22,9 +21,9 @@ class MyLogger:
 
     def debug(self, msg):
         # Hack to fix changing extension
-        match = search(r'.Merger..Merging formats into..(.*?).$', msg) # To mkv
+        match = re_search(r'.Merger..Merging formats into..(.*?).$', msg) # To mkv
         if not match and not self.obj.is_playlist:
-            match = search(r'.ExtractAudio..Destination..(.*?)$', msg) # To mp3
+            match = re_search(r'.ExtractAudio..Destination..(.*?)$', msg) # To mp3
         if match and not self.obj.is_playlist:
             newname = match.group(1)
             newname = newname.split("/")[-1]

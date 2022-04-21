@@ -1,13 +1,12 @@
 from logging import getLogger, ERROR, DEBUG
 from time import time, sleep
-
 from pickle import load as pload, dump as pdump
 from json import loads as jsnloads
 from os import makedirs, path as ospath, listdir
 from urllib.parse import parse_qs, urlparse
 from requests.utils import quote as rquote
 from io import FileIO
-from re import search
+from re import search as re_search
 from random import randrange
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -99,7 +98,7 @@ class GoogleDriveHelper:
     def __getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
             regex = r"https://drive\.google\.com/(drive)?/?u?/?\d?/?(mobile)?/?(file)?(folders)?/?d?/([-\w]+)[?+]?/?(w+)?"
-            res = search(regex,link)
+            res = re_search(regex,link)
             if res is None:
                 raise IndexError("G-Drive ID not found.")
             return res.group(5)
@@ -358,7 +357,8 @@ class GoogleDriveHelper:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.deletefile(durl)
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>Name: </b><code>{meta.get("name")}</code>\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += f'<b>Name: </b><code>{meta.get("name")}</code>'
+                msg += f'\n\n<b>Size: </b>{get_readable_file_size(self.transferred_size)}'
                 msg += '\n\n<b>Type: </b>Folder'
                 msg += f'\n<b>SubFolders: </b>{self.__total_folders}'
                 msg += f'\n<b>Files: </b>{self.__total_files}'
@@ -479,18 +479,8 @@ class GoogleDriveHelper:
             if ospath.exists(self.__G_DRIVE_TOKEN_FILE):
                 with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                     credentials = pload(f)
-            if credentials is None or not credentials.valid:
-                if credentials and credentials.expired and credentials.refresh_token:
-                    credentials.refresh(Request())
-                else:
-                    flow = InstalledAppFlow.from_client_secrets_file(
-                        'credentials.json', self.__OAUTH_SCOPE)
-                    LOGGER.info(flow)
-                    credentials = flow.run_console(port=0)
-
-                # Save the credentials for the next run
-                with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
-                    pdump(credentials, token)
+            else:
+                LOGGER.error('token.pickle not found!')
         else:
             LOGGER.info(f"Authorizing with {SERVICE_ACCOUNT_INDEX}.json service account")
             credentials = service_account.Credentials.from_service_account_file(
@@ -506,17 +496,6 @@ class GoogleDriveHelper:
                 LOGGER.info("Authorize with token.pickle")
                 with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                     credentials = pload(f)
-                if credentials is None or not credentials.valid:
-                    if credentials and credentials.expired and credentials.refresh_token:
-                        credentials.refresh(Request())
-                    else:
-                        flow = InstalledAppFlow.from_client_secrets_file(
-                            'credentials.json', self.__OAUTH_SCOPE)
-                        LOGGER.info(flow)
-                        credentials = flow.run_console(port=0)
-                    # Save the credentials for the next run
-                    with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
-                        pdump(credentials, token)
                 return build('drive', 'v3', credentials=credentials, cache_discovery=False)
         return None
 

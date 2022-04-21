@@ -185,8 +185,7 @@ def serviceaccountfactory(
         else:
             flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
 
-            creds = flow.run_local_server(port=0)
-            # creds = flow.run_console()
+            creds = flow.run_local_server(port=0, open_browser=False)
 
         with open(token, 'wb') as t:
             pickle.dump(creds, t)

@@ -10,7 +10,6 @@ for original authorship. """
 
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
-
 from base64 import b64decode
 from urllib.parse import urlparse, unquote
 from json import loads as jsnloads
@@ -74,8 +73,6 @@ def direct_link_generator(link: str):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
-    elif 'gofile.io' in link:
-        return gofile(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
@@ -387,20 +384,3 @@ def gdtot(url: str) -> str:
     except:
         raise DirectDownloadLinkException("ERROR: Try in your broswer, mostly file not found or user limit exceeded!")
     return f'https://drive.google.com/open?id={decoded_id}'
-
-def gofile(url: str) -> str:
-    try:
-        api_uri = 'https://api.gofile.io'
-        client = rsession()
-        res = client.get(f'{api_uri}/createAccount').json()
-        data = {
-            'contentId': url.split('/')[-1],
-            'token': res['data']['token'],
-            'websiteToken': 'websiteToken',
-            'cache': 'true'
-        }
-        res = client.get(f'{api_uri}/getContent', params=data).json()
-        content = list(res['data']['contents'].values())
-        return content[0]['directLink']
-    except:
-        raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from gofile!")

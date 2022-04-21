@@ -1,6 +1,5 @@
 from random import SystemRandom
 from string import ascii_letters, digits
-
 from telegram.ext import CommandHandler
 from threading import Thread
 from time import sleep
