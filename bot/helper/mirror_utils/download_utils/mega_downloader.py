@@ -11,7 +11,7 @@ from megasdkrestclient import MegaSdkRestClient, constants
 
 
 class MegaDownloader:
-    POLLING_INTERVAL = 4
+    POLLING_INTERVAL = 3
 
     def __init__(self, listener):
         self.__listener = listener
