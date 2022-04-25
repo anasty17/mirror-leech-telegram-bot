@@ -198,7 +198,7 @@ def _qb_listener(listener, client, ext_hash, path):
                             client.torrents_delete(torrent_hashes=ext_hash, delete_files=True)
                             client.auth_log_out()
                             break
-                        download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
+                        download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, True)
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {tor_info.name}")
                 else:
