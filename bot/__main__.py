@@ -1,15 +1,14 @@
-import signal
-
+from signal import signal, SIGINT
 from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun, check_output
-from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time, Process as psprocess
+from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from time import time
 from pyrogram import idle
 from sys import executable
 from telegram import ParseMode, InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, web, AUTHORIZED_CHATS, LOGGER, Interval, rss_session, a2c
+from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, AUTHORIZED_CHATS, LOGGER, Interval, rss_session
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, sendLogFile
@@ -21,7 +20,10 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clon
 
 
 def stats(update, context):
-    last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
+    if ospath.exists('.git'):
+        last_commit = check_output(["git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'"], shell=True).decode()
+    else:
+        last_commit = 'No UPSTREAM_REPO'
     currentTime = get_readable_time(time() - botStartTime)
     osUptime = get_readable_time(time() - boot_time())
     total, used, free, disk= disk_usage('/')
@@ -36,7 +38,6 @@ def stats(update, context):
     swap = swap_memory()
     swap_p = swap.percent
     swap_t = get_readable_file_size(swap.total)
-    swap_u = get_readable_file_size(swap.used)
     memory = virtual_memory()
     mem_p = memory.percent
     mem_t = get_readable_file_size(memory.total)
@@ -80,16 +81,11 @@ def restart(update, context):
     if Interval:
         Interval[0].cancel()
     alive.kill()
-    procs = psprocess(web.pid)
-    for proc in procs.children(recursive=True):
-        proc.kill()
-    procs.kill()
+    srun(["pkill", "-f", "gunicorn"])
     clean_all()
+    srun(["pkill", "-f", "aria2c"])
+    srun(["pkill", "-f", "megasdkrest"])
     srun(["python3", "update.py"])
-    a2cproc = psprocess(a2c.pid)
-    for proc in a2cproc.children(recursive=True):
-        proc.kill()
-    a2cproc.kill()
     with open(".restartmsg", "w") as f:
         f.truncate(0)
         f.write(f"{restart_message.chat.id}\n{restart_message.message_id}\n")
@@ -257,7 +253,7 @@ def main():
                 if str(i).startswith('-'):
                     bot.sendMessage(chat_id=i, text="<b>Bot Started!</b>", parse_mode=ParseMode.HTML)
         except Exception as e:
-            LOGGER.warning(e)
+            LOGGER.error(e)
 
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
     ping_handler = CommandHandler(BotCommands.PingCommand, ping,
@@ -277,7 +273,7 @@ def main():
     dispatcher.add_handler(log_handler)
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
-    signal.signal(signal.SIGINT, exit_clean_up)
+    signal(SIGINT, exit_clean_up)
     if rss_session is not None:
         rss_session.start()
 

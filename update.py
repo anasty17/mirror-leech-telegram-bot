@@ -1,5 +1,4 @@
-import logging
-
+from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info
 from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
@@ -9,9 +8,9 @@ if ospath.exists('log.txt'):
     with open('log.txt', 'r+') as f:
         f.truncate(0)
 
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[logging.FileHandler('log.txt'), logging.StreamHandler()],
-                    level=logging.INFO)
+basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    handlers=[FileHandler('log.txt'), StreamHandler()],
+                    level=INFO)
 
 CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
 try:
@@ -23,9 +22,9 @@ try:
             with open('config.env', 'wb+') as f:
                 f.write(res.content)
         else:
-            logging.error(f"Failed to download config.env {res.status_code}")
+            log_error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
-        logging.error(f"CONFIG_FILE_URL: {e}")
+        log_error(f"CONFIG_FILE_URL: {e}")
 except TypeError:
     pass
 
@@ -58,6 +57,6 @@ if UPSTREAM_REPO is not None:
                      && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
 
     if update.returncode == 0:
-        logging.info('Successfully updated with latest commit from UPSTREAM_REPO')
+        log_info('Successfully updated with latest commit from UPSTREAM_REPO')
     else:
-        logging.error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
+        log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')

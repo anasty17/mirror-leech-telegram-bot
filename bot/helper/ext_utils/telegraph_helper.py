@@ -1,8 +1,7 @@
 # Implement By - @VarnaX-279
 
-import string
-import random
-import logging
+from string import ascii_letters
+from random import SystemRandom
 
 from time import sleep
 from telegraph import Telegraph
@@ -14,7 +13,7 @@ from bot import LOGGER
 class TelegraphHelper:
     def __init__(self, author_name=None, author_url=None):
         self.telegraph = Telegraph()
-        self.short_name = ''.join(random.SystemRandom().choices(string.ascii_letters, k=8))
+        self.short_name = ''.join(SystemRandom().choices(ascii_letters, k=8))
         self.access_token = None
         self.author_name = author_name
         self.author_url = author_url

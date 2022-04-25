@@ -1,5 +1,4 @@
-from subprocess import run
-from telegram import ParseMode
+from subprocess import run as srun
 from telegram.ext import CommandHandler
 
 from bot import LOGGER, dispatcher
@@ -14,7 +13,7 @@ def shell(update, context):
     if len(cmd) == 1:
         return sendMessage('No command to execute was given.', context.bot, update.message)
     cmd = cmd[1]
-    process = run(cmd, capture_output=True, shell=True)
+    process = srun(cmd, capture_output=True, shell=True)
     reply = ''
     stderr = process.stderr.decode('utf-8')
     stdout = process.stdout.decode('utf-8')
