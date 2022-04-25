@@ -1,6 +1,5 @@
-import logging
-import random
-
+from logging import getLogger, WARNING
+from random import choices
 from time import time
 from threading import RLock, Lock, Thread
 
@@ -13,7 +12,7 @@ from bot.helper.ext_utils.fs_utils import check_storage_threshold
 
 global_lock = Lock()
 GLOBAL_GID = set()
-logging.getLogger("pyrogram").setLevel(logging.WARNING)
+getLogger("pyrogram").setLevel(WARNING)
 
 
 class TelegramDownloadHelper:
@@ -40,7 +39,7 @@ class TelegramDownloadHelper:
             self.name = name
             self.size = size
             self.__id = file_id
-        gid = ''.join(random.choices(file_id, k=12))
+        gid = ''.join(choices(file_id, k=12))
         with download_dict_lock:
             download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
         sendStatusMessage(self.__listener.message, self.__listener.bot)

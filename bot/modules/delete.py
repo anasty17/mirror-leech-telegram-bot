@@ -1,5 +1,4 @@
 from threading import Thread
-from telegram import Update
 from telegram.ext import CommandHandler
 
 from bot import dispatcher, LOGGER

@@ -1,5 +1,3 @@
-# Leech Settings V2 Implement By - @VarnaX-279
-
 from os import remove as osremove, path as ospath, mkdir
 from threading import Thread
 from PIL import Image

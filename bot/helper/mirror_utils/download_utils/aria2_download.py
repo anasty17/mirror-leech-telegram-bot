@@ -107,7 +107,7 @@ def start_listener():
 
 def add_aria2c_download(link: str, path, listener, filename):
     if is_magnet(link):
-        download = aria2.add_magnet(link, {'dir': path, 'out': filename})
+        download = aria2.add_magnet(link, {'dir': path})
     else:
         download = aria2.add_uris([link], {'dir': path, 'out': filename})
     if download.error_message:
