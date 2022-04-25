@@ -39,8 +39,6 @@ class TgUploader:
         path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_readable_file_size(get_path_size(path))
         for dirpath, subdir, files in sorted(walk(path)):
-            if '/.unwanted' in dirpath:
-                continue
             for file_ in sorted(files):
                 if self.__is_cancelled:
                     return

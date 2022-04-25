@@ -47,6 +47,19 @@ def exit_clean_up(signal, frame):
         LOGGER.warning("Force Exiting before the cleanup finishes!")
         sysexit(1)
 
+def clean_unwanted(path: str):
+    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
+    for dirpath, subdir, files in walk(path, topdown=False):
+        for filee in files:
+            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
+                osremove(ospath.join(dirpath, filee))
+        for folder in subdir:
+            if folder == ".unwanted":
+                rmtree(ospath.join(dirpath, folder))
+    for dirpath, subdir, files in walk(path, topdown=False):
+        if not listdir(dirpath):
+            rmdir(dirpath)
+
 def get_path_size(path: str):
     if ospath.isfile(path):
         return ospath.getsize(path)

@@ -112,7 +112,7 @@ AUTHORIZED_CHATS = set()
 SUDO_USERS = set()
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
-EXTENTION_FILTER = set(['.!qB', '.parts', '.torrent'])
+EXTENTION_FILTER = set(['.torrent'])
 
 if ospath.exists('authorized_chats.txt'):
     with open('authorized_chats.txt', 'r+') as f:
