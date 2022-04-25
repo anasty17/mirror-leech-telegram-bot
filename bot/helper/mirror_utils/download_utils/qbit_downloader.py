@@ -12,7 +12,7 @@ from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownload
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, get_readable_file_size, get_readable_time
-from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name, check_storage_threshold
+from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 from bot.helper.telegram_helper import button_build
 
 
@@ -62,7 +62,7 @@ def add_qb_torrent(link, path, listener, select):
         with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, client, ext_hash, select)
         LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
-        Thread(target=_qb_listener, args=(listener, client, ext_hash, select, path)).start()
+        Thread(target=_qb_listener, args=(listener, client, ext_hash, path)).start()
         if BASE_URL is not None and select:
             if not is_file:
                 metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
@@ -102,7 +102,7 @@ def add_qb_torrent(link, path, listener, select):
         sendMessage(str(e), listener.bot, listener.message)
         client.auth_log_out()
 
-def _qb_listener(listener, client, ext_hash, select, path):
+def _qb_listener(listener, client, ext_hash, path):
     stalled_time = time()
     uploaded = False
     sizeChecked = False
@@ -191,8 +191,6 @@ def _qb_listener(listener, client, ext_hash, select, path):
                 uploaded = True
                 if not QB_SEED:
                     client.torrents_pause(torrent_hashes=ext_hash)
-                if select:
-                    clean_unwanted(path)
                 listener.onDownloadComplete()
                 if QB_SEED and not listener.isLeech and not listener.extract:
                     with download_dict_lock:

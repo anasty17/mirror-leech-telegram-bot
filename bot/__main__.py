@@ -84,6 +84,7 @@ def restart(update, context):
     srun(["pkill", "-f", "gunicorn"])
     clean_all()
     srun(["pkill", "-f", "aria2c"])
+    srun(["pkill", "-f", "megasdkrest"])
     srun(["python3", "update.py"])
     with open(".restartmsg", "w") as f:
         f.truncate(0)
