@@ -452,7 +452,7 @@ class GoogleDriveHelper:
             return parent_id
         new_id = None
         for item in list_dirs:
-            if item.endswith(tuple(EXTENTION_FILTER)):
+            if item.lower().endswith(tuple(EXTENTION_FILTER)):
                 continue
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):

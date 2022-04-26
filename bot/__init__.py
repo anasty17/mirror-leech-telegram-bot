@@ -55,7 +55,7 @@ except:
 
 PORT = environ.get('PORT', SERVER_PORT)
 alive = Popen(["python3", "alive.py"])
-Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
+Popen([f"gunicorn", "web.wserver:app", "--bind 0.0.0.0:", PORT])
 srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
@@ -142,7 +142,7 @@ try:
     fx = getConfig('EXTENTION_FILTER')
     fx = fx.split(' ')
     for x in fx:
-        EXTENTION_FILTER.add('.' + x)
+        EXTENTION_FILTER.add(x.lower())
 except:
     pass
 try:

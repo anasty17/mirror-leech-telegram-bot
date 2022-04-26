@@ -30,9 +30,7 @@ def start_cleanup():
 
 def clean_all():
     aria2.remove_all(True)
-    qbc = get_client()
-    qbc.torrents_delete(torrent_hashes="all", delete_files=True)
-    qbc.app_shutdown()
+    get_client().torrents_delete(torrent_hashes="all")
     try:
         rmtree(DOWNLOAD_DIR)
     except FileNotFoundError:
