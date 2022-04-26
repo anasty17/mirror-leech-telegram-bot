@@ -148,7 +148,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
-- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file. Read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended) also.
+- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file. For more informations read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
 - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means `master`.
 - `EXTENTION_FILTER`: File extentions that won't upload. Separate them by space.
 - `SHORTENER_API`: Fill your Shortener API key.
@@ -331,9 +331,12 @@ help - All cmds with description
 ## UPSTREAM REPO (Recommended)
 
 - `UPSTREAM_REPO` variable can be used for edit/add any file in repository.
-- You can add private/public repository link to grab all files from it.
-- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except config.env, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
+- You can add private/public repository link to grab/overwrite all files from it.
+- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except **config.env**, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
 - If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
+- If you filled `UPSTREAM_REPO` with the official repository link then be carefull incase any change in requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates or make it empty if deployed master branch.
+- In case you you filled `UPSTREAM_REPO` with your fork link be carefull also if you fetched the commits from the official repository.
+- The changes in your `UPSTREAM_REPO` will take affect only after restart.
 - `UPSTREAM_BRANCH` don't ever fill heroku here.
 
 ------
