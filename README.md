@@ -23,10 +23,9 @@
 **Important Notes for Heroku Branch**
 1. This Branch only for DEPLOYING! Don't use it for update!
 2. Generate all your private files from master branch (token.pickle, config.env, drive_folder, cookies.txt ...).
-3. If you want to edit aria.sh or qBittorrent.conf or any other file in repository you must add `UPSTREAM_REPO` of your edited public or private fork else YOU WILL GET THE OFFICIAL CODE AND ALL YOUR CHANGES WILL NOT TAKE EFFECT.
-4. To stay up to date don't fill `UPSTREAM_REPO`, on each `dyno restart` you will get lastest commits from official repository. BUT any change in requirements of official repository you need to update you code and deploy again or your bot will not boot after dyno restart, so if you have problem with this then fill `UPSTREAM_REPO`.
-5. You can fill `UPSTREAM_REPO` by your public/private fork link and fetch manually then you can update your bot by `restart cmd` and `dyno restart`.
-6. If want to add private files before deploying then add them to heroku branch not master branch!
+3. `UPSTREAM_REPO` is required for heroku branch otherwise your bot will not start.
+4. If you want to edit aria.sh or qBittorrent.conf or any other file in repository, edit in your repository that filled for `UPSTREAM_REPO`. For more informations read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
+6. If want to add private files before deploying then add them to heroku branch not master branch!.
 
 ------
 
