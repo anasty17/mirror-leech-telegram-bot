@@ -210,7 +210,6 @@ class QbDownloader:
                 self.__listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
                 self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                 self.client.auth_log_out()
-                update_all_messages()
                 self.periodic.cancel()
         except Exception as e:
             LOGGER.error(str(e))
