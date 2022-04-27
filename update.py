@@ -37,7 +37,7 @@ try:
        raise TypeError
 except TypeError:
     UPSTREAM_REPO = ""
-    log_error('One important variable is missing. The README.md file of heroku branch there to be read! Exiting now!')
+    log_error('UPSTREAM_REPO variable is missing. The README.md file of heroku branch there to be read! Exiting now!')
     exit()
 try:
     if len(UPSTREAM_BRANCH) == 0:

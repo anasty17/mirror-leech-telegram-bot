@@ -16,7 +16,7 @@
 **Important Notes for Both Branches**
 1. Don't delete .gitignore file.
 2. Read all variables definitions from master branch readme.
-3. Don't edit/add variables from Heroku, if you want to edit/add simply do it in config.env from gists if using gists or from private repository if added in it, then restart your app. Yuo can only add `CONFIG_FILE_URL` variable from heroku.
+3. Don't edit/add variables from Heroku, if you want to edit/add simply do it in config.env from gists if using gists or from private repository if added in it, then restart your app. You can only add `CONFIG_FILE_URL` variable from heroku.
 4. Keep the programmer inside you away and follow the steps.
 5. Don't deploy from browser or hmanager app, only from cli or workflow.
 
@@ -24,7 +24,7 @@
 1. This Branch only for DEPLOYING! Don't use it for update!
 2. Generate all your private files from master branch (token.pickle, config.env, drive_folder, cookies.txt ...).
 3. `UPSTREAM_REPO` is required for heroku branch otherwise your bot will not start.
-4. If you want to edit aria.sh or qBittorrent.conf or any other file in repository, edit in your repository that filled for `UPSTREAM_REPO`. For more informations read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
+4. If you want to edit aria.sh or qBittorrent.conf or any other file in repository, edit in your repository that filled for `UPSTREAM_REPO`. For more information read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
 6. If want to add private files before deploying then add them to heroku branch not master branch!.
 
 ------
