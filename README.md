@@ -6,7 +6,7 @@
   - Heroku ban specific layer from docker and not all docker layers. In this repository heroku banned `COPY` layer that copy all repository files to docker container. So changing `COPY` layer by removing files, suspension will not occure.
 
 * But how to get repository files to run the code ?
-  - We are using update feature that clone the files from master branch of official repository to docker container before bot startup.
+  - We are using update feature that clone the files from `UPSTREAM_REPO` to docker container before bot startup.
 
 * Is there any other way to avoid suspension?
   - Yes! deploy master branch twice. But how this works ?! When you deploy heroku app with specific name, heroku store docker cache for next time deploy for this app with it's specific name, so docker image will not be downloaded again and again for this app since already downloaded first time unless there is a change in docker layers.
