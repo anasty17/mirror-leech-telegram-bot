@@ -456,14 +456,16 @@ class GoogleDriveHelper:
             return parent_id
         new_id = None
         for item in list_dirs:
-            if item.lower().endswith(tuple(EXTENTION_FILTER)):
-                continue
+            if self.is_cancelled:
+                break
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.__create_directory(item, parent_id)
                 new_id = self.__upload_dir(current_file_name, current_dir_id)
                 self.__total_folders += 1
             else:
+                if item.lower().endswith(tuple(EXTENTION_FILTER)):
+                    continue
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 # current_file_name will have the full path
@@ -843,10 +845,10 @@ class GoogleDriveHelper:
             return
         result = sorted(result, key=lambda k: k['name'])
         for item in result:
+            if self.is_cancelled:
+                break
             file_id = item['id']
             filename = item['name']
-            if filename.lower().endswith(tuple(EXTENTION_FILTER)):
-                continue
             shortcut_details = item.get('shortcutDetails')
             if shortcut_details is not None:
                 file_id = shortcut_details['targetId']
@@ -856,6 +858,8 @@ class GoogleDriveHelper:
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__download_folder(file_id, path, filename)
             elif not ospath.isfile(path + filename):
+                if filename.lower().endswith(tuple(EXTENTION_FILTER)):
+                    continue
                 self.__download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
                 break
