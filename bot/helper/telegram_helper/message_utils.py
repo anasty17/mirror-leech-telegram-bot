@@ -63,10 +63,10 @@ def sendRss(text: str, bot):
             return
     else:
         try:
-            return rss_session.send_message(RSS_CHAT_ID, text, parse_mode=enums.ParseMode.HTML, disable_web_page_preview=True)
+            return rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
         except FloodWait as e:
             LOGGER.warning(str(e))
-            sleep(e.x * 1.5)
+            sleep(e.value * 1.5)
             return sendRss(text, bot)
         except Exception as e:
             LOGGER.error(str(e))

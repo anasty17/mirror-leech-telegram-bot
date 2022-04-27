@@ -97,11 +97,11 @@ class GoogleDriveHelper:
     @staticmethod
     def __getIdFromUrl(link: str):
         if "folders" in link or "file" in link:
-            regex = r"https:\/\/drive\.google\.com\/(?:open(.*?)id\=|drive(.*?)\/folders\/|file(.*?)?\/d\/|folderview(.*?)id\=|uc(.*?)id\=)([-\w]+)"
+            regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"
             res = re_search(regex,link)
             if res is None:
                 raise IndexError("G-Drive ID not found.")
-            return res.group(6)
+            return res.group(3)
         parsed = urlparse(link)
         return parse_qs(parsed.query)['id'][0]
 
@@ -845,6 +845,8 @@ class GoogleDriveHelper:
         for item in result:
             file_id = item['id']
             filename = item['name']
+            if filename.lower().endswith(tuple(EXTENTION_FILTER)):
+                continue
             shortcut_details = item.get('shortcutDetails')
             if shortcut_details is not None:
                 file_id = shortcut_details['targetId']
