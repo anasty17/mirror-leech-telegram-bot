@@ -36,7 +36,9 @@ try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
 except TypeError:
-    UPSTREAM_REPO = "https://github.com/anasty17/mirror-leech-telegram-bot"
+    UPSTREAM_REPO = ""
+    log_error('One important variable is missing. The README.md file of heroku branch there to be read! Exiting now!')
+    exit()
 try:
     if len(UPSTREAM_BRANCH) == 0:
        raise TypeError
