@@ -6,6 +6,7 @@ from os import makedirs, path as ospath, listdir
 from requests.utils import quote as rquote
 from io import FileIO
 from re import search as re_search
+from urllib.parse import parse_qs, urlparse
 from random import randrange
 from google.auth.transport.requests import Request
 from google.oauth2 import service_account
@@ -95,11 +96,14 @@ class GoogleDriveHelper:
 
     @staticmethod
     def __getIdFromUrl(link: str):
-        regex = r"https:\/\/drive\.google\.com\/(?:open(.*?)id\=|drive(.*?)\/folders\/|file(.*?)?\/d\/|folderview(.*?)id\=|uc(.*?)id\=)([-\w]+)"
-        res = re_search(regex,link)
-        if res is None:
-            raise IndexError("G-Drive ID not found.")
-        return res.group(6)
+        if "folders" in link or "file" in link:
+            regex = r"https:\/\/drive\.google\.com\/(?:open(.*?)id\=|drive(.*?)\/folders\/|file(.*?)?\/d\/|folderview(.*?)id\=|uc(.*?)id\=)([-\w]+)"
+            res = re_search(regex,link)
+            if res is None:
+                raise IndexError("G-Drive ID not found.")
+            return res.group(6)
+        parsed = urlparse(link)
+        return parse_qs(parsed.query)['id'][0]
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(HttpError), before=before_log(LOGGER, DEBUG))
