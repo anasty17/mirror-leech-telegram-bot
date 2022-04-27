@@ -141,8 +141,9 @@ except:
 try:
     fx = getConfig('EXTENTION_FILTER')
     fx = fx.split(' ')
-    for x in fx:
-        EXTENTION_FILTER.add(x.lower())
+    if fx != '':
+        for x in fx:
+            EXTENTION_FILTER.add(x.lower())
 except:
     pass
 try:
