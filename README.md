@@ -23,17 +23,17 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - YT-DLP quality buttons
 - Search for torrents with Torrent Search API or with variable plugins using qBittorrent search engine
-- Docker image support for `linux/amd64, linux/arm64, linux/arm/v7, linux/arm/v6` (**Note**: Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run)
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Qbittorrent seed until reaching specific ratio or time
 - Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Save leech settings including thumbnails in database
-- Mirror/Leech/Clone multi links/files with one command.
+- Mirror/Leech/Clone multi links/files with one command
+- Extenstion Filter for uploading files
 - Many bugs have been fixed
 
 ## From Other Repositories
 - Mirror direct download links, Torrent, and Telegram files to Google Drive
-- Mirror Mega.nz links to Google Drive (If you have non-premium Mega account, it will limit download to 5GB per 6 hours)
+- Mirror Mega.nz links to Google Drive
 - Copy files from someone's Drive to your Drive (Using Autorclone)
 - Download/Upload progress, Speeds and ETAs
 - Mirror all yt-dlp supported links
@@ -49,7 +49,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Custom Filename* (Only for direct links, Telegram files and yt-dlp. Not for Mega links, Gdrive links or Torrents)
 - Extract password protected files
 - Extract these filetypes and uploads to Google Drive
-  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, tar.xz
+  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 
 - Direct links Supported:
   >letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com (Uptobox account must be premium) and solidfiles.com
@@ -129,8 +129,6 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk)
 - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account (Leave though)
 - `MEGA_PASSWORD`: Password for mega.nz account
-- `BLOCK_MEGA_FOLDER`: If you want to remove mega.nz folder support, set it to `True`. `Bool`
-- `BLOCK_MEGA_LINKS`: If you want to remove mega.nz mirror support, set it to `True`. `Bool`
 - `STOP_DUPLICATE`: (Leave empty if unsure) if this field is set to `True`, bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). `Bool`
 - `CLONE_LIMIT`: To limit the size of Google Drive folder/file which you can clone. Don't add unit, the default unit is `GB`.
 - `MEGA_LIMIT`: To limit the size of Mega download. Don't add unit, the default unit is `GB`.
@@ -145,14 +143,15 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `SERVER_PORT`: Only For VPS even if `IS_VPS` is `False`, which is the **BASE_URL_OF_BOT** Port.
 - `WEB_PINCODE`: If empty or `False` means no more pincode required while qbit web selection. `Bool`
 - `QB_SEED`: If `True` QB torrent will be seeded after and while uploading until reaching specific ratio or time, edit `MaxRatio` or `GlobalMaxSeedingMinutes` or both from qbittorrent.conf (`-1` means no limit, but u can cancel manually by gid). **NOTE**: 1. Don't change `MaxRatioAction`, 2. Only works with `/qbmirror` and `/qbzipmirror`. `Bool`
-- `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds.
   - **Qbittorrent NOTE**: If your facing ram exceeded issue then set limit for `MaxConnecs` and decrease `AsyncIOThreadsCount` in qbittorrent config.
+- `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds.
 - `TG_SPLIT_SIZE`: Size of split in bytes, leave it empty for max size `2GB`.
 - `AS_DOCUMENT`: Default Telegram file type upload. Empty or `False` means as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **TG_SPLIT_SIZE** into equal parts size (Not working with zip cmd). `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name.
-- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your appllication from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect - DON'T delete .gitignore file. Read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended) also.
+- `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. **NOTE**: Any change in docker or requirements you need to deploy/build again with updated repo to take effect. DON'T delete .gitignore file. For more information read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
 - `UPSTREAM_BRANCH`: Upstream branch for update. Empty means `master`.
+- `EXTENTION_FILTER`: File extentions that won't upload. Separate them by space.
 - `SHORTENER_API`: Fill your Shortener API key.
 - `SHORTENER`: Shortener URL.
   - Supported URL Shorteners:
@@ -181,9 +180,9 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 ### 3. Getting Google OAuth API credential file and token.pickle
 
 **NOTES**
-- Old authentication changed, now we can't use bot to generate token.pickle. You need OS with a browser.
+- Old authentication changed, now we can't use bot or replit to generate token.pickle. You need OS with a browser.
 - Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
-- You can ONLY open the generated link from local broswer.
+- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
 
 1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
 2. Go to the OAuth Consent tab, fill it, and save.
@@ -214,10 +213,9 @@ sudo docker container prune
 sudo docker image prune -a
 ```
 4. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
-5. Use `anasty17/mltb-oracle:latest` for oracle or if u faced problem with arm64 docker run.
-   - Tutorial Video for Deploying on Oracle VPS:
-     - Thanks to [Wiszky](https://github.com/vishnoe115)
-     - No need to use sudo su, you can also use sudo before each cmd!
+5. Tutorial Video for Deploying on Oracle VPS:
+   - Thanks to [Wiszky](https://github.com/vishnoe115)
+   - No need to use sudo su, you can also use sudo before each cmd!
 <p><a href="https://youtu.be/IzUG7U7v4U4?t=968"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
 ------
@@ -334,9 +332,12 @@ help - All cmds with description
 ## UPSTREAM REPO (Recommended)
 
 - `UPSTREAM_REPO` variable can be used for edit/add any file in repository.
-- You can add private/public repository link to grab all files from it.
-- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except config.env, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
+- You can add private/public repository link to grab/overwrite all files from it.
+- You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except **config.env**, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
 - If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
+- If you filled `UPSTREAM_REPO` with the official repository link then be carefull incase any change in requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates or make it empty if deployed master branch.
+- In case you you filled `UPSTREAM_REPO` with your fork link be carefull also if you fetched the commits from the official repository.
+- The changes in your `UPSTREAM_REPO` will take affect only after restart.
 - `UPSTREAM_BRANCH` don't ever fill heroku here.
 
 ------

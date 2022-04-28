@@ -61,12 +61,12 @@ def _clone(message, bot, multi=0):
                 msg2 = f'Failed, Clone limit is {CLONE_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(size)}.'
                 return sendMessage(msg2, bot, message)
         if multi > 1:
-            sleep(1)
+            sleep(2)
             nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
             nextmsg = sendMessage(args[0], bot, nextmsg)
             nextmsg.from_user.id = message.from_user.id
             multi -= 1
-            sleep(1)
+            sleep(2)
             Thread(target=_clone, args=(nextmsg, bot, multi)).start()
         if files <= 20:
             msg = sendMessage(f"Cloning: <code>{link}</code>", bot, message)
@@ -99,9 +99,9 @@ def _clone(message, bot, multi=0):
             sendMarkup(result + cc, bot, message, button)
         if is_gdtot:
             gd.deletefile(link)
+        LOGGER.info(f"Cloning Done: {name}")
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', bot, message)
-    LOGGER.info(f"Cloning Done: {name}")
 
 @new_thread
 def cloneNode(update, context):

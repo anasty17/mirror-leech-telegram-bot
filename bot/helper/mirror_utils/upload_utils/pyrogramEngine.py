@@ -5,7 +5,7 @@ from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
 
-from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME
+from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, EXTENTION_FILTER
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
@@ -41,7 +41,7 @@ class TgUploader:
             for file_ in sorted(files):
                 if self.__is_cancelled:
                     return
-                if file_.endswith('.torrent'):
+                if file_.lower().endswith(tuple(EXTENTION_FILTER)):
                     continue
                 up_path = ospath.join(dirpath, file_)
                 fsize = ospath.getsize(up_path)
@@ -52,7 +52,7 @@ class TgUploader:
                 self.__upload_file(up_path, file_, dirpath)
                 if self.__is_cancelled:
                     return
-                self.__msgs_dict[file_] = self.__sent_msg.message_id
+                self.__msgs_dict[file_] = self.__sent_msg.id
                 self._last_uploaded = 0
                 sleep(1)
         if len(self.__msgs_dict) <= self.__corrupted:
@@ -95,7 +95,6 @@ class TgUploader:
                     self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
                                                               duration=duration,
                                                               width=width,
                                                               height=height,
@@ -108,7 +107,6 @@ class TgUploader:
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
                                                               duration=duration,
                                                               performer=artist,
                                                               title=title,
@@ -119,7 +117,6 @@ class TgUploader:
                     self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,
                                                               caption=cap_mono,
-                                                              parse_mode="html",
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
                 else:
@@ -135,12 +132,11 @@ class TgUploader:
                                                              quote=True,
                                                              thumb=thumb,
                                                              caption=cap_mono,
-                                                             parse_mode="html",
                                                              disable_notification=True,
                                                              progress=self.__upload_progress)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            sleep(f.x)
+            sleep(f.value)
         except RPCError as e:
             LOGGER.error(f"RPCError: {e} File: {up_path}")
             self.__corrupted += 1
