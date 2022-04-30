@@ -157,7 +157,7 @@ def rss_set_update(update, context):
     elif data[1] == 'unsuball':
         query.answer()
         if len(rss_dict) > 0:
-            DbManger().rss_delete_all()
+            DbManger().trunc_table('rss')
             with rss_dict_lock:
                 rss_dict.clear()
             rss_job.enabled = False

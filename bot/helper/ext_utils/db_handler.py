@@ -42,6 +42,7 @@ class DbManger:
               )
               """
         self.cur.execute(sql)
+        self.cur.execute("CREATE TABLE IF NOT EXISTS notifier (cid bigint, mid bigint, tag text)")
         self.conn.commit()
         LOGGER.info("Database Initiated")
         self.db_load()
@@ -191,17 +192,53 @@ class DbManger:
         self.conn.commit()
         self.disconnect()
 
-    def rss_delete(self, name: str):
+    def rss_delete(self, name):
         if self.err:
             return
         self.cur.execute("DELETE FROM rss WHERE name = %s", (name,))
         self.conn.commit()
         self.disconnect()
 
-    def rss_delete_all(self):
+    def add_incomplete_task(self, cid: int, mid: int, tag: str):
         if self.err:
             return
-        self.cur.execute("TRUNCATE TABLE rss")
+        q = (cid, mid, tag)
+        self.cur.execute("INSERT INTO notifier (cid, mid, tag) VALUES (%s, %s, %s)", q)
+        self.conn.commit()
+        self.disconnect()
+
+    def rm_complete_task(self, mid: int):
+        if self.err:
+            return
+        self.cur.execute("DELETE FROM notifier WHERE mid = %s", (mid,))
+        self.conn.commit()
+        self.disconnect()
+
+    def get_incomplete_tasks(self):
+        if self.err:
+            return False
+        self.cur.execute("SELECT * from notifier")
+        rows = self.cur.fetchall()  #returns a list ==> (cid, mid, tag)
+        if rows:
+            notifier_dict = {}
+            for row in rows:
+                if row[0] in list(notifier_dict.keys()):
+                    if row[2] in list(notifier_dict[row[0]].keys()):
+                        notifier_dict[row[0]][row[2]].append(row[1])
+                    else:
+                        notifier_dict[row[0]][row[2]] = [row[1]]
+                else:
+                    usr_dict = {}
+                    usr_dict[row[2]] = [row[1]]
+                    notifier_dict[row[0]] = usr_dict
+            return notifier_dict #return a dict ==> {cid: {tag: [mid, mid, ...]}}
+        return False
+        self.disconnect()
+
+    def trunc_table(self, name):
+        if self.err:
+            return
+        self.cur.execute("TRUNCATE TABLE {}".format(name))
         self.conn.commit()
         self.disconnect()
 
