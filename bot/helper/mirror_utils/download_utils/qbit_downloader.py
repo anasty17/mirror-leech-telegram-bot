@@ -214,7 +214,7 @@ class QbDownloader:
     def cancel_download(self):
         if self.__seeding:
             LOGGER.info(f"Cancelling Seed: {self.__name}")
-            self.client.torrents_pause(torrent_hashes=self.__ext_hash)
+            self.client.torrents_pause(torrent_hashes=self.ext_hash)
         else:
             self.__onDownloadError('Download stopped by user!')
 
