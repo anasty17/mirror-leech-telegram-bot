@@ -42,6 +42,7 @@ class TelegramDownloadHelper:
         gid = ''.join(choices(file_id, k=12))
         with download_dict_lock:
             download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
+        self.__listener.onDownloadStart()
         sendStatusMessage(self.__listener.message, self.__listener.bot)
 
     def __onDownloadProgress(self, current, total):

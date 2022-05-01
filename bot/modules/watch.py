@@ -119,7 +119,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
                 else:
                     size = 0
 
-                if quality in formats_dict:
+                if quality in list(formats_dict.keys()):
                     formats_dict[quality][frmt['tbr']] = size
                 else:
                     subformat = {}
