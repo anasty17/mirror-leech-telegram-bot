@@ -525,3 +525,4 @@ updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connec
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
+botname = bot.username
