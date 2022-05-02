@@ -246,20 +246,17 @@ def main():
         notifier_dict = DbManger().get_incomplete_tasks()
         if notifier_dict:
             for cid, data in notifier_dict.items():
-                if bot.get_chat(cid).type in ['private', 'group']:
-                    continue
                 if ospath.isfile(".restartmsg"):
                     with open(".restartmsg") as f:
                         chat_id, msg_id = map(int, f)
                     msg = 'Restarted successfully!'
                 else:
                     msg = 'Bot Restarted!'
-                for tag, mids in data.items():
+                for tag, links in data.items():
                      msg += f"\n\n{tag}: "
-                     for index, mid in enumerate(mids, start=1):
-                         link = f"https://t.me/c/{str(cid)[4:]}/{mid}"
+                     for index, link in enumerate(links, start=1):
                          msg += f" <a href='{link}'>{index}</a> |"
-                         if len(msg.encode('utf-8')) > 4000:
+                         if len(msg.encode()) > 4000:
                              if 'Restarted successfully!' in msg and cid == chat_id:
                                  bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl')
                                  osremove(".restartmsg")
@@ -271,7 +268,6 @@ def main():
                      osremove(".restartmsg")
                 else:
                     bot.sendMessage(cid, msg, 'HTML')
-        DbManger().trunc_table('notifier')
 
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:

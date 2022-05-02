@@ -25,6 +25,7 @@ class TgUploader:
         self._last_uploaded = 0
         self.__listener = listener
         self.__start_time = time()
+        self.__total_files = 0
         self.__is_cancelled = False
         self.__as_doc = AS_DOCUMENT
         self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
@@ -40,6 +41,7 @@ class TgUploader:
         for dirpath, subdir, files in sorted(walk(path)):
             for file_ in sorted(files):
                 if not file_.lower().endswith(tuple(EXTENTION_FILTER)):
+                    self.__total_files += 1
                     up_path = ospath.join(dirpath, file_)
                     fsize = ospath.getsize(up_path)
                     if fsize == 0:
@@ -49,13 +51,14 @@ class TgUploader:
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
-                    self.__msgs_dict[file_] = self.__sent_msg.id
+                    if not self.__listener.isPrivate:
+                        self.__msgs_dict[file_] = self.__sent_msg.link
                     self._last_uploaded = 0
                     sleep(1)
-        if len(self.__msgs_dict) <= self.__corrupted:
+        if self.__total_files <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")
-        self.__listener.onUploadComplete(None, size, self.__msgs_dict, None, self.__corrupted, self.name)
+        self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     def __upload_file(self, up_path, file_, dirpath):
         if CUSTOM_FILENAME is not None:

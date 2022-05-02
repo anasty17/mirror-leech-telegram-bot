@@ -50,6 +50,7 @@ class MirrorListener:
         self.isLeech = isLeech
         self.pswd = pswd
         self.tag = tag
+        self.isPrivate = self.message.chat.type in ['private', 'group']
 
     def clean(self):
         try:
@@ -61,8 +62,8 @@ class MirrorListener:
             pass
 
     def onDownloadStart(self):
-        if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().add_incomplete_task(self.message.chat.id, self.uid, self.tag)
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     def onDownloadComplete(self):
         with download_dict_lock:
@@ -189,31 +190,27 @@ class MirrorListener:
         else:
             update_all_messages()
 
-        if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.uid)
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name: str):
-        if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.uid)
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         if self.isLeech:
-            count = len(files)
-            msg += f'\n<b>Total Files: </b>{count}'
+            msg += f'\n<b>Total Files: </b>{folders}'
             if typ != 0:
                 msg += f'\n<b>Corrupted Files: </b>{typ}'
             msg += f'\n<b>cc: </b>{self.tag}\n\n'
-            if self.message.chat.type in ['private', 'group']:
+            if not files:
                 sendMessage(msg, self.bot, self.message)
             else:
-                chat_id = str(self.message.chat.id)[4:]
                 fmsg = ''
-                for index, item in enumerate(list(files), start=1):
-                    msg_id = files[item]
-                    link = f"https://t.me/c/{chat_id}/{msg_id}"
-                    fmsg += f"{index}. <a href='{link}'>{item}</a>\n"
-                    if len(fmsg.encode('utf-8') + msg.encode('utf-8')) > 4000:
+                for index, (name, link) in enumerate(files.items(), start=1):
+                    fmsg += f"{index}. <a href='{link}'>{name}</a>\n"
+                    if len(fmsg.encode() + msg.encode()) > 4000:
                         sendMessage(msg + fmsg, self.bot, self.message)
-                        sleep(1.5)
+                        sleep(1)
                         fmsg = ''
                 if fmsg != '':
                     sendMessage(msg + fmsg, self.bot, self.message)
@@ -282,8 +279,8 @@ class MirrorListener:
         else:
             update_all_messages()
 
-        if INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
-            DbManger().rm_complete_task(self.uid)
+        if not self.isPrivate and INCOMPLETE_TASK_NOTIFIER and DB_URI is not None:
+            DbManger().rm_complete_task(self.message.link)
 
 def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, multi=0):
     mesg = message.text.split('\n')
@@ -420,7 +417,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             except:
                 pssw = ''
             auth = f"{ussr}:{pssw}"
-            auth = "Basic " + b64encode(auth.encode()).decode()
+            auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name, auth)).start()
