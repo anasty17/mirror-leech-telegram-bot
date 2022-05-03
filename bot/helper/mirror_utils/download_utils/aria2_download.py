@@ -13,10 +13,10 @@ from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 def __onDownloadStarted(api, gid):
     try:
         if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
-            sleep(3)
             dl = getDownloadByGid(gid)
             if not dl:
                 return
+            sleep(3)
             download = api.get_download(gid)
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')

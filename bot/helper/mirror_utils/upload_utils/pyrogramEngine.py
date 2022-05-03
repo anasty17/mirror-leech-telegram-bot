@@ -43,8 +43,7 @@ class TgUploader:
                 if not file_.lower().endswith(tuple(EXTENTION_FILTER)):
                     self.__total_files += 1
                     up_path = ospath.join(dirpath, file_)
-                    fsize = ospath.getsize(up_path)
-                    if fsize == 0:
+                    if ospath.getsize(up_path) == 0:
                         LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                         self.__corrupted += 1
                         continue
@@ -150,6 +149,7 @@ class TgUploader:
 
     def __upload_progress(self, current, total):
         if self.__is_cancelled:
+            self.__listener.onUploadError('your upload has been stopped!')
             app.stop_transmission()
             return
         with self.__resource_lock:
@@ -176,4 +176,3 @@ class TgUploader:
     def cancel_download(self):
         self.__is_cancelled = True
         LOGGER.info(f"Cancelling Upload: {self.name}")
-        self.__listener.onUploadError('your upload has been stopped!')
