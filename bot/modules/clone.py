@@ -97,9 +97,9 @@ def _clone(message, bot, multi=0):
             sendMessage(f"{tag} {result}", bot, message)
         else:
             sendMarkup(result + cc, bot, message, button)
+            LOGGER.info(f'Cloning Done: {name}')
         if is_gdtot:
             gd.deletefile(link)
-        LOGGER.info(f"Cloning Done: {name}")
     else:
         sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', bot, message)
 

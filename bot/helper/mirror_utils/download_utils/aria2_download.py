@@ -13,14 +13,19 @@ from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 def __onDownloadStarted(api, gid):
     try:
         if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
+            download = api.get_download(gid)
+            if download.is_metadata:
+                LOGGER.info(f'onDownloadStarted: {gid} Metadata')
+                return
+            elif not download.is_torrent:
+                sleep(3)
+            LOGGER.info(f'onDownloadStarted: {gid}')
             dl = getDownloadByGid(gid)
             if not dl:
                 return
-            sleep(3)
-            download = api.get_download(gid)
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
-                sname = download.name
+                sname = dl.name()
                 if dl.getListener().isZip:
                     sname = sname + ".zip"
                 elif dl.getListener().extract:
@@ -37,7 +42,7 @@ def __onDownloadStarted(api, gid):
             if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
                 limit = None
-                size = api.get_download(gid).total_length
+                size = dl.size_raw()
                 arch = any([dl.getListener().isZip, dl.getListener().extract])
                 if STORAGE_THRESHOLD is not None:
                     acpt = check_storage_threshold(size, arch, True)
@@ -68,7 +73,6 @@ def __onDownloadComplete(api, gid):
     download = api.get_download(gid)
     if download.followed_by_ids:
         new_gid = download.followed_by_ids[0]
-        new_download = api.get_download(new_gid)
         if not dl:
             dl = getDownloadByGid(new_gid)
         with download_dict_lock:
