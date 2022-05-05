@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "cobra-web-app-1643339579465",
+  "private_key_id": "354281e2171c83a8caf5d48ff755853de1ccc1d8",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQD0ehF0klPSEBk3\n6Xwpq7MgqraTE5ppyKW0xUK5vhRk4+9UIgughNHYvdEwRaHjITGbqmc+WhxZBXVl\nR1IEag/+bOCrqYC2tdf+37WV7KaEe8JlPTeVczroVnTfOiTq9RBNrs0JQcWhmCZI\nSE0jzsl6qkZ46B/0RdVsQA9IZX/trPR/r/5HAV4vpOU3CpBoDbiXHAQBCoxRV4E3\nSSnb6yMB4M+f8wH/CanMhwZaTEnvxAXczkn+w7xomI3CPuSUozR12KVnODVGjktk\nMXgp4vVKSYMzjsruLuqgjmHOHHLeZf+fLja/M0ZxVdVRSxw7nPuZQCaAwjbm2YGc\nzSjEoaApAgMBAAECggEAAX53eddlFL0NcmaGYDjQ5Ou2JurxQCE+Rf8Im9r6A+3S\nqhh1Krt1DtaGHz3lsd4jj/h4Hgzt7GtYntBTQ3ykcWEX9GSaSUOOONwEH5DtKZUa\nCIVZwBuOqhnRKAYScK8jtN3TGfHhc83auglbE1NxrsK4oIeGnncIyVsQ3Nfl8r1f\nSFXrQMMmNmURWxjMHknrq7wTsjKNdGngeRFiFbeHODa0Y8hOUqHU93KR+5PLkuXv\nU04L3Dr8QRPSc18PTScCWI34aOULZP3+UZ5/lmQUb2cMLNo5A2QvAgCmLVMQr3vH\nXFr319XGa9I8IqDUMut7rnyxZt08866Ix2H+AgSwSQKBgQD8hIOxrfSJHVOloRBx\nWwJqO1ctajqqlE7n2iONv5TiZiZjHAwbq3i97aII5f3t3VrXyKW1C027Ke72qjnO\ndGtf8O7Kxqv44VmQ5UkSmAMwDI7lF4//P78pkGCoKvPcdvez151nTbIQCKJfRDd+\nMm2CvAdaVA8dojFfNu6qDgSD7QKBgQD32SqlAuZ/EiNiovuU7bLNddFYz4rAM7aI\nx6p3Su0k99JT6gyLmXWxNIYdAB0LaLKLkYYehZ32+jgdM9GFNhJwH7ezFTsxL5Ww\nMlINbkqg0WU8DlFWonxIdG7PEUQRGXifbd4G3Cz+atalHq10pf4wVXjJ5p4fZE5a\nD7kr7hk9rQKBgQDbhSOregtki48lJMDTmoed7FpcC8ZWdjmmSzevSYZXzu++JyrL\nfySnEAdV7wLyHwWTI0YS/nGjrM+ltdQtC34w2JXuyAnGgblIQltlA6t5wOEUfYhc\nIIHB01aDu1tmJDIwMNgQbzXFxIvLf9UyKwqSpX1K5FqDq3V6TZnrUeZQ/QKBgQDj\nsPdTVqHIVTJ62D4FqIUd6cHkM+5E+n0TlVKOex/3WVA5VQgna1jK7fTTSZplM87r\nF0q+WYQwM9k/Qq6WEYHIzeqmM7gITK3Yi7IDsrIOoa++B21ECMviiEyQIE2G4/6D\ngJx7cuRG6oG8eb1iL2igoLTxztKvBihQ5qb3q6o2lQKBgQD2fxnNvR5yMyRTAngB\n2zHBMVebl3GsOEuum2WP/Tka4BMcRTke5k1VzWFDABiEWQXs/x4Vyjq7+hipTIfV\nkeKr78kjq4defV8L1TsOMtb/vvJNnOFSnoXHjjr1POAQddkNtVoHzARpRm5OqUWU\nll1qZtnPOnjpbCEdIV3x8TOyLg==\n-----END PRIVATE KEY-----\n",
+  "client_email": "mfc-q96wxgkuyjcyqrawy4l3m1ydqv@cobra-web-app-1643339579465.iam.gserviceaccount.com",
+  "client_id": "106197927213314083492",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mfc-q96wxgkuyjcyqrawy4l3m1ydqv%40cobra-web-app-1643339579465.iam.gserviceaccount.com"
+}
