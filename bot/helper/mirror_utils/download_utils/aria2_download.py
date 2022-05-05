@@ -19,13 +19,14 @@ def __onDownloadStarted(api, gid):
                 return
             elif not download.is_torrent:
                 sleep(3)
+                download = api.get_download(gid)
             LOGGER.info(f'onDownloadStarted: {gid}')
             dl = getDownloadByGid(gid)
             if not dl:
                 return
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
-                sname = dl.name()
+                sname = download.name
                 if dl.getListener().isZip:
                     sname = sname + ".zip"
                 elif dl.getListener().extract:
@@ -42,7 +43,7 @@ def __onDownloadStarted(api, gid):
             if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
                 limit = None
-                size = dl.size_raw()
+                size = download.total_length
                 arch = any([dl.getListener().isZip, dl.getListener().extract])
                 if STORAGE_THRESHOLD is not None:
                     acpt = check_storage_threshold(size, arch, True)
@@ -73,17 +74,13 @@ def __onDownloadComplete(api, gid):
     download = api.get_download(gid)
     if download.followed_by_ids:
         new_gid = download.followed_by_ids[0]
-        if not dl:
-            dl = getDownloadByGid(new_gid)
-        with download_dict_lock:
-            download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
         LOGGER.info(f'Changed gid from {gid} to {new_gid}')
     elif dl:
         Thread(target=dl.getListener().onDownloadComplete).start()
 
 @new_thread
 def __onDownloadStopped(api, gid):
-    sleep(4)
+    sleep(6)
     dl = getDownloadByGid(gid)
     if dl:
         dl.getListener().onDownloadError('Dead torrent!')
