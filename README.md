@@ -326,6 +326,7 @@ log - Get the Bot Log
 shell - Run commands in Shell
 restart - Restart the Bot
 stats - Bot Usage Stats
+shorten - Shorten URL
 ping - Ping the Bot
 help - All cmds with description
 ```
