@@ -35,8 +35,11 @@ def shorten_link(update, context):
         res = post('https://cleanuri.com/api/v1/shorten', data=data)
         result = res.json()
 
-        if result["error"]:
-            return sendMessage(result["error"], context.bot, update.message)
+        try:
+            if result["error"]:
+                return sendMessage(result["error"], context.bot, update.message)
+        except KeyError:
+            pass
 
         result_url = result["result_url"]
         buttons = button_build.ButtonMaker()
