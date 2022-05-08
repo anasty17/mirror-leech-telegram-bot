@@ -40,7 +40,7 @@ def shorten_link(update, context):
 
         result_url = result["result_url"]
         buttons = button_build.ButtonMaker()
-        buttons.buildbutton('Shortened URL', result)
+        buttons.buildbutton('Shortened URL', result_url)
         button = InlineKeyboardMarkup(buttons.build_menu(1))
         msg = 'URL shortened!'
         msg += f'\nOriginal: {link}'
