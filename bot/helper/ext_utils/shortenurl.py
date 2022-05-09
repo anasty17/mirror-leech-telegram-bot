@@ -42,6 +42,9 @@ def short_url(longurl):
     elif "adfoc.us" in SHORTENER:
         disable_warnings()
         link = cget(f'http://adfoc.us/api/?key={SHORTENER_API}&url={longurl}', verify=False).text
+    elif "cutt.ly" in SHORTENER:
+        disable_warnings()
+        link = cget(f'http://cutt.ly/api/api.php?key={SHORTENER_API}&short={longurl}', verify=False).text
     else:
         link = cget(f'https://{SHORTENER}/api?api={SHORTENER_API}&url={quote(longurl)}&format=text').text
 
