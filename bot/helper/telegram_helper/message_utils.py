@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 def sendMessage(text: str, bot, message: Message):
     try:
-        return bot.send_message(message.chat_id,
+        return bot.sendMessage(message.chat_id,
                             reply_to_message_id=message.message_id,
                             text=text, allow_sending_without_reply=True, parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
@@ -25,7 +25,7 @@ def sendMessage(text: str, bot, message: Message):
 
 def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMarkup):
     try:
-        return bot.send_message(message.chat_id,
+        return bot.sendMessage(message.chat_id,
                             reply_to_message_id=message.message_id,
                             text=text, reply_markup=reply_markup, allow_sending_without_reply=True,
                             parse_mode='HTMl', disable_web_page_preview=True)
@@ -39,7 +39,7 @@ def sendMarkup(text: str, bot, message: Message, reply_markup: InlineKeyboardMar
 
 def editMessage(text: str, message: Message, reply_markup=None):
     try:
-        bot.edit_message_text(text=text, message_id=message.message_id,
+        bot.editMessageText(text=text, message_id=message.message_id,
                               chat_id=message.chat.id,reply_markup=reply_markup,
                               parse_mode='HTMl', disable_web_page_preview=True)
     except RetryAfter as r:
@@ -53,7 +53,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
 def sendRss(text: str, bot):
     if rss_session is None:
         try:
-            return bot.send_message(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
+            return bot.sendMessage(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
         except RetryAfter as r:
             LOGGER.warning(str(r))
             sleep(r.retry_after * 1.5)
@@ -74,14 +74,14 @@ def sendRss(text: str, bot):
 
 def deleteMessage(bot, message: Message):
     try:
-        bot.delete_message(chat_id=message.chat.id,
+        bot.deleteMessage(chat_id=message.chat.id,
                            message_id=message.message_id)
     except Exception as e:
         LOGGER.error(str(e))
 
 def sendLogFile(bot, message: Message):
     with open('log.txt', 'rb') as f:
-        bot.send_document(document=f, filename=f.name,
+        bot.sendDocument(document=f, filename=f.name,
                           reply_to_message_id=message.message_id,
                           chat_id=message.chat_id)
 

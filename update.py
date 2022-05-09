@@ -25,7 +25,7 @@ try:
             log_error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
         log_error(f"CONFIG_FILE_URL: {e}")
-except TypeError:
+except:
     pass
 
 load_dotenv('config.env', override=True)
@@ -35,12 +35,12 @@ UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
 try:
     if len(UPSTREAM_REPO) == 0:
        raise TypeError
-except TypeError:
+except:
     UPSTREAM_REPO = None
 try:
     if len(UPSTREAM_BRANCH) == 0:
        raise TypeError
-except TypeError:
+except:
     UPSTREAM_BRANCH = 'master'
 
 if UPSTREAM_REPO is not None:

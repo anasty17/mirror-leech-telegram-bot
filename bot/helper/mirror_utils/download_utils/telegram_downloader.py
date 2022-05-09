@@ -42,6 +42,7 @@ class TelegramDownloadHelper:
         gid = ''.join(choices(file_id, k=12))
         with download_dict_lock:
             download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
+        self.__listener.onDownloadStart()
         sendStatusMessage(self.__listener.message, self.__listener.bot)
 
     def __onDownloadProgress(self, current, total):
@@ -60,7 +61,7 @@ class TelegramDownloadHelper:
         with global_lock:
             try:
                 GLOBAL_GID.remove(self.__id)
-            except KeyError:
+            except:
                 pass
         self.__listener.onDownloadError(error)
 
@@ -71,10 +72,7 @@ class TelegramDownloadHelper:
 
     def __download(self, message, path):
         try:
-            download = app.download_media(message,
-                                                progress = self.__onDownloadProgress,
-                                                file_name = path
-                                               )
+            download = message.download(file_name = path, progress = self.__onDownloadProgress)
         except Exception as e:
             LOGGER.error(str(e))
             return self.__onDownloadError(str(e))

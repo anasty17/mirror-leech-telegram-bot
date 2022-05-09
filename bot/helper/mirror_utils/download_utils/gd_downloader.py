@@ -53,6 +53,7 @@ def add_gd_download(link, listener, is_gdtot):
     download_status = GdDownloadStatus(drive, size, listener, gid)
     with download_dict_lock:
         download_dict[listener.uid] = download_status
+    listener.onDownloadStart()
     sendStatusMessage(listener.message, listener.bot)
     drive.download(link)
     if is_gdtot:

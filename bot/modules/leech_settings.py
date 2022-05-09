@@ -87,7 +87,8 @@ def setLeechType(update, context):
             editLeechType(message, query)
         else:
             query.answer(text="Old Settings", show_alert=True)
-    elif data[2] == "close":
+    else:
+        query.answer()
         try:
             query.message.delete()
             query.message.reply_to_message.delete()
@@ -108,7 +109,7 @@ def setThumb(update, context):
         osremove(photo_dir)
         if DB_URI is not None:
             DbManger().user_save_thumb(user_id, des_dir)
-        msg = f"Custom thumbnail saved for <a href='tg://user?id={user_id}'>{update.message.from_user.full_name}</a>."
+        msg = f"Custom thumbnail saved for {update.message.from_user.mention_html(update.message.from_user.first_name)}."
         sendMessage(msg, context.bot, update.message)
     else:
         sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update.message)

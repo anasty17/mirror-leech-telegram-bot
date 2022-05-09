@@ -62,6 +62,8 @@ class MegaDownloader:
             self.__name = name
             self.__size = size
             self.__gid = gid
+        self.__listener.onDownloadStart()
+        sendStatusMessage(self.__listener.message, self.__listener.bot)
 
     def __onInterval(self):
         dlInfo = self.__mega_client.getDownloadInfo(self.gid)
@@ -140,7 +142,6 @@ class MegaDownloader:
                 if file_size > limit * 1024**3:
                     return sendMessage(msg3, self.__listener.bot, self.__listener.message)
         self.__onDownloadStart(file_name, file_size, gid)
-        sendStatusMessage(self.__listener.message, self.__listener.bot)
         LOGGER.info(f'Mega download started with gid: {gid}')
 
     def cancel_download(self):
