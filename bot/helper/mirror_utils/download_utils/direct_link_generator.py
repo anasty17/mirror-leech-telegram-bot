@@ -70,6 +70,8 @@ def direct_link_generator(link: str):
         return wetransfer(link)    
     elif "mdisk" in link:
         return mdisk(link)
+    elif "gofile.io" in link:
+        return gofile(link)
     elif is_gdtot_link(link):
         return gdtot(link)
     elif any(x in link for x in fmed_list):
