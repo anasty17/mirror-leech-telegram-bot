@@ -449,7 +449,7 @@ def mdis_k(urlx):
     return query
 
 def mdisk(url: str) -> str:
-    """MDisk DDL link generator
+    """MDisk DL Link Generator
     By https://github.com/missemily2022"""
 
     try:
@@ -460,3 +460,24 @@ def mdisk(url: str) -> str:
         return text
     except:
         raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
+        
+def gofile(url: str) -> str:
+    """Gofile.io DL Link Generator
+    By https://github.com/xcscxr"""
+
+    try:
+        api_uri = 'https://api.gofile.io'
+        client = rsession()
+        res = client.get(api_uri+'/createAccount').json()
+        data = {
+            'contentId': url.split('/')[-1],
+            'token': res['data']['token'],
+            'websiteToken': '12345',
+            'cache': 'true'
+        }
+        res = client.get(api_uri+'/getContent', params=data).json()
+        for item in res['data']['contents'].values():
+            content = item
+        return content['directLink']
+    except:
+        raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from GoFile!")        
