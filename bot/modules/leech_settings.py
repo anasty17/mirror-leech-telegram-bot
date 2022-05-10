@@ -4,8 +4,21 @@ from PIL import Image
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 
-from bot import AS_DOC_USERS, AS_MEDIA_USERS, dispatcher, AS_DOCUMENT, app, AUTO_DELETE_MESSAGE_DURATION, DB_URI
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
+from bot import (
+    AS_DOC_USERS,
+    AS_MEDIA_USERS,
+    dispatcher,
+    AS_DOCUMENT,
+    app,
+    AUTO_DELETE_MESSAGE_DURATION,
+    DB_URI,
+)
+from bot.helper.telegram_helper.message_utils import (
+    sendMessage,
+    sendMarkup,
+    editMessage,
+    auto_delete_message,
+)
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
@@ -39,19 +52,27 @@ def getleechinfo(from_user):
 
     button = InlineKeyboardMarkup(buttons.build_menu(1))
 
-    text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
-           f"Leech Type <b>{ltype}</b>\n"\
-           f"Custom Thumbnail <b>{thumbmsg}</b>"
+    text = (
+        f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"
+        f"Leech Type <b>{ltype}</b>\n"
+        f"Custom Thumbnail <b>{thumbmsg}</b>"
+    )
     return text, button
+
 
 def editLeechType(message, query):
     msg, button = getleechinfo(query.from_user)
     editMessage(msg, message, button)
 
+
 def leechSet(update, context):
     msg, button = getleechinfo(update.message.from_user)
     choose_msg = sendMarkup(msg, context.bot, update.message, button)
-    Thread(target=auto_delete_message, args=(context.bot, update.message, choose_msg)).start()
+    Thread(
+        target=auto_delete_message,
+        args=(context.bot, update.message, choose_msg),
+    ).start()
+
 
 def setLeechType(update, context):
     query = update.callback_query
@@ -67,7 +88,9 @@ def setLeechType(update, context):
         AS_DOC_USERS.add(user_id)
         if DB_URI is not None:
             DbManger().user_doc(user_id)
-        query.answer(text="Your File Will Deliver As Document!", show_alert=True)
+        query.answer(
+            text="Your File Will Deliver As Document!", show_alert=True
+        )
         editLeechType(message, query)
     elif data[2] == "med":
         if user_id in AS_DOC_USERS:
@@ -95,6 +118,7 @@ def setLeechType(update, context):
         except:
             pass
 
+
 def setThumb(update, context):
     user_id = update.message.from_user.id
     reply_to = update.message.reply_to_message
@@ -102,7 +126,10 @@ def setThumb(update, context):
         path = "Thumbnails/"
         if not ospath.isdir(path):
             mkdir(path)
-        photo_msg = app.get_messages(update.message.chat.id, reply_to_message_ids=update.message.message_id)
+        photo_msg = app.get_messages(
+            update.message.chat.id,
+            reply_to_message_ids=update.message.message_id,
+        )
         photo_dir = app.download_media(photo_msg, file_name=path)
         des_dir = ospath.join(path, str(user_id) + ".jpg")
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
@@ -112,13 +139,29 @@ def setThumb(update, context):
         msg = f"Custom thumbnail saved for {update.message.from_user.mention_html(update.message.from_user.first_name)}."
         sendMessage(msg, context.bot, update.message)
     else:
-        sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update.message)
+        sendMessage(
+            "Reply to a photo to save custom thumbnail.",
+            context.bot,
+            update.message,
+        )
 
-leech_set_handler = CommandHandler(BotCommands.LeechSetCommand, leechSet, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-set_thumbnail_handler = CommandHandler(BotCommands.SetThumbCommand, setThumb, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-but_set_handler = CallbackQueryHandler(setLeechType, pattern="leechset", run_async=True)
+
+leech_set_handler = CommandHandler(
+    BotCommands.LeechSetCommand,
+    leechSet,
+    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
+    run_async=True,
+)
+set_thumbnail_handler = CommandHandler(
+    BotCommands.SetThumbCommand,
+    setThumb,
+    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user,
+    run_async=True,
+)
+but_set_handler = CallbackQueryHandler(
+    setLeechType, pattern="leechset", run_async=True
+)
 
 dispatcher.add_handler(leech_set_handler)
 dispatcher.add_handler(but_set_handler)
 dispatcher.add_handler(set_thumbnail_handler)
-

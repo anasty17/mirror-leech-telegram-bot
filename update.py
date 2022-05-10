@@ -1,25 +1,34 @@
-from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info
+from logging import (
+    FileHandler,
+    StreamHandler,
+    INFO,
+    basicConfig,
+    error as log_error,
+    info as log_info,
+)
 from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
 from dotenv import load_dotenv
 
-if ospath.exists('log.txt'):
-    with open('log.txt', 'r+') as f:
+if ospath.exists("log.txt"):
+    with open("log.txt", "r+") as f:
         f.truncate(0)
 
-basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[FileHandler('log.txt'), StreamHandler()],
-                    level=INFO)
+basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[FileHandler("log.txt"), StreamHandler()],
+    level=INFO,
+)
 
-CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
+CONFIG_FILE_URL = environ.get("CONFIG_FILE_URL")
 try:
     if len(CONFIG_FILE_URL) == 0:
         raise TypeError
     try:
         res = rget(CONFIG_FILE_URL)
         if res.status_code == 200:
-            with open('config.env', 'wb+') as f:
+            with open("config.env", "wb+") as f:
                 f.write(res.content)
         else:
             log_error(f"Failed to download config.env {res.status_code}")
@@ -28,35 +37,42 @@ try:
 except:
     pass
 
-load_dotenv('config.env', override=True)
+load_dotenv("config.env", override=True)
 
-UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
-UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
+UPSTREAM_REPO = environ.get("UPSTREAM_REPO")
+UPSTREAM_BRANCH = environ.get("UPSTREAM_BRANCH")
 try:
     if len(UPSTREAM_REPO) == 0:
-       raise TypeError
+        raise TypeError
 except:
     UPSTREAM_REPO = None
 try:
     if len(UPSTREAM_BRANCH) == 0:
-       raise TypeError
+        raise TypeError
 except:
-    UPSTREAM_BRANCH = 'master'
+    UPSTREAM_BRANCH = "master"
 
 if UPSTREAM_REPO is not None:
-    if ospath.exists('.git'):
+    if ospath.exists(".git"):
         srun(["rm", "-rf", ".git"])
 
-    update = srun([f"git init -q \
+    update = srun(
+        [
+            f"git init -q \
                      && git config --global user.email e.anastayyar@gmail.com \
                      && git config --global user.name mltb \
                      && git add . \
                      && git commit -sm update -q \
                      && git remote add origin {UPSTREAM_REPO} \
                      && git fetch origin -q \
-                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"], shell=True)
+                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"
+        ],
+        shell=True,
+    )
 
     if update.returncode == 0:
-        log_info('Successfully updated with latest commit from UPSTREAM_REPO')
+        log_info("Successfully updated with latest commit from UPSTREAM_REPO")
     else:
-        log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
+        log_error(
+            "Something went wrong while updating, check UPSTREAM_REPO if valid or not!"
+        )

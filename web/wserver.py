@@ -2,7 +2,13 @@
 # (c) YashDK [yash-dk@github]
 # Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
 
-from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig as log_Config
+from logging import (
+    getLogger,
+    FileHandler,
+    StreamHandler,
+    INFO,
+    basicConfig as log_Config,
+)
 
 
 from time import sleep
@@ -13,9 +19,11 @@ from web import nodes
 
 app = Flask(__name__)
 
-log_Config(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[FileHandler('log.txt'), StreamHandler()],
-                    level=INFO)
+log_Config(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[FileHandler("log.txt"), StreamHandler()],
+    level=INFO,
+)
 
 LOGGER = getLogger(__name__)
 
@@ -643,6 +651,7 @@ section span{
 </html>
 """
 
+
 def re_verfiy(paused, resumed, client, hash_id):
 
     paused = paused.strip()
@@ -673,13 +682,17 @@ def re_verfiy(paused, resumed, client, hash_id):
         sleep(1)
         client = qbClient(host="localhost", port="8090")
         try:
-            client.torrents_file_priority(torrent_hash=hash_id, file_ids=paused, priority=0)
+            client.torrents_file_priority(
+                torrent_hash=hash_id, file_ids=paused, priority=0
+            )
         except NotFound404Error:
             raise NotFound404Error
         except Exception as e:
             LOGGER.error(f"{e} Errored in reverification paused")
         try:
-            client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
+            client.torrents_file_priority(
+                torrent_hash=hash_id, file_ids=resumed, priority=1
+            )
         except NotFound404Error:
             raise NotFound404Error
         except Exception as e:
@@ -690,7 +703,8 @@ def re_verfiy(paused, resumed, client, hash_id):
     LOGGER.info("Verified")
     return True
 
-@app.route('/app/files/<string:hash_id>', methods=['GET'])
+
+@app.route("/app/files/<string:hash_id>", methods=["GET"])
 def list_torrent_contents(hash_id):
 
     if "pin_code" not in request.args.keys():
@@ -713,9 +727,12 @@ def list_torrent_contents(hash_id):
     nodes.create_list(par, cont)
 
     client.auth_log_out()
-    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{hash_id}?pin_code={pincode}")
+    return page.replace("{My_content}", cont[0]).replace(
+        "{form_url}", f"/app/files/{hash_id}?pin_code={pincode}"
+    )
 
-@app.route('/app/files/<string:hash_id>', methods=['POST'])
+
+@app.route("/app/files/<string:hash_id>", methods=["POST"])
 def set_priority(hash_id):
 
     client = qbClient(host="localhost", port="8090")
@@ -736,13 +753,17 @@ def set_priority(hash_id):
     resume = resume.strip("|")
 
     try:
-        client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
+        client.torrents_file_priority(
+            torrent_hash=hash_id, file_ids=pause, priority=0
+        )
     except NotFound404Error:
         raise NotFound404Error
     except Exception as e:
         LOGGER.error(f"{e} Errored in paused")
     try:
-        client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
+        client.torrents_file_priority(
+            torrent_hash=hash_id, file_ids=resume, priority=1
+        )
     except NotFound404Error:
         raise NotFound404Error
     except Exception as e:
@@ -753,14 +774,16 @@ def set_priority(hash_id):
     client.auth_log_out()
     return list_torrent_contents(hash_id)
 
-@app.route('/')
+
+@app.route("/")
 def homepage():
     return "<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>"
+
 
 @app.errorhandler(NotFound404Error)
 def page_not_found(e):
     return "<h1>404: Torrent not found. Mostly wrong hash input</h2>", 404
 
+
 if __name__ == "__main__":
     app.run()
-

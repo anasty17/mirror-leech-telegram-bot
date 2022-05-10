@@ -13,7 +13,9 @@ class CustomFilters:
     class __AuthorizedUserFilter(MessageFilter):
         def filter(self, message: Message):
             id = message.from_user.id
-            return bool(id in AUTHORIZED_CHATS or id in SUDO_USERS or id == OWNER_ID)
+            return bool(
+                id in AUTHORIZED_CHATS or id in SUDO_USERS or id == OWNER_ID
+            )
 
     authorized_user = __AuthorizedUserFilter()
 
@@ -31,4 +33,3 @@ class CustomFilters:
 
     def _owner_query(user_id):
         return bool(user_id == OWNER_ID or user_id in SUDO_USERS)
-
