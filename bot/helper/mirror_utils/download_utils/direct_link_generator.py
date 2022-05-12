@@ -70,8 +70,6 @@ def direct_link_generator(link: str):
         return wetransfer(link)    
     elif "mdisk" in link:
         return mdisk(link)
-    elif "gofile.io" in link:
-        return gofile(link)
     elif is_gdtot_link(link):
         return gdtot(link)
     elif any(x in link for x in fmed_list):
@@ -395,7 +393,6 @@ WETRANSFER_API_URL = "https://wetransfer.com/api/v4/transfers"
 WETRANSFER_DOWNLOAD_URL = WETRANSFER_API_URL + "/{transfer_id}/download"
 
 def _prepare_session() -> ression:
-
     s = ression()
     r = s.get("https://wetransfer.com/")
     m = re_search('name="csrf-token" content="([^"]+)"', r.text)
@@ -408,9 +405,6 @@ def _prepare_session() -> ression:
     return s
 
 def wetransfer(url: str) -> str:
-    """WeTransfer.com DL Link Generator
-    By https://github.com/missemily2022"""
-
     if url.startswith("https://we.tl/"):
         r = rhead(url, allow_redirects=True)
         url = r.url
@@ -436,7 +430,7 @@ def wetransfer(url: str) -> str:
             return j["direct_link"]
     except:
         raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from WeTransfer!")
-        
+
 def mdis_k(urlx):
     scraper = create_scraper(interpreter="nodejs", allow_brotli=False)
     headers = {
@@ -451,9 +445,6 @@ def mdis_k(urlx):
     return query
 
 def mdisk(url: str) -> str:
-    """MDisk DL Link Generator
-    By https://github.com/missemily2022"""
-
     try:
         fxl = url.split("/")
         urlx = fxl[-1]
@@ -461,25 +452,4 @@ def mdisk(url: str) -> str:
         text = uhh["download"]
         return text
     except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
-        
-def gofile(url: str) -> str:
-    """Gofile.io DL Link Generator
-    By https://github.com/xcscxr"""
-
-    try:
-        api_uri = 'https://api.gofile.io'
-        client = rsession()
-        res = client.get(api_uri+'/createAccount').json()
-        data = {
-            'contentId': url.split('/')[-1],
-            'token': res['data']['token'],
-            'websiteToken': '12345',
-            'cache': 'true'
-        }
-        res = client.get(api_uri+'/getContent', params=data).json()
-        for item in res['data']['contents'].values():
-            content = item
-        return content['directLink']
-    except:
-        raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from GoFile!")        
+        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")      
