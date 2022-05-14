@@ -1,6 +1,6 @@
 from logging import getLogger, ERROR, DEBUG
-from time import time, sleep
-from pickle import load as pload, dump as pdump
+from time import time
+from pickle import load as pload
 from json import loads as jsnloads
 from os import makedirs, path as ospath, listdir
 from requests.utils import quote as rquote
@@ -685,7 +685,6 @@ class GoogleDriveHelper:
                     content=content
                 )["path"]
             )
-        sleep(0.5)
         if len(path) > 1:
             telegraph.edit_telegraph(path, telegraph_content)
 

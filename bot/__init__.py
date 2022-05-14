@@ -371,16 +371,6 @@ try:
 except:
     USE_SERVICE_ACCOUNTS = False
 try:
-    BLOCK_MEGA_FOLDER = getConfig('BLOCK_MEGA_FOLDER')
-    BLOCK_MEGA_FOLDER = BLOCK_MEGA_FOLDER.lower() == 'true'
-except:
-    BLOCK_MEGA_FOLDER = False
-try:
-    BLOCK_MEGA_LINKS = getConfig('BLOCK_MEGA_LINKS')
-    BLOCK_MEGA_LINKS = BLOCK_MEGA_LINKS.lower() == 'true'
-except:
-    BLOCK_MEGA_LINKS = False
-try:
     WEB_PINCODE = getConfig('WEB_PINCODE')
     WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 except:
