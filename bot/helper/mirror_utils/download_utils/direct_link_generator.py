@@ -10,12 +10,13 @@ for original authorship. """
 
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
-from base64 import b64decode, standard_b64encode
+from base64 import b64decode
 from urllib.parse import urlparse, unquote
 from json import loads as jsnloads
 from lk21 import Bypass
 from cfscrape import create_scraper
 from bs4 import BeautifulSoup
+from base64 import standard_b64encode
 
 from bot import LOGGER, UPTOBOX_TOKEN, CRYPT
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -66,10 +67,6 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
-    elif 'we.tl' in link:
-        return wetransfer(link)    
-    elif "mdisk" in link:
-        return mdisk(link)
     elif is_gdtot_link(link):
         return gdtot(link)
     elif any(x in link for x in fmed_list):
@@ -387,69 +384,3 @@ def gdtot(url: str) -> str:
     except:
         raise DirectDownloadLinkException("ERROR: Try in your broswer, mostly file not found or user limit exceeded!")
     return f'https://drive.google.com/open?id={decoded_id}'
-
-# Wetransfer Pre-Req
-WETRANSFER_API_URL = "https://wetransfer.com/api/v4/transfers"
-WETRANSFER_DOWNLOAD_URL = WETRANSFER_API_URL + "/{transfer_id}/download"
-
-def _prepare_session() -> ression:
-    s = ression()
-    r = s.get("https://wetransfer.com/")
-    m = re_search('name="csrf-token" content="([^"]+)"', r.text)
-    s.headers.update(
-        {
-            "x-csrf-token": m.group(1),
-            "x-requested-with": "XMLHttpRequest",
-        }
-    )
-    return s
-
-def wetransfer(url: str) -> str:
-    if url.startswith("https://we.tl/"):
-        r = rhead(url, allow_redirects=True)
-        url = r.url
-    recipient_id = None
-    params = urlparse(url).path.split("/")[2:]
-    if len(params) == 2:
-        transfer_id, security_hash = params
-    elif len(params) == 3:
-        transfer_id, recipient_id, security_hash = params
-    else:
-        return None
-    j = {
-        "intent": "entire_transfer",
-        "security_hash": security_hash,
-    }
-    if recipient_id:
-        j["recipient_id"] = recipient_id
-    s = _prepare_session()
-    r = s.post(WETRANSFER_DOWNLOAD_URL.format(transfer_id=transfer_id), json=j)
-    j = r.json()
-    try:
-        if "direct_link" in j:
-            return j["direct_link"]
-    except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from WeTransfer!")
-
-def mdis_k(urlx):
-    scraper = create_scraper(interpreter="nodejs", allow_brotli=False)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
-    }
-    apix = f"http://x.egraph.workers.dev/?param={urlx}"
-    try:
-        response = scraper.get(apix, headers=headers)
-        query = response.json()
-    except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
-    return query
-
-def mdisk(url: str) -> str:
-    try:
-        fxl = url.split("/")
-        urlx = fxl[-1]
-        uhh = mdis_k(urlx)
-        text = uhh["download"]
-        return text
-    except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")      
