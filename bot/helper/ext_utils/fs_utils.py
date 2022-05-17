@@ -186,7 +186,7 @@ def take_ss(video_file):
     Image.open(des_dir).convert("RGB").save(des_dir, "JPEG")
     return des_dir
 
-def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):
+def split_file(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=False):
     parts = ceil(size/TG_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
@@ -204,7 +204,7 @@ def split(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop=Fals
                 dif = out_size - 2097152000
                 split_size = split_size - dif + 2500000
                 osremove(out_path)
-                return split(path, size, file_, dirpath, split_size, start_time, i, inLoop=True)
+                return split_file(path, size, file_, dirpath, split_size, start_time, i, inLoop=True)
             lpd = get_media_info(out_path)[0]
             if lpd <= 4 or out_size < 1000000:
                 osremove(out_path)
