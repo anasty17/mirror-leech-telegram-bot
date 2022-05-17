@@ -420,7 +420,7 @@ cd accounts
 ```
 $emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -ExpandProperty client_email >>emails.txt
 ```
-- `For Linux / MacOs`
+- `For Linux`
 ```
 grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
 ```
