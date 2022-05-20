@@ -1,5 +1,5 @@
 from base64 import b64encode
-from requests import utils as rutils
+from requests import utils as rutils, get as rget
 from re import match as re_match, search as re_search, split as re_split
 from time import sleep, time
 from os import path as ospath, remove as osremove, listdir, walk
@@ -385,6 +385,32 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, message)
+    elif isQbit and not is_magnet(link) and not ospath.exists(link):
+        if link.endswith('.torrent') or "https://api.telegram.org/file/" in link:
+            content_type = None
+        else:
+            content_type = get_content_type(link)
+        if content_type is None or re_match(r'application/x-bittorrent|application/octet-stream', content_type):
+            try:
+                resp = rget(link, timeout=10, headers = {'user-agent': 'Wget/1.12'})
+                if resp.status_code == 200:
+                    file_name = str(time()).replace(".", "") + ".torrent"
+                    with open(file_name, "wb") as t:
+                        t.write(resp.content)
+                    link = str(file_name)
+                else:
+                    return sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
+            except Exception as e:
+                error = str(e).replace('<', ' ').replace('>', ' ')
+                if error.startswith('No connection adapters were found for'):
+                    link = error.split("'")[1]
+                else:
+                    LOGGER.error(str(e))
+                    return sendMessage(tag + " " + error, bot, message)
+        else:
+            msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
+            return sendMessage(msg, bot, message)
+
 
     listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
 
@@ -398,7 +424,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             Thread(target=add_gd_download, args=(link, listener, is_gdtot)).start()
     elif is_mega_link(link):
         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener)).start()
-    elif isQbit:
+    elif isQbit and (is_magnet(link) or ospath.exists(link)):
         qb_dl = QbDownloader(listener)
         Thread(target=qb_dl.add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', qbitsel)).start()
     else:
