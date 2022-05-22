@@ -332,12 +332,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             else:
                 tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
-        if (
-            not is_url(link)
-            and not is_magnet(link)
-            or len(link) == 0
-        ):
-
+        if not is_url(link) and not is_magnet(link) or len(link) == 0:
             if file is None:
                 reply_text = reply_to.text
                 if is_url(reply_text) or is_magnet(reply_text):
