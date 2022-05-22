@@ -45,7 +45,7 @@ class QbDownloader:
                 self.ext_hash = _get_hash_file(link)
             tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
             if len(tor_info) > 0:
-                sendMessage("This Torrent already added!", listener.bot, listener.message)
+                sendMessage("This Torrent already added!", self.__listener.bot, self.__listener.message)
                 return self.client.auth_log_out()
             if link.startswith('magnet:'):
                 op = self.client.torrents_add(link, save_path=path)
