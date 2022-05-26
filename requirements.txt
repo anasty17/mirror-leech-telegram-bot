@@ -3,6 +3,7 @@ appdirs
 aria2p
 attrdict
 beautifulsoup4
+bencoding
 cfscrape
 feedparser
 flask

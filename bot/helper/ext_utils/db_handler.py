@@ -121,11 +121,11 @@ class DbManger:
         if self.err:
             return "Error in DB connection, check log for details"
         elif self.user_check(user_id):
-             sql = 'UPDATE users SET sudo = FALSE WHERE uid = {}'.format(user_id)
-             self.cur.execute(sql)
-             self.conn.commit()
-             self.disconnect()
-             return 'Successfully removed from Sudo'
+            sql = 'UPDATE users SET sudo = FALSE WHERE uid = {}'.format(user_id)
+            self.cur.execute(sql)
+            self.conn.commit()
+            self.disconnect()
+            return 'Successfully removed from Sudo'
 
     def user_media(self, user_id: int):
         if self.err:
