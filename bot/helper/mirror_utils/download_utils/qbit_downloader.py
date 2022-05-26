@@ -25,8 +25,8 @@ class QbDownloader:
         self.__name = ''
         self.select = False
         self.client = None
-        self.periodic = None
         self.ext_hash = ''
+        self.__periodic = None
         self.__stalled_time = time()
         self.__uploaded = False
         self.__seeding = False
@@ -74,7 +74,7 @@ class QbDownloader:
                 download_dict[self.__listener.uid] = QbDownloadStatus(self.__listener, self)
             self.__listener.onDownloadStart()
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
-            self.periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
+            self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
             if BASE_URL is not None and select:
                 if link.startswith('magnet:'):
                     metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
@@ -194,7 +194,7 @@ class QbDownloader:
                         if self.__listener.uid not in list(download_dict.keys()):
                             self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                             self.client.auth_log_out()
-                            self.periodic.cancel()
+                            self.__periodic.cancel()
                             return
                         download_dict[self.__listener.uid] = QbDownloadStatus(self.__listener, self)
                     self.__seeding = True
@@ -203,12 +203,12 @@ class QbDownloader:
                 else:
                     self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                     self.client.auth_log_out()
-                    self.periodic.cancel()
+                    self.__periodic.cancel()
             elif tor_info.state == 'pausedUP' and QB_SEED:
                 self.__listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
                 self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                 self.client.auth_log_out()
-                self.periodic.cancel()
+                self.__periodic.cancel()
         except Exception as e:
             LOGGER.error(str(e))
 
@@ -219,7 +219,7 @@ class QbDownloader:
         self.__listener.onDownloadError(err)
         self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
         self.client.auth_log_out()
-        self.periodic.cancel()
+        self.__periodic.cancel()
 
     def cancel_download(self):
         if self.__seeding:

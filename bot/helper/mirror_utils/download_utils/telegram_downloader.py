@@ -1,9 +1,13 @@
+#!/usr/bin/env python3
 from logging import getLogger, WARNING
 from random import choices
 from time import time
 from threading import RLock, Lock, Thread
+from pyrogram import Client, enums
+from asyncio import new_event_loop
 
-from bot import LOGGER, download_dict, download_dict_lock, app, STOP_DUPLICATE, STORAGE_THRESHOLD
+from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE, STORAGE_THRESHOLD, \
+                 TELEGRAM_API, TELEGRAM_HASH, BOT_TOKEN
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMarkup, sendMessage, sendStatusMessage
@@ -16,6 +20,7 @@ getLogger("pyrogram").setLevel(WARNING)
 
 
 class TelegramDownloadHelper:
+
     def __init__(self, listener):
         self.name = ""
         self.size = 0
@@ -26,13 +31,15 @@ class TelegramDownloadHelper:
         self.__id = ""
         self.__is_cancelled = False
         self.__resource_lock = RLock()
+        self.__app = None
+        self.__path = None
 
     @property
     def download_speed(self):
         with self.__resource_lock:
             return self.downloaded_bytes / (time() - self.__start_time)
 
-    def __onDownloadStart(self, name, size, file_id):
+    async def __onDownloadStart(self, name, size, file_id):
         with global_lock:
             GLOBAL_GID.add(file_id)
         with self.__resource_lock:
@@ -45,10 +52,9 @@ class TelegramDownloadHelper:
         self.__listener.onDownloadStart()
         sendStatusMessage(self.__listener.message, self.__listener.bot)
 
-    def __onDownloadProgress(self, current, total):
+    async def __onDownloadProgress(self, current, total):
         if self.__is_cancelled:
-            self.__onDownloadError('Cancelled by user!')
-            app.stop_transmission()
+            await self.__app.stop_transmission()
             return
         with self.__resource_lock:
             self.downloaded_bytes = current
@@ -65,24 +71,24 @@ class TelegramDownloadHelper:
                 pass
         self.__listener.onDownloadError(error)
 
-    def __onDownloadComplete(self):
-        with global_lock:
-            GLOBAL_GID.remove(self.__id)
-        self.__listener.onDownloadComplete()
-
-    def __download(self, message, path):
+    async def __download(self, message, path):
         try:
-            download = message.download(file_name = path, progress = self.__onDownloadProgress)
+            self.__path = await message.download(file_name=path, progress=self.__onDownloadProgress)
         except Exception as e:
             LOGGER.error(str(e))
             return self.__onDownloadError(str(e))
-        if download is not None:
-            self.__onDownloadComplete()
-        elif not self.__is_cancelled:
+        if self.__path is None and not self.__is_cancelled:
             self.__onDownloadError('Internal error occurred')
+        else:
+            with global_lock:
+                GLOBAL_GID.remove(self.__id)
+        await self.__app.terminate()
 
-    def add_download(self, message, path, filename):
-        _dmsg = app.get_messages(message.chat.id, reply_to_message_ids=message.message_id)
+    async def __add_download(self, message, path, filename):
+        self.__app = Client(name=f'{time()}', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, \
+                      bot_token=BOT_TOKEN, in_memory=True, parse_mode=enums.ParseMode.HTML, no_updates=True)
+        await self.__app.start()
+        _dmsg = await self.__app.get_messages(message.chat.id, reply_to_message_ids=message.message_id)
         media = None
         media_array = [_dmsg.document, _dmsg.video, _dmsg.audio]
         for i in media_array:
@@ -92,7 +98,7 @@ class TelegramDownloadHelper:
         if media is not None:
             with global_lock:
                 # For avoiding locking the thread lock for long time unnecessarily
-                download = media.file_id not in GLOBAL_GID
+                download = media.file_unique_id not in GLOBAL_GID
             if filename == "":
                 name = media.file_name
             else:
@@ -114,9 +120,9 @@ class TelegramDownloadHelper:
                         msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
                         msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
                         return sendMessage(msg, self.__listener.bot, self.__listener.message)
-                self.__onDownloadStart(name, size, media.file_id)
-                LOGGER.info(f'Downloading Telegram file with id: {media.file_id}')
-                Thread(target=self.__download, args=(_dmsg, path)).start()
+                await self.__onDownloadStart(name, size, media.file_unique_id)
+                LOGGER.info(f'Downloading Telegram file with id: {media.file_unique_id}')
+                return await self.__download(_dmsg, path)
             else:
                 self.__onDownloadError('File already being downloaded!')
         else:
@@ -125,3 +131,16 @@ class TelegramDownloadHelper:
     def cancel_download(self):
         LOGGER.info(f'Cancelling download on user request: {self.__id}')
         self.__is_cancelled = True
+        self.__onDownloadError('Cancelled by user!')
+
+    def async_starter(self, message, path, filename):
+        loop = new_event_loop()
+        loop.run_until_complete(self.__add_download(message, path, filename))
+        if self.__path is not None:
+            if self.__listener.isLeech:
+                self.__listener.loop = loop
+            else:
+                loop.close()
+            self.__listener.onDownloadComplete()
+        else:
+            loop.close()
