@@ -1,5 +1,6 @@
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info, warning as log_warning
 from socket import setdefaulttimeout
+import os
 from faulthandler import enable as faulthandler_enable
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
@@ -29,6 +30,16 @@ load_dotenv('config.env', override=True)
 def getConfig(name: str):
     return environ[name]
 
+CONFIG_FILE_URL = os.environ.get('CONFIG_FILE_URL', None)
+if CONFIG_FILE_URL is not None:
+    res = requests.get(CONFIG_FILE_URL)
+    if res.status_code == 200:
+        with open('config.env', 'wb+') as f:
+            f.write(res.content)
+            f.close()
+    else:
+        logging.error(res.status_code)
+        
 try:
     NETRC_URL = getConfig('NETRC_URL')
     if len(NETRC_URL) == 0:
@@ -165,6 +176,12 @@ def aria2c_init():
 Thread(target=aria2c_init).start()
 sleep(1.5)
 
+try:
+    IMAGE_URL = getConfig('IMAGE_URL')
+    if len(IMAGE_URL) == 0:
+        IMAGE_URL = 'https://telegra.ph/file/79733a2b8d4e437df928a.jpg'
+except KeyError:
+    IMAGE_URL = 'https://telegra.ph/file/79733a2b8d4e437df928a.jpg'  
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
