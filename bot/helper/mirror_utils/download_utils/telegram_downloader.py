@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 from logging import getLogger, WARNING
-from random import choices
 from time import time
-from threading import RLock, Lock, Thread
+from threading import RLock, Lock
 from pyrogram import Client, enums
-from asyncio import new_event_loop
+from asyncio import run
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE, STORAGE_THRESHOLD, \
                  TELEGRAM_API, TELEGRAM_HASH, BOT_TOKEN
@@ -46,9 +45,8 @@ class TelegramDownloadHelper:
             self.name = name
             self.size = size
             self.__id = file_id
-        gid = ''.join(choices(file_id, k=12))
         with download_dict_lock:
-            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, gid)
+            download_dict[self.__listener.uid] = TelegramDownloadStatus(self, self.__listener, self.__id)
         self.__listener.onDownloadStart()
         sendStatusMessage(self.__listener.message, self.__listener.bot)
 
@@ -77,12 +75,13 @@ class TelegramDownloadHelper:
         except Exception as e:
             LOGGER.error(str(e))
             return self.__onDownloadError(str(e))
-        if self.__path is None and not self.__is_cancelled:
-            self.__onDownloadError('Internal error occurred')
-        else:
+        if self.__path is not None:
             with global_lock:
                 GLOBAL_GID.remove(self.__id)
+        elif not self.__is_cancelled:
+            self.__onDownloadError('Internal error occurred')
         await self.__app.terminate()
+
 
     async def __add_download(self, message, path, filename):
         self.__app = Client(name=f'{time()}', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, \
@@ -134,13 +133,6 @@ class TelegramDownloadHelper:
         self.__onDownloadError('Cancelled by user!')
 
     def async_starter(self, message, path, filename):
-        loop = new_event_loop()
-        loop.run_until_complete(self.__add_download(message, path, filename))
+        run(self.__add_download(message, path, filename))
         if self.__path is not None:
-            if self.__listener.isLeech:
-                self.__listener.loop = loop
-            else:
-                loop.close()
             self.__listener.onDownloadComplete()
-        else:
-            loop.close()

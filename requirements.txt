@@ -24,7 +24,6 @@ python-magic
 python-telegram-bot
 qbittorrent-api
 requests
-six
 telegraph
 tenacity
 tgCrypto

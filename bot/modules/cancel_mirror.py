@@ -22,10 +22,7 @@ def cancel_mirror(update, context):
         mirror_message = update.message.reply_to_message
         with download_dict_lock:
             keys = list(download_dict.keys())
-            try:
-                dl = download_dict[mirror_message.message_id]
-            except:
-                dl = None
+        dl = mirror_message.message_id in keys
         if not dl:
             return sendMessage("This is not an active task!", context.bot, update.message)
     elif len(args) == 1:

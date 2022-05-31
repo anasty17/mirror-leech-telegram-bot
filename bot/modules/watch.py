@@ -222,7 +222,8 @@ def select_format(update, context):
     elif data[2] == "dict":
         query.answer()
         qual = data[3]
-        return _qual_subbuttons(task_id, qual, msg)
+        _qual_subbuttons(task_id, qual, msg)
+        return
     elif data[2] == "back":
         query.answer()
         return editMessage('Choose Video Quality:', msg, task_info[4])
@@ -232,7 +233,8 @@ def select_format(update, context):
             playlist = True
         else:
             playlist = False
-        return _audio_subbuttons(task_id, msg, playlist)
+        _audio_subbuttons(task_id, msg, playlist)
+        return
     elif data[2] == "cancel":
         query.answer()
         editMessage('Task has been cancelled.', msg)
