@@ -1,5 +1,6 @@
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info, warning as log_warning
 from socket import setdefaulttimeout
+import os
 from faulthandler import enable as faulthandler_enable
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
@@ -24,6 +25,16 @@ basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
 
 LOGGER = getLogger(__name__)
 
+CONFIG_FILE_URL = os.environ.get('CONFIG_FILE_URL', None)
+if CONFIG_FILE_URL is not None:
+    res = requests.get(CONFIG_FILE_URL)
+    if res.status_code == 200:
+        with open('config.env', 'wb+') as f:
+            f.write(res.content)
+            f.close()
+    else:
+        logging.error(res.status_code)
+        
 load_dotenv('config.env', override=True)
 
 def getConfig(name: str):
