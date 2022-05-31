@@ -1,6 +1,5 @@
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info, warning as log_warning
 from socket import setdefaulttimeout
-import os
 from faulthandler import enable as faulthandler_enable
 from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
@@ -176,12 +175,6 @@ def aria2c_init():
 Thread(target=aria2c_init).start()
 sleep(1.5)
 
-try:
-    IMAGE_URL = getConfig('IMAGE_URL')
-    if len(IMAGE_URL) == 0:
-        IMAGE_URL = 'https://telegra.ph/file/79733a2b8d4e437df928a.jpg'
-except KeyError:
-    IMAGE_URL = 'https://telegra.ph/file/79733a2b8d4e437df928a.jpg'  
 try:
     MEGA_API_KEY = getConfig('MEGA_API_KEY')
     if len(MEGA_API_KEY) == 0:
