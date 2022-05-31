@@ -59,7 +59,7 @@ def sendRss_ptb(text: str, bot):
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendRss(text, bot)
+        return sendRss_ptb(text, bot)
     except Exception as e:
         LOGGER.error(str(e))
         return
@@ -72,7 +72,7 @@ async def sendRss_pyro(text: str):
     except FloodWait as e:
         LOGGER.warning(str(e))
         await asleep(e.value * 1.5)
-        return await sendRss(text)
+        return await sendRss_pyro(text)
     except Exception as e:
         LOGGER.error(str(e))
         return
