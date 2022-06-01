@@ -3,7 +3,7 @@ from logging import getLogger, WARNING
 from time import time
 from threading import RLock, Lock
 from pyrogram import Client, enums
-from asyncio import run
+from asyncio import get_event_loop, gather
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE, STORAGE_THRESHOLD, \
                  TELEGRAM_API, TELEGRAM_HASH, BOT_TOKEN
@@ -133,6 +133,7 @@ class TelegramDownloadHelper:
         self.__onDownloadError('Cancelled by user!')
 
     def async_starter(self, message, path, filename):
-        run(self.__add_download(message, path, filename))
+        loop = get_event_loop()
+        loop.run_until_complete(gather(self.__add_download(message, path, filename)))
         if self.__path is not None:
             self.__listener.onDownloadComplete()
