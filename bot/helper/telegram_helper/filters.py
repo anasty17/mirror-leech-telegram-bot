@@ -29,5 +29,5 @@ class CustomFilters:
 
     sudo_user = __SudoUser()
 
-    def _owner_query(self, user_id):
+    def _owner_query(user_id):
         return user_id == OWNER_ID or user_id in SUDO_USERS
