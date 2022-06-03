@@ -8,7 +8,7 @@
 5. `BASE_URL_OF_BOT` variable is required to start the bot.
 6. Incase any extra file added or any edit in dockerfile or edit file not mentioned in note `3` your bot will not start.
 7. Shell and Eval commands disabled in this branch.
-8. This branch use megasdkrest and latest version of qBittorrent.
+8. This branch uses megasdkrest and latest version of qBittorrent.
 
 ------
 
