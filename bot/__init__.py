@@ -11,6 +11,10 @@ from subprocess import Popen, run as srun, check_output
 from time import sleep, time
 from threading import Thread, Lock
 from dotenv import load_dotenv
+from pyrogram import Client, enums
+from asyncio import get_event_loop
+
+main_loop = get_event_loop()
 
 faulthandler_enable()
 
@@ -142,12 +146,17 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
+LOGGER.info("Generating BOT_SESSION_STRING")
+app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
+
 try:
-    USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
-    if len(USER_STRING_SESSION) == 0:
+    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
+    if len(USER_SESSION_STRING) == 0:
         raise KeyError
+    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 except:
-    USER_STRING_SESSION = None
+    USER_SESSION_STRING = None
+    rss_session = None
 
 def aria2c_init():
     try:

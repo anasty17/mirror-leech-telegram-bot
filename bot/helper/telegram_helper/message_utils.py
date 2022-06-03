@@ -1,15 +1,11 @@
-#!/usr/bin/env python3
 from time import sleep
-from asyncio import sleep as asleep
 from telegram import InlineKeyboardMarkup
 from telegram.message import Message
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
-from pyrogram import Client, enums
 
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_reply_dict_lock, \
-                Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, bot, USER_STRING_SESSION, \
-                TELEGRAM_HASH, TELEGRAM_API
+                Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, bot, rss_session
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
@@ -53,29 +49,28 @@ def editMessage(text: str, message: Message, reply_markup=None):
         LOGGER.error(str(e))
         return
 
-def sendRss_ptb(text: str, bot):
-    try:
-        return bot.sendMessage(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
-    except RetryAfter as r:
-        LOGGER.warning(str(r))
-        sleep(r.retry_after * 1.5)
-        return sendRss_ptb(text, bot)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return
-
-async def sendRss_pyro(text: str):
-    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_STRING_SESSION, parse_mode=enums.ParseMode.HTML)
-    await rss_session.start()
-    try:
-        return await rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
-    except FloodWait as e:
-        LOGGER.warning(str(e))
-        await asleep(e.value * 1.5)
-        return await sendRss_pyro(text)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return
+def sendRss(text: str, bot):
+    if rss_session is None:
+        try:
+            return bot.sendMessage(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
+        except RetryAfter as r:
+            LOGGER.warning(str(r))
+            sleep(r.retry_after * 1.5)
+            return sendRss(text, bot)
+        except Exception as e:
+            LOGGER.error(str(e))
+            return
+    else:
+        try:
+            with rss_session:
+                return rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
+        except FloodWait as e:
+            LOGGER.warning(str(e))
+            sleep(e.value * 1.5)
+            return sendRss(text, bot)
+        except Exception as e:
+            LOGGER.error(str(e))
+            return
 
 def deleteMessage(bot, message: Message):
     try:

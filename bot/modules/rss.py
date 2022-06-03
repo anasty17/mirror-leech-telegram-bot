@@ -3,10 +3,9 @@ from time import sleep
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from telegram import InlineKeyboardMarkup
 from threading import Lock, Thread
-from asyncio import run
 
-from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND, AUTO_DELETE_MESSAGE_DURATION, USER_STRING_SESSION
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup, auto_delete_message, sendRss_pyro, sendRss_ptb
+from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND, AUTO_DELETE_MESSAGE_DURATION
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup, auto_delete_message, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -226,10 +225,7 @@ def rss_monitor(context):
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"
-                if USER_STRING_SESSION is None:
-                    sendRss_ptb(feed_msg, context.bot)
-                else:
-                    run(sendRss_pyro(feed_msg))
+                sendRss(feed_msg, context.bot)
                 feed_count += 1
                 sleep(5)
             DbManger().rss_update(name, str(last_link), str(last_title))

@@ -5,10 +5,9 @@ from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
 from pyrogram import Client, enums
-from asyncio import new_event_loop, set_event_loop, get_event_loop
 
 from bot import DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, \
-                 EXTENTION_FILTER, TELEGRAM_API, TELEGRAM_HASH, BOT_TOKEN
+                 EXTENTION_FILTER, app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
@@ -37,21 +36,10 @@ class TgUploader:
         self.__corrupted = 0
         self.__resource_lock = RLock()
         self.__is_corrupted = False
-        self.__app = None
+        self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         self.__user_settings()
 
     def upload(self):
-        try:
-            loop = get_event_loop()
-            new_loop = False
-        except:
-            loop = new_event_loop()
-            new_loop = True
-        set_event_loop(loop)
-        self.__app = Client(name=str(self.__start_time), api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, \
-                      bot_token=BOT_TOKEN, in_memory=True, parse_mode=enums.ParseMode.HTML, no_updates=True)
-        self.__app.start()
-        self.__sent_msg = self.__app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         path = f"{DOWNLOAD_DIR}{self.__listener.uid}"
         size = get_readable_file_size(get_path_size(path))
         for dirpath, subdir, files in sorted(walk(path)):
@@ -70,9 +58,6 @@ class TgUploader:
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     self._last_uploaded = 0
                     sleep(1)
-        self.__app.stop()
-        if new_loop:
-            loop.close()
         if self.__total_files <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")
@@ -171,7 +156,7 @@ class TgUploader:
 
     def __upload_progress(self, current, total):
         if self.__is_cancelled:
-            self.__app.stop_transmission()
+            app.stop_transmission()
             return
         with self.__resource_lock:
             chunk_size = current - self._last_uploaded
