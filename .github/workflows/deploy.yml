@@ -1,6 +1,9 @@
 name: Manually Deploy to Heroku
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    branches:
+      - "heroku"
 
 jobs:
   deploy:
