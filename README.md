@@ -2,13 +2,14 @@
 
 **Important Notes**
 1. This branch non-editable.
-2. Generate all your private files from master branch (token.pickle, config.env, drive_folder, cookies.txt ...).
+2. Generate all your private files from master branch (token.pickle, config.env, drive_folder, cookies.txt ...) since the generators not available in heroku branch but you should add the private files in heroku branch not master or use variables links in `config.env`.
 3. You can only edit a2c.conf(aria2c) and qBittorrent.conf.
 4. Don't add variables in heroku Environment, you can only add `CONFIG_FILE_URL`.
 5. `BASE_URL_OF_BOT` variable is required to start the bot.
-6. Incase any extra file added or any edit in dockerfile or edit file not mentioned in note `3` your bot will not start.
+6. Incase any extra file added other than the private files or any edit in dockerfile or edit file not mentioned in note `3` your bot will not start.
 7. Shell and Eval commands disabled in this branch.
-8. This branch uses megasdkrest and latest version of qBittorrent.
+8. `UPSTREAM_REPO` and `UPSTREAM_BRANCH` not working in this branch.
+9. This branch uses megasdkrest and latest version of qBittorrent.
 
 ------
 
@@ -110,11 +111,13 @@ heroku logs -t
    - Before: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/19ba5ab5eb43016422193319f28bc3c7dfb60f25/config.env
    - After: https://gist.githubusercontent.com/anasty17/8cce4a4b4e7f4ea47e948b2d058e52ac/raw/config.env
 
-4. After adding all the above Required Variables go to Github Actions tab in your repository.
+4. Add all your private files in this branch or use variables links in `config.env`.
+
+5. After adding all the above Required Variables go to Github Actions tab in your repository.
    - Select Manually Deploy to Heroku workflow as shown below:
 
 ![Select Manual Deploy](https://telegra.ph/file/cff1c24de42c271b23239.jpg)
 
-5. Click on Run workflow
+6. Choose `heroku` branch and click on Run workflow
 
 ![Run Workflow](https://telegra.ph/file/f44c7465d58f9f046328b.png)
