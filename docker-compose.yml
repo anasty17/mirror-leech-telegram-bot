@@ -1,9 +1,0 @@
-version: "3.3"
-
-services:
-  app:
-    build: .
-    command: bash start.sh
-    restart: on-failure
-    ports:
-      - "80:80"
