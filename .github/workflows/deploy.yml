@@ -1,0 +1,23 @@
+name: Manually Deploy to Heroku
+
+on:
+  workflow_dispatch:
+    branches:
+      - "heroku"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: akhileshns/heroku-deploy@v3.12.12
+        with:
+          heroku_api_key: ${{secrets.HEROKU_API_KEY}}
+          heroku_app_name: ${{secrets.HEROKU_APP_NAME}}
+          heroku_email: ${{secrets.HEROKU_EMAIL}}
+          usedocker: true
+          docker_heroku_process_type: web
+          stack: "container"
+          region: "us"
+        env:
+          HD_CONFIG_FILE_URL: ${{secrets.CONFIG_FILE_URL}}
