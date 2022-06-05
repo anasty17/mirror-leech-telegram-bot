@@ -206,8 +206,6 @@ def onedrive(link: str) -> str:
     if resp.status_code != 302:
         raise DirectDownloadLinkException("ERROR: Unauthorized link, the link may be private")
     dl_link = resp.next.url
-    file_name = dl_link.rsplit("/", 1)[1]
-    resp2 = rhead(dl_link)
     return dl_link
 
 def pixeldrain(url: str) -> str:
@@ -243,7 +241,7 @@ def racaty(url: str) -> str:
     based on https://github.com/SlamDevs/slam-mirrorbot"""
     dl_url = ''
     try:
-        link = re_findall(r'\bhttps?://.*racaty\.net\S+', url)[0]
+        re_findall(r'\bhttps?://.*racaty\.net\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Racaty links found\n")
     scraper = create_scraper()
@@ -376,7 +374,7 @@ def gdtot(url: str) -> str:
 
     with rsession() as client:
         client.cookies.update({'crypt': CRYPT})
-        res = client.get(url)
+        client.get(url)
         res = client.get(f"https://{match[0]}.gdtot.{match[1]}/dld?id={url.split('/')[-1]}")
     matches = re_findall('gd=(.*?)&', res.text)
     try:

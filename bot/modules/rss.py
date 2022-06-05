@@ -5,7 +5,7 @@ from telegram import InlineKeyboardMarkup
 from threading import Lock, Thread
 
 from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, RSS_DELAY, RSS_CHAT_ID, RSS_COMMAND, AUTO_DELETE_MESSAGE_DURATION
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendMarkup, auto_delete_message
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup, auto_delete_message, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
