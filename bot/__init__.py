@@ -232,6 +232,7 @@ try:
     if len(BASE_URL) == 0:
         raise KeyError
 except:
+    log_warning('BASE_URL_OF_BOT not provided!')
     BASE_URL = None
 try:
     DB_URI = getConfig('DATABASE_URL')
