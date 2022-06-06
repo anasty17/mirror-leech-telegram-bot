@@ -9,6 +9,7 @@ than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtend
 for original authorship. """
 import requests
 import re
+import cloudscraper
 from cfscrape import create_scraper
 from lxml import etree
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
