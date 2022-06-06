@@ -54,6 +54,7 @@ def _clone(message, bot, multi=0):
         except DirectDownloadLinkException as e:
             deleteMessage(bot, msg)
             return sendMessage(str(e), bot, message)
+    is_appdrive = is_appdrive_link(link)
     if is_appdrive:
         try:
             msg = sendMessage(f"Processing:<code>{link}</code>", bot, message)
