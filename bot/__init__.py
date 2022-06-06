@@ -437,6 +437,24 @@ try:
 except:
     CRYPT = None
 try:
+    EMAIL = getConfig('EMAIL')
+    if len(EMAIL) == 0:
+        raise KeyError
+except KeyError:
+    EMAIL = None
+try:
+    PWSSD = getConfig('PWSSD')
+    if len(PWSSD) == 0:
+        raise KeyError
+except KeyError:
+    PWSSD = None
+try:
+    CLONE_LOACTION = getConfig('CLONE_LOACTION')
+    if len(CLONE_LOACTION) == 0:
+        raise KeyError
+except KeyError:
+    CLONE_LOACTION = ''
+try:
     TOKEN_PICKLE_URL = getConfig('TOKEN_PICKLE_URL')
     if len(TOKEN_PICKLE_URL) == 0:
         raise KeyError
