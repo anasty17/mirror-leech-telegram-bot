@@ -632,7 +632,7 @@ def mdis_k(urlx):
 
        params = {
 
-            'param': content_id,
+            'param': urlx,
 
             'sys': 'ios',
 
