@@ -582,22 +582,64 @@ def gplinks(url: str):
         return 'Something went wrong :('
     return sendMessage(link, bot, message)
 
-def mdis_k(urlx):
-    scraper = create_scraper(interpreter="nodejs", allow_brotli=False)
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
-    }
-    apix = f"http://x.egraph.workers.dev/?param={urlx}"
-    try:
-        response = scraper.get(apix, headers=headers)
-        query = response.json()
-    except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk5")
-    return query
-
 def mdisk(url: str) -> str:
+
         fxl = url.split("/")
+
         urlx = fxl[-1]
+
         uhh = mdis_k(urlx)
+
         text = uhh["download"]
+
         return text
+
+def mdis_k(urlx):
+
+       headers = {
+
+            'authority': 'diskuploader.entertainvideo.com',
+
+            'accept': '*/*',
+
+            'accept-language': 'en-US,en;q=0.9',
+
+            'cache-control': 'no-cache',
+
+            'origin': 'https://mdisk.me',
+
+            'pragma': 'no-cache',
+
+            'referer': 'https://mdisk.me/',
+
+            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="100", "Google Chrome";v="100"',
+
+            'sec-ch-ua-mobile': '?0',
+
+            'sec-ch-ua-platform': '"Windows"',
+
+            'sec-fetch-dest': 'empty',
+
+            'sec-fetch-mode': 'cors',
+
+            'sec-fetch-site': 'cross-site',
+
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
+
+       }
+
+
+
+       params = {
+
+            'param': content_id,
+
+            'sys': 'ios',
+
+       }
+
+
+
+       res = requests.get('https://diskuploader.entertainvideo.com/v1/file/cdnurl', params=params, headers=headers)
+
+       return res
