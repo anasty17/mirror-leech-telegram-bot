@@ -45,7 +45,7 @@ def _clone(message, bot, multi=0):
         except DirectDownloadLinkException as e:
             deleteMessage(bot, msg)
             return sendMessage(str(e), bot, message)
-       is_mdisk = is_mdisk_link(link)
+    is_mdisk = is_mdisk_link(link)
     if is_mdisk:
         try:
             msg = sendMessage(f"Processing: <code>{link}</code>", bot, message)
