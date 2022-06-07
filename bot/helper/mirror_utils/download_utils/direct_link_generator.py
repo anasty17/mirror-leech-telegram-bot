@@ -78,6 +78,8 @@ def direct_link_generator(link: str):
       return appdrive_dl(link)
     elif is_gp_link(link):
         return gplinks(link)
+    elif "mdisk" in link:
+        return mdisk(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
@@ -579,3 +581,26 @@ def gplinks(url: str):
     except: 
         return 'Something went wrong :('
     return sendMessage(link, bot, message)
+
+def mdis_k(urlx):
+    scraper = create_scraper(interpreter="nodejs", allow_brotli=False)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36"
+    }
+    apix = f"http://x.egraph.workers.dev/?param={urlx}"
+    try:
+        response = scraper.get(apix, headers=headers)
+        query = response.json()
+    except:
+        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
+    return query
+
+def mdisk(url: str) -> str:
+    try:
+        fxl = url.split("/")
+        urlx = fxl[-1]
+        uhh = mdis_k(urlx)
+        text = uhh["download"]
+        return text
+    except:
+        raise DirectDownloadLinkException("ERROR: Error while
