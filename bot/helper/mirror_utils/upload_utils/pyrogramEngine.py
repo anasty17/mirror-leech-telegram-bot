@@ -4,8 +4,10 @@ from time import time, sleep
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
+from pyrogram import Client, enums
 
-from bot import app, DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, EXTENTION_FILTER
+from bot import DOWNLOAD_DIR, AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, \
+                 EXTENTION_FILTER, app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_video_resolution, get_path_size
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
@@ -25,13 +27,16 @@ class TgUploader:
         self._last_uploaded = 0
         self.__listener = listener
         self.__start_time = time()
+        self.__total_files = 0
         self.__is_cancelled = False
         self.__as_doc = AS_DOCUMENT
         self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
-        self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
+        self.__sent_msg = None
         self.__msgs_dict = {}
         self.__corrupted = 0
         self.__resource_lock = RLock()
+        self.__is_corrupted = False
+        self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
         self.__user_settings()
 
     def upload(self):
@@ -40,22 +45,23 @@ class TgUploader:
         for dirpath, subdir, files in sorted(walk(path)):
             for file_ in sorted(files):
                 if not file_.lower().endswith(tuple(EXTENTION_FILTER)):
+                    self.__total_files += 1
                     up_path = ospath.join(dirpath, file_)
-                    fsize = ospath.getsize(up_path)
-                    if fsize == 0:
+                    if ospath.getsize(up_path) == 0:
                         LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                         self.__corrupted += 1
                         continue
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
-                    self.__msgs_dict[file_] = self.__sent_msg.id
+                    if not self.__listener.isPrivate and not self.__is_corrupted:
+                        self.__msgs_dict[self.__sent_msg.link] = file_
                     self._last_uploaded = 0
                     sleep(1)
-        if len(self.__msgs_dict) <= self.__corrupted:
+        if self.__total_files <= self.__corrupted:
             return self.__listener.onUploadError('Files Corrupted. Check logs')
         LOGGER.info(f"Leech Completed: {self.name}")
-        self.__listener.onUploadComplete(None, size, self.__msgs_dict, None, self.__corrupted, self.name)
+        self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     def __upload_file(self, up_path, file_, dirpath):
         if CUSTOM_FILENAME is not None:
@@ -68,6 +74,7 @@ class TgUploader:
             cap_mono = f"<code>{file_}</code>"
         notMedia = False
         thumb = self.__thumb
+        self.__is_corrupted = False
         try:
             if not self.__as_doc:
                 duration = 0
@@ -90,32 +97,32 @@ class TgUploader:
                         osrename(up_path, new_path)
                         up_path = new_path
                     self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
-                                                              quote=True,
-                                                              caption=cap_mono,
-                                                              duration=duration,
-                                                              width=width,
-                                                              height=height,
-                                                              thumb=thumb,
-                                                              supports_streaming=True,
-                                                              disable_notification=True,
-                                                              progress=self.__upload_progress)
+                                                                  quote=True,
+                                                                  caption=cap_mono,
+                                                                  duration=duration,
+                                                                  width=width,
+                                                                  height=height,
+                                                                  thumb=thumb,
+                                                                  supports_streaming=True,
+                                                                  disable_notification=True,
+                                                                  progress=self.__upload_progress)
                 elif file_.upper().endswith(AUDIO_SUFFIXES):
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
-                                                              quote=True,
-                                                              caption=cap_mono,
-                                                              duration=duration,
-                                                              performer=artist,
-                                                              title=title,
-                                                              thumb=thumb,
-                                                              disable_notification=True,
-                                                              progress=self.__upload_progress)
+                                                                  quote=True,
+                                                                  caption=cap_mono,
+                                                                  duration=duration,
+                                                                  performer=artist,
+                                                                  title=title,
+                                                                  thumb=thumb,
+                                                                  disable_notification=True,
+                                                                  progress=self.__upload_progress)
                 elif file_.upper().endswith(IMAGE_SUFFIXES):
                     self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
-                                                              quote=True,
-                                                              caption=cap_mono,
-                                                              disable_notification=True,
-                                                              progress=self.__upload_progress)
+                                                                  quote=True,
+                                                                  caption=cap_mono,
+                                                                  disable_notification=True,
+                                                                  progress=self.__upload_progress)
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:
@@ -126,20 +133,22 @@ class TgUploader:
                             osremove(thumb)
                         return
                 self.__sent_msg = self.__sent_msg.reply_document(document=up_path,
-                                                             quote=True,
-                                                             thumb=thumb,
-                                                             caption=cap_mono,
-                                                             disable_notification=True,
-                                                             progress=self.__upload_progress)
+                                                                 quote=True,
+                                                                 thumb=thumb,
+                                                                 caption=cap_mono,
+                                                                 disable_notification=True,
+                                                                 progress=self.__upload_progress)
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
         except RPCError as e:
-            LOGGER.error(f"RPCError: {e} File: {up_path}")
+            LOGGER.error(f"RPCError: {e} Path: {up_path}")
             self.__corrupted += 1
+            self.__is_corrupted = True
         except Exception as err:
-            LOGGER.error(f"{err} File: {up_path}")
+            LOGGER.error(f"{err} Path: {up_path}")
             self.__corrupted += 1
+            self.__is_corrupted = True
         if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
             osremove(thumb)
         if not self.__is_cancelled:

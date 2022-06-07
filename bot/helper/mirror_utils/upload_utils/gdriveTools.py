@@ -1,6 +1,6 @@
 from logging import getLogger, ERROR, DEBUG
-from time import time, sleep
-from pickle import load as pload, dump as pdump
+from time import time
+from pickle import load as pload
 from json import loads as jsnloads
 from os import makedirs, path as ospath, listdir
 from requests.utils import quote as rquote
@@ -8,9 +8,7 @@ from io import FileIO
 from re import search as re_search
 from urllib.parse import parse_qs, urlparse
 from random import randrange
-from google.auth.transport.requests import Request
 from google.oauth2 import service_account
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
@@ -120,7 +118,7 @@ class GoogleDriveHelper:
             return msg
         msg = ''
         try:
-            res = self.__service.files().delete(fileId=file_id, supportsTeamDrives=IS_TEAM_DRIVE).execute()
+            self.__service.files().delete(fileId=file_id, supportsTeamDrives=IS_TEAM_DRIVE).execute()
             msg = "Successfully deleted"
             LOGGER.info(f"Delete Result: {msg}")
         except HttpError as err:
@@ -685,7 +683,6 @@ class GoogleDriveHelper:
                     content=content
                 )["path"]
             )
-        sleep(0.5)
         if len(path) > 1:
             telegraph.edit_telegraph(path, telegraph_content)
 

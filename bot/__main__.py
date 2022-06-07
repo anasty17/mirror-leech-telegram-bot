@@ -3,12 +3,11 @@ from os import path as ospath, remove as osremove, execl as osexecl
 from subprocess import run as srun, check_output
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from time import time
-from pyrogram import idle
 from sys import executable
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler
 
-from bot import bot, app, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, alive, LOGGER, Interval, rss_session, INCOMPLETE_TASK_NOTIFIER, DB_URI
+from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, INCOMPLETE_TASK_NOTIFIER, DB_URI, app, main_loop
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.ext_utils.telegraph_helper import telegraph
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
@@ -19,7 +18,6 @@ from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
 
 from .modules import authorize, list, cancel_mirror, mirror_status, mirror, clone, watch, shell, eval, delete, count, leech_settings, search, rss
-
 
 
 def stats(update, context):
@@ -83,9 +81,8 @@ def restart(update, context):
     restart_message = sendMessage("Restarting...", context.bot, update.message)
     if Interval:
         Interval[0].cancel()
-    alive.kill()
     clean_all()
-    srun(["pkill", "-f", "gunicorn|aria2c|qbittorrent-nox|megasdkrest"])
+    srun(["pkill", "-f", "gunicorn|aria2c|qbittorrent-nox"])
     srun(["python3", "update.py"])
     with open(".restartmsg", "w") as f:
         f.truncate(0)
@@ -246,32 +243,28 @@ def main():
         notifier_dict = DbManger().get_incomplete_tasks()
         if notifier_dict:
             for cid, data in notifier_dict.items():
-                if bot.get_chat(cid).type in ['private', 'group']:
-                    continue
                 if ospath.isfile(".restartmsg"):
                     with open(".restartmsg") as f:
                         chat_id, msg_id = map(int, f)
                     msg = 'Restarted successfully!'
                 else:
                     msg = 'Bot Restarted!'
-                for tag, mids in data.items():
+                for tag, links in data.items():
                      msg += f"\n\n{tag}: "
-                     for index, mid in enumerate(mids, start=1):
-                         link = f"https://t.me/c/{str(cid)[4:]}/{mid}"
+                     for index, link in enumerate(links, start=1):
                          msg += f" <a href='{link}'>{index}</a> |"
-                         if len(msg.encode('utf-8')) > 4000:
+                         if len(msg.encode()) > 4000:
                              if 'Restarted successfully!' in msg and cid == chat_id:
-                                 bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl')
+                                 bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl', disable_web_page_preview=True)
                                  osremove(".restartmsg")
                              else:
                                  bot.sendMessage(cid, msg, 'HTML')
                              msg = ''
                 if 'Restarted successfully!' in msg and cid == chat_id:
-                     bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl')
+                     bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTMl', disable_web_page_preview=True)
                      osremove(".restartmsg")
                 else:
                     bot.sendMessage(cid, msg, 'HTML')
-        DbManger().trunc_table('notifier')
 
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
@@ -298,9 +291,8 @@ def main():
     updater.start_polling(drop_pending_updates=IGNORE_PENDING_REQUESTS)
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
-    if rss_session is not None:
-        rss_session.start()
 
-app.start()
 main()
-idle()
+app.start()
+
+main_loop.run_forever()

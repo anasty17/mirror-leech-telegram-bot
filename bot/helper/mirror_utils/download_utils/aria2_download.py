@@ -13,11 +13,17 @@ from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
 def __onDownloadStarted(api, gid):
     try:
         if any([STOP_DUPLICATE, TORRENT_DIRECT_LIMIT, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD]):
-            sleep(3)
+            download = api.get_download(gid)
+            if download.is_metadata:
+                LOGGER.info(f'onDownloadStarted: {gid} Metadata')
+                return
+            elif not download.is_torrent:
+                sleep(3)
+                download = api.get_download(gid)
+            LOGGER.info(f'onDownloadStarted: {gid}')
             dl = getDownloadByGid(gid)
             if not dl:
                 return
-            download = api.get_download(gid)
             if STOP_DUPLICATE and not dl.getListener().isLeech:
                 LOGGER.info('Checking File/Folder if already in Drive...')
                 sname = download.name
@@ -37,7 +43,7 @@ def __onDownloadStarted(api, gid):
             if any([ZIP_UNZIP_LIMIT, TORRENT_DIRECT_LIMIT, STORAGE_THRESHOLD]):
                 sleep(1)
                 limit = None
-                size = api.get_download(gid).total_length
+                size = download.total_length
                 arch = any([dl.getListener().isZip, dl.getListener().extract])
                 if STORAGE_THRESHOLD is not None:
                     acpt = check_storage_threshold(size, arch, True)
@@ -68,18 +74,13 @@ def __onDownloadComplete(api, gid):
     download = api.get_download(gid)
     if download.followed_by_ids:
         new_gid = download.followed_by_ids[0]
-        new_download = api.get_download(new_gid)
-        if not dl:
-            dl = getDownloadByGid(new_gid)
-        with download_dict_lock:
-            download_dict[dl.uid()] = AriaDownloadStatus(new_gid, dl.getListener())
         LOGGER.info(f'Changed gid from {gid} to {new_gid}')
     elif dl:
         Thread(target=dl.getListener().onDownloadComplete).start()
 
 @new_thread
 def __onDownloadStopped(api, gid):
-    sleep(4)
+    sleep(6)
     dl = getDownloadByGid(gid)
     if dl:
         dl.getListener().onDownloadError('Dead torrent!')

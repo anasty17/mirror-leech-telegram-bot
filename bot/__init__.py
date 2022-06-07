@@ -10,9 +10,11 @@ from json import loads as jsnloads
 from subprocess import Popen, run as srun, check_output
 from time import sleep, time
 from threading import Thread, Lock
-from pyrogram import Client, enums
 from dotenv import load_dotenv
-from megasdkrestclient import MegaSdkRestClient, errors as mega_err
+from pyrogram import Client, enums
+from asyncio import get_event_loop
+
+main_loop = get_event_loop()
 
 faulthandler_enable()
 
@@ -53,9 +55,7 @@ try:
 except:
     SERVER_PORT = 80
 
-PORT = environ.get('PORT', SERVER_PORT)
-alive = Popen(["python3", "alive.py"])
-Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}"], shell=True)
+Popen([f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}"], shell=True)
 srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
@@ -63,6 +63,7 @@ srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun(["./aria.sh"], shell=True)
+sleep(0.5)
 
 Interval = []
 DRIVES_NAMES = []
@@ -86,12 +87,6 @@ aria2 = ariaAPI(
 
 def get_client():
     return qbClient(host="localhost", port=8090)
-
-trackers = check_output(["curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all | awk '$0'"], shell=True).decode('utf-8')
-trackerslist = set(trackers.split("\n"))
-trackerslist.remove("")
-trackerslist = "\n\n".join(trackerslist)
-get_client().application.set_preferences({"add_trackers": f"{trackerslist}"})
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None
@@ -151,16 +146,16 @@ except:
     LOGGER.error("One or more env variables missing! Exiting now")
     exit(1)
 
-LOGGER.info("Generating BOT_STRING_SESSION")
+LOGGER.info("Generating BOT_SESSION_STRING")
 app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
 
 try:
-    USER_STRING_SESSION = getConfig('USER_STRING_SESSION')
-    if len(USER_STRING_SESSION) == 0:
+    USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
+    if len(USER_SESSION_STRING) == 0:
         raise KeyError
-    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_STRING_SESSION, parse_mode=enums.ParseMode.HTML)
+    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 except:
-    USER_STRING_SESSION = None
+    USER_SESSION_STRING = None
     rss_session = None
 
 def aria2c_init():
@@ -171,41 +166,30 @@ def aria2c_init():
         aria2.add_uris([link], {'dir': dire})
         sleep(3)
         downloads = aria2.get_downloads()
-        sleep(30)
+        sleep(20)
         for download in downloads:
             aria2.remove([download], force=True, files=True)
     except Exception as e:
         log_error(f"Aria2c initializing error: {e}")
 Thread(target=aria2c_init).start()
+sleep(1.5)
 
 try:
-    MEGA_KEY = getConfig('MEGA_API_KEY')
-    if len(MEGA_KEY) == 0:
+    MEGA_API_KEY = getConfig('MEGA_API_KEY')
+    if len(MEGA_API_KEY) == 0:
         raise KeyError
 except:
-    MEGA_KEY = None
-    LOGGER.info('MEGA_API_KEY not provided!')
-if MEGA_KEY is not None:
-    # Start megasdkrest binary
-    Popen(["megasdkrest", "--apikey", MEGA_KEY])
-    sleep(3)  # Wait for the mega server to start listening
-    mega_client = MegaSdkRestClient('http://localhost:6090')
-    try:
-        MEGA_USERNAME = getConfig('MEGA_EMAIL_ID')
-        MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
-        if len(MEGA_USERNAME) > 0 and len(MEGA_PASSWORD) > 0:
-            try:
-                mega_client.login(MEGA_USERNAME, MEGA_PASSWORD)
-            except mega_err.MegaSdkRestClientException as e:
-                log_error(e.message['message'])
-                exit(0)
-        else:
-            log_info("Mega API KEY provided but credentials not provided. Starting mega in anonymous mode!")
-    except:
-        log_info("Mega API KEY provided but credentials not provided. Starting mega in anonymous mode!")
-else:
-    sleep(1.5)
-
+    log_warning('MEGA API KEY not provided!')
+    MEGA_API_KEY = None
+try:
+    MEGA_EMAIL_ID = getConfig('MEGA_EMAIL_ID')
+    MEGA_PASSWORD = getConfig('MEGA_PASSWORD')
+    if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+        raise KeyError
+except:
+    log_warning('MEGA Credentials not provided!')
+    MEGA_EMAIL_ID = None
+    MEGA_PASSWORD = None
 try:
     DB_URI = getConfig('DATABASE_URL')
     if len(DB_URI) == 0:
@@ -371,16 +355,6 @@ try:
 except:
     USE_SERVICE_ACCOUNTS = False
 try:
-    BLOCK_MEGA_FOLDER = getConfig('BLOCK_MEGA_FOLDER')
-    BLOCK_MEGA_FOLDER = BLOCK_MEGA_FOLDER.lower() == 'true'
-except:
-    BLOCK_MEGA_FOLDER = False
-try:
-    BLOCK_MEGA_LINKS = getConfig('BLOCK_MEGA_LINKS')
-    BLOCK_MEGA_LINKS = BLOCK_MEGA_LINKS.lower() == 'true'
-except:
-    BLOCK_MEGA_LINKS = False
-try:
     WEB_PINCODE = getConfig('WEB_PINCODE')
     WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 except:
@@ -525,3 +499,4 @@ updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connec
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
+botname = bot.username

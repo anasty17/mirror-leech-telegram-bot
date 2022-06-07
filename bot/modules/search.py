@@ -215,7 +215,7 @@ def _getResult(search_results, key, message, method):
             if link.startswith('magnet:'):
                 msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(link)}'>Telegram</a><br><br>"
             else:
-                msg += f"<b>Share Url to</b> <a href='http://t.me/share/url?url={link}'>Telegram</a><br><br>"
+                msg += f"<a href='{link}'>Direct Link</a><br><br>"
 
         if len(msg.encode('utf-8')) > 39000:
            telegraph_content.append(msg)
