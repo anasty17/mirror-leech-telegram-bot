@@ -639,5 +639,5 @@ def mdis_k(urlx):
 
 
        res = requests.get('https://diskuploader.entertainvideo.com/v1/file/cdnurl', params=params, headers=headers)
-       yoyo = res.json()['download']
+       yoyo = res.json()['source']
        return yoyo
