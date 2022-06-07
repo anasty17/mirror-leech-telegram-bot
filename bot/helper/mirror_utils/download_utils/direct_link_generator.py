@@ -603,4 +603,4 @@ def mdisk(url: str) -> str:
         text = uhh["download"]
         return text
     except:
-        raise DirectDownloadLinkException("ERROR: Error while
+        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
