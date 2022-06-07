@@ -4,12 +4,12 @@ from os import makedirs
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD, MEGA_LIMIT, STOP_DUPLICATE, ZIP_UNZIP_LIMIT, STORAGE_THRESHOLD
+from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import get_mega_link_type, get_readable_file_size
+from bot.helper.ext_utils.bot_utils import get_mega_link_type
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.fs_utils import get_base_name, check_storage_threshold
+from bot.helper.ext_utils.fs_utils import get_base_name
 
 
 class MegaAppListener(MegaListener):
@@ -166,26 +166,6 @@ def add_mega_download(mega_link: str, path: str, listener):
             if smsg:
                 msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMarkup(msg1, listener.bot, listener.message, button)
-    if any([STORAGE_THRESHOLD, ZIP_UNZIP_LIMIT, MEGA_LIMIT]):
-        size = api.getSize(node)
-        arch = any([listener.isZip, listener.extract])
-        if STORAGE_THRESHOLD is not None:
-            acpt = check_storage_threshold(size, arch)
-            if not acpt:
-                msg = f'You must leave {STORAGE_THRESHOLD}GB free storage.'
-                msg += f'\nYour File/Folder size is {get_readable_file_size(size)}'
-                return sendMessage(msg, listener.bot, listener.message)
-        limit = None
-        if ZIP_UNZIP_LIMIT is not None and arch:
-            msg3 = f'Failed, Zip/Unzip limit is {ZIP_UNZIP_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
-            limit = ZIP_UNZIP_LIMIT
-        elif MEGA_LIMIT is not None:
-            msg3 = f'Failed, Mega limit is {MEGA_LIMIT}GB.\nYour File/Folder size is {get_readable_file_size(api.getSize(node))}.'
-            limit = MEGA_LIMIT
-        if limit is not None:
-            LOGGER.info('Checking File/Folder Size...')
-            if size > limit * 1024**3:
-                return sendMessage(msg3, listener.bot, listener.message)
     with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
     listener.onDownloadStart()
