@@ -592,7 +592,7 @@ def mdis_k(urlx):
         response = scraper.get(apix, headers=headers)
         query = response.json()
     except:
-        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk!")
+        raise DirectDownloadLinkException("ERROR: Error while trying to generate Direct Link from MDisk5")
     return query
 
 def mdisk(url: str) -> str:
