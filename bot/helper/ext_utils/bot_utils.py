@@ -242,7 +242,8 @@ def is_gp_link(url: str):
 
 def is_appdrive_link(url: str):
     return "appdrive.in" in url or "driveapp.in" in url
-
+def is_mdisk_link(url: str):
+    return "mdisk.me" in url
 
 def is_mega_link(url: str):
     return "mega.nz" in url or "mega.co.nz" in url
