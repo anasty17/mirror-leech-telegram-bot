@@ -596,7 +596,6 @@ def mdis_k(urlx):
     return query
 
 def mdisk(url: str) -> str:
-    try:
         fxl = url.split("/")
         urlx = fxl[-1]
         uhh = mdis_k(urlx)
