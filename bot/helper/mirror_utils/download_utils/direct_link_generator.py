@@ -590,9 +590,7 @@ def mdisk(url: str) -> str:
 
         uhh = mdis_k(urlx)
 
-        text = uhh["download"]
-
-        return text
+        return uhh
 
 def mdis_k(urlx):
 
@@ -641,5 +639,5 @@ def mdis_k(urlx):
 
 
        res = requests.get('https://diskuploader.entertainvideo.com/v1/file/cdnurl', params=params, headers=headers)
-
-       return res
+       yoyo = res.json()['download']
+       return yoyo
