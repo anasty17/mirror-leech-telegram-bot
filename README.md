@@ -1,2 +1,3 @@
-# This code for edit use it with UPSTREAM_REPO.
-I will add notes later...
+# Heroku Code
+
+- This branch only for editing and not for deploying.
