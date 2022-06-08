@@ -245,6 +245,9 @@ def is_appdrive_link(url: str):
 def is_mdisk_link(url: str):
     return "mdisk.me" in url
 
+def is_dl_link(url: str):
+    return "droplink.co" in url
+
 def is_mega_link(url: str):
     return "mega.nz" in url or "mega.co.nz" in url
 
