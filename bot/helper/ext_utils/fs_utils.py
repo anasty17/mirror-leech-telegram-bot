@@ -209,18 +209,21 @@ def get_media_info(path):
     except Exception as e:
         LOGGER.error(f"get_media_info: {e}")
         return 0, None, None
-    try:
-        duration = round(float(fields['duration']))
-    except:
-        duration = 0
-    try:
-        artist = str(fields['tags']['artist'])
-    except:
-        artist = None
-    try:
-        title = str(fields['tags']['title'])
-    except:
+
+    duration = round(float(fields.get('duration', 0)))
+
+    fields = fields.get('tags')
+    if fields is not None:
+        artist = fields.get('artist')
+        if artist is None:
+            artist = fields.get('ARTIST')
+        title = fields.get('title')
+        if title is None:
+            title = fields.get('TITLE')
+    else:
         title = None
+        artist = None
+
     return duration, artist, title
 
 def get_video_resolution(path):
