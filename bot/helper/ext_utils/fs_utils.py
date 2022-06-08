@@ -184,7 +184,7 @@ def split_file(path, size, file_, dirpath, split_size, start_time=0, i=1, inLoop
             out_path = ospath.join(dirpath, parted_name)
             srun(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i",
                             path, "-ss", str(start_time), "-fs", str(split_size),
-                            "-async", "1", "-strict", "-2", "-c", "copy", out_path])
+                            "-async", "1", "-strict", "-2", "-map", "0", "-c", "copy", out_path])
             out_size = get_path_size(out_path)
             if out_size > 2097152000:
                 dif = out_size - 2097152000
@@ -238,4 +238,3 @@ def get_video_resolution(path):
     except Exception as e:
         LOGGER.error(f"get_video_resolution: {e}")
         return 480, 320
-
