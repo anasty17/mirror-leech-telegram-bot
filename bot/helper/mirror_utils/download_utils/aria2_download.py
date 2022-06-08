@@ -12,7 +12,7 @@ from bot.helper.ext_utils.fs_utils import get_base_name
 @new_thread
 def __onDownloadStarted(api, gid):
     try:
-        if STOP_DUPLICATE and not dl.getListener().isLeech:
+        if STOP_DUPLICATE:
             download = api.get_download(gid)
             if download.is_metadata:
                 LOGGER.info(f'onDownloadStarted: {gid} Metadata')
@@ -22,7 +22,7 @@ def __onDownloadStarted(api, gid):
                 download = api.get_download(gid)
             LOGGER.info(f'onDownloadStarted: {gid}')
             dl = getDownloadByGid(gid)
-            if not dl:
+            if not dl or dl.getListener().isLeech:
                 return
             LOGGER.info('Checking File/Folder if already in Drive...')
             sname = download.name
