@@ -25,7 +25,7 @@ from base64 import standard_b64encode, b64decode
 
 from bot import LOGGER, UPTOBOX_TOKEN, CRYPT, EMAIL, PWSSD, CLONE_LOACTION as GDRIVE_FOLDER_ID
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_gdtot_link, is_gp_link, is_appdrive_link, is_mdisk_link
+from bot.helper.ext_utils.bot_utils import is_gdtot_link, is_gp_link, is_appdrive_link, is_mdisk_link, is_dl_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
@@ -80,6 +80,8 @@ def direct_link_generator(link: str):
         return gplinks(link)
     elif is_mdisk_link(link):
         return mdisk(link)
+    elif is_dl_link(link):
+        return dlbypass(link) 
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
@@ -642,3 +644,28 @@ def mdis_k(urlx):
        yoyo = res.json()['source']
        return yoyo
        return sendMessage(link, bot, message)
+
+def dlbypass(url: str) -> str:
+    DOMAIN = 'https://yoshare.net'
+    
+    client = cloudscraper.create_scraper(interpreter='nodejs', allow_brotli=False)
+    res = client.get(url)
+
+    h = {'referer': DOMAIN}
+    res = client.get(url, headers=h)
+
+    bs4 = BeautifulSoup(res.content, 'lxml')
+    inputs = bs4.find_all('input')
+    data = { input.get('name'): input.get('value') for input in inputs }
+
+    h = {
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-requested-with': 'XMLHttpRequest'
+    }
+    p = urlparse(url)
+    final_url = f'{p.scheme}://{p.netloc}/links/go'
+
+    time.sleep(3.1)
+    res = client.post(final_url, data=data, headers=h).json()
+
+    return res["url"]
