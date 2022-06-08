@@ -70,7 +70,7 @@ if TORRENT_TIMEOUT is not None:
     with open("a2c.conf", "a+") as a:
         a.write(f"bt-stop-timeout={TORRENT_TIMEOUT}\n")
 with open("a2c.conf", "a+") as a:
-    a.write(f"bt-tracker={trackers}")
+    a.write(f"bt-tracker=[{trackers}]")
 srun(["extra-api", "--conf-path=/usr/src/app/a2c.conf"])
 alive = Popen(["python3", "alive.py"])
 sleep(0.5)
