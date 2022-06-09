@@ -49,13 +49,12 @@ TELEGRAPH_LIMIT = 300
 
 def torser(update, context):
     user_id = update.message.from_user.id
-    key = update.message.text.split(" ", maxsplit=1)
     buttons = button_build.ButtonMaker()
     if SEARCH_API_LINK is  None and SEARCH_PLUGINS is None:
         sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
-    elif len(key) == 1 and SEARCH_API_LINK is None:
+    elif len(context.args) == 0 and SEARCH_API_LINK is None:
         sendMessage("Send a search key along with command", context.bot, update.message)
-    elif len(key) == 1:
+    elif len(context.args) == 0:
         buttons.sbutton('Trending', f"torser {user_id} apitrend")
         buttons.sbutton('Recent', f"torser {user_id} apirecent")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
@@ -78,13 +77,13 @@ def torserbut(update, context):
     query = update.callback_query
     user_id = query.from_user.id
     message = query.message
-    key = message.reply_to_message.text.split(" ", maxsplit=1)
+    key = message.reply_to_message.text.split(maxsplit=1)
     if len(key) > 1:
-        key = key[1]
+        key = key[1].strip()
     else:
         key = None
     data = query.data
-    data = data.split(" ")
+    data = data.split()
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2].startswith('api'):

@@ -16,11 +16,11 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 
 def _clone(message, bot, multi=0):
-    args = message.text.split(" ", maxsplit=1)
+    args = message.text.split(maxsplit=1)
     reply_to = message.reply_to_message
     link = ''
     if len(args) > 1:
-        link = args[1]
+        link = args[1].strip()
         if link.isdigit():
             multi = int(link)
             link = ''
@@ -28,9 +28,9 @@ def _clone(message, bot, multi=0):
             tag = f"@{message.from_user.username}"
         else:
             tag = message.from_user.mention_html(message.from_user.first_name)
-    if reply_to is not None:
+    if reply_to:
         if len(link) == 0:
-            link = reply_to.text
+            link = reply_to.text.strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:

@@ -28,7 +28,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Save leech settings including thumbnails in database
 - Mirror/Leech/Clone multi links/files with one command
-- Extenstion Filter for uploading/cloning files
+- Extensions Filter for the files to be uploaded/cloned
 - Incomplete task notifier to get incomplete task messages after restart, works with database.
 - Many bugs have been fixed
 
@@ -123,7 +123,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `CMD_INDEX`: commands index number. This number will added at the end all commands.
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds.
-- `EXTENTION_FILTER`: File extentions that won't upload/clone. Separate them by space.
+- `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space.
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and (supergroup or channel). Default is `False`. `Bool`
 
 ### Update

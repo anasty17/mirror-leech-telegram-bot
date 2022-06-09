@@ -20,34 +20,40 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     user_id = message.from_user.id
     msg_id = message.message_id
 
-    try:
-        link = mssg.split(' ')[1].strip()
+    link = mssg.split()
+    if len(lmsg) > 1:
+        link = lmsg[1].strip()
         if link.isdigit():
             multi = int(link)
-            raise IndexError
+            link = ''
         elif link.startswith(("|", "pswd:", "args:")):
-            raise IndexError
-    except:
+            link = ''
+    else:
         link = ''
-    try:
-        name_arg = mssg.split('|', maxsplit=1)
-        if 'args: ' in name_arg[0]:
-            raise IndexError
+
+    name = mssg.split('|', maxsplit=1)
+    if len(name) > 1:
+        if 'args: ' in name[0] or 'pswd: ' in name[0]:
+            name = ''
         else:
-            name = name_arg[1]
-        name = re_split(r' pswd: | args: ', name)[0]
-        name = name.strip()
-    except:
+            name = name[1]
+        if name != '':
+            name = re_split('pswd:|args:', name)[0]
+            name = name.strip()
+    else:
         name = ''
-    try:
-        pswd = mssg.split(' pswd: ')[1]
+
+    pswd = mssg.split(' pswd: ')
+    if len(pswd) > 1:
+        pswd = pswd[1]
         pswd = pswd.split(' args: ')[0]
-    except:
+    else:
         pswd = None
 
-    try:
-        args = mssg.split(' args: ')[1]
-    except:
+    args = mssg.split(' args: ')
+    if len(args) > 1:
+        args = args[1]
+    else:
         args = None
 
     if message.from_user.username:

@@ -29,7 +29,7 @@ class QbDownloader:
         self.__periodic = None
         self.__stalled_time = time()
         self.__uploaded = False
-        self.__seeding = False
+        self.is_seeding = False
         self.__dupChecked = False
         self.__rechecked = False
 
@@ -173,7 +173,7 @@ class QbDownloader:
                             self.__periodic.cancel()
                             return
                         download_dict[self.__listener.uid] = QbDownloadStatus(self.__listener, self)
-                    self.__seeding = True
+                    self.is_seeding = True
                     update_all_messages()
                     LOGGER.info(f"Seeding started: {self.__name}")
                 else:
@@ -198,7 +198,7 @@ class QbDownloader:
         self.__periodic.cancel()
 
     def cancel_download(self):
-        if self.__seeding:
+        if self.is_seeding:
             LOGGER.info(f"Cancelling Seed: {self.__name}")
             self.client.torrents_pause(torrent_hashes=self.ext_hash)
         else:
@@ -208,7 +208,7 @@ def get_confirm(update, context):
     query = update.callback_query
     user_id = query.from_user.id
     data = query.data
-    data = data.split(" ")
+    data = data.split()
     qbdl = getDownloadByGid(data[2])
     if not qbdl:
         query.answer(text="This task has been cancelled!", show_alert=True)
