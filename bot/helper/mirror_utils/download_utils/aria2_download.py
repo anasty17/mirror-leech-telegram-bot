@@ -1,5 +1,4 @@
 from time import sleep
-from threading import Thread
 
 from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, LOGGER
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper

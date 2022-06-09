@@ -11,7 +11,7 @@ from bot.helper.telegram_helper import button_build
 
 def list_buttons(update, context):
     user_id = update.message.from_user.id
-    if len(update.message.text.split(" ", maxsplit=1)) < 2:
+    if len(context.args) == 0:
         return sendMessage('Send a search key along with command', context.bot, update.message)
     buttons = button_build.ButtonMaker()
     buttons.sbutton("Folders", f"types {user_id} folders")
@@ -27,7 +27,7 @@ def select_type(update, context):
     msg = query.message
     key = msg.reply_to_message.text.split(" ", maxsplit=1)[1]
     data = query.data
-    data = data.split(" ")
+    data = data.split()
     if user_id != int(data[1]):
         return query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == 'cancel':

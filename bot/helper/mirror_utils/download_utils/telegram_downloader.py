@@ -1,7 +1,6 @@
 from logging import getLogger, WARNING
 from time import time
 from threading import RLock, Lock
-from pyrogram import Client, enums
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE, app
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
