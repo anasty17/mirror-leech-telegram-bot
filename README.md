@@ -28,7 +28,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Save leech settings including thumbnails in database
 - Mirror/Leech/Clone multi links/files with one command
-- Extenstion Filter for uploading/cloning files
+- Extension Filter for uploading/cloning files
 - Incomplete task notifier to get incomplete task messages after restart, works with database.
 - Many bugs have been fixed
 
