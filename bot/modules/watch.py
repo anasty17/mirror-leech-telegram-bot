@@ -21,8 +21,8 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     msg_id = message.message_id
 
     link = mssg.split()
-    if len(lmsg) > 1:
-        link = lmsg[1].strip()
+    if len(link) > 1:
+        link = link[1].strip()
         if link.isdigit():
             multi = int(link)
             link = ''
