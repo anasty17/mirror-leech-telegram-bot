@@ -280,8 +280,11 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
         link = message_args[1].strip()
         if link.startswith("s ") or link == "s":
             qbitsel = True
-            message_args = mesg[0].split(' ', maxsplit=2)
-            link = message_args[2].strip()
+            message_args = mesg[0].split(maxsplit=2)
+            if len(message_args) > 2:
+                link = message_args[2].strip()
+            else:
+                link = ''
         elif link.isdigit():
             multi = int(link)
             link = ''
