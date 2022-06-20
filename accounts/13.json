@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "teak-amphora-353912",
+  "private_key_id": "f01e978d9c1f3ab33dcf2db9de37deba554e2b1b",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDAZExrAdI//eIk\nLM1BTr4cAVFohPax42rtssoJ8kvF0ppvBi8YA3VR8uiCMJQW7NCUXLOxlloHJyae\nqnJmv5ttWqMBKs3nPNw5QhuZyPKtczPK6RhvWw/0odxTwXm76YFTEhd41BL/segu\n5UvEzGD5glDuyqQRJ4qfgZdJtQmKDuF7htlk1BvX6AFcf6rlJkTP88ar0M/cnylH\n4TszxgaC1ht6sIeT6Ckoqv4NAiMHvB4qyQrIKEnQkyVs1es1SgLrAdQ5ofbJ63g8\ndHQW1llHhFUUtFUvSyqxQG5X6mv1P1Zt0/0SoJpPPDqzhjcl1uo3hRiKUQFcgYlG\nllj+32NBAgMBAAECggEACYoPlfCxrZWXjGaiSL4wQ/A2yqFpH/ngN+f5B5Q5eJYQ\nLTgXxq+JNiZ+q9HfzeExGGIeUMxdK2SgEBbwdDLE8J+hXHH0YqZMXxRtjOr/SWVg\naIu1N/RCbsVFyOtbb1tNG8LWYhnV1VLLaePZpWji2AxDmgt3JhiZUX5Z84Aj+HHd\nbSaXEmMfJHRv755zTMKaFKOuE18IHJe3v/kgfeWbVh0SDnZLBuwi0+yfUTxhGmaD\nKngRUxcgcEGiQ+7JFxrKFgkoZaYlbFdKXbgnNh6xekz46N6rSmDKSEW7bBEOSBOc\nxsPEYN6k0H0qJpWTysrQMKSp/mggiPHQ0hMQAiE3oQKBgQDkCUDcDzCE1FzHiX2I\n8h8xr21sFFzDy/fUSZjQkwGOqm8tKLbnm9eURKz3Y5gXX3Hwmbv2Kw8aN4CYYang\nfJoNymdlYKLIPFu1RUx+BJ3pV47oZ8QlsTNQgmjkfK8C6Vdsu0RCeFCHkQNXbWFR\nUtVM6YtDfKbwbkJTEzXV8XMpSQKBgQDX/A+IvWsP28DEMwMpxX/wFvjET+lQhCkY\n6FAFjLW3uDorc7SS6ekhvzSQJXq4cTZmDeaw3TDbghAHOm/U1/kXSvfpkJfk0Ixb\nkGx3kPKhGO3OOCN/ukaYq93nixLjqMSXTUjak8Wt5Hji+okT9gQtH5XO+0x6ffSz\n+9hpHkOiOQKBgQC81STOlg15kVmbKrG3u7g1Lq4P9/SxdrAtLRzMa0+40k3qOXLs\n7FJix1PsMJ77i+AQe135BcMl1Jw6k3VXHhd8IAXrH1DtO34957rmB/C0D/uZXIRD\nKi/yFWvC+bT7Vjs9IP3vhS46dM0tkrgp3cwgOq1GH20mYEev/5JvLdhNcQKBgQDN\nc6s/MpfWFP8QY0oeAQ4LT37CFxXkjmMdm1cLgGcXZTqIPN9HZRRsEpsoh05uhtrt\nR0nrcezY0ab3iUH54JvE6X5cAjxK34q0SvSy5AG49qK3qLUz+fjPn6VNbQDB6Ldh\nCZZEvY6sNIo9t36Pq1Ubq1Dw/CEq4AfW8blRfQVvGQKBgQDJ62wqz1uVhJ7WssJU\nu7ItmNEc/49ZCefwzEyOE9kNBwoQvoxa1BWi4yobuFeY/4XVCxWJtpY3VsCHWxm+\nHUw2N44pS7PEdr+BzCZkpmhw6H/ueQaMVKei4Fetc7dcD2Wi7CtQHaw8V6t0ICVD\nwPm4Dfmcj9PGDjQx7OKiJLwTTQ==\n-----END PRIVATE KEY-----\n",
+  "client_email": "mfc-43va0jwurhmx22bbkl-6--0m2n@teak-amphora-353912.iam.gserviceaccount.com",
+  "client_id": "116117605776335440525",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/mfc-43va0jwurhmx22bbkl-6--0m2n%40teak-amphora-353912.iam.gserviceaccount.com"
+}
