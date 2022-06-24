@@ -5,6 +5,7 @@ asyncio
 attrdict
 beautifulsoup4
 cfscrape
+cloudscraper
 feedparser
 flask
 google-api-python-client
