@@ -19,7 +19,7 @@ def countNode(update, context):
             tag = update.message.from_user.mention_html(update.message.from_user.first_name)
     if reply_to:
         if len(link) == 0:
-            link = reply_to.text.strip()
+            link = reply_to.text.split(maxsplit=1)[0].strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
         else:
