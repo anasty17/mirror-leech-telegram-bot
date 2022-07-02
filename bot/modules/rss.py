@@ -107,7 +107,7 @@ def rss_sub(update, context):
         msg = f"Use this format to add feed url:\n/{BotCommands.RssSubCommand} Title https://www.rss-url.com"
         msg += " f: 1080 or 720 or 144p|mkv or mp4|hevc (optional)\n\nThis filter will parse links that it's titles"
         msg += " contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` words. You can add whatever you want.\n\n"
-        msg += "Another example: f:  1080  or 720p|.web. or .webrip.|hvec or x264 .. This will parse titles that contains"
+        msg += "Another example: f:  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains"
         msg += " ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080"
         msg += " to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without"
         msg += " spaces after it."
@@ -206,7 +206,7 @@ def rss_monitor(context):
                         break
                 except IndexError:
                     LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {name}. \
-                          Maybe you need to add less RSS_DELAY to not miss some torrents")
+                          Maybe you need to use less RSS_DELAY to not miss some torrents")
                     break
                 parse = True
                 for list in data[3]:
