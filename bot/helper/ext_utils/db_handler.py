@@ -93,7 +93,7 @@ class DbManger:
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
-        return 'Authorized successfully'
+        return '𝗖𝗵𝗮𝘁 𝐀𝐮𝐭𝐡𝐫𝐨𝐫𝐢𝐳𝐞𝐝 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 ✅'
 
     def user_unauth(self, chat_id: int):
         if self.err:
@@ -103,7 +103,7 @@ class DbManger:
             self.cur.execute(sql)
             self.conn.commit()
             self.disconnect()
-            return 'Unauthorized successfully'
+            return '𝗖𝗵𝗮𝘁 𝐔𝐧𝐚𝐮𝐭𝐡𝐨𝐫𝐢𝐳𝐞𝐝 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 😁'
 
     def user_addsudo(self, user_id: int):
         if self.err:
@@ -115,7 +115,7 @@ class DbManger:
         self.cur.execute(sql)
         self.conn.commit()
         self.disconnect()
-        return 'Successfully Promoted as Sudo'
+        return '𝐔𝐬𝐞𝐫 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗣𝗿𝗼𝗺𝗼𝘁𝗲𝗱 𝗮𝘀 𝗦𝘂𝗱𝗼 ✅'
 
     def user_rmsudo(self, user_id: int):
         if self.err:
@@ -125,7 +125,7 @@ class DbManger:
             self.cur.execute(sql)
             self.conn.commit()
             self.disconnect()
-            return 'Successfully removed from Sudo'
+            return '𝐔𝐬𝐞𝐫 𝗦𝘂𝗰𝗰𝗲𝘀𝘀𝗳𝘂𝗹𝗹𝘆 𝗿𝗲𝗺𝗼𝘃𝗲𝗱 𝗳𝗿𝗼𝗺 𝗦𝘂𝗱𝗼 😁'
 
     def user_media(self, user_id: int):
         if self.err:
