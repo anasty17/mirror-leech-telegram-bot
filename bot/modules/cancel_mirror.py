@@ -20,8 +20,7 @@ def cancel_mirror(update, context):
     elif update.message.reply_to_message:
         mirror_message = update.message.reply_to_message
         with download_dict_lock:
-            keys = list(download_dict.keys())
-            if mirror_message.message_id in keys:
+            if mirror_message.message_id in download_dict:
                 dl = download_dict[mirror_message.message_id]
             else:
                 dl = None
