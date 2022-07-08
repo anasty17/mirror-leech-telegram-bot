@@ -40,10 +40,6 @@ def mirror_status(update, context):
 
 def status_pages(update, context):
     query = update.callback_query
-    with status_reply_dict_lock:
-        if not status_reply_dict or not Interval or time() - list(status_reply_dict.values())[0][1] < 2:
-            query.answer(text="Wait One More Second!", show_alert=True)
-            return
     data = query.data
     data = data.split()
     query.answer()
