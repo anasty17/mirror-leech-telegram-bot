@@ -62,7 +62,6 @@ class YoutubeDLHelper:
                      'allow_multiple_video_streams': True,
                      'allow_multiple_audio_streams': True,
                      'trim_file_name': 200,
-                     'extract_flat': 'in_playlist',
                      'ffmpeg_location': '/bin/new-api'}
 
     @property
