@@ -87,17 +87,17 @@ def create_list(par, msg):
         if i.is_folder:
             msg[0] += "<li>"
             if i.name != ".unwanted":
-                msg[0] += f"<input type=\"checkbox\" name=\"foldernode_{msg[1]}\"> <label for=\"{i.name}\">{i.name}</label>"
+                msg[0] += f'<input type="checkbox" name="foldernode_{msg[1]}"> <label for="{i.name}">{i.name}</label>'
             create_list(i,msg)
             msg[0] += "</li>"
             msg[1] += 1
         else:
             msg[0] += '<li>'
             if i.priority == 0:
-                msg[0] += f"<input type=\"checkbox\" name=\"filenode_{i.file_id}\" data-size=\"{i.size}\"> <label data-size=\"{i.size}\" for=\"filenode_{i.file_id}\">{i.name}</label>"
+                msg[0] += f'<input type="checkbox" name="filenode_{i.file_id}" data-size="{i.size}"> <label data-size="{i.size}" for="filenode_{i.file_id}">{i.name}</label>'
             else:
-                msg[0] += f"<input type=\"checkbox\" checked name=\"filenode_{i.file_id}\" data-size=\"{i.size}\"> <label data-size=\"{i.size}\" for=\"filenode_{i.file_id}\">{i.name}</label>"
-            msg[0] += f"<input type=\"hidden\" value=\"off\" name=\"filenode_{i.file_id}\">"
+                msg[0] += f'<input type="checkbox" checked name="filenode_{i.file_id}" data-size="{i.size}"> <label data-size="{i.size}" for="filenode_{i.file_id}">{i.name}</label>'
+            msg[0] += f'<input type="hidden" value="off" name="filenode_{i.file_id}">'
 
             msg[0] += "</li>"
 
