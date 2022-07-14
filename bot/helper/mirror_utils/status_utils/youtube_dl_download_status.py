@@ -12,9 +12,6 @@ class YoutubeDLDownloadStatus:
     def gid(self):
         return self.__gid
 
-    def path(self):
-        return f"{DOWNLOAD_DIR}{self.__uid}"
-
     def processed_bytes(self):
         if self.__obj.downloaded_bytes != 0:
           return self.__obj.downloaded_bytes

@@ -174,7 +174,7 @@ class TgUploader:
         with self.__resource_lock:
             try:
                 return self.uploaded_bytes / (time() - self.__start_time)
-            except ZeroDivisionError:
+            except:
                 return 0
 
     def cancel_download(self):
