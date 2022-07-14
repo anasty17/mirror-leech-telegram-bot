@@ -21,7 +21,6 @@ class MegaAppListener(MegaListener):
         self.node = None
         self.public_node = None
         self.listener = listener
-        self.uid = listener.uid
         self.__bytes_transferred = 0
         self.is_cancelled = False
         self.__speed = 0

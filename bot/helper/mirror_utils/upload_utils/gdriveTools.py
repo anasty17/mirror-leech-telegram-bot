@@ -73,19 +73,19 @@ class GoogleDriveHelper:
         """
         try:
             return self.uploaded_bytes / self.total_time
-        except ZeroDivisionError:
+        except:
             return 0
 
     def dspeed(self):
         try:
             return self.downloaded_bytes / self.dtotal_time
-        except ZeroDivisionError:
+        except:
             return 0
 
     def cspeed(self):
         try:
             return self.transferred_size / int(time() - self.start_time)
-        except ZeroDivisionError:
+        except:
             return 0
 
     @staticmethod

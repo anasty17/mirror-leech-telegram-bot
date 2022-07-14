@@ -83,7 +83,7 @@ def _clone(message, bot, multi=0):
             sendMarkup(result + cc, bot, message, button)
             LOGGER.info(f'Cloning Done: {name}')
     else:
-        sendMessage('Send Gdrive or gdtot link along with command or by replying to the link by command', bot, message)
+        sendMessage('Send Gdrive link along with command or by replying to the link by command', bot, message)
 
 @new_thread
 def cloneNode(update, context):

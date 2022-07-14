@@ -1,4 +1,4 @@
-from bot import DOWNLOAD_DIR, LOGGER
+from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 def get_download(client, hash_):
@@ -46,10 +46,10 @@ class QbDownloadStatus:
 
     def name(self):
         self.__update()
-        return self.__info.name
-
-    def path(self):
-        return f"{DOWNLOAD_DIR}{self.__uid}"
+        if self.__info.state in ["metaDL", "checkingResumeData"]:
+            return self.__info.name + " [METADATA]"
+        else:
+            return self.__info.name
 
     def size(self):
         return get_readable_file_size(self.__info.size)
@@ -61,8 +61,6 @@ class QbDownloadStatus:
         download = self.__info.state
         if download in ["queuedDL", "queuedUP"]:
             return MirrorStatus.STATUS_WAITING
-        elif download in ["metaDL", "checkingResumeData"]:
-            return MirrorStatus.STATUS_DOWNLOADING + " (Metadata)"
         elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSE
         elif download in ["checkingUP", "checkingDL"]:
