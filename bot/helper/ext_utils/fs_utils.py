@@ -140,7 +140,10 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             i = i + 1
     else:
         out_path = ospath.join(dirpath, file_ + ".")
-        srun(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        listener.split_proc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        listener.split_proc.wait()
+        if listener.split_proc.returncode == -9:
+            return False
     return True
 
 def get_media_info(path):
