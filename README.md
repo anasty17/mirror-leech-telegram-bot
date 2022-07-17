@@ -47,7 +47,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Multiple Trackers support
 - Shell and Executor
 - Add sudo users
-- Custom Filename* (Only for direct links, Telegram files and yt-dlp. Not for Mega links, Gdrive links or Torrents)
+- Custom Filename (Only for direct links, Telegram files, Mega links(master branch) and yt-dlp. Not for Gdrive links or Torrents)
 - Extract password protected files
 - Extract these filetypes and uploads to Google Drive
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
