@@ -133,7 +133,10 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
                 osremove(out_path)
                 return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True)
             lpd = get_media_info(out_path)[0]
-            if lpd <= 4:
+            if lpd == 0:
+                LOGGER.error(f'Something went wrong while splitting mostly file is corrupted. Path: {path}')
+                break
+            elif lpd <= 4:
                 osremove(out_path)
                 break
             start_time += lpd - 3
@@ -148,8 +151,12 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
 
 def get_media_info(path):
 
-    result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
-                           "json", "-show_format", path]).decode('utf-8')
+    try:
+        result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
+                               "json", "-show_format", path]).decode('utf-8')
+    except Exception as e:
+        LOGGER.error(f'{e} Mostly file not Found!')
+        return 0, None, None
 
     fields = jsnloads(result).get('format')
     if fields is None:

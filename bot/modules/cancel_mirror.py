@@ -7,7 +7,7 @@ from bot import download_dict, dispatcher, download_dict_lock, SUDO_USERS, OWNER
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, auto_delete_message
-from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, getAllDownload
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload
 from bot.helper.telegram_helper import button_build
 
 
