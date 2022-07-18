@@ -57,6 +57,8 @@ class MegaAppListener(MegaListener):
     def onRequestFinish(self, api, request, error):
         if str(error).lower() != "no error":
             self.error = error.copy()
+            LOGGER.error(self.error)
+            self.continue_event.set()
             return
         request_type = request.getType()
         if request_type == MegaRequest.TYPE_LOGIN:
@@ -137,11 +139,9 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
     if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
         executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
     if get_mega_link_type(mega_link) == "file":
-        LOGGER.info("File. If your download didn't start, then check your link if it's available to download")
         executor.do(api.getPublicNode, (mega_link,))
         node = mega_listener.public_node
     else:
-        LOGGER.info("Folder. If your download didn't start, then check your link if it's available to download")
         folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
         folder_api.addListener(mega_listener)
         executor.do(folder_api.loginToFolder, (mega_link,))
