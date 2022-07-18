@@ -117,7 +117,7 @@ class MirrorListener:
                                     self.ext_proc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])
                                 else:
                                     self.ext_proc = Popen(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
-                                self.arch_proc.wait()
+                                self.ext_proc.wait()
                                 if self.ext_proc.returncode == -9:
                                     return
                                 elif self.ext_proc.returncode != 0:
