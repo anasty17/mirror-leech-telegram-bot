@@ -406,7 +406,7 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             gmsg += f"Use /{BotCommands.UnzipMirrorCommand} to extracts Google Drive archive file"
             sendMessage(gmsg, bot, message)
         else:
-            Thread(target=add_gd_download, args=(link, listener)).start()
+            Thread(target=add_gd_download, args=(link, listener, name)).start()
     elif is_mega_link(link):
         if MEGA_KEY is not None:
             Thread(target=MegaDownloader(listener).add_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/')).start()
