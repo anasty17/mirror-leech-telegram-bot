@@ -31,6 +31,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Extensions Filter for the files to be uploaded/cloned.
 - Incomplete task notifier to get incomplete task messages after restart, works with database.
 - Almost all repository functions have been improved.
+- Custom Name for all links except torrents. For files you should add extension except yt-dlp links.
 - Many bugs have been fixed.
 
 ## From Other Repositories
@@ -47,7 +48,6 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Multiple Trackers support
 - Shell and Executor
 - Add sudo users
-- Custom Filename (Only for direct links, Telegram files, Mega links(master branch) and yt-dlp. Not for Gdrive links or Torrents)
 - Extract password protected files
 - Extract these filetypes and uploads to Google Drive
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ

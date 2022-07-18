@@ -152,16 +152,19 @@ try:
     USER_SESSION_STRING = getConfig('USER_SESSION_STRING')
     if len(USER_SESSION_STRING) == 0:
         raise KeyError
+    LOGGER.info("Generating USER_SESSION_STRING")
     app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
     with app:
         IS_PREMIUM_USER = app.get_me().is_premium
 except:
+    LOGGER.info("Generating BOT_SESSION_STRING")
     app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
 
 try:
     RSS_USER_SESSION_STRING = getConfig('RSS_USER_SESSION_STRING')
     if len(RSS_USER_SESSION_STRING) == 0:
         raise KeyError
+    LOGGER.info("Generating RSS_USER_SESSION_STRING")
     rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 except:
     rss_session = None
