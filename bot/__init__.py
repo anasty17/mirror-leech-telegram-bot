@@ -210,7 +210,7 @@ try:
         raise KeyError
     TG_SPLIT_SIZE = int(TG_SPLIT_SIZE)
 except:
-    if IS_PREMIUM_USER:
+    if not IS_PREMIUM_USER:
         TG_SPLIT_SIZE = 2097152000
     else:
         TG_SPLIT_SIZE = 4194304000
