@@ -657,24 +657,21 @@ def re_verfiy(paused, resumed, client, hash_id):
         paused = paused.split("|")
     if resumed:
         resumed = resumed.split("|")
+
     k = 0
     while True:
-
         res = client.torrents_files(torrent_hash=hash_id)
         verify = True
-
         for i in res:
             if str(i.id) in paused and i.priority != 0:
                 verify = False
                 break
-
             if str(i.id) in resumed and i.priority == 0:
                 verify = False
                 break
-
         if verify:
             break
-        LOGGER.info("Reverification Failed: correcting stuff...")
+        LOGGER.info("Reverification Failed! Correcting stuff...")
         client.auth_log_out()
         sleep(1)
         client = qbClient(host="localhost", port="8090")
@@ -683,17 +680,17 @@ def re_verfiy(paused, resumed, client, hash_id):
         except NotFound404Error:
             raise NotFound404Error
         except Exception as e:
-            LOGGER.error(f"{e} Errored in reverification paused")
+            LOGGER.error(f"{e} Errored in reverification paused!")
         try:
             client.torrents_file_priority(torrent_hash=hash_id, file_ids=resumed, priority=1)
         except NotFound404Error:
             raise NotFound404Error
         except Exception as e:
-            LOGGER.error(f"{e} Errored in reverification resumed")
+            LOGGER.error(f"{e} Errored in reverification resumed!")
         k += 1
         if k > 5:
             return False
-    LOGGER.info("Verified")
+    LOGGER.info(f"Verified! Hash: {hash_id}")
     return True
 
 @app.route('/app/files/<string:hash_id>', methods=['GET'])
@@ -713,11 +710,7 @@ def list_torrent_contents(hash_id):
 
     client = qbClient(host="localhost", port="8090")
     res = client.torrents_files(torrent_hash=hash_id)
-
-    par = nodes.make_tree(res)
-    cont = ["", 0]
-    nodes.create_list(par, cont)
-
+    cont = nodes.make_tree(res)
     client.auth_log_out()
     return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{hash_id}?pin_code={pincode}")
 
@@ -730,7 +723,7 @@ def set_priority(hash_id):
     data = dict(request.form)
 
     for i, value in data.items():
-        if i.find("filenode") != -1:
+        if "filenode" in i:
             node_no = i.split("_")[-1]
 
             if value == "on":
@@ -740,7 +733,6 @@ def set_priority(hash_id):
 
     pause = pause.strip("|")
     resume = resume.strip("|")
-
     try:
         client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
     except NotFound404Error:
@@ -753,9 +745,9 @@ def set_priority(hash_id):
         raise NotFound404Error
     except Exception as e:
         LOGGER.error(f"{e} Errored in resumed")
-    sleep(2)
+    sleep(1)
     if not re_verfiy(pause, resume, client, hash_id):
-        LOGGER.error("Verification Failed")
+        LOGGER.error(f"Verification Failed! Hash: {hash_id}")
     client.auth_log_out()
     return list_torrent_contents(hash_id)
 
