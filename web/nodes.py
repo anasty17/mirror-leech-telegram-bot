@@ -4,7 +4,7 @@
 from anytree import NodeMixin
 
 class TorNode(NodeMixin):
-    def __init__(self, name, is_folder=False, is_file=False, parent=None, progress=None, size=None, priority=None, file_id=None):
+    def __init__(self, name, is_folder=False, is_file=False, parent=None, size=None, priority=None, file_id=None):
         super().__init__()
         self.name = name
         self.is_folder = is_folder
@@ -12,8 +12,6 @@ class TorNode(NodeMixin):
 
         if parent is not None:
             self.parent = parent
-        if progress is not None:
-            self.progress = progress
         if size is not None:
             self.size = size
         if priority is not None:
@@ -38,7 +36,7 @@ def make_tree(res):
         TorNode: Parent node of the tree constructed and can be used further.
     """
     parent = TorNode("Torrent")
-    for l, i in enumerate(res):
+    for i in res:
         # Get the hierarchy of the folders by splitting based on '/'
         folders = get_folders(i.name)
         # Check if the file is alone for if its in folder
@@ -63,15 +61,15 @@ def make_tree(res):
                 # if the node is not found then create the folder node
                 # if the node is found then use it as base for the next
                 if current_node is None:
-                    previous_node = TorNode(folders[j],parent=previous_node,is_folder=True)
+                    previous_node = TorNode(folders[j], parent=previous_node, is_folder=True)
                 else:
                     previous_node = current_node
             # at this point the previous_node will contain the deepest folder in it so add the file to it
-            TorNode(folders[-1],is_file=True,parent=previous_node,progress=i.progress,size=i.size,priority=i.priority,file_id=l)
+            TorNode(folders[-1], is_file=True, parent=previous_node, size=i.size, priority=i.priority, file_id=i.id)
         else:
             # at the file to the parent if no folders are there
-            TorNode(folders[-1],is_file=True,parent=parent,progress=i.progress,size=i.size,priority=i.priority,file_id=l)
-    return parent
+            TorNode(folders[-1], is_file=True, parent=parent, size=i.size, priority=i.priority, file_id=i.id)
+    return create_list(parent, ["", 0])
 
 """
 def print_tree(parent):
@@ -88,7 +86,7 @@ def create_list(par, msg):
             msg[0] += "<li>"
             if i.name != ".unwanted":
                 msg[0] += f'<input type="checkbox" name="foldernode_{msg[1]}"> <label for="{i.name}">{i.name}</label>'
-            create_list(i,msg)
+            create_list(i, msg)
             msg[0] += "</li>"
             msg[1] += 1
         else:
@@ -103,3 +101,4 @@ def create_list(par, msg):
 
     if par.name != ".unwanted":
         msg[0] += "</ul>"
+    return msg

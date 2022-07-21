@@ -482,7 +482,7 @@ class GoogleDriveHelper:
             str = str.replace(char, '\\' + char)
         return str.strip()
 
-    def __get_recursive_list(self, file, rootid = "root"):
+    def __get_recursive_list(self, file, rootid):
         rtnlist = []
         if not rootid:
             rootid = file.get('teamDriveId')
