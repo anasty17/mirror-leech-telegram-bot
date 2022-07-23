@@ -11,7 +11,7 @@ from telegram.ext import CommandHandler
 from telegram import InlineKeyboardMarkup
 
 from bot import Interval, INDEX_URL, VIEW_LINK, aria2, QB_SEED, dispatcher, DOWNLOAD_DIR, \
-                download_dict, download_dict_lock, TG_SPLIT_SIZE, LOGGER, DB_URI, INCOMPLETE_TASK_NOTIFIER
+                download_dict, download_dict_lock, LEECH_SPLIT_SIZE, LOGGER, DB_URI, INCOMPLETE_TASK_NOTIFIER
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split_file, clean_download
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException, NotSupportedExtractionArchive
@@ -48,6 +48,7 @@ class MirrorListener:
         self.tag = tag
         self.seed = any([seed, QB_SEED])
         self.isPrivate = self.message.chat.type in ['private', 'group']
+        self.suproc = None
 
     def clean(self):
         try:
@@ -77,25 +78,25 @@ class MirrorListener:
             with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
             if self.pswd is not None:
-                if self.isLeech and int(size) > TG_SPLIT_SIZE:
+                if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}.0*')
-                    self.arch_proc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
+                    self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
                 else:
                     LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-                    self.arch_proc = Popen(["7z", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
-            elif self.isLeech and int(size) > TG_SPLIT_SIZE:
+                    self.suproc = Popen(["7z", "a", "-mx=0", f"-p{self.pswd}", path, m_path])
+            elif self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}.0*')
-                self.arch_proc = Popen(["7z", f"-v{TG_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
+                self.suproc = Popen(["7z", f"-v{LEECH_SPLIT_SIZE}b", "a", "-mx=0", path, m_path])
             else:
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-                self.arch_proc = Popen(["7z", "a", "-mx=0", path, m_path])
-            self.arch_proc.wait()
-            if self.arch_proc.returncode == -9:
+                self.suproc = Popen(["7z", "a", "-mx=0", path, m_path])
+            self.suproc.wait()
+            if self.suproc.returncode == -9:
                 return
-            elif self.arch_proc.returncode != 0:
+            elif self.suproc.returncode != 0:
                 LOGGER.error('An error occurred while zipping! Uploading anyway')
                 path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
-            if self.arch_proc.returncode == 0 and (not self.isQbit or not self.seed or self.isLeech):
+            if self.suproc.returncode == 0 and (not self.isQbit or not self.seed or self.isLeech):
                 try:
                     rmtree(m_path)
                 except:
@@ -114,15 +115,15 @@ class MirrorListener:
                                or (file_.endswith(".rar") and not re_search(r'\.part\d+\.rar$', file_)):
                                 m_path = ospath.join(dirpath, file_)
                                 if self.pswd is not None:
-                                    self.ext_proc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])
+                                    self.suproc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])
                                 else:
-                                    self.ext_proc = Popen(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
-                                self.ext_proc.wait()
-                                if self.ext_proc.returncode == -9:
+                                    self.suproc = Popen(["7z", "x", m_path, f"-o{dirpath}", "-aot"])
+                                self.suproc.wait()
+                                if self.suproc.returncode == -9:
                                     return
-                                elif self.ext_proc.returncode != 0:
+                                elif self.suproc.returncode != 0:
                                     LOGGER.error('Unable to extract archive splits! Uploading anyway')
-                        if self.ext_proc.returncode == 0:
+                        if self.suproc is not None and self.suproc.returncode == 0:
                             for file_ in files:
                                 if file_.endswith((".rar", ".zip", ".7z")) or \
                                     re_search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$', file_):
@@ -131,13 +132,13 @@ class MirrorListener:
                     path = f'{DOWNLOAD_DIR}{self.uid}/{name}'
                 else:
                     if self.pswd is not None:
-                        self.ext_proc = Popen(["bash", "pextract", m_path, self.pswd])
+                        self.suproc = Popen(["bash", "pextract", m_path, self.pswd])
                     else:
-                        self.ext_proc = Popen(["bash", "extract", m_path])
-                    self.ext_proc.wait()
-                    if self.ext_proc.returncode == -9:
+                        self.suproc = Popen(["bash", "extract", m_path])
+                    self.suproc.wait()
+                    if self.suproc.returncode == -9:
                         return
-                    elif self.ext_proc.returncode == 0:
+                    elif self.suproc.returncode == 0:
                         LOGGER.info(f"Extracted Path: {path}")
                         osremove(m_path)
                     else:
@@ -155,13 +156,13 @@ class MirrorListener:
                 for file_ in files:
                     f_path = ospath.join(dirpath, file_)
                     f_size = ospath.getsize(f_path)
-                    if int(f_size) > TG_SPLIT_SIZE:
+                    if int(f_size) > LEECH_SPLIT_SIZE:
                         if not checked:
                             checked = True
                             with download_dict_lock:
                                 download_dict[self.uid] = SplitStatus(up_name, size, gid, self)
                             LOGGER.info(f"Splitting: {up_name}")
-                        res = split_file(f_path, f_size, file_, dirpath, TG_SPLIT_SIZE, self)
+                        res = split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
                         if not res:
                             return
                         osremove(f_path)
