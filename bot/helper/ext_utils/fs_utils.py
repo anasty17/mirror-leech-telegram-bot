@@ -126,10 +126,10 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         while i <= parts :
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = ospath.join(dirpath, parted_name)
-            listener.split_proc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
+            listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
                   "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1", "-c", "copy", out_path])
-            listener.split_proc.wait()
-            if listener.split_proc.returncode == -9:
+            listener.suproc.wait()
+            if listener.suproc.returncode == -9:
                 return False
             out_size = get_path_size(out_path)
             if out_size > MAX_SPLIT_SIZE:
@@ -148,9 +148,9 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             i = i + 1
     else:
         out_path = ospath.join(dirpath, file_ + ".")
-        listener.split_proc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
-        listener.split_proc.wait()
-        if listener.split_proc.returncode == -9:
+        listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        listener.suproc.wait()
+        if listener.suproc.returncode == -9:
             return False
     return True
 
