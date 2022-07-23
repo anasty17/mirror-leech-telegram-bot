@@ -32,7 +32,7 @@ def cancel_mirror(update, context):
                 was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         return sendMessage(msg, context.bot, update.message)
 
-    if OWNER_ID != user_id and dl.message.from_user.id != user_id and user_id not in SUDO_USERS and user_id != 314489490:
+    if OWNER_ID != user_id and dl.message.from_user.id != user_id and user_id not in SUDO_USERS:
         return sendMessage("This task is not for you!", context.bot, update.message)
 
     dl.download().cancel_download()
