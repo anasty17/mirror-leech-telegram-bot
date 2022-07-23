@@ -10,7 +10,7 @@ from math import ceil
 from re import split as re_split, I
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, TG_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER
+from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER
 
 if IS_PREMIUM_USER:
     MAX_SPLIT_SIZE = 4194304000
@@ -117,7 +117,7 @@ def take_ss(video_file):
     return des_dir
 
 def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False):
-    parts = ceil(size/TG_SPLIT_SIZE)
+    parts = ceil(size/LEECH_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
