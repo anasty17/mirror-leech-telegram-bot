@@ -63,12 +63,29 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
+    elif 'zippyshare.com' in link:
+        return zippy_share(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
+
+def zippy_share(url: str) -> str:
+    base_url = re_search('http.+.zippyshare.com', url).group()
+    response = requests.rget(url)
+    pages = BeautifulSoup(response.text, "html.parser")
+    js_script = str(pages.find("div", style="margin-left: 24px; margin-top: 20px; text-align: center; width: 303px; height: 105px;"))
+    try:
+        mtk = eval(re_findall(r"\+\((.*?).\+", js_script)[0] + " + 10 + 5/5")
+        uri1 = re_findall(r".href.=.\"/(.*?)/\"", js_script)[0]
+        uri2 = re_findall(r"\)\+\"/(.*?)\"", js_script)[0]
+    except Exception as err:
+        LOGGER.error(err)
+        raise DirectDownloadLinkException("Zippyshare Error!")
+    dl_url = f"{base_url}/{uri1}/{int(mtk)}/{uri2}"
+    return dl_url
 
 def yandex_disk(url: str) -> str:
     """ Yandex.Disk direct link generator
