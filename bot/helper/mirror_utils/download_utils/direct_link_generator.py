@@ -8,6 +8,8 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
+import requests
+
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from urllib.parse import urlparse, unquote
@@ -73,8 +75,10 @@ def direct_link_generator(link: str):
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 def zippy_share(url: str) -> str:
+    """Zippyshare direct link generator
+    Credit https://github/NasiGorengRebus
     base_url = re_search('http.+.zippyshare.com', url).group()
-    response = requests.rget(url)
+    response = requests.get(url)
     pages = BeautifulSoup(response.text, "html.parser")
     js_script = str(pages.find("div", style="margin-left: 24px; margin-top: 20px; text-align: center; width: 303px; height: 105px;"))
     try:
