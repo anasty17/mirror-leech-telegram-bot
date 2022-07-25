@@ -63,6 +63,8 @@ def direct_link_generator(link: str):
         return solidfiles(link)
     elif 'krakenfiles.com' in link:
         return krakenfiles(link)
+    elif 'upload.ee' in link:
+        return uploadee(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
@@ -351,3 +353,16 @@ def krakenfiles(page_link: str) -> str:
     else:
         raise DirectDownloadLinkException(
             f"Failed to acquire download URL from kraken for : {page_link}")
+
+def uploadee(url: str) -> str:
+    """ uploadee direct link generator
+    By https://github.com/iron-heart-x"""
+    try:
+        soup = BeautifulSoup(rget(url).content, 'lxml')
+        s_a=soup.find('a', attrs={'id':'d_l'})
+        dl_link=s_a['href']
+        return dl_link
+    except:
+        raise DirectDownloadLinkException(
+            f"Failed to acquire download URL from upload.ee for : {url}")
+    
