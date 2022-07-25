@@ -75,8 +75,8 @@ def direct_link_generator(link: str):
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
 
 def zippy_share(url: str) -> str:
-    """Zippyshare direct link generator
-    Credit https://github/NasiGorengRebus
+    """ Zippyshare direct link generator
+    Credit https://github/NasiGorengRebus """
     base_url = re_search('http.+.zippyshare.com', url).group()
     response = requests.get(url)
     pages = BeautifulSoup(response.text, "html.parser")
