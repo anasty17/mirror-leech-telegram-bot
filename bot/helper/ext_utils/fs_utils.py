@@ -116,30 +116,42 @@ def take_ss(video_file):
 
     return des_dir
 
-def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False):
+def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
     parts = ceil(size/LEECH_SPLIT_SIZE)
+    duration = get_media_info(path)[0]
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 5000000
-        while i <= parts :
+        while i <= parts:
             parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
             out_path = ospath.join(dirpath, parted_name)
-            listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
-                  "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1", "-c", "copy", out_path])
+            if not noMap:
+                listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
+                 "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1", "-c", "copy", out_path])
+            else:
+                listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
+                              "-i", path, "-fs", str(split_size), "-map_chapters", "-1", "-c", "copy", out_path])
             listener.suproc.wait()
             if listener.suproc.returncode == -9:
                 return False
+            elif listener.suproc.returncode != 0 and not noMap:
+                LOGGER.warning(f'Retrying without map, -map 0 not working in all situations. Path: {path}')
+                osremove(out_path)
+                return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, True)
             out_size = get_path_size(out_path)
             if out_size > MAX_SPLIT_SIZE:
                 dif = out_size - MAX_SPLIT_SIZE
                 split_size = split_size - dif + 5000000
                 osremove(out_path)
-                return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True)
+                return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, noMap)
             lpd = get_media_info(out_path)[0]
             if lpd == 0:
                 LOGGER.error(f'Something went wrong while splitting, mostly file is corrupted. Path: {path}')
+                break
+            elif duration == lpd:
+                LOGGER.warning(f"This file has been splitted with default stream and audio, so you will only see one part with less size from orginal one because it doesn't have all streams and audios. This happens mostly with MKV videos. noMap={noMap}. Path: {path}")
                 break
             elif lpd <= 4:
                 osremove(out_path)
@@ -171,7 +183,7 @@ def get_media_info(path):
     duration = round(float(fields.get('duration', 0)))
 
     fields = fields.get('tags')
-    if fields is not None:
+    if fields:
         artist = fields.get('artist')
         if artist is None:
             artist = fields.get('ARTIST')

@@ -37,8 +37,7 @@ def select(update, context):
         sendMessage("This task is not for you!", context.bot, update.message)
         return
     if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSE, MirrorStatus.STATUS_WAITING]:
-        sendMessage('Task should be in downloading status or in pause status incase message deleted \
-               by wrong or in queued status incase you used torrent file!', context.bot, update.message)
+        sendMessage('Task should be in downloading status or in pause status incase message deleted by wrong or in queued status incase you used torrent file!', context.bot, update.message)
         return
     if dl.name().endswith('[METADATA]'):
         sendMessage('Try after downloading metadata finished!', context.bot, update.message)
