@@ -193,6 +193,8 @@ help_string = f'''
 
 /{BotCommands.RestartCommand}: Restart and update the bot
 
+/{BotCommands.SleepCommand}: idle the bot
+
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports
 '''
 
