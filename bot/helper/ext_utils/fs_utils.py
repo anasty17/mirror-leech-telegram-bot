@@ -118,10 +118,10 @@ def take_ss(video_file):
 
 def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
     parts = ceil(size/LEECH_SPLIT_SIZE)
-    duration = get_media_info(path)[0]
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
     if file_.upper().endswith(VIDEO_SUFFIXES):
+        duration = get_media_info(path)[0]
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 5000000
         while i <= parts:
