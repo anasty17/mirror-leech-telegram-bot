@@ -51,5 +51,6 @@ class _BotCommands:
         self.EvalCommand = f'eval{CMD_INDEX}'
         self.ExecCommand = f'exec{CMD_INDEX}'
         self.ClearLocalsCommand = f'clearlocals{CMD_INDEX}'
+        self.SleepCommand = f'sleep{CMD_INDEX}'
 
 BotCommands = _BotCommands()
