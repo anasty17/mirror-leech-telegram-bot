@@ -47,7 +47,7 @@ class QbDownloadStatus:
     def name(self):
         self.__update()
         if self.__info.state in ["metaDL", "checkingResumeData"]:
-            return self.__info.name + " [METADATA]"
+            return f"[METADATA]{self.__info.name}"
         else:
             return self.__info.name
 
@@ -62,7 +62,7 @@ class QbDownloadStatus:
         if download in ["queuedDL", "queuedUP"]:
             return MirrorStatus.STATUS_WAITING
         elif download in ["pausedDL", "pausedUP"]:
-            return MirrorStatus.STATUS_PAUSE
+            return MirrorStatus.STATUS_PAUSED
         elif download in ["checkingUP", "checkingDL"]:
             return MirrorStatus.STATUS_CHECKING
         elif download in ["stalledUP", "uploading"] and self.__obj.is_seeding:

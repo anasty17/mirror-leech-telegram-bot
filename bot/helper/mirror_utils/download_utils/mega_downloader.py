@@ -111,7 +111,7 @@ class MegaDownloader:
             LOGGER.info('Checking File/Folder if already in Drive')
             mname = file_name
             if self.__listener.isZip:
-                mname = mname + ".zip"
+                mname = f"{mname}.zip"
             elif self.__listener.extract:
                 try:
                     mname = get_base_name(mname)

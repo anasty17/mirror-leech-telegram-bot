@@ -8,7 +8,7 @@ from requests import head as rhead
 from urllib.request import urlopen
 from telegram import InlineKeyboardMarkup
 
-from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, DOWNLOAD_DIR
+from bot import download_dict, download_dict_lock, STATUS_LIMIT, botStartTime, DOWNLOAD_DIR, WEB_PINCODE, BASE_URL
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -25,7 +25,7 @@ class MirrorStatus:
     STATUS_DOWNLOADING = "Downloading...📥"
     STATUS_CLONING = "Cloning...♻️"
     STATUS_WAITING = "Queued...💤"
-    STATUS_PAUSE = "Paused...⛔️"
+    STATUS_PAUSED = "Paused...⛔️"
     STATUS_ARCHIVING = "Archiving...🔐"
     STATUS_EXTRACTING = "Extracting...📂"
     STATUS_SPLITTING = "Splitting...✂️"
@@ -74,27 +74,32 @@ def getDownloadByGid(gid):
 def getAllDownload(req_status: str):
     with download_dict_lock:
         for dl in list(download_dict.values()):
-            if dl:
-                status = dl.status()
-                if req_status == 'all':
-                    return dl
-                if req_status == 'down' and status in [MirrorStatus.STATUS_DOWNLOADING,
-                                                         MirrorStatus.STATUS_WAITING,
-                                                         MirrorStatus.STATUS_PAUSE]:
-                    return dl
-                if req_status == 'up' and status == MirrorStatus.STATUS_UPLOADING:
-                    return dl
-                if req_status == 'clone' and status == MirrorStatus.STATUS_CLONING:
-                    return dl
-                if req_status == 'seed' and status == MirrorStatus.STATUS_SEEDING:
-                    return dl
-                if req_status == 'split' and status == MirrorStatus.STATUS_SPLITTING:
-                    return dl
-                if req_status == 'extract' and status == MirrorStatus.STATUS_EXTRACTING:
-                    return dl
-                if req_status == 'archive' and status == MirrorStatus.STATUS_ARCHIVING:
-                    return dl
+            status = dl.status()
+            if req_status in ['all', status]:
+                return dl
     return None
+
+def bt_selection_buttons(id_: str):
+    if len(id_) > 20:
+        gid = id_[:12]
+    else:
+        gid = id_
+
+    pincode = ""
+    for n in id_:
+        if n.isdigit():
+            pincode += str(n)
+        if len(pincode) == 4:
+            break
+
+    buttons = ButtonMaker()
+    if WEB_PINCODE:
+        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}")
+        buttons.sbutton("Pincode", f"btsel pin {gid} {pincode}")
+    else:
+        buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
+    buttons.sbutton("Done Selecting", f"btsel done {gid} {id_}")
+    return InlineKeyboardMarkup(buttons.build_menu(2))
 
 def get_progress_bar_string(status):
     completed = status.processed_bytes() / 8
@@ -124,7 +129,7 @@ def get_readable_message():
                 msg += f"\n{get_progress_bar_string(download)} {download.progress()}"
                 if download.status() in [MirrorStatus.STATUS_DOWNLOADING,
                                          MirrorStatus.STATUS_WAITING,
-                                         MirrorStatus.STATUS_PAUSE]:
+                                         MirrorStatus.STATUS_PAUSED]:
                     msg += f"\n<b>Downloaded:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
                 elif download.status() == MirrorStatus.STATUS_UPLOADING:
                     msg += f"\n<b>Uploaded:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"

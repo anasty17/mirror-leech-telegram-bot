@@ -17,7 +17,7 @@ def add_gd_download(link, listener, newname):
     if STOP_DUPLICATE and not listener.isLeech:
         LOGGER.info('Checking File/Folder if already in Drive...')
         if listener.isZip:
-            gname = name + ".zip"
+            gname = f"{name}.zip"
         elif listener.extract:
             try:
                 gname = get_base_name(name)

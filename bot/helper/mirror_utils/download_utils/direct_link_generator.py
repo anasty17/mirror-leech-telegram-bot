@@ -100,7 +100,7 @@ def uptobox(url: str) -> str:
             dl_url = link
         except:
             file_id = re_findall(r'\bhttps?://.*uptobox\.com/(\w+)', url)[0]
-            file_link = 'https://uptobox.com/api/link?token=%s&file_code=%s' % (UPTOBOX_TOKEN, file_id)
+            file_link = f'https://uptobox.com/api/link?token={UPTOBOX_TOKEN}&file_code={file_id}'
             req = rget(file_link)
             result = req.json()
             dl_url = result['data']['dlLink']
@@ -195,8 +195,7 @@ def onedrive(link: str) -> str:
     resp = rhead(direct_link1)
     if resp.status_code != 302:
         raise DirectDownloadLinkException("ERROR: Unauthorized link, the link may be private")
-    dl_link = resp.next.url
-    return dl_link
+    return resp.next.url
 
 def pixeldrain(url: str) -> str:
     """ Based on https://github.com/yash-dk/TorToolkit-Telegram """
@@ -212,7 +211,7 @@ def pixeldrain(url: str) -> str:
     if resp["success"]:
         return dl_link
     else:
-        raise DirectDownloadLinkException("ERROR: Cant't download due {}.".format(resp["message"]))
+        raise DirectDownloadLinkException(f"ERROR: Cant't download due {resp['message']}.")
 
 def antfiles(url: str) -> str:
     """ Antfiles direct link generator

@@ -1,13 +1,10 @@
-# -*- coding: utf-8 -*-
-# (c) YashDK [yash-dk@github]
-# Redesigned By - @bipuldey19 (https://github.com/SlamDevs/slam-mirrorbot/commit/1e572f4fa3625ecceb953ce6d3e7cf7334a4d542#diff-c3d91f56f4c5d8b5af3d856d15a76bd5f00aa38d712691b91501734940761bdd)
-
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
+from aria2p import API as ariaAPI, Client as ariaClient
 from flask import Flask, request
 
-from web import nodes
+from web.nodes import make_tree
 
 app = Flask(__name__)
 
@@ -24,7 +21,7 @@ page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent File Selector</title>
-    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
+    <link rel="icon" href="https://telegra.ph/file/43af672249c94053356c7.jpg" type="image/jpg">
     <script
       src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
       integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs="
@@ -225,11 +222,11 @@ function s_validate() {
     <header>
       <div class="brand">
         <img
-          src="https://telegra.ph/file/cc06d0c613491080cc174.png"
+          src="https://telegra.ph/file/43af672249c94053356c7.jpg"
           alt="logo"
         />
         <a href="https://t.me/anas_tayyar">
-          <h2 class="name">Qbittorrent Selection</h2>
+          <h2 class="name">Bittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
@@ -421,7 +418,7 @@ code_page = """
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Torrent Code Checker</title>
-    <link rel="icon" href="https://telegra.ph/file/cc06d0c613491080cc174.png" type="image/jpg">
+    <link rel="icon" href="https://telegra.ph/file/43af672249c94053356c7.jpg" type="image/jpg">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -617,11 +614,11 @@ section span{
     <header>
       <div class="brand">
         <img
-          src="https://telegra.ph/file/cc06d0c613491080cc174.png"
+          src="https://telegra.ph/file/43af672249c94053356c7.jpg"
           alt="logo"
         />
         <a href="https://t.me/anas_tayyar">
-          <h2 class="name">Qbittorrent Selection</h2>
+          <h2 class="name">Bittorrent Selection</h2>
         </a>
       </div>
       <div class="social">
@@ -693,14 +690,14 @@ def re_verfiy(paused, resumed, client, hash_id):
     LOGGER.info(f"Verified! Hash: {hash_id}")
     return True
 
-@app.route('/app/files/<string:hash_id>', methods=['GET'])
-def list_torrent_contents(hash_id):
+@app.route('/app/files/<string:id_>', methods=['GET'])
+def list_torrent_contents(id_):
 
     if "pin_code" not in request.args.keys():
-        return code_page.replace("{form_url}", f"/app/files/{hash_id}")
+        return code_page.replace("{form_url}", f"/app/files/{id_}")
 
     pincode = ""
-    for nbr in hash_id:
+    for nbr in id_:
         if nbr.isdigit():
             pincode += str(nbr)
         if len(pincode) == 4:
@@ -708,56 +705,80 @@ def list_torrent_contents(hash_id):
     if request.args["pin_code"] != pincode:
         return "<h1>Incorrect pin code</h1>"
 
-    client = qbClient(host="localhost", port="8090")
-    res = client.torrents_files(torrent_hash=hash_id)
-    cont = nodes.make_tree(res)
-    client.auth_log_out()
-    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{hash_id}?pin_code={pincode}")
+    if len(id_) > 20:
+        client = qbClient(host="localhost", port="8090")
+        res = client.torrents_files(torrent_hash=id_)
+        cont = make_tree(res)
+        client.auth_log_out()
+    else:
+        aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+        res = aria2.client.get_files(id_)
+        cont = make_tree(res, True)
+    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{id_}?pin_code={pincode}")
 
-@app.route('/app/files/<string:hash_id>', methods=['POST'])
-def set_priority(hash_id):
+@app.route('/app/files/<string:id_>', methods=['POST'])
+def set_priority(id_):
 
-    client = qbClient(host="localhost", port="8090")
-    resume = ""
-    pause = ""
     data = dict(request.form)
 
-    for i, value in data.items():
-        if "filenode" in i:
-            node_no = i.split("_")[-1]
+    if len(id_) > 20:
+        resume = ""
+        pause = ""
 
-            if value == "on":
-                resume += f"{node_no}|"
-            else:
-                pause += f"{node_no}|"
+        for i, value in data.items():
+            if "filenode" in i:
+                node_no = i.split("_")[-1]
 
-    pause = pause.strip("|")
-    resume = resume.strip("|")
-    try:
-        client.torrents_file_priority(torrent_hash=hash_id, file_ids=pause, priority=0)
-    except NotFound404Error:
-        raise NotFound404Error
-    except Exception as e:
-        LOGGER.error(f"{e} Errored in paused")
-    try:
-        client.torrents_file_priority(torrent_hash=hash_id, file_ids=resume, priority=1)
-    except NotFound404Error:
-        raise NotFound404Error
-    except Exception as e:
-        LOGGER.error(f"{e} Errored in resumed")
-    sleep(1)
-    if not re_verfiy(pause, resume, client, hash_id):
-        LOGGER.error(f"Verification Failed! Hash: {hash_id}")
-    client.auth_log_out()
-    return list_torrent_contents(hash_id)
+                if value == "on":
+                    resume += f"{node_no}|"
+                else:
+                    pause += f"{node_no}|"
+
+        pause = pause.strip("|")
+        resume = resume.strip("|")
+
+        client = qbClient(host="localhost", port="8090")
+
+        try:
+            client.torrents_file_priority(torrent_hash=id_, file_ids=pause, priority=0)
+        except NotFound404Error:
+            raise NotFound404Error
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in paused")
+        try:
+            client.torrents_file_priority(torrent_hash=id_, file_ids=resume, priority=1)
+        except NotFound404Error:
+            raise NotFound404Error
+        except Exception as e:
+            LOGGER.error(f"{e} Errored in resumed")
+        sleep(1)
+        if not re_verfiy(pause, resume, client, id_):
+            LOGGER.error(f"Verification Failed! Hash: {id_}")
+        client.auth_log_out()
+    else:
+        resume = ""
+        for i, value in data.items():
+            if "filenode" in i and value == "on":
+                node_no = i.split("_")[-1]
+                resume += f'{node_no},'
+
+        resume = resume.strip(",")
+
+        aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+        res = aria2.client.change_option(id_, {'select-file': resume})
+        if res == "OK":
+            LOGGER.info(f"Verified! Gid: {id_}")
+        else:
+            LOGGER.info(f"Verification Failed! Report! Gid: {id_}")
+    return list_torrent_contents(id_)
 
 @app.route('/')
 def homepage():
     return "<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>"
 
-@app.errorhandler(NotFound404Error)
+@app.errorhandler(Exception)
 def page_not_found(e):
-    return "<h1>404: Torrent not found. Mostly wrong hash input</h2>", 404
+    return f"<h1>404: Torrent not found! Mostly wrong input. <br><br>Error: {e}</h2>", 404
 
 if __name__ == "__main__":
     app.run()
