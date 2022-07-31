@@ -368,15 +368,24 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
 
     if not is_url(link) and not is_magnet(link) and not ospath.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
-        help_msg += "\n<code>/command</code> {link} |newname pswd: xx [zip/unzip]"
-        help_msg += "\n\n<b>By replying to link or file:</b>"
-        help_msg += "\n<code>/command</code> |newname pswd: xx [zip/unzip]"
-        help_msg += "\n\n<b>Direct link authorization:</b>"
-        help_msg += "\n<code>/command</code> {link} |newname pswd: xx\nusername\npassword"
-        help_msg += "\n\n<b>Qbittorrent selection and seed:</b>"
-        help_msg += "\n<code>/qbcommand</code> <b>s</b>(for selection) <b>d</b>(for seeding) {link} or by replying to {file/link}"
-        help_msg += "\n\n<b>Multi links only by replying to first link or file:</b>"
-        help_msg += "\n<code>/command</code> 10(number of links/files)"
+        if isQbit:
+            help_msg += "\n\n<b>Bittorrent selection:</b>"
+            help_msg += "\n<code>/cmd</code> <b>s</b> {link} or by replying to {file/link}"
+            help_msg += "\n\n<b>Qbittorrent seed</b>:"
+            help_msg += "\n<code>/qbcmd</code> <b>d</b> {link} or by replying to {file/link}. "
+            help_msg += "Sure you can use seed and select perfix together with qbcmds."
+            help_msg += "\n\n<b>Multi links only by replying to first link/file:</b>"
+            help_msg += "\n<code>/command</code> 10(number of links/files)"
+        else:
+            help_msg += "\n<code>/cmd</code> {link} |newname pswd: xx [zip/unzip]"
+            help_msg += "\n\n<b>By replying to link/file:</b>"
+            help_msg += "\n<code>/cmd</code> |newname pswd: xx [zip/unzip]"
+            help_msg += "\n\n<b>Direct link authorization:</b>"
+            help_msg += "\n<code>/cmd</code> {link} |newname pswd: xx\nusername\npassword"
+            help_msg += "\n\n<b>Bittorrent selection:</b>"
+            help_msg += "\n<code>/cmd</code> <b>s</b> {link} or by replying to {file/link}"
+            help_msg += "\n\n<b>Multi links only by replying to first link/file:</b>"
+            help_msg += "\n<code>/command</code> 10(number of links/files)"
         return sendMessage(help_msg, bot, message)
 
     LOGGER.info(link)
