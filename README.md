@@ -299,7 +299,7 @@ leechzipwatch - Leech yt-dlp support link as zip
 leechset - Leech settings
 setthumb - Set thumbnail
 status - Get Mirror Status message
-qbsel - select files from qb-tasks
+btsel - select files from torrent
 rsslist - List all subscribed rss feed info
 rssget - Get specific No. of links from specific rss feed
 rsssub - Subscribe new rss feed
