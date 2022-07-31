@@ -836,7 +836,7 @@ class GoogleDriveHelper:
             filename = filename[:245] + ext
             if self.name.endswith(ext):
                 self.name = filename
-        fh = FileIO('{}{}'.format(path, filename), 'wb')
+        fh = FileIO(f"{path}{filename}", 'wb')
         downloader = MediaIoBaseDownload(fh, request, chunksize=50 * 1024 * 1024)
         done = False
         while not done:

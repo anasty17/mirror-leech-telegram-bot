@@ -1,7 +1,11 @@
-# -*- coding: utf-8 -*-
-# (c) YashDK [yash-dk@github]
-
 from anytree import NodeMixin
+from re import findall as re_findall
+from os import environ
+
+DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR')
+if not DOWNLOAD_DIR.endswith("/"):
+    DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
+
 
 class TorNode(NodeMixin):
     def __init__(self, name, is_folder=False, is_file=False, parent=None, size=None, priority=None, file_id=None):
@@ -20,55 +24,55 @@ class TorNode(NodeMixin):
             self.file_id = file_id
 
 
+def qb_get_folders(path):
+    return path.split("/")
+
 def get_folders(path):
-    path_seperator = "/"
-    return path.split(path_seperator)
+    fs = re_findall(DOWNLOAD_DIR + r'[0-9]+/(.+)', path)[0]
+    return fs.split('/')
 
-
-def make_tree(res):
-    """This function takes the list of all the torrent files. The files are name hierarchically.
-        Felt a need to document to save time.
-
-    Args:
-        res (list): Torrent files list.
-
-    Returns:
-        TorNode: Parent node of the tree constructed and can be used further.
-    """
+def make_tree(res, aria2=False):
     parent = TorNode("Torrent")
-    for i in res:
-        # Get the hierarchy of the folders by splitting based on '/'
-        folders = get_folders(i.name)
-        # Check if the file is alone for if its in folder
-        if len(folders) > 1:
-            # Enter here if in folder
+    if not aria2:
+        for i in res:
+            folders = qb_get_folders(i.name)
+            if len(folders) > 1:
+                previous_node = parent
+                for j in range(len(folders)-1):
+                    current_node = None
+                    for k in previous_node.children:
+                        if k.name == folders[j]:
+                            current_node = k
+                            break
+                    if current_node is None:
+                        previous_node = TorNode(folders[j], parent=previous_node, is_folder=True)
+                    else:
+                        previous_node = current_node
+                TorNode(folders[-1], is_file=True, parent=previous_node, size=i.size, priority=i.priority, file_id=i.id)
+            else:
+                TorNode(folders[-1], is_file=True, parent=parent, size=i.size, priority=i.priority, file_id=i.id)
+    else:
+        for i in res:
+            folders = get_folders(i['path'])
+            priority = 1
+            if i['selected'] == 'false':
+                priority = 0
+            if len(folders) > 1:
+                previous_node = parent
+                for j in range(len(folders)-1):
+                    current_node = None
+                    for k in previous_node.children:
+                        if k.name == folders[j]:
+                            current_node = k
+                            break
+                    if current_node is None:
+                        previous_node = TorNode(folders[j], parent=previous_node, is_folder=True)
+                    else:
+                        previous_node = current_node
 
-            # Set the parent
-            previous_node = parent
-
-            # Traverse till second last assuming the last is a file.
-            for j in range(len(folders)-1):
-                current_node = None
-
-                # As we are traversing the folder from top to bottom we are searching
-                # the first folder (folders list) under the parent node in first iteration.
-                # If the node is found then it becomes the current node else the current node
-                # is left None.
-                for k in previous_node.children:
-                    if k.name == folders[j]:
-                        current_node = k
-                        break
-                # if the node is not found then create the folder node
-                # if the node is found then use it as base for the next
-                if current_node is None:
-                    previous_node = TorNode(folders[j], parent=previous_node, is_folder=True)
-                else:
-                    previous_node = current_node
-            # at this point the previous_node will contain the deepest folder in it so add the file to it
-            TorNode(folders[-1], is_file=True, parent=previous_node, size=i.size, priority=i.priority, file_id=i.id)
-        else:
-            # at the file to the parent if no folders are there
-            TorNode(folders[-1], is_file=True, parent=parent, size=i.size, priority=i.priority, file_id=i.id)
+                TorNode(folders[-1], is_file=True, parent=previous_node, size=i['length'], priority=priority, file_id=i['index'])
+            else:
+                TorNode(folders[-1], is_file=True, parent=parent, size=i['length'], priority=priority, file_id=i['index'])
     return create_list(parent, ["", 0])
 
 """

@@ -103,7 +103,7 @@ def setThumb(update, context):
         if not ospath.isdir(path):
             mkdir(path)
         photo_dir = reply_to.photo[-1].get_file().download()
-        des_dir = ospath.join(path, str(user_id) + ".jpg")
+        des_dir = ospath.join(path, f'{user_id}.jpg')
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         osremove(photo_dir)
         if DB_URI is not None:

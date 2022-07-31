@@ -4,7 +4,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 ## By [anasty17](https://github.com/anasty17)
 - qBittorrent.
-- Select files from Torrent before downloading using qbittorrent.
+- Select files from Torrent before downloading using qbittorrent and aria2c.
 - Leech (splitting, thumbnail for each user, setting as document or as media for each user).
 - Stop duplicates for all tasks except yt-dlp tasks.
 - Zip/Unzip G-Drive links.

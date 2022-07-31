@@ -4,15 +4,13 @@ from bencoding import bencode, bdecode
 from os import path as ospath, listdir
 from time import sleep, time
 from re import search as re_search
-from telegram import InlineKeyboardMarkup
 
-from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, WEB_PINCODE, TORRENT_TIMEOUT, LOGGER
+from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, TORRENT_TIMEOUT, LOGGER
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages
-from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval
+from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, bt_selection_buttons
 from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
-from bot.helper.telegram_helper import button_build
 
 
 class QbDownloader:
@@ -75,12 +73,13 @@ class QbDownloader:
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
             if BASE_URL is not None and select:
                 if link.startswith('magnet:'):
-                    metamsg = "Downloading Metadata, wait then you can select files or mirror torrent file"
+                    metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                     meta = sendMessage(metamsg, self.__listener.bot, self.__listener.message)
                     while True:
                         tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
                         if len(tor_info) == 0:
-                            return deleteMessage(self.__listener.bot, meta)
+                            deleteMessage(self.__listener.bot, meta)
+                            return
                         try:
                             tor_info = tor_info[0]
                             if tor_info.state not in ["metaDL", "checkingResumeData", "pausedDL"]:
@@ -89,23 +88,9 @@ class QbDownloader:
                         except:
                             return deleteMessage(self.__listener.bot, meta)
                 self.client.torrents_pause(torrent_hashes=self.ext_hash)
-                pincode = ""
-                for n in str(self.ext_hash):
-                    if n.isdigit():
-                        pincode += str(n)
-                    if len(pincode) == 4:
-                        break
-                buttons = button_build.ButtonMaker()
-                gid = self.ext_hash[:12]
-                if WEB_PINCODE:
-                    buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}")
-                    buttons.sbutton("Pincode", f"qbs pin {gid} {pincode}")
-                else:
-                    buttons.buildbutton("Select Files", f"{BASE_URL}/app/files/{self.ext_hash}?pin_code={pincode}")
-                buttons.sbutton("Done Selecting", f"qbs done {gid} {self.ext_hash}")
-                QBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
+                SBUTTONS = bt_selection_buttons(self.ext_hash)
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMarkup(msg, self.__listener.bot, self.__listener.message, QBBUTTONS)
+                sendMarkup(msg, self.__listener.bot, self.__listener.message, SBUTTONS)
             else:
                 sendStatusMessage(self.__listener.message, self.__listener.bot)
         except Exception as e:
@@ -130,7 +115,7 @@ class QbDownloader:
                     if qbname.endswith('.!qB'):
                         qbname = ospath.splitext(qbname)[0]
                     if self.__listener.isZip:
-                        qbname = qbname + ".zip"
+                        qbname = f"{qbname}.zip"
                     elif self.__listener.extract:
                         try:
                            qbname = get_base_name(qbname)
