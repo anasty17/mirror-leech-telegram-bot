@@ -230,6 +230,11 @@ try:
 except:
     UPTOBOX_TOKEN = None
 try:
+    DAILY_RESTART_NOTIFIER = getConfig('DAILY_RESTART_NOTIFIER')
+    DAILY_RESTART_NOTIFIER = not DAILY_RESTART_NOTIFIER.lower() == 'false'
+except:
+    DAILY_RESTART_NOTIFIER = True
+try:
     INDEX_URL = getConfig('INDEX_URL').rstrip("/")
     if len(INDEX_URL) == 0:
         raise KeyError
