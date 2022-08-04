@@ -30,9 +30,10 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, delete_all_messages, update_all_messages, \
+                                                     deleteMessage, auto_delete_message, editMessage
 
 
 class MirrorListener:
@@ -390,15 +391,27 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
 
     LOGGER.info(link)
 
+    if multi == 0:
+        check_ = sendMessage(f"Checking for link, Please wait...", bot, message)
+    else: check_ = None
+
     if not is_mega_link(link) and not isQbit and not is_magnet(link) \
         and not is_gdrive_link(link) and not link.endswith('.torrent'):
         content_type = get_content_type(link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
-                link = direct_link_generator(link)
+                if link == "uptobox.com":
+                    editMessage(f"Generate {link} Direct Link. Please Wait...", check_)
+                    link = direct_link_generator(link)
+                else:
+                    link = direct_link_generator(link)
                 LOGGER.info(f"Generated link: {link}")
+                if check_ != None:
+                    deleteMessage(bot, check_); check_ = None
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
+                if check_ != None:
+                    deleteMessage(bot, check_); check_ = None
                 if str(e).startswith('ERROR:'):
                     return sendMessage(str(e), bot, message)
     elif isQbit and not is_magnet(link):
@@ -428,6 +441,8 @@ def _mirror(bot, message, isZip=False, extract=False, isQbit=False, isLeech=Fals
             return sendMessage(msg, bot, message)
 
 
+    if check_ != None:
+        deleteMessage(bot, check_); check_ = None
     listener = MirrorListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed)
 
     if is_gdrive_link(link):
