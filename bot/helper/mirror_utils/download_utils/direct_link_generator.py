@@ -289,7 +289,7 @@ def fichier(link: str) -> str:
           raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
         else:
           return dl_url
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 2:
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
         str_2 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_2).lower():
             numbers = [int(word) for word in str(str_2).split() if word.isdigit()]
@@ -300,8 +300,9 @@ def fichier(link: str) -> str:
         elif "protect access" in str(str_2).lower():
           raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
         else:
-            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
+            print(str_2)
+            raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
+    elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:
         str_1 = soup.find_all("div", {"class": "ct_warn"})[-2]
         str_3 = soup.find_all("div", {"class": "ct_warn"})[-1]
         if "you must wait" in str(str_1).lower():
