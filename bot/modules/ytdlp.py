@@ -11,11 +11,11 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from .mirror import MirrorListener
+from .listener import MirrorLeechListener
 
 listener_dict = {}
 
-def _watch(bot, message, isZip=False, isLeech=False, multi=0):
+def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
@@ -24,7 +24,8 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     if len(link) > 1:
         link = link[1].strip()
         if link.strip().isdigit():
-            multi = int(link)
+            if multi == 0:
+                multi = int(link)
             link = ''
         elif link.strip().startswith(("|", "pswd:", "args:")):
             link = ''
@@ -82,7 +83,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         help_msg += "\n\nCheck all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L174'>FILE</a>."
         return sendMessage(help_msg, bot, message)
 
-    listener = MirrorListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
+    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
     buttons = button_build.ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
@@ -159,11 +160,11 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
     if multi > 1:
         sleep(4)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        nextmsg = sendMessage(mssg.split(' ')[0], bot, nextmsg)
+        nextmsg = sendMessage(mssg, bot, nextmsg)
         nextmsg.from_user.id = message.from_user.id
         multi -= 1
         sleep(4)
-        Thread(target=_watch, args=(bot, nextmsg, isZip, isLeech, multi)).start()
+        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech, multi)).start()
 
 def _qual_subbuttons(task_id, qual, msg):
     buttons = button_build.ButtonMaker()
@@ -271,30 +272,30 @@ def _auto_cancel(msg, msg_id):
     except:
         pass
 
-def watch(update, context):
-    _watch(context.bot, update.message)
+def ytdl(update, context):
+    _ytdl(context.bot, update.message)
 
-def watchZip(update, context):
-    _watch(context.bot, update.message, True)
+def ytdlZip(update, context):
+    _ytdl(context.bot, update.message, True)
 
-def leechWatch(update, context):
-    _watch(context.bot, update.message, isLeech=True)
+def ytdlleech(update, context):
+    _ytdl(context.bot, update.message, isLeech=True)
 
-def leechWatchZip(update, context):
-    _watch(context.bot, update.message, True, True)
+def ytdlZipleech(update, context):
+    _ytdl(context.bot, update.message, True, True)
 
-watch_handler = CommandHandler(BotCommands.WatchCommand, watch,
+ytdl_handler = CommandHandler(BotCommands.YtdlCommand, ytdl,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-zip_watch_handler = CommandHandler(BotCommands.ZipWatchCommand, watchZip,
+ytdl_zip_handler = CommandHandler(BotCommands.YtdlZipCommand, ytdlZip,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-leech_watch_handler = CommandHandler(BotCommands.LeechWatchCommand, leechWatch,
+ytdl_leech_handler = CommandHandler(BotCommands.YtdlLeechCommand, ytdlleech,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-leech_zip_watch_handler = CommandHandler(BotCommands.LeechZipWatchCommand, leechWatchZip,
+ytdl_zip_leech_handler = CommandHandler(BotCommands.YtdlZipLeechCommand, ytdlZipleech,
                                     filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 quality_handler = CallbackQueryHandler(select_format, pattern="qu", run_async=True)
 
-dispatcher.add_handler(watch_handler)
-dispatcher.add_handler(zip_watch_handler)
-dispatcher.add_handler(leech_watch_handler)
-dispatcher.add_handler(leech_zip_watch_handler)
+dispatcher.add_handler(ytdl_handler)
+dispatcher.add_handler(ytdl_zip_handler)
+dispatcher.add_handler(ytdl_leech_handler)
+dispatcher.add_handler(ytdl_zip_leech_handler)
 dispatcher.add_handler(quality_handler)

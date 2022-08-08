@@ -72,20 +72,6 @@ def sendRss(text: str, bot):
             LOGGER.error(str(e))
             return
 
-
-async def sendRss_pyro(text: str):
-    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_STRING_SESSION, parse_mode=enums.ParseMode.HTML)
-    await rss_session.start()
-    try:
-        return await rss_session.send_message(RSS_CHAT_ID, text, disable_web_page_preview=True)
-    except FloodWait as e:
-        LOGGER.warning(str(e))
-        await asleep(e.value * 1.5)
-        return await sendRss(text)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return
-
 def deleteMessage(bot, message: Message):
     try:
         bot.deleteMessage(chat_id=message.chat.id,
@@ -98,6 +84,19 @@ def sendLogFile(bot, message: Message):
         bot.sendDocument(document=f, filename=f.name,
                           reply_to_message_id=message.message_id,
                           chat_id=message.chat_id)
+
+def sendFile(bot, message: Message, name: str, caption=""):
+    with open(name, 'rb') as f:
+        try:
+            bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
+                             caption=caption, parse_mode='HTMl',chat_id=message.chat_id)
+        except RetryAfter as r:
+            LOGGER.warning(str(r))
+            sleep(r.retry_after * 1.5)
+            return sendFile(bot, message, name, caption)
+        except Exception as e:
+            LOGGER.error(str(e))
+            return
 
 def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
