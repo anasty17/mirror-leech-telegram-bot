@@ -1,18 +1,19 @@
 from requests import get as rget
-from time import sleep
+from time import time
 from threading import Thread
 from html import escape
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
+from os import remove
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
-from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup, deleteMessage, sendFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.telegram_helper import button_build
+from bot.helper.ext_utils.html_helper import html_template
 
 if SEARCH_PLUGINS is not None:
     PLUGINS = []
@@ -43,8 +44,6 @@ SITES = {
     "ybt": "YourBittorrent",
     "all": "All"
 }
-
-TELEGRAPH_LIMIT = 300
 
 
 def torser(update, context):
@@ -109,12 +108,12 @@ def torserbut(update, context):
                 editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
         else:
             editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>", message)
-        Thread(target=_search, args=(key, site, message, method)).start()
+        Thread(target=_search, args=(context.bot, key, site, message, method)).start()
     else:
         query.answer()
         editMessage("Search has been canceled!", message)
 
-def _search(key, site, message, method):
+def _search(bot, key, site, message, method):
     if method.startswith('api'):
         if method == 'apisearch':
             LOGGER.info(f"API Searching: {key} from {site}")
@@ -139,20 +138,20 @@ def _search(key, site, message, method):
             search_results = resp.json()
             if "error" in search_results.keys():
                 return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
-            msg = f"<b>Found {min(search_results['total'], TELEGRAPH_LIMIT)}</b>"
+            cap = f"<b>Found {search_results['total']}</b>"
             if method == 'apitrend':
-                msg += f" <b>trending result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                cap += f" <b>trending results\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
             elif method == 'apirecent':
-                msg += f" <b>recent result(s)\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                cap += f" <b>recent results\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
             else:
-                msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
+                cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>"
             search_results = search_results['data']
         except Exception as e:
             return editMessage(str(e), message)
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
         client = get_client()
-        search = client.search_start(pattern=str(key), plugins=str(site), category='all')
+        search = client.search_start(pattern=key, plugins=site, category='all')
         search_id = search.id
         while True:
             result_status = client.search_status(search_id=search_id)
@@ -164,78 +163,69 @@ def _search(key, site, message, method):
         total_results = dict_search_results.total
         if total_results == 0:
             return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
-        msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
-        msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-    link = _getResult(search_results, key, message, method)
-    buttons = button_build.ButtonMaker()
-    buttons.buildbutton("🔎 VIEW", link)
-    button = InlineKeyboardMarkup(buttons.build_menu(1))
-    editMessage(msg, message, button)
+        cap = f"<b>Found {total_results}</b>"
+        cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
+    hmsg = _getResult(search_results, key, message, method)
+    name = f"{method}_{key}_{site}_{time()}.html"
+    with open(name, "w", encoding='utf-8') as f:
+        f.write(html_template.replace('{msg}', hmsg).replace('{title}', f'{method}_{key}_{site}'))
+    deleteMessage(bot, message)
+    sendFile(bot, message.reply_to_message, name, cap)
+    remove(name)
     if not method.startswith('api'):
         client.search_delete(search_id=search_id)
 
 def _getResult(search_results, key, message, method):
-    telegraph_content = []
     if method == 'apirecent':
-        msg = "<h4>API Recent Results</h4>"
+        msg = '<span class="container center rfontsize"><h4>API Recent Results</h4></span>'
     elif method == 'apisearch':
-        msg = f"<h4>API Search Result(s) For {key}</h4>"
+        msg = f'<span class="container center rfontsize"><h4>API Search Results For {key}</h4></span>'
     elif method == 'apitrend':
-        msg = "<h4>API Trending Results</h4>"
+        msg = '<span class="container center rfontsize"><h4>API Trending Results</h4></span>'
     else:
-        msg = f"<h4>PLUGINS Search Result(s) For {key}</h4>"
-    for index, result in enumerate(search_results, start=1):
+        msg = f'<span class="container center rfontsize"><h4>PLUGINS Search Results For {key}</h4></span>'
+    for result in search_results:
+        msg += '<span class="container start rfontsize">'
         if method.startswith('api'):
             if 'name' in result.keys():
-                msg += f"<code><a href='{result['url']}'>{escape(result['name'])}</a></code><br>"
+                msg += f"<div> <a class='withhover' href='{result['url']}'>{escape(result['name'])}</a></div>"
             if 'torrents' in result.keys():
                 for subres in result['torrents']:
-                    msg += f"<b>Quality: </b>{subres['quality']} | <b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}<br>"
+                    msg += f"<span class='topmarginsm'><b>Quality: </b>{subres['quality']} | "
+                    mag += f"<b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}</span>"
                     if 'torrent' in subres.keys():
-                        msg += f"<a href='{subres['torrent']}'>Direct Link</a><br>"
+                        msg += "<span class='topmarginxl'><a class='withhover' "
+                        msg += f"href='{subres['torrent']}'>Direct Link</a></span>"
                     elif 'magnet' in subres.keys():
-                        msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a><br>"
+                        msg += "<span><b>Share Magnet to</b> <a class='withhover' "
+                        msg += f"href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a></span>"
                 msg += '<br>'
             else:
-                msg += f"<b>Size: </b>{result['size']}<br>"
+                msg += f"<span class='topmarginsm'><b>Size: </b>{result['size']}</span>"
                 try:
-                    msg += f"<b>Seeders: </b>{result['seeders']} | <b>Leechers: </b>{result['leechers']}<br>"
+                    msg += f"<span class='topmarginsm'><b>Seeders: </b>{result['seeders']} | "
+                    msg += f"<b>Leechers: </b>{result['leechers']}</span>"
                 except:
                     pass
                 if 'torrent' in result.keys():
-                    msg += f"<a href='{result['torrent']}'>Direct Link</a><br><br>"
+                    msg += f"<span class='topmarginxl'><a class='withhover' "
+                    msg += f"href='{result['torrent']}'>Direct Link</a></span>"
                 elif 'magnet' in result.keys():
-                    msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a><br><br>"
+                    msg += f"<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
+                    msg += f"href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a></span>"
         else:
-            msg += f"<a href='{result.descrLink}'>{escape(result.fileName)}</a><br>"
-            msg += f"<b>Size: </b>{get_readable_file_size(result.fileSize)}<br>"
-            msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}<br>"
+            msg += f"<div> <a class='withhover' href='{result.descrLink}'>{escape(result.fileName)}</a></div>"
+            msg += f"<span class='topmarginsm'><b>Size: </b>{get_readable_file_size(result.fileSize)}</span>"
+            msg += f"<span class='topmarginsm'><b>Seeders: </b>{result.nbSeeders} | "
+            msg += f"<b>Leechers: </b>{result.nbLeechers}</span>"
             link = result.fileUrl
             if link.startswith('magnet:'):
-                msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(link)}'>Telegram</a><br><br>"
+                msg += f"<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
+                msg += f"href='http://t.me/share/url?url={quote(link)}'>Telegram</a></span>"
             else:
-                msg += f"<a href='{link}'>Direct Link</a><br><br>"
-
-        if len(msg.encode('utf-8')) > 39000:
-           telegraph_content.append(msg)
-           msg = ""
-
-        if index == TELEGRAPH_LIMIT:
-            break
-
-    if msg != "":
-        telegraph_content.append(msg)
-
-    editMessage(f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-    path = [telegraph.create_page(
-                title='Mirror-leech-bot Torrent Search',
-                content=content
-            )["path"] for content in telegraph_content]
-    sleep(0.5)
-    if len(path) > 1:
-        editMessage(f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>", message)
-        telegraph.edit_telegraph(path, telegraph_content)
-    return f"https://telegra.ph/{path[0]}"
+                msg += f"<span class='topmarginxl'><a class='withhover' href='{link}'>Direct Link</a></span>"
+        msg += '</span>'
+    return msg
 
 def _api_buttons(user_id, method):
     buttons = button_build.ButtonMaker()

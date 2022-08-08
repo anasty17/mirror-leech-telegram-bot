@@ -10,12 +10,7 @@ from math import ceil
 from re import split as re_split, I
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER
-
-if IS_PREMIUM_USER:
-    MAX_SPLIT_SIZE = 4194304000
-else:
-    MAX_SPLIT_SIZE = 2097152000
+from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER, MAX_SPLIT_SIZE
 
 VIDEO_SUFFIXES = ("M4V", "MP4", "MOV", "FLV", "WMV", "3GP", "MPG", "WEBM", "MKV", "AVI")
 
@@ -24,6 +19,19 @@ ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".
                 ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
                 ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
 
+def clean_target(path: str):
+    if ospath.exists(path):
+        LOGGER.info(f"Cleaning Target: {path}")
+        if ospath.isdir(path):
+            try:
+                rmtree(path)
+            except:
+                pass
+        elif ospath.isfile(path):
+            try:
+                osremove(path)
+            except:
+                pass
 
 def clean_download(path: str):
     if ospath.exists(path):
@@ -62,11 +70,10 @@ def clean_unwanted(path: str):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, subdir, files in walk(path, topdown=False):
         for filee in files:
-            if filee.endswith((".!qB", ".aria2")) or filee.endswith('.parts') and filee.startswith('.'):
+            if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                 osremove(ospath.join(dirpath, filee))
-        for folder in subdir:
-            if folder == ".unwanted":
-                rmtree(ospath.join(dirpath, folder))
+        if dirpath.endswith((".unwanted", "splited_files_mltb")):
+            rmtree(dirpath)
     for dirpath, subdir, files in walk(path, topdown=False):
         if not listdir(dirpath):
             rmdir(dirpath)
@@ -117,6 +124,9 @@ def take_ss(video_file):
     return des_dir
 
 def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
+    if listener.seed and not listener.newDir:
+        dirpath = f"{dirpath}/splited_files_mltb"
+        mkdir(dirpath)
     parts = ceil(size/LEECH_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
@@ -129,20 +139,29 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             out_path = ospath.join(dirpath, parted_name)
             if not noMap:
                 listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
-                 "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1", "-c", "copy", out_path])
+                                         "-i", path, "-fs", str(split_size), "-map", "0", "-map_chapters", "-1",
+                                         "-c", "copy", out_path])
             else:
                 listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
-                              "-i", path, "-fs", str(split_size), "-map_chapters", "-1", "-c", "copy", out_path])
+                                          "-i", path, "-fs", str(split_size), "-map_chapters", "-1", "-c", "copy",
+                                          out_path])
             listener.suproc.wait()
             if listener.suproc.returncode == -9:
                 return False
             elif listener.suproc.returncode != 0 and not noMap:
-                LOGGER.warning(f'Retrying without map, -map 0 not working in all situations. Path: {path}')
+                LOGGER.warning(f"Retrying without map, -map 0 not working in all situations. Path: {path}")
                 try:
                     osremove(out_path)
                 except:
                     pass
                 return split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, True)
+            elif listener.suproc.returncode != 0:
+                LOGGER.warning(f"Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
+                try:
+                    osremove(out_path)
+                except:
+                    pass
+                return "errored"
             out_size = get_path_size(out_path)
             if out_size > MAX_SPLIT_SIZE:
                 dif = out_size - MAX_SPLIT_SIZE
@@ -163,7 +182,8 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             i = i + 1
     else:
         out_path = ospath.join(dirpath, file_ + ".")
-        listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3", f"--bytes={split_size}", path, out_path])
+        listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3",
+                                f"--bytes={split_size}", path, out_path])
         listener.suproc.wait()
         if listener.suproc.returncode == -9:
             return False

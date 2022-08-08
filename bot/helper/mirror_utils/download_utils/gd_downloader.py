@@ -8,7 +8,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMess
 from bot.helper.ext_utils.fs_utils import get_base_name
 
 
-def add_gd_download(link, listener, newname):
+def add_gd_download(link, path, listener, newname):
     res, size, name, files = GoogleDriveHelper().helper(link)
     if res != "":
         return sendMessage(res, listener.bot, listener.message)
@@ -29,7 +29,7 @@ def add_gd_download(link, listener, newname):
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
                 return sendMarkup(msg, listener.bot, listener.message, button)
     LOGGER.info(f"Download Name: {name}")
-    drive = GoogleDriveHelper(name, listener)
+    drive = GoogleDriveHelper(name, path, size, listener)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     download_status = GdDownloadStatus(drive, size, listener, gid)
     with download_dict_lock:

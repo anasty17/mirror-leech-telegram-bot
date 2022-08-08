@@ -173,8 +173,8 @@ class YoutubeDLHelper:
             if len(audio_info) == 2:
                 rate = audio_info[1]
             else:
-                rate = 320
-            self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': f'{rate}'}]
+                rate = '320'
+            self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name, args)

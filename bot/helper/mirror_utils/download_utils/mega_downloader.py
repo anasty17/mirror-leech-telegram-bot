@@ -76,7 +76,7 @@ class MegaAppListener(MegaListener):
         LOGGER.error(f'Mega Request error in {error}')
         if not self.is_cancelled:
             self.is_cancelled = True
-            self.listener.onDownloadError("RequestTempError: " + error.toString())
+            self.listener.onDownloadError(f"RequestTempError: {error.toString()}")
         self.error = error.toString()
         self.continue_event.set()
 

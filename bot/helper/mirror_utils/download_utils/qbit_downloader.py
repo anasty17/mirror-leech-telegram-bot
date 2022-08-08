@@ -30,7 +30,7 @@ class QbDownloader:
         self.__dupChecked = False
         self.__rechecked = False
 
-    def add_qb_torrent(self, link, path, select):
+    def add_qb_torrent(self, link, path, select, ratio, seed_time):
         self.__path = path
         self.select = select
         self.client = get_client()
@@ -44,9 +44,9 @@ class QbDownloader:
                 sendMessage("This Torrent already added!", self.__listener.bot, self.__listener.message)
                 return self.client.auth_log_out()
             if link.startswith('magnet:'):
-                op = self.client.torrents_add(link, save_path=path)
+                op = self.client.torrents_add(link, save_path=path, ratio_limit=ratio, seeding_time_limit=seed_time)
             else:
-                op = self.client.torrents_add(torrent_files=[link], save_path=path)
+                op = self.client.torrents_add(torrent_files=[link], save_path=path, ratio_limit=ratio, seeding_time_limit=seed_time)
             sleep(0.3)
             if op.lower() == "ok.":
                 tor_info = self.client.torrents_info(torrent_hashes=self.ext_hash)
@@ -109,7 +109,7 @@ class QbDownloader:
                     self.__onDownloadError("Dead Torrent!")
             elif tor_info.state == "downloading":
                 self.__stalled_time = time()
-                if not self.__dupChecked and STOP_DUPLICATE and ospath.isdir(f'{self.__path}') and not self.__listener.isLeech and not self.select:
+                if not self.select and not self.__dupChecked and STOP_DUPLICATE and not self.__listener.isLeech and ospath.isdir(f'{self.__path}'):
                     LOGGER.info('Checking File/Folder if already in Drive')
                     qbname = str(listdir(f'{self.__path}')[-1])
                     if qbname.endswith('.!qB'):
@@ -149,26 +149,20 @@ class QbDownloader:
                 if self.select:
                     clean_unwanted(self.__path)
                 self.__listener.onDownloadComplete()
-                if self.__listener.seed and not self.__listener.isLeech and not self.__listener.extract:
+                if self.__listener.seed:
                     with download_dict_lock:
                         if self.__listener.uid not in download_dict:
-                            self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                            self.client.auth_log_out()
-                            self.__periodic.cancel()
+                            self.__remove_torrent()
                             return
                         download_dict[self.__listener.uid] = QbDownloadStatus(self.__listener, self)
                     self.is_seeding = True
                     update_all_messages()
-                    LOGGER.info(f"Seeding started: {self.__name}")
+                    LOGGER.info(f"Seeding started: {self.__name} - Hash: {self.ext_hash}")
                 else:
-                    self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                    self.client.auth_log_out()
-                    self.__periodic.cancel()
+                    self.__remove_torrent()
             elif tor_info.state == 'pausedUP' and self.__listener.seed:
                 self.__listener.onUploadError(f"Seeding stopped with Ratio: {round(tor_info.ratio, 3)} and Time: {get_readable_time(tor_info.seeding_time)}")
-                self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
-                self.client.auth_log_out()
-                self.__periodic.cancel()
+                self.__remove_torrent()
         except Exception as e:
             LOGGER.error(str(e))
 
@@ -177,6 +171,9 @@ class QbDownloader:
         self.client.torrents_pause(torrent_hashes=self.ext_hash)
         sleep(0.3)
         self.__listener.onDownloadError(err)
+        self.__remove_torrent()
+
+    def __remove_torrent(self):
         self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
         self.client.auth_log_out()
         self.__periodic.cancel()
