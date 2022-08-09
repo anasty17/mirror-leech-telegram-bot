@@ -101,7 +101,7 @@ class TgUploader:
                         up_path = new_path
                     self.__sent_msg = self.__sent_msg.reply_video(video=up_path,
                                                                   quote=True,
-                                                                  caption=cap_mono,
+                                                                  caption=f"{cap_mono} <i>({get_readable_file_size(get_path_size(up_path))}</i>)",
                                                                   duration=duration,
                                                                   width=width,
                                                                   height=height,
@@ -113,7 +113,7 @@ class TgUploader:
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
                                                                   quote=True,
-                                                                  caption=cap_mono,
+                                                                  caption=f"{cap_mono} <i>({get_readable_file_size(get_path_size(up_path))}</i>)",
                                                                   duration=duration,
                                                                   performer=artist,
                                                                   title=title,
@@ -123,7 +123,7 @@ class TgUploader:
                 elif file_.upper().endswith(IMAGE_SUFFIXES):
                     self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
                                                                   quote=True,
-                                                                  caption=cap_mono,
+                                                                  caption=f"{cap_mono} <i>({get_readable_file_size(get_path_size(up_path))}</i>)",
                                                                   disable_notification=True,
                                                                   progress=self.__upload_progress)
                 else:
@@ -138,7 +138,7 @@ class TgUploader:
                 self.__sent_msg = self.__sent_msg.reply_document(document=up_path,
                                                                  quote=True,
                                                                  thumb=thumb,
-                                                                 caption=cap_mono,
+                                                                 caption=f"{cap_mono} <i>({get_readable_file_size(get_path_size(up_path))}</i>)",
                                                                  disable_notification=True,
                                                                  progress=self.__upload_progress)
         except FloodWait as f:
