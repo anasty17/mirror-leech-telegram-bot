@@ -208,7 +208,8 @@ except:
     DB_URI = None
 try:
     LEECH_SPLIT_SIZE = getConfig('LEECH_SPLIT_SIZE')
-    if len(LEECH_SPLIT_SIZE) == 0 or (not IS_PREMIUM_USER and LEECH_SPLIT_SIZE > 2097152000) or LEECH_SPLIT_SIZE > 4194304000:
+    if len(LEECH_SPLIT_SIZE) == 0 or (not IS_PREMIUM_USER and int(LEECH_SPLIT_SIZE) > 2097152000) \
+       or int(LEECH_SPLIT_SIZE) > 4194304000:
         raise KeyError
     LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
 except:
