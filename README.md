@@ -277,33 +277,33 @@ sudo docker-compose start
 ## Bot commands to be set in [@BotFather](https://t.me/BotFather)
 
 ```
-mirror - Mirror
-zipmirror - Mirror and upload as zip
-unzipmirror - Mirror and extract files
-qbmirror - Mirror torrent using qBittorrent
-qbzipmirror - Mirror torrent and upload as zip using qb
-qbunzipmirror - Mirror torrent and extract files using qb
-leech - Leech
-zipleech - Leech and upload as zip
-unzipleech - Leech and extract files
-qbleech - Leech torrent using qBittorrent
-qbzipleech - Leech torrent and upload as zip using qb
-qbunzipleech - Leech torrent and extract using qb
+mirror - or /m Mirror
+zipmirror - or /zm Mirror and upload as zip
+unzipmirror - or /uzm Mirror and extract files
+qbmirror - or /qm Mirror torrent using qBittorrent
+qbzipmirror - or /qzm Mirror torrent and upload as zip using qb
+qbunzipmirror - or /quzm Mirror torrent and extract files using qb
+leech - or /l Leech
+zipleech - or /zl Leech and upload as zip
+unzipleech - or /uzl Leech and extract files
+qbleech - or /ql Leech torrent using qBittorrent
+qbzipleech - or /qzl Leech torrent and upload as zip using qb
+qbunzipleech - or /quzl Leech torrent and extract using qb
 clone - Copy file/folder to Drive
 count - Count file/folder of Drive
-watch - Mirror yt-dlp supported link
-zipwatch - Mirror yt-dlp supported link as zip
-leechwatch - Leech through yt-dlp supported link
-leechzipwatch - Leech yt-dlp support link as zip
+ytdl - or /y Mirror yt-dlp supported link
+ytdlzip - or /yz Mirror yt-dlp supported link as zip
+ytdlleech - or /yl Leech through yt-dlp supported link
+ytdlzipleech - or /yzl Leech yt-dlp support link as zip
 leechset - Leech settings
 setthumb - Set thumbnail
 status - Get Mirror Status message
 btsel - select files from torrent
-rsslist - List all subscribed rss feed info
-rssget - Get specific No. of links from specific rss feed
-rsssub - Subscribe new rss feed
-rssunsub - Unsubscribe rss feed by title
-rssset - Rss Settings
+rsslist - or /rl List all subscribed rss feed info
+rssget - or /rg Get specific No. of links from specific rss feed
+rsssub - or /rs Subscribe new rss feed
+rssunsub - or /rus Unsubscribe rss feed by title
+rssset - or /rst Rss Settings
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
