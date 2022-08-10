@@ -1,6 +1,5 @@
 from random import SystemRandom
 from string import ascii_letters, digits
-from os import remove
 
 from bot import download_dict, download_dict_lock, LOGGER, STOP_DUPLICATE
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -29,7 +28,6 @@ def add_gd_download(link, path, listener, newname):
             if cap:
                 cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
                 sendFile(listener.bot, listener.message, f_name, cap)
-                remove(f_name)
                 return
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, path, size, listener)

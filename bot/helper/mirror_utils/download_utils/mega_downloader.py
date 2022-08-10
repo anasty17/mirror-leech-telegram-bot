@@ -1,6 +1,6 @@
 from random import SystemRandom
 from string import ascii_letters, digits
-from os import makedirs, remove
+from os import makedirs
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
@@ -167,7 +167,6 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
             if cap:
                 cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
                 sendFile(listener.bot, listener.message, f_name, cap)
-                remove(f_name)
                 api.removeListener(mega_listener)
                 if folder_api is not None:
                     folder_api.removeListener(mega_listener)

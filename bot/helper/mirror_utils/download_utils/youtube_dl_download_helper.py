@@ -139,10 +139,7 @@ class YoutubeDLHelper:
             ext = realName.split('.')[-1]
             if name == "":
                 newname = realName.split(f" [{result['id'].replace('*', '_')}]")
-                if len(newname) > 1:
-                    self.name = newname[0] + '.' + ext
-                else:
-                    self.name = newname[0]
+                self.name = newname[0] + '.' + ext if len(newname) > 1 else newname[0]
             else:
                 self.name = f"{name}.{ext}"
 
@@ -170,10 +167,7 @@ class YoutubeDLHelper:
         if qual.startswith('ba/b'):
             audio_info = qual.split('-')
             qual = audio_info[0]
-            if len(audio_info) == 2:
-                rate = audio_info[1]
-            else:
-                rate = '320'
+            rate = audio_info[1] if len(audio_info) == 2 else '320'
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")

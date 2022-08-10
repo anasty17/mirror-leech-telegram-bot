@@ -1,7 +1,7 @@
 from hashlib import sha1
 from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
-from os import path as ospath, listdir, remove
+from os import path as ospath, listdir
 from time import sleep, time
 from re import search as re_search
 
@@ -127,7 +127,6 @@ class QbDownloader:
                             self.__onDownloadError("File/Folder is already available in Drive.")
                             cap = f"Here are the search results:\n\n{cap}"
                             sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
-                            remove(f_name)
                     self.__dupChecked = True
             elif tor_info.state == "stalledDL":
                 if not self.__rechecked and 0.99989999999999999 < tor_info.progress < 1:

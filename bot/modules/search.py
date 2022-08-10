@@ -4,7 +4,6 @@ from html import escape
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from os import remove
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup, deleteMessage, sendFile
@@ -151,17 +150,16 @@ def _search(bot, key, site, message, method):
             return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
         cap = f"<b>Found {total_results}</b>"
         cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-    hmsg = _getResult(search_results, key, message, method)
+    hmsg = _getResult(search_results, key, method)
     name = f"{method}_{key}_{site}_{message.message_id}.html"
     with open(name, "w", encoding='utf-8') as f:
         f.write(html_template.replace('{msg}', hmsg).replace('{title}', f'{method}_{key}_{site}'))
     deleteMessage(bot, message)
     sendFile(bot, message.reply_to_message, name, cap)
-    remove(name)
     if not method.startswith('api'):
         client.search_delete(search_id=search_id)
 
-def _getResult(search_results, key, message, method):
+def _getResult(search_results, key, method):
     if method == 'apirecent':
         msg = '<span class="container center rfontsize"><h4>API Recent Results</h4></span>'
     elif method == 'apisearch':
