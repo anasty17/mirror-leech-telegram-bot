@@ -1,7 +1,6 @@
 from logging import getLogger, WARNING
 from time import time
 from threading import RLock, Lock
-from os import remove
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE, app
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
@@ -96,10 +95,9 @@ class TelegramDownloadHelper:
                 if STOP_DUPLICATE and not self.__listener.isLeech:
                     LOGGER.info('Checking File/Folder if already in Drive...')
                     cap, f_name = GoogleDriveHelper().drive_list(name, True, True)
-                    if smsg:
+                    if cap:
                         cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
                         sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
-                        remove(f_name)
                         return
                 self.__onDownloadStart(name, size, media.file_unique_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_unique_id}')
