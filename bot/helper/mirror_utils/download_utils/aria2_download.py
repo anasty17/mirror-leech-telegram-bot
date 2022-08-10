@@ -14,53 +14,51 @@ def __onDownloadStarted(api, gid):
     if download.is_metadata:
         LOGGER.info(f'onDownloadStarted: {gid} METADATA')
         sleep(1)
-        dl = getDownloadByGid(gid)
-        listener = dl.listener()
-        if listener.select:
-            metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
-            meta = sendMessage(metamsg, listener.bot, listener.message)
-            while True:
-                try:
-                    download = api.get_download(gid)
-                except:
-                    deleteMessage(listener.bot, meta)
-                    break
-                if download.followed_by_ids:
-                    deleteMessage(listener.bot, meta)
-                    break
+        if dl := getDownloadByGid(gid):
+            listener = dl.listener()
+            if listener.select:
+                metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
+                meta = sendMessage(metamsg, listener.bot, listener.message)
+                while True:
+                    try:
+                        download = api.get_download(gid)
+                    except:
+                        deleteMessage(listener.bot, meta)
+                        break
+                    if download.followed_by_ids:
+                        deleteMessage(listener.bot, meta)
+                        break
         return
     else:
         LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
     try:
         if STOP_DUPLICATE:
             sleep(1)
-            dl = getDownloadByGid(gid)
-            if not dl:
-                return
-            listener = dl.listener()
-            if listener.isLeech or listener.select:
-                return
-            download = api.get_download(gid)
-            if not download.is_torrent:
-                sleep(3)
-                download = download.live
-            LOGGER.info('Checking File/Folder if already in Drive...')
-            sname = download.name
-            if listener.isZip:
-                sname = sname + ".zip"
-            elif listener.extract:
-                try:
-                    sname = get_base_name(sname)
-                except:
-                    sname = None
-            if sname is not None:
-                cap, f_name = GoogleDriveHelper().drive_list(sname, True)
-                if cap:
-                    listener.onDownloadError('File/Folder already available in Drive.')
-                    api.remove([download], force=True, files=True)
-                    cap = f"Here are the search results:\n\n{cap}"
-                    sendFile(listener.bot, listener.message, f_name, cap)
+            if dl := getDownloadByGid(gid):
+                listener = dl.listener()
+                if listener.isLeech or listener.select:
                     return
+                download = api.get_download(gid)
+                if not download.is_torrent:
+                    sleep(3)
+                    download = download.live
+                LOGGER.info('Checking File/Folder if already in Drive...')
+                sname = download.name
+                if listener.isZip:
+                    sname = sname + ".zip"
+                elif listener.extract:
+                    try:
+                        sname = get_base_name(sname)
+                    except:
+                        sname = None
+                if sname is not None:
+                    cap, f_name = GoogleDriveHelper().drive_list(sname, True)
+                    if cap:
+                        listener.onDownloadError('File/Folder already available in Drive.')
+                        api.remove([download], force=True, files=True)
+                        cap = f"Here are the search results:\n\n{cap}"
+                        sendFile(listener.bot, listener.message, f_name, cap)
+                        return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 
@@ -73,12 +71,13 @@ def __onDownloadComplete(api, gid):
     if download.followed_by_ids:
         new_gid = download.followed_by_ids[0]
         LOGGER.info(f'Gid changed from {gid} to {new_gid}')
-        dl = getDownloadByGid(new_gid)
-        listener = dl.listener()
-        if BASE_URL is not None and listener.select:
-            SBUTTONS = bt_selection_buttons(new_gid)
-            msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-            sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
+        if dl := getDownloadByGid(new_gid):
+            listener = dl.listener()
+            if BASE_URL is not None and listener.select:
+                api.client.force_pause(new_gid)
+                SBUTTONS = bt_selection_buttons(new_gid)
+                msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
+                sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
         if dl := getDownloadByGid(gid):
             if hasattr(dl, 'listener'):
