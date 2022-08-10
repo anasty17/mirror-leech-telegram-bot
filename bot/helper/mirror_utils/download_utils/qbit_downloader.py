@@ -1,6 +1,5 @@
-from os import path as ospath, listdir, remove
+from os import path as ospath, listdir
 from time import sleep, time
-from re import search as re_search
 
 from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, TORRENT_TIMEOUT, LOGGER
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
@@ -117,7 +116,6 @@ class QbDownloader:
                             self.__onDownloadError("File/Folder is already available in Drive.")
                             cap = f"Here are the search results:\n\n{cap}"
                             sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
-                            remove(f_name)
                     self.__dupChecked = True
             elif tor_info.state == "stalledDL":
                 if not self.__rechecked and 0.99989999999999999 < tor_info.progress < 1:

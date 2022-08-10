@@ -1,7 +1,6 @@
 from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from os import remove
 
 from bot import LOGGER, dispatcher
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -46,7 +45,6 @@ def _list_drive(bot, key, bmsg, item_type):
     if cap:
         deleteMessage(bot, bmsg)
         sendFile(bot, bmsg.reply_to_message, f_name, cap)
-        remove(f_name)
     else:
         editMessage(f'No result found for <i>{key}</i>', bmsg)
 

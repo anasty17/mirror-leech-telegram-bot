@@ -445,17 +445,16 @@ class GoogleDriveHelper:
     def __authorize(self):
         # Get credentials
         credentials = None
-        if not USE_SERVICE_ACCOUNTS:
-            if ospath.exists(self.__G_DRIVE_TOKEN_FILE):
-                with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
-                    credentials = pload(f)
-            else:
-                LOGGER.error('token.pickle not found!')
-        else:
+        if USE_SERVICE_ACCOUNTS:
             LOGGER.info(f"Authorizing with {SERVICE_ACCOUNT_INDEX}.json service account")
             credentials = service_account.Credentials.from_service_account_file(
                 f'accounts/{SERVICE_ACCOUNT_INDEX}.json',
                 scopes=self.__OAUTH_SCOPE)
+        elif ospath.exists(self.__G_DRIVE_TOKEN_FILE):
+            with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
+                credentials = pload(f)
+        else:
+            LOGGER.error('token.pickle not found!')
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
 
     def __alt_authorize(self):
@@ -469,11 +468,11 @@ class GoogleDriveHelper:
                 return build('drive', 'v3', credentials=credentials, cache_discovery=False)
         return None
 
-    def __escapes(self, str):
+    def __escapes(self, estr):
         chars = ['\\', "'", '"', r'\a', r'\b', r'\f', r'\n', r'\r', r'\t']
         for char in chars:
-            str = str.replace(char, f'\\{char}')
-        return str.strip()
+            estr = estr.replace(char, f'\\{char}')
+        return estr.strip()
 
     def __get_recursive_list(self, file, rootid):
         rtnlist = []
@@ -639,15 +638,12 @@ class GoogleDriveHelper:
                 contents_count += 1
             if noMulti:
                 break
-
         if contents_count == 0:
             return "", ""
-
         cap = f"<b>Found {contents_count} result for <i>{fileName}</i></b>"
         f_name = f'{fileName}_{time()}.html'
         with open(f_name, 'w', encoding='utf-8') as f:
             f.write(hmtl_content.replace('{fileName}', fileName).replace('{msg}', msg))
-
         return cap, f_name
 
     def count(self, link):

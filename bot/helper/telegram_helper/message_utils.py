@@ -3,6 +3,7 @@ from telegram import InlineKeyboardMarkup
 from telegram.message import Message
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
+from os import remove
 
 from bot import AUTO_DELETE_MESSAGE_DURATION, LOGGER, status_reply_dict, status_reply_dict_lock, \
                 Interval, DOWNLOAD_STATUS_UPDATE_INTERVAL, RSS_CHAT_ID, bot, rss_session
@@ -86,17 +87,19 @@ def sendLogFile(bot, message: Message):
                           chat_id=message.chat_id)
 
 def sendFile(bot, message: Message, name: str, caption=""):
-    with open(name, 'rb') as f:
-        try:
+    try:
+        with open(name, 'rb') as f:
             bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
                              caption=caption, parse_mode='HTMl',chat_id=message.chat_id)
-        except RetryAfter as r:
-            LOGGER.warning(str(r))
-            sleep(r.retry_after * 1.5)
-            return sendFile(bot, message, name, caption)
-        except Exception as e:
-            LOGGER.error(str(e))
-            return
+        remove(name)
+        return
+    except RetryAfter as r:
+        LOGGER.warning(str(r))
+        sleep(r.retry_after * 1.5)
+        return sendFile(bot, message, name, caption)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return
 
 def auto_delete_message(bot, cmd_message: Message, bot_message: Message):
     if AUTO_DELETE_MESSAGE_DURATION != -1:
