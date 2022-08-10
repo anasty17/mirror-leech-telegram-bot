@@ -1,7 +1,6 @@
 from threading import Thread
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from time import time
 from os import remove
 
 from bot import LOGGER, dispatcher
@@ -10,7 +9,6 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, s
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper import button_build
-from bot.helper.ext_utils.html_helper import hmtl_content
 
 def list_buttons(update, context):
     user_id = update.message.from_user.id
@@ -44,14 +42,11 @@ def select_type(update, context):
 def _list_drive(bot, key, bmsg, item_type):
     LOGGER.info(f"listing: {key}")
     gdrive = GoogleDriveHelper()
-    rmsg, msg = gdrive.drive_list(key, isRecursive=True, itemType=item_type)
-    if msg:
-        name = f'{key}_{time()}.html'
-        with open(name, 'w', encoding='utf-8') as f:
-            f.write(hmtl_content.replace('{fileName}', key).replace('{msg}', msg))
+    cap, f_name = gdrive.drive_list(key, isRecursive=True, itemType=item_type)
+    if cap:
         deleteMessage(bot, bmsg)
-        sendFile(bot, bmsg.reply_to_message, name, rmsg)
-        remove(name)
+        sendFile(bot, bmsg.reply_to_message, f_name, cap)
+        remove(f_name)
     else:
         editMessage(f'No result found for <i>{key}</i>', bmsg)
 

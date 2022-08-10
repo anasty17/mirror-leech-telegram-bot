@@ -1,10 +1,11 @@
 from time import sleep, time
+from os import remove
 
 from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, BASE_URL, LOGGER
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, bt_selection_buttons
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage, deleteMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage, deleteMessage, update_all_messages, sendFile
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
 
 
@@ -54,11 +55,14 @@ def __onDownloadStarted(api, gid):
                 except:
                     sname = None
             if sname is not None:
-                smsg, button = GoogleDriveHelper().drive_list(sname, True)
-                if smsg:
-                    listener.onDownloadError('File/Folder already available in Drive.\n\n')
+                cap, f_name = GoogleDriveHelper().drive_list(sname, True)
+                if cap:
+                    listener.onDownloadError('File/Folder already available in Drive.')
                     api.remove([download], force=True, files=True)
-                    return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
+                    cap = f"Here are the search results:\n\n{cap}"
+                    sendFile(listener.bot, listener.message, f_name, cap)
+                    remove(f_name)
+                    return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 

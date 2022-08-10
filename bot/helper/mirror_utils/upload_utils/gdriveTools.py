@@ -20,6 +20,7 @@ from bot import parent_id, IS_TEAM_DRIVE, INDEX_URL, USE_SERVICE_ACCOUNTS, VIEW_
                 DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type
+from bot.helper.ext_utils.html_helper import hmtl_content
 
 LOGGER = getLogger(__name__)
 getLogger('googleapiclient.discovery').setLevel(ERROR)
@@ -642,9 +643,12 @@ class GoogleDriveHelper:
         if contents_count == 0:
             return "", ""
 
-        rmsg = f"<b>Found {contents_count} result for <i>{fileName}</i></b>"
+        cap = f"<b>Found {contents_count} result for <i>{fileName}</i></b>"
+        f_name = f'{fileName}_{time()}.html'
+        with open(f_name, 'w', encoding='utf-8') as f:
+            f.write(hmtl_content.replace('{fileName}', fileName).replace('{msg}', msg))
 
-        return rmsg, msg
+        return cap, f_name
 
     def count(self, link):
         try:
@@ -755,7 +759,7 @@ class GoogleDriveHelper:
             if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__download_folder(file_id, self.__path, self.name)
             else:
-                makedirs(path)
+                makedirs(self.__path)
                 self.__download_file(file_id, self.__path, self.name, meta.get('mimeType'))
         except Exception as err:
             if isinstance(err, RetryError):

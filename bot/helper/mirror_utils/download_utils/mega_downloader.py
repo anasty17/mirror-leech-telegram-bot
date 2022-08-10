@@ -1,8 +1,9 @@
 from threading import Lock
 from pathlib import Path
+from os import remove
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.fs_utils import get_base_name
@@ -118,10 +119,12 @@ class MegaDownloader:
                 except:
                     mname = None
             if mname is not None:
-                smsg, button = GoogleDriveHelper().drive_list(mname, True)
-                if smsg:
-                    msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
-                    return sendMarkup(msg1, self.__listener.bot, self.__listener.message, button)
+                cap, f_name = GoogleDriveHelper().drive_list(mname, True)
+                if cap:
+                    cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
+                    sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
+                    remove(f_name)
+                    return
         self.__onDownloadStart(file_name, file_size, gid)
         LOGGER.info(f'Mega download started with gid: {gid}')
 
