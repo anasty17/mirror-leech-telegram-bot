@@ -30,7 +30,7 @@ if SEARCH_API_LINK:
         SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
         SITES['all'] = 'All'
     except Exception as e:
-        LOGGER.warning("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
+        LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
         SITES = None
 else:
     SITES = None
