@@ -4,7 +4,6 @@ from html import escape
 from urllib.parse import quote
 from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from os import remove
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup, deleteMessage, sendFile
@@ -157,7 +156,6 @@ def _search(bot, key, site, message, method):
         f.write(html_template.replace('{msg}', hmsg).replace('{title}', f'{method}_{key}_{site}'))
     deleteMessage(bot, message)
     sendFile(bot, message.reply_to_message, name, cap)
-    remove(name)
     if not method.startswith('api'):
         client.search_delete(search_id=search_id)
 

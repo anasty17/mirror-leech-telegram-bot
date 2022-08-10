@@ -1,5 +1,4 @@
 from time import sleep, time
-from os import remove
 
 from bot import aria2, download_dict_lock, download_dict, STOP_DUPLICATE, BASE_URL, LOGGER
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -61,7 +60,6 @@ def __onDownloadStarted(api, gid):
                     api.remove([download], force=True, files=True)
                     cap = f"Here are the search results:\n\n{cap}"
                     sendFile(listener.bot, listener.message, f_name, cap)
-                    remove(f_name)
                     return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")

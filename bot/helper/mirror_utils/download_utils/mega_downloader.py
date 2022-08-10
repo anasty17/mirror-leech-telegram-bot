@@ -1,6 +1,5 @@
 from threading import Lock
 from pathlib import Path
-from os import remove
 
 from bot import LOGGER, download_dict, download_dict_lock, STOP_DUPLICATE
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
@@ -68,9 +67,8 @@ class MegaDownloader:
 
     def __onInterval(self):
         dlInfo = self.__mega_client.getDownloadInfo(self.gid)
-        if (dlInfo['state'] == constants.State.TYPE_STATE_COMPLETED or dlInfo[
-            'state'] == constants.State.TYPE_STATE_CANCELED or dlInfo[
-                'state'] == constants.State.TYPE_STATE_FAILED) and self.__periodic is not None:
+        if dlInfo['state'] in [constants.State.TYPE_STATE_COMPLETED, constants.State.TYPE_STATE_CANCELED, 
+            constants.State.TYPE_STATE_FAILED] and self.__periodic is not None:
             self.__periodic.cancel()
         if dlInfo['state'] == constants.State.TYPE_STATE_COMPLETED:
             self.__onDownloadComplete()
@@ -123,7 +121,6 @@ class MegaDownloader:
                 if cap:
                     cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
                     sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
-                    remove(f_name)
                     return
         self.__onDownloadStart(file_name, file_size, gid)
         LOGGER.info(f'Mega download started with gid: {gid}')
