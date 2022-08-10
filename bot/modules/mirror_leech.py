@@ -4,6 +4,7 @@ from time import sleep
 from os import path as ospath
 from threading import Thread
 from telegram.ext import CommandHandler
+from requests import get as rget
 
 from bot import dispatcher, DOWNLOAD_DIR, LOGGER
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type
