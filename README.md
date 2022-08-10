@@ -3,43 +3,80 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 # Features:
 
 ## By [anasty17](https://github.com/anasty17)
-- qBittorrent.
-- Select files from Torrent before downloading using qbittorrent and aria2c.
-- Leech (splitting, thumbnail for each user, setting as document or as media for each user).
-- Stop duplicates for all tasks except yt-dlp tasks.
-- Leech/Zip/Unzip G-Drive links.
-- Counting files/folders from Google Drive link.
-- View Link button, extra button to open file index link in broswer instead of direct download.
-- Status Pages for unlimited tasks.
-- Clone status.
-- Search in multiple Drive folder/TeamDrive.
-- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method).
-- Multi-TD list by token.pickle if exists.
-- Extract rar, zip and 7z splits with or without password.
-- Zip file/folder with or without password.
-- Use Token.pickle if file not found with Service Account for all Gdrive functions.
-- Random Service Account at startup.
-- Mirror/Leech/Watch/Clone/Count/Del by reply.
-- YT-DLP quality buttons.
-- Search on torrents with Torrent Search API or with variable plugins using qBittorrent search engine
-- Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`.
-- Update bot at startup and with restart command using `UPSTREAM_REPO`.
-- Bittorrent seed until reaching specific ratio or time.
-- Rss feed and filter. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan).
-- Save leech settings including thumbnails in database.
-- Mirror/Leech/Clone multi links/files with one command.
-- Extensions Filter for the files to be uploaded/cloned.
-- Incomplete task notifier to get incomplete task messages after restart, works with database.
-- Almost all repository functions have been improved.
-- Custom Name for all links except torrents. For files you should add extension except yt-dlp links.
-- Many bugs have been fixed.
+In each single file there is a major change from base code, it's almost totaly different. Here some of features and fixes that I remember.
+### qBittorrent
+- Qbittorrent support
+- Select files from Torrent before and while downloading
+- Seed torrents to specific ratio and time
+### Aria2c
+- Select files from Torrent before and while downloading
+- Seed torrents to specific ratio and time
+- Improve aria.sh
+- Fix all download listener functions and status
+### Leech
+- Leech support
+- Splitting
+- Thumbnail for each user
+- Set upload as document or as media for each user
+- 4GB file upload with premium account
+### Google
+- Stop duplicates for all tasks except yt-dlp tasks
+- Download G-Drive links
+- Counting files/folders from Google Drive link
+- Search in multiple Drive folder/TeamDrive
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
+- Use Token.pickle if file not found with Service Account, for all Gdrive functions
+- List result in html file instead of telegraph or telegram message to avoid limits by @junedkh
+- Random Service Account at startup
+### Status
+- Clone Status
+- Extract Status
+- Archive Status
+- Seed Status
+- Status Pages for unlimited tasks
+- Ability to cancel upload/clone/archive/extract/split
+- Cancel all buttons for choosing specific tasks status to cancel
+- Fix flooding issues
+- Fix overall upload and download speed
+### Yt-dlp
+- Switch from youtube-dl to yt-dlp and fix all conflicts
+- Yt-dlp quality buttons
+- Support for download live streams
+- Ability to use specific yt-dlp arg for each task
+- Fix download progress
+### Database
+- SQL Database support
+- Save leech settings including thumbnails in database
+- Save sudo and authorized users
+- Incomplete task notifier to get incomplete task messages after restart
+### Torrents Search
+- Torrent search support
+- Search on torrents with Torrent Search API
+- Search on torrents with variable plugins using qBittorrent search engine
+### Archives
+- Zip instead of tar
+- Using 7-zip tool to extract all supported files
+- Extract rar, zip and 7z within folder or splits with or without password
+- Zip file/folder with or without password
+### RSS
+- Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
+- Filter added and all functions have been improved
+### Overall
+- Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
+- Update bot at startup and with restart command using `UPSTREAM_REPO`
+- Mirror/Leech/Watch/Clone/Count/Del by reply
+- Mirror/Leech/Clone multi links/files with one command
+- Custom name for all links except torrents. For files you should add extension except yt-dlp links
+- Extensions Filter for the files to be uploaded/cloned
+- View Link button. Extra button to open index link in broswer instead of direct download for file
+- Almost all repository functions have been improved and many other details can't mention all of them
+- Many bugs have been fixed
 
 ## From Base and other Repositories
-- Mirror direct download links, Torrent, and Telegram files to Google Drive
-- Mirror Mega.nz links to Google Drive
-- Copy files from someone's Drive to your Drive (Using Autorclone)
+- Mirror direct download links, Torrent, Mega.nz and Telegram files to Google Drive
+- Copy files from someone's Drive to your Drive
 - Download/Upload progress, Speeds and ETAs
-- Mirror all yt-dlp supported links
+- Mirror all youtube-dl supported links
 - Docker support
 - Uploading to Team Drive
 - Index Link support
@@ -51,7 +88,6 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 - Extract password protected files
 - Extract these filetypes
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
-
 - Direct links Supported:
   >mediafire, letsupload.io, hxfile.co, anonfiles.com, bayfiles.com, antfiles, fembed.com, fembed.net, femax20.com, layarkacaxxi.icu, fcdn.stream, sbplay.org, naniplay.com, naniplay.nanime.in, naniplay.nanime.biz, sbembed.com, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), uptobox.com and solidfiles.com
 
@@ -164,7 +200,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
 
 ### Buttons
-- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`, if yes make it `True`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
+- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
 
 ### Torrent Search
 - `SEARCH_API_LINK`: Search api app link. Get your api from deploying this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
@@ -324,7 +360,7 @@ help - All cmds with description
 - You can add private/public repository link to grab/overwrite all files from it.
 - You can skip adding the privates files like token.pickle or accounts folder before deploying, also no need to add variables direct links except **config.env**, simply fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
 - If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this private repository, so your private files will be overwritten from this repository. Also if you are using URL variables like `TOKEN_PICKLE_URL` then all files from those variables will override the private files that added before deploying or from private `UPSTREAM_REPO`.
-- If you filled `UPSTREAM_REPO` with the official repository link then be carefull incase any change in requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates or make it empty if deployed master branch.
+- If you filled `UPSTREAM_REPO` with the official repository link, then be carefull incase any change in requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates.
 - In case you you filled `UPSTREAM_REPO` with your fork link be carefull also if you fetched the commits from the official repository.
 - The changes in your `UPSTREAM_REPO` will take affect only after restart.
 - `UPSTREAM_BRANCH` don't ever fill heroku here.

@@ -115,6 +115,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
     if not is_url(link) and not is_magnet(link) and not ospath.exists(link):
         help_msg = "<b>Send link along with command line:</b>"
         if isQbit:
+            help_msg += "\n<code>/qbcmd</code> {link} pswd: xx [zip/unzip]"
+            help_msg += "\n\n<b>By replying to link/file:</b>"
+            help_msg += "\n<code>/qbcmd</code> pswd: xx [zip/unzip]"
             help_msg += "\n\n<b>Bittorrent selection:</b>"
             help_msg += "\n<code>/cmd</code> <b>s</b> {link} or by replying to {file/link}"
             help_msg += "\n\n<b>Qbittorrent seed</b>:"
@@ -132,7 +135,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             help_msg += "\n\n<b>Bittorrent selection:</b>"
             help_msg += "\n<code>/cmd</code> <b>s</b> {link} or by replying to {file/link}"
             help_msg += "\n\n<b>Bittorrent seed</b>:"
-            help_msg += "\n<code>/qbcmd</code> <b>d</b> {link} or by replying to {file/link}.\n"
+            help_msg += "\n<code>/cmd</code> <b>d</b> {link} or by replying to {file/link}.\n"
             help_msg += "To specify ratio and seed time. Ex: d:0.7:10 (ratio and time) or d:0.7 "
             help_msg += "(only ratio) or d::10 (only time) where time in minutes"
             help_msg += "\n\n<b>Multi links only by replying to first link/file:</b>"
