@@ -1,11 +1,11 @@
 from random import SystemRandom
 from string import ascii_letters, digits
-from os import makedirs
+from os import makedirs, remove
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
 from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD, STOP_DUPLICATE
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
 from bot.helper.ext_utils.bot_utils import get_mega_link_type
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -163,10 +163,11 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
             except:
                 mname = None
         if mname is not None:
-            smsg, button = GoogleDriveHelper().drive_list(mname, True)
-            if smsg:
-                msg1 = "File/Folder is already available in Drive.\nHere are the search results:"
-                sendMarkup(msg1, listener.bot, listener.message, button)
+            cap, f_name = GoogleDriveHelper().drive_list(mname, True)
+            if cap:
+                cap = f"File/Folder is already available in Drive. Here are the search results:\n\n{cap}"
+                sendFile(listener.bot, listener.message, f_name, cap)
+                remove(f_name)
                 api.removeListener(mega_listener)
                 if folder_api is not None:
                     folder_api.removeListener(mega_listener)

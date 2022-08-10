@@ -1,14 +1,14 @@
 from hashlib import sha1
 from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
-from os import path as ospath, listdir
+from os import path as ospath, listdir, remove
 from time import sleep, time
 from re import search as re_search
 
 from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, TORRENT_TIMEOUT, LOGGER
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, deleteMessage, sendStatusMessage, update_all_messages, sendFile
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, bt_selection_buttons
 from bot.helper.ext_utils.fs_utils import clean_unwanted, get_base_name
 
@@ -122,10 +122,12 @@ class QbDownloader:
                         except:
                             qbname = None
                     if qbname is not None:
-                        qbmsg, button = GoogleDriveHelper().drive_list(qbname, True)
-                        if qbmsg:
+                        cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
+                        if cap:
                             self.__onDownloadError("File/Folder is already available in Drive.")
-                            sendMarkup("Here are the search results:", self.__listener.bot, self.__listener.message, button)
+                            cap = f"Here are the search results:\n\n{cap}"
+                            sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
+                            remove(f_name)
                     self.__dupChecked = True
             elif tor_info.state == "stalledDL":
                 if not self.__rechecked and 0.99989999999999999 < tor_info.progress < 1:

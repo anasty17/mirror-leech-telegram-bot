@@ -11,6 +11,8 @@ In each single file there is a major change from base code, it's almost totaly d
 ### Aria2c
 - Select files from Torrent before and while downloading
 - Seed torrents to specific ratio and time
+- Netrc support
+- Direct link authentication for specific link while using the bot (it will work even if only username or password)
 - Improve aria.sh
 - Fix all download listener functions and status
 ### Leech

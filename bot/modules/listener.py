@@ -26,7 +26,7 @@ class MirrorLeechListener:
     def __init__(self, bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None, select=False, seed=False):
         self.bot = bot
         self.message = message
-        self.uid = self.message.message_id
+        self.uid = message.message_id
         self.extract = extract
         self.isZip = isZip
         self.isQbit = isQbit
@@ -37,7 +37,7 @@ class MirrorLeechListener:
         self.newDir = ""
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.select = select
-        self.isPrivate = self.message.chat.type in ['private', 'group']
+        self.isPrivate = message.chat.type in ['private', 'group']
         self.suproc = None
 
     def clean(self):
