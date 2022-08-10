@@ -24,33 +24,23 @@ if SEARCH_PLUGINS is not None:
     qbclient.search_install_plugin(SEARCH_PLUGINS)
     qbclient.auth_log_out()
 
-SITES = {
-    "1337x": "1337x",
-    "yts": "YTS",
-    "tgx": "TorrentGalaxy",
-    "torlock": "Torlock",
-    "piratebay": "PirateBay",
-    "nyaasi": "NyaaSi",
-    "zooqle": "Zooqle",
-    "kickass": "KickAss",
-    "bitsearch": "Bitsearch",
-    "glodls": "Glodls",
-    "magnetdl": "MagnetDL",
-    "limetorrent": "LimeTorrent",
-    "torrentfunk": "TorrentFunk",
-    "torrentproject": "TorrentProject",
-    "libgen": "Libgen",
-    "ybt": "YourBittorrent",
-    "all": "All"
-}
-
+if SEARCH_API_LINK:
+    try:
+        res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
+        SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
+        SITES['all'] = 'All'
+    except Exception as e:
+        LOGGER.warning("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
+        SITES = None
+else:
+    SITES = None
 
 def torser(update, context):
     user_id = update.message.from_user.id
     buttons = button_build.ButtonMaker()
-    if SEARCH_API_LINK is  None and SEARCH_PLUGINS is None:
+    if SITES is None and SEARCH_PLUGINS is None:
         sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
-    elif len(context.args) == 0 and SEARCH_API_LINK is None:
+    elif len(context.args) == 0 and SITES is None:
         sendMessage("Send a search key along with command", context.bot, update.message)
     elif len(context.args) == 0:
         buttons.sbutton('Trending', f"torser {user_id} apitrend")
@@ -58,16 +48,16 @@ def torser(update, context):
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = InlineKeyboardMarkup(buttons.build_menu(2))
         sendMarkup("Send a search key along with command", context.bot, update.message, button)
-    elif SEARCH_API_LINK is not None and SEARCH_PLUGINS is not None:
+    elif SITES is not None and SEARCH_PLUGINS is not None:
         buttons.sbutton('Api', f"torser {user_id} apisearch")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = InlineKeyboardMarkup(buttons.build_menu(2))
         sendMarkup('Choose tool to search:', context.bot, update.message, button)
-    elif SEARCH_API_LINK is not None and SEARCH_PLUGINS is None:
+    elif SITES is not None:
         button = _api_buttons(user_id, "apisearch")
         sendMarkup('Choose site to search:', context.bot, update.message, button)
-    elif SEARCH_API_LINK is None and SEARCH_PLUGINS is not None:
+    else:
         button = _plugin_buttons(user_id)
         sendMarkup('Choose site to search:', context.bot, update.message, button)
 
@@ -76,10 +66,7 @@ def torserbut(update, context):
     user_id = query.from_user.id
     message = query.message
     key = message.reply_to_message.text.split(maxsplit=1)
-    if len(key) > 1:
-        key = key[1].strip()
-    else:
-        key = None
+    key = key[1].strip() if len(key) > 1 else None
     data = query.data
     data = data.split()
     if user_id != int(data[1]):
@@ -98,10 +85,10 @@ def torserbut(update, context):
         method = data[3]
         if method.startswith('api'):
             if key is None:
-                if method == 'apitrend':
-                    endpoint = 'Trending'
-                elif method == 'apirecent':
+                if method == 'apirecent':
                     endpoint = 'Recent'
+                elif method == 'apitrend':
+                    endpoint = 'Trending'
                 editMessage(f"<b>Listing {endpoint} Items...\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
             else:
                 editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
@@ -191,7 +178,7 @@ def _getResult(search_results, key, message, method):
             if 'torrents' in result.keys():
                 for subres in result['torrents']:
                     msg += f"<span class='topmarginsm'><b>Quality: </b>{subres['quality']} | "
-                    mag += f"<b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}</span>"
+                    msg += f"<b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}</span>"
                     if 'torrent' in subres.keys():
                         msg += "<span class='topmarginxl'><a class='withhover' "
                         msg += f"href='{subres['torrent']}'>Direct Link</a></span>"
@@ -207,10 +194,10 @@ def _getResult(search_results, key, message, method):
                 except:
                     pass
                 if 'torrent' in result.keys():
-                    msg += f"<span class='topmarginxl'><a class='withhover' "
+                    msg += "<span class='topmarginxl'><a class='withhover' "
                     msg += f"href='{result['torrent']}'>Direct Link</a></span>"
                 elif 'magnet' in result.keys():
-                    msg += f"<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
+                    msg += "<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
                     msg += f"href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a></span>"
         else:
             msg += f"<div> <a class='withhover' href='{result.descrLink}'>{escape(result.fileName)}</a></div>"
@@ -219,7 +206,7 @@ def _getResult(search_results, key, message, method):
             msg += f"<b>Leechers: </b>{result.nbLeechers}</span>"
             link = result.fileUrl
             if link.startswith('magnet:'):
-                msg += f"<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
+                msg += "<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
                 msg += f"href='http://t.me/share/url?url={quote(link)}'>Telegram</a></span>"
             else:
                 msg += f"<span class='topmarginxl'><a class='withhover' href='{link}'>Direct Link</a></span>"
