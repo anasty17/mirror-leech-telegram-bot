@@ -1,3 +1,4 @@
+from logging import error as log_error
 from requests import get as rget
 from threading import Thread
 from html import escape
@@ -30,7 +31,7 @@ if SEARCH_API_LINK:
         SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
         SITES['all'] = 'All'
     except Exception as e:
-        LOGGER.warning("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
+        log_error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
         SITES = None
 else:
     SITES = None
