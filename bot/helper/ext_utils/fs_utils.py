@@ -126,7 +126,8 @@ def take_ss(video_file):
 def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, noMap=False):
     if listener.seed and not listener.newDir:
         dirpath = f"{dirpath}/splited_files_mltb"
-        mkdir(dirpath)
+        if not ospath.exists(dirpath):
+            mkdir(dirpath)
     parts = ceil(size/LEECH_SPLIT_SIZE)
     if EQUAL_SPLITS and not inLoop:
         split_size = ceil(size/parts) + 1000
