@@ -1,7 +1,6 @@
 from hashlib import sha1
 from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
-from os import path as ospath, listdir
 from time import sleep, time
 from re import search as re_search
 
@@ -27,7 +26,6 @@ class QbDownloader:
         self.__name = ''
         self.__stalled_time = time()
         self.__uploaded = False
-        self.__dupChecked = False
         self.__rechecked = False
 
     def add_qb_torrent(self, link, path, select, ratio, seed_time):
@@ -93,6 +91,22 @@ class QbDownloader:
                 sendMarkup(msg, self.__listener.bot, self.__listener.message, SBUTTONS)
             else:
                 sendStatusMessage(self.__listener.message, self.__listener.bot)
+                if STOP_DUPLICATE and not self.__listener.isLeech:
+                    LOGGER.info('Checking File/Folder if already in Drive')
+                    qbname = tor_info.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
+                    if self.__listener.isZip:
+                        qbname = f"{qbname}.zip"
+                    elif self.__listener.extract:
+                        try:
+                            qbname = get_base_name(qbname)
+                        except:
+                            qbname = None
+                    if qbname is not None:
+                        cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
+                        if cap:
+                            self.__onDownloadError("File/Folder is already available in Drive.")
+                            cap = f"Here are the search results:\n\n{cap}"
+                            sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
         except Exception as e:
             sendMessage(str(e), self.__listener.bot, self.__listener.message)
             self.client.auth_log_out()
@@ -109,25 +123,6 @@ class QbDownloader:
                     self.__onDownloadError("Dead Torrent!")
             elif tor_info.state == "downloading":
                 self.__stalled_time = time()
-                if not self.select and not self.__dupChecked and STOP_DUPLICATE and not self.__listener.isLeech and ospath.isdir(f'{self.__path}'):
-                    LOGGER.info('Checking File/Folder if already in Drive')
-                    qbname = str(listdir(f'{self.__path}')[-1])
-                    if qbname.endswith('.!qB'):
-                        qbname = ospath.splitext(qbname)[0]
-                    if self.__listener.isZip:
-                        qbname = f"{qbname}.zip"
-                    elif self.__listener.extract:
-                        try:
-                           qbname = get_base_name(qbname)
-                        except:
-                            qbname = None
-                    if qbname is not None:
-                        cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
-                        if cap:
-                            self.__onDownloadError("File/Folder is already available in Drive.")
-                            cap = f"Here are the search results:\n\n{cap}"
-                            sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
-                    self.__dupChecked = True
             elif tor_info.state == "stalledDL":
                 if not self.__rechecked and 0.99989999999999999 < tor_info.progress < 1:
                     msg = f"Force recheck - Name: {self.__name} Hash: "
@@ -142,8 +137,7 @@ class QbDownloader:
                 self.client.torrents_recheck(torrent_hashes=self.ext_hash)
             elif tor_info.state == "error":
                 self.__onDownloadError("No enough space for this torrent on device")
-            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and \
-                 not self.__uploaded and len(listdir(self.__path)) != 0:
+            elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and not self.__uploaded:
                 self.__uploaded = True
                 if not self.__listener.seed:
                     self.client.torrents_pause(torrent_hashes=self.ext_hash)

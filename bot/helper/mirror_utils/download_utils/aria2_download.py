@@ -111,6 +111,8 @@ def __onBtDownloadComplete(api, gid):
                 api.set_options({'max-upload-limit': '0'}, [download])
             except Exception as e:
                 LOGGER.error(f'{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent')
+        else:
+            api.client.force_pause(gid)
         listener.onDownloadComplete()
         if listener.seed:
             with download_dict_lock:
