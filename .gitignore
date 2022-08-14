@@ -8,8 +8,6 @@ data*
 *.pickle
 .netrc
 log.txt
-authorized_chats.txt
-sudo_users.txt
 accounts/*
 Thumbnails/*
 drive_folder
