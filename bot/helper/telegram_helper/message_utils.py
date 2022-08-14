@@ -41,7 +41,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
     try:
         bot.editMessageText(text=text, message_id=message.message_id,
                               chat_id=message.chat.id,reply_markup=reply_markup,
-                              parse_mode='HTMl', disable_web_page_preview=True)
+                              parse_mode='HTML', disable_web_page_preview=True)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
@@ -53,7 +53,7 @@ def editMessage(text: str, message: Message, reply_markup=None):
 def sendRss(text: str, bot):
     if rss_session is None:
         try:
-            return bot.sendMessage(RSS_CHAT_ID, text, parse_mode='HTMl', disable_web_page_preview=True)
+            return bot.sendMessage(RSS_CHAT_ID, text, parse_mode='HTML', disable_web_page_preview=True)
         except RetryAfter as r:
             LOGGER.warning(str(r))
             sleep(r.retry_after * 1.5)
@@ -90,7 +90,7 @@ def sendFile(bot, message: Message, name: str, caption=""):
     try:
         with open(name, 'rb') as f:
             bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
-                             caption=caption, parse_mode='HTMl',chat_id=message.chat_id)
+                             caption=caption, parse_mode='HTML',chat_id=message.chat_id)
         remove(name)
         return
     except RetryAfter as r:
