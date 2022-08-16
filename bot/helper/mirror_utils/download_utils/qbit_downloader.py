@@ -27,6 +27,7 @@ class QbDownloader:
         self.__stalled_time = time()
         self.__uploaded = False
         self.__rechecked = False
+        self.__stopDup_check = False
 
     def add_qb_torrent(self, link, path, select, ratio, seed_time):
         self.__path = path
@@ -91,22 +92,6 @@ class QbDownloader:
                 sendMarkup(msg, self.__listener.bot, self.__listener.message, SBUTTONS)
             else:
                 sendStatusMessage(self.__listener.message, self.__listener.bot)
-                if STOP_DUPLICATE and not self.__listener.isLeech:
-                    LOGGER.info('Checking File/Folder if already in Drive')
-                    qbname = tor_info.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
-                    if self.__listener.isZip:
-                        qbname = f"{qbname}.zip"
-                    elif self.__listener.extract:
-                        try:
-                            qbname = get_base_name(qbname)
-                        except:
-                            qbname = None
-                    if qbname is not None:
-                        cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
-                        if cap:
-                            self.__onDownloadError("File/Folder is already available in Drive.")
-                            cap = f"Here are the search results:\n\n{cap}"
-                            sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
         except Exception as e:
             sendMessage(str(e), self.__listener.bot, self.__listener.message)
             self.client.auth_log_out()
@@ -123,6 +108,23 @@ class QbDownloader:
                     self.__onDownloadError("Dead Torrent!")
             elif tor_info.state == "downloading":
                 self.__stalled_time = time()
+                if not self.__stopDup_check and not self.select and STOP_DUPLICATE and not self.__listener.isLeech:
+                    LOGGER.info('Checking File/Folder if already in Drive')
+                    qbname = tor_info.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
+                    if self.__listener.isZip:
+                        qbname = f"{qbname}.zip"
+                    elif self.__listener.extract:
+                        try:
+                            qbname = get_base_name(qbname)
+                        except:
+                            qbname = None
+                    if qbname is not None:
+                        cap, f_name = GoogleDriveHelper().drive_list(qbname, True)
+                        if cap:
+                            self.__onDownloadError("File/Folder is already available in Drive.")
+                            cap = f"Here are the search results:\n\n{cap}"
+                            sendFile(self.__listener.bot, self.__listener.message, f_name, cap)
+                    self.__stopDup_check = True
             elif tor_info.state == "stalledDL":
                 if not self.__rechecked and 0.99989999999999999 < tor_info.progress < 1:
                     msg = f"Force recheck - Name: {self.__name} Hash: "

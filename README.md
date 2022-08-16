@@ -174,7 +174,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `CUSTOM_FILENAME`: Add custom word to leeched file name. `Str`
 - `USER_SESSION_STRING`: To download/upload from your telegram account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with supergroup or channel.
 
-### qBittorrent
+### qBittorrent/Aria2c
 - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). This Var is optional on VPS and required for Heroku specially to avoid app sleeping/idling. For Heroku fill `https://yourappname.herokuapp.com`. Still got idling? You can use http://cron-job.org to ping your Heroku app. `Str`
 - `SERVER_PORT`: Only For VPS, which is the **BASE_URL_OF_BOT** Port. `Str`
 - `WEB_PINCODE`: If empty or `False` means no more pincode required while qbit web selection. `Bool`

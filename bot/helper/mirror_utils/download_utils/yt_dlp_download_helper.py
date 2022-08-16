@@ -164,10 +164,10 @@ class YoutubeDLHelper:
             self.is_playlist = True
         self.__gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
         self.__onDownloadStart()
-        if qual.startswith('ba/b'):
-            audio_info = qual.split('-')
-            qual = audio_info[0]
-            rate = audio_info[1] if len(audio_info) == 2 else '320'
+        if qual.startswith('ba/b-'):
+            mp3_info = qual.split('-')
+            qual = mp3_info[0]
+            rate = mp3_info[1]
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
         LOGGER.info(f"Downloading with YT-DLP: {link}")
