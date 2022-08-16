@@ -49,7 +49,7 @@ def _clone(message, bot):
         if multi > 1:
             sleep(4)
             nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-            nextmsg = sendMessage(message.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
+            nextmsg = sendMessage(message.text.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
             nextmsg.from_user.id = message.from_user.id
             sleep(4)
             Thread(target=_clone, args=(nextmsg, bot)).start()
