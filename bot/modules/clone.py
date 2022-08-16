@@ -13,10 +13,11 @@ from bot import dispatcher, LOGGER, STOP_DUPLICATE, download_dict, download_dict
 from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread
 
 
-def _clone(message, bot, multi=0):
+def _clone(message, bot):
     args = message.text.split()
     reply_to = message.reply_to_message
     link = ''
+    multi=1
     if len(args) > 1:
         link = args[1].strip()
         if link.strip().isdigit():
@@ -48,11 +49,10 @@ def _clone(message, bot, multi=0):
         if multi > 1:
             sleep(4)
             nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-            nextmsg = sendMessage(args[0], bot, nextmsg)
+            nextmsg = sendMessage(message.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
             nextmsg.from_user.id = message.from_user.id
-            multi -= 1
             sleep(4)
-            Thread(target=_clone, args=(nextmsg, bot, multi)).start()
+            Thread(target=_clone, args=(nextmsg, bot)).start()
         if files <= 20:
             msg = sendMessage(f"Cloning: <code>{link}</code>", bot, message)
             result, button = gd.clone(link)

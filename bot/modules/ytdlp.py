@@ -8,24 +8,24 @@ from bot import DOWNLOAD_DIR, dispatcher
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.telegram_helper import button_build
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
-from bot.helper.mirror_utils.download_utils.youtube_dl_download_helper import YoutubeDLHelper
+from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from .listener import MirrorLeechListener
 
 listener_dict = {}
 
-def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
+def _ytdl(bot, message, isZip=False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
+    multi=1
 
     link = mssg.split()
     if len(link) > 1:
         link = link[1].strip()
         if link.strip().isdigit():
-            if multi == 0:
-                multi = int(link)
+            multi = int(link)
             link = ''
         elif link.strip().startswith(("|", "pswd:", "args:")):
             link = ''
@@ -76,11 +76,11 @@ def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
         help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [zip] args: x:y|x1:y1"
         help_msg += "\n\n<b>By replying to link:</b>"
         help_msg += "\n<code>/command</code> |newname pswd: mypassword [zip] args: x:y|x1:y1"
-        help_msg += "\n\n<b>Args Example:</b> args: playliststart:^10|match_filter:season_number=18|matchtitle:S1"
+        help_msg += "\n\n<b>Args Example:</b> args: playliststart:^10|matchtitle:S13|writesubtitles:true"
         help_msg += "\n\n<b>NOTE:</b> Add `^` before integer, some values must be integer and some string."
-        help_msg += " Like playlist_items:10 works with string so no need to add `^` before the number"
+        help_msg += " Like playlist_items:10 works with string, so no need to add `^` before the number"
         help_msg += " but playlistend works only with integer so you must add `^` before the number like example above."
-        help_msg += "\n\nCheck all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L174'>FILE</a>."
+        help_msg += "\n\nCheck all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L178'>FILE</a>."
         return sendMessage(help_msg, bot, message)
 
     listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
@@ -95,11 +95,11 @@ def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
         return sendMessage(tag + " " + msg, bot, message)
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
-            video_format = f"bv*[height<={i}][ext=mp4]"
+            video_format = f"bv*[height<=?{i}][ext=mp4]"
             buttons.sbutton(f"{i}-mp4", f"qu {msg_id} {video_format} t")
-            video_format = f"bv*[height<={i}][ext=webm]"
+            video_format = f"bv*[height<=?{i}][ext=webm]"
             buttons.sbutton(f"{i}-webm", f"qu {msg_id} {video_format} t")
-        buttons.sbutton("Audios", f"qu {msg_id} audio t")
+        buttons.sbutton("MP3", f"qu {msg_id} mp3 t")
         buttons.sbutton("Best Videos", f"qu {msg_id} {best_video} t")
         buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
@@ -111,44 +111,42 @@ def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
         formats_dict = {}
         if formats is not None:
             for frmt in formats:
-                if not frmt.get('tbr') or not frmt.get('height'):
-                    continue
+                if frmt.get('tbr'):
 
-                if frmt.get('fps'):
-                    quality = f"{frmt['height']}p{frmt['fps']}-{frmt['ext']}"
-                else:
-                    quality = f"{frmt['height']}p-{frmt['ext']}"
+                    format_id = frmt['format_id']
 
-                if frmt.get('filesize'):
-                    size = frmt['filesize']
-                elif frmt.get('filesize_approx'):
-                    size = frmt['filesize_approx']
-                else:
-                    size = 0
-
-                if quality in list(formats_dict.keys()):
-                    formats_dict[quality][frmt['tbr']] = size
-                else:
-                    subformat = {}
-                    subformat[frmt['tbr']] = size
-                    formats_dict[quality] = subformat
-
-            for _format in formats_dict:
-                if len(formats_dict[_format]) == 1:
-                    qual_fps_ext = re_split(r'p|-', _format, maxsplit=2)
-                    height = qual_fps_ext[0]
-                    fps = qual_fps_ext[1]
-                    ext = qual_fps_ext[2]
-                    if fps != '':
-                        video_format = f"bv*[height={height}][fps={fps}][ext={ext}]"
+                    if frmt.get('filesize'):
+                        size = frmt['filesize']
+                    elif frmt.get('filesize_approx'):
+                        size = frmt['filesize_approx']
                     else:
-                        video_format = f"bv*[height={height}][ext={ext}]"
-                    size = list(formats_dict[_format].values())[0]
-                    buttonName = f"{_format} ({get_readable_file_size(size)})"
-                    buttons.sbutton(str(buttonName), f"qu {msg_id} {video_format}")
+                        size = 0
+
+                    if frmt.get('height'):
+                        height = frmt['height']
+                        ext = frmt['ext']
+                        fps = frmt['fps'] if frmt.get('fps') else ''
+                        b_name = f"{height}p{fps}-{ext}"
+                        v_format = f"bv*[format_id={format_id}]+ba/b[height={height}]"
+                    elif frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
+                        b_name = f"{frmt['acodec']}-{frmt['ext']}"
+                        v_format = f"ba[format_id={format_id}]"
+
+                    if b_name in formats_dict:
+                        formats_dict[b_name][frmt['tbr']] = [size, v_format]
+                    else:
+                        subformat = {}
+                        subformat[frmt['tbr']] = [size, v_format]
+                        formats_dict[b_name] = subformat
+
+            for b_name, d_dict in formats_dict.items():
+                if len(d_dict) == 1:
+                    d_data = list(d_dict.values())[0]
+                    buttonName = f"{b_name} ({get_readable_file_size(d_data[0])})"
+                    buttons.sbutton(buttonName, f"qu {msg_id} {d_data[1]}")
                 else:
-                    buttons.sbutton(str(_format), f"qu {msg_id} dict {_format}")
-        buttons.sbutton("Audios", f"qu {msg_id} audio")
+                    buttons.sbutton(b_name, f"qu {msg_id} dict {b_name}")
+        buttons.sbutton("MP3", f"qu {msg_id} mp3")
         buttons.sbutton("Best Video", f"qu {msg_id} {best_video}")
         buttons.sbutton("Best Audio", f"qu {msg_id} {best_audio}")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
@@ -160,43 +158,24 @@ def _ytdl(bot, message, isZip=False, isLeech=False, multi=0):
     if multi > 1:
         sleep(4)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        nextmsg = sendMessage(mssg, bot, nextmsg)
+        nextmsg = sendMessage(mssg.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
         nextmsg.from_user.id = message.from_user.id
-        multi -= 1
         sleep(4)
-        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech, multi)).start()
+        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
 
-def _qual_subbuttons(task_id, qual, msg):
+def _qual_subbuttons(task_id, b_name, msg):
     buttons = button_build.ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[6]
-    qual_fps_ext = re_split(r'p|-', qual, maxsplit=2)
-    height = qual_fps_ext[0]
-    fps = qual_fps_ext[1]
-    ext = qual_fps_ext[2]
-    tbrs = []
-    for tbr in formats_dict[qual]:
-        tbrs.append(tbr)
-    tbrs.sort(reverse=True)
-    for index, br in enumerate(tbrs):
-        if index == 0:
-            tbr = f">{br}"
-        else:
-            sbr = index - 1
-            tbr = f"<{tbrs[sbr]}"
-        if fps != '':
-            video_format = f"bv*[height={height}][fps={fps}][ext={ext}][tbr{tbr}]"
-        else:
-            video_format = f"bv*[height={height}][ext={ext}][tbr{tbr}]"
-        size = formats_dict[qual][br]
-        buttonName = f"{br}K ({get_readable_file_size(size)})"
-        buttons.sbutton(str(buttonName), f"qu {task_id} {video_format}")
+    for tbr, d_data in formats_dict[b_name].items():
+        buttonName = f"{tbr}K ({get_readable_file_size(d_data[0])})"
+        buttons.sbutton(buttonName, f"qu {task_id} {d_data[1]}")
     buttons.sbutton("Back", f"qu {task_id} back")
     buttons.sbutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
-    editMessage(f"Choose Video Bitrate for <b>{qual}</b>:", msg, SUBBUTTONS)
+    editMessage(f"Choose Bit rate for <b>{b_name}</b>:", msg, SUBBUTTONS)
 
-def _audio_subbuttons(task_id, msg, playlist=False):
+def _mp3_subbuttons(task_id, msg, playlist=False):
     buttons = button_build.ButtonMaker()
     audio_qualities = [64, 128, 320]
     for q in audio_qualities:
@@ -228,19 +207,19 @@ def select_format(update, context):
         return query.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
         query.answer()
-        qual = data[3]
-        _qual_subbuttons(task_id, qual, msg)
+        b_name = data[3]
+        _qual_subbuttons(task_id, b_name, msg)
         return
     elif data[2] == "back":
         query.answer()
         return editMessage('Choose Video Quality:', msg, task_info[4])
-    elif data[2] == "audio":
+    elif data[2] == "mp3":
         query.answer()
         if len(data) == 4:
             playlist = True
         else:
             playlist = False
-        _audio_subbuttons(task_id, msg, playlist)
+        _mp3_subbuttons(task_id, msg, playlist)
         return
     elif data[2] == "cancel":
         query.answer()
@@ -252,9 +231,6 @@ def select_format(update, context):
         name = task_info[3]
         args = task_info[5]
         qual = data[2]
-        if qual.startswith('bv*['): # To not exceed telegram button bytes limits. Temp solution.
-            height = re_split(r'\[|\]', qual, maxsplit=2)[1]
-            qual = qual + f"+ba/b[{height}]"
         if len(data) == 4:
             playlist = True
         else:

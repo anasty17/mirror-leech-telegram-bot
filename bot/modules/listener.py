@@ -100,18 +100,20 @@ class MirrorLeechListener:
                     if self.seed:
                         self.newDir = f"{self.dir}10000"
                         path = f"{self.newDir}/{name}"
+                    else:
+                        path = m_path
                     for dirpath, subdir, files in walk(m_path, topdown=False):
                         for file_ in files:
                             if re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
-                                m_path = ospath.join(dirpath, file_)
+                                f_path = ospath.join(dirpath, file_)
                                 if self.seed:
                                     t_path = dirpath.replace(self.dir, self.newDir)
                                 else:
                                     t_path = dirpath
                                 if self.pswd is not None:
-                                    self.suproc = Popen(["7z", "x", f"-p{self.pswd}", m_path, f"-o{t_path}", "-aot"])
+                                    self.suproc = Popen(["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot"])
                                 else:
-                                    self.suproc = Popen(["7z", "x", m_path, f"-o{t_path}", "-aot"])
+                                    self.suproc = Popen(["7z", "x", f_path, f"-o{t_path}", "-aot"])
                                 self.suproc.wait()
                                 if self.suproc.returncode == -9:
                                     return

@@ -6,14 +6,12 @@ from PIL import Image
 from threading import RLock
 
 from bot import AS_DOCUMENT, AS_DOC_USERS, AS_MEDIA_USERS, CUSTOM_FILENAME, EXTENSION_FILTER, app
-from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, clean_unwanted
+from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_media_streams, clean_unwanted
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 
 LOGGER = getLogger(__name__)
 getLogger("pyrogram").setLevel(ERROR)
 
-VIDEO_SUFFIXES = ("MKV", "MP4", "MOV", "WMV", "3GP", "MPG", "WEBM", "AVI", "FLV", "M4V", "GIF")
-AUDIO_SUFFIXES = ("MP3", "M4A", "M4B", "FLAC", "WAV", "AIF", "OGG", "AAC", "DTS", "MID", "AMR", "MKA")
 IMAGE_SUFFIXES = ("JPG", "JPX", "PNG", "CR2", "TIF", "BMP", "JXR", "PSD", "ICO", "HEIC", "JPEG")
 
 
@@ -78,12 +76,12 @@ class TgUploader:
         thumb = self.__thumb
         self.__is_corrupted = False
         try:
+            is_video, is_audio = get_media_streams(up_path)
             if not self.__as_doc:
-                duration = 0
-                if file_.upper().endswith(VIDEO_SUFFIXES):
+                if is_video:
                     duration = get_media_info(up_path)[0]
                     if thumb is None:
-                        thumb = take_ss(up_path)
+                        thumb = take_ss(up_path, duration)
                         if self.__is_cancelled:
                             if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
                                 osremove(thumb)
@@ -109,7 +107,7 @@ class TgUploader:
                                                                   supports_streaming=True,
                                                                   disable_notification=True,
                                                                   progress=self.__upload_progress)
-                elif file_.upper().endswith(AUDIO_SUFFIXES):
+                elif is_audio:
                     duration , artist, title = get_media_info(up_path)
                     self.__sent_msg = self.__sent_msg.reply_audio(audio=up_path,
                                                                   quote=True,
@@ -129,8 +127,8 @@ class TgUploader:
                 else:
                     notMedia = True
             if self.__as_doc or notMedia:
-                if file_.upper().endswith(VIDEO_SUFFIXES) and thumb is None:
-                    thumb = take_ss(up_path)
+                if is_video and thumb is None:
+                    thumb = take_ss(up_path, None)
                     if self.__is_cancelled:
                         if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
                             osremove(thumb)
