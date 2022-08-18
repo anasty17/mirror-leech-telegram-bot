@@ -176,6 +176,7 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
     listener.onDownloadStart()
     makedirs(path)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
+    mname = name or node.getName()
     mega_listener.setValues(mname, api.getSize(node), gid)
     sendStatusMessage(listener.message, listener.bot)
     executor.do(api.startDownload, (node, path, name, None, False, None))

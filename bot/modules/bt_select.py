@@ -47,7 +47,6 @@ def select(update, context):
             id_ = dl.download().ext_hash
             client = dl.client()
             client.torrents_pause(torrent_hashes=id_)
-            dl.download().select = True
         else:
             id_ = dl.gid()
             aria2.client.force_pause(id_)

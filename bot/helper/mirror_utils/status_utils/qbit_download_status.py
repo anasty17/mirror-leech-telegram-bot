@@ -32,10 +32,7 @@ class QbDownloadStatus:
         Gets total size of the mirror file/folder
         :return: total size of mirror
         """
-        if self.__obj.select:
-            return self.__info.size
-        else:
-            return self.__info.total_size
+        return self.__info.size
 
     def processed_bytes(self):
         return self.__info.downloaded

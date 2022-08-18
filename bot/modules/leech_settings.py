@@ -2,7 +2,6 @@ from os import remove as osremove, path as ospath, mkdir
 from threading import Thread
 from PIL import Image
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from telegram import InlineKeyboardMarkup
 
 from bot import AS_DOC_USERS, AS_MEDIA_USERS, dispatcher, AS_DOCUMENT, AUTO_DELETE_MESSAGE_DURATION, DB_URI
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
@@ -37,7 +36,7 @@ def getleechinfo(from_user):
     if AUTO_DELETE_MESSAGE_DURATION == -1:
         buttons.sbutton("Close", f"leechset {user_id} close")
 
-    button = InlineKeyboardMarkup(buttons.build_menu(1))
+    button = buttons.build_menu(1)
 
     text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
            f"Leech Type <b>{ltype}</b>\n"\
