@@ -60,18 +60,17 @@ except:
 
 PORT = environ.get('PORT')
 Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{PORT}", shell=True)
-srun(["last-api", "-d", "--profile=."])
+srun(["firefox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
 srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "600", ".netrc"])
 trackers = check_output("curl -Ns https://raw.githubusercontent.com/XIU2/TrackersListCollection/master/all.txt https://ngosang.github.io/trackerslist/trackers_all_http.txt https://newtrackon.com/api/all https://raw.githubusercontent.com/hezhijie0327/Trackerslist/main/trackerslist_tracker.txt | awk '$0' | tr '\n\n' ','", shell=True).decode('utf-8').rstrip(',')
-if TORRENT_TIMEOUT is not None:
-    with open("a2c.conf", "a+") as a:
-        a.write(f"bt-stop-timeout={TORRENT_TIMEOUT}\n")
 with open("a2c.conf", "a+") as a:
+    if TORRENT_TIMEOUT is not None:
+        a.write(f"bt-stop-timeout={TORRENT_TIMEOUT}\n")
     a.write(f"bt-tracker=[{trackers}]")
-srun(["extra-api", "--conf-path=/usr/src/app/a2c.conf"])
+srun(["chrome", "--conf-path=/usr/src/app/a2c.conf"])
 alive = Popen(["python3", "alive.py"])
 sleep(0.5)
 

@@ -2,7 +2,6 @@ from requests import get as rget
 from threading import Thread
 from html import escape
 from urllib.parse import quote
-from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
@@ -45,13 +44,13 @@ def torser(update, context):
         buttons.sbutton('Trending', f"torser {user_id} apitrend")
         buttons.sbutton('Recent', f"torser {user_id} apirecent")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
-        button = InlineKeyboardMarkup(buttons.build_menu(2))
+        button = buttons.build_menu(2)
         sendMarkup("Send a search key along with command", context.bot, update.message, button)
     elif SITES is not None and SEARCH_PLUGINS is not None:
         buttons.sbutton('Api', f"torser {user_id} apisearch")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
-        button = InlineKeyboardMarkup(buttons.build_menu(2))
+        button = buttons.build_menu(2)
         sendMarkup('Choose tool to search:', context.bot, update.message, button)
     elif SITES is not None:
         button = _api_buttons(user_id, "apisearch")
@@ -216,7 +215,7 @@ def _api_buttons(user_id, method):
     for data, name in SITES.items():
         buttons.sbutton(name, f"torser {user_id} {data} {method}")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
-    return InlineKeyboardMarkup(buttons.build_menu(2))
+    return buttons.build_menu(2)
 
 def _plugin_buttons(user_id):
     buttons = button_build.ButtonMaker()
@@ -230,7 +229,7 @@ def _plugin_buttons(user_id):
         buttons.sbutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.sbutton('All', f"torser {user_id} all plugin")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
-    return InlineKeyboardMarkup(buttons.build_menu(2))
+    return buttons.build_menu(2)
 
 
 torser_handler = CommandHandler(BotCommands.SearchCommand, torser, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

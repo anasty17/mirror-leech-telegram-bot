@@ -1,5 +1,4 @@
 from threading import Thread
-from telegram import InlineKeyboardMarkup
 from telegram.ext import CommandHandler, CallbackQueryHandler
 
 from bot import LOGGER, dispatcher
@@ -18,7 +17,7 @@ def list_buttons(update, context):
     buttons.sbutton("Files", f"types {user_id} files")
     buttons.sbutton("Both", f"types {user_id} both")
     buttons.sbutton("Cancel", f"types {user_id} cancel")
-    button = InlineKeyboardMarkup(buttons.build_menu(2))
+    button = buttons.build_menu(2)
     sendMarkup('Choose option to list.', context.bot, update.message, button)
 
 def select_type(update, context):

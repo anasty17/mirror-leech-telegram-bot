@@ -1,6 +1,5 @@
 from threading import Thread
 from telegram.ext import CommandHandler, CallbackQueryHandler
-from telegram import InlineKeyboardMarkup
 from time import sleep
 from re import split as re_split
 
@@ -103,7 +102,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
         buttons.sbutton("Best Videos", f"qu {msg_id} {best_video} t")
         buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
-        YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(3))
+        YTBUTTONS = buttons.build_menu(3)
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args]
         bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
     else:
@@ -150,7 +149,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
         buttons.sbutton("Best Video", f"qu {msg_id} {best_video}")
         buttons.sbutton("Best Audio", f"qu {msg_id} {best_audio}")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
-        YTBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
+        YTBUTTONS = buttons.build_menu(2)
         listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args, formats_dict]
         bmsg = sendMarkup('Choose Video Quality:', bot, message, YTBUTTONS)
 
@@ -172,7 +171,7 @@ def _qual_subbuttons(task_id, b_name, msg):
         buttons.sbutton(buttonName, f"qu {task_id} {d_data[1]}")
     buttons.sbutton("Back", f"qu {task_id} back")
     buttons.sbutton("Cancel", f"qu {task_id} cancel")
-    SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
+    SUBBUTTONS = buttons.build_menu(2)
     editMessage(f"Choose Bit rate for <b>{b_name}</b>:", msg, SUBBUTTONS)
 
 def _mp3_subbuttons(task_id, msg, playlist=False):
@@ -188,7 +187,7 @@ def _mp3_subbuttons(task_id, msg, playlist=False):
         buttons.sbutton(f"{q}K-mp3", f"qu {task_id} {audio_format}")
     buttons.sbutton("Back", f"qu {task_id} back")
     buttons.sbutton("Cancel", f"qu {task_id} cancel")
-    SUBBUTTONS = InlineKeyboardMarkup(buttons.build_menu(2))
+    SUBBUTTONS = buttons.build_menu(2)
     editMessage(f"Choose Audio{i} Bitrate:", msg, SUBBUTTONS)
 
 def select_format(update, context):
