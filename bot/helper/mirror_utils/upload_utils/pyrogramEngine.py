@@ -44,10 +44,17 @@ class TgUploader:
                 if not file_.lower().endswith(tuple(EXTENSION_FILTER)):
                     up_path = ospath.join(dirpath, file_)
                     self.__total_files += 1
-                    if ospath.getsize(up_path) == 0:
-                        LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
-                        self.__corrupted += 1
-                        continue
+                    try:
+                        if ospath.getsize(up_path) == 0:
+                            LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
+                            self.__corrupted += 1
+                            continue
+                    except Exception as e:
+                        if self.__is_cancelled:
+                            return
+                        else:
+                            LOGGER.error(e)
+                            continue
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return

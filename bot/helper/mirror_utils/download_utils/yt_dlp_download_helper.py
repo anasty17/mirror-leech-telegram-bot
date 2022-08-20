@@ -5,6 +5,7 @@ from yt_dlp import YoutubeDL, DownloadError
 from threading import RLock
 from time import time
 from re import search as re_search
+from json import loads as jsonloads
 
 from bot import download_dict_lock, download_dict
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
@@ -55,11 +56,12 @@ class YoutubeDLHelper:
         self.opts = {'progress_hooks': [self.__onDownloadProgress],
                      'logger': MyLogger(self),
                      'usenetrc': True,
-                     'prefer_ffmpeg': True,
                      'cookiefile': 'cookies.txt',
                      'allow_multiple_video_streams': True,
                      'allow_multiple_audio_streams': True,
                      'noprogress': True,
+                     'allow_playlist_files': True,
+                     'overwrites': True,
                      'trim_file_name': 200}
 
     @property
@@ -111,6 +113,8 @@ class YoutubeDLHelper:
             self.__set_args(args)
         if get_info:
             self.opts['playlist_items'] = '0'
+        if link.startswith(('rtmp', 'mms', 'rstp')):
+            self.opts['external_downloader'] = 'ffmpeg'
         with YoutubeDL(self.opts) as ydl:
             try:
                 result = ydl.extract_info(link, download=False)
@@ -193,11 +197,18 @@ class YoutubeDLHelper:
     def __set_args(self, args):
         args = args.split('|')
         for arg in args:
-            xy = arg.split(':')
-            if xy[1].startswith('^'):
-                xy[1] = int(xy[1].split('^')[1])
-            elif xy[1].lower() == 'true':
-                xy[1] = True
-            elif xy[1].lower() == 'false':
-                xy[1] = False
-            self.opts[xy[0]] = xy[1]
+            xy = arg.split(':', 1)
+            karg = xy[0].strip()
+            varg = xy[1].strip()
+            if varg.startswith('^'):
+                varg = int(varg.split('^')[1])
+            elif varg.lower() == 'true':
+                varg = True
+            elif varg.lower() == 'false':
+                varg = False
+            elif varg.startswith('(') and varg.endswith(')'):
+                varg = varg.replace('(', '').replace(')', '')
+                varg = tuple(map(int, varg.split(',')))
+            elif varg.startswith('{') and varg.endswith('}'):
+                varg = jsonloads(varg)
+            self.opts[karg] = varg

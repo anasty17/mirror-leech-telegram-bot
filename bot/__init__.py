@@ -6,7 +6,7 @@ from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from os import remove as osremove, path as ospath, environ
 from requests import get as rget
-from json import loads as jsnloads
+from json import loads as jsonloads
 from subprocess import Popen, run as srun, check_output
 from time import sleep, time
 from threading import Thread, Lock
@@ -425,7 +425,7 @@ try:
     SEARCH_PLUGINS = getConfig('SEARCH_PLUGINS')
     if len(SEARCH_PLUGINS) == 0:
         raise KeyError
-    SEARCH_PLUGINS = jsnloads(SEARCH_PLUGINS)
+    SEARCH_PLUGINS = jsonloads(SEARCH_PLUGINS)
 except:
     SEARCH_PLUGINS = None
 
