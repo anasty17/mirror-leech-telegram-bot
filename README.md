@@ -21,6 +21,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Thumbnail for each user
 - Set upload as document or as media for each user
 - 4GB file upload with premium account
+- Upload all files to DUMP_CHAT.
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download G-Drive links
@@ -160,7 +161,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Str`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and (supergroup or channel). Default is `False`. `Bool`
-- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account).
+- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
 
 ### Update
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. `Str`.
@@ -172,6 +173,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name. `Str`
+- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for supergroup/channel. Add `-100` before channel/Group id. In short don't add bot id or your id!
 - `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with supergroup or channel.
 
 ### qBittorrent/Aria2c

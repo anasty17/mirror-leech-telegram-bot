@@ -16,7 +16,6 @@ pillow
 psutil
 psycopg2-binary
 pybase64
-pycryptodomex
 pyrogram
 python-dotenv
 python-magic

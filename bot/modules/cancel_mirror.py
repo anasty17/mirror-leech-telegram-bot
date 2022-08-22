@@ -30,8 +30,8 @@ def cancel_mirror(update, context):
             sendMessage("This is not an active task!", context.bot, update.message)
             return
     elif len(context.args) == 0:
-        msg = f"Reply to an active <code>/{BotCommands.MirrorCommand}</code> message which \
-                was used to start the download or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
+        msg = f"Reply to an active Command message which was used to start the download" \
+              f" or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         sendMessage(msg, context.bot, update.message)
         return
 

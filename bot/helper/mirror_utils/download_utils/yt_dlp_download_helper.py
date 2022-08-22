@@ -9,7 +9,7 @@ from json import loads as jsonloads
 
 from bot import download_dict_lock, download_dict
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
-from ..status_utils.youtube_dl_download_status import YoutubeDLDownloadStatus
+from ..status_utils.yt_dlp_download_status import YtDlpDownloadStatus
 
 LOGGER = getLogger(__name__)
 
@@ -42,11 +42,12 @@ class YoutubeDLHelper:
     def __init__(self, listener):
         self.name = ""
         self.is_playlist = False
-        self.size = 0
-        self.progress = 0
-        self.downloaded_bytes = 0
         self._last_downloaded = 0
+        self.__size = 0
+        self.__progress = 0
+        self.__downloaded_bytes = 0
         self.__download_speed = 0
+        self.__eta = '-'
         self.__start_time = time()
         self.__listener = listener
         self.__gid = ""
@@ -69,6 +70,26 @@ class YoutubeDLHelper:
         with self.__resource_lock:
             return self.__download_speed
 
+    @property
+    def downloaded_bytes(self):
+        with self.__resource_lock:
+            return self.__downloaded_bytes
+
+    @property
+    def size(self):
+        with self.__resource_lock:
+            return self.__size
+
+    @property
+    def progress(self):
+        with self.__resource_lock:
+            return self.__progress
+
+    @property
+    def eta(self):
+        with self.__resource_lock:
+            return self.__eta
+
     def __onDownloadProgress(self, d):
         self.__downloading = True
         if self.__is_cancelled:
@@ -83,21 +104,22 @@ class YoutubeDLHelper:
                     downloadedBytes = d['downloaded_bytes']
                     chunk_size = downloadedBytes - self._last_downloaded
                     self._last_downloaded = downloadedBytes
-                    self.downloaded_bytes += chunk_size
+                    self.__downloaded_bytes += chunk_size
                 else:
                     if d.get('total_bytes'):
-                        self.size = d['total_bytes']
+                        self.__size = d['total_bytes']
                     elif d.get('total_bytes_estimate'):
-                        self.size = d['total_bytes_estimate']
-                    self.downloaded_bytes = d['downloaded_bytes']
+                        self.__size = d['total_bytes_estimate']
+                    self.__downloaded_bytes = d['downloaded_bytes']
+                    self.__eta = d.get('eta', '-')
                 try:
-                    self.progress = (self.downloaded_bytes / self.size) * 100
-                except ZeroDivisionError:
+                    self.__progress = (self.__downloaded_bytes / self.__size) * 100
+                except:
                     pass
 
     def __onDownloadStart(self):
         with download_dict_lock:
-            download_dict[self.__listener.uid] = YoutubeDLDownloadStatus(self, self.__listener, self.__gid)
+            download_dict[self.__listener.uid] = YtDlpDownloadStatus(self, self.__listener, self.__gid)
         self.__listener.onDownloadStart()
         sendStatusMessage(self.__listener.message, self.__listener.bot)
 
@@ -132,9 +154,9 @@ class YoutubeDLHelper:
                 if not v:
                     continue
                 elif 'filesize_approx' in v:
-                    self.size += v['filesize_approx']
+                    self.__size += v['filesize_approx']
                 elif 'filesize' in v:
-                    self.size += v['filesize']
+                    self.__size += v['filesize']
             if name == "":
                 self.name = realName.split(f" [{result['id'].replace('*', '_')}]")[0]
             else:
