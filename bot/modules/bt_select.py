@@ -71,8 +71,7 @@ def get_confirm(update, context):
     if hasattr(dl, 'listener'):
         listener = dl.listener()
     else:
-        query.answer(text="Not in download status anymore!", show_alert=True)
-        query.message.delete()
+        query.answer(text="Not in download state anymore! Keep this message to resume the seed if seed enabled!", show_alert=True)
         return
     if user_id != listener.message.from_user.id:
         query.answer(text="This task is not for you!", show_alert=True)
