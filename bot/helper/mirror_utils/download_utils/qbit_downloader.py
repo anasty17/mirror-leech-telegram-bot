@@ -3,6 +3,7 @@ from base64 import b16encode, b32decode
 from bencoding import bencode, bdecode
 from time import sleep, time
 from re import search as re_search
+from os import remove
 
 from bot import download_dict, download_dict_lock, BASE_URL, get_client, STOP_DUPLICATE, TORRENT_TIMEOUT, LOGGER
 from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
@@ -54,12 +55,18 @@ class QbDownloader:
                         if len(tor_info) > 0:
                             break
                         elif time() - self.__stalled_time >= 30:
-                            msg = "Not a torrent. If something wrong please report."
+                            msg = "Not a torrent. If it's a torrent then report!"
                             self.client.torrents_delete(torrent_hashes=self.ext_hash, delete_files=True)
                             sendMessage(msg, self.__listener.bot, self.__listener.message)
+                            if not link.startswith('magnet:'):
+                                remove(link)
                             return self.client.auth_log_out()
+                if not link.startswith('magnet:'):
+                    remove(link)
             else:
                 sendMessage("This is an unsupported/invalid link.", self.__listener.bot, self.__listener.message)
+                if not link.startswith('magnet:'):
+                    remove(link)
                 return self.client.auth_log_out()
             tor_info = tor_info[0]
             self.__name = tor_info.name
