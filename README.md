@@ -21,7 +21,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Thumbnail for each user
 - Set upload as document or as media for each user
 - 4GB file upload with premium account
-- Upload all files to DUMP_CHAT.
+- Upload all files to specific superGroup/channel.
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download G-Drive links
@@ -30,7 +30,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
 - List result in html file instead of telegraph or telegram message to avoid limits by @junedkh
-- Random Service Account at startup
+- Random Service Account for each task
 ### Status
 - Clone Status
 - Extract Status
@@ -160,7 +160,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `CMD_INDEX`: commands index number. This number will added at the end all commands. `Str`
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Str`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
-- `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and (supergroup or channel). Default is `False`. `Bool`
+- `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
 
 ### Update
@@ -173,8 +173,8 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `CUSTOM_FILENAME`: Add custom word to leeched file name. `Str`
-- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for supergroup/channel. Add `-100` before channel/Group id. In short don't add bot id or your id!
-- `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with supergroup or channel.
+- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
+- `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with superGroup.
 
 ### qBittorrent/Aria2c
 - `BASE_URL_OF_BOT`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). This Var is optional on VPS and required for Heroku specially to avoid app sleeping/idling. For Heroku fill `https://yourappname.herokuapp.com`. Still got idling? You can use http://cron-job.org to ping your Heroku app. `Str`
@@ -185,7 +185,7 @@ Fill up rest of the fields. Meaning of each field is discussed below:
 ### RSS
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Str`
 - `RSS_COMMAND`: Choose command for the desired action. `Str`
-- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. `Str`
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. Add `-100` before channel id. `Str`
 - `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. Instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
   - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.
 
