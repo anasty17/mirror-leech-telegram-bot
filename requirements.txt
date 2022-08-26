@@ -16,14 +16,12 @@ pillow
 psutil
 psycopg2-binary
 pybase64
-pycryptodomex
 pyrogram
 python-dotenv
 python-magic
 python-telegram-bot
 qbittorrent-api
 requests
-SecretStorage
 tenacity
 tgCrypto
 xattr
