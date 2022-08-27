@@ -17,7 +17,7 @@ def _clone(message, bot):
     args = message.text.split()
     reply_to = message.reply_to_message
     link = ''
-    multi=1
+    multi = 0
     if len(args) > 1:
         link = args[1].strip()
         if link.strip().isdigit():
@@ -49,7 +49,9 @@ def _clone(message, bot):
         if multi > 1:
             sleep(4)
             nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-            nextmsg = sendMessage(message.text.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
+            cmsg = message.text.split()
+            cmsg[1] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
             nextmsg.from_user.id = message.from_user.id
             sleep(4)
             Thread(target=_clone, args=(nextmsg, bot)).start()

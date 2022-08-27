@@ -18,7 +18,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
-    multi=1
+    multi = 0
 
     link = mssg.split()
     if len(link) > 1:
@@ -26,19 +26,19 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
         if link.strip().isdigit():
             multi = int(link)
             link = ''
-        elif link.strip().startswith(("|", "pswd:", "args:")):
+        elif link.strip().startswith(("|", "pswd:", "opt:")):
             link = ''
     else:
         link = ''
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
-        if 'args: ' in name[0] or 'pswd: ' in name[0]:
+        if 'opt: ' in name[0] or 'pswd: ' in name[0]:
             name = ''
         else:
             name = name[1]
         if name != '':
-            name = re_split('pswd:|args:', name)[0]
+            name = re_split('pswd:|opt:', name)[0]
             name = name.strip()
     else:
         name = ''
@@ -46,15 +46,15 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     pswd = mssg.split(' pswd: ')
     if len(pswd) > 1:
         pswd = pswd[1]
-        pswd = pswd.split(' args: ')[0]
+        pswd = pswd.split(' opt: ')[0]
     else:
         pswd = None
 
-    args = mssg.split(' args: ')
-    if len(args) > 1:
-        args = args[1]
+    opt = mssg.split(' opt: ')
+    if len(opt) > 1:
+        opt = opt[1]
     else:
-        args = None
+        opt = None
 
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
@@ -73,16 +73,23 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     if not is_url(link):
         help_msg = """
 <b>Send link along with command line:</b>
-<code>/command</code> {link} |newname pswd: mypassword [zip] args: x:y|x1:y1
+<code>/cmd</code> link |newname pswd: xx(zip) opt: x:y|x1:y1
 
 <b>By replying to link:</b>
-<code>/command</code> |newname pswd: mypassword [zip] args: x:y|x1:y1
+<code>/cmd</code> |newname pswd: xx(zip) opt: x:y|x1:y1
 
-<b>Args Example:</b> args: playliststart:^10|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
+<b>Options Example:</b> opt: playliststart:^10|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
 
-<b>Args Note:</b> Add `^` before integer, some values must be integer and some string.
+<b>Multi links only by replying to first link:</b>
+<code>/cmd</code> 10(number of links)
+Number should be always before |newname, pswd: and opt:
+
+<b>Options Note:</b> Add `^` before integer, some values must be integer and some string.
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
-You can add tuple and dict also. Use double quotes inside dict. Also you can add format manually, whatever what quality button you have pressed.
+You can add tuple and dict also. Use double quotes inside dict.
+
+<b>NOTE:</b>
+You can't add perfix randomly. They should be arranged like exmaple above, rename then pswd then opt. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
 
 Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L178'>FILE</a>.
         """
@@ -94,7 +101,7 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
     best_audio = "ba/b"
     ydl = YoutubeDLHelper(listener)
     try:
-        result = ydl.extractMetaData(link, name, args, True)
+        result = ydl.extractMetaData(link, name, opt, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         return sendMessage(tag + " " + msg, bot, message)
@@ -109,7 +116,7 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
         buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = buttons.build_menu(3)
-        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, args]
+        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt]
         bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
     else:
         formats = result.get('formats')
@@ -163,7 +170,9 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
     if multi > 1:
         sleep(4)
         nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        nextmsg = sendMessage(mssg.replace(str(multi), str(multi - 1), 1), bot, nextmsg)
+        ymsg = message.text.split(maxsplit=2)
+        ymsg[1] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
         nextmsg.from_user.id = message.from_user.id
         sleep(4)
         Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
@@ -234,14 +243,14 @@ def select_format(update, context):
         listener = task_info[0]
         link = task_info[2]
         name = task_info[3]
-        args = task_info[5]
+        opt = task_info[5]
         qual = data[2]
         if len(data) == 4:
             playlist = True
         else:
             playlist = False
         ydl = YoutubeDLHelper(listener)
-        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, args)).start()
+        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)).start()
         query.message.delete()
     del listener_dict[task_id]
 
