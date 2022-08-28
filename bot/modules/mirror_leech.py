@@ -58,6 +58,8 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 link = message_args[index].strip()
                 if link.startswith(("|", "pswd:")):
                     link = ''
+            else:
+                link = ''
         else:
             link = ''
     else:
