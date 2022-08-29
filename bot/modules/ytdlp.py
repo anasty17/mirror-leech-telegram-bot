@@ -143,6 +143,8 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
                     elif frmt.get('video_ext') == 'none' and frmt.get('acodec') != 'none':
                         b_name = f"{frmt['acodec']}-{frmt['ext']}"
                         v_format = f"ba[format_id={format_id}]"
+                    else:
+                        continue
 
                     if b_name in formats_dict:
                         formats_dict[b_name][frmt['tbr']] = [size, v_format]
