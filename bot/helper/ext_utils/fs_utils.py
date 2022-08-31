@@ -252,10 +252,11 @@ def get_media_streams(path):
         LOGGER.error(f"get_media_streams: {result}")
         return is_video, is_audio
 
-    if fields[0].get('codec_type') == 'video':
-        is_video = True
-    else:
-        is_audio = True
+    for stream in fields:
+        if stream.get('codec_type') == 'video':
+            is_video = True
+        elif stream.get('codec_type') == 'audio':
+            is_audio = True
 
     return is_video, is_audio
 
