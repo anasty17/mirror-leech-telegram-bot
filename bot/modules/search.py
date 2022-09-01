@@ -120,7 +120,7 @@ def _search(bot, key, site, message, method):
         try:
             resp = rget(api)
             search_results = resp.json()
-            if "error" in search_results.keys():
+            if 'error' in search_results or search_results['total'] == 0:
                 return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
             cap = f"<b>Found {search_results['total']}</b>"
             if method == 'apitrend':
