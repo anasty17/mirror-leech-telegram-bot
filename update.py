@@ -1,9 +1,8 @@
 from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info
-from os import path as ospath, environ, execl as osexecl
+from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
 from dotenv import load_dotenv
-from sys import executable
 
 if ospath.exists('log.txt'):
     with open('log.txt', 'r+') as f:
