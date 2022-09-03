@@ -189,7 +189,7 @@ class TgUploader:
                 msg = self.__listener.message.text
             else:
                 msg = self.__listener.message.link
-            self.__sent_msg = app.send_message(DUMP_CHAT, msg)
+            self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
         else:
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
 
