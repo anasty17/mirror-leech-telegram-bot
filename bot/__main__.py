@@ -48,6 +48,7 @@ def start(update, context):
     buttons = ButtonMaker()
     buttons.buildbutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
     buttons.buildbutton("Owner", "https://www.github.com/anasty17")
+    buttons.buildbutton("Mirror&Leech || Group", "https:t.me/MirrorNLeechGroup")
     reply_markup = buttons.build_menu(2)
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
