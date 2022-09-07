@@ -201,7 +201,7 @@ Number should be always before |newname or pswd:
         Thread(target=add_mega_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}/', listener, name)).start()
     elif isQbit and (is_magnet(link) or ospath.exists(link)):
         Thread(target=QbDownloader(listener).add_qb_torrent, args=(link, f'{DOWNLOAD_DIR}{listener.uid}',
-                                                                   select, ratio, seed_time)).start()
+                                                                   ratio, seed_time)).start()
     else:
         if len(mesg) > 1:
             ussr = mesg[1]
@@ -214,7 +214,7 @@ Number should be always before |newname or pswd:
         else:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name,
-                                                 auth, select, ratio, seed_time)).start()
+                                                 auth, ratio, seed_time)).start()
 
     if multi > 1:
         sleep(4)

@@ -163,7 +163,7 @@ def start_listener():
                                   on_bt_download_complete=__onBtDownloadComplete,
                                   timeout=60)
 
-def add_aria2c_download(link: str, path, listener, filename, auth, select, ratio, seed_time):
+def add_aria2c_download(link: str, path, listener, filename, auth, ratio, seed_time):
     args = {'dir': path, 'max-upload-limit': '1K'}
     if filename:
         args['out'] = filename
@@ -185,7 +185,7 @@ def add_aria2c_download(link: str, path, listener, filename, auth, select, ratio
         download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
         LOGGER.info(f"Aria2Download started: {download.gid}")
     listener.onDownloadStart()
-    if not select:
+    if not listener.select:
         sendStatusMessage(listener.message, listener.bot)
 
 start_listener()

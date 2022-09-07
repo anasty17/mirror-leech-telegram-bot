@@ -27,12 +27,10 @@ class QbDownloader:
         self.__uploaded = False
         self.__rechecked = False
         self.__stopDup_check = False
-        self.__select = False
         self.__periodic = None
 
-    def add_qb_torrent(self, link, path, select, ratio, seed_time):
+    def add_qb_torrent(self, link, path, ratio, seed_time):
         self.__path = path
-        self.__select = select
         try:
             if link.startswith('magnet:'):
                 self.ext_hash = _get_hash_magnet(link)
@@ -114,7 +112,7 @@ class QbDownloader:
                     self.__onDownloadError("Dead Torrent!")
             elif tor_info.state == "downloading":
                 self.__stalled_time = time()
-                if not self.__stopDup_check and not self.__select and STOP_DUPLICATE and not self.__listener.isLeech:
+                if not self.__stopDup_check and not self.__listener.select and STOP_DUPLICATE and not self.__listener.isLeech:
                     LOGGER.info('Checking File/Folder if already in Drive')
                     qbname = tor_info.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
                     if self.__listener.isZip:
@@ -149,7 +147,7 @@ class QbDownloader:
                 self.__uploaded = True
                 if not self.__listener.seed:
                     self.client.torrents_pause(torrent_hashes=self.ext_hash)
-                if self.__select:
+                if self.__listener.select:
                     clean_unwanted(self.__path)
                 self.__listener.onDownloadComplete()
                 if self.__listener.seed:
