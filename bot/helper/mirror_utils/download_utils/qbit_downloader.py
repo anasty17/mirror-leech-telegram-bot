@@ -74,7 +74,7 @@ class QbDownloader:
             self.__listener.onDownloadStart()
             LOGGER.info(f"QbitDownload started: {self.__name} - Hash: {self.ext_hash}")
             self.__periodic = setInterval(self.POLLING_INTERVAL, self.__qb_listener)
-            if BASE_URL is not None and select:
+            if BASE_URL is not None and self.__listener.select:
                 if link.startswith('magnet:'):
                     metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                     meta = sendMessage(metamsg, self.__listener.bot, self.__listener.message)
