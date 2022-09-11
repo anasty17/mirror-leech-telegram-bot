@@ -86,7 +86,7 @@ aria2 = ariaAPI(
 )
 
 def get_client():
-    return qbClient(host="localhost", port=8090, VERIFY_WEBUI_CERTIFICATE=False)
+    return qbClient(host="localhost", port=8090, VERIFY_WEBUI_CERTIFICATE=False, REQUESTS_ARGS={'timeout': (30, 60)})
 
 DOWNLOAD_DIR = None
 BOT_TOKEN = None

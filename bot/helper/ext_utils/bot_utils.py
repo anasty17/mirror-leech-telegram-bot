@@ -116,7 +116,6 @@ def get_readable_message():
         msg = ""
         if STATUS_LIMIT is not None:
             tasks = len(download_dict)
-            global pages
             pages = ceil(tasks/STATUS_LIMIT)
             if PAGE_NO > pages and pages != 0:
                 globals()['COUNT'] -= STATUS_LIMIT
@@ -174,15 +173,20 @@ def get_readable_message():
         if STATUS_LIMIT is not None and tasks > STATUS_LIMIT:
             msg += f"<b>Page:</b> {PAGE_NO}/{pages} | <b>Tasks:</b> {tasks}\n"
             buttons = ButtonMaker()
-            buttons.sbutton("Previous", "status pre")
-            buttons.sbutton("Next", "status nex")
-            button = buttons.build_menu(2)
+            buttons.sbutton("<<", "status pre")
+            buttons.sbutton(">>", "status nex")
+            buttons.sbutton("♻️", "status ref")
+            button = buttons.build_menu(3)
             return msg + bmsg, button
         return msg + bmsg, ""
 
 def turn(data):
     try:
         with download_dict_lock:
+            tasks = len(download_dict)
+            if tasks == 0:
+                raise ValueError
+            pages = ceil(tasks/STATUS_LIMIT)
             global COUNT, PAGE_NO
             if data[1] == "nex":
                 if PAGE_NO == pages:
@@ -198,6 +202,8 @@ def turn(data):
                 else:
                     COUNT -= STATUS_LIMIT
                     PAGE_NO -= 1
+            elif data[1] == "ref":
+                return "refresh"
         return True
     except:
         return False
