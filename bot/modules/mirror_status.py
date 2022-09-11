@@ -43,10 +43,11 @@ def status_pages(update, context):
     data = query.data
     data = data.split()
     query.answer()
-    done = turn(data)
-    if done == "refresh":
+    if data[1] == "ref":
         update_all_messages(True)
-    elif not done:
+        return
+    done = turn(data)
+    if not done:
         query.message.delete()
 
 

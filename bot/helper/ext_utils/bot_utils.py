@@ -202,8 +202,6 @@ def turn(data):
                 else:
                     COUNT -= STATUS_LIMIT
                     PAGE_NO -= 1
-            elif data[1] == "ref":
-                return "refresh"
         return True
     except:
         return False
