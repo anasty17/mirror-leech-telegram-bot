@@ -251,7 +251,7 @@ def select_format(update, context):
             playlist = True
         else:
             playlist = False
-        if not playlist and not qual.startswith('ba/b-'):
+        if not playlist and not qual.startswith('ba/b-') and qual not in ["ba/b", "bv*+ba/b"]:
             b_name, tbr = qual.split('|')
             qual = task_info[6][b_name][tbr][1]
         ydl = YoutubeDLHelper(listener)
