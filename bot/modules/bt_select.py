@@ -45,7 +45,7 @@ def select(update, context):
     try:
         listener = dl.listener()
         if listener.isQbit:
-            id_ = dl.download().ext_hash
+            id_ = dl.hash()
             client = dl.client()
             client.torrents_pause(torrent_hashes=id_)
         else:

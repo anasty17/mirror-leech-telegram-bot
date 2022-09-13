@@ -16,8 +16,8 @@ class QbDownloadStatus:
 
     def __init__(self, listener, hash_, seeding=False):
         self.__client = get_client()
-        self.__hash = hash_
         self.__listener = listener
+        self.__hash = hash_
         self.__info = get_download(self.__client, self.__hash)
         self.seeding = seeding
         self.message = listener.message
@@ -95,6 +95,9 @@ class QbDownloadStatus:
 
     def gid(self):
         return self.__hash[:12]
+
+    def hash(self):
+        return self.__hash
 
     def client(self):
         return self.__client
