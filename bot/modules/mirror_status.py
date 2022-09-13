@@ -36,8 +36,8 @@ def mirror_status(update, context):
 
 @new_thread
 def status_pages(update, context):
-    query.answer()
     query = update.callback_query
+    query.answer()
     data = query.data
     data = data.split()
     if data[1] == "ref":
