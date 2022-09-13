@@ -77,12 +77,10 @@ def __onDownloadComplete(api, gid):
                 sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
         if dl := getDownloadByGid(gid):
-            if hasattr(dl, 'listener'):
-                listener = dl.listener()
-                if hasattr(listener, 'uploaded'):
-                    LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
-                    listener.onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
-                    api.remove([download], force=True, files=True)
+            if hasattr(dl, 'listener') and dl.seeding:
+                LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
+                dl.listener().onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
+                api.remove([download], force=True, files=True)
     else:
         LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
         if dl := getDownloadByGid(gid):
@@ -113,14 +111,17 @@ def __onBtDownloadComplete(api, gid):
             except Exception as e:
                 LOGGER.error(f'{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent')
         else:
-            api.client.force_pause(gid)
+            try:
+                api.client.force_pause(gid)
+            except Exception as e:
+                LOGGER.error(f"{e} GID: {gid}" )
         listener.onDownloadComplete()
         if listener.seed:
             with download_dict_lock:
                 if listener.uid not in download_dict:
                     api.remove([download], force=True, files=True)
                     return
-                download_dict[listener.uid] = AriaDownloadStatus(gid, listener)
+                download_dict[listener.uid] = AriaDownloadStatus(gid, listener, True)
                 download_dict[listener.uid].start_time = seed_start_time
             LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
             download = download.live
@@ -130,7 +131,6 @@ def __onBtDownloadComplete(api, gid):
                     listener.onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
                     api.remove([download], force=True, files=True)
             else:
-                listener.uploaded = True
                 update_all_messages()
         else:
             api.remove([download], force=True, files=True)

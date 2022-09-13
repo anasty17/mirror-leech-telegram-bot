@@ -44,7 +44,7 @@ In each single file there is a major change from base code, it's almost totaly d
 ### Yt-dlp
 - Switch from youtube-dl to yt-dlp and fix all conflicts
 - Yt-dlp quality buttons
-- Ability to use specific yt-dlp arg for each task
+- Ability to use specific yt-dlp option for each task
 - Fix download progress
 ### Database
 - SQL Database support

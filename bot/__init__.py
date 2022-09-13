@@ -66,6 +66,7 @@ srun("./aria.sh", shell=True)
 sleep(0.5)
 
 Interval = []
+QbInterval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []

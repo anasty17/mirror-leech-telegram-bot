@@ -1,4 +1,6 @@
-from bot import LOGGER
+from time import sleep
+
+from bot import LOGGER, get_client
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
 
 def get_download(client, hash_):
@@ -6,19 +8,22 @@ def get_download(client, hash_):
         return client.torrents_info(torrent_hashes=hash_)[0]
     except Exception as e:
         LOGGER.error(f'{e}: while getting torrent info')
+        client = get_client()
+        return get_download(client, hash_)
 
 
 class QbDownloadStatus:
 
-    def __init__(self, listener, obj):
-        self.__obj = obj
+    def __init__(self, listener, hash_, seeding=False):
+        self.__client = get_client()
+        self.__hash = hash_
         self.__listener = listener
-        self.__uid = listener.uid
-        self.__info = get_download(obj.client, obj.ext_hash)
+        self.__info = get_download(self.__client, self.__hash)
+        self.seeding = seeding
         self.message = listener.message
 
     def __update(self):
-        self.__info = get_download(self.__obj.client, self.__obj.ext_hash)
+        self.__info = get_download(self.__client, self.__hash)
 
     def progress(self):
         """
@@ -62,7 +67,7 @@ class QbDownloadStatus:
             return MirrorStatus.STATUS_PAUSED
         elif download in ["checkingUP", "checkingDL"]:
             return MirrorStatus.STATUS_CHECKING
-        elif download in ["stalledUP", "uploading"] and self.__obj.is_seeding:
+        elif download in ["stalledUP", "uploading"] and self.seeding:
             return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING
@@ -86,13 +91,21 @@ class QbDownloadStatus:
         return f"{get_readable_time(self.__info.seeding_time)}"
 
     def download(self):
-        return self.__obj
+        return self
 
     def gid(self):
-        return self.__obj.ext_hash[:12]
+        return self.__hash[:12]
 
     def client(self):
-        return self.__obj.client
+        return self.__client
 
     def listener(self):
         return self.__listener
+
+    def cancel_download(self):
+        self.__client.torrents_pause(torrent_hashes=self.__hash)
+        if self.status() != MirrorStatus.STATUS_SEEDING:
+            LOGGER.info(f"Cancelling Download: {self.__info.name}")
+            sleep(0.3)
+            self.__listener.onDownloadError('Download stopped by user!')
+            self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)

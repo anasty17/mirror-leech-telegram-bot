@@ -12,11 +12,12 @@ def get_download(gid):
 
 class AriaDownloadStatus:
 
-    def __init__(self, gid, listener):
+    def __init__(self, gid, listener, seeding=False):
         self.__gid = gid
         self.__download = get_download(gid)
         self.__listener = listener
         self.start_time = 0
+        self.seeding = seeding
         self.message = listener.message
 
     def __update(self):
@@ -62,7 +63,7 @@ class AriaDownloadStatus:
             return MirrorStatus.STATUS_WAITING
         elif download.is_paused:
             return MirrorStatus.STATUS_PAUSED
-        elif download.seeder and hasattr(self.__listener, 'uploaded'):
+        elif download.seeder and self.seeding:
             return MirrorStatus.STATUS_SEEDING
         else:
             return MirrorStatus.STATUS_DOWNLOADING
