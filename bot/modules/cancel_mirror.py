@@ -2,12 +2,11 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from time import sleep
 from threading import Thread
 
-from bot import download_dict, dispatcher, download_dict_lock, SUDO_USERS, OWNER_ID, AUTO_DELETE_MESSAGE_DURATION
+from bot import download_dict, dispatcher, download_dict_lock, SUDO_USERS, OWNER_ID
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, auto_delete_message
-from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload
-from bot.helper.ext_utils.bot_utils import MirrorStatus
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload, new_thread, MirrorStatus
 from bot.helper.telegram_helper import button_build
 
 
@@ -65,12 +64,12 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("Queued", f"canall {MirrorStatus.STATUS_WAITING}")
     buttons.sbutton("Paused", f"canall {MirrorStatus.STATUS_PAUSED}")
     buttons.sbutton("All", "canall all")
-    if AUTO_DELETE_MESSAGE_DURATION == -1:
-        buttons.sbutton("Close", "canall close")
+    buttons.sbutton("Close", "canall close")
     button = buttons.build_menu(2)
     can_msg = sendMarkup('Choose tasks to cancel.', context.bot, update.message, button)
     Thread(target=auto_delete_message, args=(context.bot, update.message, can_msg)).start()
 
+@new_thread
 def cancel_all_update(update, context):
     query = update.callback_query
     user_id = query.from_user.id
@@ -78,8 +77,8 @@ def cancel_all_update(update, context):
     data = data.split()
     if CustomFilters._owner_query(user_id):
         query.answer()
-        query.message.delete()
         if data[1] == 'close':
+            query.message.delete()
             return
         cancel_all(data[1])
     else:

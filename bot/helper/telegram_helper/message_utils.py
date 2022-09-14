@@ -78,7 +78,7 @@ def deleteMessage(bot, message: Message):
         bot.deleteMessage(chat_id=message.chat.id,
                            message_id=message.message_id)
     except Exception as e:
-        LOGGER.error(str(e))
+        pass
 
 def sendLogFile(bot, message: Message):
     with open('log.txt', 'rb') as f:

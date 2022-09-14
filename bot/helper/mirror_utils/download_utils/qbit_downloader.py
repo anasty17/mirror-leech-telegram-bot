@@ -225,14 +225,13 @@ def __qb_listener():
                     client.torrents_recheck(torrent_hashes=tor_info.hash)
                 elif tor_info.state == "error":
                     Thread(target=__onDownloadError, args=("No enough space for this torrent on device", client, tor_info)).start()
-                elif (tor_info.completion_on != 0 or tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and tor_info.hash not in UPLOADED:
+                elif (tor_info.completion_on != 0 or tor_info.state.endswith("UP") or tor_info.state == "uploading") \
+                      and tor_info.hash not in UPLOADED and tor_info.state not in ['checkingUP', 'checkingDL']:
                     UPLOADED.add(tor_info.hash)
                     __onDownloadComplete(client, tor_info)
                 elif tor_info.state == 'pausedUP' and tor_info.hash in SEEDING:
                     __onSeedFinish(client, tor_info)
-                elif tor_info.state == 'pausedDL' and tor_info.completion_on != 0:
-                    # recheck torrent incase one of seed limits reached
-                    # sometimes it stuck on pausedDL from maxRatioAction but it should be pausedUP
+                elif tor_info.state == 'pausedDL' and tor_info.hash in UPLOADED:
                     if tor_info.hash not in RECHECKED:
                         LOGGER.error(f"Recheck on complete manually! PausedDL. Hash: {tor_info.hash}")
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
