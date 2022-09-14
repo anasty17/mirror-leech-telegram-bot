@@ -76,6 +76,7 @@ def __onDownloadComplete(api, gid):
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
                 sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
+        sleep(2)
         if dl := getDownloadByGid(gid):
             if hasattr(dl, 'listener') and dl.seeding:
                 LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")

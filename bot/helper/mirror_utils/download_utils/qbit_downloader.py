@@ -216,7 +216,7 @@ def __qb_listener():
                         msg = f"Force recheck - Name: {tor_info.name} Hash: "
                         msg += f"{tor_info.hash} Downloaded Bytes: {tor_info.downloaded} "
                         msg += f"Size: {tor_info.size} Total Size: {tor_info.total_size}"
-                        LOGGER.info(msg)
+                        LOGGER.error(msg)
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
                     elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME[tor_info.hash] >= TORRENT_TIMEOUT:
@@ -225,7 +225,7 @@ def __qb_listener():
                     client.torrents_recheck(torrent_hashes=tor_info.hash)
                 elif tor_info.state == "error":
                     Thread(target=__onDownloadError, args=("No enough space for this torrent on device", client, tor_info)).start()
-                elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and tor_info.hash not in UPLOADED:
+                elif (tor_info.completion_on != 0 or tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and tor_info.hash not in UPLOADED:
                     UPLOADED.add(tor_info.hash)
                     __onDownloadComplete(client, tor_info)
                 elif tor_info.state == 'pausedUP' and tor_info.hash in SEEDING:
@@ -234,7 +234,7 @@ def __qb_listener():
                     # recheck torrent incase one of seed limits reached
                     # sometimes it stuck on pausedDL from maxRatioAction but it should be pausedUP
                     if tor_info.hash not in RECHECKED:
-                        LOGGER.info(f"Recheck on complete manually! PausedDL. Hash: {tor_info.hash}")
+                        LOGGER.error(f"Recheck on complete manually! PausedDL. Hash: {tor_info.hash}")
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
         except Exception as e:

@@ -48,7 +48,6 @@ class AriaDownloadStatus:
         return self.__download.download_speed_string()
 
     def name(self):
-        self.__update()
         return self.__download.name
 
     def size(self):
@@ -58,6 +57,7 @@ class AriaDownloadStatus:
         return self.__download.eta_string()
 
     def status(self):
+        self.__update()
         download = self.__download
         if download.is_waiting:
             return MirrorStatus.STATUS_WAITING
@@ -78,6 +78,7 @@ class AriaDownloadStatus:
         return self.__download.upload_length_string()
 
     def upload_speed(self):
+        self.__update()
         return self.__download.upload_speed_string()
 
     def ratio(self):
