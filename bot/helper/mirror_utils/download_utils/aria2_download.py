@@ -27,7 +27,7 @@ def __onDownloadStarted(api, gid):
             LOGGER.info('Checking File/Folder if already in Drive...')
             sname = download.name
             if dl.getListener().isZip:
-                sname = sname + ".zip"
+                sname = f"{sname}.zip"
             elif dl.getListener().extract:
                 try:
                     sname = get_base_name(sname)
@@ -56,8 +56,7 @@ def __onDownloadComplete(api, gid):
 @new_thread
 def __onDownloadStopped(api, gid):
     sleep(6)
-    dl = getDownloadByGid(gid)
-    if dl:
+    if dl := getDownloadByGid(gid):
         dl.getListener().onDownloadError('Dead torrent!')
 
 @new_thread

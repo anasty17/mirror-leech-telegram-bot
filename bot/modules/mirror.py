@@ -76,7 +76,7 @@ class MirrorListener:
             try:
                 with download_dict_lock:
                     download_dict[self.uid] = ZipStatus(name, m_path, size)
-                path = m_path + ".zip"
+                path = f"{m_path}.zip"
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
                 if self.pswd is not None:
                     if self.isLeech and int(size) > TG_SPLIT_SIZE:
@@ -107,7 +107,7 @@ class MirrorListener:
                     for dirpath, subdir, files in walk(m_path, topdown=False):
                         for file_ in files:
                             if file_.endswith((".zip", ".7z")) or re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$', file_) \
-                               or (file_.endswith(".rar") and not re_search(r'\.part\d+\.rar$', file_)):
+                                   or (file_.endswith(".rar") and not re_search(r'\.part\d+\.rar$', file_)):
                                 m_path = ospath.join(dirpath, file_)
                                 if self.pswd is not None:
                                     result = srun(["7z", "x", f"-p{self.pswd}", m_path, f"-o{dirpath}", "-aot"])

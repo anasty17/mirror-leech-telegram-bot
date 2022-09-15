@@ -96,14 +96,14 @@ def setLeechType(update, context):
             pass
 
 def setThumb(update, context):
-    user_id = update.message.from_user.id
     reply_to = update.message.reply_to_message
     if reply_to is not None and reply_to.photo:
         path = "Thumbnails/"
         if not ospath.isdir(path):
             mkdir(path)
         photo_dir = reply_to.photo[-1].get_file().download()
-        des_dir = ospath.join(path, str(user_id) + ".jpg")
+        user_id = update.message.from_user.id
+        des_dir = ospath.join(path, f"{str(user_id)}.jpg")
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         osremove(photo_dir)
         if DB_URI is not None:

@@ -57,7 +57,7 @@ if not creds or not creds.valid:
 drive = googleapiclient.discovery.build("drive", "v3", credentials=creds)
 batch = drive.new_batch_http_request()
 
-aa = glob.glob('%s/*.json' % acc_dir)
+aa = glob.glob(f'{acc_dir}/*.json')
 pbar = progress.bar.Bar("Readying accounts", max=len(aa))
 for i in aa:
     ce = json.loads(open(i, 'r').read())['client_email']
