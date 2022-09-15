@@ -75,6 +75,7 @@ def add_qb_torrent(link, path, listener, ratio, seed_time):
         with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
         with qb_download_lock:
+            STALLED_TIME[ext_hash] = time()
             if not QbInterval:
                 periodic = setInterval(3, __qb_listener)
                 QbInterval.append(periodic)
@@ -208,7 +209,7 @@ def __qb_listener():
                         Thread(target=__onDownloadError, args=("Dead Torrent!", client, tor_info)).start()
                 elif tor_info.state == "downloading":
                     STALLED_TIME[tor_info.hash] = time()
-                    if tor_info.hash not in STOP_DUP_CHECK and STOP_DUPLICATE:
+                    if STOP_DUPLICATE and tor_info.hash not in STOP_DUP_CHECK:
                         STOP_DUP_CHECK.add(tor_info.hash)
                         __stop_duplicate(client, tor_info)
                 elif tor_info.state == "stalledDL":
@@ -229,12 +230,7 @@ def __qb_listener():
                       and tor_info.hash not in UPLOADED and tor_info.state not in ['checkingUP', 'checkingDL']:
                     UPLOADED.add(tor_info.hash)
                     __onDownloadComplete(client, tor_info)
-                elif tor_info.state == 'pausedUP' and tor_info.hash in SEEDING:
+                elif tor_info.state in ['pausedUP', 'pausedDL'] and tor_info.hash in SEEDING:
                     __onSeedFinish(client, tor_info)
-                elif tor_info.state == 'pausedDL' and tor_info.hash in UPLOADED:
-                    if tor_info.hash not in RECHECKED:
-                        LOGGER.error(f"Recheck on complete manually! PausedDL. Hash: {tor_info.hash}")
-                        client.torrents_recheck(torrent_hashes=tor_info.hash)
-                        RECHECKED.add(tor_info.hash)
         except Exception as e:
             LOGGER.error(str(e))
