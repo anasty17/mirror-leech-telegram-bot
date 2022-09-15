@@ -50,16 +50,15 @@ def make_tree(res):
 
             # Traverse till second last assuming the last is a file.
             for j in range(len(folders)-1):
-                current_node = None
+                current_node = next(
+                    (
+                        k
+                        for k in previous_node.children
+                        if k.name == folders[j]
+                    ),
+                    None,
+                )
 
-                # As we are traversing the folder from top to bottom we are searching
-                # the first folder (folders list) under the parent node in first iteration.
-                # If the node is found then it becomes the current node else the current node
-                # is left None.
-                for k in previous_node.children:
-                    if k.name == folders[j]:
-                        current_node = k
-                        break
                 # if the node is not found then create the folder node
                 # if the node is found then use it as base for the next
                 if current_node is None:

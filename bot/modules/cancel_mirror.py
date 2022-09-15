@@ -46,15 +46,11 @@ def cancel_mirror(update, context):
 
 def cancel_all(status):
     gid = ''
-    while True:
-        dl = getAllDownload(status)
-        if dl:
-            if dl.gid() != gid:
-                gid = dl.gid()
-                dl.download().cancel_download()
-                sleep(1)
-        else:
-            break
+    while dl := getAllDownload(status):
+        if dl.gid() != gid:
+            gid = dl.gid()
+            dl.download().cancel_download()
+            sleep(1)
 
 def cancell_all_buttons(update, context):
     buttons = button_build.ButtonMaker()

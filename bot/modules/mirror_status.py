@@ -34,8 +34,7 @@ def status_pages(update, context):
     data = query.data
     data = data.split(' ')
     query.answer()
-    done = turn(data)
-    if done:
+    if done := turn(data):
         update_all_messages()
     else:
         query.message.delete()

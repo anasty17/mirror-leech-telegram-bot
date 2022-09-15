@@ -131,7 +131,7 @@ class QbDownloader:
                     if qbname.endswith('.!qB'):
                         qbname = ospath.splitext(qbname)[0]
                     if self.__listener.isZip:
-                        qbname = qbname + ".zip"
+                        qbname = f"{qbname}.zip"
                     elif self.__listener.extract:
                         try:
                            qbname = get_base_name(qbname)
@@ -158,7 +158,7 @@ class QbDownloader:
             elif tor_info.state == "error":
                 self.__onDownloadError("No enough space for this torrent on device")
             elif (tor_info.state.lower().endswith("up") or tor_info.state == "uploading") and \
-                 not self.__uploaded and len(listdir(self.__path)) != 0:
+                     not self.__uploaded and len(listdir(self.__path)) != 0:
                 self.__uploaded = True
                 if not QB_SEED:
                     self.client.torrents_pause(torrent_hashes=self.ext_hash)

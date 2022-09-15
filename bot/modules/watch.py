@@ -57,7 +57,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
 
     reply_to = message.reply_to_message
     if reply_to is not None:
-        if len(link) == 0:
+        if not link:
             link = reply_to.text.strip()
         if reply_to.from_user.username:
             tag = f"@{reply_to.from_user.username}"
@@ -65,8 +65,11 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     if not is_url(link):
-        help_msg = "<b>Send link along with command line:</b>"
-        help_msg += "\n<code>/command</code> {link} |newname pswd: mypassword [zip] args: x:y|x1:y1"
+        help_msg = (
+            "<b>Send link along with command line:</b>"
+            + "\n<code>/command</code> {link} |newname pswd: mypassword [zip] args: x:y|x1:y1"
+        )
+
         help_msg += "\n\n<b>By replying to link:</b>"
         help_msg += "\n<code>/command</code> |newname pswd: mypassword [zip] args: x:y|x1:y1"
         help_msg += "\n\n<b>Args Example:</b> args: playliststart:^10|match_filter:season_number=18|matchtitle:S1"
@@ -85,7 +88,7 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
         result = ydl.extractMetaData(link, name, args, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        return sendMessage(tag + " " + msg, bot, message)
+        return sendMessage(f"{tag} {msg}", bot, message)
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]"
@@ -122,20 +125,21 @@ def _watch(bot, message, isZip=False, isLeech=False, multi=0):
                 if quality in list(formats_dict.keys()):
                     formats_dict[quality][frmt['tbr']] = size
                 else:
-                    subformat = {}
-                    subformat[frmt['tbr']] = size
+                    subformat = {frmt['tbr']: size}
                     formats_dict[quality] = subformat
 
-            for _format in formats_dict:
-                if len(formats_dict[_format]) == 1:
+            for _format, value in formats_dict.items():
+                if len(value) == 1:
                     qual_fps_ext = re_split(r'p|-', _format, maxsplit=2)
                     height = qual_fps_ext[0]
                     fps = qual_fps_ext[1]
                     ext = qual_fps_ext[2]
-                    if fps != '':
-                        video_format = f"bv*[height={height}][fps={fps}][ext={ext}]"
-                    else:
-                        video_format = f"bv*[height={height}][ext={ext}]"
+                    video_format = (
+                        f"bv*[height={height}][fps={fps}][ext={ext}]"
+                        if fps != ''
+                        else f"bv*[height={height}][ext={ext}]"
+                    )
+
                     size = list(formats_dict[_format].values())[0]
                     buttonName = f"{_format} ({get_readable_file_size(size)})"
                     buttons.sbutton(str(buttonName), f"qu {msg_id} {video_format}")
@@ -167,9 +171,7 @@ def _qual_subbuttons(task_id, qual, msg):
     height = qual_fps_ext[0]
     fps = qual_fps_ext[1]
     ext = qual_fps_ext[2]
-    tbrs = []
-    for tbr in formats_dict[qual]:
-        tbrs.append(tbr)
+    tbrs = list(formats_dict[qual])
     tbrs.sort(reverse=True)
     for index, br in enumerate(tbrs):
         if index == 0:
@@ -229,10 +231,7 @@ def select_format(update, context):
         return editMessage('Choose Video Quality:', msg, task_info[4])
     elif data[2] == "audio":
         query.answer()
-        if len(data) == 4:
-            playlist = True
-        else:
-            playlist = False
+        playlist = len(data) == 4
         _audio_subbuttons(task_id, msg, playlist)
         return
     elif data[2] == "cancel":
@@ -247,11 +246,8 @@ def select_format(update, context):
         qual = data[2]
         if qual.startswith('bv*['): # To not exceed telegram button bytes limits. Temp solution.
             height = re_split(r'\[|\]', qual, maxsplit=2)[1]
-            qual = qual + f"+ba/b[{height}]"
-        if len(data) == 4:
-            playlist = True
-        else:
-            playlist = False
+            qual = f"{qual}+ba/b[{height}]"
+        playlist = len(data) == 4
         ydl = YoutubeDLHelper(listener)
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, args)).start()
         query.message.delete()
