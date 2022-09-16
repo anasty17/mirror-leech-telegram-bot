@@ -183,10 +183,14 @@ def __onDownloadComplete(client, tor):
     listener.onDownloadComplete()
     if listener.seed:
         with download_dict_lock:
-            if listener.uid not in download_dict:
-                client.torrents_delete(torrent_hashes=tor.hash, delete_files=True)
-                return
-            download_dict[listener.uid] = QbDownloadStatus(listener, tor.hash, True)
+            if listener.uid in download_dict:
+                removed = False
+                download_dict[listener.uid] = QbDownloadStatus(listener, tor.hash, True)
+            else:
+                removed = True
+        if removed:
+            __remove_torrent(client, tor.hash)
+            return
         with qb_download_lock:
             SEEDING.add(tor.hash)
         update_all_messages()
