@@ -76,7 +76,6 @@ def __onDownloadComplete(api, gid):
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
                 sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
-        sleep(2)
         if dl := getDownloadByGid(gid):
             if hasattr(dl, 'listener') and dl.seeding:
                 LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
@@ -110,7 +109,7 @@ def __onBtDownloadComplete(api, gid):
             try:
                 api.set_options({'max-upload-limit': '0'}, [download])
             except Exception as e:
-                LOGGER.error(f'{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent')
+                LOGGER.error(f'{e} You are not able to seed because you added global option seed-time=0 without adding specific seed_time for this torrent GID: {gid}')
         else:
             try:
                 api.client.force_pause(gid)
@@ -118,13 +117,6 @@ def __onBtDownloadComplete(api, gid):
                 LOGGER.error(f"{e} GID: {gid}" )
         listener.onDownloadComplete()
         if listener.seed:
-            with download_dict_lock:
-                if listener.uid not in download_dict:
-                    api.remove([download], force=True, files=True)
-                    return
-                download_dict[listener.uid] = AriaDownloadStatus(gid, listener, True)
-                download_dict[listener.uid].start_time = seed_start_time
-            LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
             download = download.live
             if download.is_complete:
                 if dl := getDownloadByGid(gid):
@@ -132,6 +124,13 @@ def __onBtDownloadComplete(api, gid):
                     listener.onUploadError(f"Seeding stopped with Ratio: {dl.ratio()} and Time: {dl.seeding_time()}")
                     api.remove([download], force=True, files=True)
             else:
+                with download_dict_lock:
+                    if listener.uid not in download_dict:
+                        api.remove([download], force=True, files=True)
+                        return
+                    download_dict[listener.uid] = AriaDownloadStatus(gid, listener, True)
+                    download_dict[listener.uid].start_time = seed_start_time
+                LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
                 update_all_messages()
         else:
             api.remove([download], force=True, files=True)

@@ -105,22 +105,26 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         return sendMessage(tag + " " + msg, bot, message)
+    formats_dict = {}
     if 'entries' in result:
         for i in ['144', '240', '360', '480', '720', '1080', '1440', '2160']:
             video_format = f"bv*[height<={i}][ext=mp4]+ba[ext=m4a]/b[height<={i}]"
-            buttons.sbutton(f"{i}-mp4", f"qu {msg_id} {video_format} t")
+            b_data = f"{i}|mp4"
+            formats_dict[b_data] = video_format
+            buttons.sbutton(f"{i}-mp4", f"qu {msg_id} {b_data} t")
             video_format = f"bv*[height<={i}][ext=webm]+ba/b[height<={i}]"
-            buttons.sbutton(f"{i}-webm", f"qu {msg_id} {video_format} t")
+            b_data = f"{i}|webm"
+            formats_dict[b_data] = video_format
+            buttons.sbutton(f"{i}-webm", f"qu {msg_id} {b_data} t")
         buttons.sbutton("MP3", f"qu {msg_id} mp3 t")
         buttons.sbutton("Best Videos", f"qu {msg_id} {best_video} t")
         buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
         buttons.sbutton("Cancel", f"qu {msg_id} cancel")
         YTBUTTONS = buttons.build_menu(3)
-        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt]
+        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
         bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
     else:
         formats = result.get('formats')
-        formats_dict = {}
         if formats is not None:
             for frmt in formats:
                 if frmt.get('tbr'):
@@ -252,11 +256,13 @@ def select_format(update, context):
         qual = data[2]
         if len(data) == 4:
             playlist = True
+            if '|' in qual:
+                qual = task_info[6][qual]
         else:
             playlist = False
-        if '|' in qual:
-            b_name, tbr = qual.split('|')
-            qual = task_info[6][b_name][tbr][1]
+            if '|' in qual:
+                b_name, tbr = qual.split('|')
+                qual = task_info[6][b_name][tbr][1]
         ydl = YoutubeDLHelper(listener)
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)).start()
         query.message.delete()

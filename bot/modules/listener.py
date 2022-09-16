@@ -59,7 +59,7 @@ class MirrorLeechListener:
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
         if name == "None" or self.isQbit or not ospath.exists(f"{self.dir}/{name}"):
-            name = listdir(f"{self.dir}")[-1]
+            name = listdir(self.dir)[-1]
         m_path = f'{self.dir}/{name}'
         size = get_path_size(m_path)
         if self.isZip:
