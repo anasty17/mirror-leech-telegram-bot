@@ -62,6 +62,9 @@ DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
 
+def getConfig(name: str):
+    return environ[name]
+
 try:
     if bool(getConfig('_____REMOVE_THIS_LINE_____')):
         log_error('The README.md file there to be read! Exiting now!')
@@ -92,14 +95,10 @@ download_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-AUTHORIZED_CHATS = set()
-SUDO_USERS = set()
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
 EXTENSION_FILTER = set(['.aria2'])
 
-def getConfig(name: str):
-    return environ[name]
 
 try:
     BOT_TOKEN = getConfig('BOT_TOKEN')
@@ -117,15 +116,17 @@ except:
     exit(1)
 
 aid = environ.get('AUTHORIZED_CHATS', '')
-aid = aid.split()
-for _id in aid:
-    AUTHORIZED_CHATS.add(int(_id.strip()))
-
+if len(aid) != 0:
+    aid = aid.split()
+    AUTHORIZED_CHATS = {int(_id.strip()) for _id in aid}
+else:
+    AUTHORIZED_CHATS = set()
 aid = environ.get('SUDO_USERS', '')
-aid = aid.split()
-for _id in aid:
-    SUDO_USERS.add(int(_id.strip()))
-
+if len(aid) != 0:
+    aid = aid.split()
+    SUDO_USERS = {int(_id.strip()) for _id in aid}
+else:
+    SUDO_USERS = set()
 fx = environ.get('EXTENSION_FILTER', '')
 if len(fx) > 0:
     fx = fx.split()
@@ -192,17 +193,9 @@ else:
     LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
 
 DUMP_CHAT = environ.get('DUMP_CHAT', '')
-if len(DUMP_CHAT) == 0:
-    DUMP_CHAT = None
-else:
-    DUMP_CHAT = int(DUMP_CHAT)
-
+DUMP_CHAT = None if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
-if len(STATUS_LIMIT) == 0:
-    STATUS_LIMIT = None
-else:
-    STATUS_LIMIT = int(STATUS_LIMIT)
-
+STATUS_LIMIT = None if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
 if len(UPTOBOX_TOKEN) == 0:
     UPTOBOX_TOKEN = None
@@ -219,11 +212,7 @@ if len(SEARCH_API_LINK) == 0:
     SEARCH_API_LINK = None
 
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
-if len(SEARCH_LIMIT) == 0:
-    SEARCH_LIMIT = 0
-else:
-    SEARCH_LIMIT = int(SEARCH_LIMIT)
-
+SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 RSS_COMMAND = environ.get('RSS_COMMAND', '')
 if len(RSS_COMMAND) == 0:
     RSS_COMMAND = None
@@ -231,23 +220,11 @@ if len(RSS_COMMAND) == 0:
 CMD_INDEX = environ.get('CMD_INDEX', '')
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
-if len(RSS_CHAT_ID) == 0:
-    RSS_CHAT_ID = None
-else:
-    RSS_CHAT_ID = int(RSS_CHAT_ID)
-
+RSS_CHAT_ID = None if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
 RSS_DELAY = environ.get('RSS_DELAY', '')
-if len(RSS_DELAY) == 0:
-    RSS_DELAY = 900
-else:
-    RSS_DELAY = int(RSS_DELAY)
-
+RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
-if len(TORRENT_TIMEOUT) == 0:
-    TORRENT_TIMEOUT = None
-else:
-    TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
-
+TORRENT_TIMEOUT = None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 BASE_URL = environ.get('BASE_URL_OF_BOT', '').rstrip("/")
 if len(BASE_URL) == 0:
     log_warning('BASE_URL_OF_BOT not provided!')
