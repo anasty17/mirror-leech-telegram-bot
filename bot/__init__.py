@@ -97,7 +97,7 @@ rss_dict = {}
 
 AS_DOC_USERS = set()
 AS_MEDIA_USERS = set()
-EXTENSION_FILTER = {'.aria2'}
+EXTENSION_FILTER = set(['.aria2'])
 
 
 try:
