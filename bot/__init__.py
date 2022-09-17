@@ -116,11 +116,17 @@ except:
     exit(1)
 
 aid = environ.get('AUTHORIZED_CHATS', '')
-aid = aid.split()
-AUTHORIZED_CHATS = {int(_id.strip()) for _id in aid}
+if len(aid) != 0:
+    aid = aid.split()
+    AUTHORIZED_CHATS = {int(_id.strip()) for _id in aid}
+else:
+    AUTHORIZED_CHATS = set()
 aid = environ.get('SUDO_USERS', '')
-aid = aid.split()
-SUDO_USERS = {int(_id.strip()) for _id in aid}
+if len(aid) != 0:
+    aid = aid.split()
+    SUDO_USERS = {int(_id.strip()) for _id in aid}
+else:
+    SUDO_USERS = set()
 fx = environ.get('EXTENSION_FILTER', '')
 if len(fx) > 0:
     fx = fx.split()
