@@ -61,12 +61,12 @@ QbInterval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
-
-def getConfig(name: str):
-    return environ[name]
+AS_DOC_USERS = set()
+AS_MEDIA_USERS = set()
+EXTENSION_FILTER = {'.aria2'}
 
 try:
-    if bool(getConfig('_____REMOVE_THIS_LINE_____')):
+    if bool(environ.get('_____REMOVE_THIS_LINE_____')):
         log_error('The README.md file there to be read! Exiting now!')
         exit()
 except:
@@ -95,25 +95,52 @@ download_dict = {}
 # value: [rss_feed, last_link, last_title, filter]
 rss_dict = {}
 
-AS_DOC_USERS = set()
-AS_MEDIA_USERS = set()
-EXTENSION_FILTER = set(['.aria2'])
+BOT_TOKEN = environ.get('BOT_TOKEN', '')
+if len(BOT_TOKEN) == 0:
+    log_error("BOT_TOKEN variable is missing! Exiting now")
+    exit(1)
 
+OWNER_ID = environ.get('OWNER_ID', '')
+if len(OWNER_ID) == 0:
+    log_error("OWNER_ID variable is missing! Exiting now")
+    exit(1)
+else:
+    OWNER_ID = int(OWNER_ID)
 
-try:
-    BOT_TOKEN = getConfig('BOT_TOKEN')
-    parent_id = getConfig('GDRIVE_FOLDER_ID')
-    DOWNLOAD_DIR = getConfig('DOWNLOAD_DIR')
+TELEGRAM_API = environ.get('TELEGRAM_API', '')
+if len(TELEGRAM_API) == 0:
+    log_error("TELEGRAM_API variable is missing! Exiting now")
+    exit(1)
+else:
+    TELEGRAM_API = int(TELEGRAM_API)
+
+TELEGRAM_HASH = environ.get('TELEGRAM_HASH', '')
+if len(TELEGRAM_HASH) == 0:
+    log_error("TELEGRAM_HASH variable is missing! Exiting now")
+    exit(1)
+
+PARENT_ID = environ.get('GDRIVE_FOLDER_ID', '')
+if len(PARENT_ID) == 0:
+    PARENT_ID = None
+
+DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
+if len(DOWNLOAD_DIR) == 0:
+    DOWNLOAD_DIR = '/usr/src/app/downloads/'
+else:
     if not DOWNLOAD_DIR.endswith("/"):
         DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
-    DOWNLOAD_STATUS_UPDATE_INTERVAL = int(getConfig('DOWNLOAD_STATUS_UPDATE_INTERVAL'))
-    OWNER_ID = int(getConfig('OWNER_ID'))
-    AUTO_DELETE_MESSAGE_DURATION = int(getConfig('AUTO_DELETE_MESSAGE_DURATION'))
-    TELEGRAM_API = getConfig('TELEGRAM_API')
-    TELEGRAM_HASH = getConfig('TELEGRAM_HASH')
-except:
-    log_error("One or more env variables missing! Exiting now")
-    exit(1)
+
+DOWNLOAD_STATUS_UPDATE_INTERVAL = environ.get('DOWNLOAD_STATUS_UPDATE_INTERVAL', '')
+if len(DOWNLOAD_STATUS_UPDATE_INTERVAL) == 0:
+    DOWNLOAD_STATUS_UPDATE_INTERVAL = 10
+else:
+    DOWNLOAD_STATUS_UPDATE_INTERVAL = int(DOWNLOAD_STATUS_UPDATE_INTERVAL)
+
+AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
+if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
+    AUTO_DELETE_MESSAGE_DURATION = 30
+else:
+    AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
 
 aid = environ.get('AUTHORIZED_CHATS', '')
 if len(aid) != 0:
@@ -133,15 +160,14 @@ if len(fx) > 0:
     for x in fx:
         EXTENSION_FILTER.add(x.strip().lower())
 
-
 IS_PREMIUM_USER = False
 USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) == 0:
     log_info("Creating client from BOT_TOKEN")
-    app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    app = Client(name='pyrogram', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
 else:
     log_info("Creating client from USER_SESSION_STRING")
-    app = Client(name='pyrogram', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    app = Client(name='pyrogram', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
     with app:
         IS_PREMIUM_USER = app.me.is_premium
 
@@ -150,7 +176,7 @@ if len(RSS_USER_SESSION_STRING) == 0:
     rss_session = None
 else:
     log_info("Creating client from RSS_USER_SESSION_STRING")
-    rss_session = Client(name='rss_session', api_id=int(TELEGRAM_API), api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    rss_session = Client(name='rss_session', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
 
 def aria2c_init():
     try:
@@ -319,7 +345,7 @@ if len(YT_COOKIES_URL) != 0:
         log_error(f"YT_COOKIES_URL: {e}")
 
 DRIVES_NAMES.append("Main")
-DRIVES_IDS.append(parent_id)
+DRIVES_IDS.append(PARENT_ID)
 if ospath.exists('drive_folder'):
     with open('drive_folder', 'r+') as f:
         lines = f.readlines()

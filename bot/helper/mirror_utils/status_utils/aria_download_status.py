@@ -7,7 +7,8 @@ def get_download(gid):
     try:
         return aria2.get_download(gid)
     except Exception as e:
-        LOGGER.error(f'{e}: while getting torrent info')
+        LOGGER.error(f'{e}: Aria2c, Error while getting torrent info')
+        return get_download(gid)
 
 
 class AriaDownloadStatus:
@@ -22,7 +23,9 @@ class AriaDownloadStatus:
 
     def __update(self):
         self.__download = self.__download.live
-        if self.__download.followed_by_ids:
+        if self.__download is None:
+            self.__download = get_download(self.__gid)
+        elif self.__download.followed_by_ids:
             self.__gid = self.__download.followed_by_ids[0]
             self.__download = get_download(self.__gid)
 

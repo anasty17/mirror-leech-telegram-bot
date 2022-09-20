@@ -24,12 +24,12 @@ In each single file there is a major change from base code, it's almost totaly d
 - Upload all files to specific superGroup/channel.
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
-- Download G-Drive links
-- Counting files/folders from Google Drive link
+- Download from Google Drive
+- Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
-- List result in html file instead of telegraph or telegram message to avoid limits by @junedkh
+- List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
 ### Status
 - Clone Status
@@ -134,21 +134,22 @@ cp config_sample.env config.env
 ```
 _____REMOVE_THIS_LINE_____=True
 ```
-Fill up rest of the fields. Meaning of each field is discussed below:
+Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between quotes, even if `Int` or `Bool`.
 
 **1. Required Fields**
 
 - `BOT_TOKEN`: The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather). `Str`
-- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. `Str`
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot. `Int`
-- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
-- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Int`
 - `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Str`
 
 **2. Optional Fields**
+
+- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. Required for `Google Drive` upload. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
+- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
+- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables. `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Str`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Str`

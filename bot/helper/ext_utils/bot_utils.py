@@ -46,8 +46,8 @@ class setInterval:
     def __setInterval(self):
         nextTime = time() + self.interval
         while not self.stopEvent.wait(nextTime - time()):
-            nextTime += self.interval
             self.action()
+            nextTime = time() + self.interval
 
     def cancel(self):
         self.stopEvent.set()
