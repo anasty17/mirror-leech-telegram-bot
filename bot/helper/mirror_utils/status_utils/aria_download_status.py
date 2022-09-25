@@ -102,7 +102,7 @@ class AriaDownloadStatus:
 
     def cancel_download(self):
         self.__update()
-        if self.__download.seeder:
+        if self.__download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             self.__listener.onUploadError(f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}")
             aria2.remove([self.__download], force=True, files=True)
