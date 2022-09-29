@@ -268,10 +268,10 @@ def select_format(update, context):
         query.message.delete()
     del listener_dict[task_id]
 
-def _auto_cancel(msg, msg_id):
+def _auto_cancel(msg, task_id):
     sleep(120)
     try:
-        del listener_dict[msg_id]
+        del listener_dict[task_id]
         editMessage('Timed out! Task has been cancelled.', msg)
     except:
         pass
@@ -288,14 +288,15 @@ def ytdlleech(update, context):
 def ytdlZipleech(update, context):
     _ytdl(context.bot, update.message, True, True)
 
+
 ytdl_handler = CommandHandler(BotCommands.YtdlCommand, ytdl,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 ytdl_zip_handler = CommandHandler(BotCommands.YtdlZipCommand, ytdlZip,
-                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 ytdl_leech_handler = CommandHandler(BotCommands.YtdlLeechCommand, ytdlleech,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 ytdl_zip_leech_handler = CommandHandler(BotCommands.YtdlZipLeechCommand, ytdlZipleech,
-                                    filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 quality_handler = CallbackQueryHandler(select_format, pattern="qu", run_async=True)
 
 dispatcher.add_handler(ytdl_handler)

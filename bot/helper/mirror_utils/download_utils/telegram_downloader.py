@@ -69,6 +69,9 @@ class TelegramDownloadHelper:
     def __download(self, message, path):
         try:
             download = message.download(file_name=path, progress=self.__onDownloadProgress)
+            if self.__is_cancelled:
+                self.__onDownloadError('Cancelled by user!')
+                return
         except Exception as e:
             LOGGER.error(str(e))
             return self.__onDownloadError(str(e))
@@ -110,4 +113,3 @@ class TelegramDownloadHelper:
     def cancel_download(self):
         LOGGER.info(f'Cancelling download on user request: {self.__id}')
         self.__is_cancelled = True
-        self.__onDownloadError('Cancelled by user!')

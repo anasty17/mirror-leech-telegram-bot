@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from os import remove, path as ospath
 
-from bot import aria2, BASE_URL, download_dict, dispatcher, download_dict_lock, SUDO_USERS, OWNER_ID, LOGGER
+from bot import aria2, BASE_URL, download_dict, dispatcher, download_dict_lock, OWNER_ID, user_data, LOGGER
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, sendStatusMessage
@@ -32,7 +32,8 @@ def select(update, context):
         sendMessage(msg, context.bot, update.message)
         return
 
-    if OWNER_ID != user_id and dl.message.from_user.id != user_id and user_id not in SUDO_USERS:
+    if OWNER_ID != user_id and dl.message.from_user.id != user_id and \
+       (user_id not in user_data or not user_data[user_id].get('is_sudo')):
         sendMessage("This task is not for you!", context.bot, update.message)
         return
     if dl.status() not in [MirrorStatus.STATUS_DOWNLOADING, MirrorStatus.STATUS_PAUSED, MirrorStatus.STATUS_WAITING]:
@@ -114,10 +115,12 @@ def get_confirm(update, context):
                 LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         sendStatusMessage(listener.message, listener.bot)
         query.message.delete()
+        query.message.reply_to_message.delete()
 
 
 select_handler = CommandHandler(BotCommands.BtSelectCommand, select,
                                 filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
 bts_handler = CallbackQueryHandler(get_confirm, pattern="btsel", run_async=True)
+
 dispatcher.add_handler(select_handler)
 dispatcher.add_handler(bts_handler)

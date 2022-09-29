@@ -46,7 +46,14 @@ SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
 
-Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+BASE_URL = environ.get('BASE_URL_OF_BOT', '').rstrip("/")
+if len(BASE_URL) == 0:
+    log_warning('BASE_URL_OF_BOT not provided!')
+    BASE_URL = None
+
+if BASE_URL is not None:
+    Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
+
 srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
     srun(["touch", ".netrc"])
@@ -61,9 +68,8 @@ QbInterval = []
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
-AS_DOC_USERS = set()
-AS_MEDIA_USERS = set()
 EXTENSION_FILTER = {'.aria2'}
+user_data = {}
 
 try:
     if bool(environ.get('_____REMOVE_THIS_LINE_____')):
@@ -72,13 +78,7 @@ try:
 except:
     pass
 
-aria2 = ariaAPI(
-    ariaClient(
-        host="http://localhost",
-        port=6800,
-        secret="",
-    )
-)
+aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 
 def get_client():
     return qbClient(host="localhost", port=8090, VERIFY_WEBUI_CERTIFICATE=False, REQUESTS_ARGS={'timeout': (30, 60)})
@@ -145,15 +145,15 @@ else:
 aid = environ.get('AUTHORIZED_CHATS', '')
 if len(aid) != 0:
     aid = aid.split()
-    AUTHORIZED_CHATS = {int(_id.strip()) for _id in aid}
-else:
-    AUTHORIZED_CHATS = set()
+    for id_ in aid:
+        user_data[id_.strip()] = {'is_auth': True}
+
 aid = environ.get('SUDO_USERS', '')
 if len(aid) != 0:
     aid = aid.split()
-    SUDO_USERS = {int(_id.strip()) for _id in aid}
-else:
-    SUDO_USERS = set()
+    for id_ in aid:
+        user_data[id_.strip()] = {'is_sudo': True}
+
 fx = environ.get('EXTENSION_FILTER', '')
 if len(fx) > 0:
     fx = fx.split()
@@ -220,8 +220,10 @@ else:
 
 DUMP_CHAT = environ.get('DUMP_CHAT', '')
 DUMP_CHAT = None if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
 STATUS_LIMIT = None if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+
 UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
 if len(UPTOBOX_TOKEN) == 0:
     UPTOBOX_TOKEN = None
@@ -239,6 +241,7 @@ if len(SEARCH_API_LINK) == 0:
 
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
+
 RSS_COMMAND = environ.get('RSS_COMMAND', '')
 if len(RSS_COMMAND) == 0:
     RSS_COMMAND = None
@@ -247,14 +250,12 @@ CMD_INDEX = environ.get('CMD_INDEX', '')
 
 RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
 RSS_CHAT_ID = None if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
+
 RSS_DELAY = environ.get('RSS_DELAY', '')
 RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
+
 TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
 TORRENT_TIMEOUT = None if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
-BASE_URL = environ.get('BASE_URL_OF_BOT', '').rstrip("/")
-if len(BASE_URL) == 0:
-    log_warning('BASE_URL_OF_BOT not provided!')
-    BASE_URL = None
 
 CUSTOM_FILENAME = environ.get('CUSTOM_FILENAME', '')
 if len(CUSTOM_FILENAME) == 0:

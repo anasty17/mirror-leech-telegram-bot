@@ -28,7 +28,7 @@ class _BotCommands:
         self.ListCommand = f'list{CMD_INDEX}'
         self.SearchCommand = f'search{CMD_INDEX}'
         self.StatusCommand = f'status{CMD_INDEX}'
-        self.AuthorizedUsersCommand = f'users{CMD_INDEX}'
+        self.UsersCommand = f'users{CMD_INDEX}'
         self.AuthorizeCommand = f'authorize{CMD_INDEX}'
         self.UnAuthorizeCommand = f'unauthorize{CMD_INDEX}'
         self.AddSudoCommand = f'addsudo{CMD_INDEX}'
@@ -42,7 +42,7 @@ class _BotCommands:
         self.EvalCommand = f'eval{CMD_INDEX}'
         self.ExecCommand = f'exec{CMD_INDEX}'
         self.ClearLocalsCommand = f'clearlocals{CMD_INDEX}'
-        self.LeechSetCommand = f'leechset{CMD_INDEX}'
+        self.UserSetCommand = f'usetting{CMD_INDEX}'
         self.SetThumbCommand = f'setthumb{CMD_INDEX}'
         self.BtSelectCommand = f'btsel{CMD_INDEX}'
         self.RssListCommand = (f'rsslist{CMD_INDEX}', f'rl{CMD_INDEX}')
