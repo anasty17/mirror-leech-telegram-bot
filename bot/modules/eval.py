@@ -112,10 +112,11 @@ def clear(update, context):
         del namespaces[update.message.chat_id]
     send("Cleared locals.", bot, update)
 
-EVAL_HANDLER = CommandHandler(BotCommands.EvalCommand, evaluate, filters=CustomFilters.owner_filter, run_async=True)
-EXEC_HANDLER = CommandHandler(BotCommands.ExecCommand, execute, filters=CustomFilters.owner_filter, run_async=True)
-CLEAR_HANDLER = CommandHandler(BotCommands.ClearLocalsCommand, clear, filters=CustomFilters.owner_filter, run_async=True)
 
-dispatcher.add_handler(EVAL_HANDLER)
-dispatcher.add_handler(EXEC_HANDLER)
-dispatcher.add_handler(CLEAR_HANDLER)
+eval_handler = CommandHandler(BotCommands.EvalCommand, evaluate, filters=CustomFilters.owner_filter, run_async=True)
+exec_handler = CommandHandler(BotCommands.ExecCommand, execute, filters=CustomFilters.owner_filter, run_async=True)
+clear_handler = CommandHandler(BotCommands.ClearLocalsCommand, clear, filters=CustomFilters.owner_filter, run_async=True)
+
+dispatcher.add_handler(eval_handler)
+dispatcher.add_handler(exec_handler)
+dispatcher.add_handler(clear_handler)

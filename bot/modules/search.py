@@ -120,7 +120,7 @@ def _search(bot, key, site, message, method):
         try:
             resp = rget(api)
             search_results = resp.json()
-            if "error" in search_results.keys():
+            if 'error' in search_results or search_results['total'] == 0:
                 return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i>", message)
             cap = f"<b>Found {search_results['total']}</b>"
             if method == 'apitrend':
@@ -232,7 +232,8 @@ def _plugin_buttons(user_id):
     return buttons.build_menu(2)
 
 
-torser_handler = CommandHandler(BotCommands.SearchCommand, torser, filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+torser_handler = CommandHandler(BotCommands.SearchCommand, torser,
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
 torserbut_handler = CallbackQueryHandler(torserbut, pattern="torser", run_async=True)
 
 dispatcher.add_handler(torser_handler)

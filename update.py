@@ -12,10 +12,8 @@ basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[FileHandler('log.txt'), StreamHandler()],
                     level=INFO)
 
-CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL')
-try:
-    if len(CONFIG_FILE_URL) == 0:
-        raise TypeError
+CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL', '')
+if len(CONFIG_FILE_URL) != 0:
     try:
         res = rget(CONFIG_FILE_URL)
         if res.status_code == 200:
@@ -25,22 +23,15 @@ try:
             log_error(f"Failed to download config.env {res.status_code}")
     except Exception as e:
         log_error(f"CONFIG_FILE_URL: {e}")
-except:
-    pass
 
 load_dotenv('config.env', override=True)
 
-UPSTREAM_REPO = environ.get('UPSTREAM_REPO')
-UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH')
-try:
-    if len(UPSTREAM_REPO) == 0:
-       raise TypeError
-except:
-    UPSTREAM_REPO = None
-try:
-    if len(UPSTREAM_BRANCH) == 0:
-       raise TypeError
-except:
+UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
+if len(UPSTREAM_REPO) == 0:
+   UPSTREAM_REPO = None
+
+UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
+if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = 'master'
 
 if UPSTREAM_REPO is not None:

@@ -24,12 +24,12 @@ In each single file there is a major change from base code, it's almost totaly d
 - Upload all files to specific superGroup/channel.
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
-- Download G-Drive links
-- Counting files/folders from Google Drive link
+- Download from Google Drive
+- Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
-- List result in html file instead of telegraph or telegram message to avoid limits by @junedkh
+- List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
 ### Status
 - Clone Status
@@ -44,13 +44,13 @@ In each single file there is a major change from base code, it's almost totaly d
 ### Yt-dlp
 - Switch from youtube-dl to yt-dlp and fix all conflicts
 - Yt-dlp quality buttons
-- Support for download live streams
-- Ability to use specific yt-dlp arg for each task
+- Ability to use specific yt-dlp option for each task
 - Fix download progress
 ### Database
 - SQL Database support
 - Save leech settings including thumbnails in database
 - Save sudo and authorized users
+- Save RSS last recorded data
 - Incomplete task notifier to get incomplete task messages after restart
 ### Torrents Search
 - Torrent search support
@@ -58,7 +58,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Search on torrents with variable plugins using qBittorrent search engine
 ### Archives
 - Zip instead of tar
-- Using 7-zip tool to extract all supported files
+- Using 7-zip tool to extract all supported types
 - Extract rar, zip and 7z within folder or splits with or without password
 - Zip file/folder with or without password
 ### RSS
@@ -134,22 +134,23 @@ cp config_sample.env config.env
 ```
 _____REMOVE_THIS_LINE_____=True
 ```
-Fill up rest of the fields. Meaning of each field is discussed below:
+Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between quotes, even if `Int` or `Bool`.
 
 **1. Required Fields**
 
 - `BOT_TOKEN`: The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather). `Str`
-- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. `Str`
 - `OWNER_ID`: The Telegram User ID (not username) of the Owner of the bot. `Int`
-- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
-- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
-- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `TELEGRAM_API`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Int`
 - `TELEGRAM_HASH`: This is to authenticate your Telegram account for downloading Telegram files. You can get this from https://my.telegram.org. `Str`
 
 **2. Optional Fields**
+
+- `GDRIVE_FOLDER_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. Required for `Google Drive` upload. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
-- `DATABASE_URL`: Your SQL Database URL. Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, leech settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: If deploying on heroku and using heroku postgresql delete this variable from **config.env** file. **DATABASE_URL** will be grabbed from heroku variables. `Str`
+- `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
+- `DOWNLOAD_STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
+- `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
+- `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Str`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Str`
 - `IGNORE_PENDING_REQUESTS`: Ignore pending requests after restart. Default is `False`. `Bool`
@@ -335,7 +336,7 @@ ytdl - or /y Mirror yt-dlp supported link
 ytdlzip - or /yz Mirror yt-dlp supported link as zip
 ytdlleech - or /yl Leech through yt-dlp supported link
 ytdlzipleech - or /yzl Leech yt-dlp support link as zip
-leechset - Leech settings
+usetting - users settings
 setthumb - Set thumbnail
 status - Get Mirror Status message
 btsel - select files from torrent
@@ -458,30 +459,17 @@ Then add emails from emails.txt to Google Group, after that add this Google Grou
 ```
 python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 ```
+
 ------
 
 ### Generate Database
 
-**1. Using Railway**
-- Go to [railway](https://railway.app) and create account
-- Start new project
-- Press on `Provision PostgreSQL`
-- After creating database press on `PostgresSQL`
-- Go to `Connect` column
-- Copy `Postgres Connection URL` and fill `DATABASE_URL` variable with it
-
-**2. Using Heroku PostgreSQL**
-<p><a href="https://dev.to/prisma/how-to-setup-a-free-postgresql-database-on-heroku-1dc1"> <img src="https://img.shields.io/badge/See%20Dev.to-black?style=for-the-badge&logo=dev.to" width="160""/></a></p>
-
-**3. Using ElephantSQL**
-- Go to [elephantsql](https://elephantsql.com) and create account
-- Hit `Create New Instance`
-- Follow the further instructions in the screen
-- Hit `Select Region`
-- Hit `Review`
-- Hit `Create instance`
-- Select your database name
-- Copy your database url, and fill `DATABASE_URL` variable with it
+1. Go to `https://mongodb.com/` and sign-up.
+2. Create Shared Cluster.
+3. Press on `Database` under `Deployment` Header, your created cluster will be there.
+5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
+6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
+7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
 
 ------
 
@@ -515,5 +503,13 @@ Using Aria2c you can also use built in feature from bot with or without username
 machine example.workers.dev password index_password
 ```
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each separated by a new line.
+
+-----
+
+## Donations
+
+<p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
 
 -----

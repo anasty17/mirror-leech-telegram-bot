@@ -1,6 +1,6 @@
 from telegram.ext import MessageFilter
 from telegram import Message
-from bot import AUTHORIZED_CHATS, SUDO_USERS, OWNER_ID
+from bot import user_data, OWNER_ID
 
 
 class CustomFilters:
@@ -13,22 +13,24 @@ class CustomFilters:
     class __AuthorizedUserFilter(MessageFilter):
         def filter(self, message: Message):
             uid = message.from_user.id
-            return uid in AUTHORIZED_CHATS or uid in SUDO_USERS or uid == OWNER_ID
+            return uid == OWNER_ID or uid in user_data and (user_data[uid].get('is_auth') or user_data[uid].get('is_sudo'))
 
     authorized_user = __AuthorizedUserFilter()
 
     class __AuthorizedChat(MessageFilter):
         def filter(self, message: Message):
-            return message.chat.id in AUTHORIZED_CHATS
+            uid = message.chat.id
+            return uid in user_data and user_data[uid].get('is_auth')
 
     authorized_chat = __AuthorizedChat()
 
     class __SudoUser(MessageFilter):
         def filter(self, message: Message):
-            return message.from_user.id in SUDO_USERS
+            uid = message.from_user.id
+            return uid in user_data and user_data[uid].get('is_sudo')
 
     sudo_user = __SudoUser()
 
     @staticmethod
-    def _owner_query(user_id):
-        return user_id == OWNER_ID or user_id in SUDO_USERS
+    def _owner_query(uid):
+        return uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo')

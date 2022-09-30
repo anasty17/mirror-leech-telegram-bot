@@ -4,6 +4,7 @@ asyncio
 beautifulsoup4
 bencoding
 cfscrape
+dnspython
 feedparser
 flask
 google-api-python-client
@@ -14,8 +15,8 @@ lk21
 lxml
 pillow
 psutil
-psycopg2-binary
 pybase64
+pymongo
 pyrogram
 python-dotenv
 python-magic
