@@ -225,7 +225,7 @@ def __qb_listener():
                         LOGGER.error(msg)
                         client.torrents_recheck(torrent_hashes=tor_info.hash)
                         RECHECKED.add(tor_info.hash)
-                    elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME[tor_info.hash] >= TORRENT_TIMEOUT:
+                    elif TORRENT_TIMEOUT is not None and time() - STALLED_TIME.get(tor_info.hash, 0) >= TORRENT_TIMEOUT:
                         Thread(target=__onDownloadError, args=("Dead Torrent!", client, tor_info)).start()
                 elif tor_info.state == "missingFiles":
                     client.torrents_recheck(torrent_hashes=tor_info.hash)
