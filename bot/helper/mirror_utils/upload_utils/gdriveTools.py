@@ -273,7 +273,7 @@ class GoogleDriveHelper:
         return file_id
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=(retry_if_exception_type(Exception) | retry_if_exception_type(IOError)))
+           retry=(retry_if_exception_type(Exception)))
     def __upload_file(self, file_path, file_name, mime_type, dest_id):
         # File body description
         file_metadata = {
@@ -759,7 +759,7 @@ class GoogleDriveHelper:
                 break
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
-           retry=(retry_if_exception_type(Exception) | retry_if_exception_type(IOError)))
+           retry=(retry_if_exception_type(Exception)))
     def __download_file(self, file_id, path, filename, mime_type):
         request = self.__service.files().get_media(fileId=file_id, supportsTeamDrives=True)
         filename = filename.replace('/', '')
