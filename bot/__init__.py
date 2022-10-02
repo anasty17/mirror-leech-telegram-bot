@@ -126,9 +126,8 @@ if len(PARENT_ID) == 0:
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
     DOWNLOAD_DIR = '/usr/src/app/downloads/'
-else:
-    if not DOWNLOAD_DIR.endswith("/"):
-        DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
+elif not DOWNLOAD_DIR.endswith("/"):
+    DOWNLOAD_DIR = DOWNLOAD_DIR + '/'
 
 DOWNLOAD_STATUS_UPDATE_INTERVAL = environ.get('DOWNLOAD_STATUS_UPDATE_INTERVAL', '')
 if len(DOWNLOAD_STATUS_UPDATE_INTERVAL) == 0:
@@ -146,13 +145,13 @@ aid = environ.get('AUTHORIZED_CHATS', '')
 if len(aid) != 0:
     aid = aid.split()
     for id_ in aid:
-        user_data[id_.strip()] = {'is_auth': True}
+        user_data[int(id_.strip())] = {'is_auth': True}
 
 aid = environ.get('SUDO_USERS', '')
 if len(aid) != 0:
     aid = aid.split()
     for id_ in aid:
-        user_data[id_.strip()] = {'is_sudo': True}
+        user_data[int(id_.strip())] = {'is_sudo': True}
 
 fx = environ.get('EXTENSION_FILTER', '')
 if len(fx) > 0:
