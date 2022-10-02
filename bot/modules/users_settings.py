@@ -109,7 +109,7 @@ def setThumb(update, context):
 def sendUsersSettings(update, context):
     msg = ''
     for u, d in user_data.items():
-        msg += f'<code>{u}</code>: {d}'
+        msg += f'<code>{u}</code>: {d}\n'
     sendMessage(msg, context.bot, update.message)
 
 users_settings_handler = CommandHandler(BotCommands.UsersCommand, sendUsersSettings,
