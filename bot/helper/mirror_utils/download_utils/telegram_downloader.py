@@ -89,6 +89,9 @@ class TelegramDownloadHelper:
                 download = media.file_unique_id not in GLOBAL_GID
             if filename == "":
                 name = media.file_name
+                if "_" in name:
+                    name = _dmsg.caption.split("\n")[0]
+                    path = path + name
             else:
                 name = filename
                 path = path + name
