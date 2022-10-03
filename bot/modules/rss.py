@@ -190,12 +190,12 @@ def rss_monitor(context):
             rss_d = feedparse(data['link'])
             last_link = rss_d.entries[0]['link']
             last_title = rss_d.entries[0]['title']
-            if data['last_link'] == last_link or data['last_title'] == last_title:
+            if data['last_feed'] == last_link or data['last_title'] == last_title:
                 continue
             feed_count = 0
             while True:
                 try:
-                    if data['last_link'] == rss_d.entries[feed_count]['link'] or \
+                    if data['last_feed'] == rss_d.entries[feed_count]['link'] or \
                        data['last_title'] == rss_d.entries[feed_count]['title']:
                         break
                 except IndexError:
@@ -222,10 +222,10 @@ def rss_monitor(context):
                 feed_count += 1
                 sleep(5)
             with rss_dict_lock:
-                rss_dict[title].update({'last_link': last_link, 'last_title': last_title})
+                rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
             DbManger().rss_update(title)
             LOGGER.info(f"Feed Name: {title}")
-            LOGGER.info(f"Last item: {last_link}")
+            LOGGER.info(f"Last item: {last_feed}")
         except Exception as e:
             LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
             continue
