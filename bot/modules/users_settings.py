@@ -17,8 +17,8 @@ def getleechinfo(from_user):
     name = from_user.full_name
     buttons = button_build.ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
-    if user_id in user_data and (user_data[user_id].get('as_doc') or (not user_data[user_id].get('as_media') \
-       and AS_DOCUMENT)):
+    user_dict = user_data.get(user_id, False)
+    if not user_dict and AS_DOCUMENT or user_dict and user_dict.get('as_doc'):
         ltype = "DOCUMENT"
         buttons.sbutton("Send As Media", f"leechset {user_id} med")
     else:
@@ -33,7 +33,7 @@ def getleechinfo(from_user):
 
     buttons.sbutton("Close", f"leechset {user_id} close")
     button = buttons.build_menu(1)
-    text = f"<u>Leech Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
+    text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
            f"Leech Type <b>{ltype}</b>\n"\
            f"Custom Thumbnail <b>{thumbmsg}</b>"
     return text, button
@@ -56,17 +56,13 @@ def setLeechType(update, context):
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == "doc":
-        if user_id in user_data and user_data[user_id].get('as_media'):
-            update_user_ldata(user_id, 'as_media', False)
         update_user_ldata(user_id, 'as_doc', True)
         if DB_URI is not None:
             DbManger().update_user_data(user_id)
         query.answer(text="Your File Will Deliver As Document!", show_alert=True)
         editLeechType(message, query)
     elif data[2] == "med":
-        if user_id in user_data and user_data[user_id].get('as_doc'):
-            update_user_ldata(user_id, 'as_doc', False)
-        update_user_ldata(user_id, 'as_media', True)
+        update_user_ldata(user_id, 'as_doc', False)
         if DB_URI is not None:
             DbManger().update_user_data(user_id)
         query.answer(text="Your File Will Deliver As Media!", show_alert=True)

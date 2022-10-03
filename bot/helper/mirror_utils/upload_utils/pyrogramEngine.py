@@ -177,10 +177,12 @@ class TgUploader:
 
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
-        if user_id in user_data and user_data[user_id].get('as_doc'):
-            self.__as_doc = True
-        elif user_id in user_data and user_data[user_id].get('as_media'):
-            self.__as_doc = False
+        user_dict = user_data.get(user_id, False)
+        if user_dict:
+            if user_dict.get('as_doc'):
+                self.__as_doc = True
+            else:
+                self.__as_doc = False
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 

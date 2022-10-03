@@ -269,7 +269,7 @@ def get_content_type(link: str) -> str:
             content_type = None
     return content_type
 
-def update_user_ldata(id_: str, key, value):
+def update_user_ldata(id_: int, key, value):
     if id_ in user_data:
         user_data[id_][key] = value
     else:
