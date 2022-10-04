@@ -4,6 +4,7 @@ from subprocess import run as srun, check_output
 from psutil import disk_usage, cpu_percent, swap_memory, cpu_count, virtual_memory, net_io_counters, boot_time
 from time import time
 from sys import executable
+from telegram import ParseMode
 from telegram.ext import CommandHandler
 
 from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, \
@@ -151,25 +152,25 @@ def main():
                 else:
                     msg = 'Bot Restarted!'
                 for tag, links in data.items():
-                     msg += f"\n\n{tag}: "
-                     for index, link in enumerate(links, start=1):
-                         msg += f" <a href='{link}'>{index}</a> |"
-                         if len(msg.encode()) > 4000:
-                             if 'Restarted Successfully!' in msg and cid == chat_id:
-                                 bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
-                                 osremove(".restartmsg")
-                             else:
-                                 try:
-                                     bot.sendMessage(cid, msg, 'HTML', disable_web_page_preview=True)
-                                 except Exception as e:
-                                     LOGGER.error(e)
-                             msg = ''
+                    msg += f"\n\n{tag}: "
+                    for index, link in enumerate(links, start=1):
+                        msg += f" <a href='{link}'>{index}</a> |"
+                        if len(msg.encode()) > 4000:
+                            if 'Restarted Successfully!' in msg and cid == chat_id:
+                                bot.editMessageText(msg, chat_id, msg_id, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+                                osremove(".restartmsg")
+                            else:
+                                try:
+                                    bot.sendMessage(cid, msg, ParseMode.HTML, disable_web_page_preview=True)
+                                except Exception as e:
+                                    LOGGER.error(e)
+                            msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
-                     bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
-                     osremove(".restartmsg")
+                    bot.editMessageText(msg, chat_id, msg_id, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+                    osremove(".restartmsg")
                 else:
                     try:
-                        bot.sendMessage(cid, msg, 'HTML', disable_web_page_preview=True)
+                        bot.sendMessage(cid, msg, ParseMode.HTML, disable_web_page_preview=True)
                     except Exception as e:
                         LOGGER.error(e)
 

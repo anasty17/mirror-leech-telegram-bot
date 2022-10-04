@@ -5,7 +5,7 @@ from re import split as re_split
 
 from bot import DOWNLOAD_DIR, dispatcher
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
-from bot.helper.telegram_helper import button_build
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -51,11 +51,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
         pswd = None
 
     opt = mssg.split(' opt: ')
-    if len(opt) > 1:
-        opt = opt[1]
-    else:
-        opt = None
-
+    opt = opt[1] if len(opt) > 1 else None
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
     else:
@@ -96,7 +92,7 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
         return sendMessage(help_msg, bot, message)
 
     listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     best_video = "bv*+ba/b"
     best_audio = "ba/b"
     ydl = YoutubeDLHelper(listener)
@@ -156,8 +152,7 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
                     if b_name in formats_dict:
                         formats_dict[b_name][str(frmt['tbr'])] = [size, v_format]
                     else:
-                        subformat = {}
-                        subformat[str(frmt['tbr'])] = [size, v_format]
+                        subformat = {str(frmt['tbr']): [size, v_format]}
                         formats_dict[b_name] = subformat
 
             for b_name, d_dict in formats_dict.items():
@@ -187,7 +182,7 @@ Check all arguments from this <a href='https://github.com/yt-dlp/yt-dlp/blob/mas
         Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
 
 def _qual_subbuttons(task_id, b_name, msg):
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     task_info = listener_dict[task_id]
     formats_dict = task_info[6]
     for tbr, d_data in formats_dict[b_name].items():
@@ -199,7 +194,7 @@ def _qual_subbuttons(task_id, b_name, msg):
     editMessage(f"Choose Bit rate for <b>{b_name}</b>:", msg, SUBBUTTONS)
 
 def _mp3_subbuttons(task_id, msg, playlist=False):
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     audio_qualities = [64, 128, 320]
     for q in audio_qualities:
         if playlist:
@@ -238,10 +233,7 @@ def select_format(update, context):
         return editMessage('Choose Video Quality:', msg, task_info[4])
     elif data[2] == "mp3":
         query.answer()
-        if len(data) == 4:
-            playlist = True
-        else:
-            playlist = False
+        playlist = len(data) == 4
         _mp3_subbuttons(task_id, msg, playlist)
         return
     elif data[2] == "cancel":

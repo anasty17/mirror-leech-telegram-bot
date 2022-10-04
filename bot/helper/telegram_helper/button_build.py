@@ -11,7 +11,7 @@ class ButtonMaker:
             self.button.append(InlineKeyboardButton(text = key, url = link))
         elif header:
             self.header_button.append(InlineKeyboardButton(text = key, url = link))
-        elif footer:
+        else:
             self.footer_button.append(InlineKeyboardButton(text = key, url = link))
 
     def sbutton(self, key, data, footer=False, header=False):
@@ -19,7 +19,7 @@ class ButtonMaker:
             self.button.append(InlineKeyboardButton(text = key, callback_data = data))
         elif header:
             self.header_button.append(InlineKeyboardButton(text = key, callback_data = data))
-        elif footer:
+        else:
             self.footer_button.append(InlineKeyboardButton(text = key, callback_data = data))
 
     def build_menu(self, n_cols):

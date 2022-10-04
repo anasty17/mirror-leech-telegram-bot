@@ -304,9 +304,7 @@ class GoogleDriveHelper:
         # Insert a file
         drive_file = self.__service.files().create(body=file_metadata, media_body=media_body, supportsTeamDrives=True)
         response = None
-        while response is None:
-            if self.__is_cancelled:
-                break
+        while response is None and not self.__is_cancelled:
             try:
                 self.__status, response = drive_file.next_chunk()
             except HttpError as err:

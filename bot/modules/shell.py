@@ -1,4 +1,5 @@
 from subprocess import Popen, PIPE
+from telegram import ParseMode
 from telegram.ext import CommandHandler
 
 from bot import LOGGER, dispatcher
@@ -10,7 +11,7 @@ def shell(update, context):
     message = update.effective_message
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
-        return message.reply_text('No command to execute was given.', parse_mode='HTML')
+        return message.reply_text('No command to execute was given.', parse_mode=ParseMode.HTML)
     cmd = cmd[1]
     process = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=True)
     stdout, stderr = process.communicate()
@@ -33,9 +34,9 @@ def shell(update, context):
                 reply_to_message_id=message.message_id,
                 chat_id=message.chat_id)
     elif len(reply) != 0:
-        message.reply_text(reply, parse_mode='Markdown')
+        message.reply_text(reply, parse_mode=ParseMode.MARKDOWN)
     else:
-        message.reply_text('No Reply', parse_mode='Markdown')
+        message.reply_text('No Reply', parse_mode=ParseMode.MARKDOWN)
 
 
 SHELL_HANDLER = CommandHandler(BotCommands.ShellCommand, shell,

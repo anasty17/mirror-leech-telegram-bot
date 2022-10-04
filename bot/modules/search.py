@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, s
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
-from bot.helper.telegram_helper import button_build
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.html_helper import html_template
 
 if SEARCH_PLUGINS is not None:
@@ -35,7 +35,7 @@ else:
 
 def torser(update, context):
     user_id = update.message.from_user.id
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     if SITES is None and SEARCH_PLUGINS is None:
         sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
     elif len(context.args) == 0 and SITES is None:
@@ -170,32 +170,35 @@ def _getResult(search_results, key, method):
     for result in search_results:
         msg += '<span class="container start rfontsize">'
         if method.startswith('api'):
-            if 'name' in result.keys():
-                msg += f"<div> <a class='withhover' href='{result['url']}'>{escape(result['name'])}</a></div>"
-            if 'torrents' in result.keys():
-                for subres in result['torrents']:
-                    msg += f"<span class='topmarginsm'><b>Quality: </b>{subres['quality']} | "
-                    msg += f"<b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}</span>"
-                    if 'torrent' in subres.keys():
+            try:
+                if 'name' in result.keys():
+                    msg += f"<div> <a class='withhover' href='{result['url']}'>{escape(result['name'])}</a></div>"
+                if 'torrents' in result.keys():
+                    for subres in result['torrents']:
+                        msg += f"<span class='topmarginsm'><b>Quality: </b>{subres['quality']} | "
+                        msg += f"<b>Type: </b>{subres['type']} | <b>Size: </b>{subres['size']}</span>"
+                        if 'torrent' in subres.keys():
+                            msg += "<span class='topmarginxl'><a class='withhover' "
+                            msg += f"href='{subres['torrent']}'>Direct Link</a></span>"
+                        elif 'magnet' in subres.keys():
+                            msg += "<span><b>Share Magnet to</b> <a class='withhover' "
+                            msg += f"href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a></span>"
+                    msg += '<br>'
+                else:
+                    msg += f"<span class='topmarginsm'><b>Size: </b>{result['size']}</span>"
+                    try:
+                        msg += f"<span class='topmarginsm'><b>Seeders: </b>{result['seeders']} | "
+                        msg += f"<b>Leechers: </b>{result['leechers']}</span>"
+                    except:
+                        pass
+                    if 'torrent' in result.keys():
                         msg += "<span class='topmarginxl'><a class='withhover' "
-                        msg += f"href='{subres['torrent']}'>Direct Link</a></span>"
-                    elif 'magnet' in subres.keys():
-                        msg += "<span><b>Share Magnet to</b> <a class='withhover' "
-                        msg += f"href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a></span>"
-                msg += '<br>'
-            else:
-                msg += f"<span class='topmarginsm'><b>Size: </b>{result['size']}</span>"
-                try:
-                    msg += f"<span class='topmarginsm'><b>Seeders: </b>{result['seeders']} | "
-                    msg += f"<b>Leechers: </b>{result['leechers']}</span>"
-                except:
-                    pass
-                if 'torrent' in result.keys():
-                    msg += "<span class='topmarginxl'><a class='withhover' "
-                    msg += f"href='{result['torrent']}'>Direct Link</a></span>"
-                elif 'magnet' in result.keys():
-                    msg += "<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
-                    msg += f"href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a></span>"
+                        msg += f"href='{result['torrent']}'>Direct Link</a></span>"
+                    elif 'magnet' in result.keys():
+                        msg += "<span class='topmarginxl'><b>Share Magnet to</b> <a class='withhover' "
+                        msg += f"href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a></span>"
+            except:
+                continue
         else:
             msg += f"<div> <a class='withhover' href='{result.descrLink}'>{escape(result.fileName)}</a></div>"
             msg += f"<span class='topmarginsm'><b>Size: </b>{get_readable_file_size(result.fileSize)}</span>"
@@ -211,14 +214,14 @@ def _getResult(search_results, key, method):
     return msg
 
 def _api_buttons(user_id, method):
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     for data, name in SITES.items():
         buttons.sbutton(name, f"torser {user_id} {data} {method}")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
     return buttons.build_menu(2)
 
 def _plugin_buttons(user_id):
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     if not PLUGINS:
         qbclient = get_client()
         pl = qbclient.search_plugins()

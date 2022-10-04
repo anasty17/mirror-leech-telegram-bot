@@ -8,7 +8,6 @@ from contextlib import redirect_stdout
 
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.message_utils import sendMessage
 from bot import LOGGER, dispatcher
 
 namespaces = {}

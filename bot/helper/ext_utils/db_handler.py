@@ -97,8 +97,7 @@ class DbManger:
                     else:
                         notifier_dict[row['cid']][row['tag']] = [row['_id']]
                 else:
-                    usr_dict = {}
-                    usr_dict[row['tag']] = [row['_id']]
+                    usr_dict = {row['tag']: [row['_id']]}
                     notifier_dict[row['cid']] = usr_dict
         self.__db.tasks[botname].drop()
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}

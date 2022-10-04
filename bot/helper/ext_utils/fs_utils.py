@@ -88,7 +88,7 @@ def get_path_size(path: str):
 
 def get_base_name(orig_path: str):
     ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if len(ext) > 0:
+    if ext:
         ext = ext[0]
         return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
     else:

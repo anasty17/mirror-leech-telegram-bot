@@ -7,7 +7,7 @@ from bot import user_data, dispatcher, AS_DOCUMENT, DB_URI
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage, auto_delete_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper import button_build
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 
@@ -15,7 +15,7 @@ from bot.helper.ext_utils.bot_utils import update_user_ldata
 def getleechinfo(from_user):
     user_id = from_user.id
     name = from_user.full_name
-    buttons = button_build.ButtonMaker()
+    buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
     user_dict = user_data.get(user_id, False)
     if not user_dict and AS_DOCUMENT or user_dict and user_dict.get('as_doc'):
@@ -84,13 +84,13 @@ def setLeechType(update, context):
         query.message.reply_to_message.delete()
 
 def setThumb(update, context):
-    user_id = update.message.from_user.id
     reply_to = update.message.reply_to_message
     if reply_to is not None and reply_to.photo:
         path = "Thumbnails/"
         if not ospath.isdir(path):
             mkdir(path)
         photo_dir = reply_to.photo[-1].get_file().download()
+        user_id = update.message.from_user.id
         des_dir = ospath.join(path, f'{user_id}.jpg')
         Image.open(photo_dir).convert("RGB").save(des_dir, "JPEG")
         osremove(photo_dir)
@@ -103,9 +103,7 @@ def setThumb(update, context):
         sendMessage("Reply to a photo to save custom thumbnail.", context.bot, update.message)
 
 def sendUsersSettings(update, context):
-    msg = ''
-    for u, d in user_data.items():
-        msg += f'<code>{u}</code>: {d}\n'
+    msg = ''.join(f'<code>{u}</code>: {d}\n' for u, d in user_data.items())
     sendMessage(msg, context.bot, update.message)
 
 users_settings_handler = CommandHandler(BotCommands.UsersCommand, sendUsersSettings,

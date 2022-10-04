@@ -4,7 +4,6 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus,
 class MegaDownloadStatus:
 
     def __init__(self, obj, listener):
-        self.__listener = listener
         self.__obj = obj
         self.message = listener.message
 

@@ -80,11 +80,7 @@ def getAllDownload(req_status: str):
     return None
 
 def bt_selection_buttons(id_: str):
-    if len(id_) > 20:
-        gid = id_[:12]
-    else:
-        gid = id_
-
+    gid = id_[:12] if len(id_) > 20 else id_
     pincode = ""
     for n in id_:
         if n.isdigit():
