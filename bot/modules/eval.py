@@ -2,7 +2,6 @@ from os import path as ospath, getcwd, chdir
 from traceback import format_exc
 from textwrap import indent
 from io import StringIO, BytesIO
-from telegram import ParseMode
 from telegram.ext import CommandHandler
 from contextlib import redirect_stdout
 
@@ -42,7 +41,7 @@ def send(msg, bot, update):
         bot.send_message(
             chat_id=update.effective_chat.id,
             text=f"`{msg}`",
-            parse_mode=ParseMode.MARKDOWN)
+            parse_mode='Markdown')
 
 def evaluate(update, context):
     bot = context.bot
