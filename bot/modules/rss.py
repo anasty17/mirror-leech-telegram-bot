@@ -215,9 +215,13 @@ def rss_monitor(context):
                     url = rss_d.entries[feed_count]['link']
                 if RSS_COMMAND is not None:
                     feed_msg = f"{RSS_COMMAND} {url}"
+                    feed_msg2 = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                 else:
                     feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
                     feed_msg += f"<b>Link: </b><code>{url}</code>"
+                    feed_msg2 = ""
+                if feed_msg2:
+                    sendRss(feed_msg2, context.bot)
                 sendRss(feed_msg, context.bot)
                 feed_count += 1
                 sleep(5)
