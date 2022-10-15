@@ -11,7 +11,7 @@ from bot.helper.ext_utils.bot_utils import update_user_ldata
 def authorize(update, context):
     reply_message = update.message.reply_to_message
     if len(context.args) == 1:
-        id_ = context.args[0]
+        id_ = int(context.args[0])
     elif reply_message:
         id_ = reply_message.from_user.id
     else:
@@ -28,7 +28,7 @@ def authorize(update, context):
 def unauthorize(update, context):
     reply_message = update.message.reply_to_message
     if len(context.args) == 1:
-        id_ = context.args[0]
+        id_ = int(context.args[0])
     elif reply_message:
         id_ = reply_message.from_user.id
     else:
