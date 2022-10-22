@@ -23,7 +23,7 @@ SEEDING = set()
 def __get_hash_magnet(mgt: str):
     hash_ = re_search(r'(?<=xt=urn:btih:)[a-zA-Z0-9]+', mgt).group(0)
     if len(hash_) == 32:
-        hash_ = b16encode(b32decode(str(hash_))).decode()
+        hash_ = b16encode(b32decode(hash_.upper())).decode()
     return str(hash_)
 
 def __get_hash_file(path):
