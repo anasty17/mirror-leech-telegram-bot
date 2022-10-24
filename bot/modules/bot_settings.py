@@ -238,8 +238,8 @@ def edit_bot_settings(update, context):
         dispatcher.remove_handler(value_handler)
     elif data[1] == 'edtvar' and STATE == 'view':
         value = config_dict[data[2]]
-        if not value:
-            value = 'Empty'
+        if value == '':
+            value = 'None'
         query.answer(text=f'{value}', show_alert=True)
     elif data[1] == 'edit':
         query.answer()
