@@ -8,8 +8,8 @@ print("\n\n"\
       "        teamdrive INDEX URL -->   enter index url for this drive.\n" \
       "                                  go to the respective drive and copy the url from address bar\n")
 msg = ''
-if os.path.exists('drive_folder'):
-    with open('drive_folder', 'r+') as f:
+if os.path.exists('list_drives.txt'):
+    with open('list_drives.txt', 'r+') as f:
         lines = f.read()
     if not re.match(r'^\s*$', lines):
         print(lines)
@@ -41,7 +41,7 @@ for count in range(1, num + 1):
     else:
         index = ''
     msg += f"{name} {id} {index}\n"
-with open('drive_folder', 'w') as file:
+with open('list_drives.txt', 'w') as file:
     file.truncate(0)
     file.write(msg)
 print("\n\n    Done!")

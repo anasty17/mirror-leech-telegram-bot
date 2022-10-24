@@ -32,5 +32,5 @@ class CustomFilters:
     sudo_user = __SudoUser()
 
     @staticmethod
-    def _owner_query(uid):
+    def owner_query(uid):
         return uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo')

@@ -4,7 +4,7 @@ from os import makedirs
 from threading import Event
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
-from bot import LOGGER, MEGA_API_KEY, download_dict_lock, download_dict, MEGA_EMAIL_ID, MEGA_PASSWORD, STOP_DUPLICATE
+from bot import LOGGER, config_dict, download_dict_lock, download_dict
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
 from bot.helper.ext_utils.bot_utils import get_mega_link_type
 from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownloadStatus
@@ -131,12 +131,15 @@ class AsyncExecutor:
 
 
 def add_mega_download(mega_link: str, path: str, listener, name: str):
+    MEGA_API_KEY = config_dict['MEGA_API_KEY']
+    MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
+    MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
     executor = AsyncExecutor()
     api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
     folder_api = None
     mega_listener = MegaAppListener(executor.continue_event, listener)
     api.addListener(mega_listener)
-    if MEGA_EMAIL_ID is not None and MEGA_PASSWORD is not None:
+    if MEGA_EMAIL_ID and MEGA_PASSWORD:
         executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
     if get_mega_link_type(mega_link) == "file":
         executor.do(api.getPublicNode, (mega_link,))
@@ -153,7 +156,7 @@ def add_mega_download(mega_link: str, path: str, listener, name: str):
             folder_api.removeListener(mega_listener)
         return
     mname = name or node.getName()
-    if STOP_DUPLICATE and not listener.isLeech:
+    if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
         LOGGER.info('Checking File/Folder if already in Drive')
         if listener.isZip:
             mname = f"{mname}.zip"

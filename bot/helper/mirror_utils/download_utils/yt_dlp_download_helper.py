@@ -142,7 +142,8 @@ class YoutubeDLHelper:
                     return result
                 elif result is None:
                     raise ValueError('Info result is None')
-                realName = ydl.prepare_filename(result)
+                if not self.is_playlist:
+                    realName = ydl.prepare_filename(result)
             except Exception as e:
                 if get_info:
                     raise e
@@ -156,11 +157,11 @@ class YoutubeDLHelper:
                 elif 'filesize' in v:
                     self.__size += v['filesize']
             if name == "":
-                self.name = realName.split(f" [{result['id'].replace('*', '_')}]")[0]
+                self.name = result['entries'].get('title')
             else:
                 self.name = name
         else:
-            ext = realName.split('.')[-1]
+            ext = realName.rsplit('.', 1)[-1]
             if name == "":
                 newname = realName.split(f" [{result['id'].replace('*', '_')}]")
                 self.name = newname[0] + '.' + ext if len(newname) > 1 else newname[0]

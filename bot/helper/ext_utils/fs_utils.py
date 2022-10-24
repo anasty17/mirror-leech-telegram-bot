@@ -10,7 +10,7 @@ from math import ceil
 from re import split as re_split, I
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, LEECH_SPLIT_SIZE, EQUAL_SPLITS, IS_PREMIUM_USER, MAX_SPLIT_SIZE
+from bot import aria2, app, LOGGER, DOWNLOAD_DIR, get_client, IS_PREMIUM_USER, MAX_SPLIT_SIZE, config_dict
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
             ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
@@ -40,6 +40,7 @@ def clean_download(path: str):
             pass
 
 def start_cleanup():
+    get_client().torrents_delete(torrent_hashes="all")
     try:
         rmtree(DOWNLOAD_DIR)
     except:
@@ -127,8 +128,8 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         dirpath = f"{dirpath}/splited_files_mltb"
         if not ospath.exists(dirpath):
             mkdir(dirpath)
-    parts = ceil(size/LEECH_SPLIT_SIZE)
-    if EQUAL_SPLITS and not inLoop:
+    parts = ceil(size/config_dict['LEECH_SPLIT_SIZE'])
+    if config_dict['EQUAL_SPLITS'] and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]

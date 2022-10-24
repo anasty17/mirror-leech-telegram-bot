@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage,
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
-from bot import dispatcher, LOGGER, STOP_DUPLICATE, download_dict, download_dict_lock, Interval
+from bot import dispatcher, LOGGER, download_dict, download_dict_lock, Interval, config_dict
 from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread
 
 
@@ -39,7 +39,7 @@ def _clone(message, bot):
         res, size, name, files = gd.helper(link)
         if res != "":
             return sendMessage(res, bot, message)
-        if STOP_DUPLICATE:
+        if config_dict['STOP_DUPLICATE']:
             LOGGER.info('Checking File/Folder if already in Drive...')
             cap, f_name = gd.drive_list(name, True, True)
             if cap:

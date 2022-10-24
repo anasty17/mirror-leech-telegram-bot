@@ -76,7 +76,7 @@ def cancel_all_update(update, context):
     user_id = query.from_user.id
     data = query.data
     data = data.split()
-    if CustomFilters._owner_query(user_id):
+    if CustomFilters.owner_query(user_id):
         query.answer()
         if data[1] == 'close':
             query.message.delete()

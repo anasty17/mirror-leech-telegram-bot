@@ -3,8 +3,9 @@ from threading import Thread
 from html import escape
 from urllib.parse import quote
 from telegram.ext import CommandHandler, CallbackQueryHandler
+from json import loads as jsonloads
 
-from bot import dispatcher, LOGGER, SEARCH_API_LINK, SEARCH_PLUGINS, get_client, SEARCH_LIMIT
+from bot import dispatcher, LOGGER, config_dict, get_client
 from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup, deleteMessage, sendFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -12,31 +13,37 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.html_helper import html_template
 
-if SEARCH_PLUGINS is not None:
-    PLUGINS = []
-    qbclient = get_client()
-    qb_plugins = qbclient.search_plugins()
-    if qb_plugins:
-        for plugin in qb_plugins:
-            qbclient.search_uninstall_plugin(names=plugin['name'])
-    qbclient.search_install_plugin(SEARCH_PLUGINS)
-    qbclient.auth_log_out()
+PLUGINS = []
+SITES = None
 
-if SEARCH_API_LINK:
-    try:
-        res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
-        SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
-        SITES['all'] = 'All'
-    except Exception as e:
-        LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
-        SITES = None
-else:
-    SITES = None
+
+def initiate_search_tools():
+    if SEARCH_PLUGINS := config_dict['SEARCH_PLUGINS']:
+        globals()['PLUGINS'] = []
+        src_plugins = jsonloads(SEARCH_PLUGINS)
+        qbclient = get_client()
+        qb_plugins = qbclient.search_plugins()
+        if qb_plugins:
+            for plugin in qb_plugins:
+                qbclient.search_uninstall_plugin(names=plugin['name'])
+        qbclient.search_install_plugin(src_plugins)
+        qbclient.auth_log_out()
+
+    if SEARCH_API_LINK := config_dict['SEARCH_API_LINK']:
+        global SITES
+        try:
+            res = rget(f'{SEARCH_API_LINK}/api/v1/sites').json()
+            SITES = {str(site): str(site).capitalize() for site in res['supported_sites']}
+            SITES['all'] = 'All'
+        except Exception as e:
+            LOGGER.error("Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
+            SITES = None
 
 def torser(update, context):
     user_id = update.message.from_user.id
     buttons = ButtonMaker()
-    if SITES is None and SEARCH_PLUGINS is None:
+    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
+    if SITES is None and SEARCH_PLUGINS:
         sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
     elif len(context.args) == 0 and SITES is None:
         sendMessage("Send a search key along with command", context.bot, update.message)
@@ -46,17 +53,17 @@ def torser(update, context):
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
         sendMarkup("Send a search key along with command", context.bot, update.message, button)
-    elif SITES is not None and SEARCH_PLUGINS is not None:
+    elif SITES is not None and SEARCH_PLUGINS:
         buttons.sbutton('Api', f"torser {user_id} apisearch")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
         sendMarkup('Choose tool to search:', context.bot, update.message, button)
     elif SITES is not None:
-        button = _api_buttons(user_id, "apisearch")
+        button = __api_buttons(user_id, "apisearch")
         sendMarkup('Choose site to search:', context.bot, update.message, button)
     else:
-        button = _plugin_buttons(user_id)
+        button = __plugin_buttons(user_id)
         sendMarkup('Choose site to search:', context.bot, update.message, button)
 
 def torserbut(update, context):
@@ -71,11 +78,11 @@ def torserbut(update, context):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2].startswith('api'):
         query.answer()
-        button = _api_buttons(user_id, data[2])
+        button = __api_buttons(user_id, data[2])
         editMessage('Choose site:', message, button)
     elif data[2] == 'plugin':
         query.answer()
-        button = _plugin_buttons(user_id)
+        button = __plugin_buttons(user_id)
         editMessage('Choose site:', message, button)
     elif data[2] != "cancel":
         query.answer()
@@ -92,13 +99,15 @@ def torserbut(update, context):
                 editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>", message)
         else:
             editMessage(f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>", message)
-        Thread(target=_search, args=(context.bot, key, site, message, method)).start()
+        Thread(target=__search, args=(context.bot, key, site, message, method)).start()
     else:
         query.answer()
         editMessage("Search has been canceled!", message)
 
-def _search(bot, key, site, message, method):
+def __search(bot, key, site, message, method):
     if method.startswith('api'):
+        SEARCH_API_LINK = config_dict['SEARCH_API_LINK']
+        SEARCH_LIMIT = config_dict['SEARCH_LIMIT']
         if method == 'apisearch':
             LOGGER.info(f"API Searching: {key} from {site}")
             if site == 'all':
@@ -142,14 +151,14 @@ def _search(bot, key, site, message, method):
             status = result_status[0].status
             if status != 'Running':
                 break
-        dict_search_results = client.search_results(search_id=search_id)
-        search_results = dict_search_results.results
-        total_results = dict_search_results.total
+        dict__search_results = client.search_results(search_id=search_id)
+        search_results = dict__search_results.results
+        total_results = dict__search_results.total
         if total_results == 0:
             return editMessage(f"No result found for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i>", message)
         cap = f"<b>Found {total_results}</b>"
         cap += f" <b>results for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-    hmsg = _getResult(search_results, key, method)
+    hmsg = __getResult(search_results, key, method)
     name = f"{method}_{key}_{site}_{message.message_id}.html"
     with open(name, "w", encoding='utf-8') as f:
         f.write(html_template.replace('{msg}', hmsg).replace('{title}', f'{method}_{key}_{site}'))
@@ -158,7 +167,7 @@ def _search(bot, key, site, message, method):
     if not method.startswith('api'):
         client.search_delete(search_id=search_id)
 
-def _getResult(search_results, key, method):
+def __getResult(search_results, key, method):
     if method == 'apirecent':
         msg = '<span class="container center rfontsize"><h4>API Recent Results</h4></span>'
     elif method == 'apisearch':
@@ -213,14 +222,14 @@ def _getResult(search_results, key, method):
         msg += '</span>'
     return msg
 
-def _api_buttons(user_id, method):
+def __api_buttons(user_id, method):
     buttons = ButtonMaker()
     for data, name in SITES.items():
         buttons.sbutton(name, f"torser {user_id} {data} {method}")
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
     return buttons.build_menu(2)
 
-def _plugin_buttons(user_id):
+def __plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
         qbclient = get_client()
@@ -234,6 +243,7 @@ def _plugin_buttons(user_id):
     buttons.sbutton("Cancel", f"torser {user_id} cancel")
     return buttons.build_menu(2)
 
+initiate_search_tools()
 
 torser_handler = CommandHandler(BotCommands.SearchCommand, torser,
                                 filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)

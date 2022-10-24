@@ -221,7 +221,7 @@ def select_format(update, context):
     except:
         return editMessage("This is an old task", msg)
     uid = task_info[1]
-    if user_id != uid and not CustomFilters._owner_query(user_id):
+    if user_id != uid and not CustomFilters.owner_query(user_id):
         return query.answer(text="This task is not for you!", show_alert=True)
     elif data[2] == "dict":
         query.answer()

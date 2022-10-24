@@ -3,6 +3,7 @@ from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 if ospath.exists('log.txt'):
     with open('log.txt', 'r+') as f:
@@ -12,19 +13,33 @@ basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[FileHandler('log.txt'), StreamHandler()],
                     level=INFO)
 
-CONFIG_FILE_URL = environ.get('CONFIG_FILE_URL', '')
-if len(CONFIG_FILE_URL) != 0:
-    try:
-        res = rget(CONFIG_FILE_URL)
-        if res.status_code == 200:
-            with open('config.env', 'wb+') as f:
-                f.write(res.content)
-        else:
-            log_error(f"Failed to download config.env {res.status_code}")
-    except Exception as e:
-        log_error(f"CONFIG_FILE_URL: {e}")
-
 load_dotenv('config.env', override=True)
+
+try:
+    if bool(environ.get('_____REMOVE_THIS_LINE_____')):
+        log_error('The README.md file there to be read! Exiting now!')
+        exit()
+except:
+    pass
+
+BOT_TOKEN = environ.get('BOT_TOKEN', '')
+if len(BOT_TOKEN) == 0:
+    log_error("BOT_TOKEN variable is missing! Exiting now")
+    exit(1)
+
+bot_id = int(BOT_TOKEN.split(':', 1)[0])
+
+DB_URI = environ.get('DATABASE_URL', '')
+if len(DB_URI) == 0:
+    DB_URI = None
+
+if DB_URI is not None:
+    conn = MongoClient(DB_URI)
+    db = conn.mltb
+    if config_dict := db.settings.config.find_one({'_id': bot_id}):  #retrun config dict (all env vars)
+        environ['UPSTREAM_REPO'] = config_dict['UPSTREAM_REPO']
+        environ['UPSTREAM_BRANCH'] = config_dict['UPSTREAM_BRANCH']
+    conn.close()
 
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
 if len(UPSTREAM_REPO) == 0:

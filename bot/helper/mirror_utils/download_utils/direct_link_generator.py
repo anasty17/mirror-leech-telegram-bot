@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 from base64 import standard_b64encode
 from time import sleep
 
-from bot import LOGGER, UPTOBOX_TOKEN
+from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
@@ -92,7 +92,7 @@ def uptobox(url: str) -> str:
         link = re_findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Uptobox links found")
-    if UPTOBOX_TOKEN is None:
+    if UPTOBOX_TOKEN := config_dict['UPTOBOX_TOKEN']:
         LOGGER.error('UPTOBOX_TOKEN not provided!')
         dl_url = link
     else:

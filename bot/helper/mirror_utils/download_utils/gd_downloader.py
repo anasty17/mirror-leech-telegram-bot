@@ -1,7 +1,7 @@
 from random import SystemRandom
 from string import ascii_letters, digits
 
-from bot import download_dict, download_dict_lock, LOGGER, STOP_DUPLICATE
+from bot import download_dict, download_dict_lock, LOGGER, config_dict
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendFile
@@ -14,7 +14,7 @@ def add_gd_download(link, path, listener, newname):
         return sendMessage(res, listener.bot, listener.message)
     if newname:
         name = newname
-    if STOP_DUPLICATE and not listener.isLeech:
+    if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
         LOGGER.info('Checking File/Folder if already in Drive...')
         if listener.isZip:
             gname = f"{name}.zip"
