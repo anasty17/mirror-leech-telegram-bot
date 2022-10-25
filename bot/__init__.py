@@ -5,7 +5,6 @@ from telegram.ext import Updater as tgUpdater
 from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from os import remove as osremove, path as ospath, environ
-from requests import get as rget
 from subprocess import Popen, run as srun
 from time import sleep, time
 from threading import Thread, Lock
@@ -347,6 +346,7 @@ srun("./aria.sh", shell=True)
 if ospath.exists('accounts.zip'):
     srun(["unzip", "-q", "-o", "accounts.zip"])
     srun(["chmod", "-R", "777", "accounts"])
+    osremove('accounts.zip')
 sleep(0.5)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
