@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from functools import partial
 from time import time
-from os import remove, replace, rename
+from os import remove, replace, rename, path as ospath
 from subprocess import run as srun, Popen
 
 from bot import config_dict, dispatcher, DB_URI, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, LOGGER, status_reply_dict_lock, Interval
@@ -107,6 +107,8 @@ def edit_variable(update, context, omsg, key):
         initiate_search_tools()
     elif value.isdigit():
         value = int(value)
+        config_dict[key] = value
+    else:
         config_dict[key] = value
     update_buttons(omsg, 'var')
     if DB_URI:
@@ -258,7 +260,7 @@ def edit_bot_settings(update, context):
         query.answer()
         srun([f"git add -f {data[2]} \
                 && git commit -sm botsettings -q \
-                && git push origin {UPSTREAM_BRANCH} -q"], shell=True)
+                && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
         query.message.delete()
         query.message.reply_to_message.delete()
     elif data[1] == 'qbit':
