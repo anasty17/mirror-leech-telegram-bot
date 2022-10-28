@@ -27,5 +27,8 @@ class ButtonMaker:
         if self.__header_button:
             menu.insert(0, self.__header_button)
         if self.__footer_button:
-            menu.append(self.__footer_button)
+            if len(self.__footer_button) > 8:
+                [menu.append(self.__footer_button[i:i+8]) for i in range(0, len(self.__footer_button), 8)]
+            else:
+                menu.append(self.__footer_button)
         return InlineKeyboardMarkup(menu)

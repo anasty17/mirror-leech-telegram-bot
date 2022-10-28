@@ -36,6 +36,7 @@ DRIVES_IDS = []
 INDEX_URLS = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
+aria2_options = {}
 
 try:
     if bool(environ.get('_____REMOVE_THIS_LINE_____')):
@@ -80,6 +81,9 @@ if DB_URI:
             if value:
                 with open(key, 'wb+') as f:
                     f.write(value)
+    if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
+        del a2c_options['_id']
+        aria2_options = a2c_options
     conn.close()
 else:
     config_dict = {}
@@ -363,12 +367,18 @@ def aria2c_init():
         sleep(3)
         downloads = aria2.get_downloads()
         sleep(20)
-        for download in downloads:
-            aria2.remove([download], force=True, files=True)
+        aria2.remove(downloads, force=True, files=True, clean=True)
     except Exception as e:
         log_error(f"Aria2c initializing error: {e}")
 Thread(target=aria2c_init).start()
 sleep(1.5)
+
+aria2c_global = ['bt-max-open-files', 'download-result', 'keep-unfinished-download-result', 'log', 'log-level',
+                 'max-concurrent-downloads', 'max-download-result', 'max-overall-download-limit', 'save-session',
+                 'max-overall-upload-limit', 'optimize-concurrent-downloads', 'save-cookies', 'server-stat-of']
+
+if not aria2_options:
+    aria2_options = aria2.client.get_global_option()
 
 updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot

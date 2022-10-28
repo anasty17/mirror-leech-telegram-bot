@@ -2,7 +2,7 @@ from os import path as ospath, makedirs
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from bot import DB_URI, user_data, rss_dict, LOGGER, bot_id, config_dict
+from bot import DB_URI, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options
 
 class DbManger:
     def __init__(self):
@@ -22,9 +22,12 @@ class DbManger:
     def db_load(self):
         if self.__err:
             return
-        #save bot settings if not exists
+        # Save bot settings if not exists
         if self.__db.settings.config.find_one({'_id': bot_id}) is None:
             self.__db.settings.config.update_one({'_id': bot_id}, {'$set': config_dict}, upsert=True)
+        # Save Aria2c options
+        if self.__db.settings.aria2c.find_one({'_id': bot_id}) is None:
+            self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': aria2_options}, upsert=True)
         # User Data
         if self.__db.users.find_one():
             rows = self.__db.users.find({})  # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb}
@@ -50,10 +53,16 @@ class DbManger:
             LOGGER.info("Rss data has been imported from Database.")
         self.__conn.close()
 
-    def update_config(self, key, value):
+    def update_config(self, dict_):
         if self.__err:
             return
-        self.__db.settings.config.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
+        self.__db.settings.config.update_one({'_id': bot_id}, {'$set': dict_}, upsert=True)
+        self.__conn.close()
+
+    def update_aria2(self, key, value):
+        if self.__err:
+            return
+        self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
         self.__conn.close()
 
     def update_private_file(self, path):
