@@ -10,5 +10,6 @@ data*
 log.txt
 accounts/*
 Thumbnails/*
-drive_folder
+list_drives.txt
 cookies.txt
+downloads
