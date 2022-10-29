@@ -646,8 +646,8 @@ class GoogleDriveHelper:
         size = int(filee.get('size', 0))
         self.__total_bytes += size
 
-    def __gDrive_directory(self, drive_folder):
-        files = self.__getFilesByFolderId(drive_folder['id'])
+    def __gDrive_directory(self, list_drives.txt):
+        files = self.__getFilesByFolderId(list_drives.txt['id'])
         if len(files) == 0:
             return
         for filee in files:
