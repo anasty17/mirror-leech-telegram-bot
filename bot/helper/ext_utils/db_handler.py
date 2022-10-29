@@ -70,6 +70,7 @@ class DbManger:
             return
         with open(path, 'rb+') as pf:
             pf_bin = pf.read()
+        path = path.replace('.', '__')
         self.__db.settings.PFile.update_one({'_id': bot_id}, {'$set': {path: pf_bin}}, upsert=True)
         self.__conn.close()
 
