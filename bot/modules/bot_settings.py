@@ -107,7 +107,7 @@ def load_config():
             except:
                 pass
             finally:
-                Interval.append(setInterval(value, update_all_messages))
+                Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
     AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
     if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
