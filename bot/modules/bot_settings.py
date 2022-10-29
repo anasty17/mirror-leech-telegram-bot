@@ -4,7 +4,6 @@ from time import time, sleep
 from os import remove, rename, path as ospath, environ
 from subprocess import run as srun, Popen
 from dotenv import load_dotenv
-from ast import literal_eval
 
 from bot import config_dict, dispatcher, user_data, DB_URI, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client
 from bot.helper.telegram_helper.message_utils import sendFile, sendMarkup, editMessage, update_all_messages
