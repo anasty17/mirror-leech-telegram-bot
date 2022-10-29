@@ -1,7 +1,7 @@
 from telegram.ext import CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 from functools import partial
 from time import time, sleep
-from os import remove, rename, path as ospath
+from os import remove, rename, path as ospath, environ
 from subprocess import run as srun, Popen
 from dotenv import load_dotenv
 
