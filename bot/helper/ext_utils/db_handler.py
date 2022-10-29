@@ -2,7 +2,7 @@ from os import path as ospath, makedirs
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from bot import DB_URI, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options
+from bot import DB_URI, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options
 
 class DbManger:
     def __init__(self):
@@ -28,6 +28,9 @@ class DbManger:
         # Save Aria2c options
         if self.__db.settings.aria2c.find_one({'_id': bot_id}) is None:
             self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': aria2_options}, upsert=True)
+        # Save qbittorrent options
+        if self.__db.settings.qbittorrent.find_one({'_id': bot_id}) is None:
+            self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': qbit_options}, upsert=True)
         # User Data
         if self.__db.users.find_one():
             rows = self.__db.users.find({})  # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb}
@@ -63,6 +66,12 @@ class DbManger:
         if self.__err:
             return
         self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
+        self.__conn.close()
+
+    def update_qbittorrent(self, key, value):
+        if self.__err:
+            return
+        self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': {key: value}}, upsert=True)
         self.__conn.close()
 
     def update_private_file(self, path):

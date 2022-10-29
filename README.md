@@ -8,6 +8,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Qbittorrent support
 - Select files from Torrent before and while downloading
 - Seed torrents to specific ratio and time
+- Edit Global Options while bot running from bot settings
 ### Aria2c
 - Select files from Torrent before and while downloading
 - Seed torrents to specific ratio and time

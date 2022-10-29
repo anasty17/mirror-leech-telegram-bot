@@ -37,6 +37,7 @@ INDEX_URLS = []
 GLOBAL_EXTENSION_FILTER = ['.aria2']
 user_data = {}
 aria2_options = {}
+qbit_options = {}
 
 try:
     if bool(environ.get('_____REMOVE_THIS_LINE_____')):
@@ -85,6 +86,9 @@ if DB_URI:
     if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
         del a2c_options['_id']
         aria2_options = a2c_options
+    if qbit_opt := db.settings.qbittorrent.find_one({'_id': bot_id}):
+        del qbit_opt['_id']
+        qbit_options = qbit_opt
     conn.close()
 else:
     config_dict = {}
@@ -383,6 +387,12 @@ if not aria2_options:
     del aria2_options['dir']
     del aria2_options['max-download-limit']
     del aria2_options['lowest-speed-limit']
+
+qb_client = get_client()
+if not qbit_options:
+    qbit_options = dict(qb_client.app_preferences())
+else:
+    qb_client.app_set_preferences(qbit_options)
 
 updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot
