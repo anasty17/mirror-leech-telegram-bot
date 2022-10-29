@@ -52,38 +52,22 @@ def load_config():
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
     MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
-    if len(MEGA_API_KEY) == 0:
-        MEGA_API_KEY = ''
 
     MEGA_EMAIL_ID = environ.get('MEGA_EMAIL_ID', '')
+
     MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
-    if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
-        MEGA_EMAIL_ID = ''
-        MEGA_PASSWORD = ''
 
     UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
-    if len(UPTOBOX_TOKEN) == 0:
-        UPTOBOX_TOKEN = ''
 
     INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
-    if len(INDEX_URL) == 0:
-        INDEX_URL = ''
 
     SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
-    if len(SEARCH_API_LINK) == 0:
-        SEARCH_API_LINK = ''
 
     RSS_COMMAND = environ.get('RSS_COMMAND', '')
-    if len(RSS_COMMAND) == 0:
-        RSS_COMMAND = ''
 
     LEECH_FILENAME_PERFIX = environ.get('LEECH_FILENAME_PERFIX', '')
-    if len(LEECH_FILENAME_PERFIX) == 0:
-        LEECH_FILENAME_PERFIX = ''
 
     SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
-    if len(SEARCH_PLUGINS) == 0:
-        SEARCH_PLUGINS = ''
 
     MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
@@ -94,10 +78,7 @@ def load_config():
         LEECH_SPLIT_SIZE = int(LEECH_SPLIT_SIZE)
 
     STATUS_UPDATE_INTERVAL = environ.get('STATUS_UPDATE_INTERVAL', '')
-    if len(STATUS_UPDATE_INTERVAL) == 0:
-        STATUS_UPDATE_INTERVAL = 10
-    else:
-        STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
+    STATUS_UPDATE_INTERVAL = 10 if len(STATUS_UPDATE_INTERVAL) == 0 else int(STATUS_UPDATE_INTERVAL)
     if len(download_dict) != 0:
         with status_reply_dict_lock:
             try:
@@ -110,10 +91,7 @@ def load_config():
                 Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
     AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
-    if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
-        AUTO_DELETE_MESSAGE_DURATION = 30
-    else:
-        AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
+    AUTO_DELETE_MESSAGE_DURATION = 30 if len(AUTO_DELETE_MESSAGE_DURATION) == 0: else int(AUTO_DELETE_MESSAGE_DURATION)
 
     SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
     SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
@@ -152,54 +130,37 @@ def load_config():
         aria2_options['bt-stop-timeout'] = TORRENT_TIMEOUT
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
 
-    INCOMPLETE_TASK_NOTIFIER = environ.get('INCOMPLETE_TASK_NOTIFIER', '')
-    INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == 'true'
+    INCOMPLETE_TASK_NOTIFIER = environ.get('INCOMPLETE_TASK_NOTIFIER', '').lower() == 'true'
 
-    STOP_DUPLICATE = environ.get('STOP_DUPLICATE', '')
-    STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
+    STOP_DUPLICATE = environ.get('STOP_DUPLICATE', '').lower() == 'true'
 
-    VIEW_LINK = environ.get('VIEW_LINK', '')
-    VIEW_LINK = VIEW_LINK.lower() == 'true'
+    VIEW_LINK = environ.get('VIEW_LINK', 'False').lower() == 'true'
 
-    IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
-    IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
+    IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '').lower() == 'true'
 
-    USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '')
-    USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
+    USE_SERVICE_ACCOUNTS = environ.get('USE_SERVICE_ACCOUNTS', '').lower() == 'true'
 
-    WEB_PINCODE = environ.get('WEB_PINCODE', '')
-    WEB_PINCODE = WEB_PINCODE.lower() == 'true'
+    WEB_PINCODE = environ.get('WEB_PINCODE', '').lower() == 'true'
 
-    AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
-    AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
+    AS_DOCUMENT = environ.get('AS_DOCUMENT', '').lower() == 'true'
 
-    EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
-    EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
+    EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '').lower() == 'true'
 
-    IGNORE_PENDING_REQUESTS = environ.get('IGNORE_PENDING_REQUESTS', '')
-    IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
+    IGNORE_PENDING_REQUESTS = environ.get('IGNORE_PENDING_REQUESTS', '').lower() == 'true'
 
     SERVER_PORT = environ.get('SERVER_PORT', '')
-    if len(SERVER_PORT) == 0:
-        SERVER_PORT = 80
-    else:
-        SERVER_PORT = int(SERVER_PORT)
+    SERVER_PORT = 80 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
 
     BASE_URL = environ.get('BASE_URL', '').rstrip("/")
     if len(BASE_URL) == 0:
-        BASE_URL = ''
         srun(["pkill", "-9", "-f", "gunicorn"])
     else:
         srun(["pkill", "-9", "-f", "gunicorn"])
         Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 
     UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
-    if len(UPSTREAM_REPO) == 0:
-       UPSTREAM_REPO = ''
 
-    UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
-    if len(UPSTREAM_BRANCH) == 0:
-        UPSTREAM_BRANCH = 'master'
+    UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', 'master')
 
     initiate_search_tools()
 
