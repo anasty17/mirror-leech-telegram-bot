@@ -5,7 +5,7 @@ from os import remove, rename, path as ospath, environ
 from subprocess import run as srun, Popen
 from dotenv import load_dotenv
 
-from bot import config_dict, dispatcher, DB_URI, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict
+from bot import config_dict, dispatcher, user_data, DB_URI, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict
 from bot.helper.telegram_helper.message_utils import sendFile, sendMarkup, editMessage, update_all_messages
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -429,7 +429,7 @@ def upload_file(update, context, omsg):
         update.message.delete()
     update_buttons(omsg)
     if DB_URI:
-        DbManger.update_private_file(file_name)
+        DbManger().update_private_file(file_name)
     if ospath.exists('accounts.zip'):
         remove('accounts.zip')
 
