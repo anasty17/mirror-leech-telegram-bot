@@ -75,12 +75,12 @@ if DB_URI:
         del config_dict['_id']
         for key, value in config_dict.items():
             environ[key] = str(value)
-    if pf_dict := db.settings.PFile.find_one({'_id': bot_id}):
+    if pf_dict := db.settings.files.find_one({'_id': bot_id}):
         del pf_dict['_id']
         for key, value in pf_dict.items():
             if value:
-                file = key.replace('__', '.')
-                with open(file, 'wb+') as f:
+                file_ = key.replace('__', '.')
+                with open(file_, 'wb+') as f:
                     f.write(value)
     if a2c_options := db.settings.aria2c.find_one({'_id': bot_id}):
         del a2c_options['_id']
@@ -381,6 +381,8 @@ aria2c_global = ['bt-max-open-files', 'download-result', 'keep-unfinished-downlo
 if not aria2_options:
     aria2_options = aria2.client.get_global_option()
     del aria2_options['dir']
+    del aria2_options['max-download-limit']
+    del aria2_options['lowest-speed-limit']
 
 updater = tgUpdater(token=BOT_TOKEN, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
 bot = updater.bot

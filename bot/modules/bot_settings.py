@@ -274,8 +274,7 @@ def get_buttons(key=None, edit_type=None):
         msg = f'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt or .netrc.\nTimeout: 60 sec'
     elif key == 'aria':
         for k in list(aria2_options.keys())[START:10+START]:
-            if k not in ['max-download-limit', 'lowest-speed-limit']:
-                buttons.sbutton(k, f"botset editaria {k}")
+            buttons.sbutton(k, f"botset editaria {k}")
         if STATE == 'view':
             buttons.sbutton('Edit', "botset edit aria")
         else:
