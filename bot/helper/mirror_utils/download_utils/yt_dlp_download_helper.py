@@ -142,28 +142,37 @@ class YoutubeDLHelper:
                     return result
                 elif result is None:
                     raise ValueError('Info result is None')
-                realName = ydl.prepare_filename(result)
             except Exception as e:
                 if get_info:
                     raise e
                 return self.__onDownloadError(str(e))
         if 'entries' in result:
-            for v in result['entries']:
-                if not v:
+            for entry in result['entries']:
+                if not entry:
                     continue
-                elif 'filesize_approx' in v:
-                    self.__size += v['filesize_approx']
-                elif 'filesize' in v:
-                    self.__size += v['filesize']
-            if name == "":
-                self.name = realName.split(f" [{result['id'].replace('*', '_')}]")[0]
-            else:
-                self.name = name
+                elif 'filesize_approx' in entry:
+                    self.__size += entry['filesize_approx']
+                elif 'filesize' in entry:
+                    self.__size += entry['filesize']
+                if self.name == '':
+                    if name == "":
+                        if 'series' in entry:
+                            outtmpl_ = '%(series|)s'
+                        elif 'playlist_title' in entry:
+                            outtmpl_ = '%(playlist_title|)s'
+                        else:
+                            outtmpl_ = ''
+                        outtmpl_ +='%(season_number& |)s%(season_number&S|)s%(season_number|)s%(height& |)s%(height|)s%(height&p|)s'
+                        self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
+                    else:
+                        self.name = name
         else:
+            outtmpl_ ='%(title)s%(season_number& |)s%(season_number&S|)s%(season_number|)s%(episode_number&E|)s%(episode_number|)s%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)s%(ext&.|)s%(ext|)s'
+            realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
             ext = realName.rsplit('.', 1)[-1]
             if name == "":
                 newname = realName.split(f" [{result['id'].replace('*', '_')}]")
-                self.name = newname[0] + '.' + ext if len(newname) > 1 else newname[0]
+                self.name = f'{newname[0]}.{ext}' if len(newname) > 1 else newname[0]
             else:
                 self.name = f"{name}.{ext}"
 
