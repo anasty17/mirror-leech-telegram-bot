@@ -1,3 +1,4 @@
+from os import path as ospath, listdir
 from random import SystemRandom
 from string import ascii_letters, digits
 from logging import getLogger
@@ -154,20 +155,13 @@ class YoutubeDLHelper:
                     self.__size += entry['filesize_approx']
                 elif 'filesize' in entry:
                     self.__size += entry['filesize']
-                if self.name == '':
-                    if name == "":
-                        if 'series' in entry:
-                            outtmpl_ = '%(series|)s'
-                        elif 'playlist_title' in entry:
-                            outtmpl_ = '%(playlist_title|)s'
-                        else:
-                            outtmpl_ = ''
-                        outtmpl_ +='%(season_number& |)s%(season_number&S|)s%(season_number|)s%(height& |)s%(height|)s%(height&p|)s'
-                        self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
-                    else:
-                        self.name = name
+                if name == "":
+                    outtmpl_ ='%(series,playlist_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
+                    self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
+                else:
+                    self.name = name
         else:
-            outtmpl_ ='%(title)s%(season_number& |)s%(season_number&S|)s%(season_number|)s%(episode_number&E|)s%(episode_number|)s%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)s%(ext&.|)s%(ext|)s'
+            outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
             realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
             ext = realName.rsplit('.', 1)[-1]
             if name == "":
@@ -176,11 +170,14 @@ class YoutubeDLHelper:
             else:
                 self.name = f"{name}.{ext}"
 
-    def __download(self, link):
+    def __download(self, link, path):
         try:
             with YoutubeDL(self.opts) as ydl:
                 try:
                     ydl.download([link])
+                    if self.is_playlist and (not ospath.exists(path) or len(listdir(path)) == 0):
+                        self.__onDownloadError("No video available to download from this playlist. Check logs for more details")
+                        return
                 except DownloadError as e:
                     if not self.__is_cancelled:
                         self.__onDownloadError(str(e))
@@ -208,14 +205,14 @@ class YoutubeDLHelper:
         if self.__is_cancelled:
             return
         if self.is_playlist:
-            self.opts['outtmpl'] = f"{path}/{self.name}/%(title)s.%(ext)s"
+            self.opts['outtmpl'] = f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
         elif args is None:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
-        self.__download(link)
+        self.__download(link, path)
 
     def cancel_download(self):
         self.__is_cancelled = True

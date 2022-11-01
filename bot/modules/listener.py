@@ -179,17 +179,16 @@ class MirrorLeechListener:
                             if res == "errored":
                                 if f_size <= MAX_SPLIT_SIZE:
                                     continue
-                                else:
-                                    try:
-                                        osremove(f_path)
-                                    except:
-                                        return
+                                try:
+                                    osremove(f_path)
+                                except:
+                                    return
                             elif not self.seed or self.newDir:
                                 try:
                                     osremove(f_path)
                                 except:
                                     return
-                            elif self.seed and res != "errored":
+                            else:
                                 m_size.append(f_size)
                                 o_files.append(file_)
 
