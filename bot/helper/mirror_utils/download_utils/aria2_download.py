@@ -177,7 +177,7 @@ def add_aria2c_download(link: str, path, listener, filename, auth, ratio, seed_t
     if seed_time:
         args['seed-time'] = seed_time
     if TORRENT_TIMEOUT := config_dict['TORRENT_TIMEOUT']:
-        args['bt-stop-timeout'] = TORRENT_TIMEOUT
+        args['bt-stop-timeout'] = str(TORRENT_TIMEOUT)
     if is_magnet(link):
         download = aria2.add_magnet(link, args)
     else:
