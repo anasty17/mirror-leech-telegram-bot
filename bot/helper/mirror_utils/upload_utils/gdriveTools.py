@@ -90,7 +90,7 @@ class GoogleDriveHelper:
             with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                 credentials = pload(f)
             if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
-                LOGGER.warning('Your token is expired! Refreshing Token...)
+                LOGGER.warning('Your token is expired! Refreshing Token...')
                 credentials.refresh(Request())
                 with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
                     pdump(credentials, token)
@@ -107,7 +107,7 @@ class GoogleDriveHelper:
                 with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                     credentials = pload(f)
                 if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
-                    LOGGER.warning('Your token is expired! Refreshing Token...)
+                    LOGGER.warning('Your token is expired! Refreshing Token...')
                     credentials.refresh(Request())
                     with open(self.__G_DRIVE_TOKEN_FILE, 'wb') as token:
                         pdump(credentials, token)
