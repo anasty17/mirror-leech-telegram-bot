@@ -168,7 +168,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
-- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#format-selection-examples).
+- `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats).
 
 ### Update
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token from [Github settings](https://github.com/settings/tokens). So you can update your bot from filled repository on each restart. `Str`.
@@ -330,7 +330,6 @@ ytdlleech - or /yl Leech through yt-dlp supported link
 ytdlzipleech - or /yzl Leech yt-dlp support link as zip
 usetting - users settings
 bsetting - bot settings
-setthumb - Set thumbnail
 status - Get Mirror Status message
 btsel - select files from torrent
 rsslist - or /rl List all subscribed rss feed info

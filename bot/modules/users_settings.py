@@ -158,7 +158,7 @@ Send YT-DLP Qaulity.
 Examples:
 1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
 2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.
-Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#format-selection-examples">HERE</a>.
+Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#filtering-formats">HERE</a>.
         '''
         editMessage(rmsg, message, buttons.build_menu(1))
         partial_fnc = partial(set_yt_quality, omsg=message)
