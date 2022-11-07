@@ -22,9 +22,8 @@ class DbManger:
     def db_load(self):
         if self.__err:
             return
-        # Save bot settings if not exists
-        if self.__db.settings.config.find_one({'_id': bot_id}) is None:
-            self.__db.settings.config.update_one({'_id': bot_id}, {'$set': config_dict}, upsert=True)
+        # Save bot settings
+        self.__db.settings.config.update_one({'_id': bot_id}, {'$set': config_dict}, upsert=True)
         # Save Aria2c options
         if self.__db.settings.aria2c.find_one({'_id': bot_id}) is None:
             self.__db.settings.aria2c.update_one({'_id': bot_id}, {'$set': aria2_options}, upsert=True)

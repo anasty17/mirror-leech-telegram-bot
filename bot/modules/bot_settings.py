@@ -333,13 +333,9 @@ def edit_variable(update, context, omsg, key):
         value = int(value)
         if len(download_dict) != 0:
             with status_reply_dict_lock:
-                try:
-                    if Interval:
-                        Interval[0].cancel()
-                        Interval.clear()
-                except:
-                    pass
-                finally:
+                if Interval:
+                    Interval[0].cancel()
+                    Interval.clear()
                     Interval.append(setInterval(value, update_all_messages))
     elif key == 'TORRENT_TIMEOUT':
         value = int(value)
@@ -503,9 +499,9 @@ def edit_bot_settings(update, context):
             srun(["pkill", "-9", "-f", "gunicorn"])
             Popen("gunicorn web.wserver:app --bind 0.0.0.0:80", shell=True)
         config_dict[data[2]] = value
+        update_buttons(message, 'var')
         if DB_URI:
             DbManger().update_config({data[2]: value})
-        update_buttons(message, 'var')
     elif data[1] == 'resetaria':
         aria2_defaults = aria2.client.get_global_option()
         if aria2_defaults[data[2]] == aria2_options[data[2]]:
@@ -525,8 +521,8 @@ def edit_bot_settings(update, context):
         handler_dict[message.chat.id] = True
         update_buttons(message, 'private')
         partial_fnc = partial(upload_file, omsg=message)
-        file_handler = MessageHandler(filters=Filters.document & Filters.chat(message.chat.id) &
-                        (CustomFilters.owner_filter | CustomFilters.sudo_user), callback=partial_fnc, run_async=True)
+        file_handler = MessageHandler(filters=Filters.document & Filters.chat(message.chat.id) & Filters.user(user_id),
+                                      callback=partial_fnc, run_async=True)
         dispatcher.add_handler(file_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:
@@ -546,8 +542,8 @@ def edit_bot_settings(update, context):
         handler_dict[message.chat.id] = True
         update_buttons(message, data[2], data[1])
         partial_fnc = partial(edit_variable, omsg=message, key=data[2])
-        value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) &
-                        (CustomFilters.owner_filter | CustomFilters.sudo_user), callback=partial_fnc, run_async=True)
+        value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
+                                       callback=partial_fnc, run_async=True)
         dispatcher.add_handler(value_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:

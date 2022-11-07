@@ -214,6 +214,10 @@ if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
 else:
     AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
 
+YT_DLP_QUALITY = environ.get('YT_DLP_QUALITY', '')
+if len(YT_DLP_QUALITY) == 0:
+    YT_DLP_QUALITY = ''
+
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 
@@ -280,55 +284,52 @@ UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
 if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = 'master'
 
-if not config_dict:
-    config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
-                   'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
-                   'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
-                   'BASE_URL': BASE_URL,
-                   'CMD_PERFIX': CMD_PERFIX,
-                   'DUMP_CHAT': DUMP_CHAT,
-                   'EQUAL_SPLITS': EQUAL_SPLITS,
-                   'EXTENSION_FILTER': EXTENSION_FILTER,
-                   'GDRIVE_ID': GDRIVE_ID,
-                   'IGNORE_PENDING_REQUESTS': IGNORE_PENDING_REQUESTS,
-                   'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
-                   'INDEX_URL': INDEX_URL,
-                   'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
-                   'LEECH_FILENAME_PERFIX': LEECH_FILENAME_PERFIX,
-                   'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
-                   'MEGA_API_KEY': MEGA_API_KEY,
-                   'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
-                   'MEGA_PASSWORD': MEGA_PASSWORD,
-                   'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
-                   'RSS_CHAT_ID': RSS_CHAT_ID,
-                   'RSS_COMMAND': RSS_COMMAND,
-                   'RSS_DELAY': RSS_DELAY,
-                   'SEARCH_API_LINK': SEARCH_API_LINK,
-                   'SEARCH_LIMIT': SEARCH_LIMIT,
-                   'SEARCH_PLUGINS': SEARCH_PLUGINS,
-                   'SERVER_PORT': SERVER_PORT,
-                   'STATUS_LIMIT': STATUS_LIMIT,
-                   'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
-                   'STOP_DUPLICATE': STOP_DUPLICATE,
-                   'SUDO_USERS': SUDO_USERS,
-                   'TELEGRAM_API': TELEGRAM_API,
-                   'TELEGRAM_HASH': TELEGRAM_HASH,
-                   'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
-                   'UPSTREAM_REPO': UPSTREAM_REPO,
-                   'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-                   'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
-                   'USER_SESSION_STRING': USER_SESSION_STRING,
-                   'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
-                   'VIEW_LINK': VIEW_LINK,
-                   'WEB_PINCODE': WEB_PINCODE}
+config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
+               'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
+               'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
+               'BASE_URL': BASE_URL,
+               'CMD_PERFIX': CMD_PERFIX,
+               'DUMP_CHAT': DUMP_CHAT,
+               'EQUAL_SPLITS': EQUAL_SPLITS,
+               'EXTENSION_FILTER': EXTENSION_FILTER,
+               'GDRIVE_ID': GDRIVE_ID,
+               'IGNORE_PENDING_REQUESTS': IGNORE_PENDING_REQUESTS,
+               'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
+               'INDEX_URL': INDEX_URL,
+               'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+               'LEECH_FILENAME_PERFIX': LEECH_FILENAME_PERFIX,
+               'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+               'MEGA_API_KEY': MEGA_API_KEY,
+               'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+               'MEGA_PASSWORD': MEGA_PASSWORD,
+               'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
+               'RSS_CHAT_ID': RSS_CHAT_ID,
+               'RSS_COMMAND': RSS_COMMAND,
+               'RSS_DELAY': RSS_DELAY,
+               'SEARCH_API_LINK': SEARCH_API_LINK,
+               'SEARCH_LIMIT': SEARCH_LIMIT,
+               'SEARCH_PLUGINS': SEARCH_PLUGINS,
+               'SERVER_PORT': SERVER_PORT,
+               'STATUS_LIMIT': STATUS_LIMIT,
+               'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
+               'STOP_DUPLICATE': STOP_DUPLICATE,
+               'SUDO_USERS': SUDO_USERS,
+               'TELEGRAM_API': TELEGRAM_API,
+               'TELEGRAM_HASH': TELEGRAM_HASH,
+               'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
+               'UPSTREAM_REPO': UPSTREAM_REPO,
+               'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
+               'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
+               'USER_SESSION_STRING': USER_SESSION_STRING,
+               'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
+               'VIEW_LINK': VIEW_LINK,
+               'WEB_PINCODE': WEB_PINCODE,
+               'YT_DLP_QUALITY': YT_DLP_QUALITY}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")
     DRIVES_IDS.append(GDRIVE_ID)
-    if INDEX_URL:
-        INDEX_URLS.append(INDEX_URL)
-    else:
-        INDEX_URLS.append(None)
+    INDEX_URLS.append(INDEX_URL)
 
 if ospath.exists('list_drives.txt'):
     with open('list_drives.txt', 'r+') as f:
@@ -340,7 +341,7 @@ if ospath.exists('list_drives.txt'):
             if len(temp) > 2:
                 INDEX_URLS.append(temp[2])
             else:
-                INDEX_URLS.append(None)
+                INDEX_URLS.append('')
 
 if BASE_URL:
     Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)

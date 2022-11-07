@@ -24,13 +24,13 @@ from .listener import MirrorLeechListener
 def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
-    name_args = mesg[0].split('|', maxsplit=1)
     index = 1
     ratio = None
     seed_time = None
     select = False
     seed = False
     multi = 0
+    link = ''
 
     if len(message_args) > 1:
         args = mesg[0].split(maxsplit=3)
@@ -58,33 +58,27 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 link = message_args[index].strip()
                 if link.startswith(("|", "pswd:")):
                     link = ''
-            else:
-                link = ''
-        else:
-            link = ''
-    else:
-        link = ''
 
-    if len(name_args) > 1:
-        name = name_args[1]
-        name = name.split(' pswd:')[0]
-        name = name.strip()
+    name = mesg[0].split('|', maxsplit=1)
+    if len(name) > 1:
+        if 'pswd:' in name[0]:
+            name = ''
+        else:
+            name = name[1].split('pswd:')[0].strip()
     else:
         name = ''
 
-    link = re_split(r"pswd:|\|", link)[0]
-    link = link.strip()
-
-    pswd_arg = mesg[0].split(' pswd: ')
-    if len(pswd_arg) > 1:
-        pswd = pswd_arg[1]
-    else:
-        pswd = None
+    pswd = mesg[0].split(' pswd: ')
+    pswd = pswd[1] if len(pswd) > 1 else None
 
     if message.from_user.username:
         tag = f"@{message.from_user.username}"
     else:
         tag = message.from_user.mention_html(message.from_user.first_name)
+
+    if link != '':
+        link = re_split(r"pswd:|\|", link)[0]
+        link = link.strip()
 
     reply_to = message.reply_to_message
     if reply_to is not None:
@@ -131,10 +125,12 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
 
 <b>Bittorrent selection:</b>
 <code>/cmd</code> <b>s</b> link or by replying to file/link
+This perfix should be always before |newname or pswd:
 
 <b>Bittorrent seed</b>:
 <code>/cmd</code> <b>d</b> link or by replying to file/link
 To specify ratio and seed time add d:ratio:time. Ex: d:0.7:10 (ratio and time) or d:0.7 (only ratio) or d::10 (only time) where time in minutes.
+Those perfixes should be always before |newname or pswd:
 
 <b>Multi links only by replying to first link/file:</b>
 <code>/cmd</code> 10(number of links/files)

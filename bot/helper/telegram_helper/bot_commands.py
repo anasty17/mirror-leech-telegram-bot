@@ -44,7 +44,6 @@ class _BotCommands:
         self.ClearLocalsCommand = f'clearlocals{CMD_PERFIX}'
         self.BotSetCommand = f'bsetting{CMD_PERFIX}'
         self.UserSetCommand = f'usetting{CMD_PERFIX}'
-        self.SetThumbCommand = f'setthumb{CMD_PERFIX}'
         self.BtSelectCommand = f'btsel{CMD_PERFIX}'
         self.RssListCommand = (f'rsslist{CMD_PERFIX}', f'rl{CMD_PERFIX}')
         self.RssGetCommand = (f'rssget{CMD_PERFIX}', f'rg{CMD_PERFIX}')
