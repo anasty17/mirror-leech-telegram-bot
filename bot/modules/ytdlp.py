@@ -116,10 +116,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             for f in opts:
                 if f.startswith('format:'):
                     qual = f.split('format:', 1)[1]
-        elif config_dict['YT_DLP_QUALITY']:
-            qual = config_dict['YT_DLP_QUALITY']
         elif user_dict and user_dict.get('yt_ql', False):
             qual = user_dict['yt_ql']
+        elif config_dict['YT_DLP_QUALITY']:
+            qual = config_dict['YT_DLP_QUALITY']
     if qual:
         playlist = 'entries' in result
         ydl = YoutubeDLHelper(listener)
