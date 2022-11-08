@@ -122,7 +122,6 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             qual = config_dict['YT_DLP_QUALITY']
     if qual:
         playlist = 'entries' in result
-        ydl = YoutubeDLHelper(listener)
         Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{msg_id}', name, qual, playlist, opt)).start()
     else:
         buttons = ButtonMaker()
