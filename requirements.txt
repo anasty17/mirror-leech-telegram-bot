@@ -23,6 +23,7 @@ python-magic
 python-telegram-bot
 qbittorrent-api
 requests
+telegraph
 tenacity
 tgCrypto
 xattr

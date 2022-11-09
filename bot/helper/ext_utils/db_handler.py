@@ -76,8 +76,11 @@ class DbManger:
     def update_private_file(self, path):
         if self.__err:
             return
-        with open(path, 'rb+') as pf:
-            pf_bin = pf.read()
+        if ospath.exists(path):
+            with open(path, 'rb+') as pf:
+                pf_bin = pf.read()
+        else:
+            pf_bin = ''
         path = path.replace('.', '__')
         self.__db.settings.files.update_one({'_id': bot_id}, {'$set': {path: pf_bin}}, upsert=True)
         self.__conn.close()

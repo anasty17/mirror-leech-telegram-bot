@@ -100,13 +100,9 @@ def load_config():
         STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
     if len(download_dict) != 0:
         with status_reply_dict_lock:
-            try:
-                if Interval:
-                    Interval[0].cancel()
-                    Interval.clear()
-            except:
-                pass
-            finally:
+            if Interval:
+                Interval[0].cancel()
+                Interval.clear()
                 Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
 
     AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
@@ -114,7 +110,7 @@ def load_config():
         AUTO_DELETE_MESSAGE_DURATION = 30
     else:
         AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
-    
+
     YT_DLP_QUALITY = environ.get('YT_DLP_QUALITY', '')
     if len(YT_DLP_QUALITY) == 0:
         YT_DLP_QUALITY = ''
@@ -293,7 +289,8 @@ def get_buttons(key=None, edit_type=None):
     elif key == 'private':
         buttons.sbutton('Back', "botset back")
         buttons.sbutton('Close', "botset close")
-        msg = f'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt or .netrc.\nTimeout: 60 sec'
+        msg = 'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt or .netrc.' \
+              '\nTo delete private file send the name of the file only as text message.\nTimeout: 60 sec'
     elif key == 'aria':
         for k in list(aria2_options.keys())[START:10+START]:
             buttons.sbutton(k, f"botset editaria {k}")
@@ -329,6 +326,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Back', "botset back aria")
         if key != 'newkey':
             buttons.sbutton('Default', f"botset resetaria {key}")
+            buttons.sbutton('Empty String', f"botset emptyaria {key}")
         buttons.sbutton('Close', "botset close")
         if key == 'newkey':
             msg = 'Send a key with value. Example: https-proxy-user:value'
@@ -336,9 +334,10 @@ def get_buttons(key=None, edit_type=None):
             msg = f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editqbit':
         buttons.sbutton('Back', "botset back qbit")
+        buttons.sbutton('Empty String', f"botset emptyqbit {key}")
         buttons.sbutton('Close', "botset close")
         msg = f'Send a valid value for {key}. Timeout: 60 sec'
-    return msg, buttons.build_menu(2)
+    return msg, buttons.build_menu(1)
 
 def update_buttons(message, key=None, edit_type=None):
     msg, button = get_buttons(key, edit_type)
@@ -437,49 +436,56 @@ def edit_qbit(update, context, omsg, key):
     if DB_URI:
         DbManger().update_qbittorrent(key, value)
 
-def upload_file(update, context, omsg):
+def update_private_file(update, context, omsg):
     handler_dict[omsg.chat.id] = False
-    doc = update.message.document
-    file_name = doc.file_name
-    doc.get_file().download(custom_path=file_name)
-    if file_name == 'accounts.zip':
-        srun(["unzip", "-q", "-o", "accounts.zip"])
-        srun(["chmod", "-R", "777", "accounts"])
-    elif file_name == 'list_drives.txt':
-        DRIVES_IDS.clear()
-        DRIVES_NAMES.clear()
-        INDEX_URLS.clear()
-        if GDRIVE_ID := config_dict['GDRIVE_ID']:
-            DRIVES_NAMES.append("Main")
-            DRIVES_IDS.append(GDRIVE_ID)
-            INDEX_URLS.append(config_dict['INDEX_URL'])
-        with open('list_drives.txt', 'r+') as f:
-            lines = f.readlines()
-            for line in lines:
-                temp = line.strip().split()
-                DRIVES_IDS.append(temp[1])
-                DRIVES_NAMES.append(temp[0].replace("_", " "))
-                if len(temp) > 2:
-                    INDEX_URLS.append(temp[2])
-                else:
-                    INDEX_URLS.append('')
-    elif file_name in ['.netrc', 'netrc']:
-        if file_name == 'netrc':
-            rename('netrc', '.netrc')
-            file_name = '.netrc'
-        srun(["cp", ".netrc", "/root/.netrc"])
-        srun(["chmod", "600", ".netrc"])
-    elif file_name == 'config.env':
-        load_dotenv('config.env', override=True)
-        load_config()
-    if '@github.com' in config_dict['UPSTREAM_REPO']:
-        buttons = ButtonMaker()
-        msg = 'Push to UPSTREAM_REPO ?'
-        buttons.sbutton('Yes!', f"botset push {file_name}")
-        buttons.sbutton('No', "botset close")
-        sendMarkup(msg, context.bot, update.message, buttons.build_menu(2))
-    else:
+    message = update.message
+    if not message.document and message.text:
+        file_name = message.text
+        if ospath.exists(file_name):
+            remove(file_name)
         update.message.delete()
+    else:
+        doc = update.message.document
+        file_name = doc.file_name
+        doc.get_file().download(custom_path=file_name)
+        if file_name == 'accounts.zip':
+            srun(["unzip", "-q", "-o", "accounts.zip"])
+            srun(["chmod", "-R", "777", "accounts"])
+        elif file_name == 'list_drives.txt':
+            DRIVES_IDS.clear()
+            DRIVES_NAMES.clear()
+            INDEX_URLS.clear()
+            if GDRIVE_ID := config_dict['GDRIVE_ID']:
+                DRIVES_NAMES.append("Main")
+                DRIVES_IDS.append(GDRIVE_ID)
+                INDEX_URLS.append(config_dict['INDEX_URL'])
+            with open('list_drives.txt', 'r+') as f:
+                lines = f.readlines()
+                for line in lines:
+                    temp = line.strip().split()
+                    DRIVES_IDS.append(temp[1])
+                    DRIVES_NAMES.append(temp[0].replace("_", " "))
+                    if len(temp) > 2:
+                        INDEX_URLS.append(temp[2])
+                    else:
+                        INDEX_URLS.append('')
+        elif file_name in ['.netrc', 'netrc']:
+            if file_name == 'netrc':
+                rename('netrc', '.netrc')
+                file_name = '.netrc'
+            srun(["cp", ".netrc", "/root/.netrc"])
+            srun(["chmod", "600", ".netrc"])
+        elif file_name == 'config.env':
+            load_dotenv('config.env', override=True)
+            load_config()
+        if '@github.com' in config_dict['UPSTREAM_REPO']:
+            buttons = ButtonMaker()
+            msg = 'Push to UPSTREAM_REPO ?'
+            buttons.sbutton('Yes!', f"botset push {file_name}")
+            buttons.sbutton('No', "botset close")
+            sendMarkup(msg, context.bot, update.message, buttons.build_menu(2))
+        else:
+            update.message.delete()
     update_buttons(omsg)
     if DB_URI:
         DbManger().update_private_file(file_name)
@@ -510,6 +516,7 @@ def edit_bot_settings(update, context):
         update_buttons(message, data[1])
     elif data[1] == 'resetvar':
         query.answer()
+        handler_dict[message.chat.id] = False
         value = ''
         if data[2] in default_values:
             value = default_values[data[2]]
@@ -540,6 +547,7 @@ def edit_bot_settings(update, context):
         if DB_URI:
             DbManger().update_config({data[2]: value})
     elif data[1] == 'resetaria':
+        handler_dict[message.chat.id] = False
         aria2_defaults = aria2.client.get_global_option()
         if aria2_defaults[data[2]] == aria2_options[data[2]]:
             query.answer(text='Value already same as you added in aria.sh!')
@@ -547,8 +555,31 @@ def edit_bot_settings(update, context):
         query.answer()
         value = aria2_defaults[data[2]]
         aria2_options[data[2]] = value
+        update_buttons(message, 'aria')
+        downloads = aria2.get_downloads()
+        if downloads:
+            aria2.set_options({data[2]: value}, downloads)
         if DB_URI:
             DbManger().update_aria2(data[2], value)
+    elif data[1] == 'emptyaria':
+        query.answer()
+        handler_dict[message.chat.id] = False
+        aria2_options[data[2]] = ''
+        update_buttons(message, 'aria')
+        downloads = aria2.get_downloads()
+        if downloads:
+            aria2.set_options({data[2]: ''}, downloads)
+        if DB_URI:
+            DbManger().update_aria2(data[2], '')
+    elif data[1] == 'emptyqbit':
+        query.answer()
+        handler_dict[message.chat.id] = False
+        client = get_client()
+        client.app_set_preferences({data[2]: value})
+        qbit_options[data[2]] = ''
+        update_buttons(message, 'qbit')
+        if DB_URI:
+            DbManger().update_qbittorrent(data[2], '')
     elif data[1] == 'private':
         query.answer()
         if handler_dict.get(message.chat.id):
@@ -557,9 +588,8 @@ def edit_bot_settings(update, context):
         start_time = time()
         handler_dict[message.chat.id] = True
         update_buttons(message, 'private')
-        partial_fnc = partial(upload_file, omsg=message)
-        file_handler = MessageHandler(filters=Filters.document & Filters.chat(message.chat.id) & Filters.user(user_id),
-                                      callback=partial_fnc, run_async=True)
+        partial_fnc = partial(update_private_file, omsg=message)
+        file_handler = MessageHandler(filters=(Filters.document | Filters.text) & Filters.chat(message.chat.id) & Filters.user(user_id), callback=partial_fnc, run_async=True)
         dispatcher.add_handler(file_handler)
         while handler_dict[message.chat.id]:
             if time() - start_time > 60:

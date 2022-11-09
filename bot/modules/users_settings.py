@@ -133,7 +133,7 @@ def edit_user_settings(update, context):
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
-        editMessage('Send a photo to save it as custom thumbnail.', message, buttons.build_menu(1))
+        editMessage('Send a photo to save it as custom thumbnail. Timeout: 60 sec', message, buttons.build_menu(1))
         partial_fnc = partial(set_thumb, omsg=message)
         photo_handler = MessageHandler(filters=Filters.photo & Filters.chat(message.chat.id) & Filters.user(user_id),
                                        callback=partial_fnc, run_async=True)
@@ -154,7 +154,7 @@ def edit_user_settings(update, context):
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
-Send YT-DLP Qaulity.
+Send YT-DLP Qaulity. Timeout: 60 sec
 Examples:
 1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
 2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.

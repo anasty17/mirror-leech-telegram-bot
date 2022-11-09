@@ -106,12 +106,8 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
 /{BotCommands.UserSetCommand} [query]: Users settings.
+/{BotCommands.BotSetCommand} [query]: Bot settings.
 /{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
-/{BotCommands.RssListCommand[0]} or /{BotCommands.RssListCommand[1]}: List all subscribed rss feed info (Only Owner & Sudo).
-/{BotCommands.RssGetCommand[0]} or /{BotCommands.RssGetCommand[1]}: Force fetch last N links (Only Owner & Sudo).
-/{BotCommands.RssSubCommand[0]} or /{BotCommands.RssSubCommand[1]}: Subscribe new rss feed (Only Owner & Sudo).
-/{BotCommands.RssUnSubCommand[0]} or /{BotCommands.RssUnSubCommand[1]}: Unubscribe rss feed by title (Only Owner & Sudo).
-/{BotCommands.RssSettingsCommand[0]} or /{BotCommands.RssSettingsCommand[1]} [query]: Rss Settings (Only Owner & Sudo).
 /{BotCommands.CancelMirror}: Cancel task by gid or reply.
 /{BotCommands.CancelAllCommand} [query]: Cancel all [status] tasks.
 /{BotCommands.ListCommand} [query]: Search in Google Drive(s).
@@ -130,6 +126,11 @@ NOTE: Try each command without any perfix to see more detalis.
 /{BotCommands.EvalCommand}: Run Python Code Line | Lines (Only Owner).
 /{BotCommands.ExecCommand}: Run Commands In Exec (Only Owner).
 /{BotCommands.ClearLocalsCommand}: Clear {BotCommands.EvalCommand} or {BotCommands.ExecCommand} locals (Only Owner).
+/{BotCommands.RssListCommand[0]} or /{BotCommands.RssListCommand[1]}: List all subscribed rss feed info (Only Owner & Sudo).
+/{BotCommands.RssGetCommand[0]} or /{BotCommands.RssGetCommand[1]}: Force fetch last N links (Only Owner & Sudo).
+/{BotCommands.RssSubCommand[0]} or /{BotCommands.RssSubCommand[1]}: Subscribe new rss feed (Only Owner & Sudo).
+/{BotCommands.RssUnSubCommand[0]} or /{BotCommands.RssUnSubCommand[1]}: Unubscribe rss feed by title (Only Owner & Sudo).
+/{BotCommands.RssSettingsCommand[0]} or /{BotCommands.RssSettingsCommand[1]} [query]: Rss Settings (Only Owner & Sudo).
 '''
 
 def bot_help(update, context):
