@@ -525,7 +525,7 @@ def edit_bot_settings(update, context):
                     if Interval:
                         Interval[0].cancel()
                         Interval.clear()
-                        Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
+                        Interval.append(setInterval(value, update_all_messages))
         elif data[2] == 'EXTENSION_FILTER':
             GLOBAL_EXTENSION_FILTER.clear()
             GLOBAL_EXTENSION_FILTER.append('.aria2')
