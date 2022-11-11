@@ -44,7 +44,7 @@ def torser(update, context):
     user_id = update.message.from_user.id
     buttons = ButtonMaker()
     SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
-    if SITES is None and SEARCH_PLUGINS:
+    if SITES is None and not SEARCH_PLUGINS:
         sendMessage("No API link or search PLUGINS added for this function", context.bot, update.message)
     elif len(context.args) == 0 and SITES is None:
         sendMessage("Send a search key along with command", context.bot, update.message)
