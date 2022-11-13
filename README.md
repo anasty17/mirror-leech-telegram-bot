@@ -29,9 +29,8 @@ In each single file there is a major change from base code, it's almost totaly d
 - Download from Google Drive
 - Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
-- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method)
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
-- List result in html file instead of telegraph or telegram message to avoid limits by [junedkh](https://github.com/junedkh)
 - Random Service Account for each task
 ### Status
 - Clone Status
@@ -72,6 +71,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
 - Edit variables and overwrite the private files while bot running
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
+- Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot.
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - Mirror/Leech/Clone multi links/files with one command
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links

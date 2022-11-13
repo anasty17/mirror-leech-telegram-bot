@@ -2,7 +2,7 @@ from os import path as ospath, makedirs
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
-from bot import DB_URI, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options
+from bot import DATABASE_URL, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options
 
 class DbManger:
     def __init__(self):
@@ -13,7 +13,7 @@ class DbManger:
 
     def __connect(self):
         try:
-            self.__conn = MongoClient(DB_URI)
+            self.__conn = MongoClient(DATABASE_URL)
             self.__db = self.__conn.mltb
         except PyMongoError as e:
             LOGGER.error(f"Error in DB connection: {e}")
@@ -155,6 +155,6 @@ class DbManger:
         self.__db[name].drop()
         self.__conn.close()
 
-if DB_URI:
+if DATABASE_URL:
     DbManger().db_load()
 

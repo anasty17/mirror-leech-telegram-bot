@@ -50,7 +50,7 @@ class TelegraphHelper:
         except RetryAfterError as st:
             LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
             sleep(st.retry_after)
-        return self.edit_page(path, title, content)
+            return self.edit_page(path, title, content)
 
     def edit_telegraph(self, path, telegraph_content):
         nxt_page = 1

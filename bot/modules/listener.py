@@ -5,7 +5,7 @@ from os import path as ospath, remove as osremove, listdir, walk
 from subprocess import Popen
 from html import escape
 
-from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DB_URI, MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock
+from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split_file, clean_download, clean_target
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
@@ -49,7 +49,7 @@ class MirrorLeechListener:
             pass
 
     def onDownloadStart(self):
-        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DB_URI:
+        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     def onDownloadComplete(self):
@@ -214,7 +214,7 @@ class MirrorLeechListener:
             drive.upload(up_name)
 
     def onUploadComplete(self, link: str, size, files, folders, typ, name):
-        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DB_URI:
+        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{size}"
         if self.isLeech:
@@ -295,7 +295,7 @@ class MirrorLeechListener:
         else:
             update_all_messages()
 
-        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DB_URI:
+        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)
 
     def onUploadError(self, error):
@@ -315,5 +315,5 @@ class MirrorLeechListener:
         else:
             update_all_messages()
 
-        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DB_URI:
+        if not self.isPrivate and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             DbManger().rm_complete_task(self.message.link)

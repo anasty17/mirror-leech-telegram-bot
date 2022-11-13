@@ -5,7 +5,7 @@ from time import sleep, time
 from functools import partial
 from html import escape
 
-from bot import user_data, dispatcher, config_dict, DB_URI
+from bot import user_data, dispatcher, config_dict, DATABASE_URL
 from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -70,7 +70,7 @@ def set_yt_quality(update, context, omsg):
     update_user_ldata(user_id, 'yt_ql', value)
     update.message.delete()
     update_user_settings(omsg, message.from_user)
-    if DB_URI:
+    if DATABASE_URL:
         DbManger().update_user_data(user_id)
 
 def set_thumb(update, context, omsg):
@@ -88,7 +88,7 @@ def set_thumb(update, context, omsg):
     update_user_ldata(user_id, 'thumb', des_dir)
     update.message.delete()
     update_user_settings(omsg, message.from_user)
-    if DB_URI:
+    if DATABASE_URL:
         DbManger().update_thumb(user_id, des_dir)
 
 def edit_user_settings(update, context):
@@ -103,13 +103,13 @@ def edit_user_settings(update, context):
         update_user_ldata(user_id, 'as_doc', True)
         query.answer(text="Your File Will Deliver As Document!", show_alert=True)
         update_user_settings(message, query.from_user)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == "med":
         update_user_ldata(user_id, 'as_doc', False)
         query.answer(text="Your File Will Deliver As Media!", show_alert=True)
         update_user_settings(message, query.from_user)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == "dthumb":
         path = f"Thumbnails/{user_id}.jpg"
@@ -118,7 +118,7 @@ def edit_user_settings(update, context):
             osremove(path)
             update_user_ldata(user_id, 'thumb', '')
             update_user_settings(message, query.from_user)
-            if DB_URI:
+            if DATABASE_URL:
                 DbManger().update_thumb(user_id)
         else:
             query.answer(text="Old Settings", show_alert=True)
@@ -174,7 +174,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         query.answer(text="YT-DLP Quality Removed!", show_alert=True)
         update_user_ldata(user_id, 'yt_ql', '')
         update_user_settings(message, query.from_user)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == 'back':
         query.answer()

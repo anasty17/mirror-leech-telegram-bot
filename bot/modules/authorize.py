@@ -1,6 +1,6 @@
 from telegram.ext import CommandHandler
 
-from bot import user_data, dispatcher, DB_URI
+from bot import user_data, dispatcher, DATABASE_URL
 from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -20,7 +20,7 @@ def authorize(update, context):
         msg = 'Already Authorized!'
     else:
         update_user_ldata(id_, 'is_auth', True)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(id_)
         msg = 'Authorized'
     sendMessage(msg, context.bot, update.message)
@@ -35,7 +35,7 @@ def unauthorize(update, context):
         id_ = update.effective_chat.id
     if id_ not in user_data or user_data[id_].get('is_auth'):
         update_user_ldata(id_, 'is_auth', False)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(id_)
         msg = 'Unauthorized'
     else:
@@ -54,7 +54,7 @@ def addSudo(update, context):
             msg = 'Already Sudo!'
         else:
             update_user_ldata(id_, 'is_sudo', True)
-            if DB_URI:
+            if DATABASE_URL:
                 DbManger().update_user_data(id_)
             msg = 'Promoted as Sudo'
     else:
@@ -70,7 +70,7 @@ def removeSudo(update, context):
         id_ = reply_message.from_user.id
     if id_ and id_ not in user_data or user_data[id_].get('is_sudo'):
         update_user_ldata(id_, 'is_sudo', False)
-        if DB_URI:
+        if DATABASE_URL:
             DbManger().update_user_data(id_)
         msg = 'Demoted'
     else:

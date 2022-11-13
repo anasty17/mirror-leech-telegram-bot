@@ -7,7 +7,7 @@ from sys import executable
 from telegram.ext import CommandHandler
 
 from bot import bot, dispatcher, updater, botStartTime, IGNORE_PENDING_REQUESTS, LOGGER, Interval, \
-                DB_URI, app, main_loop, QbInterval, INCOMPLETE_TASK_NOTIFIER
+                DATABASE_URL, app, main_loop, QbInterval, INCOMPLETE_TASK_NOTIFIER
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time
 from .helper.ext_utils.db_handler import DbManger
@@ -138,7 +138,7 @@ def bot_help(update, context):
 
 def main():
     start_cleanup()
-    if INCOMPLETE_TASK_NOTIFIER and DB_URI:
+    if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
         if notifier_dict := DbManger().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
                 if ospath.isfile(".restartmsg"):

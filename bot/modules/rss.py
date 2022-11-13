@@ -2,9 +2,8 @@ from feedparser import parse as feedparse
 from time import sleep
 from telegram.ext import CommandHandler, CallbackQueryHandler
 from threading import Lock, Thread
-from copy import deepcopy
 
-from bot import dispatcher, job_queue, rss_dict, LOGGER, DB_URI, config_dict, RSS_DELAY, RSS_CHAT_ID
+from bot import dispatcher, job_queue, rss_dict, LOGGER, DATABASE_URL, config_dict, RSS_DELAY, RSS_CHAT_ID
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup, auto_delete_message, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -184,8 +183,7 @@ def rss_monitor(context):
         if len(rss_dict) == 0:
             rss_job.enabled = False
             return
-        rss_saver = deepcopy(rss_dict)
-    for title, data in rss_saver.items():
+    for title, data in list(rss_dict.items()):
         try:
             rss_d = feedparse(data['link'])
             last_link = rss_d.entries[0]['link']
@@ -222,6 +220,8 @@ def rss_monitor(context):
                 feed_count += 1
                 sleep(5)
             with rss_dict_lock:
+                if title not in rss_dict:
+                    continue
                 rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
             DbManger().rss_update(title)
             LOGGER.info(f"Feed Name: {title}")
@@ -230,7 +230,7 @@ def rss_monitor(context):
             LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
             continue
 
-if DB_URI and RSS_CHAT_ID:
+if DATABASE_URL and RSS_CHAT_ID:
     rss_list_handler = CommandHandler(BotCommands.RssListCommand, rss_list,
                                       filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
     rss_get_handler = CommandHandler(BotCommands.RssGetCommand, rss_get,
