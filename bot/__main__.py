@@ -153,27 +153,36 @@ def main():
                         msg += f" <a href='{link}'>{index}</a> |"
                         if len(msg.encode()) > 4000:
                             if 'Restarted Successfully!' in msg and cid == chat_id:
-                                bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                                try:
+                                    bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                                except:
+                                    pass
                                 osremove(".restartmsg")
                             else:
                                 try:
-                                    bot.sendMessage(cid, msg, 'HTML', disable_web_page_preview=True)
+                                    bot.sendMessage(cid, msg, parse_mode='HTML', disable_web_page_preview=True)
                                 except Exception as e:
                                     LOGGER.error(e)
                             msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
-                    bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                    try:
+                        bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                    except:
+                        pass
                     osremove(".restartmsg")
                 else:
                     try:
-                        bot.sendMessage(cid, msg, 'HTML', disable_web_page_preview=True)
+                        bot.sendMessage(cid, msg, parse_mode='HTML', disable_web_page_preview=True)
                     except Exception as e:
                         LOGGER.error(e)
 
     if ospath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
-        bot.edit_message_text("Restarted Successfully!", chat_id, msg_id)
+        try:
+            bot.edit_message_text("Restarted Successfully!", chat_id, msg_id)
+        except:
+            pass
         osremove(".restartmsg")
 
     start_handler = CommandHandler(BotCommands.StartCommand, start, run_async=True)
