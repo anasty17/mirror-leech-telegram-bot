@@ -153,7 +153,10 @@ def main():
                         msg += f" <a href='{link}'>{index}</a> |"
                         if len(msg.encode()) > 4000:
                             if 'Restarted Successfully!' in msg and cid == chat_id:
-                                bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                                try:
+                                    bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                                except:
+                                    pass
                                 osremove(".restartmsg")
                             else:
                                 try:
@@ -162,7 +165,10 @@ def main():
                                     LOGGER.error(e)
                             msg = ''
                 if 'Restarted Successfully!' in msg and cid == chat_id:
-                    bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                    try:
+                        bot.editMessageText(msg, chat_id, msg_id, parse_mode='HTML', disable_web_page_preview=True)
+                    except:
+                        pass
                     osremove(".restartmsg")
                 else:
                     try:
