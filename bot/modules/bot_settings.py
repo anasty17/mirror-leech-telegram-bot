@@ -483,15 +483,22 @@ def update_private_file(update, context, omsg):
     message = update.message
     if not message.document and message.text:
         file_name = message.text
-        if ospath.exists(file_name):
-            remove(file_name)
+        fn = file_name.rsplit('.zip', 1)[0]
+        if ospath.exists(fn):
+            remove(fn)
+        if fn == 'accounts':
+            config_dict['USE_SERVICE_ACCOUNTS'] = False
+            if DATABASE_URL:
+                DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
         update.message.delete()
     else:
         doc = update.message.document
         file_name = doc.file_name
         doc.get_file().download(custom_path=file_name)
         if file_name == 'accounts.zip':
-            srun(["unzip", "-q", "-o", "accounts.zip"])
+            if ospath.exists('accounts'):
+                srun(["rm", "-rf", "accounts"])
+            srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
             srun(["chmod", "-R", "777", "accounts"])
         elif file_name == 'list_drives.txt':
             DRIVES_IDS.clear()
@@ -753,9 +760,15 @@ def edit_bot_settings(update, context):
             update_buttons(message, data[2])
     elif data[1] == 'push':
         query.answer()
-        srun([f"git add -f {data[2].rsplit('.zip', 1)[0]} \
-                && git commit -sm botsettings -q \
-                && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
+        filename = data[2].rsplit('.zip', 1)[0]
+        if ospath.exits(filename):
+            srun([f"git add -f {filename} \
+                    && git commit -sm botsettings -q \
+                    && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
+        else:
+            srun([f"git rm -r --cached {filename} \
+                    && git commit -sm botsettings -q \
+                    && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
         query.message.delete()
         query.message.reply_to_message.delete()
 
