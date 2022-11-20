@@ -65,6 +65,10 @@ def load_config():
     if len(UPTOBOX_TOKEN) == 0:
         UPTOBOX_TOKEN = ''
 
+    CRYPT = environ.get('CRYPT', '')
+    if len(CRYPT) == 0:
+        CRYPT = ''
+
     INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
     if len(INDEX_URL) == 0:
         INDEX_URL = ''
@@ -208,6 +212,7 @@ def load_config():
                         'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                         'BASE_URL': BASE_URL,
                         'CMD_PERFIX': CMD_PERFIX,
+                        'CRYPT': CRYPT,
                         'DUMP_CHAT': DUMP_CHAT,
                         'EQUAL_SPLITS': EQUAL_SPLITS,
                         'EXTENSION_FILTER': EXTENSION_FILTER,
