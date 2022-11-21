@@ -156,7 +156,7 @@ class YoutubeDLHelper:
                 elif 'filesize' in entry:
                     self.__size += entry['filesize']
                 if name == "":
-                    outtmpl_ ='%(series,playlist_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
+                    outtmpl_ = '%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
                     self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
                 else:
                     self.name = name
