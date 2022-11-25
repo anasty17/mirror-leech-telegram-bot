@@ -761,7 +761,7 @@ def edit_bot_settings(update, context):
     elif data[1] == 'push':
         query.answer()
         filename = data[2].rsplit('.zip', 1)[0]
-        if ospath.exits(filename):
+        if ospath.exists(filename):
             srun([f"git add -f {filename} \
                     && git commit -sm botsettings -q \
                     && git push origin {config_dict['UPSTREAM_BRANCH']} -q"], shell=True)
