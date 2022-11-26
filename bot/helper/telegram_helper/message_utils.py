@@ -48,8 +48,8 @@ def editMessage(text, message, reply_markup=None):
         LOGGER.error(str(e))
         return str(e)
 
-def sendRss(text: str, bot):
-    if rss_session is None:
+def sendRss(text, bot):
+    if not rss_session:
         try:
             return bot.sendMessage(config_dict['RSS_CHAT_ID'], text, parse_mode='HTML', disable_web_page_preview=True)
         except RetryAfter as r:
