@@ -152,7 +152,7 @@ class DbManger:
     def trunc_table(self, name):
         if self.__err:
             return
-        self.__db[name].drop()
+        self.__db[name][bot_id].drop()
         self.__conn.close()
 
 if DATABASE_URL:
