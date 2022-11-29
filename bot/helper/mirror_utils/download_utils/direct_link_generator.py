@@ -92,7 +92,8 @@ def uptobox(url: str) -> str:
         link = re_findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
     except IndexError:
         raise DirectDownloadLinkException("No Uptobox links found")
-    if UPTOBOX_TOKEN := config_dict['UPTOBOX_TOKEN']:
+    UPTOBOX_TOKEN = config_dict['UPTOBOX_TOKEN']
+    if not UPTOBOX_TOKEN:
         LOGGER.error('UPTOBOX_TOKEN not provided!')
         dl_url = link
     else:
