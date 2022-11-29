@@ -40,6 +40,9 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
                 link = args[index].strip()
                 if link.startswith(("|", "pswd:", "opt:")):
                     link = ''
+                else:
+                    link = re_split(r"opt:|pswd:|\|", link)[0]
+                    link = link.strip()     
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
