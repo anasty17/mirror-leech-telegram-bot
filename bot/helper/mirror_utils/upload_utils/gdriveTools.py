@@ -262,6 +262,8 @@ class GoogleDriveHelper:
                 self.__upload_file(current_file_name, file_name, mime_type, dest_id)
                 self.__total_files += 1
                 new_id = dest_id
+            else:
+                new_id = 'filter'
             if self.__is_cancelled:
                 break
         return new_id

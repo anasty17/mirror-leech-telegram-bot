@@ -106,12 +106,12 @@ class AriaDownloadStatus:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             self.__listener.onUploadError(f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}")
             aria2.remove([self.__download], force=True, files=True)
-        elif len(self.__download.followed_by_ids) != 0:
+        elif downloads := self.__download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-            downloads = aria2.get_downloads(self.__download.followed_by_ids)
-            self.__listener.onDownloadError('Download stopped by user!')
+            self.__listener.onDownloadError('Download cancelled by user!')
+            downloads.append(self.__download)
             aria2.remove(downloads, force=True, files=True)
         else:
             LOGGER.info(f"Cancelling Download: {self.name()}")
             self.__listener.onDownloadError('Download stopped by user!')
-        aria2.remove([self.__download], force=True, files=True)
+            aria2.remove([self.__download], force=True, files=True)

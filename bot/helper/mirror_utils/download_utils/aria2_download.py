@@ -114,8 +114,8 @@ def __onBtDownloadComplete(api, gid):
             except Exception as e:
                 LOGGER.error(f"{e} GID: {gid}" )
         listener.onDownloadComplete()
+        download = download.live
         if listener.seed:
-            download = download.live
             if download.is_complete:
                 if dl := getDownloadByGid(gid):
                     LOGGER.info(f"Cancelling Seed: {download.name}")
