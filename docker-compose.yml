@@ -4,6 +4,8 @@ services:
   app:
     build: .
     command: bash start.sh
+    volumes:
+      - $HOME/mirror-leech-telegram-bot/config.env:/usr/src/app/config.env
     restart: on-failure
     ports:
-      - "80:80"
+      - "127.0.0.1:80:80"
