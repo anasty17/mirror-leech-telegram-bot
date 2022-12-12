@@ -87,6 +87,7 @@ class GoogleDriveHelper:
                 f'accounts/{self.__service_account_index}.json',
                 scopes=self.__OAUTH_SCOPE)
         elif ospath.exists(self.__G_DRIVE_TOKEN_FILE):
+            LOGGER.info("Authorize with token.pickle")
             with open(self.__G_DRIVE_TOKEN_FILE, 'rb') as f:
                 credentials = pload(f)
             if credentials and not credentials.valid and credentials.expired and credentials.refresh_token:
@@ -450,13 +451,12 @@ class GoogleDriveHelper:
                 if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     if config_dict['USE_SERVICE_ACCOUNTS']:
                         if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
-                            self.__is_cancelled = True
+                            LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
                             self.__switchServiceAccount()
                             return self.__copyFile(file_id, dest_id)
                     else:
-                        self.__is_cancelled = True
                         LOGGER.error(f"Got: {reason}")
                         raise err
                 else:
@@ -787,6 +787,8 @@ class GoogleDriveHelper:
             filename = f"{filename[:245]}{ext}"
             if self.name.endswith(ext):
                 self.name = filename
+        if self.__is_cancelled:
+            return
         fh = FileIO(f"{path}/{filename}", 'wb')
         downloader = MediaIoBaseDownload(fh, request, chunksize=50 * 1024 * 1024)
         done = False
@@ -806,7 +808,7 @@ class GoogleDriveHelper:
                         raise err
                     if config_dict['USE_SERVICE_ACCOUNTS']:
                         if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
-                            self.__is_cancelled = True
+                            LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
                             self.__switchServiceAccount()

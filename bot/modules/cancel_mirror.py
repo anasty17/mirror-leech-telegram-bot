@@ -5,7 +5,7 @@ from threading import Thread
 from bot import download_dict, dispatcher, download_dict_lock, OWNER_ID, user_data
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, auto_delete_message
+from bot.helper.telegram_helper.message_utils import sendMessage, auto_delete_message
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload, new_thread, MirrorStatus
 from bot.helper.telegram_helper import button_build
 
@@ -67,7 +67,7 @@ def cancell_all_buttons(update, context):
     buttons.sbutton("All", "canall all")
     buttons.sbutton("Close", "canall close")
     button = buttons.build_menu(2)
-    can_msg = sendMarkup('Choose tasks to cancel.', context.bot, update.message, button)
+    can_msg = sendMessage('Choose tasks to cancel.', context.bot, update.message, button)
     Thread(target=auto_delete_message, args=(context.bot, update.message, can_msg)).start()
 
 @new_thread
@@ -88,10 +88,10 @@ def cancel_all_update(update, context):
 
 
 cancel_mirror_handler = CommandHandler(BotCommands.CancelMirror, cancel_mirror,
-                                   filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user), run_async=True)
+                                   filters=(CustomFilters.authorized_chat | CustomFilters.authorized_user))
 cancel_all_handler = CommandHandler(BotCommands.CancelAllCommand, cancell_all_buttons,
-                                   filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
-cancel_all_buttons_handler = CallbackQueryHandler(cancel_all_update, pattern="canall", run_async=True)
+                                   filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
+cancel_all_buttons_handler = CallbackQueryHandler(cancel_all_update, pattern="canall")
 
 dispatcher.add_handler(cancel_all_handler)
 dispatcher.add_handler(cancel_mirror_handler)

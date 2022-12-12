@@ -163,7 +163,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Str`
 - `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
-- `CMD_PERFIX`: commands index number. This number will added at the end all commands. `Str`
+- `CMD_SUFFIX`: commands index number. This number will added at the end all commands. `Str`
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Str`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`

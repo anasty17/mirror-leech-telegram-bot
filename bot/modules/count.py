@@ -37,6 +37,6 @@ def countNode(update, context):
 
 
 count_handler = CommandHandler(BotCommands.CountCommand, countNode,
-                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 
 dispatcher.add_handler(count_handler)

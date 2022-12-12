@@ -4,7 +4,7 @@ from threading import RLock, Lock
 
 from bot import LOGGER, download_dict, download_dict_lock, app, config_dict
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 
 global_lock = Lock()
@@ -100,7 +100,7 @@ class TelegramDownloadHelper:
                     smsg, button = GoogleDriveHelper().drive_list(name, True, True)
                     if smsg:
                         msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                        return sendMarkup(msg, self.__listener.bot, self.__listener.message, button)
+                        return sendMessage(msg, self.__listener.bot, self.__listener.message, button)
                 self.__onDownloadStart(name, size, media.file_unique_id)
                 LOGGER.info(f'Downloading Telegram file with id: {media.file_unique_id}')
                 self.__download(_dmsg, path)

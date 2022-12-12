@@ -5,7 +5,7 @@ from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, a
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import is_magnet, getDownloadByGid, new_thread, bt_selection_buttons
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMarkup, sendStatusMessage, sendMessage, deleteMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage, deleteMessage, update_all_messages
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
 
 
@@ -53,7 +53,7 @@ def __onDownloadStarted(api, gid):
                     if smsg:
                         listener.onDownloadError('File/Folder already available in Drive.\n\n')
                         api.remove([download], force=True, files=True)
-                        return sendMarkup("Here are the search results:", listener.bot, listener.message, button)
+                        return sendMessage("Here are the search results:", listener.bot, listener.message, button)
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 
@@ -72,7 +72,7 @@ def __onDownloadComplete(api, gid):
                 api.client.force_pause(new_gid)
                 SBUTTONS = bt_selection_buttons(new_gid)
                 msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
-                sendMarkup(msg, listener.bot, listener.message, SBUTTONS)
+                sendMessage(msg, listener.bot, listener.message, SBUTTONS)
     elif download.is_torrent:
         if dl := getDownloadByGid(gid):
             if hasattr(dl, 'listener') and dl.seeding:

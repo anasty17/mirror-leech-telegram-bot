@@ -163,11 +163,10 @@ class YoutubeDLHelper:
         else:
             outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
             realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
-            ext = realName.rsplit('.', 1)[-1]
             if name == "":
-                newname = realName.split(f" [{result['id'].replace('*', '_')}]")
-                self.name = f'{newname[0]}.{ext}' if len(newname) > 1 else newname[0]
+                self.name = realName
             else:
+                ext = realName.rsplit('.', 1)[-1]
                 self.name = f"{name}.{ext}"
 
     def __download(self, link, path):

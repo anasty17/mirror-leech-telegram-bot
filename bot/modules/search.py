@@ -6,7 +6,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 from json import loads as jsonloads
 
 from bot import dispatcher, LOGGER, config_dict, get_client
-from bot.helper.telegram_helper.message_utils import editMessage, sendMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -53,19 +53,19 @@ def torser(update, context):
         buttons.sbutton('Recent', f"torser {user_id} apirecent")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
-        sendMarkup("Send a search key along with command", context.bot, update.message, button)
+        sendMessage("Send a search key along with command", context.bot, update.message, button)
     elif SITES is not None and SEARCH_PLUGINS:
         buttons.sbutton('Api', f"torser {user_id} apisearch")
         buttons.sbutton('Plugins', f"torser {user_id} plugin")
         buttons.sbutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
-        sendMarkup('Choose tool to search:', context.bot, update.message, button)
+        sendMessage('Choose tool to search:', context.bot, update.message, button)
     elif SITES is not None:
         button = __api_buttons(user_id, "apisearch")
-        sendMarkup('Choose site to search:', context.bot, update.message, button)
+        sendMessage('Choose site to search:', context.bot, update.message, button)
     else:
         button = __plugin_buttons(user_id)
-        sendMarkup('Choose site to search:', context.bot, update.message, button)
+        sendMessage('Choose site to search:', context.bot, update.message, button)
 
 def torserbut(update, context):
     query = update.callback_query
@@ -259,8 +259,8 @@ def __plugin_buttons(user_id):
 initiate_search_tools()
 
 torser_handler = CommandHandler(BotCommands.SearchCommand, torser,
-                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-torserbut_handler = CallbackQueryHandler(torserbut, pattern="torser", run_async=True)
+                                filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+torserbut_handler = CallbackQueryHandler(torserbut, pattern="torser")
 
 dispatcher.add_handler(torser_handler)
 dispatcher.add_handler(torserbut_handler)

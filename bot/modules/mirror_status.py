@@ -45,8 +45,8 @@ def status_pages(update, context):
 
 
 mirror_status_handler = CommandHandler(BotCommands.StatusCommand, mirror_status,
-                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-status_pages_handler = CallbackQueryHandler(status_pages, pattern="status", run_async=True)
+                                      filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+status_pages_handler = CallbackQueryHandler(status_pages, pattern="status")
 
 dispatcher.add_handler(mirror_status_handler)
 dispatcher.add_handler(status_pages_handler)

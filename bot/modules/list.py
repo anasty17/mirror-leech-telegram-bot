@@ -3,7 +3,7 @@ from telegram.ext import CommandHandler, CallbackQueryHandler
 
 from bot import LOGGER, dispatcher
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -18,7 +18,7 @@ def list_buttons(update, context):
     buttons.sbutton("Both", f"types {user_id} both")
     buttons.sbutton("Cancel", f"types {user_id} cancel")
     button = buttons.build_menu(2)
-    sendMarkup('Choose option to list.', context.bot, update.message, button)
+    sendMessage('Choose option to list.', context.bot, update.message, button)
 
 def select_type(update, context):
     query = update.callback_query
@@ -48,8 +48,8 @@ def _list_drive(key, bmsg, item_type):
 
 
 list_handler = CommandHandler(BotCommands.ListCommand, list_buttons,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-list_type_handler = CallbackQueryHandler(select_type, pattern="types", run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+list_type_handler = CallbackQueryHandler(select_type, pattern="types")
 
 dispatcher.add_handler(list_handler)
 dispatcher.add_handler(list_type_handler)

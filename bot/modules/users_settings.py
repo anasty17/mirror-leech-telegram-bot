@@ -6,7 +6,7 @@ from functools import partial
 from html import escape
 
 from bot import user_data, dispatcher, config_dict, DATABASE_URL
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -60,7 +60,7 @@ def update_user_settings(message, from_user):
 
 def user_settings(update, context):
     msg, button = get_user_settings(update.message.from_user)
-    buttons_msg = sendMarkup(msg, context.bot, update.message, button)
+    sendMessage(msg, context.bot, update.message, button)
 
 def set_yt_quality(update, context, omsg):
     message = update.message
@@ -136,7 +136,7 @@ def edit_user_settings(update, context):
         editMessage('Send a photo to save it as custom thumbnail. Timeout: 60 sec', message, buttons.build_menu(1))
         partial_fnc = partial(set_thumb, omsg=message)
         photo_handler = MessageHandler(filters=Filters.photo & Filters.chat(message.chat.id) & Filters.user(user_id),
-                                       callback=partial_fnc, run_async=True)
+                                       callback=partial_fnc)
         dispatcher.add_handler(photo_handler)
         while handler_dict[user_id]:
             if time() - start_time > 60:
@@ -163,7 +163,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         editMessage(rmsg, message, buttons.build_menu(1))
         partial_fnc = partial(set_yt_quality, omsg=message)
         value_handler = MessageHandler(filters=Filters.text & Filters.chat(message.chat.id) & Filters.user(user_id),
-                                       callback=partial_fnc, run_async=True)
+                                       callback=partial_fnc)
         dispatcher.add_handler(value_handler)
         while handler_dict[user_id]:
             if time() - start_time > 60:
@@ -194,10 +194,10 @@ def send_users_settings(update, context):
         sendMessage('No users data!', context.bot, update.message)
 
 users_settings_handler = CommandHandler(BotCommands.UsersCommand, send_users_settings,
-                                            filters=CustomFilters.owner_filter | CustomFilters.sudo_user, run_async=True)
+                                            filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
 user_set_handler = CommandHandler(BotCommands.UserSetCommand, user_settings,
-                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-but_set_handler = CallbackQueryHandler(edit_user_settings, pattern="userset", run_async=True)
+                                   filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+but_set_handler = CallbackQueryHandler(edit_user_settings, pattern="userset")
 
 dispatcher.add_handler(user_set_handler)
 dispatcher.add_handler(but_set_handler)

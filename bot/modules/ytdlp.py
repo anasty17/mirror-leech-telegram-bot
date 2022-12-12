@@ -4,7 +4,7 @@ from time import sleep
 from re import split as re_split
 
 from bot import DOWNLOAD_DIR, dispatcher, config_dict, user_data
-from bot.helper.telegram_helper.message_utils import sendMessage, sendMarkup, editMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
@@ -28,7 +28,9 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     if len(args) > 1:
         for x in args:
             x = x.strip()
-            if x == 's':
+            if x in ['|', 'pswd:', 'opt:']:
+                break
+            elif x == 's':
                select = True
                index += 1
             elif x.strip().isdigit():
@@ -42,7 +44,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
                     link = ''
                 else:
                     link = re_split(r"opt:|pswd:|\|", link)[0]
-                    link = link.strip()     
+                    link = link.strip()
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
@@ -84,7 +86,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
 <b>Quality Buttons:</b>
 Incase default quality added but you need to select quality for specific link or links with multi links feature.
 <code>/cmd</code> s link
-This perfix should be always before |newname, pswd: and opt:
+This option should be always before |newname, pswd: and opt:
 
 <b>Options Example:</b> opt: playliststart:^10|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
 
@@ -97,9 +99,10 @@ Like playlist_items:10 works with string, so no need to add `^` before the numbe
 You can add tuple and dict also. Use double quotes inside dict.
 
 <b>NOTE:</b>
-You can add perfix randomly before link those for select (s) and mutli links (number).
-You can't add perfix randomly after link. They should be arranged like exmaple above, rename then pswd then opt. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
-You can always add video quality from yt-dlp api options.
+1. When use cmd by reply don't add any option in link msg! always add them after cmd msg!
+2. Options (select quality (s) and mutli links (number)) can be add randomly before link or any other option.
+3. Options (rename, pswd, opt) should be arranged like exmaple above, rename then pswd then opt and after the link if link along with the cmd or after cmd if by reply. If you don't want to add pswd for example then it will be (|newname opt:), just don't change the arrangement.
+4. You can always add video quality from yt-dlp api options.
 
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L178'>FILE</a>.
         """
@@ -147,7 +150,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(3)
             listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
-            bmsg = sendMarkup('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
+            bmsg = sendMessage('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
         else:
             formats = result.get('formats')
             if formats is not None:
@@ -197,7 +200,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(2)
             listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
-            bmsg = sendMarkup('Choose Video Quality:', bot, message, YTBUTTONS)
+            bmsg = sendMessage('Choose Video Quality:', bot, message, YTBUTTONS)
 
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
@@ -312,14 +315,14 @@ def ytdlZipleech(update, context):
 
 
 ytdl_handler = CommandHandler(BotCommands.YtdlCommand, ytdl,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_zip_handler = CommandHandler(BotCommands.YtdlZipCommand, ytdlZip,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_leech_handler = CommandHandler(BotCommands.YtdlLeechCommand, ytdlleech,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
 ytdl_zip_leech_handler = CommandHandler(BotCommands.YtdlZipLeechCommand, ytdlZipleech,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user, run_async=True)
-quality_handler = CallbackQueryHandler(select_format, pattern="qu", run_async=True)
+                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
+quality_handler = CallbackQueryHandler(select_format, pattern="qu")
 
 dispatcher.add_handler(ytdl_handler)
 dispatcher.add_handler(ytdl_zip_handler)

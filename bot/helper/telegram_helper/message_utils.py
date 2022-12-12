@@ -1,5 +1,4 @@
 from time import sleep, time
-from telegram import InlineKeyboardMarkup
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
 from os import remove
@@ -8,38 +7,32 @@ from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, 
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
 
 
-def sendMessage(text, bot, message):
+def sendMessage(text, bot, message, reply_markup=None):
     try:
-        return bot.sendMessage(message.chat_id,
-                            reply_to_message_id=message.message_id,
-                            text=text, allow_sending_without_reply=True, parse_mode='HTML', disable_web_page_preview=True)
+        return bot.sendMessage(message.chat_id, reply_to_message_id=message.message_id,
+                               text=text, reply_markup=reply_markup)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMessage(text, bot, message)
+        return sendMessage(text, bot, message, reply_markup)
     except Exception as e:
         LOGGER.error(str(e))
         return
 
-def sendMarkup(text, bot, message, reply_markup: InlineKeyboardMarkup):
+def sendPhoto(text, bot, message, photo):
     try:
-        return bot.sendMessage(message.chat_id,
-                            reply_to_message_id=message.message_id,
-                            text=text, reply_markup=reply_markup, allow_sending_without_reply=True,
-                            parse_mode='HTML', disable_web_page_preview=True)
+        return bot.sendPhoto(message.chat_id, photo, text, reply_to_message_id=message.message_id)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendMarkup(text, bot, message, reply_markup)
+        return sendPhoto(text, bot, message, photo)
     except Exception as e:
         LOGGER.error(str(e))
         return
 
 def editMessage(text, message, reply_markup=None):
     try:
-        bot.editMessageText(text=text, message_id=message.message_id,
-                              chat_id=message.chat.id,reply_markup=reply_markup,
-                              parse_mode='HTML', disable_web_page_preview=True)
+        bot.editMessageText(text=text, message_id=message.message_id, chat_id=message.chat.id, reply_markup=reply_markup)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
@@ -51,7 +44,7 @@ def editMessage(text, message, reply_markup=None):
 def sendRss(text, bot):
     if not rss_session:
         try:
-            return bot.sendMessage(config_dict['RSS_CHAT_ID'], text, parse_mode='HTML', disable_web_page_preview=True)
+            return bot.sendMessage(config_dict['RSS_CHAT_ID'], text)
         except RetryAfter as r:
             LOGGER.warning(str(r))
             sleep(r.retry_after * 1.5)
@@ -87,7 +80,7 @@ def sendFile(bot, message, name, caption=""):
     try:
         with open(name, 'rb') as f:
             bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
-                             caption=caption, parse_mode='HTML',chat_id=message.chat_id)
+                             caption=caption, chat_id=message.chat_id)
         remove(name)
         return
     except RetryAfter as r:
@@ -98,11 +91,13 @@ def sendFile(bot, message, name, caption=""):
         LOGGER.error(str(e))
         return
 
-def auto_delete_message(bot, cmd_message, bot_message):
+def auto_delete_message(bot, cmd_message=None, bot_message=None):
     if config_dict['AUTO_DELETE_MESSAGE_DURATION'] != -1:
         sleep(config_dict['AUTO_DELETE_MESSAGE_DURATION'])
-        deleteMessage(bot, cmd_message)
-        deleteMessage(bot, bot_message)
+        if cmd_message is not None:
+            deleteMessage(bot, cmd_message)
+        if bot_message is not None:
+            deleteMessage(bot, bot_message)
 
 def delete_all_messages():
     with status_reply_dict_lock:

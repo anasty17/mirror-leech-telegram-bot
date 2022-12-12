@@ -4,7 +4,7 @@ from string import ascii_letters, digits
 from bot import download_dict, download_dict_lock, LOGGER, config_dict
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadStatus
-from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, sendMarkup
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.fs_utils import get_base_name
 
 
@@ -27,7 +27,7 @@ def add_gd_download(link, path, listener, newname):
             gmsg, button = GoogleDriveHelper().drive_list(gname, True)
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                return sendMarkup(msg, listener.bot, listener.message, button)
+                return sendMessage(msg, listener.bot, listener.message, button)
     LOGGER.info(f"Download Name: {name}")
     drive = GoogleDriveHelper(name, path, size, listener)
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
