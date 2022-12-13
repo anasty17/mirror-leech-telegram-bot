@@ -140,10 +140,7 @@ def sendStatusMessage(msg, bot):
             message = status_reply_dict[msg.chat.id][0]
             deleteMessage(bot, message)
             del status_reply_dict[msg.chat.id]
-        if buttons == "":
-            message = sendMessage(progress, bot, msg)
-        else:
-            message = sendMarkup(progress, bot, msg, buttons)
+        message = sendMessage(progress, bot, msg, buttons)
         status_reply_dict[msg.chat.id] = [message, time()]
         if not Interval:
             Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))

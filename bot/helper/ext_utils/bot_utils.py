@@ -106,8 +106,7 @@ def get_progress_bar_string(status):
     cFull = p // 8
     p_str = '■' * cFull
     p_str += '□' * (12 - cFull)
-    p_str = f"[{p_str}]"
-    return p_str
+    return f"[{p_str}]"
 
 def get_readable_message():
     with download_dict_lock:
@@ -176,7 +175,7 @@ def get_readable_message():
             buttons.sbutton("♻️", "status ref")
             button = buttons.build_menu(3)
             return msg + bmsg, button
-        return msg + bmsg, ""
+        return msg + bmsg, None
 
 def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
