@@ -424,4 +424,3 @@ updater = tgUpdater(token=BOT_TOKEN, defaults=tgDefaults, request_kwargs={'read_
 bot = updater.bot
 dispatcher = updater.dispatcher
 job_queue = updater.job_queue
-
