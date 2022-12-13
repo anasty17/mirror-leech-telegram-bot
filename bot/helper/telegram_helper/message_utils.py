@@ -121,10 +121,7 @@ def update_all_messages(force=False):
     with status_reply_dict_lock:
         for chat_id in status_reply_dict:
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
-                if buttons == "":
-                    rmsg = editMessage(msg, status_reply_dict[chat_id][0])
-                else:
-                    rmsg = editMessage(msg, status_reply_dict[chat_id][0], buttons)
+                rmsg = editMessage(msg, status_reply_dict[chat_id][0], buttons)
                 if rmsg == "Message to edit not found":
                     del status_reply_dict[chat_id]
                     return
