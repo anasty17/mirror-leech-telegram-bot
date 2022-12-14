@@ -48,11 +48,7 @@ def get_user_settings(from_user):
         ytq = 'None'
 
     buttons.sbutton("Thumbnail", f"userset {user_id} sthumb")
-    if ospath.exists(thumbpath):
-        thumbmsg = "Exists"
-    else:
-        thumbmsg = "Not Exists"
-
+    thumbmsg = "Exists" if ospath.exists(thumbpath) else "Not Exists"
     buttons.sbutton("Close", f"userset {user_id} close")
     text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
            f"Leech Type is <b>{ltype}</b>\n"\
@@ -183,7 +179,7 @@ def edit_user_settings(update, context):
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
         if user_dict and user_dict.get('yt_ql'):
-            buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", postion='header')
+            buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
 Send YT-DLP Qaulity. Timeout: 60 sec
