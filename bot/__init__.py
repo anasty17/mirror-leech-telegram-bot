@@ -282,13 +282,16 @@ if len(BASE_URL) == 0:
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
 if len(UPSTREAM_REPO) == 0:
    UPSTREAM_REPO = ''
-
+    
+REALDEBRID_KEY = environ.get('REALDEBRID_KEY', '')
+    
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
 if len(UPSTREAM_BRANCH) == 0:
     UPSTREAM_BRANCH = 'master'
 
 config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
+               'REALDEBRID_KEY': REALDEBRID_KEY,
                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                'BASE_URL': BASE_URL,
                'BOT_TOKEN': BOT_TOKEN,
