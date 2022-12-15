@@ -51,12 +51,12 @@ def start(update, context):
     reply_markup = buttons.build_menu(1)
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
         start_string = f'''
-This bot can mirror all your links to Google Drive or to telegram!
-Type /{BotCommands.HelpCommand} to get a list of available commands
+This bot can mirror all your links to GDrive or Telegram.
+Type /{BotCommands.HelpCommand} to get a list of available commands.
 '''
         sendMessage(start_string, context.bot, update.message, reply_markup)
     else:
-        sendMessage('Not an Authorized user, deploy your own mirror-leech bot', context.bot, update.message, reply_markup)
+        sendMessage('You are not an authorized user, deploy your own mirror-leech bot.', context.bot, update.message, reply_markup)
 
 def restart(update, context):
     restart_message = sendMessage("Restarting...", context.bot, update.message)
