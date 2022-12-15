@@ -21,9 +21,70 @@ from time import sleep
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
+realdebrid_key = config_dict["REALDEBRID_KEY"]
+turbobit_alts = ["turbobif.com", "turbobit.com", "turb.to", "turb.pw", "turb.cc", "turbo.to", "turbo.pw", "turbo.cc", "turbobit.net"]
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
-
+rd_list = ['rg.to','rapidgator.net','drop.download','4shared.com','bayfiles.com','dailymotion.com',
+'ddownload.com',
+'ddownload.org',
+'ddownload.to',
+'ddl.to',
+'drop.download',
+'dropapk.to',
+'file.al',
+'filefactory.com',
+'fastclickpremium.com',
+'easybytez.net',
+'filerio.in',
+'flashbit.cc',
+'gigapeta.com',
+'drive.google.com',
+'hexupload.net',
+'hitfile.net',
+'hulkshare.com',
+'isra.cloud',
+'katfile.com',
+'load.to',
+'mediafire.com',
+'mega.io',
+'mega.nz',
+'mixdrop.co',
+'mixdrp.co',
+'mixloads.com',
+'prefiles.com',
+'radiotunes.com',
+'rapidgator.net',
+'redtube.com',
+'scribd.com',
+'sendspace.com',
+'soundcloud.com',
+'streamta.site',
+'streamtape.click',
+'strtape.tech',
+'tusfiles.net',
+'ulozto.net',
+'uloz.to',
+'ulozto.cz',
+'ulozto.sk',
+'ulozto.cz',
+'upstream.se',
+'uptobox.com',
+'uptobox.fr',
+'userclouds.com',
+'usersdrive.com',
+'videobin.org',
+'vimeo.com',
+'vk.com',
+'wipfiles.net',
+'voe.sx',
+'vidoza.co',
+'vidoza.net',
+'wupfile.com',
+'salefiles.co',
+'youporn.com',
+'youtube.com',
+'zippyshare.com']
 
 def direct_link_generator(link: str):
     """ direct links generator """
@@ -65,12 +126,26 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in link:
         return uploadee(link)
+    elif 'upload.ee' in link:
+        return uploadee(link)
+    elif 'upload.ee' in link:
+        return uploadee(link)
+    elif is_turbobit(link):
+        return turbobit(link)
+    elif any(x in link for x in rd_list):
+        return rd(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
     else:
         raise DirectDownloadLinkException(f'No Direct link function found for {link}')
+
+def is_turbobit(url: str) -> bool:
+  for alt in turbobit_alts:
+      if alt in url:
+          return True
+  return False
 
 def yandex_disk(url: str) -> str:
     """ Yandex.Disk direct link generator
@@ -267,57 +342,15 @@ def fichier(link: str) -> str:
     gan = re_match(regex, link)
     if not gan:
       raise DirectDownloadLinkException("ERROR: The link you entered is wrong!")
-    if "::" in link:
-      pswd = link.split("::")[-1]
-      url = link.split("::")[-2]
-    else:
-      pswd = None
-      url = link
-    try:
-      if pswd is None:
-        req = rpost(url)
-      else:
-        pw = {"pass": pswd}
-        req = rpost(url, data=pw)
-    except:
-      raise DirectDownloadLinkException("ERROR: Unable to reach 1fichier server!")
-    if req.status_code == 404:
-      raise DirectDownloadLinkException("ERROR: File not found/The link you entered is wrong!")
-    soup = BeautifulSoup(req.content, 'lxml')
-    if soup.find("a", {"class": "ok btn-general btn-orange"}) is not None:
-        dl_url = soup.find("a", {"class": "ok btn-general btn-orange"})["href"]
-        if dl_url is None:
-          raise DirectDownloadLinkException("ERROR: Unable to generate Direct Link 1fichier!")
-        else:
-          return dl_url
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 3:
-        str_2 = soup.find_all("div", {"class": "ct_warn"})[-1]
-        if "you must wait" in str(str_2).lower():
-            numbers = [int(word) for word in str(str_2).split() if word.isdigit()]
-            if not numbers:
-                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-            else:
-                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
-        elif "protect access" in str(str_2).lower():
-          raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
-        else:
-            print(str_2)
-            raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
-    elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:
-        str_1 = soup.find_all("div", {"class": "ct_warn"})[-2]
-        str_3 = soup.find_all("div", {"class": "ct_warn"})[-1]
-        if "you must wait" in str(str_1).lower():
-            numbers = [int(word) for word in str(str_1).split() if word.isdigit()]
-            if not numbers:
-                raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
-            else:
-                raise DirectDownloadLinkException(f"ERROR: 1fichier is on a limit. Please wait {numbers[0]} minute.")
-        elif "bad password" in str(str_3).lower():
-          raise DirectDownloadLinkException("ERROR: The password you entered is wrong!")
-        else:
-            raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
-    else:
-        raise DirectDownloadLinkException("ERROR: Error trying to generate Direct Link from 1fichier!")
+    return rd_unrestrict(url)
+
+def turbobit(url: str) -> str:
+  for alt in turbobit_alts:
+      if alt in url:
+          url = url.replace(alt, "turbobit.net")
+  return rd_unrestrict(url)
+def rd(url: str) -> str:
+  return rd_unrestrict(url)
 
 def solidfiles(url: str) -> str:
     """ Solidfiles direct link generator
@@ -376,3 +409,14 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+
+def rd_unrestrict(link: str) -> str:
+    if (len(realdebrid_key) == 0):
+        raise DirectDownloadLinkException("Cant download.. Check if Real Debrid key is up")
+    rd_form_data = {'link': link}
+    rd_req = rpost("https://api.real-debrid.com/rest/1.0/unrestrict/link", data=rd_form_data,headers={ "authorization": "Bearer " + realdebrid_key, "Content-Type": "multipart/form-data"})
+    rd_data = rd_req.json()
+    if ("download" in rd_data):
+      return rd_data["download"]
+    else:
+      raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
