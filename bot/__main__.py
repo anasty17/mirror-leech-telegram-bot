@@ -50,10 +50,7 @@ def start(update, context):
     buttons.buildbutton("Source Code", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
     reply_markup = buttons.build_menu(1)
     if CustomFilters.authorized_user(update) or CustomFilters.authorized_chat(update):
-        start_string = f'''
-This bot can mirror all your links to GDrive or Telegram.
-Type /{BotCommands.HelpCommand} to get a list of available commands.
-'''
+        start_string = f'This bot can mirror all your links to GDrive or Telegram. Type /{BotCommands.HelpCommand} to get a list of available commands.'
         sendMessage(start_string, context.bot, update.message, reply_markup)
     else:
         sendMessage('You are not an authorized user, deploy your own mirror-leech bot.', context.bot, update.message, reply_markup)
