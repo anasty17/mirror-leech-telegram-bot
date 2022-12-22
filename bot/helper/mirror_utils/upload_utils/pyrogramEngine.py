@@ -63,6 +63,9 @@ class TgUploader:
                     sleep(1)
         if self.__listener.seed and not self.__listener.newDir:
             clean_unwanted(self.__path)
+        if self.__total_files == 0:
+            self.__listener.onUploadError('No files to upload. Make sure if you filled USER_SESSION_STRING then you should use supergroup. In case you filled EXTENSION_FILTER then check if all file have this extension')
+            return
         if self.__total_files <= self.__corrupted:
             self.__listener.onUploadError('Files Corrupted. Check logs!')
             return
@@ -71,9 +74,9 @@ class TgUploader:
         self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     def __upload_file(self, up_path, file_, dirpath):
-        if LEECH_FILENAME_PERFIX := config_dict['LEECH_FILENAME_PERFIX']:
-            cap_mono = f"{LEECH_FILENAME_PERFIX} <code>{file_}</code>"
-            file_ = f"{LEECH_FILENAME_PERFIX} {file_}"
+        if LEECH_FILENAME_PREFIX := config_dict['LEECH_FILENAME_PREFIX']:
+            cap_mono = f"{LEECH_FILENAME_PREFIX} <code>{file_}</code>"
+            file_ = f"{LEECH_FILENAME_PREFIX} {file_}"
             new_path = ospath.join(dirpath, file_)
             osrename(up_path, new_path)
             up_path = new_path

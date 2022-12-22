@@ -4,7 +4,6 @@ from time import time, sleep
 from os import remove, rename, path as ospath, environ
 from subprocess import run as srun, Popen
 from dotenv import load_dotenv
-from shutil import rmtree
 
 from bot import config_dict, dispatcher, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages
@@ -13,6 +12,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import new_thread, setInterval
 from bot.helper.ext_utils.db_handler import DbManger
+from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.modules.search import initiate_search_tools
 
 START = 0
@@ -109,9 +109,9 @@ def load_config():
     if len(RSS_COMMAND) == 0:
         RSS_COMMAND = ''
 
-    LEECH_FILENAME_PERFIX = environ.get('LEECH_FILENAME_PERFIX', '')
-    if len(LEECH_FILENAME_PERFIX) == 0:
-        LEECH_FILENAME_PERFIX = ''
+    LEECH_FILENAME_PREFIX = environ.get('LEECH_FILENAME_PREFIX', '')
+    if len(LEECH_FILENAME_PREFIX) == 0:
+        LEECH_FILENAME_PREFIX = ''
 
     SEARCH_PLUGINS = environ.get('SEARCH_PLUGINS', '')
     if len(SEARCH_PLUGINS) == 0:
@@ -192,6 +192,15 @@ def load_config():
         if DATABASE_URL:
             DbManger().update_aria2('bt-stop-timeout', TORRENT_TIMEOUT)
         TORRENT_TIMEOUT = int(TORRENT_TIMEOUT)
+
+    QUEUE_ALL = environ.get('QUEUE_ALL', '')
+    QUEUE_ALL = '' if len(QUEUE_ALL) == 0 else int(QUEUE_ALL)
+
+    QUEUE_DOWNLOAD = environ.get('QUEUE_DOWNLOAD', '')
+    QUEUE_DOWNLOAD = '' if len(QUEUE_DOWNLOAD) == 0 else int(QUEUE_DOWNLOAD)
+
+    QUEUE_UPLOAD = environ.get('QUEUE_UPLOAD', '')
+    QUEUE_UPLOAD = '' if len(QUEUE_UPLOAD) == 0 else int(QUEUE_UPLOAD)
 
     INCOMPLETE_TASK_NOTIFIER = environ.get('INCOMPLETE_TASK_NOTIFIER', '')
     INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == 'true'
@@ -279,12 +288,15 @@ def load_config():
                         'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                         'INDEX_URL': INDEX_URL,
                         'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
-                        'LEECH_FILENAME_PERFIX': LEECH_FILENAME_PERFIX,
+                        'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                         'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                         'MEGA_API_KEY': MEGA_API_KEY,
                         'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                         'MEGA_PASSWORD': MEGA_PASSWORD,
                         'OWNER_ID': OWNER_ID,
+                        'QUEUE_ALL': QUEUE_ALL,
+                        'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
+                        'QUEUE_UPLOAD': QUEUE_UPLOAD,
                         'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                         'RSS_CHAT_ID': RSS_CHAT_ID,
                         'RSS_COMMAND': RSS_COMMAND,
@@ -311,6 +323,7 @@ def load_config():
 
     if DATABASE_URL:
         DbManger().update_config(config_dict)
+    start_from_queued()
 
 def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
@@ -332,7 +345,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Close', "botset close")
         for x in range(0, len(config_dict)-1, 10):
             buttons.sbutton(int(x/10), f"botset start var {x}", position='footer')
-        msg = f'Bot Variables. Page: {int(START/10)}. State: {STATE}'
+        msg = f'Config Variables | Page: {int(START/10)} | State: {STATE}'
     elif key == 'private':
         buttons.sbutton('Back', "botset back")
         buttons.sbutton('Close', "botset close")
@@ -350,7 +363,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Close', "botset close")
         for x in range(0, len(aria2_options)-1, 10):
             buttons.sbutton(int(x/10), f"botset start aria {x}", position='footer')
-        msg = f'Aria2c Options. Page: {int(START/10)}. State: {STATE}'
+        msg = f'Aria2c Options | Page: {int(START/10)} | State: {STATE}'
     elif key == 'qbit':
         for k in list(qbit_options.keys())[START:10+START]:
             buttons.sbutton(k, f"botset editqbit {k}")
@@ -362,7 +375,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Close', "botset close")
         for x in range(0, len(qbit_options)-1, 10):
             buttons.sbutton(int(x/10), f"botset start qbit {x}", position='footer')
-        msg = f'Qbittorrent Options. Page: {int(START/10)}. State: {STATE}'
+        msg = f'Qbittorrent Options | Page: {int(START/10)} | State: {STATE}'
     elif edit_type == 'editvar':
         buttons.sbutton('Back', "botset back var")
         if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
@@ -455,6 +468,8 @@ def edit_variable(update, context, omsg, key):
     update.message.delete()
     if DATABASE_URL:
         DbManger().update_config({key: value})
+    if key in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
+        start_from_queued()
 
 def edit_aria(update, context, omsg, key):
     handler_dict[omsg.chat.id] = False
@@ -506,15 +521,15 @@ def update_private_file(update, context, omsg):
     if not message.document and message.text:
         file_name = message.text
         fn = file_name.rsplit('.zip', 1)[0]
-        if ospath.exists(fn):
-            if fn == 'accounts':
-                rmtree(fn)
-                config_dict['USE_SERVICE_ACCOUNTS'] = False
-                if DATABASE_URL:
-                    DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
-            else:
-                remove(fn)
-        if file_name in ['.netrc', 'netrc']:
+        if ospath.isfile(fn):
+            remove(fn)
+        if fn == 'accounts':
+            if ospath.exists('accounts'):
+                srun(["rm", "-rf", "accounts"])
+            config_dict['USE_SERVICE_ACCOUNTS'] = False
+            if DATABASE_URL:
+                DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
+        elif file_name in ['.netrc', 'netrc']:
             srun(["touch", ".netrc"])
             srun(["cp", ".netrc", "/root/.netrc"])
             srun(["chmod", "600", ".netrc"])
@@ -587,6 +602,8 @@ def edit_bot_settings(update, context):
         query.answer()
         handler_dict[message.chat.id] = False
         key = data[2] if len(data) == 3 else None
+        if key is None:
+            globals()['START'] = 0
         update_buttons(message, key)
     elif data[1] in ['var', 'aria', 'qbit']:
         query.answer()
@@ -637,6 +654,8 @@ def edit_bot_settings(update, context):
         update_buttons(message, 'var')
         if DATABASE_URL:
             DbManger().update_config({data[2]: value})
+        if data[2] in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
+            start_from_queued()
     elif data[1] == 'resetaria':
         handler_dict[message.chat.id] = False
         aria2_defaults = aria2.client.get_global_option()
@@ -817,6 +836,7 @@ def edit_bot_settings(update, context):
 
 def bot_settings(update, context):
     msg, button = get_buttons()
+    globals()['START'] = 0
     sendMessage(msg, context.bot, update.message, button)
 
 

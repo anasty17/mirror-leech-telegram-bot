@@ -319,9 +319,15 @@ class GoogleDriveHelper:
                     ]:
                         raise err
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        self.__switchServiceAccount()
-                        LOGGER.info(f"Got: {reason}, Trying Again.")
-                        return self.__upload_file(file_path, file_name, mime_type, dest_id)
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
+                            LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
+                            raise err
+                        else:
+                            if self.__is_cancelled:
+                                return
+                            self.__switchServiceAccount()
+                            LOGGER.info(f"Got: {reason}, Trying Again.")
+                            return self.__upload_file(file_path, file_name, mime_type, dest_id)
                     else:
                         LOGGER.error(f"Got: {reason}")
                         raise err
@@ -439,10 +445,12 @@ class GoogleDriveHelper:
                 reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
                 if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
                             LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
+                            if self.__is_cancelled:
+                                return
                             self.__switchServiceAccount()
                             return self.__copyFile(file_id, dest_id)
                     else:
@@ -796,10 +804,12 @@ class GoogleDriveHelper:
                     ]:
                         raise err
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
                             LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
+                            if self.__is_cancelled:
+                                return
                             self.__switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again...")
                             return self.__download_file(file_id, path, filename, mime_type)
