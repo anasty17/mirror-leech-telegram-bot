@@ -4,6 +4,7 @@ from time import time, sleep
 from os import remove, rename, path as ospath, environ
 from subprocess import run as srun, Popen
 from dotenv import load_dotenv
+from shutil import rmtree
 
 from bot import config_dict, dispatcher, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages
@@ -506,12 +507,14 @@ def update_private_file(update, context, omsg):
         file_name = message.text
         fn = file_name.rsplit('.zip', 1)[0]
         if ospath.exists(fn):
-            remove(fn)
-        if fn == 'accounts':
-            config_dict['USE_SERVICE_ACCOUNTS'] = False
-            if DATABASE_URL:
-                DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
-        elif file_name in ['.netrc', 'netrc']:
+            if fn == 'accounts':
+                rmtree(fn)
+                config_dict['USE_SERVICE_ACCOUNTS'] = False
+                if DATABASE_URL:
+                    DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
+            else:
+                remove(fn)
+        if file_name in ['.netrc', 'netrc']:
             srun(["touch", ".netrc"])
             srun(["cp", ".netrc", "/root/.netrc"])
             srun(["chmod", "600", ".netrc"])
