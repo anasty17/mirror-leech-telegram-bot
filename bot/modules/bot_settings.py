@@ -270,8 +270,6 @@ def load_config():
                 else:
                     INDEX_URLS.append('')
 
-    initiate_search_tools()
-
     config_dict.update({'AS_DOCUMENT': AS_DOCUMENT,
                         'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                         'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
@@ -323,6 +321,7 @@ def load_config():
 
     if DATABASE_URL:
         DbManger().update_config(config_dict)
+    initiate_search_tools()
     start_from_queued()
 
 def get_buttons(key=None, edit_type=None):
@@ -449,8 +448,6 @@ def edit_variable(update, context, omsg, key):
         GLOBAL_EXTENSION_FILTER.append('.aria2')
         for x in fx:
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
-    elif key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
-        initiate_search_tools()
     elif key == 'GDRIVE_ID':
         if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
             DRIVES_IDS[0] = value
@@ -468,7 +465,9 @@ def edit_variable(update, context, omsg, key):
     update.message.delete()
     if DATABASE_URL:
         DbManger().update_config({key: value})
-    if key in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
+    if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
+        initiate_search_tools()
+    elif key in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
         start_from_queued()
 
 def edit_aria(update, context, omsg, key):
@@ -654,7 +653,9 @@ def edit_bot_settings(update, context):
         update_buttons(message, 'var')
         if DATABASE_URL:
             DbManger().update_config({data[2]: value})
-        if data[2] in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
+        if data[2] in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
+            initiate_search_tools()
+        elif data[2] in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
             start_from_queued()
     elif data[1] == 'resetaria':
         handler_dict[message.chat.id] = False

@@ -1,6 +1,5 @@
 from os import remove as osremove, path as ospath, mkdir, walk, listdir, rmdir, makedirs
 from sys import exit as sysexit
-from json import loads as jsonloads
 from shutil import rmtree
 from PIL import Image
 from magic import Magic
@@ -210,7 +209,7 @@ def get_media_info(path):
         LOGGER.error(f'{e}. Mostly file not found!')
         return 0, None, None
 
-    fields = jsonloads(result).get('format')
+    fields = eval(result).get('format')
     if fields is None:
         LOGGER.error(f"get_media_info: {result}")
         return 0, None, None
@@ -251,7 +250,7 @@ def get_media_streams(path):
         LOGGER.error(f'{e}. Mostly file not found!')
         return is_video, is_audio
 
-    fields = jsonloads(result).get('streams')
+    fields = eval(result).get('streams')
     if fields is None:
         LOGGER.error(f"get_media_streams: {result}")
         return is_video, is_audio
