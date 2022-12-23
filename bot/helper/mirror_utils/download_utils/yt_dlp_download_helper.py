@@ -271,6 +271,6 @@ class YoutubeDLHelper:
             elif varg.startswith('(') and varg.endswith(')'):
                 varg = varg.replace('(', '').replace(')', '')
                 varg = tuple(map(int, varg.split(',')))
-            elif varg.startswith('{') and varg.endswith('}'):
+            elif varg.startswith(('{', '[')) and varg.endswith(('}', ']')):
                 varg = jsonloads(varg)
             self.opts[karg] = varg
