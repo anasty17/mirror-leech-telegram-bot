@@ -114,10 +114,7 @@ class MirrorLeechListener:
                         for file_ in files:
                             if re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
                                 f_path = ospath.join(dirpath, file_)
-                                if self.seed:
-                                    t_path = dirpath.replace(self.dir, self.newDir)
-                                else:
-                                    t_path = dirpath
+                                t_path = dirpath.replace(self.dir, self.newDir) if self.seed else dirpath
                                 if self.pswd is not None:
                                     self.suproc = Popen(["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot"])
                                 else:
@@ -321,7 +318,6 @@ class MirrorLeechListener:
         start_from_queued()
 
     def onDownloadError(self, error):
-        error = error.replace('<', ' ').replace('>', ' ')
         clean_download(self.dir)
         if self.newDir:
             clean_download(self.newDir)
@@ -329,7 +325,7 @@ class MirrorLeechListener:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
             count = len(download_dict)
-        msg = f"{self.tag} your download has been stopped due to: {error}"
+        msg = f"{self.tag} your download has been stopped due to: {escape(error)}"
         sendMessage(msg, self.bot, self.message)
         if count == 0:
             self.clean()
@@ -353,7 +349,6 @@ class MirrorLeechListener:
         start_from_queued()
 
     def onUploadError(self, error):
-        e_str = error.replace('<', '').replace('>', '')
         clean_download(self.dir)
         if self.newDir:
             clean_download(self.newDir)
@@ -361,7 +356,7 @@ class MirrorLeechListener:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
             count = len(download_dict)
-        sendMessage(f"{self.tag} {e_str}", self.bot, self.message)
+        sendMessage(f"{self.tag} {escape(error)}", self.bot, self.message)
         if count == 0:
             self.clean()
         else:

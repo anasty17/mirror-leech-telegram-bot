@@ -8,7 +8,8 @@ from re import search as re_search
 from json import loads as jsonloads
 
 from bot import download_dict_lock, download_dict, config_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock
-from bot.helper.telegram_helper.message_utils import sendStatusMessage
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from ..status_utils.yt_dlp_download_status import YtDlpDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 
@@ -215,6 +216,17 @@ class YoutubeDLHelper:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
+        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.__listener.isLeech:
+            LOGGER.info('Checking File/Folder if already in Drive...')
+            sname = self.name
+            if self.__listener.isZip:
+                sname = f"{self.name}.zip"
+            if sname:
+                smsg, button = GoogleDriveHelper().drive_list(name, True)
+                if smsg:
+                    self.__onDownloadError('File/Folder already available in Drive.\n')
+                    sendMessage('Here are the search results:', self.__listener.bot, self.__listener.message, button)
+                    return
         all_limit = config_dict['QUEUE_ALL']
         dl_limit = config_dict['QUEUE_DOWNLOAD']
         if all_limit or dl_limit:
