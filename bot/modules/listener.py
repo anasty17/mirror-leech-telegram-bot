@@ -202,12 +202,12 @@ class MirrorLeechListener:
 
         up_limit = config_dict['QUEUE_UPLOAD']
         all_limit = config_dict['QUEUE_ALL']
-        added_to_queue = True
+        added_to_queue = False
         with queue_dict_lock:
             dl = len(non_queued_dl)
             up = len(non_queued_up)
-            added_to_queue = False
             if (all_limit and dl + up >= all_limit and (not up_limit or up >= up_limit)) or (up_limit and up >= up_limit):
+                added_to_queue = True
                 LOGGER.info(f"Added to Queue/Upload: {name}")
                 queued_up[self.uid] = [self]
         if added_to_queue:
