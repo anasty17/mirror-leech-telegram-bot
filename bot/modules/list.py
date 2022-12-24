@@ -13,12 +13,10 @@ def list_buttons(update, context):
     if len(context.args) == 0:
         return sendMessage('Send a search key along with command', context.bot, update.message)
     buttons = ButtonMaker()
-    buttons.sbutton("Folders", f"types {user_id} folders")
-    buttons.sbutton("Files", f"types {user_id} files")
-    buttons.sbutton("Both", f"types {user_id} both")
+    buttons.sbutton("Find", f"types {user_id} both")
     buttons.sbutton("Cancel", f"types {user_id} cancel")
     button = buttons.build_menu(2)
-    sendMessage('Choose option to list.', context.bot, update.message, button)
+    sendMessage('Choose option to list!', context.bot, update.message, button)
 
 def select_type(update, context):
     query = update.callback_query
