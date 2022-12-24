@@ -5,11 +5,12 @@ from logging import getLogger
 from yt_dlp import YoutubeDL, DownloadError
 from threading import RLock
 from re import search as re_search
-from json import loads as jsonloads
 
-from bot import download_dict_lock, download_dict
-from bot.helper.telegram_helper.message_utils import sendStatusMessage
+from bot import download_dict_lock, download_dict, config_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from ..status_utils.yt_dlp_download_status import YtDlpDownloadStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 
 LOGGER = getLogger(__name__)
 
@@ -116,11 +117,15 @@ class YoutubeDLHelper:
                 except:
                     pass
 
-    def __onDownloadStart(self):
+    def __onDownloadStart(self, from_queue):
         with download_dict_lock:
             download_dict[self.__listener.uid] = YtDlpDownloadStatus(self, self.__listener, self.__gid)
-        self.__listener.onDownloadStart()
-        sendStatusMessage(self.__listener.message, self.__listener.bot)
+        if not from_queue:
+            self.__listener.onDownloadStart()
+            sendStatusMessage(self.__listener.message, self.__listener.bot)
+            LOGGER.info(f'Download with YT_DLP: {self.name}')
+        else:
+            LOGGER.info(f'Start Queued Download with YT_DLP: {self.name}')
 
     def __onDownloadComplete(self):
         self.__listener.onDownloadComplete()
@@ -187,19 +192,18 @@ class YoutubeDLHelper:
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
-    def add_download(self, link, path, name, qual, playlist, args):
+    def add_download(self, link, path, name, qual, playlist, args, from_queue=False):
         if playlist:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
         self.__gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-        self.__onDownloadStart()
+        self.__onDownloadStart(from_queue)
         if qual.startswith('ba/b-'):
             mp3_info = qual.split('-')
             qual = mp3_info[0]
             rate = mp3_info[1]
             self.opts['postprocessors'] = [{'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
         self.opts['format'] = qual
-        LOGGER.info(f"Downloading with YT-DLP: {link}")
         self.extractMetaData(link, name, args)
         if self.__is_cancelled:
             return
@@ -211,6 +215,36 @@ class YoutubeDLHelper:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
+        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.__listener.isLeech:
+            LOGGER.info('Checking File/Folder if already in Drive...')
+            sname = self.name
+            if self.__listener.isZip:
+                sname = f"{self.name}.zip"
+            if sname:
+                smsg, button = GoogleDriveHelper().drive_list(name, True)
+                if smsg:
+                    self.__onDownloadError('File/Folder already available in Drive.\n')
+                    sendMessage('Here are the search results:', self.__listener.bot, self.__listener.message, button)
+                    return
+        all_limit = config_dict['QUEUE_ALL']
+        dl_limit = config_dict['QUEUE_DOWNLOAD']
+        if all_limit or dl_limit:
+            added_to_queue = False
+            with queue_dict_lock:
+                dl = len(non_queued_dl)
+                up = len(non_queued_up)
+                if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
+                    added_to_queue = True
+                    queued_dl[self.__listener.uid] = ['yt', link, path, name, qual, playlist, args, self.__listener]
+            if added_to_queue:
+                LOGGER.info(f"Added to Queue/Download: {self.name}")
+                with download_dict_lock:
+                    download_dict[self.__listener.uid] = QueueStatus(self.name, self.__size, self.__gid, self.__listener, 'Dl')
+                self.__listener.onDownloadStart()
+                sendStatusMessage(self.__listener.message, self.__listener.bot)
+                return
+        with queue_dict_lock:
+            non_queued_dl.add(self.__listener.uid)
         self.__download(link, path)
 
     def cancel_download(self):
@@ -233,9 +267,6 @@ class YoutubeDLHelper:
                 varg = True
             elif varg.lower() == 'false':
                 varg = False
-            elif varg.startswith('(') and varg.endswith(')'):
-                varg = varg.replace('(', '').replace(')', '')
-                varg = tuple(map(int, varg.split(',')))
-            elif varg.startswith('{') and varg.endswith('}'):
-                varg = jsonloads(varg)
+            elif varg.startswith(('{', '[', '(')) and varg.endswith(('}', ']', ')')):
+                varg = eval(varg)
             self.opts[karg] = varg

@@ -49,6 +49,7 @@ def get_user_settings(from_user):
 
     buttons.sbutton("Thumbnail", f"userset {user_id} sthumb")
     thumbmsg = "Exists" if ospath.exists(thumbpath) else "Not Exists"
+
     buttons.sbutton("Close", f"userset {user_id} close")
     text = f"<u>Settings for <a href='tg://user?id={user_id}'>{name}</a></u>\n"\
            f"Leech Type is <b>{ltype}</b>\n"\

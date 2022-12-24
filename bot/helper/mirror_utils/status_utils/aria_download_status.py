@@ -63,7 +63,7 @@ class AriaDownloadStatus:
         self.__update()
         download = self.__download
         if download.is_waiting:
-            return MirrorStatus.STATUS_WAITING
+            return MirrorStatus.STATUS_QUEUEDL
         elif download.is_paused:
             return MirrorStatus.STATUS_PAUSED
         elif download.seeder and self.seeding:

@@ -24,6 +24,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Set upload as document or as media for each user
 - 4GB file upload with premium account
 - Upload all files to specific superGroup/channel.
+- Leech Split size and equal split size settings for each user
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download from Google Drive
@@ -77,6 +78,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
 - Extensions Filter for the files to be uploaded/cloned
 - View Link button. Extra button to open index link in broswer instead of direct download for file
+- Queueing System
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
@@ -179,7 +181,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Str`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
-- `LEECH_FILENAME_PERFIX`: Add custom word to leeched file name. `Str`
+- `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
 - `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with superGroup.
 
@@ -200,6 +202,11 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Str`
 - `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
+
+### Queue System
+- `QUEUE_ALL`: Number of parallel tasks of downloads from (mega, telegram, yt-dlp, gdrive) + all uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
+- `QUEUE_DOWNLOAD`: Number of parallel downloading tasks from mega, telegram, yt-dlp and gdrive. `Int`
+- `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
 
 ### Buttons
 - `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`

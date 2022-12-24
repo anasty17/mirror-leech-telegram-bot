@@ -1,7 +1,6 @@
 from logging import getLogger, ERROR
 from time import time
 from pickle import load as pload
-from json import loads as jsnloads
 from os import makedirs, path as ospath, listdir, remove as osremove
 from requests.utils import quote as rquote
 from io import FileIO
@@ -312,16 +311,22 @@ class GoogleDriveHelper:
                 self.__status, response = drive_file.next_chunk()
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
-                    reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                    reason = eval(err.content).get('error').get('errors')[0].get('reason')
                     if reason not in [
                         'userRateLimitExceeded',
                         'dailyLimitExceeded',
                     ]:
                         raise err
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        self.__switchServiceAccount()
-                        LOGGER.info(f"Got: {reason}, Trying Again.")
-                        return self.__upload_file(file_path, file_name, mime_type, dest_id)
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
+                            LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
+                            raise err
+                        else:
+                            if self.__is_cancelled:
+                                return
+                            self.__switchServiceAccount()
+                            LOGGER.info(f"Got: {reason}, Trying Again.")
+                            return self.__upload_file(file_path, file_name, mime_type, dest_id)
                     else:
                         LOGGER.error(f"Got: {reason}")
                         raise err
@@ -436,13 +441,15 @@ class GoogleDriveHelper:
             return self.__service.files().copy(fileId=file_id, body=body, supportsAllDrives=True).execute()
         except HttpError as err:
             if err.resp.get('content-type', '').startswith('application/json'):
-                reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                reason = eval(err.content).get('error').get('errors')[0].get('reason')
                 if reason in ['userRateLimitExceeded', 'dailyLimitExceeded']:
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
                             LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
+                            if self.__is_cancelled:
+                                return
                             self.__switchServiceAccount()
                             return self.__copyFile(file_id, dest_id)
                     else:
@@ -789,17 +796,19 @@ class GoogleDriveHelper:
                 self.__status, done = downloader.next_chunk()
             except HttpError as err:
                 if err.resp.get('content-type', '').startswith('application/json'):
-                    reason = jsnloads(err.content).get('error').get('errors')[0].get('reason')
+                    reason = eval(err.content).get('error').get('errors')[0].get('reason')
                     if reason not in [
                         'downloadQuotaExceeded',
                         'dailyLimitExceeded',
                     ]:
                         raise err
                     if config_dict['USE_SERVICE_ACCOUNTS']:
-                        if self.__sa_count == SERVICE_ACCOUNTS_NUMBER:
+                        if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
                             LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
                             raise err
                         else:
+                            if self.__is_cancelled:
+                                return
                             self.__switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again...")
                             return self.__download_file(file_id, path, filename, mime_type)

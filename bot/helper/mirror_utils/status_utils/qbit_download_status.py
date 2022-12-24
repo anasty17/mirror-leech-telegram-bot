@@ -62,7 +62,7 @@ class QbDownloadStatus:
         self.__update()
         download = self.__info.state
         if download in ["queuedDL", "queuedUP"]:
-            return MirrorStatus.STATUS_WAITING
+            return MirrorStatus.STATUS_QUEUEDL
         elif download in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSED
         elif download in ["checkingUP", "checkingDL"]:
