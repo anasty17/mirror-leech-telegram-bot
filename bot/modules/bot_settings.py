@@ -348,7 +348,7 @@ def get_buttons(key=None, edit_type=None):
     elif key == 'private':
         buttons.sbutton('Back', "botset back")
         buttons.sbutton('Close', "botset close")
-        msg = 'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt or .netrc.' \
+        msg = 'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, terabox.txt or .netrc.' \
               '\nTo delete private file send the name of the file only as text message.\nTimeout: 60 sec'
     elif key == 'aria':
         for k in list(aria2_options.keys())[START:10+START]:
@@ -396,10 +396,7 @@ def get_buttons(key=None, edit_type=None):
         buttons.sbutton('Empty String', f"botset emptyqbit {key}")
         buttons.sbutton('Close', "botset close")
         msg = f'Send a valid value for {key}. Timeout: 60 sec'
-    if key is None:
-        button = buttons.build_menu(1)
-    else:
-        button = buttons.build_menu(2)
+    button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
 def update_buttons(message, key=None, edit_type=None):

@@ -9,6 +9,8 @@ than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtend
 for original authorship. """
 
 from requests import get as rget, head as rhead, post as rpost, Session as rsession
+from os import path
+from http.cookiejar import MozillaCookieJar
 from re import findall as re_findall, sub as re_sub, match as re_match, search as re_search
 from urllib.parse import urlparse, unquote
 from json import loads as jsonloads
@@ -65,6 +67,8 @@ def direct_link_generator(link: str):
         return krakenfiles(link)
     elif 'upload.ee' in link:
         return uploadee(link)
+    elif 'terabox.com' in link:
+        return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
     elif any(x in link for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
@@ -376,3 +380,24 @@ def uploadee(url: str) -> str:
         return sa['href']
     except:
         raise DirectDownloadLinkException(f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+
+def terabox(url) -> str:
+    if not path.isfile('terabox.txt'):
+        raise DirectDownloadLinkException("ERROR: terabox.txt not found")
+    try:
+        session = rsession()
+        res = session.request('GET', url)
+        key = res.url.split('?surl=')[-1]
+        jar = MozillaCookieJar('terabox.txt')
+        jar.load()
+        session.cookies.update(jar)
+        res = session.request('GET', f'https://www.terabox.com/share/list?app_id=250528&shorturl={key}&root=1')
+        result = res.json()['list']
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if len(result) > 1:
+        raise DirectDownloadLinkException("ERROR: Can't download mutiple files")
+    result = result[0]
+    if result['isdir'] != '0':
+        raise DirectDownloadLinkException("ERROR: Can't download folder")
+    return result['dlink']
