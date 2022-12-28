@@ -197,7 +197,7 @@ class TgUploader:
             if self.__media_group and (self.__as_doc or notMedia or is_video):
                 if match := re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_):
                     pname = match.group(0)
-                    key = 'videos' if is_video else 'documents'
+                    key = 'documents' if self.__as_doc or notMedia else 'videos'
                     if pname in self.__media_dict[key].keys():
                         self.__media_dict[key][pname].append(self.__sent_msg)
                     else:
