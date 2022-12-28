@@ -28,7 +28,6 @@ class TgUploader:
         self.__start_time = time()
         self.__total_files = 0
         self.__is_cancelled = False
-        self.__as_doc = config_dict['AS_DOCUMENT']
         self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
         self.__msgs_dict = {}
         self.__corrupted = 0
@@ -36,7 +35,7 @@ class TgUploader:
         self.__is_corrupted = False
         self.__size = size
         self.__in_media_group = False
-        self.__media_group = {'videos': {}, 'documents': {}}
+        self.__media_dict = {'videos': {}, 'documents': {}}
         self.__msg_to_reply()
         self.__user_settings()
 
@@ -60,10 +59,10 @@ class TgUploader:
                         LOGGER.error(e)
                         continue
                     if self.__in_media_group:
-                        group_lists = list(self.__media_group['videos'].keys()) + list(self.__media_group['documents'].keys())
+                        group_lists = list(self.__media_dict['videos'].keys()) + list(self.__media_dict['documents'].keys())
                         match = re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_)
                         if match and not match.group(0) in group_lists:
-                            for key, value in list(self.__media_group.items()):
+                            for key, value in list(self.__media_dict.items()):
                                 for pname, msgs in list(value.items()):
                                     if len(msgs) > 1:
                                         reply_to_message_id = msgs[0].reply_to_message_id
@@ -73,7 +72,7 @@ class TgUploader:
                                                                          reply_to_message_id=reply_to_message_id)
                                         for msg in msgs:
                                             msg.delete()
-                                        del self.__media_group[key][pname]
+                                        del self.__media_dict[key][pname]
 
                                         if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
                                             for m in msgs_list:
@@ -90,7 +89,7 @@ class TgUploader:
                     self._last_uploaded = 0
                     sleep(1)
         if self.__in_media_group:
-            for key, value in list(self.__media_group.items()):
+            for key, value in list(self.__media_dict.items()):
                 for pname, msgs in list(value.items()):
                     if len(msgs) > 1:
                         reply_to_message_id = msgs[0].reply_to_message_id
@@ -195,15 +194,15 @@ class TgUploader:
                                                                  disable_notification=True,
                                                                  progress=self.__upload_progress)
 
-            if config_dict['MEDIA_GROUP'] and (self.__as_doc or notMedia or is_video):
+            if self.__media_group and (self.__as_doc or notMedia or is_video):
                 if match := re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_):
                     pname = match.group(0)
                     key = 'videos' if is_video else 'documents'
-                    if pname in self.__media_group[key].keys():
-                        self.__media_group[key][pname].append(self.__sent_msg)
+                    if pname in self.__media_dict[key].keys():
+                        self.__media_dict[key][pname].append(self.__sent_msg)
                     else:
-                        self.__media_group[key][pname] = [self.__sent_msg]
-                    msgs = self.__media_group[key][pname]
+                        self.__media_dict[key][pname] = [self.__sent_msg]
+                    msgs = self.__media_dict[key][pname]
                     if len(msgs) == 10:
                         reply_to_message_id = msgs[0].reply_to_message_id
                         msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
@@ -212,7 +211,7 @@ class TgUploader:
                                                          reply_to_message_id=reply_to_message_id)
                         for msg in msgs:
                             msg.delete()
-                        del self.__media_group[key][pname]
+                        del self.__media_dict[key][pname]
 
                         if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
                             for m in msgs_list:
@@ -254,8 +253,8 @@ class TgUploader:
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, False)
-        if user_dict:
-            self.__as_doc = user_dict.get('as_doc', False)
+        self.__as_doc = user_dict and user_dict.get('as_doc', False) or config_dict['AS_DOCUMENT']
+        self.__media_group = user_dict and user_dict.get('media_group', False) or config_dict['MEDIA_GROUP']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 
@@ -271,7 +270,7 @@ class TgUploader:
 
     def __get_input_media(self, pname, key):
         rlist = []
-        for msg in self.__media_group[key][pname]:
+        for msg in self.__media_dict[key][pname]:
             if key == 'videos':
                 input_media = InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
             else:

@@ -131,7 +131,7 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
     user_dict = user_data.get(user_id, False)
     leech_split_size = (user_dict and user_dict.get('split_size')) or config_dict['LEECH_SPLIT_SIZE']
     parts = ceil(size/leech_split_size)
-    if ((user_dict and user_dict.get('equal_splits')) or config_dict['EQUAL_SPLITS']) and not inLoop:
+    if (user_dict and user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS']) and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]
