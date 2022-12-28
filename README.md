@@ -25,6 +25,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - 4GB file upload with premium account
 - Upload all files to specific superGroup/channel.
 - Leech Split size and equal split size settings for each user
+- Ability to upload documents and videos parts in media group. Setting for each user
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download from Google Drive
@@ -181,6 +182,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Str`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
+- `MEDIA_GROUP`: View Uploaded parts of videos or documents in media group. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
 - `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with superGroup.

@@ -39,6 +39,11 @@ def get_user_settings(from_user):
     else:
         equal_splits = 'Disabled'
 
+    if not user_dict and config_dict['MEDIA_GROUP'] or user_dict and user_dict.get('media_group'):
+        media_group = 'Enabled'
+    else:
+        media_group = 'Disabled'
+
     buttons.sbutton("YT-DLP Quality", f"userset {user_id} ytq")
     if user_dict and user_dict.get('yt_ql'):
         ytq = user_dict['yt_ql']
@@ -56,6 +61,7 @@ def get_user_settings(from_user):
            f"Custom Thumbnail <b>{thumbmsg}</b>\n"\
            f"Leech Split Size is <b>{split_size}</b>\n"\
            f"Equal Splits is <b>{equal_splits}</b>\n"\
+           f"Media Group is <b>{media_group}</b>\n"\
            f"YT-DLP Quality is <b><code>{escape(ytq)}</code></b>"
     return text, buttons.build_menu(1)
 
@@ -220,6 +226,10 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
             buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
+        if not user_dict and config_dict['MEDIA_GROUP'] or user_dict and user_dict.get('media_group'):
+            buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
+        else:
+            buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
         editMessage(f'Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec', message, buttons.build_menu(1))
@@ -243,6 +253,13 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         query.answer()
         handler_dict[user_id] = False
         update_user_ldata(user_id, 'equal_splits', not bool(user_dict and user_dict.get('equal_splits')))
+        update_user_settings(message, query.from_user)
+        if DATABASE_URL:
+            DbManger().update_user_data(user_id)
+    elif data[2] == 'mgroup':
+        query.answer()
+        handler_dict[user_id] = False
+        update_user_ldata(user_id, 'media_group', not bool(user_dict and user_dict.get('media_group')))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)

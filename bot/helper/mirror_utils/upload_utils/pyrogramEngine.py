@@ -1,9 +1,11 @@
 from logging import getLogger, ERROR
 from os import remove as osremove, walk, path as ospath, rename as osrename
 from time import time, sleep
+from pyrogram.types import InputMediaVideo, InputMediaDocument
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
+from re import search as re_search
 
 from bot import config_dict, user_data, GLOBAL_EXTENSION_FILTER, app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_media_streams, clean_unwanted
@@ -33,19 +35,22 @@ class TgUploader:
         self.__resource_lock = RLock()
         self.__is_corrupted = False
         self.__size = size
+        self.__in_media_group = False
+        self.__media_group = {'videos': {}, 'documents': {}}
         self.__msg_to_reply()
         self.__user_settings()
 
-    def upload(self, o_files):
+    def upload(self, o_files, m_size):
         for dirpath, subdir, files in sorted(walk(self.__path)):
             for file_ in sorted(files):
-                if file_ in o_files:
+                up_path = ospath.join(dirpath, file_)
+                f_size = ospath.getsize(up_path)
+                if self.__listener.seed and file_ in o_files and f_size in m_size:
                     continue
                 if not file_.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
-                    up_path = ospath.join(dirpath, file_)
                     self.__total_files += 1
                     try:
-                        if ospath.getsize(up_path) == 0:
+                        if f_size == 0:
                             LOGGER.error(f"{up_path} size is zero, telegram don't upload zero size files")
                             self.__corrupted += 1
                             continue
@@ -54,20 +59,60 @@ class TgUploader:
                             return
                         LOGGER.error(e)
                         continue
+                    if self.__in_media_group:
+                        group_lists = list(self.__media_group['videos'].keys()) + list(self.__media_group['documents'].keys())
+                        match = re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_)
+                        if match and not match.group(0) in group_lists:
+                            for key, value in list(self.__media_group.items()):
+                                for pname, msgs in list(value.items()):
+                                    if len(msgs) > 1:
+                                        reply_to_message_id = msgs[0].reply_to_message_id
+                                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
+                                                                         media=self.__get_input_media(pname, key),
+                                                                         disable_notification=True,
+                                                                         reply_to_message_id=reply_to_message_id)
+                                        for msg in msgs:
+                                            msg.delete()
+                                        del self.__media_group[key][pname]
+
+                                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                                            for m in msgs_list:
+                                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
+                                        self.__sent_msg = msgs_list[-1]
+
+                    self.__in_media_group = False
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
                         return
-                    if (not self.__listener.isPrivate or config_dict['DUMP_CHAT']) and not self.__is_corrupted:
+                    if (not self.__listener.isPrivate or config_dict['DUMP_CHAT']) and not self.__is_corrupted and \
+                      not self.__in_media_group:
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     self._last_uploaded = 0
                     sleep(1)
+        if self.__in_media_group:
+            for key, value in list(self.__media_group.items()):
+                for pname, msgs in list(value.items()):
+                    if len(msgs) > 1:
+                        reply_to_message_id = msgs[0].reply_to_message_id
+                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
+                                             media=self.__get_input_media(pname, key),
+                                             disable_notification=True,
+                                             reply_to_message_id=reply_to_message_id)
+                        for msg in msgs:
+                            msg.delete()
+                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                            for m in msgs_list:
+                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
+                    elif not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                        self.__msgs_dict[msgs[0].link] = msgs[0].caption
+
         if self.__listener.seed and not self.__listener.newDir:
             clean_unwanted(self.__path)
         if self.__total_files == 0:
-            self.__listener.onUploadError('No files to upload. Make sure if you filled USER_SESSION_STRING then you should use supergroup. In case you filled EXTENSION_FILTER then check if all file have this extension')
+            self.__listener.onUploadError("No files to upload. In case you have filled EXTENSION_FILTER, then check if all file have those extensions or not.")
             return
         if self.__total_files <= self.__corrupted:
-            self.__listener.onUploadError('Files Corrupted. Check logs!')
+            self.__listener.onUploadError('Files Corrupted or unable to upload. Check logs!')
             return
         LOGGER.info(f"Leech Completed: {self.name}")
         size = get_readable_file_size(self.__size)
@@ -149,6 +194,34 @@ class TgUploader:
                                                                  caption=cap_mono,
                                                                  disable_notification=True,
                                                                  progress=self.__upload_progress)
+
+            if config_dict['MEDIA_GROUP'] and (self.__as_doc or notMedia or is_video):
+                if match := re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_):
+                    pname = match.group(0)
+                    key = 'videos' if is_video else 'documents'
+                    if pname in self.__media_group[key].keys():
+                        self.__media_group[key][pname].append(self.__sent_msg)
+                    else:
+                        self.__media_group[key][pname] = [self.__sent_msg]
+                    msgs = self.__media_group[key][pname]
+                    if len(msgs) == 10:
+                        reply_to_message_id = msgs[0].reply_to_message_id
+                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
+                                                         media=self.__get_input_media(pname, key),
+                                                         disable_notification=True,
+                                                         reply_to_message_id=reply_to_message_id)
+                        for msg in msgs:
+                            msg.delete()
+                        del self.__media_group[key][pname]
+
+                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                            for m in msgs_list:
+                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
+
+                        self.__sent_msg = msgs_list[-1]
+                    else:
+                        self.__in_media_group = True
+
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
@@ -195,6 +268,16 @@ class TgUploader:
             self.__sent_msg = app.send_message(DUMP_CHAT, msg, disable_web_page_preview=True)
         else:
             self.__sent_msg = app.get_messages(self.__listener.message.chat.id, self.__listener.uid)
+
+    def __get_input_media(self, pname, key):
+        rlist = []
+        for msg in self.__media_group[key][pname]:
+            if key == 'videos':
+                input_media = InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
+            else:
+                input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
+            rlist.append(input_media)
+        return rlist
 
     @property
     def speed(self):

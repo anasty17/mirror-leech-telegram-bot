@@ -231,6 +231,9 @@ def load_config():
     IGNORE_PENDING_REQUESTS = environ.get('IGNORE_PENDING_REQUESTS', '')
     IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
 
+    MEDIA_GROUP = environ.get('MEDIA_GROUP', '')
+    MEDIA_GROUP = MEDIA_GROUP.lower() == 'true'
+
     SERVER_PORT = environ.get('SERVER_PORT', '')
     SERVER_PORT = 80 if len(SERVER_PORT) == 0 else int(SERVER_PORT)
     BASE_URL = environ.get('BASE_URL', '').rstrip("/")
@@ -288,6 +291,7 @@ def load_config():
                         'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
                         'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                         'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+                        'MEDIA_GROUP': MEDIA_GROUP,
                         'MEGA_API_KEY': MEGA_API_KEY,
                         'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                         'MEGA_PASSWORD': MEGA_PASSWORD,

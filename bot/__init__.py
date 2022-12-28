@@ -63,10 +63,9 @@ download_dict = {}
 # value: {link, last_feed, last_title, filter}
 rss_dict = {}
 
-if ospath.exists('pyrogram.session'):
-    osremove('pyrogram.session')
-if ospath.exists('pyrogram.session-journal'):
-    osremove('pyrogram.session-journal')
+for file_ in ['pyrogram.session', 'pyrogram.session-journal', 'rss_session.session', 'rss_session.session-journal']:
+    if ospath.exists(file_):
+        osremove(file_)
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
@@ -287,6 +286,9 @@ AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 EQUAL_SPLITS = environ.get('EQUAL_SPLITS', '')
 EQUAL_SPLITS = EQUAL_SPLITS.lower() == 'true'
 
+MEDIA_GROUP = environ.get('MEDIA_GROUP', '')
+MEDIA_GROUP = MEDIA_GROUP.lower() == 'true'
+
 SERVER_PORT = environ.get('SERVER_PORT', '')
 if len(SERVER_PORT) == 0:
     SERVER_PORT = 80
@@ -324,6 +326,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
                'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
+               'MEDIA_GROUP': MEDIA_GROUP,
                'MEGA_API_KEY': MEGA_API_KEY,
                'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
                'MEGA_PASSWORD': MEGA_PASSWORD,

@@ -240,14 +240,15 @@ def get_media_streams(path):
         is_audio = True
         return is_video, is_audio
 
-    if not mime_type.startswith('video'):
+    if not mime_type.startswith('video') and not mime_type.endswith('octet-stream'):
         return is_video, is_audio
 
     try:
         result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                "json", "-show_streams", path]).decode('utf-8')
     except Exception as e:
-        LOGGER.error(f'{e}. Mostly file not found!')
+        if not mime_type.endswith('octet-stream'):
+            LOGGER.error(f'{e}. Mostly file not found!')
         return is_video, is_audio
 
     fields = eval(result).get('streams')

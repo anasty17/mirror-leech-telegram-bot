@@ -213,7 +213,6 @@ class MirrorLeechListener:
                 self.queuedUp = True
             while self.queuedUp:
                 sleep(1)
-                continue
             with download_dict_lock:
                 if self.uid not in download_dict.keys():
                     return
@@ -231,7 +230,7 @@ class MirrorLeechListener:
             with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             update_all_messages()
-            tg.upload(o_files)
+            tg.upload(o_files, m_size)
         else:
             up_path = f'{up_dir}/{up_name}'
             size = get_path_size(up_path)
