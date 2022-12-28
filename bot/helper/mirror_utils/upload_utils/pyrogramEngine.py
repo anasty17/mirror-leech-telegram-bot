@@ -59,26 +59,13 @@ class TgUploader:
                         LOGGER.error(e)
                         continue
                     if self.__in_media_group:
-                        group_lists = list(self.__media_dict['videos'].keys()) + list(self.__media_dict['documents'].keys())
-                        match = re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_)
+                        group_lists = [x for v in self.__media_dict.values() for x in v.keys()]
+                        match = re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', file_)
                         if match and not match.group(0) in group_lists:
                             for key, value in list(self.__media_dict.items()):
                                 for pname, msgs in list(value.items()):
                                     if len(msgs) > 1:
-                                        reply_to_message_id = msgs[0].reply_to_message_id
-                                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
-                                                                         media=self.__get_input_media(pname, key),
-                                                                         disable_notification=True,
-                                                                         reply_to_message_id=reply_to_message_id)
-                                        for msg in msgs:
-                                            msg.delete()
-                                        del self.__media_dict[key][pname]
-
-                                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
-                                            for m in msgs_list:
-                                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
-                                        self.__sent_msg = msgs_list[-1]
-
+                                        self.__send_media_group(pname, key, msgs)
                     self.__in_media_group = False
                     self.__upload_file(up_path, file_, dirpath)
                     if self.__is_cancelled:
@@ -88,23 +75,12 @@ class TgUploader:
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     self._last_uploaded = 0
                     sleep(1)
-        if self.__in_media_group:
-            for key, value in list(self.__media_dict.items()):
-                for pname, msgs in list(value.items()):
-                    if len(msgs) > 1:
-                        reply_to_message_id = msgs[0].reply_to_message_id
-                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
-                                             media=self.__get_input_media(pname, key),
-                                             disable_notification=True,
-                                             reply_to_message_id=reply_to_message_id)
-                        for msg in msgs:
-                            msg.delete()
-                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
-                            for m in msgs_list:
-                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
-                    elif not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
-                        self.__msgs_dict[msgs[0].link] = msgs[0].caption
-
+        for key, value in list(self.__media_dict.items()):
+            for pname, msgs in list(value.items()):
+                if len(msgs) > 1:
+                    self.__send_media_group(pname, key, msgs)
+                elif not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                    self.__msgs_dict[msgs[0].link] = msgs[0].caption
         if self.__listener.seed and not self.__listener.newDir:
             clean_unwanted(self.__path)
         if self.__total_files == 0:
@@ -195,7 +171,7 @@ class TgUploader:
                                                                  progress=self.__upload_progress)
 
             if self.__media_group and (self.__as_doc or notMedia or is_video):
-                if match := re_search(r'.+(?=\.0*\d+$)', file_) or re_search(r'.+(?=\.part\d+\..+)', file_):
+                if match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', file_):
                     pname = match.group(0)
                     key = 'documents' if self.__as_doc or notMedia else 'videos'
                     if pname in self.__media_dict[key].keys():
@@ -204,20 +180,7 @@ class TgUploader:
                         self.__media_dict[key][pname] = [self.__sent_msg]
                     msgs = self.__media_dict[key][pname]
                     if len(msgs) == 10:
-                        reply_to_message_id = msgs[0].reply_to_message_id
-                        msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
-                                                         media=self.__get_input_media(pname, key),
-                                                         disable_notification=True,
-                                                         reply_to_message_id=reply_to_message_id)
-                        for msg in msgs:
-                            msg.delete()
-                        del self.__media_dict[key][pname]
-
-                        if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
-                            for m in msgs_list:
-                                self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
-
-                        self.__sent_msg = msgs_list[-1]
+                        self.__send_media_group(pname, key, msgs)
                     else:
                         self.__in_media_group = True
 
@@ -277,6 +240,17 @@ class TgUploader:
                 input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
             rlist.append(input_media)
         return rlist
+
+    def __send_media_group(self, pname, key, msgs):
+            msgs_list = self.__sent_msg.reply_media_group(media=self.__get_input_media(pname, key),
+                                                          disable_notification=True)
+            for msg in msgs:
+                msg.delete()
+            del self.__media_dict[key][pname]
+            if not self.__listener.isPrivate or config_dict['DUMP_CHAT']:
+                for m in msgs_list:
+                    self.__msgs_dict[m.link] = m.caption + ' (Grouped)'
+            self.__sent_msg = msgs_list[-1]
 
     @property
     def speed(self):
