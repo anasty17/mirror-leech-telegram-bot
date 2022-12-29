@@ -242,8 +242,11 @@ class TgUploader:
         return rlist
 
     def __send_media_group(self, pname, key, msgs):
-            msgs_list = self.__sent_msg.reply_media_group(media=self.__get_input_media(pname, key),
-                                                          disable_notification=True)
+            reply_to_message_id = msgs[0].reply_to_message_id
+            msgs_list = app.send_media_group(chat_id=self.__sent_msg.chat.id,
+                                             media=self.__get_input_media(pname, key),
+                                             disable_notification=True,
+                                             reply_to_message_id=reply_to_message_id)
             for msg in msgs:
                 msg.delete()
             del self.__media_dict[key][pname]
