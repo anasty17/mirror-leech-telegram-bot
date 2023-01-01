@@ -193,7 +193,7 @@ def __getResult(search_results, key, message, method):
                         if 'torrent' in subres.keys():
                             msg += f"<a href='{subres['torrent']}'>Direct Link</a><br>"
                         elif 'magnet' in subres.keys():
-                            msg += f"<b>Share Magnet to</b> "
+                            msg += "<b>Share Magnet to</b> "
                             msg += f"<a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a><br>"
                     msg += '<br>'
                 else:
@@ -205,7 +205,7 @@ def __getResult(search_results, key, message, method):
                     if 'torrent' in result.keys():
                         msg += f"<a href='{result['torrent']}'>Direct Link</a><br><br>"
                     elif 'magnet' in result.keys():
-                        msg += f"<b>Share Magnet to</b> "
+                        msg += "<b>Share Magnet to</b> "
                         msg += f"<a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a><br><br>"
                     else:
                         msg += '<br>'

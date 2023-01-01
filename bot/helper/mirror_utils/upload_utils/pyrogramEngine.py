@@ -172,7 +172,7 @@ class TgUploader:
                                                               thumb=thumb,
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
-            elif is_image:
+            else:
                 key = 'photos'
                 self.__sent_msg = self.__sent_msg.reply_photo(photo=up_path,
                                                               quote=True,

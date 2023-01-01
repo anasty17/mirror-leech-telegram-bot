@@ -6,7 +6,7 @@ from threading import Thread
 from telegram.ext import CommandHandler
 from requests import get as rget
 
-from bot import dispatcher, DOWNLOAD_DIR, LOGGER
+from bot import dispatcher, DOWNLOAD_DIR, LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download

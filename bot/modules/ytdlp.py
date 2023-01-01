@@ -129,7 +129,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         result = ydl.extractMetaData(link, name, opt, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        sendMessage(tag + " " + msg, bot, message)
+        sendMessage(f"{tag} {msg}", bot, message)
         __run_multi()
         return
     if not select:

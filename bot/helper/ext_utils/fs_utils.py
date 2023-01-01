@@ -87,10 +87,9 @@ def get_path_size(path: str):
     return total_size
 
 def get_base_name(orig_path: str):
-    ext = [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]
-    if ext:
+    if ext := [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]:
         ext = ext[0]
-        return re_split(ext + '$', orig_path, maxsplit=1, flags=I)[0]
+        return re_split(f'{ext}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
@@ -138,7 +137,7 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         base_name, extension = ospath.splitext(file_)
         split_size = split_size - 5000000
         while i <= parts or start_time < duration - 4:
-            parted_name = "{}.part{}{}".format(str(base_name), str(i).zfill(3), str(extension))
+            parted_name = f"{str(base_name)}.part{str(i).zfill(3)}{str(extension)}"
             out_path = ospath.join(dirpath, parted_name)
             if not noMap:
                 listener.suproc = Popen(["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(start_time),
@@ -192,7 +191,7 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
             start_time += lpd - 3
             i = i + 1
     else:
-        out_path = ospath.join(dirpath, file_ + ".")
+        out_path = ospath.join(dirpath, f"{file_}.")
         listener.suproc = Popen(["split", "--numeric-suffixes=1", "--suffix-length=3",
                                 f"--bytes={split_size}", path, out_path])
         listener.suproc.wait()
@@ -216,8 +215,7 @@ def get_media_info(path):
 
     duration = round(float(fields.get('duration', 0)))
 
-    fields = fields.get('tags')
-    if fields:
+    if fields := fields.get('tags'):
         artist = fields.get('artist')
         if artist is None:
             artist = fields.get('ARTIST')
