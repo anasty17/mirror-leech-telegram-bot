@@ -10,6 +10,7 @@ class _BotCommands:
         self.QbMirrorCommand = (f'qbmirror{CMD_SUFFIX}', f'qm{CMD_SUFFIX}')
         self.QbUnzipMirrorCommand = (f'qbunzipmirror{CMD_SUFFIX}', f'quzm{CMD_SUFFIX}')
         self.QbZipMirrorCommand = (f'qbzipmirror{CMD_SUFFIX}', f'qzm{CMD_SUFFIX}')
+        self.BulkCommand = f'bulk{CMD_INDEX}'
         self.YtdlCommand = (f'ytdl{CMD_SUFFIX}', f'y{CMD_SUFFIX}')
         self.YtdlZipCommand = (f'ytdlzip{CMD_SUFFIX}', f'yz{CMD_SUFFIX}')
         self.LeechCommand = (f'leech{CMD_SUFFIX}', f'l{CMD_SUFFIX}')
@@ -19,7 +20,8 @@ class _BotCommands:
         self.QbUnzipLeechCommand = (f'qbunzipleech{CMD_SUFFIX}', f'quzl{CMD_SUFFIX}')
         self.QbZipLeechCommand = (f'qbzipleech{CMD_SUFFIX}', f'qzl{CMD_SUFFIX}')
         self.YtdlLeechCommand = (f'ytdlleech{CMD_SUFFIX}', f'yl{CMD_SUFFIX}')
-        self.YtdlZipLeechCommand = (f'ytdlzipleech{CMD_SUFFIX}', f'yzl{CMD_SUFFIX}')
+        self.YtdlZipLeechCommand = (f'ytdlzipleech{CMD_SUFFIX}', f'yzl{CMD_SUFFIX}'
+        self.BulkLeechCommand = f'bulkleech{CMD_INDEX}'
         self.CloneCommand = f'clone{CMD_SUFFIX}'
         self.CountCommand = f'count{CMD_SUFFIX}'
         self.DeleteCommand = f'del{CMD_SUFFIX}'
