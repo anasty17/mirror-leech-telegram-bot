@@ -334,6 +334,7 @@ unzipmirror - or /uzm Mirror and extract files
 qbmirror - or /qm Mirror torrent using qBittorrent
 qbzipmirror - or /qzm Mirror torrent and upload as zip using qb
 qbunzipmirror - or /quzm Mirror torrent and extract files using qb
+bulk - Mirror multilink txt or message file
 leech - or /l Leech
 zipleech - or /zl Leech and upload as zip
 unzipleech - or /uzl Leech and extract files
@@ -346,6 +347,7 @@ ytdl - or /y Mirror yt-dlp supported link
 ytdlzip - or /yz Mirror yt-dlp supported link as zip
 ytdlleech - or /yl Leech through yt-dlp supported link
 ytdlzipleech - or /yzl Leech yt-dlp support link as zip
+bulkleech - Leech multilink txt or message file
 usetting - users settings
 bsetting - bot settings
 status - Get Mirror Status message
