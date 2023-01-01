@@ -1,7 +1,7 @@
 from time import sleep, time
 from telegram.error import RetryAfter
 from pyrogram.errors import FloodWait
-from os import remove
+from io import BytesIO
 
 from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, rss_session
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval
@@ -72,17 +72,15 @@ def deleteMessage(bot, message):
 
 def sendLogFile(bot, message):
     with open('log.txt', 'rb') as f:
-        bot.sendDocument(document=f, filename=f.name,
-                          reply_to_message_id=message.message_id,
-                          chat_id=message.chat_id)
+        bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
+                         chat_id=message.chat_id)
 
-def sendFile(bot, message, name, caption=""):
+def sendFile(bot, message, txt, fileName, caption=""):
     try:
-        with open(name, 'rb') as f:
-            bot.sendDocument(document=f, filename=f.name, reply_to_message_id=message.message_id,
-                             caption=caption, chat_id=message.chat_id)
-        remove(name)
-        return
+        with BytesIO(str.encode(txt)) as document:
+            document.name = fileName
+            return bot.sendDocument(document=document, reply_to_message_id=message.message_id,
+                                    caption=caption, chat_id=message.chat_id)
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)

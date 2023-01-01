@@ -22,6 +22,9 @@ from .listener import MirrorLeechListener
 
 
 def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False):
+    if not isLeech and not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     index = 1
@@ -60,6 +63,18 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 link = message_args[index].strip()
                 if link.startswith(("|", "pswd:")):
                     link = ''
+
+    def __run_multi():
+        if multi > 1:
+            sleep(4)
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
+            msg = message.text.split(maxsplit=mi+1)
+            msg[mi] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
+            nextmsg.from_user.id = message.from_user.id
+            sleep(4)
+            Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
 
     name = mesg[0].split('|', maxsplit=1)
     if len(name) > 1:
@@ -100,15 +115,7 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             elif not isQbit and file_.mime_type != "application/x-bittorrent":
                 listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag)
                 Thread(target=TelegramDownloadHelper(listener).add_download, args=(message, f'{DOWNLOAD_DIR}{listener.uid}/', name)).start()
-                if multi > 1:
-                    sleep(4)
-                    nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-                    msg = message.text.split(maxsplit=mi+1)
-                    msg[mi] = f"{multi - 1}"
-                    nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-                    nextmsg.from_user.id = message.from_user.id
-                    sleep(4)
-                    Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
+                __run_multi()
                 return
             else:
                 link = file_.get_file().file_path
@@ -144,7 +151,8 @@ Number should be always before |newname or pswd:
 3. You can add those options <b>d, s and multi</b> randomly. Ex: <code>/cmd</code> d:1:20 s 10 <b>or</b> <code>/cmd</code> s 10 d:0.5:100
 4. Commands that start with <b>qb</b> are ONLY for torrents.
 '''
-        return sendMessage(help_msg, bot, message)
+        sendMessage(help_msg, bot, message)
+        return
 
     LOGGER.info(link)
 
@@ -158,7 +166,9 @@ Number should be always before |newname or pswd:
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
-                    return sendMessage(str(e), bot, message)
+                    sendMessage(str(e), bot, message)
+                    __run_multi()
+                    return
     elif isQbit and not is_magnet(link):
         if link.endswith('.torrent') or "https://api.telegram.org/file/" in link:
             content_type = None
@@ -173,17 +183,23 @@ Number should be always before |newname or pswd:
                         t.write(resp.content)
                     link = str(file_name)
                 else:
-                    return sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
+                    sendMessage(f"{tag} ERROR: link got HTTP response: {resp.status_code}", bot, message)
+                    __run_multi()
+                    return
             except Exception as e:
                 error = str(e).replace('<', ' ').replace('>', ' ')
                 if error.startswith('No connection adapters were found for'):
                     link = error.split("'")[1]
                 else:
                     LOGGER.error(str(e))
-                    return sendMessage(tag + " " + error, bot, message)
+                    sendMessage(tag + " " + error, bot, message)
+                    __run_multi()
+                    return
         else:
             msg = "Qb commands for torrents only. if you are trying to dowload torrent then report."
-            return sendMessage(msg, bot, message)
+            sendMessage(msg, bot, message)
+            __run_multi()
+            return
 
     listener = MirrorLeechListener(bot, message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed)
 
@@ -213,17 +229,7 @@ Number should be always before |newname or pswd:
             auth = ''
         Thread(target=add_aria2c_download, args=(link, f'{DOWNLOAD_DIR}{listener.uid}', listener, name,
                                                  auth, ratio, seed_time)).start()
-
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        msg = message.text.split(maxsplit=mi+1)
-        msg[mi] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech)).start()
-
+    __run_multi()
 
 def mirror(update, context):
     _mirror_leech(context.bot, update.message)

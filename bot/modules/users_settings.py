@@ -6,7 +6,7 @@ from functools import partial
 from html import escape
 
 from bot import user_data, dispatcher, config_dict, DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendPhoto
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendPhoto, sendFile
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -20,8 +20,9 @@ def get_user_settings(from_user):
     name = from_user.full_name
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
-    user_dict = user_data.get(user_id, False)
-    if not user_dict and config_dict['AS_DOCUMENT'] or user_dict and user_dict.get('as_doc'):
+    user_dict = user_data.get(user_id, {})
+    AD = config_dict['AS_DOCUMENT']
+    if not user_dict and AD or user_dict.get('as_doc') or 'as_doc' not in user_dict and AD:
         ltype = "DOCUMENT"
         buttons.sbutton("Send As Media", f"userset {user_id} med")
     else:
@@ -29,26 +30,31 @@ def get_user_settings(from_user):
         buttons.sbutton("Send As Document", f"userset {user_id} doc")
 
     buttons.sbutton("Leech Splits", f"userset {user_id} lss")
-    if user_dict and user_dict.get('split_size'):
+    if user_dict.get('split_size'):
         split_size = user_dict['split_size']
     else:
         split_size = config_dict['LEECH_SPLIT_SIZE']
 
-    if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits'):
+    ES = config_dict['EQUAL_SPLITS']
+    if not user_dict and ES or user_dict.get('equal_splits') or 'equal_splits' not in user_dict and ES:
         equal_splits = 'Enabled'
     else:
         equal_splits = 'Disabled'
 
-    if not user_dict and config_dict['MEDIA_GROUP'] or user_dict and user_dict.get('media_group'):
+    MG = config_dict['MEDIA_GROUP']
+    if not user_dict and MG or user_dict.get('media_group') or 'media_group' not in user_dict and MG:
         media_group = 'Enabled'
+        buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
     else:
         media_group = 'Disabled'
+        buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
 
     buttons.sbutton("YT-DLP Quality", f"userset {user_id} ytq")
-    if user_dict and user_dict.get('yt_ql'):
+    YQ = config_dict['YT_DLP_QUALITY']
+    if user_dict.get('yt_ql'):
         ytq = user_dict['yt_ql']
-    elif config_dict['YT_DLP_QUALITY']:
-        ytq = config_dict['YT_DLP_QUALITY']
+    elif not user_dict and YQ or 'yt_ql' not in user_dict and YQ:
+        ytq = YQ
     else:
         ytq = 'None'
 
@@ -120,7 +126,7 @@ def edit_user_settings(update, context):
     data = query.data
     data = data.split()
     thumb_path = f"Thumbnails/{user_id}.jpg"
-    user_dict = user_data.get(user_id, False)
+    user_dict = user_data.get(user_id, {})
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == "doc":
@@ -185,7 +191,7 @@ def edit_user_settings(update, context):
         handler_dict[user_id] = True
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
-        if user_dict and user_dict.get('yt_ql'):
+        if user_dict.get('yt_ql'):
             buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
@@ -220,16 +226,12 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         start_time = time()
         handler_dict[user_id] = True
         buttons = ButtonMaker()
-        if user_dict and user_dict.get('split_size'):
+        if user_dict.get('split_size'):
             buttons.sbutton("Reset Split Size", f"userset {user_id} rlss")
-        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict and user_dict.get('equal_splits'):
+        if not user_dict and config_dict['EQUAL_SPLITS'] or user_dict.get('equal_splits'):
             buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
-        if not user_dict and config_dict['MEDIA_GROUP'] or user_dict and user_dict.get('media_group'):
-            buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
-        else:
-            buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
         buttons.sbutton("Back", f"userset {user_id} back")
         buttons.sbutton("Close", f"userset {user_id} close")
         editMessage(f'Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec', message, buttons.build_menu(1))
@@ -252,14 +254,13 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
     elif data[2] == 'esplits':
         query.answer()
         handler_dict[user_id] = False
-        update_user_ldata(user_id, 'equal_splits', not bool(user_dict and user_dict.get('equal_splits')))
+        update_user_ldata(user_id, 'equal_splits', not bool(user_dict.get('equal_splits')))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == 'mgroup':
         query.answer()
-        handler_dict[user_id] = False
-        update_user_ldata(user_id, 'media_group', not bool(user_dict and user_dict.get('media_group')))
+        update_user_ldata(user_id, 'media_group', not bool(user_dict.get('media_group')))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
@@ -276,7 +277,10 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
 def send_users_settings(update, context):
     msg = ''.join(f'<code>{u}</code>: {escape(str(d))}\n\n' for u, d in user_data.items())
     if msg:
-        sendMessage(msg, context.bot, update.message)
+        if len(msg.encode()) > 4000:
+            sendFile(context.bot, update.message, msg, 'users_settings.txt')
+        else:
+            sendMessage(msg, context.bot, update.message)
     else:
         sendMessage('No users data!', context.bot, update.message)
 

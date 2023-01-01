@@ -14,6 +14,9 @@ from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread
 
 
 def _clone(message, bot):
+    if not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     args = message.text.split()
     reply_to = message.reply_to_message
     link = ''
@@ -34,26 +37,35 @@ def _clone(message, bot):
             tag = f"@{reply_to.from_user.username}"
         else:
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
-    if is_gdrive_link(link):
-        gd = GoogleDriveHelper()
-        res, size, name, files = gd.helper(link)
-        if res != "":
-            return sendMessage(res, bot, message)
-        if config_dict['STOP_DUPLICATE']:
-            LOGGER.info('Checking File/Folder if already in Drive...')
-            smsg, button = gd.drive_list(name, True, True)
-            if smsg:
-                msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                return sendMessage(msg, bot, message, button)
+
+    def __run_multi():
         if multi > 1:
             sleep(4)
-            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
             cmsg = message.text.split()
             cmsg[1] = f"{multi - 1}"
             nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
             nextmsg.from_user.id = message.from_user.id
             sleep(4)
             Thread(target=_clone, args=(nextmsg, bot)).start()
+
+    if is_gdrive_link(link):
+        gd = GoogleDriveHelper()
+        res, size, name, files = gd.helper(link)
+        if res != "":
+            sendMessage(res, bot, message)
+            __run_multi()
+            return
+        if config_dict['STOP_DUPLICATE']:
+            LOGGER.info('Checking File/Folder if already in Drive...')
+            smsg, button = gd.drive_list(name, True, True)
+            if smsg:
+                msg = "File/Folder is already available in Drive.\nHere are the search results:"
+                sendMessage(msg, bot, message, button)
+                __run_multi()
+                return
+        __run_multi()
         if files <= 20:
             msg = sendMessage(f"Cloning: <code>{link}</code>", bot, message)
             result, button = gd.clone(link)

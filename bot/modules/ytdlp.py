@@ -15,6 +15,9 @@ from .listener import MirrorLeechListener
 listener_dict = {}
 
 def _ytdl(bot, message, isZip=False, isLeech=False):
+    if not isLeech and not config_dict['GDRIVE_ID']:
+        sendMessage('GDRIVE_ID not Provided!', bot, message)
+        return
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.message_id
@@ -45,6 +48,18 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
                 else:
                     link = re_split(r"opt:|pswd:|\|", link)[0]
                     link = link.strip()
+
+    def __run_multi():
+        if multi > 1:
+            sleep(4)
+            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                   'message_id': message.reply_to_message.message_id + 1})
+            ymsg = mssg.split(maxsplit=mi+1)
+            ymsg[mi] = f"{multi - 1}"
+            nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
+            nextmsg.from_user.id = message.from_user.id
+            sleep(4)
+            Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
@@ -114,18 +129,21 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         result = ydl.extractMetaData(link, name, opt, True)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
-        return sendMessage(tag + " " + msg, bot, message)
+        sendMessage(tag + " " + msg, bot, message)
+        __run_multi()
+        return
     if not select:
-        user_dict = user_data.get(user_id, False)
+        YTQ = config_dict['YT_DLP_QUALITY']
+        user_dict = user_data.get(user_id, {})
         if 'format:' in opt:
             opts = opt.split('|')
             for f in opts:
                 if f.startswith('format:'):
                     qual = f.split('format:', 1)[1]
-        elif user_dict and user_dict.get('yt_ql', False):
+        elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
-        elif config_dict['YT_DLP_QUALITY']:
-            qual = config_dict['YT_DLP_QUALITY']
+        elif not user_dict and YTQ or 'yt_ql' not in user_dict and YTQ:
+            qual = YTQ
     if qual:
         playlist = 'entries' in result
         LOGGER.info(f"Downloading with YT-DLP: {link}")
@@ -209,15 +227,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
 
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
-    if multi > 1:
-        sleep(4)
-        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id, 'message_id': message.reply_to_message.message_id + 1})
-        ymsg = mssg.split(maxsplit=mi+1)
-        ymsg[mi] = f"{multi - 1}"
-        nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
-        nextmsg.from_user.id = message.from_user.id
-        sleep(4)
-        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
+    __run_multi()
 
 def _qual_subbuttons(task_id, b_name, msg):
     buttons = ButtonMaker()

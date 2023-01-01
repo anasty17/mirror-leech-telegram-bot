@@ -128,10 +128,10 @@ def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i
         if not ospath.exists(dirpath):
             mkdir(dirpath)
     user_id = listener.message.from_user.id
-    user_dict = user_data.get(user_id, False)
-    leech_split_size = user_dict and user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
+    user_dict = user_data.get(user_id, {})
+    leech_split_size = user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
     parts = ceil(size/leech_split_size)
-    if (user_dict and user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS']) and not inLoop:
+    if (user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS']) and not inLoop:
         split_size = ceil(size/parts) + 1000
     if get_media_streams(path)[0]:
         duration = get_media_info(path)[0]
@@ -234,14 +234,19 @@ def get_media_streams(path):
 
     is_video = False
     is_audio = False
+    is_image = False
 
     mime_type = get_mime_type(path)
     if mime_type.startswith('audio'):
         is_audio = True
-        return is_video, is_audio
+        return is_video, is_audio, is_image
+
+    if mime_type.startswith('image'):
+        is_image = True
+        return is_video, is_audio, is_image
 
     if path.endswith('.bin') or not mime_type.startswith('video') and not mime_type.endswith('octet-stream'):
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     try:
         result = check_output(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
@@ -249,12 +254,12 @@ def get_media_streams(path):
     except Exception as e:
         if not mime_type.endswith('octet-stream'):
             LOGGER.error(f'{e}. Mostly file not found!')
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     fields = eval(result).get('streams')
     if fields is None:
         LOGGER.error(f"get_media_streams: {result}")
-        return is_video, is_audio
+        return is_video, is_audio, is_image
 
     for stream in fields:
         if stream.get('codec_type') == 'video':
@@ -262,5 +267,5 @@ def get_media_streams(path):
         elif stream.get('codec_type') == 'audio':
             is_audio = True
 
-    return is_video, is_audio
+    return is_video, is_audio, is_image
 
