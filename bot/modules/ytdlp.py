@@ -28,7 +28,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False, sameDir=''):
     link = ''
     folder_name = ''
 
-    args = mssg.split(maxsplit=2)
+    args = mssg.split(maxsplit=3)
     if len(args) > 1:
         for x in args:
             x = x.strip()
