@@ -60,9 +60,7 @@ class MirrorLeechListener:
     def onDownloadComplete(self):
         with download_dict_lock:
             if len(self.sameDir) > 1:
-                LOGGER.info(self.sameDir)
                 self.sameDir.remove(self.uid)
-                LOGGER.info(self.sameDir)
                 folder_name = listdir(self.dir)[-1]
                 path = f"{self.dir}/{folder_name}"
                 des_path = f"{DOWNLOAD_DIR}{list(self.sameDir)[0]}/{folder_name}"
