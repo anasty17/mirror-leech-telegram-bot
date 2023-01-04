@@ -717,7 +717,7 @@ class GoogleDriveHelper:
             if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__download_folder(file_id, self.__path, self.name)
             else:
-                makedirs(self.__path)
+                makedirs(self.__path, exist_ok=True)
                 self.__download_file(file_id, self.__path, self.name, meta.get('mimeType'))
         except Exception as err:
             if isinstance(err, RetryError):

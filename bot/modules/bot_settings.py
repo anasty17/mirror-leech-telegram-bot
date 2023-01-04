@@ -380,11 +380,16 @@ def get_buttons(key=None, edit_type=None):
             buttons.sbutton(int(x/10), f"botset start qbit {x}", position='footer')
         msg = f'Qbittorrent Options | Page: {int(START/10)} | State: {STATE}'
     elif edit_type == 'editvar':
+        msg = ''
         buttons.sbutton('Back', "botset back var")
         if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
             buttons.sbutton('Default', f"botset resetvar {key}")
         buttons.sbutton('Close', "botset close")
-        msg = f'Send a valid value for {key}. Timeout: 60 sec'
+        if key in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'IGNORE_PENDING_REQUESTS', 'CMD_SUFFIX', 'OWNER_ID',
+                   'USER_SESSION_STRING', 'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'RSS_DELAY'
+                   'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
+            msg += 'Restart required for this edit to take effect!\n\n'
+        msg += f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editaria':
         buttons.sbutton('Back', "botset back aria")
         if key != 'newkey':
@@ -717,12 +722,7 @@ def edit_bot_settings(update, context):
                 update_buttons(message)
         dispatcher.remove_handler(file_handler)
     elif data[1] == 'editvar' and STATE == 'edit':
-        if data[2] in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'IGNORE_PENDING_REQUESTS', 'CMD_SUFFIX', 'OWNER_ID',
-                       'USER_SESSION_STRING', 'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'RSS_DELAY'
-                       'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
-            query.answer(text='Restart required for this edit to take effect!', show_alert=True)
-        else:
-            query.answer()
+        query.answer()
         if handler_dict.get(message.chat.id):
             handler_dict[message.chat.id] = False
             sleep(0.5)

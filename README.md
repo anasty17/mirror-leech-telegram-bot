@@ -25,7 +25,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - 4GB file upload with premium account
 - Upload all files to specific superGroup/channel.
 - Leech Split size and equal split size settings for each user
-- Ability to leech files in media group. Setting for each user
+- Ability to leech splitted file parts in media group. Setting for each user
 ### Google
 - Stop duplicates for all tasks except yt-dlp tasks
 - Download from Google Drive
@@ -73,13 +73,14 @@ In each single file there is a major change from base code, it's almost totaly d
 - Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
 - Edit variables and overwrite the private files while bot running
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
-- Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot.
+- Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - Mirror/Leech/Clone multi links/files with one command
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
 - Extensions Filter for the files to be uploaded/cloned
 - View Link button. Extra button to open index link in broswer instead of direct download for file
 - Queueing System
+- Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
@@ -182,7 +183,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Int`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
-- `MEDIA_GROUP`: View Uploaded files in media group. Default is `False`. `Bool`.**NOTE**: Some files will end without any reply, it's hard to manage. Maybe in future i will fix it.
+- `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
 - `USER_SESSION_STRING`: To download/upload from your telegram account. If you own premium account. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: You can't use bot with private message. Use it with superGroup.
@@ -411,7 +412,7 @@ python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
 >**NOTE:** 1 Service Account can upload/copy around 750 GB a day, 1 project can make 100 Service Accounts so you can upload 75 TB a day.
 
->**NOTE:** All people can copy `2TB/DAY` from each file creator (uploader account), so if you got error `userRateLimitExceeded` that doesn't your limit exceeded but but file creator limit have been exceeded which is `2TB/DAY`.
+>**NOTE:** All people can copy `2TB/DAY` from each file creator (uploader account), so if you got error `userRateLimitExceeded` that doesn't mean your limit exceeded but file creator limit have been exceeded which is `2TB/DAY`.
 
 #### Two methods to create service accounts
 Choose one of these methods

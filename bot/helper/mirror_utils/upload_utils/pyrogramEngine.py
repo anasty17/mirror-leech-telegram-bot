@@ -1,11 +1,12 @@
 from logging import getLogger, ERROR
 from os import remove as osremove, walk, path as ospath, rename as osrename
 from time import time, sleep
-from pyrogram.types import InputMediaVideo, InputMediaDocument, InputMediaAudio, InputMediaPhoto
+from pyrogram.types import InputMediaVideo, InputMediaDocument
 from pyrogram.errors import FloodWait, RPCError
 from PIL import Image
 from threading import RLock
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
+from re import search as re_search
 
 from bot import config_dict, user_data, GLOBAL_EXTENSION_FILTER, app
 from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_media_streams, clean_unwanted
@@ -34,7 +35,8 @@ class TgUploader:
         self.__resource_lock = RLock()
         self.__is_corrupted = False
         self.__size = size
-        self.__media_dict = {'videos': {}, 'documents': {}, 'audios': {}, 'photos': {}}
+        self.__media_dict = {'videos': {}, 'documents': {}}
+        self.__last_msg_in_group = False
         self.__msg_to_reply()
         self.__user_settings()
 
@@ -55,22 +57,23 @@ class TgUploader:
                         continue
                     if self.__is_cancelled:
                         return
-                    if self.__media_group:
+                    if self.__last_msg_in_group:
                         group_lists = [x for v in self.__media_dict.values() for x in v.keys()]
-                        if dirpath not in group_lists:
+                        if (match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path)) \
+                          and not match.group(0) in group_lists:
                             for key, value in list(self.__media_dict.items()):
                                 for subkey, msgs in list(value.items()):
                                     if len(msgs) > 1:
                                         self.__send_media_group(subkey, key, msgs)
+                    self.__last_msg_in_group = False
                     up_path, cap_mono = self.__prepare_file(up_path, file_, dirpath)
                     self._last_uploaded = 0
-                    self.__upload_file(up_path, dirpath, cap_mono)
-                    if not self.__is_cancelled and \
-                      (not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb")):
-                            osremove(up_path)
+                    self.__upload_file(up_path, cap_mono)
                     if self.__is_cancelled:
                         return
-                    if (not self.__listener.isPrivate or config_dict['DUMP_CHAT']) and not self.__is_corrupted:
+                    if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
+                            osremove(up_path)
+                    if not self.__is_corrupted and (not self.__listener.isPrivate or config_dict['DUMP_CHAT']):
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     sleep(1)
                 except Exception as err:
@@ -109,7 +112,7 @@ class TgUploader:
 
     @retry(wait=wait_exponential(multiplier=2, min=4, max=8), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(Exception))
-    def __upload_file(self, up_path, dirpath, cap_mono, force_document=False):
+    def __upload_file(self, up_path, cap_mono, force_document=False):
         if self.__thumb is not None and not ospath.lexists(self.__thumb):
             self.__thumb = None
         thumb = self.__thumb
@@ -179,26 +182,32 @@ class TgUploader:
                                                               caption=cap_mono,
                                                               disable_notification=True,
                                                               progress=self.__upload_progress)
-            if self.__media_group and not self.__sent_msg.animation:
-                if dirpath in self.__media_dict[key].keys():
-                    self.__media_dict[key][dirpath].append(self.__sent_msg)
-                else:
-                    self.__media_dict[key][dirpath] = [self.__sent_msg]
-                msgs = self.__media_dict[key][dirpath]
-                if len(msgs) == 10:
-                    self.__send_media_group(dirpath, key, msgs)
+            if not self.__is_cancelled and self.__media_group and (self.__sent_msg.video or self.__sent_msg.document):
+                key = 'documents' if self.__sent_msg.document else 'videos'
+                if match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path):
+                    pname = match.group(0)
+                    if pname in self.__media_dict[key].keys():
+                        self.__media_dict[key][pname].append(self.__sent_msg)
+                    else:
+                        self.__media_dict[key][pname] = [self.__sent_msg]
+                    msgs = self.__media_dict[key][pname]
+                    if len(msgs) == 10:
+                        self.__send_media_group(pname, key, msgs)
+                    else:
+                        self.__last_msg_in_group = True
         except FloodWait as f:
             LOGGER.warning(str(f))
             sleep(f.value)
         except Exception as err:
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
-            if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
-                osremove(thumb)
             if 'Telegram says: [400' in str(err) and key != 'documents':
                 LOGGER.error(f"Retrying As Document. Path: {up_path}")
                 return self.__upload_file(up_path, dirpath, cap_mono, True)
             raise err
+        finally:
+            if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
+                osremove(thumb)
 
     def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -232,12 +241,8 @@ class TgUploader:
         for msg in self.__media_dict[key][subkey]:
             if key == 'videos':
                 input_media = InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
-            elif key == 'documents':
-                input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
-            elif key == 'photos':
-                input_media = InputMediaPhoto(media=msg.photo.file_id, caption=msg.caption)
             else:
-                input_media = InputMediaAudio(media=msg.audio.file_id, caption=msg.caption)
+                input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
             rlist.append(input_media)
         return rlist
 

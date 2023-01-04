@@ -14,7 +14,7 @@ from .listener import MirrorLeechListener
 
 listener_dict = {}
 
-def _ytdl(bot, message, isZip=False, isLeech=False):
+def _ytdl(bot, message, isZip=False, isLeech=False, sameDir=''):
     if not isLeech and not config_dict['GDRIVE_ID']:
         sendMessage('GDRIVE_ID not Provided!', bot, message)
         return
@@ -26,6 +26,7 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
     multi = 0
     index = 1
     link = ''
+    folder_name = ''
 
     args = mssg.split(maxsplit=2)
     if len(args) > 1:
@@ -39,6 +40,13 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
             elif x.strip().isdigit():
                 multi = int(x)
                 mi = index
+            elif x.startswith('m:'):
+                marg = x.split('m:', 1)
+                if len(marg) > 1:
+                    folder_name = f"/{marg[-1]}"
+                    if not sameDir:
+                        sameDir = set()
+                    sameDir.add(message.message_id)
         if multi == 0:
             args = mssg.split(maxsplit=index)
             if len(args) > index:
@@ -57,9 +65,13 @@ def _ytdl(bot, message, isZip=False, isLeech=False):
             ymsg = mssg.split(maxsplit=mi+1)
             ymsg[mi] = f"{multi - 1}"
             nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
+            if len(folder_name) > 0:
+                sameDir.add(nextmsg.message_id)
             nextmsg.from_user.id = message.from_user.id
             sleep(4)
-            Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech)).start()
+            Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech, sameDir)).start()
+
+    path = f'{DOWNLOAD_DIR}{message.message_id}{folder_name}'
 
     name = mssg.split('|', maxsplit=1)
     if len(name) > 1:
@@ -109,6 +121,10 @@ This option should be always before |newname, pswd: and opt:
 <code>/cmd</code> 10(number of links)
 Number should be always before |newname, pswd: and opt:
 
+<b>Multi links within same upload directory only by replying to first link:</b>
+<code>/cmd</code> 10(number of links) m:folder_name
+Number and m:folder_name should be always before |newname, pswd: and opt:
+
 <b>Options Note:</b> Add `^` before integer, some values must be integer and some string.
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
@@ -123,7 +139,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         """
         return sendMessage(help_msg, bot, message)
 
-    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag)
+    listener = MirrorLeechListener(bot, message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir)
     ydl = YoutubeDLHelper(listener)
     try:
         result = ydl.extractMetaData(link, name, opt, True)
@@ -147,7 +163,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     if qual:
         playlist = 'entries' in result
         LOGGER.info(f"Downloading with YT-DLP: {link}")
-        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{msg_id}', name, qual, playlist, opt)).start()
+        Thread(target=ydl.add_download, args=(link, path, name, qual, playlist, opt)).start()
     else:
         buttons = ButtonMaker()
         best_video = "bv*+ba/b"
@@ -168,7 +184,6 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             buttons.sbutton("Best Audios", f"qu {msg_id} {best_audio} t")
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(3)
-            listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
             bmsg = sendMessage('Choose Playlist Videos Quality:', bot, message, YTBUTTONS)
         else:
             formats = result.get('formats')
@@ -222,9 +237,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             buttons.sbutton("Best Audio", f"qu {msg_id} {best_audio}")
             buttons.sbutton("Cancel", f"qu {msg_id} cancel")
             YTBUTTONS = buttons.build_menu(2)
-            listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict]
             bmsg = sendMessage('Choose Video Quality:', bot, message, YTBUTTONS)
 
+        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict, path]
         Thread(target=_auto_cancel, args=(bmsg, msg_id)).start()
 
     __run_multi()
@@ -294,6 +309,7 @@ def select_format(update, context):
         name = task_info[3]
         opt = task_info[5]
         qual = data[2]
+        path = task_info[7]
         if len(data) == 4:
             playlist = True
             if '|' in qual:
@@ -305,7 +321,7 @@ def select_format(update, context):
                 qual = task_info[6][b_name][tbr][1]
         ydl = YoutubeDLHelper(listener)
         LOGGER.info(f"Downloading with YT-DLP: {link}")
-        Thread(target=ydl.add_download, args=(link, f'{DOWNLOAD_DIR}{task_id}', name, qual, playlist, opt)).start()
+        Thread(target=ydl.add_download, args=(link, path, name, qual, playlist, opt)).start()
         query.message.delete()
     del listener_dict[task_id]
 

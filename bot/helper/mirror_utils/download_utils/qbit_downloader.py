@@ -171,6 +171,7 @@ def __stop_duplicate(client, tor):
 
 @new_thread
 def __onDownloadComplete(client, tor):
+    sleep(2)
     download = getDownloadByGid(tor.hash[:12])
     try:
         listener = download.listener()

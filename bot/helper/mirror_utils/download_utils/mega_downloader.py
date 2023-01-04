@@ -202,7 +202,7 @@ def add_mega_download(mega_link, path, listener, name, from_queue=False):
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
     with queue_dict_lock:
         non_queued_dl.add(listener.uid)
-    makedirs(path)
+    makedirs(path, exist_ok=True)
     mega_listener.setValues(mname, size, gid)
     if not from_queue:
         listener.onDownloadStart()
