@@ -84,7 +84,7 @@ def sendFile(bot, message, txt, fileName, caption=""):
     except RetryAfter as r:
         LOGGER.warning(str(r))
         sleep(r.retry_after * 1.5)
-        return sendFile(bot, message, name, caption)
+        return sendFile(bot, message, txt, fileName, caption)
     except Exception as e:
         LOGGER.error(str(e))
         return
