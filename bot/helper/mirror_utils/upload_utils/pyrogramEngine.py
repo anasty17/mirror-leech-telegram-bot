@@ -59,8 +59,7 @@ class TgUploader:
                         return
                     if self.__last_msg_in_group:
                         group_lists = [x for v in self.__media_dict.values() for x in v.keys()]
-                        if (match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path)) \
-                          and not match.group(0) in group_lists:
+                        if (match := re_search(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path)) and match.group(0) not in group_lists:
                             for key, value in list(self.__media_dict.items()):
                                 for subkey, msgs in list(value.items()):
                                     if len(msgs) > 1:
@@ -203,7 +202,7 @@ class TgUploader:
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
             if 'Telegram says: [400' in str(err) and key != 'documents':
                 LOGGER.error(f"Retrying As Document. Path: {up_path}")
-                return self.__upload_file(up_path, dirpath, cap_mono, True)
+                return self.__upload_file(up_path, cap_mono, True)
             raise err
         finally:
             if self.__thumb is None and thumb is not None and ospath.lexists(thumb):
