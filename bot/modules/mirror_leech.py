@@ -21,7 +21,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage
 from .listener import MirrorLeechListener
 
 
-def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir=''):
+def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         sendMessage('GDRIVE_ID not Provided!', bot, message)
         return

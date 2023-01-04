@@ -14,7 +14,7 @@ from .listener import MirrorLeechListener
 
 listener_dict = {}
 
-def _ytdl(bot, message, isZip=False, isLeech=False, sameDir=''):
+def _ytdl(bot, message, isZip=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         sendMessage('GDRIVE_ID not Provided!', bot, message)
         return
