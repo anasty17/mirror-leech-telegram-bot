@@ -220,8 +220,8 @@ class TgUploader:
     def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
-        self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
-        self.__media_group = user_dict.get('media_group') or config_dict['MEDIA_GROUP']
+        self.__as_doc = user_dict.get('as_doc') or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']
+        self.__media_group = user_dict.get('media_group') or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']
         if not ospath.lexists(self.__thumb):
             self.__thumb = None
 

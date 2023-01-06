@@ -21,37 +21,34 @@ def get_user_settings(from_user):
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
     user_dict = user_data.get(user_id, {})
-    AD = config_dict['AS_DOCUMENT']
-    if not user_dict and AD or user_dict.get('as_doc') or 'as_doc' not in user_dict and AD:
+    if user_dict.get('as_doc', False) or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']:
         ltype = "DOCUMENT"
-        buttons.sbutton("Send As Media", f"userset {user_id} med")
+        buttons.sbutton("Send As Media", f"userset {user_id} doc")
     else:
         ltype = "MEDIA"
         buttons.sbutton("Send As Document", f"userset {user_id} doc")
 
     buttons.sbutton("Leech Splits", f"userset {user_id} lss")
-    if user_dict.get('split_size'):
+    if user_dict.get('split_size', False):
         split_size = user_dict['split_size']
     else:
         split_size = config_dict['LEECH_SPLIT_SIZE']
 
-    ES = config_dict['EQUAL_SPLITS']
-    if not user_dict and ES or user_dict.get('equal_splits') or 'equal_splits' not in user_dict and ES:
+    if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
         equal_splits = 'Enabled'
     else:
         equal_splits = 'Disabled'
 
-    MG = config_dict['MEDIA_GROUP']
-    if not user_dict and MG or user_dict.get('media_group') or 'media_group' not in user_dict and MG:
+    if user_dict.get('media_group', False) or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']:
         media_group = 'Enabled'
     else:
         media_group = 'Disabled'
 
     buttons.sbutton("YT-DLP Quality", f"userset {user_id} ytq")
     YQ = config_dict['YT_DLP_QUALITY']
-    if user_dict.get('yt_ql'):
+    if user_dict.get('yt_ql', False):
         ytq = user_dict['yt_ql']
-    elif not user_dict and YQ or 'yt_ql' not in user_dict and YQ:
+    elif 'yt_ql' not in user_dict and YQ:
         ytq = YQ
     else:
         ytq = 'None'
@@ -128,13 +125,7 @@ def edit_user_settings(update, context):
     if user_id != int(data[1]):
         query.answer(text="Not Yours!", show_alert=True)
     elif data[2] == "doc":
-        update_user_ldata(user_id, 'as_doc', True)
-        query.answer()
-        update_user_settings(message, query.from_user)
-        if DATABASE_URL:
-            DbManger().update_user_data(user_id)
-    elif data[2] == "med":
-        update_user_ldata(user_id, 'as_doc', False)
+        update_user_ldata(user_id, 'as_doc', not user_dict.get('as_doc', False))
         query.answer()
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
@@ -189,7 +180,7 @@ def edit_user_settings(update, context):
         handler_dict[user_id] = True
         buttons = ButtonMaker()
         buttons.sbutton("Back", f"userset {user_id} back")
-        if user_dict.get('yt_ql') or config_dict['YT_DLP_QUALITY']:
+        if user_dict.get('yt_ql', False) or config_dict['YT_DLP_QUALITY']:
             buttons.sbutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
         buttons.sbutton("Close", f"userset {user_id} close")
         rmsg = f'''
@@ -224,15 +215,14 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         start_time = time()
         handler_dict[user_id] = True
         buttons = ButtonMaker()
-        if user_dict.get('split_size'):
+        if user_dict.get('split_size', False):
             buttons.sbutton("Reset Split Size", f"userset {user_id} rlss")
         ES = config_dict['EQUAL_SPLITS']
-        if not user_dict and ES or user_dict.get('equal_splits') or 'equal_splits' not in user_dict and ES:
+        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
             buttons.sbutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.sbutton("Enable Equal Splits", f"userset {user_id} esplits")
-        MG = config_dict['MEDIA_GROUP']
-        if not user_dict and MG or user_dict.get('media_group') or 'media_group' not in user_dict and MG:
+        if user_dict.get('media_group', False) or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']:
             buttons.sbutton("Disable Media Group", f"userset {user_id} mgroup")
         else:
             buttons.sbutton("Enable Media Group", f"userset {user_id} mgroup")
@@ -258,14 +248,14 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
     elif data[2] == 'esplits':
         query.answer()
         handler_dict[user_id] = False
-        update_user_ldata(user_id, 'equal_splits', not bool(user_dict.get('equal_splits')))
+        update_user_ldata(user_id, 'equal_splits', not user_dict.get('equal_splits', False))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)
     elif data[2] == 'mgroup':
         query.answer()
         handler_dict[user_id] = False
-        update_user_ldata(user_id, 'media_group', not bool(user_dict.get('media_group')))
+        update_user_ldata(user_id, 'media_group', not user_dict.get('media_group', False))
         update_user_settings(message, query.from_user)
         if DATABASE_URL:
             DbManger().update_user_data(user_id)

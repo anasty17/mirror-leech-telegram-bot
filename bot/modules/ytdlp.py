@@ -158,7 +158,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
                     qual = f.split('format:', 1)[1]
         elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
-        elif not user_dict and YTQ or 'yt_ql' not in user_dict and YTQ:
+        elif 'yt_ql' not in user_dict and YTQ:
             qual = YTQ
     if qual:
         playlist = 'entries' in result

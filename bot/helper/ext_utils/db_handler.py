@@ -32,7 +32,8 @@ class DbManger:
             self.__db.settings.qbittorrent.update_one({'_id': bot_id}, {'$set': qbit_options}, upsert=True)
         # User Data
         if self.__db.users.find_one():
-            rows = self.__db.users.find({})  # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb}
+            rows = self.__db.users.find({})
+            # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_ql, media_group, equal_splits, split_size}
             for row in rows:
                 uid = row['_id']
                 del row['_id']
