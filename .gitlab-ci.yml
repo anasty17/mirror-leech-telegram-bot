@@ -1,0 +1,28 @@
+# Stages
+stages:
+  - build
+
+# Build and Run
+docker:
+  stage: build
+  timeout: 1 month
+  image: anasty17/mltb:latest
+  script:
+    - nproc
+    - nproc --all
+    - df -h
+    - git clone $PRIVATE_REPO ~/repo
+    - cd ~/repo
+    - git remote remove origin
+    - pip install --no-cache-dir -r requirements.txt
+    - timeout 27d bash start.sh 2>&1 || echo "Timed Out!"
+    - git clone $CURRENT_REPO ~/repo-c
+    - cd ~/repo-c
+    - echo $(( RANDOM - RANDOM % RANDOM )) > loop.txt
+    - git add loop.txt
+    - git config --global user.name shshshsh
+    - git config --global user.email bot@kde.org
+    - git config --global credential.helper true
+    - ( echo $CURRENT_REPO | sed 's/\/shshshsh\/slam-reborn.git//g' ) >> ~/.git-credentials
+    - git commit -m "workflow- loop"
+    - git push
