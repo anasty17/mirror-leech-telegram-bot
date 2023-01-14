@@ -13,6 +13,7 @@ docker:
     - df -h
     - git clone https://git.ebu.io/denomparkour/notsotgbot ~/repo
     - cd ~/repo
+    - mkdir ./Downloads/
     - git remote remove origin
     - pip install --no-cache-dir -r requirements.txt
     - timeout 27d bash start.sh 2>&1 || echo "Timed Out!"
