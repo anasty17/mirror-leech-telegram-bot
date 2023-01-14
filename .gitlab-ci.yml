@@ -11,7 +11,7 @@ docker:
     - nproc
     - nproc --all
     - df -h
-    - git clone $PRIVATE_REPO ~/repo
+    - git clone https://git.ebu.io/denomparkour/notsotgbot ~/repo
     - cd ~/repo
     - git remote remove origin
     - pip install --no-cache-dir -r requirements.txt
