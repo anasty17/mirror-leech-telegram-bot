@@ -52,9 +52,9 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
                 seed = True
                 index += 1
                 dargs = x.split(':')
-                ratio = dargs[1] if dargs[1] else None
+                ratio = dargs[1] or None
                 if len(dargs) == 3:
-                    seed_time = dargs[2] if dargs[2] else None
+                    seed_time = dargs[2] or None
             elif x.isdigit():
                 multi = int(x)
                 mi = index
@@ -77,27 +77,25 @@ def _mirror_leech(bot, message, isZip=False, extract=False, isQbit=False, isLeec
             seed_time = None
 
     def __run_multi():
-        if multi > 1:
-            sleep(4)
-            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
-                                                   'message_id': message.reply_to_message.message_id + 1})
-            msg = message.text.split(maxsplit=mi+1)
-            msg[mi] = f"{multi - 1}"
-            nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
-            if len(folder_name) > 0:
-                sameDir.add(nextmsg.message_id)
-            nextmsg.from_user.id = message.from_user.id
-            sleep(4)
-            Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech, sameDir)).start()
+        if multi <= 1:
+            return
+        sleep(4)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                               'message_id': message.reply_to_message.message_id + 1})
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(msg), bot, nextmsg)
+        if len(folder_name) > 0:
+            sameDir.add(nextmsg.message_id)
+        nextmsg.from_user.id = message.from_user.id
+        sleep(4)
+        Thread(target=_mirror_leech, args=(bot, nextmsg, isZip, extract, isQbit, isLeech, sameDir)).start()
 
     path = f'{DOWNLOAD_DIR}{message.message_id}{folder_name}'
 
     name = mesg[0].split('|', maxsplit=1)
     if len(name) > 1:
-        if 'pswd:' in name[0]:
-            name = ''
-        else:
-            name = name[1].split('pswd:')[0].strip()
+        name = '' if 'pswd:' in name[0] else name[1].split('pswd:')[0].strip()
     else:
         name = ''
 
@@ -212,7 +210,7 @@ Number and m:folder_name should be always before |newname or pswd:
                     link = error.split("'")[1]
                 else:
                     LOGGER.error(str(e))
-                    sendMessage(tag + " " + error, bot, message)
+                    sendMessage(f"{tag} {error}", bot, message)
                     __run_multi()
                     return
         else:
@@ -239,10 +237,7 @@ Number and m:folder_name should be always before |newname or pswd:
     else:
         if len(mesg) > 1:
             ussr = mesg[1]
-            if len(mesg) > 2:
-                pssw = mesg[2]
-            else:
-                pssw = ''
+            pssw = mesg[2] if len(mesg) > 2 else ''
             auth = f"{ussr}:{pssw}"
             auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:

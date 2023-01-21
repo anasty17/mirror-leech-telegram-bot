@@ -58,18 +58,19 @@ def _ytdl(bot, message, isZip=False, isLeech=False, sameDir={}):
                     link = link.strip()
 
     def __run_multi():
-        if multi > 1:
-            sleep(4)
-            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
-                                                   'message_id': message.reply_to_message.message_id + 1})
-            ymsg = mssg.split(maxsplit=mi+1)
-            ymsg[mi] = f"{multi - 1}"
-            nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
-            if len(folder_name) > 0:
-                sameDir.add(nextmsg.message_id)
-            nextmsg.from_user.id = message.from_user.id
-            sleep(4)
-            Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech, sameDir)).start()
+        if multi <= 1:
+            return
+        sleep(4)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                               'message_id': message.reply_to_message.message_id + 1})
+        ymsg = mssg.split(maxsplit=mi+1)
+        ymsg[mi] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(ymsg), bot, nextmsg)
+        if len(folder_name) > 0:
+            sameDir.add(nextmsg.message_id)
+        nextmsg.from_user.id = message.from_user.id
+        sleep(4)
+        Thread(target=_ytdl, args=(bot, nextmsg, isZip, isLeech, sameDir)).start()
 
     path = f'{DOWNLOAD_DIR}{message.message_id}{folder_name}'
 

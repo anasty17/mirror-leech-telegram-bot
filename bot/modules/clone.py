@@ -3,6 +3,8 @@ from string import ascii_letters, digits
 from telegram.ext import CommandHandler
 from threading import Thread
 from time import sleep
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, delete_all_messages, update_all_messages, sendStatusMessage
@@ -10,7 +12,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.status_utils.clone_status import CloneStatus
 from bot import dispatcher, LOGGER, download_dict, download_dict_lock, Interval, config_dict
-from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread
+from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread, is_Sharerlink
 
 
 def _clone(message, bot):
@@ -39,17 +41,28 @@ def _clone(message, bot):
             tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
 
     def __run_multi():
-        if multi > 1:
-            sleep(4)
-            nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
-                                                   'message_id': message.reply_to_message.message_id + 1})
-            cmsg = message.text.split()
-            cmsg[1] = f"{multi - 1}"
-            nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
-            nextmsg.from_user.id = message.from_user.id
-            sleep(4)
-            Thread(target=_clone, args=(nextmsg, bot)).start()
+        if multi <= 1:
+            return
+        sleep(4)
+        nextmsg = type('nextmsg', (object, ), {'chat_id': message.chat_id,
+                                                'message_id': message.reply_to_message.message_id + 1})
+        cmsg = message.text.split()
+        cmsg[1] = f"{multi - 1}"
+        nextmsg = sendMessage(" ".join(cmsg), bot, nextmsg)
+        nextmsg.from_user.id = message.from_user.id
+        sleep(4)
+        Thread(target=_clone, args=(nextmsg, bot)).start()
 
+    if is_Sharerlink(link):
+        try:
+            link = direct_link_generator(link)
+            LOGGER.info(f"Generated link: {link}")
+        except DirectDownloadLinkException as e:
+            LOGGER.info(str(e))
+            if str(e).startswith('ERROR:'):
+                sendMessage(str(e), bot, message)
+                __run_multi()
+                return
     if is_gdrive_link(link):
         gd = GoogleDriveHelper()
         res, size, name, files = gd.helper(link)
