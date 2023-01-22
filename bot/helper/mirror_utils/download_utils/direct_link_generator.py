@@ -71,14 +71,14 @@ def direct_link_generator(link: str):
         return uploadee(link)
     elif is_Sharerlink(link):
         if 'gdtot' in link:
-            gdtot(link)
+            return gdtot(link)
         elif 'filepress' in link:
-            filepress(link)
+            return filepress(link)
         elif any(x in link for x in ['appdrive', 'gdflix']):
-            appdrive(link)
+            return appdrive(link)
         else:
             raise DirectDownloadLinkException('ERROR: Currently this sharer link does not support')
-    elif any(x in link for x in ['terabox.com', 'mirrobox.com', '4funbox.com']):
+    elif any(x in link for x in ['terabox.com', 'nephobox.com', '4funbox.com']):
         return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
