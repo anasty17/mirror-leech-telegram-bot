@@ -78,7 +78,7 @@ def direct_link_generator(link: str):
             return appdrive(link)
         else:
             raise DirectDownloadLinkException('ERROR: Currently this sharer link does not support')
-    elif any(x in link for x in ['terabox.com', 'nephobox.com', '4funbox.com']):
+    elif any(x in link for x in ['terabox.com', 'mirrobox.com', '4funbox.com']):
         return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
