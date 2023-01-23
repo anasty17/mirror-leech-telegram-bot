@@ -78,7 +78,7 @@ def direct_link_generator(link: str):
             return appdrive(link)
         else:
             raise DirectDownloadLinkException('ERROR: Currently this sharer link does not support')
-    elif any(x in link for x in ['terabox.com', 'mirrobox.com', '4funbox.com']):
+    elif any(x in link for x in ['terabox.com', 'mirrobox.com', '4funbox.com', 'nephobox.com']):
         return terabox(link)
     elif any(x in link for x in fmed_list):
         return fembed(link)
@@ -413,18 +413,19 @@ def terabox(url) -> str:
 def filepress(url):
     cget = create_scraper().request
     try:
+        url = cget('GET', url).url
         raw = urlparse(url)
         json_data = {
             'id': raw.path.split('/')[-1],
             'method': 'publicDownlaod',
             }
-        api = f'{raw.scheme}://api.{raw.netloc}/api/file/downlaod/'
-        res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.netloc}'}, json=json_data).json()
-        if 'data' not in res:
-            raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
-        return f'https://drive.google.com/uc?id={res["data"]}&export=download'
+        api = f'{raw.scheme}://api.{raw.hostname}/api/file/downlaod/'
+        res = cget('POST', api, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=json_data).json()
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if 'data' not in res:
+        raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
+    return f'https://drive.google.com/uc?id={res["data"]}&export=download'
 
 def gdtot(url):
     cget = create_scraper().request
@@ -445,7 +446,7 @@ def gdtot(url):
         raise DirectDownloadLinkException('ERROR: Cannot bypass this')
     path = path[0]
     raw = urlparse(token_url)
-    final_url = f'{raw.scheme}://{raw.netloc}{path}'
+    final_url = f'{raw.scheme}://{raw.hostname}{path}'
     try:
         res = cget('GET', final_url)
     except Exception as e:
@@ -458,7 +459,7 @@ def gdtot(url):
         raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
     headers = {
         'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
-        'x-token': raw.netloc,
+        'x-token': raw.hostname,
     }
     data = '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action"\r\n\r\ndirect\r\n' \
         f'------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="key"\r\n\r\n{key}\r\n' \
@@ -467,7 +468,10 @@ def gdtot(url):
     try:
         response = cget("POST", final_url, cookies=res.cookies, headers=headers, data=data).json()
         res = cget('GET', response["url"])
-        return etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")[0]
+        if (drive_link := etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")) and "drive.google.com" in drive_link[0]:
+            return drive_link[0]
+        else:
+            raise DirectDownloadLinkException('ERROR: Drive Link not found')
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
 
@@ -486,7 +490,7 @@ def appdrive(url):
         raise DirectDownloadLinkException("ERROR: This link don't have direct download button")
     headers = {
         'Content-Type': 'multipart/form-data; boundary=----WebKitFormBoundaryi3pOrWU7hGYfwwL4',
-        'x-token': raw.netloc,
+        'x-token': raw.hostname,
     }
     data = '------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="action"\r\n\r\ndirect\r\n' \
         f'------WebKitFormBoundaryi3pOrWU7hGYfwwL4\r\nContent-Disposition: form-data; name="key"\r\n\r\n{key}\r\n' \
@@ -494,6 +498,14 @@ def appdrive(url):
         '------WebKitFormBoundaryi3pOrWU7hGYfwwL4--\r\n'
     try:
         res = cget("POST", url, cookies=res.cookies, headers=headers, data=data).json()
-        return res["url"]
+        if "url" not in res:
+            raise DirectDownloadLinkException('ERROR: Drive Link not found')
+        if "drive.google.com" in res["url"]:
+            return res["url"]
+        res = cget('GET', res["url"])
+        if (drive_link := etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")) and "drive.google.com" in drive_link[0]:
+            return drive_link[0]
+        else:
+            raise DirectDownloadLinkException('ERROR: Drive Link not found')
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
