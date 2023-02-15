@@ -1,19 +1,21 @@
+#!/usr/bin/env python3
+from uvloop import install
+install()
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, error as log_error, info as log_info, warning as log_warning
 from socket import setdefaulttimeout
 from faulthandler import enable as faulthandler_enable
-from telegram.ext import Updater as tgUpdater, Defaults
 from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from os import remove as osremove, path as ospath, environ
 from subprocess import Popen, run as srun
 from time import sleep, time
-from threading import Thread, Lock
+from threading import Thread
 from dotenv import load_dotenv
-from pyrogram import Client, enums
-from asyncio import get_event_loop
+from asyncio import Lock
 from pymongo import MongoClient
-
-main_loop = get_event_loop()
+from pyrogram import Client as tgClient, enums
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from tzlocal import get_localzone
 
 faulthandler_enable()
 
@@ -53,26 +55,18 @@ except:
 download_dict_lock = Lock()
 status_reply_dict_lock = Lock()
 queue_dict_lock = Lock()
-# Key: update.effective_chat.id
-# Value: telegram.Message
 status_reply_dict = {}
-# Key: update.message.message_id
-# Value: An object of Status
 download_dict = {}
 # key: rss_title
 # value: {link, last_feed, last_title, filter}
 rss_dict = {}
-
-for file_ in ['pyrogram.session', 'pyrogram.session-journal', 'rss_session.session', 'rss_session.session-journal']:
-    if ospath.exists(file_):
-        osremove(file_)
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
 if len(BOT_TOKEN) == 0:
     log_error("BOT_TOKEN variable is missing! Exiting now")
     exit(1)
 
-bot_id = int(BOT_TOKEN.split(':', 1)[0])
+bot_id = BOT_TOKEN.split(':', 1)[0]
 
 DATABASE_URL = environ.get('DATABASE_URL', '')
 if len(DATABASE_URL) == 0:
@@ -100,7 +94,7 @@ if DATABASE_URL:
         qbit_options = qbit_opt
     conn.close()
     BOT_TOKEN = environ.get('BOT_TOKEN', '')
-    bot_id = int(BOT_TOKEN.split(':', 1)[0])
+    bot_id = BOT_TOKEN.split(':', 1)[0]
     DATABASE_URL = environ.get('DATABASE_URL', '')
 else:
     config_dict = {}
@@ -153,22 +147,14 @@ if len(EXTENSION_FILTER) > 0:
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
 IS_PREMIUM_USER = False
+user = ''
 USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
-if len(USER_SESSION_STRING) == 0:
-    log_info("Creating client from BOT_TOKEN")
-    app = Client(name='pyrogram', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML, no_updates=True)
-else:
+if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
-    app = Client(name='pyrogram', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, session_string=USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
-    with app:
-        IS_PREMIUM_USER = app.me.is_premium
-
-RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
-if len(RSS_USER_SESSION_STRING) == 0:
-    rss_session = ''
-else:
-    log_info("Creating client from RSS_USER_SESSION_STRING")
-    rss_session = Client(name='rss_session', api_id=TELEGRAM_API, api_hash=TELEGRAM_HASH, session_string=RSS_USER_SESSION_STRING, parse_mode=enums.ParseMode.HTML, no_updates=True)
+    user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
+                    parse_mode=enums.ParseMode.HTML, no_updates=True, takeout=True,
+                    max_concurrent_transmissions=10).start()
+    IS_PREMIUM_USER = user.me.is_premium
 
 MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
 if len(MEGA_API_KEY) == 0:
@@ -193,10 +179,6 @@ if len(INDEX_URL) == 0:
 SEARCH_API_LINK = environ.get('SEARCH_API_LINK', '').rstrip("/")
 if len(SEARCH_API_LINK) == 0:
     SEARCH_API_LINK = ''
-
-RSS_COMMAND = environ.get('RSS_COMMAND', '')
-if len(RSS_COMMAND) == 0:
-    RSS_COMMAND = ''
 
 LEECH_FILENAME_PREFIX = environ.get('LEECH_FILENAME_PREFIX', '')
 if len(LEECH_FILENAME_PREFIX) == 0:
@@ -277,9 +259,6 @@ USE_SERVICE_ACCOUNTS = USE_SERVICE_ACCOUNTS.lower() == 'true'
 WEB_PINCODE = environ.get('WEB_PINCODE', '')
 WEB_PINCODE = WEB_PINCODE.lower() == 'true'
 
-IGNORE_PENDING_REQUESTS = environ.get('IGNORE_PENDING_REQUESTS', '')
-IGNORE_PENDING_REQUESTS = IGNORE_PENDING_REQUESTS.lower() == 'true'
-
 AS_DOCUMENT = environ.get('AS_DOCUMENT', '')
 AS_DOCUMENT = AS_DOCUMENT.lower() == 'true'
 
@@ -320,7 +299,6 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'EQUAL_SPLITS': EQUAL_SPLITS,
                'EXTENSION_FILTER': EXTENSION_FILTER,
                'GDRIVE_ID': GDRIVE_ID,
-               'IGNORE_PENDING_REQUESTS': IGNORE_PENDING_REQUESTS,
                'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                'INDEX_URL': INDEX_URL,
                'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
@@ -334,9 +312,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'QUEUE_ALL': QUEUE_ALL,
                'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
                'QUEUE_UPLOAD': QUEUE_UPLOAD,
-               'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                'RSS_CHAT_ID': RSS_CHAT_ID,
-               'RSS_COMMAND': RSS_COMMAND,
                'RSS_DELAY': RSS_DELAY,
                'SEARCH_API_LINK': SEARCH_API_LINK,
                'SEARCH_LIMIT': SEARCH_LIMIT,
@@ -380,16 +356,16 @@ if BASE_URL:
 
 srun(["qbittorrent-nox", "-d", "--profile=."])
 if not ospath.exists('.netrc'):
-    srun(["touch", ".netrc"])
-srun(["cp", ".netrc", "/root/.netrc"])
-srun(["chmod", "600", "/root/.netrc"])
+    with open('.netrc', 'w'):
+       pass
 srun(["chmod", "600", ".netrc"])
+srun(["cp", ".netrc", "/root/.netrc"])
 srun(["chmod", "+x", "aria.sh"])
 srun("./aria.sh", shell=True)
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip", "-x", "accounts/emails.txt"])
+    srun(["unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
 if not ospath.exists('accounts'):
@@ -444,9 +420,8 @@ else:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
 
-
-tgDefaults = Defaults(parse_mode='HTML', disable_web_page_preview=True, allow_sending_without_reply=True, run_async=True)
-updater = tgUpdater(token=BOT_TOKEN, defaults=tgDefaults, request_kwargs={'read_timeout': 20, 'connect_timeout': 15})
-bot = updater.bot
-dispatcher = updater.dispatcher
-job_queue = updater.job_queue
+log_info("Creating client from BOT_TOKEN")
+bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML).start()
+bot_loop = bot.loop
+bot_name = bot.me.username
+scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)

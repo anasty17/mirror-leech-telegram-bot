@@ -1,36 +1,28 @@
-from telegram.ext import MessageFilter
-from telegram import Message
+#!/usr/bin/env python3
+from pyrogram.filters import create
+
 from bot import user_data, OWNER_ID
 
 
 class CustomFilters:
-    class __OwnerFilter(MessageFilter):
-        def filter(self, message: Message):
-            return message.from_user.id == OWNER_ID
 
-    owner_filter = __OwnerFilter()
+    async def owner_filter(self, client, update):
+        uid = update.from_user.id
+        return uid == OWNER_ID
 
-    class __AuthorizedUserFilter(MessageFilter):
-        def filter(self, message: Message):
-            uid = message.from_user.id
-            return uid == OWNER_ID or uid in user_data and (user_data[uid].get('is_auth') or user_data[uid].get('is_sudo'))
+    owner = create(owner_filter)
 
-    authorized_user = __AuthorizedUserFilter()
+    async def authorized_user(self, client, update):
+        uid = update.from_user.id
+        chat_id = update.chat.id
+        return bool(uid == OWNER_ID or uid in user_data and (user_data[chat_id].get('is_auth', False) or
+                       user_data[uid].get('is_auth', False) or user_data[uid].get('is_sudo', False)))
 
-    class __AuthorizedChat(MessageFilter):
-        def filter(self, message: Message):
-            uid = message.chat.id
-            return uid in user_data and user_data[uid].get('is_auth')
+    authorized = create(authorized_user)
 
-    authorized_chat = __AuthorizedChat()
+    async def sudo_user(self, client, update):
+        uid = update.from_user.id
+        return bool(uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo'))
 
-    class __SudoUser(MessageFilter):
-        def filter(self, message: Message):
-            uid = message.from_user.id
-            return uid in user_data and user_data[uid].get('is_sudo')
+    sudo = create(sudo_user)
 
-    sudo_user = __SudoUser()
-
-    @staticmethod
-    def owner_query(uid):
-        return uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo')

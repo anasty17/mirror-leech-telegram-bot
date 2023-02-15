@@ -1,42 +1,42 @@
-from telegram.ext import CommandHandler
+#!/usr/bin/env python3
+from pyrogram.handlers import MessageHandler
+from pyrogram.filters import command
 
-from bot import dispatcher
+from bot import bot
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import deleteMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import is_gdrive_link, new_thread
+from bot.helper.ext_utils.bot_utils import is_gdrive_link, sync_to_async
 
-@new_thread
-def countNode(update, context):
-    reply_to = update.message.reply_to_message
+
+async def countNode(client, message):
+    args = message.text.split()
     link = ''
-    if len(context.args) == 1:
-        link = context.args[0]
-        if update.message.from_user.username:
-            tag = f"@{update.message.from_user.username}"
+    if len(args) > 1:
+        link = args[1]
+        if username := message.from_user.username:
+            tag = f"@{username}"
         else:
-            tag = update.message.from_user.mention_html(update.message.from_user.first_name)
-    if reply_to:
+            tag = message.from_user.mention
+    if reply_to := message.reply_to_message:
         if len(link) == 0:
             link = reply_to.text.split(maxsplit=1)[0].strip()
-        if reply_to.from_user.username:
-            tag = f"@{reply_to.from_user.username}"
-        else:
-            tag = reply_to.from_user.mention_html(reply_to.from_user.first_name)
+        if not reply_to.from_user.is_bot:
+            if username := reply_to.from_user.username:
+                tag = f"@{username}"
+            else:
+                tag = reply_to.from_user.mention
     if is_gdrive_link(link):
-        msg = sendMessage(f"Counting: <code>{link}</code>", context.bot, update.message)
+        msg = await sendMessage(message, f"Counting: <code>{link}</code>")
         gd = GoogleDriveHelper()
-        result = gd.count(link)
-        deleteMessage(context.bot, msg)
+        result = await sync_to_async(gd.count, link)
+        await deleteMessage(msg)
         cc = f'\n\n<b>cc: </b>{tag}'
-        sendMessage(result + cc, context.bot, update.message)
+        await sendMessage(message, result + cc)
     else:
         msg = 'Send Gdrive link along with command or by replying to the link by command'
-        sendMessage(msg, context.bot, update.message)
+        await sendMessage(message, msg)
 
 
-count_handler = CommandHandler(BotCommands.CountCommand, countNode,
-                               filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-
-dispatcher.add_handler(count_handler)
+bot.add_handler(MessageHandler(countNode, filters=command(BotCommands.CountCommand) & CustomFilters.authorized))

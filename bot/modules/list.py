@@ -1,55 +1,52 @@
-from threading import Thread
-from telegram.ext import CommandHandler, CallbackQueryHandler
+#!/usr/bin/env python3
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.filters import command, regex
 
-from bot import LOGGER, dispatcher
+from bot import LOGGER, bot
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.ext_utils.bot_utils import sync_to_async
 
-def list_buttons(update, context):
-    user_id = update.message.from_user.id
-    if len(context.args) == 0:
-        return sendMessage('Send a search key along with command', context.bot, update.message)
+
+async def list_buttons(client, message):
+    if len(message.text) == 0:
+        return await sendMessage(message, 'Send a search key along with command')
+    user_id = message.from_user.id
     buttons = ButtonMaker()
-    buttons.sbutton("Folders", f"types {user_id} folders")
-    buttons.sbutton("Files", f"types {user_id} files")
-    buttons.sbutton("Both", f"types {user_id} both")
-    buttons.sbutton("Cancel", f"types {user_id} cancel")
+    buttons.ibutton("Folders", f"list_types {user_id} folders")
+    buttons.ibutton("Files", f"list_types {user_id} files")
+    buttons.ibutton("Both", f"list_types {user_id} both")
+    buttons.ibutton("Cancel", f"list_types {user_id} cancel")
     button = buttons.build_menu(2)
-    sendMessage('Choose option to list.', context.bot, update.message, button)
+    await sendMessage(message, 'Choose option to list.', button)
 
-def select_type(update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    msg = query.message
-    key = msg.reply_to_message.text.split(" ", maxsplit=1)[1]
-    data = query.data
-    data = data.split()
-    if user_id != int(data[1]):
-        return query.answer(text="Not Yours!", show_alert=True)
-    elif data[2] == 'cancel':
-        query.answer()
-        return editMessage("list has been canceled!", msg)
-    query.answer()
-    item_type = data[2]
-    editMessage(f"<b>Searching for <i>{key}</i></b>", msg)
-    Thread(target=_list_drive, args=(key, msg, item_type)).start()
-
-def _list_drive(key, bmsg, item_type):
+async def _list_drive(key, message, item_type):
     LOGGER.info(f"listing: {key}")
     gdrive = GoogleDriveHelper()
-    msg, button = gdrive.drive_list(key, isRecursive=True, itemType=item_type)
+    msg, button = await sync_to_async(gdrive.drive_list, key, isRecursive=True, itemType=item_type)
     if button:
-        editMessage(msg, bmsg, button)
+        await editMessage(message, msg, button)
     else:
-        editMessage(f'No result found for <i>{key}</i>', bmsg)
+        await editMessage(message, f'No result found for <i>{key}</i>')
+
+async def select_type(client, query):
+    user_id = query.from_user.id
+    message = query.message
+    key = message.reply_to_message.text.split(maxsplit=1)[1].strip()
+    data = query.data.split()
+    if user_id != int(data[1]):
+        return await query.answer(text="Not Yours!", alert=True)
+    elif data[2] == 'cancel':
+        await query.answer()
+        return await editMessage(message, "list has been canceled!")
+    await query.answer()
+    item_type = data[2]
+    await editMessage(message, f"<b>Searching for <i>{key}</i></b>")
+    await _list_drive(key, message, item_type)
 
 
-list_handler = CommandHandler(BotCommands.ListCommand, list_buttons,
-                              filters=CustomFilters.authorized_chat | CustomFilters.authorized_user)
-list_type_handler = CallbackQueryHandler(select_type, pattern="types")
-
-dispatcher.add_handler(list_handler)
-dispatcher.add_handler(list_type_handler)
+bot.add_handler(MessageHandler(list_buttons, filters=command(BotCommands.ListCommand) & CustomFilters.authorized))
+bot.add_handler(CallbackQueryHandler(select_type, filters=regex("^list_types")))

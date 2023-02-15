@@ -68,9 +68,15 @@ In each single file there is a major change from base code, it's almost totaly d
 - Zip file/folder with or without password
 ### RSS
 - Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
-- Filter added and all functions have been improved
+- Filters added
+- Edit any feed while running: pause, resume, edit command and edit filters
+- Rss for each user with tag
+- Sudo settings to control users feeds
+- All functions have been improved using buttons from one command.
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7, s390x`
+- Switch from sync to async
+- SWitch from python-telegram-bot to pyrogram
 - Edit variables and overwrite the private files while bot running
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
 - Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot
@@ -162,7 +168,6 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Int`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
-- `IGNORE_PENDING_REQUESTS`: Ignore pending requests after restart. Default is `False`. `Bool`
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. **NOTE**: Recommended limit is `4` tasks. `Int`
@@ -196,10 +201,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### RSS
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Int`
-- `RSS_COMMAND`: Choose command for the desired action. `Str`. **NOTE**: Don't add `/` at the beginning.
 - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. Add `-100` before channel id. `Int`
-- `RSS_USER_SESSION_STRING`: To send rss links from your telegram account. Instead of adding bot to channel then linking the channel to group to get rss link since bot will not read command from itself or other bot. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. **NOTE**: Don't use same session string as `USER_SESSION_STRING`.
-  - **RSS NOTE**: `DATABASE_URL` and `RSS_CHAT_ID` is required, otherwise all rss commands will not work. You must use bot in group. You can add the bot to a channel and link this channel to group so messages sent by bot to channel will be forwarded to group without using `RSS_USER_STRING_SESSION`.
+  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` OR bot should be added in group and channel and used in group linked to that channel so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
 ### MEGA
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`

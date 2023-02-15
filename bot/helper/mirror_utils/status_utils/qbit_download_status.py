@@ -1,7 +1,8 @@
-from time import sleep
+#!/usr/bin/env python3
+from asyncio import sleep
 
 from bot import LOGGER, get_client
-from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time
+from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, sync_to_async
 
 def get_download(client, hash_):
     try:
@@ -18,7 +19,7 @@ class QbDownloadStatus:
         self.__client = get_client()
         self.__listener = listener
         self.__hash = hash_
-        self.__info = get_download(self.__client, self.__hash)
+        self.__info = get_download(self.__client, hash_)
         self.seeding = seeding
         self.message = listener.message
 
@@ -106,10 +107,10 @@ class QbDownloadStatus:
     def listener(self):
         return self.__listener
 
-    def cancel_download(self):
-        self.__client.torrents_pause(torrent_hashes=self.__hash)
+    async def cancel_download(self):
+        await sync_to_async(self.__client.torrents_pause, torrent_hashes=self.__hash)
         if self.status() != MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Download: {self.__info.name}")
-            sleep(0.3)
-            self.__listener.onDownloadError('Download stopped by user!')
-            self.__client.torrents_delete(torrent_hashes=self.__hash, delete_files=True)
+            await sleep(0.3)
+            await self.__listener.onDownloadError('Download stopped by user!')
+            await sync_to_async(self.__client.torrents_delete, torrent_hashes=self.__hash, delete_files=True)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from time import time
 
 from bot import DOWNLOAD_DIR, LOGGER
@@ -61,8 +62,8 @@ class ExtractStatus:
     def download(self):
         return self
 
-    def cancel_download(self):
+    async def cancel_download(self):
         LOGGER.info(f'Cancelling Extract: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
-        self.__listener.onUploadError('extracting stopped by user!')
+        await self.__listener.onUploadError('extracting stopped by user!')

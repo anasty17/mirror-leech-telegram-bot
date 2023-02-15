@@ -22,7 +22,7 @@ from base64 import standard_b64encode
 from time import sleep
 
 from bot import LOGGER, config_dict
-from bot.helper.ext_utils.bot_utils import is_Sharerlink
+from bot.helper.ext_utils.bot_utils import is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',

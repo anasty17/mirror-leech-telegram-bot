@@ -1,35 +1,256 @@
+#!/usr/bin/env python3
 from feedparser import parse as feedparse
-from time import sleep
-from telegram.ext import CommandHandler, CallbackQueryHandler
-from threading import Lock, Thread
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.filters import command, regex, create
+from asyncio import Lock, sleep
+from datetime import datetime, timedelta
+from time import time
+from functools import partial
+from aiohttp import ClientSession
+from apscheduler.triggers.interval import IntervalTrigger
 
-from bot import dispatcher, job_queue, rss_dict, LOGGER, DATABASE_URL, config_dict, RSS_DELAY, RSS_CHAT_ID
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, auto_delete_message, sendRss
+from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, RSS_DELAY, config_dict, bot
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.ext_utils.bot_utils import async_to_sync_dec
+
 
 rss_dict_lock = Lock()
+handler_dict = {}
 
-def rss_list(update, context):
-    if len(rss_dict) > 0:
-        list_feed = "<b>Your subscriptions: </b>\n\n"
-        for title, data in list(rss_dict.items()):
-            list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{data['link']}</code>\n\n"
-        sendMessage(list_feed, context.bot, update.message)
+async def rssMenu(event):
+    user_id = event.from_user.id
+    buttons = ButtonMaker()
+    buttons.ibutton("Subscribe", f"rss sub {user_id}")
+    buttons.ibutton("Subscriptions", f"rss list {user_id} 0")
+    buttons.ibutton("Get Items", f"rss get {user_id}")
+    buttons.ibutton("Edit", f"rss edit {user_id}")
+    buttons.ibutton("Pause", f"rss pause {user_id}")
+    buttons.ibutton("Resume", f"rss resume {user_id}")
+    buttons.ibutton("Unsubscribe", f"rss unsubscribe {user_id}")
+    if await CustomFilters.sudo('', event):
+        buttons.ibutton("All Subscriptions", f"rss listall {user_id}")
+        buttons.ibutton("Pause All", f"rss allpause {user_id}")
+        buttons.ibutton("Resume All", f"rss allresume {user_id}")
+        buttons.ibutton("Unsubscribe All", f"rss allunsub {user_id}")
+        buttons.ibutton("Delete User", f"rss deluser {user_id}")
+        if scheduler.running:
+            buttons.ibutton("Shutdown Rss", f"rss shutdown {user_id}")
+        else:
+            buttons.ibutton("Start Rss", f"rss start {user_id}")
+    buttons.ibutton("Close", f"rss close {user_id}")
+    button = buttons.build_menu(2)
+    msg = f'Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}'
+    return msg, button
+
+async def updateRssMenu(query):
+    msg, button = await rssMenu(query)
+    await editMessage(query.message, msg, button)
+
+async def getRssMenu(client, message):
+    msg, button = await rssMenu(message)
+    await sendMessage(message, msg, button)
+
+async def rssSub(client, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    if username := message.from_user.username:
+        tag = f"@{username}"
     else:
-        sendMessage("No subscriptions.", context.bot, update.message)
-
-def rss_get(update, context):
-    try:
-        title = context.args[0]
-        count = int(context.args[1])
-        data = rss_dict.get(title)
-        if data is not None and count > 0:
+        tag = message.from_user.mention
+    msg = ''
+    items = message.text.split('\n')
+    for item in items:
+        args = item.split()
+        if len(args) < 2:
+            await sendMessage(message, f'{item}. Wrong Input format. Read help message before adding new subcription!')
+            continue
+        title = args[0].strip()
+        if (user_feeds := rss_dict.get(user_id, False)) and title in user_feeds:
+            await sendMessage(message, f"This title {title} already subscribed! Choose another title!")
+            continue
+        feed_link = args[1].strip()
+        inf_lists = []
+        exf_lists = []
+        if len(args) > 2:
+            cmd = item.split(' c: ')
+            if len(cmd) > 1:
+                cmd = cmd[1].split(' inf: ')[0].split(' exf: ')[0].strip()
+            else:
+                cmd = None
+            inf = item.split(' inf: ')
+            if len(inf) > 1:
+                inf = inf[1].split(' exf: ')[0].split(' c: ')[0].strip()
+                filters_list = inf.split('|')
+                for x in inf:
+                    y = x.split(' or ')
+                    inf_lists.append(y)
+            else:
+                inf = None
+            exf = item.split(' exf: ')
+            if len(exf) > 1:
+                exf = exf[1].split(' inf: ')[0].split(' c: ')[0].strip()
+                filters_list = inf.split('|')
+                for x in exf:
+                    y = x.split(' or ')
+                    exf_lists.append(y)
+            else:
+                exf = None
+        else:
+            inf = None
+            exf = None
+            cmd = None
+        try:
+            async with ClientSession(trust_env=True) as session:
+                async with session.get(feed_link) as res:
+                    html = await res.text()
+            rss_d = feedparse(html)
+            msg += "<b>Subscribed!</b>"
+            msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
+            msg += f"\n<b>latest record for </b>{rss_d.feed.title}:"
+            msg += f"\nName: <code>{rss_d.entries[0]['title'].replace('>', '').replace('<', '')}</code>"
             try:
-                msg = sendMessage(f"Getting the last <b>{count}</b> item(s) from {title}", context.bot, update.message)
-                rss_d = feedparse(data['link'])
+                link = rss_d.entries[0]['links'][1]['href']
+            except IndexError:
+                link = rss_d.entries[0]['link']
+            msg += f"\nLink: <code>{link}</code>"
+            msg += f"\n<b>Command: </b><code>{cmd}</code>"
+            msg += f"\n<b>Filters:</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}<code/>\n\n"
+            last_link = rss_d.entries[0]['link']
+            last_title = rss_d.entries[0]['title']
+            async with rss_dict_lock:
+                if rss_dict.get(user_id, False):
+                    rss_dict[user_id][title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
+                                     'inf': inf_lists, 'exf': exf_lists, 'paused': False, 'command': cmd, 'tag': tag}
+                else:
+                    rss_dict[user_id] = {title: {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
+                                     'inf': inf_lists, 'exf': exf_lists, 'paused': False, 'command': cmd, 'tag': tag}}
+            LOGGER.info(f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - esf: {exf}")
+        except (IndexError, AttributeError) as e:
+            emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
+            await sendMessage(message, emsg + '\nError: ' + str(e))
+        except Exception as e:
+            await sendMessage(message, str(e))
+    if DATABASE_URL:
+        await DbManger().rss_update(user_id)
+    if msg:
+        await sendMessage(message, msg)
+    await updateRssMenu(pre_event)
+
+async def getUserId(title):
+    async with rss_dict_lock:
+        for user_id, feed in list(rss_dict.items()):
+            if feed['title'] == title:
+                return True, user_id
+        return False, False
+
+async def rssUpdate(client, message, pre_event, state):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    titles = message.text.split()
+    is_sudo = await CustomFilters.sudo(client, message)
+    updated = []
+    for title in titles:
+        title = title.strip()
+        if not (res := rss_dict[user_id].get(title, False)):
+            if sudo:
+                res, user_id = await getUserId(title)
+            if not res:
+                user_id = message.from_user.id
+                await sendMessage(message, f'{title} not found!')
+                continue
+        istate = rss_dict[user_id][title].get('paused', False)
+        if istate and state == 'pause' or not istate and state == 'resume':
+            await sendMessage(message, f'{title} already {state}d!')
+            continue
+        async with rss_dict_lock:
+            updated.append(title)
+            if state == 'unsubscribe':
+                del rss_dict[user_id][title]
+            elif state == 'pause':
+                rss_dict[user_id][title]['paused'] = True
+            elif state == 'resume':
+                rss_dict[user_id][title]['paused'] = False
+        if state == 'resume':
+            if scheduler.state == 2:
+                scheduler.resume()
+            elif is_sudo and not scheduler.running:
+                scheduler.start()
+        if is_sudo and DATABASE_URL and user_id != message.from_user.id:
+            await DbManger().rss_update(user_id)
+        if not rss_dict[user_id]:
+            async with rss_dict_lock:
+                del rss_dict[user_id]
+            if DATABASE_URL:
+                await DbManger().rss_delete(user_id)
+                if not rss_dict:
+                    await DbManger().trunc_table('rss')
+    LOGGER.info(f"Rss link with Title(s): {updated} has been {state}d!")
+    await sendMessage(message, f"Rss links with Title(s): <code>{updated}</code> has been {state}d!")
+    if DATABASE_URL and rss_dict.get(user_id):
+        await DbManger().rss_update(user_id)
+    await updateRssMenu(pre_event)
+
+async def rssList(query, start, all_users=False):
+    user_id = query.from_user.id
+    buttons = ButtonMaker()
+    if all_users:
+        list_feed = f"<b>All subscriptions | Page: {int(start/10)} </b>\n\n"
+        async with rss_dict_lock:
+            index = 0
+            for titles in list(rss_dict.values()):
+                for index, title, data in enumerate(list(titles.items())[start:10+start]):
+                    list_feed += f"<b>Title:</b> <code>{title}</code>\n"
+                    list_feed += f"<b>Feed Url:</b> <code>{data['link']}</code>\n"
+                    list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
+                    list_feed += f"<b>Inf: </b> <code>{data['inf']}</code>\n"
+                    list_feed += f"<b>Exf: </b> <code>{data['exf']}</code>\n"
+                    list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
+                    list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}\n\n"
+                    index += 1
+                    if index == 10:
+                        break
+    else:
+        list_feed = f"<b>Your subscriptions | Page: {int(start/10)} </b>\n\n"
+        async with rss_dict_lock:
+            keysCount = len(rss_dict.get(user_id, {}).keys())
+            for title, data in list(rss_dict[user_id].items())[start:10+start]:
+                list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{data['link']}</code>\n"
+                list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
+                list_feed += f"<b>Inf: </b> <code>{data['inf']}</code>\n"
+                list_feed += f"<b>Exf: </b> <code>{data['exf']}</code>\n"
+                list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
+                list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}\n\n"
+    buttons.ibutton("Back", f"rss back {user_id}")
+    buttons.ibutton("Close", f"rss close {user_id}")
+    if keysCount > 10:
+        for x in range(0, keysCount-1, 10):
+            buttons.ibutton(f'{int(x/10)}', f"rss list {user_id} {page}", position='footer')
+    button = buttons.build_menu(2)
+    await editMessage(query.message, list_feed, button)
+
+async def rssGet(client, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    args = message.text.split()
+    if len(args) < 2:
+        await sendMessage(message, f'{item}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!')
+        await updateRssMenu(pre_event)
+        return
+    try:
+        title = args[0]
+        count = int(args[1])
+        data = rss_dict[user_id].get(title, False)
+        if data and count > 0:
+            try:
+                msg = await sendMessage(message, f"Getting the last <b>{count}</b> item(s) from {title}")
+                async with ClientSession(trust_env=True) as session:
+                    async with session.get(data['link']) as res:
+                        html = await res.text()
+                rss_d = feedparse(html)
                 item_info = ""
                 for item_num in range(count):
                     try:
@@ -38,213 +259,367 @@ def rss_get(update, context):
                         link = rss_d.entries[item_num]['link']
                     item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
                     item_info += f"<b>Link: </b><code>{link}</code>\n\n"
-                editMessage(item_info, msg)
+                await editMessage(msg, item_info)
             except IndexError as e:
                 LOGGER.error(str(e))
-                editMessage("Parse depth exceeded. Try again with a lower value.", msg)
+                await editMessage(msg, "Parse depth exceeded. Try again with a lower value.")
             except Exception as e:
                 LOGGER.error(str(e))
-                editMessage(str(e), msg)
-        else:
-            sendMessage("Enter a vaild title/value.", context.bot, update.message)
-    except (IndexError, ValueError):
-        sendMessage(f"Use this format to fetch:\n/{BotCommands.RssGetCommand[0]} Title value", context.bot, update.message)
+                await editMessage(msg, str(e))
+    except Exception as e:
+        LOGGER.error(str(e))
+        await sendMessage(message, f"Enter a vaild value!. {e}")
+    await updateRssMenu(pre_event)
 
-def rss_sub(update, context):
-    try:
-        args = update.message.text.split(maxsplit=3)
-        title = args[1].strip()
-        feed_link = args[2].strip()
-        f_lists = []
-        filters = None
-
-        if len(args) == 4:
-            filters = args[3].lstrip().lower()
-            if filters.startswith('f: '):
-                filters = filters.split('f: ', 1)[1]
-                filters_list = filters.split('|')
-                for x in filters_list:
-                   y = x.split(' or ')
-                   f_lists.append(y)
-            else:
-                filters = None
-
-        if rss_dict.get(title):
-            return sendMessage("This title already subscribed! Choose another title!", context.bot, update.message)
-        try:
-            rss_d = feedparse(feed_link)
-            sub_msg = "<b>Subscribed!</b>"
-            sub_msg += f"\n\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
-            sub_msg += f"\n\n<b>latest record for </b>{rss_d.feed.title}:"
-            sub_msg += f"\n\n<b>Name: </b><code>{rss_d.entries[0]['title'].replace('>', '').replace('<', '')}</code>"
-            try:
-                link = rss_d.entries[0]['links'][1]['href']
-            except IndexError:
-                link = rss_d.entries[0]['link']
-            sub_msg += f"\n\n<b>Link: </b><code>{link}</code>"
-            sub_msg += f"\n\n<b>Filters: </b><code>{filters}</code>"
-            last_link = rss_d.entries[0]['link']
-            last_title = rss_d.entries[0]['title']
-            with rss_dict_lock:
-                if len(rss_dict) == 0:
-                    rss_job.enabled = True
-                rss_dict[title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title, 'filters': f_lists}
-            DbManger().rss_update(title)
-            sendMessage(sub_msg, context.bot, update.message)
-            LOGGER.info(f"Rss Feed Added: {title} - {feed_link} - {filters}")
-        except (IndexError, AttributeError) as e:
-            msg = "The link doesn't seem to be a RSS feed or it's region-blocked!"
-            sendMessage(msg + '\nError: ' + str(e), context.bot, update.message)
-        except Exception as e:
-            sendMessage(str(e), context.bot, update.message)
-    except IndexError:
-        msg = f"Use this format to add feed url:\n/{BotCommands.RssSubCommand[0]} Title https://www.rss-url.com"
-        msg += " f: 1080 or 720 or 144p|mkv or mp4|hevc (optional)\n\nThis filter will parse links that it's titles"
-        msg += " contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` words. You can add whatever you want.\n\n"
-        msg += "Another example: f:  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains"
-        msg += " ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080"
-        msg += " to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without"
-        msg += " spaces after it."
-        msg += "\n\nFilters Notes:\n\n1. | means and.\n\n2. Add `or` between similar keys, you can add it"
-        msg += " between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web"
-        msg += " because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
-        msg += "\n\n3. You can add `or` and `|` as much as you want."
-        msg += "\n\n4. Take look on title if it has static special character after or before the qualities or extensions"
-        msg += " or whatever and use them in filter to avoid wrong match"
-        sendMessage(msg, context.bot, update.message)
-
-def rss_unsub(update, context):
-    try:
-        title = context.args[0]
-        if rss_dict.get(title):
-            DbManger().rss_delete(title)
-            with rss_dict_lock:
-                del rss_dict[title]
-            sendMessage(f"Rss link with Title: <code>{title}</code> has been removed!", context.bot, update.message)
-            LOGGER.info(f"Rss link with Title: {title} has been removed!")
-        else:
-            msg = "Rss link not exists! Nothing removed!"
-            sendMessage(msg, context.bot, update.message)
-    except IndexError:
-        sendMessage(f"Use this format to remove feed url:\n/{BotCommands.RssUnSubCommand[0]} Title", context.bot, update.message)
-
-def rss_settings(update, context):
-    buttons = ButtonMaker()
-    buttons.sbutton("Unsubscribe All", "rss unsuball")
-    if rss_job.enabled:
-        buttons.sbutton("Pause", "rss pause")
-    else:
-        buttons.sbutton("Start", "rss start")
-    if config_dict['AUTO_DELETE_MESSAGE_DURATION'] == -1:
-        buttons.sbutton("Close", "rss close")
-    button = buttons.build_menu(1)
-    setting = sendMessage('Rss Settings', context.bot, update.message, button)
-    Thread(target=auto_delete_message, args=(context.bot, update.message, setting)).start()
-
-def rss_set_update(update, context):
-    query = update.callback_query
-    user_id = query.from_user.id
-    msg = query.message
-    data = query.data
-    data = data.split()
-    if not CustomFilters.owner_query(user_id):
-        query.answer(text="You don't have permission to use these buttons!", show_alert=True)
-    elif data[1] == 'unsuball':
-        query.answer()
-        if len(rss_dict) > 0:
-            DbManger().trunc_table('rss')
-            with rss_dict_lock:
-                rss_dict.clear()
-            rss_job.enabled = False
-            editMessage("All Rss Subscriptions have been removed.", msg)
-            LOGGER.info("All Rss Subscriptions have been removed.")
-        else:
-            editMessage("No subscriptions to remove!", msg)
-    elif data[1] == 'pause':
-        query.answer()
-        rss_job.enabled = False
-        editMessage("Rss Paused", msg)
-        LOGGER.info("Rss Paused")
-    elif data[1] == 'start':
-        query.answer()
-        rss_job.enabled = True
-        editMessage("Rss Started", msg)
-        LOGGER.info("Rss Started")
-    else:
-        query.answer()
-        query.message.delete()
-        query.message.reply_to_message.delete()
-
-def rss_monitor(context):
-    with rss_dict_lock:
-        if len(rss_dict) == 0:
-            rss_job.enabled = False
-            return
-    for title, data in list(rss_dict.items()):
-        try:
-            rss_d = feedparse(data['link'])
-            last_link = rss_d.entries[0]['link']
-            last_title = rss_d.entries[0]['title']
-            if data['last_feed'] == last_link or data['last_title'] == last_title:
-                continue
-            feed_count = 0
-            while True:
-                try:
-                    if data['last_feed'] == rss_d.entries[feed_count]['link'] or \
-                       data['last_title'] == rss_d.entries[feed_count]['title']:
-                        break
-                except IndexError:
-                    LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents")
-                    break
-                parse = True
-                for flist in data['filters']:
-                    if all(x not in str(rss_d.entries[feed_count]['title']).lower() for x in flist):
-                        parse = False
-                        feed_count += 1
-                        break
-                if not parse:
-                    continue
-                try:
-                    url = rss_d.entries[feed_count]['links'][1]['href']
-                except IndexError:
-                    url = rss_d.entries[feed_count]['link']
-                if RSS_COMMAND := config_dict['RSS_COMMAND']:
-                    feed_msg = f"/{RSS_COMMAND.replace('/', '')} {url}"
-                else:
-                    feed_msg = f"<b>Name: </b><code>{rss_d.entries[feed_count]['title'].replace('>', '').replace('<', '')}</code>\n\n"
-                    feed_msg += f"<b>Link: </b><code>{url}</code>"
-                sendRss(feed_msg, context.bot)
-                feed_count += 1
-                sleep(5)
-            with rss_dict_lock:
-                if title not in rss_dict:
-                    continue
-                rss_dict[title].update({'last_feed': last_link, 'last_title': last_title})
-            DbManger().rss_update(title)
-            LOGGER.info(f"Feed Name: {title}")
-            LOGGER.info(f"Last item: {last_link}")
-        except Exception as e:
-            LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
+async def rssEdit(client, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    items = message.text.split('\n')
+    for item in items:
+        args = item.split()
+        title = args[0].strip()
+        if len(args) < 2:
+            await sendMessage(message, f'{item}. Wrong Input format. Read help message before editing!')
             continue
+        elif not rss_dict[user_id].get(title, False):
+            await sendMessage(message, "Enter a vaild title. Title not found!")
+            continue
+        inf_lists = []
+        exf_lists = []
+        arg = item.split(' c: ')
+        if len(arg) > 1:
+            cmd = arg[1].split(' inf: ')[0].split(' exf: ')[0].strip()
+        else:
+            cmd = ''
+        arg = item.split(' inf: ')
+        if len(arg) > 1:
+            inf = arg[1].split(' exf: ')[0].split(' c: ')[0].strip()
+        else:
+            inf = ''
+        arg = item.split(' exf: ')
+        if len(arg) > 1:
+            exf = arg[1].split(' inf: ')[0].split(' c: ')[0].strip()
+        else:
+            exf = ''
+        async with rss_dict_lock:
+            if cmd:
+                if cmd.lower() == 'none':
+                    cmd = None
+                rss_dict[user_id][title]['command'] = cmd
+            if inf:
+                if inf.lower() != 'none':
+                    filters_list = inf.split('|')
+                    for x in inf:
+                        y = x.split(' or ')
+                        inf_lists.append(y)
+                rss_dict[user_id][title]['inf'] = inf_lists
+            if exf:
+                if exf.lower() != 'none':
+                    filters_list = inf.split('|')
+                    for x in exf:
+                        y = x.split(' or ')
+                        exf_lists.append(y)
+                rss_dict[user_id][title]['exf'] = exf_lists
+    if DATABASE_URL:
+        await DbManger().rss_update(user_id)
+    await updateRssMenu(pre_event)
 
-if DATABASE_URL and RSS_CHAT_ID:
-    rss_list_handler = CommandHandler(BotCommands.RssListCommand, rss_list,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-    rss_get_handler = CommandHandler(BotCommands.RssGetCommand, rss_get,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-    rss_sub_handler = CommandHandler(BotCommands.RssSubCommand, rss_sub,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-    rss_unsub_handler = CommandHandler(BotCommands.RssUnSubCommand, rss_unsub,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-    rss_settings_handler = CommandHandler(BotCommands.RssSettingsCommand, rss_settings,
-                                      filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-    rss_buttons_handler = CallbackQueryHandler(rss_set_update, pattern="rss")
+async def rssDelete(client, message, pre_event):
+    handler_dict[message.from_user.id] = False
+    users = message.text.split()
+    for user in users:
+        user = int(user)
+        async with rss_dict_lock:
+            del rss_dict[user]
+        if DATABASE_URL:
+            await DbManger().rss_delete(user)
+    await updateRssMenu(pre_event)
 
-    dispatcher.add_handler(rss_list_handler)
-    dispatcher.add_handler(rss_get_handler)
-    dispatcher.add_handler(rss_sub_handler)
-    dispatcher.add_handler(rss_unsub_handler)
-    dispatcher.add_handler(rss_settings_handler)
-    dispatcher.add_handler(rss_buttons_handler)
-    rss_job = job_queue.run_repeating(rss_monitor, interval=RSS_DELAY, first=20, name="RSS")
-    rss_job.enabled = True
+@async_to_sync_dec
+async def event_handler(client, query, pfunc):
+    user_id = query.from_user.id
+    handler_dict[user_id] = True
+    start_time = time()
+    async def event_filter(_, __, event):
+         return bool(event.from_user.id == user_id and event.chat.id == query.message.chat.id and event.text)
+    handler = client.add_handler(MessageHandler(pfunc, create(event_filter)), group=-1)
+    while handler_dict[user_id]:
+        await sleep(0.5)
+        if time() - start_time > 60:
+            handler_dict[user_id] = False
+            await updateRssMenu(query)
+    client.remove_handler(*handler)
+
+async def rssListener(client, query):
+    user_id = query.from_user.id
+    message = query.message
+    data = query.data.split()
+    if int(data[2]) != user_id and not await CustomFilters.sudo(client, query):
+        await query.answer(text="You don't have permission to use these buttons!", show_alert=True)
+    elif data[1] == 'close':
+        await query.answer()
+        handler_dict[user_id] = False
+        await message.reply_to_message.delete()
+        await message.delete()
+    elif data[1] == 'back':
+        await query.answer()
+        handler_dict[user_id] = False
+        await updateRssMenu(query)
+    elif data[1] == 'sub':
+        await query.answer()
+        handler_dict[user_id] = False
+        buttons = ButtonMaker()
+        buttons.ibutton("Back", f"rss back {user_id}")
+        buttons.ibutton("Close", f"rss close {user_id}")
+        button = buttons.build_menu(2)
+        msg = """
+Use this format to add feed url:
+Title1 link c: command (optional) inf: xx (optional) exf: xx (optional)
+Title2 link c: command inf: xx exf: xx
+
+Example: Title https://www.rss-url.com inf: 1080 or 720 or 144p|mkv or mp4|hevc exf: flv or web|xxx
+This filter will parse links that it's titles contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't conyain (flv or web) and xxx` words. You can add whatever you want.
+
+Another example: inf:  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080 to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without spaces after it.
+
+Where inf: For included words filter and exf: For excluded words filter.
+
+Filter Notes:
+1. | means and.
+2. Add `or` between similar keys, you can add it between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
+3. You can add `or` and `|` as much as you want."
+4. Take look on title if it has static special character after or before the qualities or extensions or whatever and use them in filter to avoid wrong match.
+Timeout: 60 sec.
+        """
+        await editMessage(message, msg, button)
+        pfunc = partial(rssSub, pre_event=query)
+        event_handler(client, query, pfunc)
+    elif data[1] == 'list':
+        handler_dict[user_id] = False
+        if len(rss_dict.get(int(data[2]), {})) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            start = int(data[3])
+            await rssList(query, start)
+    elif data[1] == 'get':
+        handler_dict[user_id] = False
+        if len(rss_dict.get(int(data[2]), {})) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            buttons = ButtonMaker()
+            buttons.ibutton("Back", f"rss back {user_id}")
+            buttons.ibutton("Close", f"rss close {user_id}")
+            button = buttons.build_menu(2)
+            await editMessage(message, 'Send one title with vlaue seperated by space get last X items.\nTitle Value\nTimeout: 60 sec.', button)
+            pfunc = partial(rssGet, pre_event=query)
+            event_handler(client, query, pfunc)
+    elif data[1] in ['unsubscribe', 'pause', 'resume']:
+        handler_dict[user_id] = False
+        if len(rss_dict.get(int(data[2]), {})) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            buttons = ButtonMaker()
+            buttons.ibutton("Back", f"rss back {user_id}")
+            if data[1] == 'pause':
+                buttons.ibutton("Pause AllMyFeeds", f"rss uallpause {user_id}")
+            elif data[1] == 'resume':
+                buttons.ibutton("Resume AllMyFeeds", f"rss uallresume {user_id}")
+            elif data[1] == 'unsubscribe':
+                buttons.ibutton("Unsub AllMyFeeds", f"rss uallunsub {user_id}")
+            buttons.ibutton("Close", f"rss close {user_id}")
+            button = buttons.build_menu(2)
+            await editMessage(message, f'Send one or more rss titles seperated by space to {data[1]}.\nTimeout: 60 sec.', button)
+            pfunc = partial(rssUpdate, pre_event=query, state=data[1])
+            event_handler(client, query, pfunc)
+    elif data[1] == 'edit':
+        handler_dict[user_id] = False
+        if len(rss_dict.get(int(data[2]), {})) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            buttons = ButtonMaker()
+            buttons.ibutton("Back", f"rss back {user_id}")
+            buttons.ibutton("Close", f"rss close {user_id}")
+            button = buttons.build_menu(2)
+            msg = '''Send one or more rss titles with new filters or command seperated by new line.
+Examples:
+Title1 c: mirror exf: none inf: 1080 or 720
+Title2 c: none inf: none
+Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
+Timeout: 60 sec.
+            '''
+            await editMessage(message, msg, button)
+            pfunc = partial(rssEdit, pre_event=query)
+            event_handler(client, query, pfunc)
+    elif data[1].startswith('uall'):
+        handler_dict[user_id] = False
+        if len(rss_dict.get(int(data[2]), {})) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+            return
+        elif data[1].endswith('unsub'):
+            async with rss_dict_lock:
+                del rss_dict[int(data[2])]
+            if DATABASE_URL:
+                await DbManger().rss_delete(int(data[2]))
+            await updateRssMenu(query)
+        elif data[1].endswith('pause'):
+            async with rss_dict_lock:
+                for title in list(rss_dict[int(data[2])].keys()):
+                    rss_dict[int(data[2])][title]['paused'] = True
+            if DATABASE_URL:
+                await DbManger().rss_update(int(data[2]))
+        elif data[1].endswith('resume'):
+            async with rss_dict_lock:
+                for title in list(rss_dict[int(data[2])].keys()):
+                    rss_dict[int(data[2])][title]['paused'] = False
+            if scheduler.state == 2:
+                scheduler.resume()
+            if DATABASE_URL:
+                await DbManger().rss_update(int(data[2]))
+        await query.answer(text='Done!', show_alert=True)
+        await updateRssMenu(query)
+    elif data[1].startswith('all'):
+        if len(rss_dict) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+            return
+        elif data[1].endswith('unsub'):
+            async with rss_dict_lock:
+                rss_dict.clear()
+            if DATABASE_URL:
+                await DbManger().trunc_table('rss')
+            await updateRssMenu(query)
+        elif data[1].endswith('pause'):
+            async with rss_dict_lock:
+                for user in list(rss_dict.keys()):
+                    for title in list(rss_dict[user].keys()):
+                        rss_dict[int(data[2])][title]['paused'] = True
+            if DATABASE_URL:
+                await DbManger().rss_update_all()
+        elif data[1].endswith('resume'):
+            async with rss_dict_lock:
+                for user in list(rss_dict.keys()):
+                    for title in list(rss_dict[user].keys()):
+                        rss_dict[int(data[2])][title]['paused'] = False
+            if scheduler.state == 2:
+                scheduler.resume()
+            elif not scheduler.running:
+                scheduler.start()
+            if DATABASE_URL:
+                await DbManger().rss_update_all()
+        await query.answer(text='Done!', show_alert=True)
+    elif data[1] == 'deluser':
+        if len(rss_dict) == 0:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            buttons = ButtonMaker()
+            buttons.ibutton("Back", f"rss back {user_id}")
+            buttons.ibutton("Close", f"rss close {user_id}")
+            button = buttons.build_menu(2)
+            msg = 'Send one or more user_id seperated by space to delete their resources.\nTimeout: 60 sec.'
+            await editMessage(message, msg, button)
+            pfunc = partial(rssDelete, pre_event=query)
+            event_handler(client, query, pfunc)
+    elif data[1] == 'listall':
+        if not rss_dict:
+            await query.answer(text="No subscriptions!", show_alert=True)
+        else:
+            await query.answer()
+            start = int(data[3])
+            await rssList(query, start, all_users=True)
+    elif data[1] == 'shutdown':
+        if scheduler.running:
+            await query.answer()
+            scheduler.shutdown(wait=False)
+            await sleep(0.5)
+            await updateRssMenu(query)
+        else:
+            await query.answer(text="Already Stopped!", show_alert=True)
+    elif data[1] == 'start':
+        if not scheduler.running:
+            await query.answer()
+            scheduler.start()
+            await updateRssMenu(query)
+        else:
+            await query.answer(text="Already Running!", show_alert=True)
+
+async def rssMonitor():
+    if not config_dict['RSS_CHAT_ID']:
+        scheduler.shutdown(wait=False)
+        return
+    if len(rss_dict) == 0:
+        scheduler.pause()
+        return
+    all_paused = True
+    for user, items in list(rss_dict.items()):
+        for title, data in list(items.items()):
+            await sleep(0)
+            try:
+                if data['paused']:
+                    continue
+                async with ClientSession(trust_env=True) as session:
+                    async with session.get(data['link']) as res:
+                        html = await res.text()
+                rss_d = feedparse(html)
+                last_link = rss_d.entries[0]['link']
+                last_title = rss_d.entries[0]['title']
+                if data['last_feed'] == last_link or data['last_title'] == last_title:
+                    all_paused = False
+                    continue
+                all_paused = False
+                feed_count = 0
+                while True:
+                    try:
+                        url = rss_d.entries[feed_count]['links'][1]['href']
+                    except IndexError:
+                        url = rss_d.entries[feed_count]['link']
+                    item_title = rss_d.entries[feed_count]['title']
+                    try:
+                        if data['last_feed'] == url or data['last_title'] == item_title:
+                            break
+                    except IndexError:
+                        LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents")
+                        break
+                    parse = True
+                    for flist in data['inf']:
+                        if all(x not in item_title.lower() for x in flist):
+                            parse = False
+                            feed_count += 1
+                            break
+                    for flist in data['exf']:
+                        if any(x in item_title.lower() for x in flist):
+                            parse = False
+                            feed_count += 1
+                            break
+                    if not parse:
+                        continue
+                    if command := data['command']:
+                        feed_msg = f"/{command.replace('/', '')} {url}\n<b>Tag: </b>{data['tag']} <code>{user}</code>"
+                    else:
+                        feed_msg = f"<b>Name: </b><code>{item_title.replace('>', '').replace('<', '')}</code>\n\n"
+                        feed_msg += f"<b>Link: </b><code>{url}</code>\n\n<b>Tag: </b>{data['tag']} <code>{user}</code>"
+                    await sendRss(feed_msg)
+                    feed_count += 1
+                    await sleep(5)
+                async with rss_dict_lock:
+                    if user not in rss_dict or not rss_dict[user].get(title, False):
+                        continue
+                    rss_dict[user][title].update({'last_feed': last_link, 'last_title': last_title})
+                await DbManger().rss_update(user)
+                LOGGER.info(f"Feed Name: {title}")
+                LOGGER.info(f"Last item: {last_link}")
+            except Exception as e:
+                LOGGER.error(f"{e} Feed Name: {title} - Feed Link: {data['link']}")
+                continue
+    if all_paused:
+        scheduler.pause()
+
+
+scheduler.add_job(rssMonitor, trigger=IntervalTrigger(seconds=RSS_DELAY), id='0', name='RSS', mnisfire_grace_time=15,
+                        max_instances=1, next_run_time=datetime.now()+timedelta(seconds=20), replace_existing=True)
+scheduler.start()
+bot.add_handler(MessageHandler(getRssMenu, filters=command(BotCommands.RssCommand) & CustomFilters.authorized))
+bot.add_handler(CallbackQueryHandler(rssListener, filters=regex("^rss")))

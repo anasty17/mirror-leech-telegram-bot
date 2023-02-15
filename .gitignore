@@ -13,3 +13,5 @@ Thumbnails/*
 list_drives.txt
 cookies.txt
 downloads
+bot.session
+user.session

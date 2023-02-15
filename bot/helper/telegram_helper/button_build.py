@@ -1,4 +1,5 @@
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 
 class ButtonMaker:
     def __init__(self):
@@ -6,21 +7,21 @@ class ButtonMaker:
         self.__header_button = []
         self.__footer_button = []
 
-    def buildbutton(self, key, link, position=None):
+    def ubutton(self, key, link, position=None):
         if not position:
-            self.__button.append(InlineKeyboardButton(text = key, url = link))
+            self.__button.append(InlineKeyboardButton(text=key, url=link))
         elif position == 'header':
-            self.__header_button.append(InlineKeyboardButton(text = key, url = link))
+            self.__header_button.append(InlineKeyboardButton(text=key, url=link))
         elif position == 'footer':
-            self.__footer_button.append(InlineKeyboardButton(text = key, url = link))
+            self.__footer_button.append(InlineKeyboardButton(text=key, url=link))
 
-    def sbutton(self, key, data, position=None):
+    def ibutton(self, key, data, position=None):
         if not position:
-            self.__button.append(InlineKeyboardButton(text = key, callback_data = data))
+            self.__button.append(InlineKeyboardButton(text=key, callback_data=data))
         elif position == 'header':
-            self.__header_button.append(InlineKeyboardButton(text = key, callback_data = data))
+            self.__header_button.append(InlineKeyboardButton(text=key, callback_data=data))
         elif position == 'footer':
-            self.__footer_button.append(InlineKeyboardButton(text = key, callback_data = data))
+            self.__footer_button.append(InlineKeyboardButton(text=key, callback_data=data))
 
     def build_menu(self, n_cols):
         menu = [self.__button[i:i + n_cols] for i in range(0, len(self.__button), n_cols)]

@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from random import SystemRandom
 from string import ascii_letters, digits
 
@@ -7,12 +8,15 @@ from bot.helper.mirror_utils.status_utils.gd_download_status import GdDownloadSt
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
 from bot.helper.ext_utils.fs_utils import get_base_name
+from bot.helper.ext_utils.bot_utils import sync_to_async
 
 
-def add_gd_download(link, path, listener, newname, from_queue=False):
-    res, size, name, files = GoogleDriveHelper().helper(link)
+async def add_gd_download(link, path, listener, newname, from_queue=False):
+    drive = GoogleDriveHelper()
+    res, size, name, files = await sync_to_async(drive.helper, link)
     if res != "":
-        return sendMessage(res, listener.bot, listener.message)
+        await sendMessage(listener.message, res)
+        return
     if newname:
         name = newname
     if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
@@ -25,16 +29,17 @@ def add_gd_download(link, path, listener, newname, from_queue=False):
             except:
                 gname = None
         if gname is not None:
-            gmsg, button = GoogleDriveHelper().drive_list(gname, True)
+            gmsg, button = await async_to_sync(drive.drive_list, gname, True)
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
-                return sendMessage(msg, listener.bot, listener.message, button)
+                await sendMessage(listener.message, msg, button)
+                return
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     all_limit = config_dict['QUEUE_ALL']
     dl_limit = config_dict['QUEUE_DOWNLOAD']
     if all_limit or dl_limit:
         added_to_queue = False
-        with queue_dict_lock:
+        async with queue_dict_lock:
             dl = len(non_queued_dl)
             up = len(non_queued_up)
             if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
@@ -42,20 +47,20 @@ def add_gd_download(link, path, listener, newname, from_queue=False):
                 queued_dl[listener.uid] = ['gd', link, path, listener, newname]
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {name}")
-            with download_dict_lock:
+            async with download_dict_lock:
                 download_dict[listener.uid] = QueueStatus(name, size, gid, listener, 'Dl')
-            listener.onDownloadStart()
-            sendStatusMessage(listener.message, listener.bot)
+            await listener.onDownloadStart()
+            await sendStatusMessage(listener.message)
             return
     drive = GoogleDriveHelper(name, path, size, listener)
-    with download_dict_lock:
+    async with download_dict_lock:
         download_dict[listener.uid] = GdDownloadStatus(drive, size, listener, gid)
-    with queue_dict_lock:
+    async with queue_dict_lock:
         non_queued_dl.add(listener.uid)
     if not from_queue:
         LOGGER.info(f"Download from GDrive: {name}")
-        listener.onDownloadStart()
-        sendStatusMessage(listener.message, listener.bot)
+        await listener.onDownloadStart()
+        await sendStatusMessage(listener.message)
     else:
         LOGGER.info(f'Start Queued Download from GDrive: {name}')
-    drive.download(link)
+    await sync_to_async(drive.download, link)

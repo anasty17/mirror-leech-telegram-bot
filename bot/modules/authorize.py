@@ -1,6 +1,8 @@
-from telegram.ext import CommandHandler
+#!/usr/bin/env python3
+from pyrogram.handlers import MessageHandler
+from pyrogram.filters import command
 
-from bot import user_data, dispatcher, DATABASE_URL
+from bot import user_data, DATABASE_URL, bot
 from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -8,84 +10,76 @@ from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 
 
-def authorize(update, context):
-    reply_message = update.message.reply_to_message
-    if len(context.args) == 1:
-        id_ = int(context.args[0])
-    elif reply_message:
-        id_ = reply_message.from_user.id
+async def authorize(client, message):
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    elif reply_to := message.reply_to_message:
+        id_ = reply_to.from_user.id
     else:
-        id_ = update.effective_chat.id
+        id_ = message.chat.id
     if id_ in user_data and user_data[id_].get('is_auth'):
         msg = 'Already Authorized!'
     else:
         update_user_ldata(id_, 'is_auth', True)
         if DATABASE_URL:
-            DbManger().update_user_data(id_)
+            await DbManger().update_user_data(id_)
         msg = 'Authorized'
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(message, msg)
 
-def unauthorize(update, context):
-    reply_message = update.message.reply_to_message
-    if len(context.args) == 1:
-        id_ = int(context.args[0])
-    elif reply_message:
-        id_ = reply_message.from_user.id
+async def unauthorize(client, message):
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    elif reply_to := message.reply_to_message:
+        id_ = reply_to.from_user.id
     else:
-        id_ = update.effective_chat.id
+        id_ = message.chat.id
     if id_ not in user_data or user_data[id_].get('is_auth'):
         update_user_ldata(id_, 'is_auth', False)
         if DATABASE_URL:
-            DbManger().update_user_data(id_)
+            await DbManger().update_user_data(id_)
         msg = 'Unauthorized'
     else:
         msg = 'Already Unauthorized!'
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(message, msg)
 
-def addSudo(update, context):
+async def addSudo(client, message):
     id_ = ""
-    reply_message = update.message.reply_to_message
-    if len(context.args) == 1:
-        id_ = int(context.args[0])
-    elif reply_message:
-        id_ = reply_message.from_user.id
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    elif reply_to := message.reply_to_message:
+        id_ = reply_to.from_user.id
     if id_:
         if id_ in user_data and user_data[id_].get('is_sudo'):
             msg = 'Already Sudo!'
         else:
             update_user_ldata(id_, 'is_sudo', True)
             if DATABASE_URL:
-                DbManger().update_user_data(id_)
+                await DbManger().update_user_data(id_)
             msg = 'Promoted as Sudo'
     else:
         msg = "Give ID or Reply To message of whom you want to Promote."
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(message, msg)
 
-def removeSudo(update, context):
+async def removeSudo(client, message):
     id_ = ""
-    reply_message = update.message.reply_to_message
-    if len(context.args) == 1:
-        id_ = int(context.args[0])
-    elif reply_message:
-        id_ = reply_message.from_user.id
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    elif reply_to := message.reply_to_message:
+        id_ = reply_to.from_user.id
     if id_ and id_ not in user_data or user_data[id_].get('is_sudo'):
         update_user_ldata(id_, 'is_sudo', False)
         if DATABASE_URL:
-            DbManger().update_user_data(id_)
+            await DbManger().update_user_data(id_)
         msg = 'Demoted'
     else:
         msg = "Give ID or Reply To message of whom you want to remove from Sudo"
-    sendMessage(msg, context.bot, update.message)
+    await sendMessage(message, msg)
 
-
-authorize_handler = CommandHandler(BotCommands.AuthorizeCommand, authorize,
-                                   filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-unauthorize_handler = CommandHandler(BotCommands.UnAuthorizeCommand, unauthorize,
-                                   filters=CustomFilters.owner_filter | CustomFilters.sudo_user)
-addsudo_handler = CommandHandler(BotCommands.AddSudoCommand, addSudo, filters=CustomFilters.owner_filter)
-removesudo_handler = CommandHandler(BotCommands.RmSudoCommand, removeSudo, filters=CustomFilters.owner_filter)
-
-dispatcher.add_handler(authorize_handler)
-dispatcher.add_handler(unauthorize_handler)
-dispatcher.add_handler(addsudo_handler)
-dispatcher.add_handler(removesudo_handler)
+bot.add_handler(MessageHandler(authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(unauthorize, filters=command(BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(addSudo, filters=command(BotCommands.AddSudoCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(removeSudo, filters=command(BotCommands.RmSudoCommand) & CustomFilters.sudo))
