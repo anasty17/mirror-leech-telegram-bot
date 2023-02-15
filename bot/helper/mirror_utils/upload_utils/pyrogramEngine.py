@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from logging import getLogger, WARNING
+from logging import getLogger, ERROR
 from aiofiles.os import remove as aioremove, path as aiopath, rename as aiorename
 from os import walk, path as ospath
 from time import time
@@ -16,7 +16,7 @@ from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_document_
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async
 
 LOGGER = getLogger(__name__)
-getLogger("pyrogram").setLevel(WARNING)
+getLogger("pyrogram").setLevel(ERROR)
 
 
 class TgUploader:

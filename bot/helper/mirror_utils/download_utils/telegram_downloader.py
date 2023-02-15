@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from logging import getLogger, WARNING
+from logging import getLogger, ERROR
 from time import time
 from asyncio import Lock
 
@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import sync_to_async
 
 global_lock = Lock()
 GLOBAL_GID = set()
-getLogger("pyrogram").setLevel(WARNING)
+getLogger("pyrogram").setLevel(ERROR)
 
 
 class TelegramDownloadHelper:
