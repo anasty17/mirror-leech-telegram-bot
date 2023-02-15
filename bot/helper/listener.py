@@ -130,7 +130,7 @@ class MirrorLeechListener:
                             if re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
                                 f_path = ospath.join(dirpath, file_)
                                 t_path = dirpath.replace(self.dir, self.newDir) if self.seed else dirpath
-                                cmd = ["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot", "-x.\.\@PaxHeader"]
+                                cmd = ["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot", "-xr!@PaxHeader"]
                                 if self.pswd is None:
                                     del cmd[2]
                                 self.suproc = await create_subprocess_exec(*cmd)
@@ -151,7 +151,7 @@ class MirrorLeechListener:
                     if self.seed and self.isLeech:
                         self.newDir = f"{self.dir}10000"
                         path = path.replace(self.dir, self.newDir)
-                    cmd = ["7z", "x", f"-p{self.pswd}", m_path, f"-o{path}", "-aot", "-x.\.\@PaxHeader"]
+                    cmd = ["7z", "x", f"-p{self.pswd}", m_path, f"-o{path}", "-aot", "-xr!@PaxHeader"]
                     if self.pswd is None:
                         del cmd[2]
                     self.suproc = await create_subprocess_exec(*cmd)
