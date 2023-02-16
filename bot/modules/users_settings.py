@@ -150,7 +150,7 @@ async def edit_user_settings(client, query):
     elif data[2] == 'vthumb':
         handler_dict[user_id] = False
         await query.answer()
-        await sendFile(message, await aiopen(thumb_path, 'rb'), from_user.mention)
+        await sendFile(message, thumb_path, from_user.mention)
         await update_user_settings(query)
     elif data[2] == "dthumb":
         handler_dict[user_id] = False
