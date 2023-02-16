@@ -15,7 +15,7 @@ class CustomFilters:
     async def authorized_user(self, client, update):
         uid = update.from_user.id
         chat_id = update.chat.id
-        return bool(uid == OWNER_ID or uid in user_data and (user_data[chat_id].get('is_auth', False) or
+        return bool(uid == OWNER_ID or any(id in user_data for id in [uid, chat_id]) and (user_data[chat_id].get('is_auth', False) or
                        user_data[uid].get('is_auth', False) or user_data[uid].get('is_sudo', False)))
 
     authorized = create(authorized_user)
