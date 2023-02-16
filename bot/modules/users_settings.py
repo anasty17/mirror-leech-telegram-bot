@@ -97,7 +97,7 @@ async def set_thumb(client, message, pre_event):
     if not await aiopath.isdir(path):
         await mkdir(path)
     photo_dir = await message.download()
-    des_dir = await sync_to_async(ospath.join, path, f'{user_id}.jpg')
+    des_dir = ospath.join(path, f'{user_id}.jpg')
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
     await aioremove(photo_dir)
     update_user_ldata(user_id, 'thumb', des_dir)

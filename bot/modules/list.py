@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import sync_to_async
 
 
 async def list_buttons(client, message):
-    if len(message.text) == 0:
+    if len(message.text.split()) == 1:
         return await sendMessage(message, 'Send a search key along with command')
     user_id = message.from_user.id
     buttons = ButtonMaker()

@@ -16,7 +16,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, edit
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, async_to_sync_dec, async_to_sync
+from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, async_to_sync_dec
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.modules.search import initiate_search_tools
@@ -678,7 +678,7 @@ async def edit_bot_settings(client, query):
         value = aria2_defaults[data[2]]
         aria2_options[data[2]] = value
         await update_buttons(message, 'aria')
-        downloads = await async_to_sync(aria2.get_downloads)
+        downloads = await sync_to_async(aria2.get_downloads)
         for download in downloads:
             if not download.is_complete:
                 try:
