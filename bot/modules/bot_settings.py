@@ -592,7 +592,7 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     async def event_filter(_, __, event):
         return bool(event.from_user.id == query.from_user.id and event.chat.id == chat_id and \
                     (event.text or event.document and document))
-    handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=1)
+    handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[chat_id]:
         await sleep(0.5)
         if time() - start_time > 60:
