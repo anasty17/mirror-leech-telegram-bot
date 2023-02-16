@@ -198,38 +198,40 @@ async def rssList(query, start, all_users=False):
     user_id = query.from_user.id
     buttons = ButtonMaker()
     if all_users:
-        list_feed = f"<b>All subscriptions | Page: {int(start/10)} </b>\n\n"
+        list_feed = f"<b>All subscriptions | Page: {int(start/5)} </b>"
         async with rss_dict_lock:
             index = 0
             for titles in list(rss_dict.values()):
-                for index, title, data in enumerate(list(titles.items())[start:10+start]):
-                    list_feed += f"<b>Title:</b> <code>{title}</code>\n"
+                for index, title, data in enumerate(list(titles.items())[start:5+start]):
+                    list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n"
                     list_feed += f"<b>Feed Url:</b> <code>{data['link']}</code>\n"
                     list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
                     list_feed += f"<b>Inf: </b> <code>{data['inf']}</code>\n"
                     list_feed += f"<b>Exf: </b> <code>{data['exf']}</code>\n"
                     list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
-                    list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}\n\n"
+                    list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}"
                     index += 1
                     if index == 10:
                         break
     else:
-        list_feed = f"<b>Your subscriptions | Page: {int(start/10)} </b>\n\n"
+        list_feed = f"<b>Your subscriptions | Page: {int(start/5)} </b>"
         async with rss_dict_lock:
             keysCount = len(rss_dict.get(user_id, {}).keys())
-            for title, data in list(rss_dict[user_id].items())[start:10+start]:
-                list_feed += f"<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{data['link']}</code>\n"
+            for title, data in list(rss_dict[user_id].items())[start:5+start]:
+                list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{data['link']}</code>\n"
                 list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
                 list_feed += f"<b>Inf: </b> <code>{data['inf']}</code>\n"
                 list_feed += f"<b>Exf: </b> <code>{data['exf']}</code>\n"
                 list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
-                list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}\n\n"
+                list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}"
     buttons.ibutton("Back", f"rss back {user_id}")
     buttons.ibutton("Close", f"rss close {user_id}")
-    if keysCount > 10:
-        for x in range(0, keysCount-1, 10):
-            buttons.ibutton(f'{int(x/10)}', f"rss list {user_id} {x}", position='footer')
+    if keysCount > 5:
+        for x in range(0, keysCount, 5):
+            buttons.ibutton(f'{int(x/5)}', f"rss list {user_id} {x}", position='footer')
     button = buttons.build_menu(2)
+    if query.message.text.html == list_feed:
+        return
     await editMessage(query.message, list_feed, button)
 
 async def rssGet(client, message, pre_event):

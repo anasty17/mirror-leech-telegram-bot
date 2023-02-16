@@ -165,8 +165,6 @@ async def load_config():
 
     USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 
-    RSS_USER_SESSION_STRING = environ.get('RSS_USER_SESSION_STRING', '')
-
     TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
     downloads = aria2.get_downloads()
     if len(TORRENT_TIMEOUT) == 0:
@@ -537,7 +535,7 @@ async def update_private_file(client, message, pre_message):
     elif message.document:
         doc = message.document
         file_name = doc.file_name
-        await message.download(file_name=file_name)
+        await message.download(file_name=f'/usr/src/app/{file_name}')
         if file_name == 'accounts.zip':
             if await aiopath.exists('accounts'):
                 await (await create_subprocess_exec("rm", "-rf", "accounts")).wait()

@@ -261,6 +261,6 @@ async def send_users_settings(client, message):
         await sendMessage(message, 'No users data!')
 
 
-bot.add_handler(MessageHandler(send_users_settings, filters=command(BotCommands.UsersCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(user_settings, filters=command(BotCommands.UserSetCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(send_users_settings, filters=command(BotCommands.UsersCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(user_settings, filters=command(BotCommands.UserSetCommand) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex("^userset")))
