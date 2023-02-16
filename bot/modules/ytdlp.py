@@ -4,6 +4,7 @@ from pyrogram.filters import command, regex
 from asyncio import sleep
 from re import split as re_split
 
+from requests import request
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -144,6 +145,8 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         return
 
     listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir)
+    if 'mdisk.me' in link:
+        name, link = await sync_to_async(_mdisk, link, name)
     ydl = YoutubeDLHelper(listener)
     try:
         result = await sync_to_async(ydl.extractMetaData, link, name, opt, True)
@@ -328,6 +331,16 @@ async def select_format(client, query):
         await message.delete()
         del listener_dict[task_id]
         await ydl.add_download(link, path, name, qual, playlist, opt)
+
+def _mdisk(link, name):
+    key = link.split('/')[-1]
+    resp = request('GET', f'https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}')
+    if resp.ok:
+        resp = resp.json()
+        link = resp['source']
+        if not name:
+            name = resp['filename']
+    return name, link
 
 async def _auto_cancel(msg, task_id):
     await sleep(120)
