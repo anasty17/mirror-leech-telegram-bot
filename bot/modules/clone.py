@@ -32,7 +32,7 @@ async def cloneNode(client, message):
             tag = f"@{username}"
         else:
             tag = message.from_user.mention
-    if reply_to := message.replt_to_message:
+    if reply_to := message.reply_to_message:
         if len(link) == 0:
             link = reply_to.text.split(maxsplit=1)[0].strip()
         if not reply_to.from_user.is_bot:
