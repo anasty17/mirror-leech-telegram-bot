@@ -54,7 +54,7 @@ async def __onDownloadStarted(api, gid):
                 if sname is not None:
                     smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
                     if smsg:
-                        listener.onDownloadError('File/Folder already available in Drive.\n\n')
+                        await listener.onDownloadError('File/Folder already available in Drive.\n\n')
                         await sync_to_async(api.remove, [download], force=True, files=True)
                         await sendMessage(listener.message, "Here are the search results:", button)
                         return

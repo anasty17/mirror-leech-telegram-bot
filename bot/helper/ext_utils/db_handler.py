@@ -78,10 +78,10 @@ class DbManger:
         self.__conn.close
 
     async def update_private_file(self, path):
-        if await self.__err:
+        if self.__err:
             return
         if await aiopath.exists(path):
-            with open(path, 'rb+') as pf:
+            async with aiopen(path, 'rb+') as pf:
                 pf_bin = pf.read()
         else:
             pf_bin = ''
