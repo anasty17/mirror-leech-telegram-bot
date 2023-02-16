@@ -156,7 +156,7 @@ async def rssUpdate(client, message, pre_event, state):
     for title in titles:
         title = title.strip()
         if not (res := rss_dict[user_id].get(title, False)):
-            if sudo:
+            if is_sudo:
                 res, user_id = await getUserId(title)
             if not res:
                 user_id = message.from_user.id
@@ -228,7 +228,7 @@ async def rssList(query, start, all_users=False):
     buttons.ibutton("Close", f"rss close {user_id}")
     if keysCount > 10:
         for x in range(0, keysCount-1, 10):
-            buttons.ibutton(f'{int(x/10)}', f"rss list {user_id} {page}", position='footer')
+            buttons.ibutton(f'{int(x/10)}', f"rss list {user_id} {x}", position='footer')
     button = buttons.build_menu(2)
     await editMessage(query.message, list_feed, button)
 
@@ -237,7 +237,7 @@ async def rssGet(client, message, pre_event):
     handler_dict[user_id] = False
     args = message.text.split()
     if len(args) < 2:
-        await sendMessage(message, f'{item}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!')
+        await sendMessage(message, f'{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!')
         await updateRssMenu(pre_event)
         return
     try:

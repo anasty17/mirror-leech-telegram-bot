@@ -354,11 +354,7 @@ usetting - users settings
 bsetting - bot settings
 status - Get Mirror Status message
 btsel - select files from torrent
-rsslist - or /rl List all subscribed rss feed info
-rssget - or /rg Get specific No. of links from specific rss feed
-rsssub - or /rs Subscribe new rss feed
-rssunsub - or /rus Unsubscribe rss feed by title
-rssset - or /rst Rss Settings
+rss - rss menu
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
