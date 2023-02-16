@@ -3,8 +3,6 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from base64 import b64encode
 from re import match as re_match, split as re_split
-from aiofiles.os import path as aiopath
-from time import time
 from asyncio import sleep
 
 from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict
@@ -79,18 +77,19 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
 
     @new_task
     async def __run_multi():
-        if multi > 1:
-            await sleep(4)
-            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-            msg = message.text.split(maxsplit=mi+1)
-            msg[mi] = f"{multi - 1}"
-            nextmsg = await sendMessage(nextmsg, " ".join(msg))
-            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
-            if len(folder_name) > 0:
-                sameDir.add(nextmsg.id)
-            nextmsg.from_user = message.from_user
-            await sleep(4)
-            await _mirror_leech(client, nextmsg, isZip, extract, isQbit, isLeech, sameDir)
+        if multi <= 1:
+            return
+        await sleep(4)
+        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
+        msg = message.text.split(maxsplit=mi+1)
+        msg[mi] = f"{multi - 1}"
+        nextmsg = await sendMessage(nextmsg, " ".join(msg))
+        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
+        if len(folder_name) > 0:
+            sameDir.add(nextmsg.id)
+        nextmsg.from_user = message.from_user
+        await sleep(4)
+        await _mirror_leech(client, nextmsg, isZip, extract, isQbit, isLeech, sameDir)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 
@@ -208,10 +207,7 @@ Number and m:folder_name (folder_name without space) should be always before |ne
     else:
         if len(mesg) > 1 and not mesg[1].startswith('Tag:'):
             ussr = mesg[1]
-            if len(mesg) > 2:
-                pssw = mesg[2]
-            else:
-                pssw = ''
+            pssw = mesg[2] if len(mesg) > 2 else ''
             auth = f"{ussr}:{pssw}"
             auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:

@@ -2,8 +2,8 @@
 #from hashlib import sha1
 #from base64 import b16encode, b32decode
 #from bencoding import bencode, bdecode
+#from re import search as re_search
 from time import time
-from re import search as re_search
 from aiofiles.os import remove as aioremove, path as aiopath
 from asyncio import Lock, sleep
 

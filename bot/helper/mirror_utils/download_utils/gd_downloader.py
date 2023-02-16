@@ -29,7 +29,7 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
             except:
                 gname = None
         if gname is not None:
-            gmsg, button = await async_to_sync(drive.drive_list, gname, True)
+            gmsg, button = await sync_to_async(drive.drive_list, gname, True)
             if gmsg:
                 msg = "File/Folder is already available in Drive.\nHere are the search results:"
                 await sendMessage(listener.message, msg, button)

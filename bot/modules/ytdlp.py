@@ -60,18 +60,19 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
 
     @new_task
     async def __run_multi():
-        if multi > 1:
-            await sleep(4)
-            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-            ymsg = mssg.split(maxsplit=mi+1)
-            ymsg[mi] = f"{multi - 1}"
-            nextmsg = await sendMessage(nextmsg, " ".join(ymsg))
-            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
-            if len(folder_name) > 0:
-                sameDir.add(nextmsg.id)
-            nextmsg.from_user = message.from_user
-            await sleep(4)
-            await _ytdl(client, nextmsg, isZip, isLeech, sameDir)
+        if multi <= 1:
+            return
+        await sleep(4)
+        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
+        ymsg = mssg.split(maxsplit=mi+1)
+        ymsg[mi] = f"{multi - 1}"
+        nextmsg = await sendMessage(nextmsg, " ".join(ymsg))
+        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
+        if len(folder_name) > 0:
+            sameDir.add(nextmsg.id)
+        nextmsg.from_user = message.from_user
+        await sleep(4)
+        await _ytdl(client, nextmsg, isZip, isLeech, sameDir)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 

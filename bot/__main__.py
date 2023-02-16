@@ -80,9 +80,9 @@ async def restart(client, message):
 
 async def ping(client, message):
     start_time = int(round(time() * 1000))
-    reply = await sendMessage(event, "Starting Ping")
+    reply = await sendMessage(message, "Starting Ping")
     end_time = int(round(time() * 1000))
-    await editMessage(message, f'{end_time - start_time} ms')
+    await editMessage(reply, f'{end_time - start_time} ms')
 
 async def log(client, message):
     await sendFile(message, 'log.txt')

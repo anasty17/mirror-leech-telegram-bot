@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pyrogram.handlers import MessageHandler, EditedMessageHandler
 from pyrogram.filters import command
-from aiofiles import open as aiopen
 from io import BytesIO
 
 from bot import LOGGER, bot

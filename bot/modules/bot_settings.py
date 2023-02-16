@@ -16,7 +16,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, edit
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, async_to_sync_dec
+from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, async_to_sync_dec, async_to_sync
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.modules.search import initiate_search_tools
@@ -50,10 +50,7 @@ async def load_config():
         TELEGRAM_HASH = config_dict['TELEGRAM_HASH']
 
     OWNER_ID = environ.get('OWNER_ID', '')
-    if len(OWNER_ID) == 0:
-        OWNER_ID = config_dict['OWNER_ID']
-    else:
-        OWNER_ID = int(OWNER_ID)
+    OWNER_ID = config_dict['OWNER_ID'] if len(OWNER_ID) == 0 else int(OWNER_ID)
 
     DATABASE_URL = environ.get('DATABASE_URL', '')
     if len(DATABASE_URL) == 0:

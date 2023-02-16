@@ -7,7 +7,7 @@ from bot import bot, aria2, download_dict, download_dict_lock, OWNER_ID, user_da
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
+from bot.helper.ext_utils.bot_utils import async_to_sync, getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
 
 
 async def select(client, message):
@@ -17,15 +17,12 @@ async def select(client, message):
         gid = msg[1]
         dl = await getDownloadByGid(gid)
         if not dl:
-            await sendMessage(event, f"GID: <code>{gid}</code> Not Found.")
+            await sendMessage(message, f"GID: <code>{gid}</code> Not Found.")
             return
     elif reply_to_id := message.reply_to_message_id:
         omsg_id = reply_to_id
         async with download_dict_lock:
-            if omsg_id in download_dict:
-                dl = download_dict[omsg_id]
-            else:
-                dl = None
+            dl = download_dict.get(omsg_id, None)
         if not dl:
             await sendMessage(message, "This is not an active task!")
             return
@@ -36,7 +33,7 @@ async def select(client, message):
         await sendMessage(message, msg)
         return
 
-    if OWNER_ID != user_id and dl.event.sender_id != user_id and \
+    if OWNER_ID != user_id and dl.message.from_user.id != user_id and \
        (user_id not in user_data or not user_data[user_id].get('is_sudo')):
         await sendMessage(message, "This task is not for you!")
         return

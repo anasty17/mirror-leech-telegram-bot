@@ -23,10 +23,7 @@ async def cancel_mirror(client, message):
     elif reply_to_id := message.reply_to_message_id:
         omsg_id = reply_to_id
         async with download_dict_lock:
-            if omsg_id in download_dict:
-                dl = download_dict[omsg_id]
-            else:
-                dl = None
+            dl = download_dict.get(omsg_id, None)
         if not dl:
             await sendMessage(message, "This is not an active task!")
             return

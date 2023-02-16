@@ -3,10 +3,9 @@ from logging import getLogger, ERROR
 from time import time
 from pickle import load as pload
 from os import makedirs, path as ospath, listdir, remove as osremove
-from requests.utils import quote as rquote
 from io import FileIO
 from re import search as re_search
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, quote as rquote
 from random import randrange
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
