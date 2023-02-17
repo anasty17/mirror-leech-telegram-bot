@@ -211,10 +211,10 @@ async def get_media_info(path):
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                "json", "-show_format", "-show_streams", path])
-        if result[1]:
-            raise Exception(result[1])
+        if res := result[1]:
+            LOGGER.warning(f'Get Media Info: {res}')
     except Exception as e:
-        LOGGER.error(f'{e}. Mostly file not found!')
+        LOGGER.error(f'Get Media Info: {e}. Mostly File not found!')
         return 0, None, None
 
     fields = eval(result[0]).get('format')
@@ -261,10 +261,10 @@ async def get_document_type(path):
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
                                  "json", "-show_streams", path])
-        if result[1]:
-            raise Exception(result[1])
+        if res := result[1]:
+            LOGGER.warning(f'Get Document Type: {res}')
     except Exception as e:
-        LOGGER.error(f'{e}. Mostly file not found!')
+        LOGGER.error(f'Get Document Type: {e}. Mostly File not found!')
         return is_video, is_audio, is_image
 
     fields = eval(result[0]).get('streams')
