@@ -21,8 +21,8 @@ def namespace_of(message):
             '__builtins__': globals()['__builtins__'],
             'bot': bot,
             'message': message,
-            'user': message.from_user.id,
-            'chat': message.chat.id}
+            'user': message.from_user or message.sender_chat,
+            'chat': message.chat}
 
     return namespaces[message.chat.id]
 

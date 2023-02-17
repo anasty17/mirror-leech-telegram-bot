@@ -49,7 +49,7 @@ async def cancel_all(status):
             await obj.cancel_download()
             await sleep(1)
 
-async def cancell_all_buttons(message):
+async def cancell_all_buttons(client, message):
     async with download_dict_lock:
         count = len(download_dict)
     if count == 0:

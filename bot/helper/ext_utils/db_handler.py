@@ -82,7 +82,7 @@ class DbManger:
             return
         if await aiopath.exists(path):
             async with aiopen(path, 'rb+') as pf:
-                pf_bin = pf.read()
+                pf_bin = await pf.read()
         else:
             pf_bin = ''
         path = path.replace('.', '__')
@@ -102,8 +102,8 @@ class DbManger:
         if self.__err:
             return
         if path is not None:
-            with open(path, 'rb+') as image:
-                image_bin = image.read()
+            async with aiopen(path, 'rb+') as image:
+                image_bin = await image.read()
         else:
             image_bin = ''
         await self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
@@ -153,8 +153,7 @@ class DbManger:
                     else:
                         notifier_dict[row['cid']][row['tag']] = [row['_id']]
                 else:
-                    usr_dict = {row['tag']: [row['_id']]}
-                    notifier_dict[row['cid']] = usr_dict
+                    notifier_dict[row['cid']] = {row['tag']: [row['_id']]}
         await self.__db.tasks[bot_id].drop()
         self.__conn.close
         return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}

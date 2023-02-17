@@ -124,12 +124,12 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 reply_text = reply_to.text.split(maxsplit=1)[0].strip()
                 if is_url(reply_text) or is_magnet(reply_text):
                     link = reply_text
-            elif file_.mime_type == 'application/x-bittorrent':
+            elif reply_to.document and file_.mime_type == 'application/x-bittorrent':
                 link = await reply_to.download()
             else:
                 listener = MirrorLeechListener(message, isZip, extract, isQbit, isLeech, pswd, tag, sameDir=sameDir)
                 __run_multi()
-                await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
+                await TelegramDownloadHelper(listener).add_download(message, f'{path}/', name)
                 return
 
     if not is_url(link) and not is_magnet(link):
