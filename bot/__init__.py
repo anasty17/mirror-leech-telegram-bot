@@ -365,7 +365,7 @@ srun("./aria.sh", shell=True)
 if ospath.exists('accounts.zip'):
     if ospath.exists('accounts'):
         srun(["rm", "-rf", "accounts"])
-    srun(["unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/"])
+    srun(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
     srun(["chmod", "-R", "777", "accounts"])
     osremove('accounts.zip')
 if not ospath.exists('accounts'):

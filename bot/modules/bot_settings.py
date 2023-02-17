@@ -538,7 +538,7 @@ async def update_private_file(client, message, pre_message):
         if file_name == 'accounts.zip':
             if await aiopath.exists('accounts'):
                 await (await create_subprocess_exec("rm", "-rf", "accounts")).wait()
-            await (await create_subprocess_exec("unzip", "-q", "-o", "accounts.zip", "-w", "**.json", "-d", "accounts/")).wait()
+            await (await create_subprocess_exec("7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json")).wait()
             await (await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
         elif file_name == 'list_drives.txt':
             DRIVES_IDS.clear()
