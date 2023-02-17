@@ -10,7 +10,7 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from asyncio import create_subprocess_exec
 
-from bot import bot, botStartTime, LOGGER, Interval, DATABASE_URL, user, QbInterval, INCOMPLETE_TASK_NOTIFIER
+from bot import bot, botStartTime, LOGGER, Interval, DATABASE_URL, user, QbInterval, INCOMPLETE_TASK_NOTIFIER, scheduler
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, cmd_exec, sync_to_async
 from .helper.ext_utils.db_handler import DbManger
@@ -64,6 +64,8 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
 
 async def restart(client, message):
     restart_message = await sendMessage(message, "Restarting...")
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
     if Interval:
         Interval[0].cancel()
         Interval.clear()

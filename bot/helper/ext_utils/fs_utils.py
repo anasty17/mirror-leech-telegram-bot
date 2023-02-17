@@ -112,7 +112,7 @@ async def take_ss(video_file, duration):
     if not await aiopath.exists(des_dir):
         await mkdir(des_dir)
     des_dir = ospath.join(des_dir, f"{time()}.jpg")
-    if duration is not None:
+    if duration is None:
         duration = (await get_media_info(video_file))[0]
     if duration == 0:
         duration = 3

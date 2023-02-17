@@ -553,6 +553,7 @@ Timeout: 60 sec.
 
 async def rssMonitor():
     if not config_dict['RSS_CHAT_ID']:
+        LOGGER.warning('RSS_CHAT_ID not added! Shutting down rss scheduler...')
         scheduler.shutdown(wait=False)
         return
     if len(rss_dict) == 0:
