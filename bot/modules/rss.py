@@ -222,8 +222,7 @@ async def rssList(query, start, all_users=False):
                 list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
                 list_feed += f"<b>Inf: </b> <code>{data['inf']}</code>\n"
                 list_feed += f"<b>Exf: </b> <code>{data['exf']}</code>\n"
-                list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
-                list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}"
+                list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>"
     buttons.ibutton("Back", f"rss back {user_id}")
     buttons.ibutton("Close", f"rss close {user_id}")
     if keysCount > 5:
