@@ -9,9 +9,8 @@ from os import environ
 from dotenv import load_dotenv
 from time import time
 from io import BytesIO
-from apscheduler.triggers.interval import IntervalTrigger
 
-from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER, bot, scheduler
+from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER, bot
 from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -20,6 +19,7 @@ from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, async_to_
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.modules.search import initiate_search_tools
+from bot.modules.rss import addJob
 
 START = 0
 STATE = 'view'
@@ -292,7 +292,6 @@ async def load_config():
                         'QUEUE_ALL': QUEUE_ALL,
                         'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
                         'QUEUE_UPLOAD': QUEUE_UPLOAD,
-                        'RSS_USER_SESSION_STRING': RSS_USER_SESSION_STRING,
                         'RSS_CHAT_ID': RSS_CHAT_ID,
                         'RSS_DELAY': RSS_DELAY,
                         'SEARCH_API_LINK': SEARCH_API_LINK,
@@ -415,7 +414,7 @@ async def edit_variable(client, message, pre_message, key):
             await DbManger().trunc_table('tasks')
     elif key == 'RSS_DELAY':
         value = int(value)
-        scheduler.modify_job('0', trigger=IntervalTrigger(seconds=value))
+        addJob(value)
     elif key == 'DOWNLOAD_DIR':
         if not value.endswith('/'):
             value = f'{value}/'

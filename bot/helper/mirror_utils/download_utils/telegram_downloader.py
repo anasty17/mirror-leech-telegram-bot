@@ -93,9 +93,7 @@ class TelegramDownloadHelper:
             if not self.__listener.isSuperGroup:
                 await sendMessage(message, 'Use SuperGroup to download with User!')
                 return
-            message = await user.get_messages(chat_id=message.chat.id, reply_to_message_ids=message.id)
-        else:
-            message = message.reply_to_message
+            message = await user.get_messages(chat_id=message.chat.id, message_ids=message.id)
         media = message.document or message.photo or message.video or message.audio or \
                  message.voice or message.video_note or message.sticker or message.animation or None
         if media is not None:

@@ -129,7 +129,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             else:
                 listener = MirrorLeechListener(message, isZip, extract, isQbit, isLeech, pswd, tag, sameDir=sameDir)
                 __run_multi()
-                await TelegramDownloadHelper(listener).add_download(message, f'{path}/', name)
+                await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
                 return
 
     if not is_url(link) and not is_magnet(link):
