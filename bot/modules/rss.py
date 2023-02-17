@@ -32,7 +32,7 @@ async def rssMenu(event):
     buttons.ibutton("Resume", f"rss resume {user_id}")
     buttons.ibutton("Unsubscribe", f"rss unsubscribe {user_id}")
     if await CustomFilters.sudo('', event):
-        buttons.ibutton("All Subscriptions", f"rss listall {user_id}")
+        buttons.ibutton("All Subscriptions", f"rss listall {user_id} 0")
         buttons.ibutton("Pause All", f"rss allpause {user_id}")
         buttons.ibutton("Resume All", f"rss allresume {user_id}")
         buttons.ibutton("Unsubscribe All", f"rss allunsub {user_id}")
@@ -200,9 +200,10 @@ async def rssList(query, start, all_users=False):
     if all_users:
         list_feed = f"<b>All subscriptions | Page: {int(start/5)} </b>"
         async with rss_dict_lock:
+            keysCount = sum([len(v.keys()) for v in list(rss_dict.values())])
             index = 0
             for titles in list(rss_dict.values()):
-                for index, title, data in enumerate(list(titles.items())[start:5+start]):
+                for index, (title, data) in enumerate(list(titles.items())[start:5+start]):
                     list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n"
                     list_feed += f"<b>Feed Url:</b> <code>{data['link']}</code>\n"
                     list_feed += f"<b>Command: </b> <code>{data['command']}</code>\n"
@@ -211,7 +212,7 @@ async def rssList(query, start, all_users=False):
                     list_feed += f"<b>Paused: </b> <code>{data['paused']}</code>\n"
                     list_feed += f"<b>User:</b> {data['tag'].lstrip('@')}"
                     index += 1
-                    if index == 10:
+                    if index == 5:
                         break
     else:
         list_feed = f"<b>Your subscriptions | Page: {int(start/5)} </b>"
