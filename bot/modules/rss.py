@@ -85,7 +85,7 @@ async def rssSub(client, message, pre_event):
             if len(inf) > 1:
                 inf = inf[1].split(' exf: ')[0].split(' c: ')[0].strip()
                 filters_list = inf.split('|')
-                for x in inf:
+                for x in filters_list:
                     y = x.split(' or ')
                     inf_lists.append(y)
             else:
@@ -93,8 +93,8 @@ async def rssSub(client, message, pre_event):
             exf = item.split(' exf: ')
             if len(exf) > 1:
                 exf = exf[1].split(' inf: ')[0].split(' c: ')[0].strip()
-                filters_list = inf.split('|')
-                for x in exf:
+                filters_list = exf.split('|')
+                for x in filters_list:
                     y = x.split(' or ')
                     exf_lists.append(y)
             else:
@@ -312,14 +312,14 @@ async def rssEdit(client, message, pre_event):
             if inf:
                 if inf.lower() != 'none':
                     filters_list = inf.split('|')
-                    for x in inf:
+                    for x in filters_list:
                         y = x.split(' or ')
                         inf_lists.append(y)
                 rss_dict[user_id][title]['inf'] = inf_lists
             if exf:
                 if exf.lower() != 'none':
-                    filters_list = inf.split('|')
-                    for x in exf:
+                    filters_list = exf.split('|')
+                    for x in filters_list:
                         y = x.split(' or ')
                         exf_lists.append(y)
                 rss_dict[user_id][title]['exf'] = exf_lists
