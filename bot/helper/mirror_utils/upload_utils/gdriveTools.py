@@ -448,7 +448,7 @@ class GoogleDriveHelper:
                 if reason not in ['userRateLimitExceeded', 'dailyLimitExceeded', 'cannotCopyFile']:
                     raise err
                 if reason == 'cannotCopyFile':
-                    LOGGER.erro(err)
+                    LOGGER.error(err)
                 elif config_dict['USE_SERVICE_ACCOUNTS']:
                     if self.__sa_count >= SERVICE_ACCOUNTS_NUMBER:
                         LOGGER.info(f"Reached maximum number of service accounts switching, which is {self.__sa_count}")

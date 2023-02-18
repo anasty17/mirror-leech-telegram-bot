@@ -58,25 +58,21 @@ class TgUploader:
 
     async def __msg_to_reply(self):
         if DUMP_CHAT := config_dict['DUMP_CHAT']:
-            if self.__listener.isSuperGroup:
-                msg = self.__listener.message.link
-            else:
-                msg = self.__listener.message.text
+            msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text
             if IS_PREMIUM_USER:
                 self.__sent_msg = await user.send_message(chat_id=DUMP_CHAT, text=msg,
                                                           disable_web_page_preview=False, disable_notification=True)
             else:
                 self.__sent_msg = await bot.send_message(chat_id=DUMP_CHAT, text=msg,
                                                          disable_web_page_preview=False, disable_notification=True)
-        else:
-            if IS_PREMIUM_USER:
-                if not self.__listener.isSuperGroup:
-                    await self.__listener.onUploadError('Use SuperGroup to leech with User!')
-                    return
-                self.__sent_msg = await user.get_messages(chat_id=self.__listener.message.chat.id,
+        elif IS_PREMIUM_USER:
+            if not self.__listener.isSuperGroup:
+                await self.__listener.onUploadError('Use SuperGroup to leech with User!')
+                return
+            self.__sent_msg = await user.get_messages(chat_id=self.__listener.message.chat.id,
                                                           message_ids=self.__listener.uid)
-            else:
-                self.__sent_msg = self.__listener.message
+        else:
+            self.__sent_msg = self.__listener.message
 
     async def __prepare_file(self, up_path, file_, dirpath):
         if LEECH_FILENAME_PREFIX := config_dict['LEECH_FILENAME_PREFIX']:
