@@ -376,8 +376,8 @@ async def get_buttons(key=None, edit_type=None):
         if key not in ['TELEGRAM_HASH', 'TELEGRAM_API', 'OWNER_ID', 'BOT_TOKEN']:
             buttons.ibutton('Default', f"botset resetvar {key}")
         buttons.ibutton('Close', "botset close")
-        if key in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING',
-                   'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
+        if key in ['SUDO_USERS', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING', 'TELEGRAM_HASH', 
+                   'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
             msg += 'Restart required for this edit to take effect!\n\n'
         msg += f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editaria':
