@@ -377,8 +377,7 @@ async def get_buttons(key=None, edit_type=None):
             buttons.ibutton('Default', f"botset resetvar {key}")
         buttons.ibutton('Close', "botset close")
         if key in ['SUDO_USERS', 'RSS_USER_SESSION_STRING', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING',
-                   'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'RSS_DELAY', 'DATABASE_URL',
-                   'BOT_TOKEN', 'DOWNLOAD_DIR']:
+                   'TELEGRAM_HASH', 'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
             msg += 'Restart required for this edit to take effect!\n\n'
         msg += f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editaria':
@@ -784,13 +783,13 @@ async def edit_bot_settings(client, query):
         await query.answer()
         filename = data[2].rsplit('.zip', 1)[0]
         if await aiopath.exists(filename):
-            await create_subprocess_shell(f"git add -f {filename} \
+            await (await create_subprocess_shell(f"git add -f {filename} \
                                             && git commit -sm botsettings -q \
-                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")
+                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")).wait()
         else:
-            await create_subprocess_shell(f"git rm -r --cached {filename} \
+            await (await create_subprocess_shell(f"git rm -r --cached {filename} \
                                             && git commit -sm botsettings -q \
-                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")
+                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")).wait()
         await message.reply_to_mssage.delete()
         await message.delete()
 

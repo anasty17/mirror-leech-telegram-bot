@@ -45,19 +45,18 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
         if await aiopath.exists(link):
             url = None
             tpath = link
-        op = await sync_to_async(client.torrents_add, url, tpath, path, tags=listener.uid, ratio_limit=ratio,
+        op = await sync_to_async(client.torrents_add, url, tpath, path, tags=f'{listener.uid}', ratio_limit=ratio,
                                            seeding_time_limit=seed_time, headers={'user-agent': 'Wget/1.12'})
         if op.lower() == "ok.":
-            tor_info = await sync_to_async(client.torrents_info, tag=listener.uid)
+            tor_info = await sync_to_async(client.torrents_info, tag=f'{listener.uid}')
             if len(tor_info) == 0:
                 while True:
-                    tor_info = await sync_to_async(client.torrents_info, tag=listener.uid)
+                    tor_info = await sync_to_async(client.torrents_info, tag=f'{listener.uid}')
                     if len(tor_info) > 0:
                         break
-                    elif time() - ADD_TIME >= 60:
-                        msg = "Not added, maybe it will took time and u should remove it manually using eval!"
+                    elif time() - ADD_TIME >= 120:
+                        msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
                         await sendMessage(listener.message, msg)
-                        await __remove_torrent(client, listener.uid)
                         await sync_to_async(client.auth_log_out)
                         return
             tor_info = tor_info[0]
@@ -68,7 +67,6 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                 return
         else:
             await sendMessage(listener.message, "This is an unsupported/invalid link.")
-            await __remove_torrent(client, ext_hash)
             return
         async with download_dict_lock:
             download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
