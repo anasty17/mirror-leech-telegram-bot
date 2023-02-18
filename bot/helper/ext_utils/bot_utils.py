@@ -123,7 +123,7 @@ def get_readable_message():
             globals()['COUNT'] -= STATUS_LIMIT
             globals()['PAGE_NO'] -= 1
     for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
-        if download.message.chat.type in ['SUPERGROUP', 'CHANNEL']:
+        if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
             msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
         else:
             msg += f"<b>{download.status()}: </b>"
