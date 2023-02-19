@@ -213,7 +213,7 @@ class YoutubeDLHelper:
             if self.__listener.isZip:
                 sname = f"{self.name}.zip"
             if sname:
-                smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, name, True)
+                smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
                 if smsg:
                     self.__onDownloadError('File/Folder already available in Drive.\n')
                     await sendMessage(self.__listener.message, 'Here are the search results:', button)
