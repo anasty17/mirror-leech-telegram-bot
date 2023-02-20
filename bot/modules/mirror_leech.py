@@ -4,6 +4,7 @@ from pyrogram.filters import command
 from base64 import b64encode
 from re import match as re_match, split as re_split
 from asyncio import sleep
+from aiofiles.os import path as aiopath
 
 from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, new_thread
@@ -136,7 +137,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
                 return
 
-    if not is_url(link) and not is_magnet(link):
+    if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link):
         help_msg = '''
 <code>/cmd</code> link |newname pswd: xx(zip/unzip)
 

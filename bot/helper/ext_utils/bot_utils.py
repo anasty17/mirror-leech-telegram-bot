@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from re import match as re_match
+from re import match as re_match, findall as re_findall
 from time import time
 from math import ceil
 from html import escape
@@ -228,7 +228,7 @@ def get_readable_time(seconds):
     return result
 
 def is_url(url):
-    url = re_match(URL_REGEX, url)
+    url = re_findall(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url):
@@ -250,7 +250,7 @@ def get_mega_link_type(url):
     return "file"
 
 def is_magnet(url):
-    magnet = re_match(MAGNET_REGEX, url)
+    magnet = re_findall(MAGNET_REGEX, url)
     return bool(magnet)
 
 def get_content_type(link):
