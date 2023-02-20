@@ -60,6 +60,8 @@ class MirrorLeechListener:
             await DbManger().add_incomplete_task(self.message.chat.id, self.message.link, self.tag)
 
     async def onDownloadComplete(self):
+        if len(self.sameDir) == 1:
+            await sleep(3)
         async with download_dict_lock:
             if len(self.sameDir) > 1:
                 self.sameDir.remove(self.uid)
