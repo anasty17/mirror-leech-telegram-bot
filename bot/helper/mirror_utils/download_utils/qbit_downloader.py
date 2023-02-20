@@ -121,14 +121,14 @@ async def __remove_torrent(client, hash_):
         if hash_ in SEEDING:
             SEEDING.remove(hash_)
 
-async def __onDownloadError(err, client, tor):
+async def __onDownloadError(err, client, tor, button=None):
     LOGGER.info(f"Cancelling Download: {tor.name}")
     await sync_to_async(client.torrents_pause, torrent_hashes=tor.hash)
     await sleep(0.3)
     download = await getDownloadByGid(tor.hash[:12])
     try:
         listener = download.listener()
-        await listener.onDownloadError(err)
+        await listener.onDownloadError(err, button)
     except:
         pass
     await __remove_torrent(client, tor.hash)
@@ -162,9 +162,9 @@ async def __stop_duplicate(client, tor):
             if qbname is not None:
                  qbmsg, button = await sync_to_async(GoogleDriveHelper().drive_list, qbname, True)
                  if qbmsg:
-                    await __onDownloadError("File/Folder is already available in Drive.", client, tor)
-                    await sendMessage(listener.message, "Here are the search results:", button)
-                    return
+                     qbmsg = 'File/Folder is already available in Drive.\nHere are the search results:'
+                     await __onDownloadError(qbmsg, client, tor, button)
+                     return
     except:
         pass
 

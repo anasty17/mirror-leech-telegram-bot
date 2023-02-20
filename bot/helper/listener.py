@@ -330,7 +330,7 @@ class MirrorLeechListener:
 
         await start_from_queued()
 
-    async def onDownloadError(self, error):
+    async def onDownloadError(self, error, button=None):
         await clean_download(self.dir)
         if self.newDir:
             await clean_download(self.newDir)
@@ -341,7 +341,7 @@ class MirrorLeechListener:
             if self.uid in self.sameDir:
                 self.sameDir.remove(self.uid)
         msg = f"{self.tag} your download has been stopped due to: {escape(error)}"
-        await sendMessage(self.message, msg)
+        await sendMessage(self.message, msg, button)
         if count == 0:
             await self.clean()
         else:
