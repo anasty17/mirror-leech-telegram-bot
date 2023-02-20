@@ -215,7 +215,7 @@ class YoutubeDLHelper:
             if sname:
                 smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
                 if smsg:
-                    self.__onDownloadError('File/Folder already available in Drive.\n')
+                    await self.__onDownloadError('File/Folder already available in Drive.\n')
                     await sendMessage(self.__listener.message, 'Here are the search results:', button)
                     return
         all_limit = config_dict['QUEUE_ALL']
