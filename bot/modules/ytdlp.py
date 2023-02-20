@@ -288,7 +288,7 @@ async def select_format(client, query):
         await editMessage(message, "This is an old task")
         return
     uid = task_info[1]
-    if user_id != uid and not CustomFilters.owner_query(user_id):
+    if user_id != uid and not await CustomFilters.sudo(client, query):
         await query.answer(text="This task is not for you!", show_alert=True)
         return
     elif data[2] == "dict":
@@ -298,7 +298,7 @@ async def select_format(client, query):
         return
     elif data[2] == "back":
         await query.answer()
-        await editMessage('Choose Video Quality:', message, task_info[4])
+        await editMessage(message, 'Choose Video Quality:', task_info[4])
         return
     elif data[2] == "mp3":
         await query.answer()
