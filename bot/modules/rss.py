@@ -15,12 +15,13 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import async_to_sync_dec
-
+from bot.helper.ext_utils.bot_utils import new_thread
 
 rss_dict_lock = Lock()
 handler_dict = {}
 
+
+@new_thread
 async def rssMenu(event):
     user_id = event.from_user.id
     buttons = ButtonMaker()
@@ -338,7 +339,6 @@ async def rssDelete(client, message, pre_event):
             await DbManger().rss_delete(user)
     await updateRssMenu(pre_event)
 
-@async_to_sync_dec
 async def event_handler(client, query, pfunc):
     user_id = query.from_user.id
     handler_dict[user_id] = True
@@ -353,6 +353,7 @@ async def event_handler(client, query, pfunc):
             await updateRssMenu(query)
     client.remove_handler(*handler)
 
+@new_thread
 async def rssListener(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -396,7 +397,7 @@ Timeout: 60 sec.
         """
         await editMessage(message, msg, button)
         pfunc = partial(rssSub, pre_event=query)
-        event_handler(client, query, pfunc)
+        await event_handler(client, query, pfunc)
     elif data[1] == 'list':
         handler_dict[user_id] = False
         if len(rss_dict.get(int(data[2]), {})) == 0:
@@ -417,7 +418,7 @@ Timeout: 60 sec.
             button = buttons.build_menu(2)
             await editMessage(message, 'Send one title with vlaue seperated by space get last X items.\nTitle Value\nTimeout: 60 sec.', button)
             pfunc = partial(rssGet, pre_event=query)
-            event_handler(client, query, pfunc)
+            await event_handler(client, query, pfunc)
     elif data[1] in ['unsubscribe', 'pause', 'resume']:
         handler_dict[user_id] = False
         if len(rss_dict.get(int(data[2]), {})) == 0:
@@ -436,7 +437,7 @@ Timeout: 60 sec.
             button = buttons.build_menu(2)
             await editMessage(message, f'Send one or more rss titles seperated by space to {data[1]}.\nTimeout: 60 sec.', button)
             pfunc = partial(rssUpdate, pre_event=query, state=data[1])
-            event_handler(client, query, pfunc)
+            await event_handler(client, query, pfunc)
     elif data[1] == 'edit':
         handler_dict[user_id] = False
         if len(rss_dict.get(int(data[2]), {})) == 0:
@@ -456,7 +457,7 @@ Timeout: 60 sec.
             '''
             await editMessage(message, msg, button)
             pfunc = partial(rssEdit, pre_event=query)
-            event_handler(client, query, pfunc)
+            await event_handler(client, query, pfunc)
     elif data[1].startswith('uall'):
         handler_dict[user_id] = False
         if len(rss_dict.get(int(data[2]), {})) == 0:
@@ -526,7 +527,7 @@ Timeout: 60 sec.
             msg = 'Send one or more user_id seperated by space to delete their resources.\nTimeout: 60 sec.'
             await editMessage(message, msg, button)
             pfunc = partial(rssDelete, pre_event=query)
-            event_handler(client, query, pfunc)
+            await event_handler(client, query, pfunc)
     elif data[1] == 'listall':
         if not rss_dict:
             await query.answer(text="No subscriptions!", show_alert=True)

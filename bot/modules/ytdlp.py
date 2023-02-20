@@ -8,7 +8,7 @@ from requests import request
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_thread
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -16,6 +16,26 @@ from bot.helper.listener import MirrorLeechListener
 
 listener_dict = {}
 
+
+def _mdisk(link, name):
+    key = link.split('/')[-1]
+    resp = request('GET', f'https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}')
+    if resp.ok:
+        resp = resp.json()
+        link = resp['source']
+        if not name:
+            name = resp['filename']
+    return name, link
+
+async def _auto_cancel(msg, task_id):
+    await sleep(120)
+    try:
+        del listener_dict[task_id]
+        await editMessage(msg, 'Timed out! Task has been cancelled.')
+    except:
+        pass
+
+@new_thread
 async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         await sendMessage(message, 'GDRIVE_ID not Provided!')
@@ -73,7 +93,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             sameDir.add(nextmsg.id)
         nextmsg.from_user = message.from_user
         await sleep(4)
-        await _ytdl(client, nextmsg, isZip, isLeech, sameDir)
+        _ytdl(client, nextmsg, isZip, isLeech, sameDir)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 
@@ -277,6 +297,7 @@ async def _mp3_subbuttons(task_id, msg, playlist=False):
     SUBBUTTONS = buttons.build_menu(2)
     await editMessage(msg, f"Choose Audio{i} Bitrate:", SUBBUTTONS)
 
+@new_thread
 async def select_format(client, query):
     user_id = query.from_user.id
     data = query.data.split()
@@ -332,35 +353,17 @@ async def select_format(client, query):
         del listener_dict[task_id]
         await ydl.add_download(link, path, name, qual, playlist, opt)
 
-def _mdisk(link, name):
-    key = link.split('/')[-1]
-    resp = request('GET', f'https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}')
-    if resp.ok:
-        resp = resp.json()
-        link = resp['source']
-        if not name:
-            name = resp['filename']
-    return name, link
-
-async def _auto_cancel(msg, task_id):
-    await sleep(120)
-    try:
-        del listener_dict[task_id]
-        await editMessage(msg, 'Timed out! Task has been cancelled.')
-    except:
-        pass
-
 async def ytdl(client, message):
-    await _ytdl(client, message)
+    _ytdl(client, message)
 
 async def ytdlZip(client, message):
-    await _ytdl(client, message, True)
+    _ytdl(client, message, True)
 
 async def ytdlleech(client, message):
-    await _ytdl(client, message, isLeech=True)
+    _ytdl(client, message, isLeech=True)
 
 async def ytdlZipleech(client, message):
-    await _ytdl(client, message, True, True)
+    _ytdl(client, message, True, True)
 
 bot.add_handler(MessageHandler(ytdl, filters=command(BotCommands.YtdlCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(ytdlZip, filters=command(BotCommands.YtdlZipCommand) & CustomFilters.authorized))

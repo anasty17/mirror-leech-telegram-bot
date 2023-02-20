@@ -8,9 +8,10 @@ from bot import status_reply_dict_lock, download_dict, download_dict_lock, botSt
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, auto_delete_message, sendStatusMessage, update_all_messages
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, turn, setInterval
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, turn, setInterval, new_thread
 
 
+@new_thread
 async def mirror_status(client, message):
     async with download_dict_lock:
         count = len(download_dict)
@@ -31,6 +32,7 @@ async def mirror_status(client, message):
                 Interval.clear()
                 Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
 
+@new_thread
 async def status_pages(client, query):
     await query.answer()
     data = query.data.split()

@@ -7,9 +7,10 @@ from bot.helper.telegram_helper.message_utils import auto_delete_message, sendMe
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.bot_utils import is_gdrive_link, sync_to_async
+from bot.helper.ext_utils.bot_utils import is_gdrive_link, sync_to_async, new_thread
 
 
+@new_thread
 async def deletefile(client, message):
     args = message.text.split()
     if len(args) > 1:

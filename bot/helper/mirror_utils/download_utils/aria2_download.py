@@ -5,13 +5,13 @@ from asyncio import sleep
 
 from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, aria2_options, aria2c_global
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.ext_utils.bot_utils import getDownloadByGid, bt_selection_buttons, async_to_sync_dec, sync_to_async
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, bt_selection_buttons, new_thread, sync_to_async
 from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage, deleteMessage, update_all_messages
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
 
 
-@async_to_sync_dec
+@new_thread
 async def __onDownloadStarted(api, gid):
     download = await sync_to_async(api.get_download, gid)
     if download.is_metadata:
@@ -61,7 +61,7 @@ async def __onDownloadStarted(api, gid):
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 
-@async_to_sync_dec
+@new_thread
 async def __onDownloadComplete(api, gid):
     try:
         download = await sync_to_async(api.get_download, gid)
@@ -91,7 +91,7 @@ async def __onDownloadComplete(api, gid):
             await listener.onDownloadComplete()
             await sync_to_async(api.remove, [download], force=True, files=True)
 
-@async_to_sync_dec
+@new_thread
 async def __onBtDownloadComplete(api, gid):
     seed_start_time = time()
     await sleep(1)
@@ -139,14 +139,14 @@ async def __onBtDownloadComplete(api, gid):
         else:
             await sync_to_async(api.remove, [download], force=True, files=True)
 
-@async_to_sync_dec
+@new_thread
 async def __onDownloadStopped(api, gid):
     await sleep(6)
     if dl := await getDownloadByGid(gid):
         listener = dl.listener()
         await listener.onDownloadError('Dead torrent!')
 
-@async_to_sync_dec
+@new_thread
 async def __onDownloadError(api, gid):
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"

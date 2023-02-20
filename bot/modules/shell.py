@@ -5,11 +5,12 @@ from io import BytesIO
 
 from bot import LOGGER, bot
 from bot.helper.telegram_helper.message_utils import sendMessage, sendFile
-from bot.helper.ext_utils.bot_utils import cmd_exec
+from bot.helper.ext_utils.bot_utils import cmd_exec, new_thread
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 
 
+@new_thread
 async def shell(client, message):
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:

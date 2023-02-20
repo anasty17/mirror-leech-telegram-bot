@@ -7,9 +7,10 @@ from bot import bot, aria2, download_dict, download_dict_lock, OWNER_ID, user_da
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import async_to_sync, getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
+from bot.helper.ext_utils.bot_utils import async_to_sync, getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async, new_thread
 
 
+@new_thread
 async def select(client, message):
     user_id = message.from_user.id
     msg = message.text.split()
@@ -65,6 +66,7 @@ async def select(client, message):
     msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
     await sendMessage(message, msg, SBUTTONS)
 
+@new_thread
 async def get_confirm(client, query):
     user_id = query.from_user.id
     data = query.data.split()

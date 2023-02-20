@@ -17,7 +17,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
-from bot.helper.ext_utils.bot_utils import update_user_ldata, sync_to_async, async_to_sync_dec
+from bot.helper.ext_utils.bot_utils import update_user_ldata, sync_to_async, new_thread
 
 handler_dict = {}
 
@@ -76,6 +76,7 @@ async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await editMessage(query.message, msg, button)
 
+@new_thread
 async def user_settings(client, message):
     msg, button = await get_user_settings(message.from_user)
     await sendMessage(message, msg, button)
@@ -116,7 +117,6 @@ async def leech_split_size(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
 
-@async_to_sync_dec
 async def event_handler(client, query, pfunc, photo=False):
     user_id = query.from_user.id
     handler_dict[user_id] = True
@@ -132,6 +132,7 @@ async def event_handler(client, query, pfunc, photo=False):
             await update_user_settings(query)
     client.remove_handler(*handler)
 
+@new_thread
 async def edit_user_settings(client, query):
     from_user = query.from_user
     user_id = from_user.id
@@ -174,7 +175,7 @@ async def edit_user_settings(client, query):
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(message, 'Send a photo to save it as custom thumbnail. Timeout: 60 sec', buttons.build_menu(1))
         pfunc = partial(set_thumb, pre_event=query)
-        event_handler(client, query, pfunc, True)
+        await event_handler(client, query, pfunc, True)
     elif data[2] == 'ytq':
         await query.answer()
         buttons = ButtonMaker()
@@ -191,7 +192,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         '''
         await editMessage(message, rmsg, buttons.build_menu(1))
         pfunc = partial(set_yt_quality, pre_event=query)
-        event_handler(client, query, pfunc)
+        await event_handler(client, query, pfunc)
     elif data[2] == 'rytq':
         handler_dict[user_id] = False
         await query.answer()
@@ -217,7 +218,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(message, f'Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec', buttons.build_menu(1))
         pfunc = partial(leech_split_size, pre_event=query)
-        event_handler(client, query, pfunc)
+        await event_handler(client, query, pfunc)
     elif data[2] == 'rlss':
         handler_dict[user_id] = False
         await query.answer()
@@ -249,6 +250,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         await message.reply_to_message.delete()
         await message.delete()
 
+@new_thread
 async def send_users_settings(client, message):
     if msg := ''.join(f'<code>{u}</code>: {escape(str(d))}\n\n' for u, d in user_data.items()):
         if len(msg.encode()) > 4000:

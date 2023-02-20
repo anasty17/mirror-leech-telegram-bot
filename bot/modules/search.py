@@ -10,7 +10,7 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async, new_thread
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 PLUGINS = []
@@ -46,70 +46,6 @@ async def initiate_search_tools():
         except Exception as e:
             LOGGER.error(f"{e} Can't fetching sites from SEARCH_API_LINK make sure use latest version of API")
             SITES = None
-
-async def torser(client, message):
-    user_id = message.from_user.id
-    buttons = ButtonMaker()
-    key = message.text.split()
-    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
-    if SITES is None and not SEARCH_PLUGINS:
-        await sendMessage(message, "No API link or search PLUGINS added for this function")
-    elif len(key) == 1 and SITES is None:
-        await sendMessage(message, "Send a search key along with command")
-    elif len(key) == 1:
-        buttons.ibutton('Trending', f"torser {user_id} apitrend")
-        buttons.ibutton('Recent', f"torser {user_id} apirecent")
-        buttons.ibutton("Cancel", f"torser {user_id} cancel")
-        button = buttons.build_menu(2)
-        await sendMessage(message, "Send a search key along with command", button)
-    elif SITES is not None and SEARCH_PLUGINS:
-        buttons.ibutton('Api', f"torser {user_id} apisearch")
-        buttons.ibutton('Plugins', f"torser {user_id} plugin")
-        buttons.ibutton("Cancel", f"torser {user_id} cancel")
-        button = buttons.build_menu(2)
-        await sendMessage(message, 'Choose tool to search:', button)
-    elif SITES is not None:
-        button = __api_buttons(user_id, "apisearch")
-        await sendMessage(message, 'Choose site to search | API:', button)
-    else:
-        button = await __plugin_buttons(user_id)
-        await sendMessage(message, 'Choose site to search | Plugins:', button)
-
-async def torserbut(client, query):
-    user_id = query.from_user.id
-    message = query.message
-    key = message.reply_to_message.text.split(maxsplit=1)
-    key = key[1].strip() if len(key) > 1 else None
-    data = query.data.split()
-    if user_id != int(data[1]):
-        await query.answer("Not Yours!", alert=True)
-    elif data[2].startswith('api'):
-        await query.answer()
-        button = __api_buttons(user_id, data[2])
-        await editMessage(message, 'Choose site:', button)
-    elif data[2] == 'plugin':
-        await query.answer()
-        button = await __plugin_buttons(user_id)
-        await editMessage(message, 'Choose site:', button)
-    elif data[2] != "cancel":
-        await query.answer()
-        site = data[2]
-        method = data[3]
-        if method.startswith('api'):
-            if key is None:
-                if method == 'apirecent':
-                    endpoint = 'Recent'
-                elif method == 'apitrend':
-                    endpoint = 'Trending'
-                await editMessage(message, f"<b>Listing {endpoint} Items...\nTorrent Site:- <i>{SITES.get(site)}</i></b>")
-            else:
-                await editMessage(message, f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>")
-        else:
-            await editMessage(message, f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>")
-        await __search(key, site, message, method)
-    else:
-        await query.answer()
-        await editMessage(message, "Search has been canceled!")
 
 async def __search(key, site, message, method):
     if method.startswith('api'):
@@ -266,6 +202,72 @@ async def __plugin_buttons(user_id):
     buttons.ibutton("Cancel", f"torser {user_id} cancel")
     return buttons.build_menu(2)
 
+@new_thread
+async def torrentSearch(client, message):
+    user_id = message.from_user.id
+    buttons = ButtonMaker()
+    key = message.text.split()
+    SEARCH_PLUGINS = config_dict['SEARCH_PLUGINS']
+    if SITES is None and not SEARCH_PLUGINS:
+        await sendMessage(message, "No API link or search PLUGINS added for this function")
+    elif len(key) == 1 and SITES is None:
+        await sendMessage(message, "Send a search key along with command")
+    elif len(key) == 1:
+        buttons.ibutton('Trending', f"torser {user_id} apitrend")
+        buttons.ibutton('Recent', f"torser {user_id} apirecent")
+        buttons.ibutton("Cancel", f"torser {user_id} cancel")
+        button = buttons.build_menu(2)
+        await sendMessage(message, "Send a search key along with command", button)
+    elif SITES is not None and SEARCH_PLUGINS:
+        buttons.ibutton('Api', f"torser {user_id} apisearch")
+        buttons.ibutton('Plugins', f"torser {user_id} plugin")
+        buttons.ibutton("Cancel", f"torser {user_id} cancel")
+        button = buttons.build_menu(2)
+        await sendMessage(message, 'Choose tool to search:', button)
+    elif SITES is not None:
+        button = __api_buttons(user_id, "apisearch")
+        await sendMessage(message, 'Choose site to search | API:', button)
+    else:
+        button = await __plugin_buttons(user_id)
+        await sendMessage(message, 'Choose site to search | Plugins:', button)
 
-bot.add_handler(MessageHandler(torser, filters=command(BotCommands.SearchCommand) & CustomFilters.authorized))
-bot.add_handler(CallbackQueryHandler(torserbut, filters=regex("^torser")))
+@new_thread
+async def torrentSearchUpdate(client, query):
+    user_id = query.from_user.id
+    message = query.message
+    key = message.reply_to_message.text.split(maxsplit=1)
+    key = key[1].strip() if len(key) > 1 else None
+    data = query.data.split()
+    if user_id != int(data[1]):
+        await query.answer("Not Yours!", alert=True)
+    elif data[2].startswith('api'):
+        await query.answer()
+        button = __api_buttons(user_id, data[2])
+        await editMessage(message, 'Choose site:', button)
+    elif data[2] == 'plugin':
+        await query.answer()
+        button = await __plugin_buttons(user_id)
+        await editMessage(message, 'Choose site:', button)
+    elif data[2] != "cancel":
+        await query.answer()
+        site = data[2]
+        method = data[3]
+        if method.startswith('api'):
+            if key is None:
+                if method == 'apirecent':
+                    endpoint = 'Recent'
+                elif method == 'apitrend':
+                    endpoint = 'Trending'
+                await editMessage(message, f"<b>Listing {endpoint} Items...\nTorrent Site:- <i>{SITES.get(site)}</i></b>")
+            else:
+                await editMessage(message, f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{SITES.get(site)}</i></b>")
+        else:
+            await editMessage(message, f"<b>Searching for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>")
+        await __search(key, site, message, method)
+    else:
+        await query.answer()
+        await editMessage(message, "Search has been canceled!")
+
+
+bot.add_handler(MessageHandler(torrentSearch, filters=command(BotCommands.SearchCommand) & CustomFilters.authorized))
+bot.add_handler(CallbackQueryHandler(torrentSearchUpdate, filters=regex("^torser")))

@@ -8,9 +8,9 @@ from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import sync_to_async
+from bot.helper.ext_utils.bot_utils import sync_to_async, new_thread
 
-
+@new_thread
 async def list_buttons(client, message):
     if len(message.text.split()) == 1:
         return await sendMessage(message, 'Send a search key along with command')
@@ -32,6 +32,7 @@ async def _list_drive(key, message, item_type):
     else:
         await editMessage(message, f'No result found for <i>{key}</i>')
 
+@new_thread
 async def select_type(client, query):
     user_id = query.from_user.id
     message = query.message
