@@ -263,14 +263,14 @@ class MirrorLeechListener:
     async def onUploadComplete(self, link: str, size, files, folders, typ, name):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
-        msg = f"<b>____《🐱 Pik4Bot 🐱》____</b>\n\n
+        msg = f"<b>---《🐱 Pik4Bot 🐱》---</b>\n\n
                 <b>☞ Name: </b><code>{escape(name)}</code>\n
                 <b>☞ Size: </b>{size}"
         if self.isLeech:
             msg += f'\n<b>☞Total Files: </b>{folders}'
             if typ != 0:
                 msg += f'\n<b>☞ Corrupted Files: </b>{typ}'
-            msg += f'\n<b>\n☞ : </b>{self.tag}\n\n'
+            msg += f'\n<b>☞CC : </b>{self.tag}\n\n'
             if not files:
                 await sendMessage(self.message, msg)
             else:
@@ -295,7 +295,7 @@ class MirrorLeechListener:
             if typ == "Folder":
                 msg += f'\n<b>☞ SubFolders: </b>{folders}'
                 msg += f'\n<b>☞ Files: </b>{files}'
-            msg += f'\n<b>☞: </b>{self.tag}'
+            msg += f'\n<b>☞ CC: </b>{self.tag}'
             buttons = ButtonMaker()
             buttons.ubutton("☁️ Google Drive", link)
             LOGGER.info(f'Done Uploading {name}')
