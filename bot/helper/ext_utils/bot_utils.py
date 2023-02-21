@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from re import match as re_match, findall as re_findall
+from re import match as re_match
 from time import time
 from math import ceil
 from html import escape
@@ -15,9 +15,9 @@ from bot import download_dict, download_dict_lock, botStartTime, DOWNLOAD_DIR, u
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
-MAGNET_REGEX = r"magnet:\?xt=urn:btih:[a-zA-Z0-9]*"
+MAGNET_REGEX = r'magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*'
 
-URL_REGEX = r"(?:(?:https?|ftp):\/\/)?[\w/\-?=%.]+\.[\w/\-?=%.]+"
+URL_REGEX = r'^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*)?(\?[^#\s]*)?(#.*)?$'
 
 COUNT = 0
 PAGE_NO = 1
@@ -227,8 +227,12 @@ def get_readable_time(seconds):
     result += f'{seconds}s'
     return result
 
+def is_magnet(url):
+    magnet = re_match(MAGNET_REGEX, url)
+    return bool(magnet)
+
 def is_url(url):
-    url = re_findall(URL_REGEX, url)
+    url = re_match(URL_REGEX, url)
     return bool(url)
 
 def is_gdrive_link(url):
@@ -248,10 +252,6 @@ def get_mega_link_type(url):
     elif "/#F!" in url:
         return "folder"
     return "file"
-
-def is_magnet(url):
-    magnet = re_findall(MAGNET_REGEX, url)
-    return bool(magnet)
 
 def get_content_type(link):
     try:

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 from requests import utils as rutils
-from re import search as re_search
 from aiofiles.os import path as aiopath, remove as aioremove, listdir, rename, makedirs
 from os import walk, path as ospath
 from html import escape
@@ -9,7 +8,7 @@ from asyncio import create_subprocess_exec, sleep, Event
 
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, queued_dl, queue_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split_file, clean_download, clean_target
+from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split_file, clean_download, clean_target, is_first_archive_split, is_archive, is_archive_split
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
@@ -75,6 +74,9 @@ class MirrorLeechListener:
                         sub_path = await rename(sub_path, f"{self.dir}/{folder_name}/1-{subdir}")
                     await move(sub_path, des_path)
                 del download_dict[self.uid]
+                name = sub_path.rsplit('/', 1)[-1]
+                LOGGER.info(f"Download completed: {name}. Waiting other files to finish download...")
+                await clean_download(self.dir)
                 return
             download = download_dict[self.uid]
             name = str(download.name()).replace('/', '')
@@ -129,7 +131,7 @@ class MirrorLeechListener:
                         path = m_path
                     for dirpath, subdir, files in await sync_to_async(walk, m_path, topdown=False):
                         for file_ in files:
-                            if re_search(r'\.part0*1\.rar$|\.7z\.0*1$|\.zip\.0*1$|\.zip$|\.7z$|^.(?!.*\.part\d+\.rar)(?=.*\.rar$)', file_):
+                            if is_first_archive_split(file_) or is_archive(file_) and not file_.endswith('.rar'):
                                 f_path = ospath.join(dirpath, file_)
                                 t_path = dirpath.replace(self.dir, self.newDir) if self.seed else dirpath
                                 cmd = ["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot", "-xr!@PaxHeader"]
@@ -143,7 +145,7 @@ class MirrorLeechListener:
                                     LOGGER.error('Unable to extract archive splits!')
                         if not self.seed and self.suproc is not None and self.suproc.returncode == 0:
                             for file_ in files:
-                                if re_search(r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$|\.zip$|\.rar$|\.7z$', file_):
+                                if is_archive_split(file_) or is_archive(file_):
                                     del_path = ospath.join(dirpath, file_)
                                     try:
                                         await aioremove(del_path)

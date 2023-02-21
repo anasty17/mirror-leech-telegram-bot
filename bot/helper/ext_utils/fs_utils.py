@@ -8,7 +8,7 @@ from PIL import Image
 from magic import Magic
 from time import time
 from math import ceil
-from re import split as re_split, I, match as re_match
+from re import split as re_split, I, search as re_search
 from asyncio import create_subprocess_exec
 
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -20,6 +20,20 @@ ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".
             ".zip", ".7z", ".z", ".rar", ".iso", ".wim", ".cab", ".apm", ".arj", ".chm",
             ".cpio", ".cramfs", ".deb", ".dmg", ".fat", ".hfs", ".lzh", ".lzma", ".mbr",
             ".msi", ".mslz", ".nsis", ".ntfs", ".rpm", ".squashfs", ".udf", ".vhd", ".xar"]
+
+FIRST_SPLIT_REGEX = r'(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$'
+
+SPLIT_REGEX = r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$'
+
+
+def is_first_archive_split(file):
+    return bool(re_search(FIRST_SPLIT_REGEX, file))
+
+def is_archive(file):
+    return file.endswith(tuple(ARCH_EXT))
+
+def is_archive_split(file):
+    return bool(re_search(SPLIT_REGEX, file))
 
 async def clean_target(path):
     if await aiopath.exists(path):
@@ -91,9 +105,13 @@ async def get_path_size(path):
     return total_size
 
 def get_base_name(orig_path):
-    if ext := [ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)]:
-        ext = ext[0]
-        return re_split(f'{ext}$', orig_path, maxsplit=1, flags=I)[0]
+    extension = ''
+    for ext in ARCH_EXT:
+        if orig_path.lower().endswith(ext):
+            extension = ext
+            break
+    if exception != '':
+        return re_split(f'{exception}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
@@ -210,7 +228,7 @@ async def get_media_info(path):
 
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
-                               "json", "-show_format", "-show_streams", path])
+                                 "json", "-show_format", "-show_streams", path])
         if res := result[1]:
             LOGGER.warning(f'Get Media Info: {res}')
     except Exception as e:
@@ -243,7 +261,7 @@ async def get_document_type(path):
     is_audio = False
     is_image = False
 
-    if path.endswith(tuple(ARCH_EXT)) or re_match(r'.+\.(zip|bin)(\.0*\d+)?$', path):
+    if path.endswith(tuple(ARCH_EXT)) or re_search(r'.+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$', path):
         return is_video, is_audio, is_image
 
     mime_type = await sync_to_async(get_mime_type, path)
