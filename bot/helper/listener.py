@@ -263,9 +263,9 @@ class MirrorLeechListener:
     async def onUploadComplete(self, link: str, size, files, folders, typ, name):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
-        msg = f"<b>---《🐱 Pik4Bot 🐱》---</b>"
-        msg = f"\n<b>☞ Name: </b><code>{escape(name)}</code>"
-        msg = f"\n<b>☞ Size: </b>{size}"
+        msg = f'<b>---《🐱 Pik4Bot 🐱》---</b>'
+        msg = f'\n<b>☞ Name: </b><code>{escape(name)}</code>'
+        msg = f'\n<b>☞ Size: </b>{size}'
         if self.isLeech:
             msg += f'\n<b>☞Total Files: </b>{folders}'
             if typ != 0:
