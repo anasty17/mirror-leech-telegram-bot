@@ -20,12 +20,12 @@ async def authorize(client, message):
     else:
         id_ = message.chat.id
     if id_ in user_data and user_data[id_].get('is_auth'):
-        msg = 'Already Authorized!'
+        msg = '😼 Already Authorized!'
     else:
         update_user_ldata(id_, 'is_auth', True)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Authorized'
+        msg = '😺 Authorized'
     await sendMessage(message, msg)
 
 @new_thread
@@ -41,9 +41,9 @@ async def unauthorize(client, message):
         update_user_ldata(id_, 'is_auth', False)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Unauthorized'
+        msg = '🙀 Unauthorized'
     else:
-        msg = 'Already Unauthorized!'
+        msg = '😼 Already Unauthorized!'
     await sendMessage(message, msg)
 
 @new_thread
@@ -56,12 +56,12 @@ async def addSudo(client, message):
         id_ = reply_to.from_user.id
     if id_:
         if id_ in user_data and user_data[id_].get('is_sudo'):
-            msg = 'Already Sudo!'
+            msg = '😼 Already Sudo!'
         else:
             update_user_ldata(id_, 'is_sudo', True)
             if DATABASE_URL:
                 await DbManger().update_user_data(id_)
-            msg = 'Promoted as Sudo'
+            msg = '😻 Promoted as Sudo'
     else:
         msg = "Give ID or Reply To message of whom you want to Promote."
     await sendMessage(message, msg)
@@ -78,7 +78,7 @@ async def removeSudo(client, message):
         update_user_ldata(id_, 'is_sudo', False)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Demoted'
+        msg = '🙀 Demoted'
     else:
         msg = "Give ID or Reply To message of whom you want to remove from Sudo"
     await sendMessage(message, msg)
