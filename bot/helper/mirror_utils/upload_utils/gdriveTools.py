@@ -372,11 +372,12 @@ class GoogleDriveHelper:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.deletefile(durl)
                     return "your clone has been stopped and cloned data has been deleted!", "cancelled"
-                msg += f'<b>✤ Name: </b><code>{meta.get("name")}</code>'
-                msg += f'\n\n<b>✤ Size: </b>{get_readable_file_size(self.transferred_size)}'
-                msg += '\n\n<b>✤ Type: </b>Folder'
-                msg += f'\n<b>✤ SubFolders: </b>{self.__total_folders}'
-                msg += f'\n<b>✤ Files: </b>{self.__total_files}'
+                msg += f'<b>---《🐱 Pik4Bot 🐱》---</b>'
+                msg += f'\n<b>☞ Name: </b><code>{meta.get("name")}</code>'
+                msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += '\n<b>☞ Type: </b>Folder'
+                msg += f'\n<b>☞ SubFolders: </b>{self.__total_folders}'
+                msg += f'\n<b>☞ Files: </b>{self.__total_files}'
                 buttons = ButtonMaker()
                 buttons.ubutton("☁️ Google Drive", durl)
                 if INDEX_URL := config_dict['INDEX_URL']:
@@ -385,14 +386,15 @@ class GoogleDriveHelper:
                     buttons.ubutton("⚡ Google Index", url)
             else:
                 file = self.__copyFile(meta.get('id'), config_dict['GDRIVE_ID'])
-                msg += f'<b>✤ Name: </b><code>{file.get("name")}</code>'
+                msg += f'<b>---《🐱 Pik4Bot 🐱》---</b>'
+                msg += f'\n<b>☞ Name: </b><code>{file.get("name")}</code>'
                 durl = self.__G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 buttons = ButtonMaker()
                 buttons.ubutton("☁️ Google Drive", durl)
                 if mime_type is None:
                     mime_type = 'File'
-                msg += f'\n\n<b>✤ Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
-                msg += f'\n\n<b>✤ Type: </b>{mime_type}'
+                msg += f'\n<b>☞ Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
+                msg += f'\n<b>☞ Type: </b>{mime_type}'
                 if INDEX_URL := config_dict['INDEX_URL']:
                     url_path = rquote(f'{file.get("name")}', safe='')
                     url = f'{INDEX_URL}/{url_path}'
@@ -631,19 +633,21 @@ class GoogleDriveHelper:
             mime_type = meta.get('mimeType')
             if mime_type == self.__G_DRIVE_DIR_MIME_TYPE:
                 self.__gDrive_directory(meta)
-                msg += f'<b>✤ Name: </b><code>{name}</code>'
-                msg += f'\n\n<b>✤ Size: </b>{get_readable_file_size(self.__total_bytes)}'
-                msg += '\n\n<b>✤ Type: </b>Folder'
-                msg += f'\n<b>✤ SubFolders: </b>{self.__total_folders}'
+                msg += f'<b>---《🐱 Pik4Bot 🐱》---</b>'
+                msg += f'\n<b>☞ Name: </b><code>{name}</code>'
+                msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += '\n<b>☞ Type: </b>Folder'
+                msg += f'\n<b>☞ SubFolders: </b>{self.__total_folders}'
             else:
-                msg += f'<b>✤ Name: </b><code>{name}</code>'
+                msg += f'<b>---《🐱 Pik4Bot 🐱》---</b>'
+                msg += f'\n<b>☞ Name: </b><code>{name}</code>'
                 if mime_type is None:
                     mime_type = 'File'
                 self.__total_files += 1
                 self.__gDrive_file(meta)
-                msg += f'\n\n<b>✤ Size: </b>{get_readable_file_size(self.__total_bytes)}'
-                msg += f'\n\n<b>✤ Type: </b>{mime_type}'
-            msg += f'\n<b>✤ Files: </b>{self.__total_files}'
+                msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += f'\n<b>☞ Type: </b>{mime_type}'
+            msg += f'\n<b>☞ Files: </b>{self.__total_files}'
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
