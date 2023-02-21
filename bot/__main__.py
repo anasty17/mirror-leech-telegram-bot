@@ -52,12 +52,12 @@ async def start(client, message):
     reply_markup = buttons.build_menu(2)
     if await CustomFilters.authorized(client, message):
         start_string = f'''
-🐱 Hi,i am pik4bot,i can mirror all your links to Google Drive or to telegram!
-Type /{BotCommands.HelpCommand} to get a list of available commands
+<code>Hi,i am pik4bot,i can mirror all your links to Google Drive or to telegram!
+Type</code> /{BotCommands.HelpCommand} <code>to get a list of available commands.</code>
 '''
         await sendMessage(message, start_string, reply_markup)
     else:
-        await sendMessage(message, 'Oh sorry, you are not allowed to use pik4bot in private massage, please join the group to use this bot.', reply_markup)
+        await sendMessage(message, '<code>Oh sorry, you are not allowed to use pik4bot in private massage, please join the group to use this bot.</code>', reply_markup)
 
 async def restart(client, message):
     restart_message = await sendMessage(message, "⏳ Restarting...")
