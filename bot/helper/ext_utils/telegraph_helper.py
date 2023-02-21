@@ -69,12 +69,12 @@ class TelegraphHelper:
                     nxt_page += 1
             await self.edit_page(
                 path = path[prev_page],
-                title = 'Mirror-leech-bot Torrent Search',
+                title = 'Pik4bot Search',
                 content=content
             )
         return
 
 
-telegraph = TelegraphHelper('Mirror-Leech-Telegram-Bot', 'https://github.com/anasty17/mirror-leech-telegram-bot')
+telegraph = TelegraphHelper('Pik4bot Mirror Bot', 'https://t.me/pik4bot')
 
 bot_loop.run_until_complete(telegraph.create_account())
