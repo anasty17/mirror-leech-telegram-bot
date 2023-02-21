@@ -16,10 +16,10 @@ async def list_buttons(client, message):
         return await sendMessage(message, 'Send a search key along with command')
     user_id = message.from_user.id
     buttons = ButtonMaker()
-    buttons.ibutton("Folders", f"list_types {user_id} folders")
-    buttons.ibutton("Files", f"list_types {user_id} files")
-    buttons.ibutton("Both", f"list_types {user_id} both")
-    buttons.ibutton("Cancel", f"list_types {user_id} cancel")
+    buttons.ibutton("📁 Folders", f"list_types {user_id} folders")
+    buttons.ibutton("📄 Files", f"list_types {user_id} files")
+    buttons.ibutton("🗂️ Both", f"list_types {user_id} both")
+    buttons.ibutton("⛔ Cancel", f"list_types {user_id} cancel")
     button = buttons.build_menu(2)
     await sendMessage(message, 'Choose option to list.', button)
 
@@ -30,7 +30,7 @@ async def _list_drive(key, message, item_type):
     if button:
         await editMessage(message, msg, button)
     else:
-        await editMessage(message, f'No result found for <i>{key}</i>')
+        await editMessage(message, f'❌ No result found for <i>{key}</i>')
 
 @new_thread
 async def select_type(client, query):
@@ -39,13 +39,13 @@ async def select_type(client, query):
     key = message.reply_to_message.text.split(maxsplit=1)[1].strip()
     data = query.data.split()
     if user_id != int(data[1]):
-        return await query.answer(text="Not Yours!", alert=True)
+        return await query.answer(text="😡 Not Yours!", alert=True)
     elif data[2] == 'cancel':
         await query.answer()
-        return await editMessage(message, "list has been canceled!")
+        return await editMessage(message, "⛔ list has been canceled!")
     await query.answer()
     item_type = data[2]
-    await editMessage(message, f"<b>Searching for <i>{key}</i></b>")
+    await editMessage(message, f"<b>🔎 Searching for <i>{key}</i></b>")
     await _list_drive(key, message, item_type)
 
 
