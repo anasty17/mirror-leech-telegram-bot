@@ -23,7 +23,7 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror_leech
 
 async def stats(client, message):
     if await aiopath.exists('.git'):
-        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True)
+        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd \n<b>├ 🛠 From</b> %cr'", True)
         last_commit = last_commit[0]
     else:
         last_commit = 'No UPSTREAM_REPO'
