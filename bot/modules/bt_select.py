@@ -28,8 +28,10 @@ async def select(client, message):
             await sendMessage(message, "This is not an active task!")
             return
     elif len(msg) == 1:
-        msg = "Reply to an active /cmd which was used to start the qb-download or add gid along with cmd\n\n"
-        msg += "This command mainly for selection incase you decided to select files from already added torrent. "
+        msg = (
+            "Reply to an active /cmd which was used to start the qb-download or add gid along with cmd\n\n"
+            + "This command mainly for selection incase you decided to select files from already added torrent. "
+        )
         msg += "But you can always use /cmd with arg `s` to select files before download start."
         await sendMessage(message, msg)
         return

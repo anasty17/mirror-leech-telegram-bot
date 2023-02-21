@@ -143,10 +143,14 @@ async def rssSub(client, message, pre_event):
 
 async def getUserId(title):
     async with rss_dict_lock:
-        for user_id, feed in list(rss_dict.items()):
-            if feed['title'] == title:
-                return True, user_id
-        return False, False
+        return next(
+            (
+                (True, user_id)
+                for user_id, feed in list(rss_dict.items())
+                if feed['title'] == title
+            ),
+            (False, False),
+        )
 
 async def rssUpdate(client, message, pre_event, state):
     user_id = message.from_user.id
@@ -202,7 +206,7 @@ async def rssList(query, start, all_users=False):
     if all_users:
         list_feed = f"<b>All subscriptions | Page: {int(start/5)} </b>"
         async with rss_dict_lock:
-            keysCount = sum([len(v.keys()) for v in list(rss_dict.values())])
+            keysCount = sum(len(v.keys()) for v in list(rss_dict.values()))
             index = 0
             for titles in list(rss_dict.values()):
                 for index, (title, data) in enumerate(list(titles.items())[start:5+start]):
