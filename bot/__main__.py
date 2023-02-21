@@ -41,8 +41,8 @@ async def stats(client, message):
             f'<b>├⚙️SWAP:</b> {get_readable_file_size(swap.total)} | <b>Used:</b> {swap.percent}%\n'\
             f'<b>├🎮Memory Total:</b> {get_readable_file_size(memory.total)}\n'\
             f'<b>├💿Memory Free:</b> {get_readable_file_size(memory.available)}\n'\
-            f'<b>├📀Memory Used:</b> {get_readable_file_size(memory.used)}\n'
-            f'<b>╰👤 Owner :</b> <a href='https://t.me/XRofikX'>𝑷𝒊𝒌𝒂𝒄𝒉𝒖 🐹</a>\n\n'''
+            f'<b>├📀Memory Used:</b> {get_readable_file_size(memory.used)}\n'\
+            f'<b>╰👤 Owner :</b> <a href='https://t.me/XRofikX'>𝑷𝒊𝒌𝒂𝒄𝒉𝒖 🐹</a>\n\n'
     await sendMessage(message, stats)
 
 async def start(client, message):
