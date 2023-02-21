@@ -84,7 +84,7 @@ class TgUploader:
             cap_mono = f"<code>{file_}</code>"
         if len(file_) > 60:
             ntsplit = file_.rsplit('.', 2)
-            if len(ntsplit[1]) >= 60:
+            if len(ntsplit[1]) >= 60 or len(ntsplit) == 2:
                 ntsplit = file_.rsplit('.', 1)
                 ext = ntsplit[1]
             else:
