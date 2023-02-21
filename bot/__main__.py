@@ -47,20 +47,20 @@ async def stats(client, message):
 
 async def start(client, message):
     buttons = ButtonMaker()
-    buttons.ubutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.ubutton("Owner", "https://www.github.com/anasty17")
+    buttons.ubutton("🐹Owner", "https://t.me/XRofikX")
+    buttons.ubutton("🐼Group", "https://t.me/+VyejY_I48AYxZjg1")
     reply_markup = buttons.build_menu(2)
     if await CustomFilters.authorized(client, message):
         start_string = f'''
-This bot can mirror all your links to Google Drive or to telegram!
+🐱 Hi,i am pik4bot,i can mirror all your links to Google Drive or to telegram!
 Type /{BotCommands.HelpCommand} to get a list of available commands
 '''
         await sendMessage(message, start_string, reply_markup)
     else:
-        await sendMessage(message, 'Not an Authorized user, deploy your own mirror-leech bot', reply_markup)
+        await sendMessage(message, 'Oh sorry, you are not allowed to use pik4bot in private massage, please join the group to use this bot.', reply_markup)
 
 async def restart(client, message):
-    restart_message = await sendMessage(message, "Restarting...")
+    restart_message = await sendMessage(message, "⏳ Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
     if Interval:
@@ -79,9 +79,9 @@ async def restart(client, message):
 
 async def ping(client, message):
     start_time = int(round(time() * 1000))
-    reply = await sendMessage(message, "Starting Ping")
+    reply = await sendMessage(message, "⏳ Starting Ping")
     end_time = int(round(time() * 1000))
-    await editMessage(reply, f'{end_time - start_time} ms')
+    await editMessage(reply, f'{end_time - start_time} ms 🟢')
 
 async def log(client, message):
     await sendFile(message, 'log.txt')
