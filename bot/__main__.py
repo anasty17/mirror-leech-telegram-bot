@@ -52,8 +52,8 @@ async def start(client, message):
     reply_markup = buttons.build_menu(2)
     if await CustomFilters.authorized(client, message):
         start_string = f'''
-<code>Hi,i am pik4bot,i can mirror all your links to Google Drive or to telegram!
-Type</code> /{BotCommands.HelpCommand} <code>to get a list of available commands.</code>
+<code>Hi, iam pik4bot, i can mirror all your links to Google Drive or to telegram!</code>\n
+<i>Type</i> /{BotCommands.HelpCommand} <i>to get a list of available commands.</i>
 '''
         await sendMessage(message, start_string, reply_markup)
     else:
