@@ -105,13 +105,11 @@ async def get_path_size(path):
     return total_size
 
 def get_base_name(orig_path):
-    extension = ''
-    for ext in ARCH_EXT:
-        if orig_path.lower().endswith(ext):
-            extension = ext
-            break
-    if exception != '':
-        return re_split(f'{exception}$', orig_path, maxsplit=1, flags=I)[0]
+    extension = next(
+        (ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), ''
+    )
+    if extension != '':
+        return re_split(f'{extension}$', orig_path, maxsplit=1, flags=I)[0]
     else:
         raise NotSupportedExtractionArchive('File format not supported for extraction')
 
