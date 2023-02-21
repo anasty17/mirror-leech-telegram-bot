@@ -270,7 +270,7 @@ class MirrorLeechListener:
             msg += f'\n<b>☞Total Files: </b>{folders}'
             if typ != 0:
                 msg += f'\n<b>☞ Corrupted Files: </b>{typ}'
-            msg += f'\n<b>☞CC : </b>{self.tag}\n\n'
+            msg += f'\n\n<b>☞CC : </b>{self.tag}\n\n'
             if not files:
                 await sendMessage(self.message, msg)
             else:
@@ -295,7 +295,7 @@ class MirrorLeechListener:
             if typ == "Folder":
                 msg += f'\n<b>☞ SubFolders: </b>{folders}'
                 msg += f'\n<b>☞ Files: </b>{files}'
-            msg += f'\n<b>☞ CC: </b>{self.tag}'
+            msg += f'\n\n<b>☞ CC: </b>{self.tag}'
             buttons = ButtonMaker()
             buttons.ubutton("☁️ Google Drive", link)
             LOGGER.info(f'Done Uploading {name}')
