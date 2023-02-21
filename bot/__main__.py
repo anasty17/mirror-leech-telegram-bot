@@ -23,15 +23,15 @@ from .modules import authorize, list, cancel_mirror, mirror_status, mirror_leech
 
 async def stats(client, message):
     if await aiopath.exists('.git'):
-        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd \n<b>├   From</b> %cr'", True)
+        last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd \n<b>├╴╴╴🔗From</b> %cr'", True)
         last_commit = last_commit[0]
     else:
         last_commit = 'No UPSTREAM_REPO'
     total, used, free, disk = disk_usage('/')
     swap = swap_memory()
     memory = virtual_memory()
-    stats = f'<b>《🐱 BOT STATISTICS 🐱》</b>\n_______________________\n'\
-            f'<b>╭─🛠Commit Date:</b> {last_commit}\n'\
+    stats = f'<b>  《🐱 BOT STATISTICS 🐱》</b>\n   ┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅┅\n'\
+            f'<b>╭🛠Commit Date:</b> {last_commit}\n'\
             f'<b>├🟢Bot Uptime:</b> {get_readable_time(time() - botStartTime)}\n'\
             f'<b>├⌛OS Uptime:</b> {get_readable_time(time() - boot_time())}\n'\
             f'<b>├💾Total Disk Space:</b> {get_readable_file_size(total)}\n'\
