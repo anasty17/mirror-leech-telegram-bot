@@ -61,6 +61,7 @@ class MirrorLeechListener:
     async def onDownloadComplete(self):
         if len(self.sameDir) == 1:
             await sleep(3)
+        multi_links = False
         async with download_dict_lock:
             if len(self.sameDir) > 1:
                 self.sameDir.remove(self.uid)
@@ -73,15 +74,14 @@ class MirrorLeechListener:
                     if subdir in await listdir(des_path):
                         sub_path = await rename(sub_path, f"{self.dir}/{folder_name}/1-{subdir}")
                     await move(sub_path, des_path)
-                del download_dict[self.uid]
-                name = sub_path.rsplit('/', 1)[-1]
-                LOGGER.info(f"Download completed: {name}. Waiting other files to finish download...")
-                await clean_download(self.dir)
-                return
+                multi_links = True
             download = download_dict[self.uid]
             name = str(download.name()).replace('/', '')
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
+        if multi_links:
+            await self.onUploadError('Downloaded! Waiting for other tasks...')
+            return
         if name == "None" or self.isQbit or not await aiopath.exists(f"{self.dir}/{name}"):
             name = (await listdir(self.dir))[-1]
         m_path = f"{self.dir}/{name}"
@@ -387,6 +387,10 @@ class MirrorLeechListener:
             await DbManger().rm_complete_task(self.message.link)
 
         async with queue_dict_lock:
+            if self.uid in queued_dl:
+                del queued_dl[self.uid]
+            if self.uid in non_queued_dl:
+                non_queued_dl.remove(self.uid)
             if self.uid in queued_up:
                 del queued_up[self.uid]
             if self.uid in non_queued_up:
