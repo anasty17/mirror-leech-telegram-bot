@@ -28,7 +28,7 @@ async def cancel_mirror(client, message):
             await sendMessage(message, "This is not an active task!")
             return
     elif len(msg) == 1:
-        msg = f"Reply to an active Command message which was used to start the download" \
+        msg = "Reply to an active Command message which was used to start the download" \
               f" or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         await sendMessage(message, msg)
         return

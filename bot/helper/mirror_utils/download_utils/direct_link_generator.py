@@ -29,8 +29,10 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
-anonfilesBaseSites = ['anonfiles.com','hotfile.io','bayfiles.com','megaupload.nz','letsupload.cc','filechan.org'
-                    'myfile.is','vshare.is','rapidshare.nu','lolabits.se','openload.cc','share-online.is','upvid.cc']
+
+anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload.nz', 'letsupload.cc',
+                      'filechan.org', 'myfile.is', 'vshare.is', 'rapidshare.nu', 'lolabits.se',
+                      'openload.cc', 'share-online.is', 'upvid.cc']
 
 
 def direct_link_generator(link: str):
@@ -351,7 +353,7 @@ def fichier(link: str) -> str:
             else:
                 raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
         elif "protect access" in str(str_2).lower():
-          raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
+          raise DirectDownloadLinkException("ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
         else:
             raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
     elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:

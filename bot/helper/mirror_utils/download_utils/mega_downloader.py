@@ -31,7 +31,7 @@ class MegaAppListener(MegaListener):
         self.__size = 0
         self.error = None
         self.gid = ""
-        super(MegaAppListener, self).__init__()
+        super().__init__()
 
     @property
     def speed(self):

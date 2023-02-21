@@ -295,24 +295,15 @@ async def sync_to_async(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
     with ThreadPoolExecutor() as pool:
         future = bot_loop.run_in_executor(pool, pfunc)
-        if wait:
-            return await future
-        else:
-            return future
+        return await future if wait else future
 
 def async_to_sync(func, *args, wait=True, **kwargs):
     future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
-    if wait:
-        return future.result()
-    else:
-        return future
+    return future.result() if wait else future
 
 def new_thread(func):
     @wraps(func)
     def wrapper(*args, wait=False, **kwargs):
         future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)
-        if wait:
-            return future.result()
-        else:
-            return future
+        return future.result() if wait else future
     return wrapper

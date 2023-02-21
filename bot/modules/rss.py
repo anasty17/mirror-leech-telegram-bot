@@ -202,7 +202,7 @@ async def rssList(query, start, all_users=False):
     if all_users:
         list_feed = f"<b>All subscriptions | Page: {int(start/5)} </b>"
         async with rss_dict_lock:
-            keysCount = sum([len(v.keys()) for v in list(rss_dict.values())])
+            keysCount = sum(len(v.keys()) for v in list(rss_dict.values()))
             index = 0
             for titles in list(rss_dict.values()):
                 for index, (title, data) in enumerate(list(titles.items())[start:5+start]):

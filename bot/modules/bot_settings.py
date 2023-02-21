@@ -343,8 +343,10 @@ async def get_buttons(key=None, edit_type=None):
     elif key == 'private':
         buttons.ibutton('Back', "botset back")
         buttons.ibutton('Close', "botset close")
-        msg = 'Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, terabox.txt or .netrc.' \
-              '\nTo delete private file send the name of the file only as text message.\nTimeout: 60 sec'
+        msg = '''Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other file!.
+To delete private file send only the file name as text message.
+Note: Changing .netrc will not take effect for aria2c until restart.
+Timeout: 60 sec'''
     elif key == 'aria':
         for k in list(aria2_options.keys())[START:10+START]:
             buttons.ibutton(k, f"botset editaria {k}")
@@ -587,7 +589,7 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     handler_dict[chat_id] = True
     start_time = time()
     async def event_filter(_, __, event):
-        return bool(event.from_user.id == query.from_user.id and event.chat.id == chat_id and \
+        return bool(event.from_user.id == query.from_user.id and event.chat.id == chat_id and
                     (event.text or event.document and document))
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[chat_id]:
