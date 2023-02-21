@@ -21,7 +21,6 @@ rss_dict_lock = Lock()
 handler_dict = {}
 
 
-@new_thread
 async def rssMenu(event):
     user_id = event.from_user.id
     buttons = ButtonMaker()
@@ -51,6 +50,7 @@ async def updateRssMenu(query):
     msg, button = await rssMenu(query)
     await editMessage(query.message, msg, button)
 
+@new_thread
 async def getRssMenu(client, message):
     msg, button = await rssMenu(message)
     await sendMessage(message, msg, button)
