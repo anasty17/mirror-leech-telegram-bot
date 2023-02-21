@@ -31,22 +31,18 @@ async def stats(client, message):
     swap = swap_memory()
     memory = virtual_memory()
     stats = f'<b>╭─《🐱 BOT STATISTICS 🐱》</b>\n'\
-            f'<b> Commit Date:</b> {last_commit}\n'\
-            f'<b>Bot Uptime:</b> {get_readable_time(time() - botStartTime)}\n'\
-            f'<b>OS Uptime:</b> {get_readable_time(time() - boot_time())}\n'\
-            f'<b>Total Disk Space:</b> {get_readable_file_size(total)}\n'\
-            f'<b>Used:</b> {get_readable_file_size(used)} | <b>Free:</b> {get_readable_file_size(free)}\n'\
-            f'<b>Upload:</b> {get_readable_file_size(net_io_counters().bytes_sent)}\n'\
-            f'<b>Download:</b> {get_readable_file_size(net_io_counters().bytes_recv)}\n'\
-            f'<b>CPU:</b> {cpu_percent(interval=0.5)}%\n'\
-            f'<b>RAM:</b> {memory.percent}%\n'\
-            f'<b>DISK:</b> {disk}%\n'\
-            f'<b>Physical Cores:</b> {cpu_count(logical=False)}\n'\
-            f'<b>Total Cores:</b> {cpu_count(logical=True)}\n'\
-            f'<b>SWAP:</b> {get_readable_file_size(swap.total)} | <b>Used:</b> {swap.percent}%\n'\
-            f'<b>Memory Total:</b> {get_readable_file_size(memory.total)}\n'\
-            f'<b>Memory Free:</b> {get_readable_file_size(memory.available)}\n'\
-            f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
+            f'<b>├🛠Commit Date:</b> {last_commit}\n'\
+            f'<b>├🟢Bot Uptime:</b> {get_readable_time(time() - botStartTime)}\n'\
+            f'<b>├⌛OS Uptime:</b> {get_readable_time(time() - boot_time())}\n'\
+            f'<b>├💾Total Disk Space:</b> {get_readable_file_size(total)}\n'\
+            f'<b>├💽Used:</b> {get_readable_file_size(used)} | <b>Free:</b> {get_readable_file_size(free)}\n'\
+            f'<b>├🔺Upload:</b> {get_readable_file_size(net_io_counters().bytes_sent)}\n'\
+            f'<b>├🔻Download:</b> {get_readable_file_size(net_io_counters().bytes_recv)}\n'\
+            f'<b>├⚙️SWAP:</b> {get_readable_file_size(swap.total)} | <b>Used:</b> {swap.percent}%\n'\
+            f'<b>├🎮Memory Total:</b> {get_readable_file_size(memory.total)}\n'\
+            f'<b>├💿Memory Free:</b> {get_readable_file_size(memory.available)}\n'\
+            f'<b>├📀Memory Used:</b> {get_readable_file_size(memory.used)}\n'
+            f'<b>╰👤 Owner :</b> <a href='https://t.me/XRofikX'>𝑷𝒊𝒌𝒂𝒄𝒉𝒖 🐹</a>\n\n'''
     await sendMessage(message, stats)
 
 async def start(client, message):
