@@ -87,7 +87,7 @@ async def log(client, message):
     await sendFile(message, 'log.txt')
 
 help_string = f'''
-NOTE: Try each command without any argument to see more detalis.
+📒 NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.MirrorCommand[0]} or /{BotCommands.MirrorCommand[1]}: Start mirroring to Google Drive.
 /{BotCommands.ZipMirrorCommand[0]} or /{BotCommands.ZipMirrorCommand[1]}: Start mirroring and upload the file/folder compressed with zip extension.
 /{BotCommands.UnzipMirrorCommand[0]} or /{BotCommands.UnzipMirrorCommand[1]}: Start mirroring and upload the file/folder extracted from any archive extension.
@@ -124,11 +124,6 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.RmSudoCommand}: Remove sudo users (Only Owner).
 /{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).
-/{BotCommands.ShellCommand}: Run shell commands (Only Owner).
-/{BotCommands.EvalCommand}: Run Python Code Line | Lines (Only Owner).
-/{BotCommands.ExecCommand}: Run Commands In Exec (Only Owner).
-/{BotCommands.ClearLocalsCommand}: Clear {BotCommands.EvalCommand} or {BotCommands.ExecCommand} locals (Only Owner).
-/{BotCommands.RssCommand}: RSS Menu.
 '''
 
 async def bot_help(client, message):
@@ -143,15 +138,15 @@ async def main():
                 if await aiopath.isfile(".restartmsg"):
                     with open(".restartmsg") as f:
                         chat_id, msg_id = map(int, f)
-                    msg = 'Restarted Successfully!'
+                    msg = '✅ Restarted Successfully!'
                 else:
-                    msg = 'Bot Restarted!'
+                    msg = '✅ Bot Restarted!'
                 for tag, links in data.items():
                     msg += f"\n\n{tag}: "
                     for index, link in enumerate(links, start=1):
                         msg += f" <a href='{link}'>{index}</a> |"
                         if len(msg.encode()) > 4000:
-                            if 'Restarted Successfully!' in msg and cid == chat_id:
+                            if '✅ Restarted Successfully!' in msg and cid == chat_id:
                                 try:
                                     await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg)
                                 except:
@@ -164,7 +159,7 @@ async def main():
                                 except Exception as e:
                                     LOGGER.error(e)
                             msg = ''
-                if 'Restarted Successfully!' in msg and cid == chat_id:
+                if '✅ Restarted Successfully!' in msg and cid == chat_id:
                     try:
                         await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg)
                     except:
@@ -181,7 +176,7 @@ async def main():
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
         try:
-            await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!")
+            await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text="✅ Restarted Successfully!")
         except:
             pass
         await aioremove(".restartmsg")
