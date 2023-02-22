@@ -80,6 +80,8 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     elif 'letsupload.io' in domain:
         return letsupload(link)
+    elif 'zippyshare.com' in domain:
+        return zippyshare(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in anonfilesBaseSites):
@@ -613,3 +615,31 @@ def linkbox(url):
     name = quote(itemInfo["name"])
     raw = itemInfo['url'].split("/", 3)[-1]
     return f'https://wdl.nuplink.net/{raw}&filename={name}'
+
+def zippyshare(url):
+    cget = create_scraper().request
+    try:
+        url = cget('GET', url).url
+        resp = cget('GET', url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if not resp.ok:
+        raise DirectDownloadLinkException('ERROR: Something went wrong!!, Try in your browser')
+    if findall(r'>File does not exist on this server<', resp.text):
+        raise DirectDownloadLinkException('ERROR: File does not exist on server!!, Try in your browser')
+    if not (key:= findall(r'\/d\/.*\/" \+ \((.*?)\).*(/.*)"', resp.text)):
+        raise DirectDownloadLinkException('ERROR: Key Not found')
+    try:
+        key = key[0]
+        two_parts = key[0].replace(' ', '')
+        filename = key[1]
+        two_parts = str(two_parts).split('+',1)
+        first = two_parts[0]
+        first = int(first.split('%')[0]) % int(first.split('%')[1])
+        second = two_parts[1]
+        second = int(second.split('%')[0]) % int(second.split('%')[1])
+    except:
+        raise DirectDownloadLinkException('ERROR: Cannot process with key')
+    domain = urlparse(url).hostname
+    file_id = url.split('/')[-2]
+    return f'https://{domain}/d/{file_id}/{first+second}{filename}'
