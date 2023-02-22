@@ -29,8 +29,10 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
-anonfilesBaseSites = ['anonfiles.com','hotfile.io','bayfiles.com','megaupload.nz','letsupload.cc','filechan.org'
-                    'myfile.is','vshare.is','rapidshare.nu','lolabits.se','openload.cc','share-online.is','upvid.cc']
+
+anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload.nz', 'letsupload.cc',
+                      'filechan.org', 'myfile.is', 'vshare.is', 'rapidshare.nu', 'lolabits.se',
+                      'openload.cc', 'share-online.is', 'upvid.cc']
 
 
 def direct_link_generator(link: str):
@@ -78,6 +80,8 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     elif 'letsupload.io' in domain:
         return letsupload(link)
+    elif 'zippyshare.com' in domain:
+        return zippyshare(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in anonfilesBaseSites):
@@ -351,7 +355,7 @@ def fichier(link: str) -> str:
             else:
                 raise DirectDownloadLinkException("ERROR: 1fichier is on a limit. Please wait a few minutes/hour.")
         elif "protect access" in str(str_2).lower():
-          raise DirectDownloadLinkException(f"ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
+          raise DirectDownloadLinkException("ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> https://1fichier.com/?smmtd8twfpm66awbqz04::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!")
         else:
             raise DirectDownloadLinkException("ERROR: Failed to generate Direct Link from 1fichier!")
     elif len(soup.find_all("div", {"class": "ct_warn"})) == 4:
@@ -611,3 +615,31 @@ def linkbox(url):
     name = quote(itemInfo["name"])
     raw = itemInfo['url'].split("/", 3)[-1]
     return f'https://wdl.nuplink.net/{raw}&filename={name}'
+
+def zippyshare(url):
+    cget = create_scraper().request
+    try:
+        url = cget('GET', url).url
+        resp = cget('GET', url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if not resp.ok:
+        raise DirectDownloadLinkException('ERROR: Something went wrong!!, Try in your browser')
+    if findall(r'>File does not exist on this server<', resp.text):
+        raise DirectDownloadLinkException('ERROR: File does not exist on server!!, Try in your browser')
+    if not (key:= findall(r'\/d\/.*\/" \+ \((.*?)\).*(/.*)"', resp.text)):
+        raise DirectDownloadLinkException('ERROR: Key Not found')
+    try:
+        key = key[0]
+        two_parts = key[0].replace(' ', '')
+        filename = key[1]
+        two_parts = str(two_parts).split('+',1)
+        first = two_parts[0]
+        first = int(first.split('%')[0]) % int(first.split('%')[1])
+        second = two_parts[1]
+        second = int(second.split('%')[0]) % int(second.split('%')[1])
+    except:
+        raise DirectDownloadLinkException('ERROR: Cannot process with key')
+    domain = urlparse(url).hostname
+    file_id = url.split('/')[-2]
+    return f'https://{domain}/d/{file_id}/{first+second}{filename}'

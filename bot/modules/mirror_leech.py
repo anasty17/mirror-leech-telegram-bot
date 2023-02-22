@@ -107,6 +107,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     if len(mesg) > 1 and mesg[1].startswith('Tag: '):
         tag, id_ = mesg[1].split('Tag: ')[1].split()
         message.from_user = await client.get_users(id_)
+        await message.unpin()
     elif username := message.from_user.username:
         tag = f"@{username}"
     else:
