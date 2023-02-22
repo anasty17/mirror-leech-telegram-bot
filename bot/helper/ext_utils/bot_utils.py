@@ -126,7 +126,7 @@ def get_readable_message():
     for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
         if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
             msg += f"<b>_____《🐱 Pik4Bot 🐱》_____</b>"
-            msg += f"\n\n<b>☞ <a href='{download.message.link}'>{download.status()}</a>: </b>"
+            msg += f"\n\n<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
         else:
             msg += f"<b>_____《🐱 Pik4Bot 🐱》_____</b>"
             msg += f"\n\n<b>{download.status()}: </b>"
