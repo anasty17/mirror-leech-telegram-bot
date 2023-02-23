@@ -306,7 +306,7 @@ class MirrorLeechListener:
                     buttons.ubutton("⚡ Index Link", share_url)
                 elif "video" in typ:
                     result_get_0 = INDEX_URL.split("/")[3]
-                    resultpath = '/' + result_get_0 + '/' + escape(name)
+                    resultpath = f'/{result_get_0}/{escape(name)}'
                     result_rmv_b = base64.urlsafe_b64encode(resultpath.encode("utf-8")).decode('utf-8').rstrip('=')
                     INDEX_URLVIDEO = INDEX_URL.replace(result_get_0, "0:video/")
                     share_urlvideo = INDEX_URLVIDEO + result_rmv_b
