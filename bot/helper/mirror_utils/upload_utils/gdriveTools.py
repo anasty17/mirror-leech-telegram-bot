@@ -385,13 +385,8 @@ class GoogleDriveHelper:
                     url = f'{INDEX_URL}/{url_path}/'
                     if "video" in mime_type:
                         result_get_0 = INDEX_URL.split("/")[3]
-                        resultpath = '/' + result_get_0 + '/' + meta.get("name")
-                        encoded_string = base64.b64encode(resultpath.encode("utf-8"))
-                        result_rmv_b = encoded_string.decode('utf-8')
-                        result_rmv_b = result_rmv_b.replace('/', '_')
-                        result_rmv_b = result_rmv_b.replace('+', '-')
-                        if result_rmv_b.startswith('b'):
-                            result_rmv_b = result_rmv_b[1:]
+                        resultpath = '/' + result_get_0 + '/' + file.get("name")
+                        result_rmv_b = base64.urlsafe_b64encode(resultpath.encode("utf-8")).decode('utf-8').rstrip('=')
                         INDEX_URLVIDEO = INDEX_URL.replace(result_get_0, "0:video/")
                         share_urlvideo = INDEX_URLVIDEO + result_rmv_b
                         buttons.ubutton("⚡ Index Link", url)
@@ -416,13 +411,8 @@ class GoogleDriveHelper:
                         buttons.ubutton("🌐 View Link", urlv)
                     elif "video" in mime_type:
                         result_get_0 = INDEX_URL.split("/")[3]
-                        resultpath = '/' + result_get_0 + '/' + meta.get("name")
-                        encoded_string = base64.b64encode(resultpath.encode("utf-8"))
-                        result_rmv_b = encoded_string.decode('utf-8')
-                        result_rmv_b = result_rmv_b.replace('/', '_')
-                        result_rmv_b = result_rmv_b.replace('+', '-')
-                        if result_rmv_b.startswith('b'):
-                            result_rmv_b = result_rmv_b[1:]
+                        resultpath = '/' + result_get_0 + '/' + file.get("name")
+                        result_rmv_b = base64.urlsafe_b64encode(resultpath.encode("utf-8")).decode('utf-8').rstrip('=')
                         INDEX_URLVIDEO = INDEX_URL.replace(result_get_0, "0:video/")
                         share_urlvideo = INDEX_URLVIDEO + result_rmv_b
                         buttons.ubutton("⚡ Index Link", url)
