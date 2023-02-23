@@ -150,11 +150,13 @@ class TgUploader:
                                         await self.__send_media_group(subkey, key, msgs)
                     self.__last_msg_in_group = False
                     self._last_uploaded = 0
-                    await self.__upload_file(up_path, cap_mono)
+                    uploaded_doc = await self.__upload_file(up_path, cap_mono)
                     if self.__is_cancelled:
                         return
                     if not self.__is_corrupted and (self.__listener.isSuperGroup or config_dict['DUMP_CHAT']):
                         self.__msgs_dict[self.__sent_msg.link] = file_
+                    if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
+                        await aioremove(uploaded_doc)
                     await sleep(1)
                 except Exception as err:
                     if isinstance(err, RetryError):
@@ -267,8 +269,7 @@ class TgUploader:
 
             if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
                 await aioremove(thumb)
-            if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
-                await aioremove(uploaded_doc)
+            return up_path
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
