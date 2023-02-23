@@ -383,6 +383,19 @@ class GoogleDriveHelper:
                     url_path = rquote(f'{meta.get("name")}', safe='')
                     url = f'{INDEX_URL}/{url_path}/'
                     buttons.ubutton("⚡ Index Link", url)
+                elif "video" in typ:
+                    result_get_0 = INDEX_URL.split("/")[3]
+                    resultpath = '/' + result_get_0 + '/' + escape(name)
+                    encoded_string = base64.b64encode(resultpath.encode("utf-8"))
+                    result_rmv_b = encoded_string.decode('utf-8')
+                    result_rmv_b = result_rmv_b.replace('/', '_')
+                    result_rmv_b = result_rmv_b.replace('+', '-')
+                    if result_rmv_b.startswith('b'):
+                        result_rmv_b = result_rmv_b[1:]
+                    INDEX_URLVIDEO = INDEX_URL.replace(result_get_0, "0:video/")
+                    share_urlvideo = INDEX_URLVIDEO + result_rmv_b
+                    buttons.ubutton("⚡ Index Link", share_url)
+                    buttons.ubutton("🎬 Stream Link", share_urlvideo)
             else:
                 file = self.__copyFile(meta.get('id'), config_dict['GDRIVE_ID'])
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
