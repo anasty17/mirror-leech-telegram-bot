@@ -93,9 +93,9 @@ async def update_all_messages(force=False):
         for chat_id in list(status_reply_dict.keys()):
             if status_reply_dict[chat_id] and msg != status_reply_dict[chat_id][0].text:
                 rmsg = await editMessage(status_reply_dict[chat_id][0], msg, buttons)
-                if rmsg == "Message to edit not found":
+                if isinstance(rmsg, str) and rmsg.startswith('Telegram says: [400'):
                     del status_reply_dict[chat_id]
-                    return
+                    continue
                 status_reply_dict[chat_id][0].text = msg
                 status_reply_dict[chat_id][1] = time()
 
