@@ -59,6 +59,7 @@ class GoogleDriveHelper:
         self.transferred_size = 0
         self.__service_account_index = 0
         self.__service = None
+        self.startTime = time()
 
     def speed(self):
         """
