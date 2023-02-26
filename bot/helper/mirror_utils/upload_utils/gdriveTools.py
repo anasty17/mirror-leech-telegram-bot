@@ -4,6 +4,7 @@ from time import time
 from pickle import load as pload
 from os import makedirs, path as ospath, listdir, remove as osremove
 from io import FileIO
+from time import time
 from re import search as re_search
 from urllib.parse import parse_qs, urlparse, quote as rquote
 from random import randrange
@@ -18,7 +19,8 @@ from bot import config_dict, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, GLOBAL_EXTENS
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.ext_utils.bot_utils import async_to_sync
+from bot.helper.ext_utils.bot_utils import (get_readable_time,
+                                            sync_to_async)
 
 LOGGER = getLogger(__name__)
 getLogger('googleapiclient.discovery').setLevel(ERROR)
@@ -375,6 +377,7 @@ class GoogleDriveHelper:
                 msg += f'<b>_____《🐱 Pik4Bot 🐱》_____</b>'
                 msg += f'\n\n<b>☞ Name: </b><code>{meta.get("name")}</code>'
                 msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.transferred_size)}'
+                msg += f'\n<b>☞ Elapsed</b>: {get_readable_time(time() - self.startTime)}'
                 msg += '\n<b>☞ Type: </b>Folder'
                 msg += f'\n<b>☞ SubFolders: </b>{self.__total_folders}'
                 msg += f'\n<b>☞ Files: </b>{self.__total_files}'
@@ -394,6 +397,7 @@ class GoogleDriveHelper:
                 if mime_type is None:
                     mime_type = 'File'
                 msg += f'\n<b>☞ Size: </b>{get_readable_file_size(int(meta.get("size", 0)))}'
+                msg += f'\n<b>☞ Elapsed</b>: {get_readable_time(time() - self.startTime)}'
                 msg += f'\n<b>☞ Type: </b>{mime_type}'
                 if INDEX_URL := config_dict['INDEX_URL']:
                     url_path = rquote(f'{file.get("name")}', safe='')
@@ -636,6 +640,7 @@ class GoogleDriveHelper:
                 msg += f'<b>_____《🐱 Pik4Bot 🐱》_____</b>'
                 msg += f'\n\n<b>☞ Name: </b><code>{name}</code>'
                 msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += f'\n<b>☞ Elapsed</b>: {get_readable_time(time() - self.startTime)}'
                 msg += '\n<b>☞ Type: </b>Folder'
                 msg += f'\n<b>☞ SubFolders: </b>{self.__total_folders}'
             else:
@@ -646,6 +651,7 @@ class GoogleDriveHelper:
                 self.__total_files += 1
                 self.__gDrive_file(meta)
                 msg += f'\n<b>☞ Size: </b>{get_readable_file_size(self.__total_bytes)}'
+                msg += f'\n<b>☞ Elapsed</b>: {get_readable_time(time() - self.startTime)}'
                 msg += f'\n<b>☞ Type: </b>{mime_type}'
             msg += f'\n<b>☞ Files: </b>{self.__total_files}'
         except Exception as err:
