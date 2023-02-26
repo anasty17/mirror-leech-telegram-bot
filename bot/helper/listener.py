@@ -4,6 +4,7 @@ from aiofiles.os import path as aiopath, remove as aioremove, listdir, rename, m
 from os import walk, path as ospath
 from html import escape
 from aioshutil import move
+from time import time
 from asyncio import create_subprocess_exec, sleep, Event
 
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, queued_dl, queue_dict_lock
@@ -42,6 +43,7 @@ class MirrorLeechListener:
         self.suproc = None
         self.queuedUp = None
         self.sameDir = sameDir
+        self.startTime = time()
 
     async def clean(self):
         try:
@@ -263,7 +265,7 @@ class MirrorLeechListener:
     async def onUploadComplete(self, link: str, size, files, folders, typ, name):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
-        msg = f"<b>_____《🐱 Pik4Bot 🐱》_____</b>\n\n<b>☞ Name: </b><code>{escape(name)}</code>\n<b>☞ Size: </b>{size}"
+        msg = f"<b>_____《🐱 Pik4Bot 🐱》_____</b>\n\n<b>☞ Name: </b><code>{escape(name)}</code>\n<b>☞ Size: </b>{size}\n<b>☞ Elapsed</b>: {get_readable_time(time() - self.startTime)}'"
         if self.isLeech:
             msg += f'\n<b>☞ Total Files: </b>{folders}'
             if typ != 0:
