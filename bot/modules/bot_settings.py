@@ -343,7 +343,7 @@ async def get_buttons(key=None, edit_type=None):
     elif key == 'private':
         buttons.ibutton('Back', "botset back")
         buttons.ibutton('Close', "botset close")
-        msg = '''Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other file!.
+        msg = '''Send private file: config.env, token.pickle, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other file!
 To delete private file send only the file name as text message.
 Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec'''
@@ -797,7 +797,6 @@ async def edit_bot_settings(client, query):
         await message.reply_to_mssage.delete()
         await message.delete()
 
-@new_thread
 async def bot_settings(client, message):
     msg, button = await get_buttons()
     globals()['START'] = 0

@@ -11,7 +11,7 @@ from bot import LOGGER, bot
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.message_utils import sendFile, sendMessage
-from bot.helper.ext_utils.bot_utils import sync_to_async, new_thread
+from bot.helper.ext_utils.bot_utils import sync_to_async, new_task
 
 namespaces = {}
 
@@ -38,11 +38,11 @@ async def send(msg, message):
         LOGGER.info(f"OUT: '{msg}'")
         await sendMessage(message, f"<code>{msg}</code>")
 
-@new_thread
+@new_task
 async def evaluate(client, message):
     await send(await sync_to_async(do, eval, message), message)
 
-@new_thread
+@new_task
 async def execute(client, message):
     await send(await sync_to_async(do, exec, message), message)
 
@@ -94,13 +94,12 @@ def do(func, message):
         if result:
             return result
 
-@new_thread
 async def clear(client, message):
     log_input(message)
     global namespaces
     if message.chat.id in namespaces:
         del namespaces[message.chat.id]
-    await send("Cleared locals.", message)
+    await send("Locals Cleared.", message)
 
 
 bot.add_handler(MessageHandler(evaluate, filters=command(BotCommands.EvalCommand) & CustomFilters.owner))

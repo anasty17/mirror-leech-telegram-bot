@@ -153,10 +153,10 @@ class TgUploader:
                     uploaded_doc = await self.__upload_file(up_path, cap_mono)
                     if self.__is_cancelled:
                         return
-                    if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
-                        await aioremove(uploaded_doc)
                     if not self.__is_corrupted and (self.__listener.isSuperGroup or config_dict['DUMP_CHAT']):
                         self.__msgs_dict[self.__sent_msg.link] = file_
+                    if not self.__listener.seed or self.__listener.newDir or dirpath.endswith("splited_files_mltb"):
+                        await aioremove(uploaded_doc)
                     await sleep(1)
                 except Exception as err:
                     if isinstance(err, RetryError):
@@ -252,6 +252,7 @@ class TgUploader:
                                                                     caption=cap_mono,
                                                                     disable_notification=True,
                                                                     progress=self.__upload_progress)
+
             if not self.__is_cancelled and self.__media_group and (self.__sent_msg.video or self.__sent_msg.document):
                 key = 'documents' if self.__sent_msg.document else 'videos'
                 if match := re_match(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', up_path):
@@ -266,20 +267,21 @@ class TgUploader:
                     else:
                         self.__last_msg_in_group = True
 
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+                await aioremove(thumb)
             return up_path
         except FloodWait as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:
+            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
+                await aioremove(thumb)
             err_type = "RPCError: " if isinstance(err, RPCError) else ""
             LOGGER.error(f"{err_type}{err}. Path: {up_path}")
             if 'Telegram says: [400' in str(err) and key != 'documents':
                 LOGGER.error(f"Retrying As Document. Path: {up_path}")
                 return await self.__upload_file(up_path, cap_mono, True)
             raise err
-        finally:
-            if self.__thumb is None and thumb is not None and await aiopath.exists(thumb):
-                await aioremove(thumb)
 
     @property
     def speed(self):

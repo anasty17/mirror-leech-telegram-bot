@@ -10,7 +10,7 @@ from bot.helper.telegram_helper.message_utils import editMessage, sendMessage
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async, new_thread
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async, new_task
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 PLUGINS = []
@@ -202,7 +202,6 @@ async def __plugin_buttons(user_id):
     buttons.ibutton("Cancel", f"torser {user_id} cancel")
     return buttons.build_menu(2)
 
-@new_thread
 async def torrentSearch(client, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
@@ -231,7 +230,7 @@ async def torrentSearch(client, message):
         button = await __plugin_buttons(user_id)
         await sendMessage(message, 'Choose site to search | Plugins:', button)
 
-@new_thread
+@new_task
 async def torrentSearchUpdate(client, query):
     user_id = query.from_user.id
     message = query.message

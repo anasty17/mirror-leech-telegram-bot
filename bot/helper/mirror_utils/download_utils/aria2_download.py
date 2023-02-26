@@ -57,7 +57,6 @@ async def __onDownloadStarted(api, gid):
                         smsg = 'File/Folder already available in Drive.\nHere are the search results:'
                         await listener.onDownloadError(smsg, button)
                         await sync_to_async(api.remove, [download], force=True, files=True)
-                        return
     except Exception as e:
         LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
 

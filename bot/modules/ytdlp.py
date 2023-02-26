@@ -8,7 +8,7 @@ from requests import request
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_thread
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -35,7 +35,7 @@ async def _auto_cancel(msg, task_id):
     except:
         pass
 
-@new_thread
+@new_task
 async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         await sendMessage(message, 'GDRIVE_ID not Provided!')
@@ -297,7 +297,7 @@ async def _mp3_subbuttons(task_id, msg, playlist=False):
     SUBBUTTONS = buttons.build_menu(2)
     await editMessage(msg, f"Choose Audio{i} Bitrate:", SUBBUTTONS)
 
-@new_thread
+@new_task
 async def select_format(client, query):
     user_id = query.from_user.id
     data = query.data.split()

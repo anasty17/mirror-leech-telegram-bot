@@ -15,7 +15,7 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import new_thread
+from bot.helper.ext_utils.bot_utils import new_task, new_thread
 
 rss_dict_lock = Lock()
 handler_dict = {}
@@ -50,7 +50,6 @@ async def updateRssMenu(query):
     msg, button = await rssMenu(query)
     await editMessage(query.message, msg, button)
 
-@new_thread
 async def getRssMenu(client, message):
     msg, button = await rssMenu(message)
     await sendMessage(message, msg, button)
@@ -463,7 +462,8 @@ Timeout: 60 sec.
         if len(rss_dict.get(int(data[2]), {})) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
             return
-        elif data[1].endswith('unsub'):
+        await query.answer()
+        if data[1].endswith('unsub'):
             async with rss_dict_lock:
                 del rss_dict[int(data[2])]
             if DATABASE_URL:
@@ -483,13 +483,13 @@ Timeout: 60 sec.
                 scheduler.resume()
             if DATABASE_URL:
                 await DbManger().rss_update(int(data[2]))
-        await query.answer(text='Done!', show_alert=True)
         await updateRssMenu(query)
     elif data[1].startswith('all'):
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
             return
-        elif data[1].endswith('unsub'):
+        await query.answer()
+        if data[1].endswith('unsub'):
             async with rss_dict_lock:
                 rss_dict.clear()
             if DATABASE_URL:
@@ -514,7 +514,6 @@ Timeout: 60 sec.
                 scheduler.start()
             if DATABASE_URL:
                 await DbManger().rss_update_all()
-        await query.answer(text='Done!', show_alert=True)
     elif data[1] == 'deluser':
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
@@ -610,7 +609,10 @@ async def rssMonitor():
                         feed_msg += f"<b>Link: </b><code>{url}</code>\n\n<b>Tag: </b>{data['tag']} <code>{user}</code>"
                     await sendRss(feed_msg)
                     feed_count += 1
-                    await sleep(5)
+                    try:
+                        await sleep(10)
+                    except:
+                        pass
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):
                         continue

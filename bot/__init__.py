@@ -10,7 +10,7 @@ from os import remove as osremove, path as ospath, environ
 from subprocess import Popen, run as srun
 from time import sleep, time
 from threading import Thread
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 from asyncio import Lock
 from pymongo import MongoClient
 from pyrogram import Client as tgClient, enums
@@ -57,8 +57,6 @@ status_reply_dict_lock = Lock()
 queue_dict_lock = Lock()
 status_reply_dict = {}
 download_dict = {}
-# key: rss_title
-# value: {link, last_feed, last_title, filter}
 rss_dict = {}
 
 BOT_TOKEN = environ.get('BOT_TOKEN', '')
@@ -75,7 +73,15 @@ if len(DATABASE_URL) == 0:
 if DATABASE_URL:
     conn = MongoClient(DATABASE_URL)
     db = conn.mltb
-    if config_dict := db.settings.config.find_one({'_id': bot_id}):  #retrun config dict (all env vars)
+    current_config = dict(dotenv_values('config.env'))
+    old_config = db.settings.deployConfig.find_one({'_id': bot_id})
+    if  old_config is None:
+        db.settings.deployConfig.replace_one({'_id': bot_id}, current_config, upsert=True)
+    else:
+        del old_config['_id']
+    if old_config and old_config != current_config:
+        db.settings.deployConfig.replace_one({'_id': bot_id}, current_config, upsert=True)
+    elif config_dict := db.settings.config.find_one({'_id': bot_id}):
         del config_dict['_id']
         for key, value in config_dict.items():
             environ[key] = str(value)

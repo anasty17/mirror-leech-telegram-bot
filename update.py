@@ -2,7 +2,7 @@ from logging import FileHandler, StreamHandler, INFO, basicConfig, error as log_
 from os import path as ospath, environ
 from subprocess import run as srun
 from requests import get as rget
-from dotenv import load_dotenv
+from dotenv import load_dotenv, dotenv_values
 from pymongo import MongoClient
 
 if ospath.exists('log.txt'):
@@ -36,7 +36,12 @@ if len(DATABASE_URL) == 0:
 if DATABASE_URL is not None:
     conn = MongoClient(DATABASE_URL)
     db = conn.mltb
-    if config_dict := db.settings.config.find_one({'_id': bot_id}):  #retrun config dict (all env vars)
+    old_config = db.settings.deployConfig.find_one({'_id': bot_id})
+    config_dict = db.settings.config.find_one({'_id': bot_id})
+    if old_config is not None:
+        del old_config['_id']
+    if (old_config is not None and old_config == dict(dotenv_values('config.env')) or old_config is None) \
+           and config_dict is not None:
         environ['UPSTREAM_REPO'] = config_dict['UPSTREAM_REPO']
         environ['UPSTREAM_BRANCH'] = config_dict['UPSTREAM_BRANCH']
     conn.close()

@@ -7,7 +7,7 @@ from asyncio import sleep
 from aiofiles.os import path as aiopath
 
 from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict
-from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, new_thread
+from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
@@ -21,7 +21,7 @@ from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.listener import MirrorLeechListener
 
 
-@new_thread
+@new_task
 async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}):
     if not isLeech and not config_dict['GDRIVE_ID']:
         await sendMessage(message, 'GDRIVE_ID not Provided!')
@@ -107,7 +107,10 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     if len(mesg) > 1 and mesg[1].startswith('Tag: '):
         tag, id_ = mesg[1].split('Tag: ')[1].split()
         message.from_user = await client.get_users(id_)
-        await message.unpin()
+        try:
+            await message.unpin()
+        except:
+            pass
     elif username := message.from_user.username:
         tag = f"@{username}"
     else:
