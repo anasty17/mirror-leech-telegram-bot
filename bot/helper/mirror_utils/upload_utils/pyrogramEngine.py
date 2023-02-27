@@ -79,7 +79,7 @@ class TgUploader:
     async def __prepare_file(self, file_, dirpath):
         if LEECH_FILENAME_PREFIX := config_dict['LEECH_FILENAME_PREFIX']:
             cap_mono = f"{LEECH_FILENAME_PREFIX} <code>{file_}</code>"
-            if self.__listener.seed:
+            if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                 dirpath = f'{dirpath}/copied_mltb'
                 await makedirs(dirpath, exist_ok=True)
                 new_path = ospath.join(dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
@@ -102,7 +102,7 @@ class TgUploader:
             extn = len(ext)
             remain = 60 - extn
             name = ntsplit[0][:remain]
-            if self.__listener.seed:
+            if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                 dirpath = f'{dirpath}/copied_mltb'
                 await makedirs(dirpath, exist_ok=True)
                 new_path = ospath.join(dirpath, f"{name}.{ext}")
@@ -238,8 +238,8 @@ class TgUploader:
                     width = 480
                     height = 320
                 if not self.__up_path.upper().endswith(("MKV", "MP4")):
-                    if self.__listener.seed:
-                        dirpath, file_ = self.__up_path.rsplit('/', 1)
+                    dirpath, file_ = self.__up_path.rsplit('/', 1)
+                    if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                         dirpath = f"{dirpath}/copied_mltb"
                         await makedirs(dirpath, exist_ok=True)
                         new_path = ospath.join(dirpath, f"{file_.rsplit('.', 1)[0]}.mp4")
