@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from os import walk, path as ospath
+from os import walk, path as ospath, _exit
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir, listdir, rmdir, makedirs
-from sys import exit as sysexit
 from aioshutil import rmtree as aiormtree
 from shutil import rmtree
 from PIL import Image
@@ -75,12 +74,12 @@ def clean_all():
 
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        sysexit(0)
+        _exit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        sysexit(1)
+        _exit(1)
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
