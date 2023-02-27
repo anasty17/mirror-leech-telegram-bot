@@ -6,7 +6,7 @@ from socket import setdefaulttimeout
 from faulthandler import enable as faulthandler_enable
 from qbittorrentapi import Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
-from os import remove as osremove, path as ospath, environ
+from os import remove as osremove, path as ospath, environ, getcwd
 from subprocess import Popen, run as srun
 from time import sleep, time
 from threading import Thread
@@ -359,7 +359,7 @@ if ospath.exists('list_drives.txt'):
 if BASE_URL:
     Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{SERVER_PORT}", shell=True)
 
-srun(["qbittorrent-nox", "-d", "--profile=."])
+srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists('.netrc'):
     with open('.netrc', 'w'):
        pass

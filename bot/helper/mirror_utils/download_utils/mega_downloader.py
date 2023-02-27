@@ -3,7 +3,6 @@ from random import SystemRandom
 from string import ascii_letters, digits
 from aiofiles.os import makedirs
 from asyncio import Event
-from concurrent.futures import ThreadPoolExecutor
 from mega import (MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError)
 
 from bot import LOGGER, config_dict, download_dict_lock, download_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock
@@ -130,14 +129,13 @@ class AsyncExecutor:
     def __init__(self):
         self.continue_event = Event()
 
-    async def do(self, function, args, pool=None):
+    async def do(self, function, args):
         self.continue_event.clear()
         await sync_to_async(function, *args)
         await self.continue_event.wait()
 
 
 async def add_mega_download(mega_link, path, listener, name, from_queue=False):
-    pool = ThreadPoolExecutor()
     MEGA_API_KEY = config_dict['MEGA_API_KEY']
     MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
     MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
