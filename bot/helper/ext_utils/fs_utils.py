@@ -88,7 +88,7 @@ async def clean_unwanted(path):
         for filee in files:
             if filee.endswith(".!qB") or filee.endswith('.parts') and filee.startswith('.'):
                 await aioremove(ospath.join(dirpath, filee))
-        if dirpath.endswith((".unwanted", "splited_files_mltb")):
+        if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
             await aiormtree(dirpath)
     for dirpath, subdir, files in await sync_to_async(walk, path, topdown=False):
         if not listdir(dirpath):
