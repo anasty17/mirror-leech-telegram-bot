@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from os import walk, path as ospath
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir, listdir, rmdir, makedirs
-from sys import exit as sysexit
 from aioshutil import rmtree as aiormtree
 from shutil import rmtree
 from PIL import Image
@@ -10,6 +9,8 @@ from time import time
 from math import ceil
 from re import split as re_split, I, search as re_search
 from asyncio import create_subprocess_exec
+from subprocess import run as srun
+from sys import exit as sexit
 
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from .exceptions import NotSupportedExtractionArchive
@@ -75,12 +76,13 @@ def clean_all():
 
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up the downloads and stop running downloads")
+        LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
-        sysexit(0)
+        srun(['pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg'])
+        sexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        sysexit(1)
+        sexit(1)
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")

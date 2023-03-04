@@ -127,7 +127,7 @@ class YoutubeDLHelper:
             self.__set_args(args)
         if get_info:
             self.opts['playlist_items'] = '0'
-        if link.startswith(('rtmp', 'mms', 'rstp')):
+        if link.startswith(('rtmp', 'mms', 'rstp', 'rtmps')):
             self.opts['external_downloader'] = 'ffmpeg'
         with YoutubeDL(self.opts) as ydl:
             try:
