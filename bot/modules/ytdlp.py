@@ -52,7 +52,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
 
     args = mssg.split(maxsplit=3)
     args.pop(0)
-    if len(args) > 1:
+    if len(args) > 0:
         for x in args:
             x = x.strip()
             if x == 's':
