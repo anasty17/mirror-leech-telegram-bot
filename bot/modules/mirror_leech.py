@@ -100,7 +100,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     name = mesg[0].split(' n: ', 1)
     name = name[1].split(' pswd: ')[0].strip() if len(name) > 1 else ''
 
-    pswd = mesg[0].split(' pswd:', 1)
+    pswd = mesg[0].split(' pswd: ', 1)
     pswd = pswd[1].split(' n: ')[0] if len(pswd) > 1 else None
 
     if len(mesg) > 1 and mesg[1].startswith('Tag: '):
