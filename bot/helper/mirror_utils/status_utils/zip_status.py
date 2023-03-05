@@ -15,6 +15,7 @@ class ZipStatus:
         self.__uid = listener.uid
         self.__start_time = time()
         self.message = listener.message
+        self.source = self.__listener.source
 
     def gid(self):
         return self.__gid
