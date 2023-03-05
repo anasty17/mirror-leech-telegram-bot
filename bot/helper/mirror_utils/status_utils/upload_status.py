@@ -12,7 +12,7 @@ class UploadStatus:
         self.startTime = self.__listener.startTime
         self.__listener = listener
         self.message = self.__listener.message
-        self.startTime = self.__listener.startTime
+        
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
