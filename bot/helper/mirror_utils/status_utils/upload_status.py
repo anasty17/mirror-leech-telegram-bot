@@ -8,9 +8,7 @@ class UploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
-        self.source = self.__listener.source
-        self.startTime = self.__listener.startTime
-        self.__listener = listener
+        
         
         
 
