@@ -46,6 +46,7 @@ class MirrorLeechListener:
         self.queuedUp = None
         self.sameDir = sameDir
         self.startTime = time()
+        self.__source()
 
     async def clean(self):
         try:
