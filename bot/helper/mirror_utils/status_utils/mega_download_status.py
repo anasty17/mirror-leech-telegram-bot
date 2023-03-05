@@ -7,6 +7,7 @@ class MegaDownloadStatus:
     def __init__(self, obj, listener):
         self.__obj = obj
         self.message = listener.message
+        self.source = self.__listener.source
 
     def name(self) -> str:
         return self.__obj.name
