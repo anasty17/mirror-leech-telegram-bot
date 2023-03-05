@@ -46,7 +46,7 @@ class MirrorLeechListener:
         self.queuedUp = None
         self.sameDir = sameDir
         self.startTime = time()
-        self.__source()
+        
 
     async def clean(self):
         try:
@@ -59,20 +59,7 @@ class MirrorLeechListener:
         except:
             pass
 
-    def __source(self):
-        if sender_chat:= self.message.sender_chat:
-            source = sender_chat.title
-        else:
-            source = self.message.from_user.username or self.message.from_user.id
-        if reply_to := self.message.reply_to_message:
-            if sender_chat:=reply_to.sender_chat:
-                source = reply_to.sender_chat.title
-            elif not reply_to.from_user.is_bot:
-                source = reply_to.from_user.username or reply_to.from_user.id
-        if self.isSuperGroup:
-            self.source = f"<a href='{self.message.link}'>{source}</a>"
-        else:
-            self.source = f"<i>{source}</i>"
+    
 
     async def onDownloadStart(self):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
