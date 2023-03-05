@@ -10,7 +10,7 @@ class GdDownloadStatus:
         self.__listener = listener
         self.message = self.__listener.message
         self.startTime = self.__listener.startTime
-        self.source = self.__listener.source
+        
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
