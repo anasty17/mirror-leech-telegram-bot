@@ -8,6 +8,11 @@ class UploadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
+        self.source = self.__listener.source
+        self.startTime = self.__listener.startTime
+        self.__listener = listener
+        self.message = self.__listener.message
+        self.startTime = self.__listener.startTime
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
@@ -54,3 +59,17 @@ class UploadStatus:
 
     def download(self):
         return self.__obj
+
+    def __source(self):
+        if (reply_to := self.message.reply_to_message) and reply_to.from_user and not reply_to.from_user.is_bot:
+            source = reply_to.from_user.username or reply_to.from_user.id
+        elif self.__listener.tag == 'Anonymous':
+            source = self.__listener.tag
+        else:
+            source = self.message.from_user.username or self.message.from_user.id
+        if self.__listener.isSuperGroup:
+            return f"<a href='{self.message.link}'>{source}</a>"
+        else:
+            return f"<i>{source}</i>"
+
+    
