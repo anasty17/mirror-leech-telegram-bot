@@ -126,7 +126,7 @@ def get_readable_message():
     for index, download in enumerate(list(download_dict.values())[COUNT:], start=1):
         if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
             msg += f"<b>_____《🐱 Pik4Bot 🐱》_____</b>"
-            msg += f"\n\n<b>☞ <a href='{download.message.link}'>{download.status()}</a>: </b>"
+            msg += f"\n\n<b>☞ {download.status()}: </b>"
         else:
             msg += f"<b>_____《🐱 Pik4Bot 🐱》_____</b>"
             msg += f"\n\n<b>☞ {download.status()}: </b>"
@@ -134,6 +134,7 @@ def get_readable_message():
         if download.status() not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
             msg += f"\n<b>☞</b> {get_progress_bar_string(download)} {download.progress()}"
             msg += f"\n<b>☞ Processed:</b> {get_readable_file_size(download.processed_bytes())} of {download.size()}"
+            msg += f"\n<b>☞ Source</b>: {download.source}"
             msg += f"\n<b>☞ Speed:</b> {download.speed()} | <b>ETA:</b> {download.eta()}"
             if hasattr(download, 'seeders_num'):
                 try:
