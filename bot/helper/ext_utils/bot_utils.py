@@ -46,6 +46,7 @@ class setInterval:
         self.action = action
         self.stopEvent = False
         bot_loop.create_task(self.__setInterval())
+        self.startTime = time()
 
     async def __setInterval(self):
         nextTime = time() + self.interval
