@@ -8,6 +8,7 @@ class GdDownloadStatus:
         self.__size = size
         self.__gid = gid
         self.message = listener.message
+        self.source = self.__listener.source
 
     def processed_bytes(self):
         return self.__obj.processed_bytes
