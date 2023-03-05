@@ -22,7 +22,7 @@ class QbDownloadStatus:
         self.__info = get_download(self.__client, hash_)
         self.seeding = seeding
         self.message = listener.message
-        self.source = self.__listener.source
+        
 
     def __update(self):
         self.__info = get_download(self.__client, self.__hash)
