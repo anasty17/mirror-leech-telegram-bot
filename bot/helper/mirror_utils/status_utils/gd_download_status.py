@@ -7,7 +7,8 @@ class GdDownloadStatus:
         self.__obj = obj
         self.__size = size
         self.__gid = gid
-        self.message = listener.message
+        self.__listener = listener
+        self.message = self.__listener.message
         self.startTime = self.__listener.startTime
         self.source = self.__listener.source
 
@@ -56,3 +57,6 @@ class GdDownloadStatus:
 
     def download(self):
         return self.__obj
+
+    def listener(self):
+        return self.__listener
