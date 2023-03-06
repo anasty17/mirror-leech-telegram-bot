@@ -117,6 +117,7 @@ def get_progress_bar_string(status):
 
 def get_readable_message():
     msg = ""
+    button = None
     if STATUS_LIMIT := config_dict['STATUS_LIMIT']:
         tasks = len(download_dict)
         globals()['PAGES'] = ceil(tasks/STATUS_LIMIT)
@@ -146,8 +147,7 @@ def get_readable_message():
             msg += f" | <b>Time: </b>{download.seeding_time()}"
         else:
             msg += f"\n<b>Size: </b>{download.size()}"
-        msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>"
-        msg += "\n\n"
+        msg += f"\n<code>/{BotCommands.CancelMirror} {download.gid()}</code>\n\n"
         if index == STATUS_LIMIT:
             break
     if len(msg) == 0:
@@ -173,9 +173,6 @@ def get_readable_message():
                 up_speed += float(spd.split('K')[0]) * 1024
             elif 'M' in spd:
                 up_speed += float(spd.split('M')[0]) * 1048576
-    bmsg = f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
-    bmsg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
-    bmsg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
     if STATUS_LIMIT and tasks > STATUS_LIMIT:
         msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
         buttons = ButtonMaker()
@@ -183,8 +180,10 @@ def get_readable_message():
         buttons.ibutton(">>", "status nex")
         buttons.ibutton("♻️", "status ref")
         button = buttons.build_menu(3)
-        return msg + bmsg, button
-    return msg + bmsg, None
+    msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
+    msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
+    msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"
+    return msg, button
 
 async def turn(data):
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
@@ -255,13 +254,12 @@ def get_mega_link_type(url):
 
 def get_content_type(link):
     try:
-        res = rhead(link, allow_redirects=True, timeout=5, headers = {'user-agent': 'Wget/1.12'})
+        res = rhead(link, allow_redirects=True, timeout=5, headers={'user-agent': 'Wget/1.12'})
         content_type = res.headers.get('content-type')
     except:
         try:
             res = urlopen(link, timeout=5)
-            info = res.info()
-            content_type = info.get_content_type()
+            content_type = res.info().get_content_type()
         except:
             content_type = None
     return content_type

@@ -518,8 +518,7 @@ async def edit_qbit(client, message, pre_message, key):
 
 async def update_private_file(client, message, pre_message):
     handler_dict[message.chat.id] = False
-    if not message.media and message.text:
-        file_name = message.text
+    if not message.media and (file_name := message.text):
         fn = file_name.rsplit('.zip', 1)[0]
         if await aiopath.isfile(fn):
             await remove(fn)
@@ -534,8 +533,7 @@ async def update_private_file(client, message, pre_message):
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
         await message.delete()
-    elif message.document:
-        doc = message.document
+    elif doc := message.document:
         file_name = doc.file_name
         await message.download(file_name=f'/usr/src/app/{file_name}')
         if file_name == 'accounts.zip':

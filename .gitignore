@@ -1,5 +1,4 @@
 config.env
-*auth_token.txt
 *.pyc
 data*
 .vscode
@@ -16,4 +15,3 @@ downloads
 bot.session
 user.session
 terabox.txt
-
