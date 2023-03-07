@@ -13,7 +13,7 @@ from natsort import natsorted
 from aioshutil import copy
 
 from bot import config_dict, user_data, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
-from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_document_type, clean_unwanted
+from bot.helper.ext_utils.fs_utils import take_ss, get_media_info, get_document_type, clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, sync_to_async
 
 LOGGER = getLogger(__name__)
@@ -91,24 +91,28 @@ class TgUploader:
         else:
             cap_mono = f"<code>{file_}</code>"
         if len(file_) > 60:
-            ntsplit = file_.rsplit('.', 2)
-            if len(ntsplit) == 1:
-                return cap_mono
-            elif len(ntsplit[1]) >= 60 or len(ntsplit) == 2:
-                ntsplit = file_.rsplit('.', 1)
-                ext = ntsplit[1]
+            if is_archive(file_):
+                name = get_base_name(file_)
+                ext = file_.split(name, 1)[1]
+            elif match := re_match(r'.+(?=\..+\.0*\d+$)|.+(?=\.part\d+\..+)', file_):
+                name = match.group(0)
+                ext = file_.split(name, 1)[1]
+            elif len(fsplit := file_.rsplit('.', 1)) > 1:
+                name = fsplit[0]
+                ext = f'.{fsplit[1]}'
             else:
-                ext = f"{ntsplit[1]}.{ntsplit[2]}"
+                name = file_
+                ext = ''
             extn = len(ext)
             remain = 60 - extn
-            name = ntsplit[0][:remain]
+            name = name[:remain]
             if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                 dirpath = f'{dirpath}/copied_mltb'
                 await makedirs(dirpath, exist_ok=True)
-                new_path = ospath.join(dirpath, f"{name}.{ext}")
+                new_path = ospath.join(dirpath, f"{name}{ext}")
                 self.__up_path = await copy(self.__up_path, new_path)
             else:
-                new_path = ospath.join(dirpath, f"{name}.{ext}")
+                new_path = ospath.join(dirpath, f"{name}{ext}")
                 await aiorename(self.__up_path, new_path)
                 self.__up_path = new_path
         return cap_mono
