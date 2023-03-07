@@ -31,34 +31,34 @@ async def __onDownloadStarted(api, gid):
         return
     else:
         LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
-    try:
-        if config_dict['STOP_DUPLICATE']:
-            await sleep(1)
-            if dl := await getDownloadByGid(gid):
-                listener = dl.listener()
-                if listener.isLeech or listener.select:
-                    return
-                download = await sync_to_async(api.get_download, gid)
-                if not download.is_torrent:
-                    await sleep(3)
-                    download = download.live
-                LOGGER.info('Checking File/Folder if already in Drive...')
-                sname = download.name
-                if listener.isZip:
-                    sname = f"{sname}.zip"
-                elif listener.extract:
-                    try:
-                        sname = get_base_name(sname)
-                    except:
-                        sname = None
-                if sname is not None:
-                    smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
-                    if smsg:
-                        smsg = 'File/Folder already available in Drive.\nHere are the search results:'
-                        await listener.onDownloadError(smsg, button)
-                        await sync_to_async(api.remove, [download], force=True, files=True)
-    except Exception as e:
-        LOGGER.error(f"{e} onDownloadStart: {gid} check duplicate didn't pass")
+    if config_dict['STOP_DUPLICATE']:
+        await sleep(1)
+        if dl := await getDownloadByGid(gid):
+            if not hasattr(dl, 'listener'):
+                LOGGER.warning(f"onDownloadStart: {gid}. STOP_DUPLICATE didn't pass since download completed earlier!")
+                return
+            listener = dl.listener()
+            if listener.isLeech or listener.select:
+                return
+            download = await sync_to_async(api.get_download, gid)
+            if not download.is_torrent:
+                await sleep(3)
+                download = download.live
+            LOGGER.info('Checking File/Folder if already in Drive...')
+            sname = download.name
+            if listener.isZip:
+                sname = f"{sname}.zip"
+            elif listener.extract:
+                try:
+                    sname = get_base_name(sname)
+                except:
+                    sname = None
+            if sname is not None:
+                smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, sname, True)
+                if smsg:
+                    smsg = 'File/Folder already available in Drive.\nHere are the search results:'
+                    await listener.onDownloadError(smsg, button)
+                    await sync_to_async(api.remove, [download], force=True, files=True)
 
 @new_thread
 async def __onDownloadComplete(api, gid):

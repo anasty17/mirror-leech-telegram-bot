@@ -63,7 +63,7 @@ class YoutubeDLHelper:
                      'noprogress': True,
                      'allow_playlist_files': True,
                      'overwrites': True,
-                     'trim_file_name': 200}
+                     'trim_file_name': 220}
 
     @property
     def download_speed(self):
@@ -141,6 +141,7 @@ class YoutubeDLHelper:
                     raise e
                 return self.__onDownloadError(str(e))
         if 'entries' in result:
+            self.name = name
             for entry in result['entries']:
                 if not entry:
                     continue
@@ -150,9 +151,7 @@ class YoutubeDLHelper:
                     self.__size += entry['filesize']
                 if name == "":
                     outtmpl_ = '%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
-                    self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
-                else:
-                    self.name = name
+                    self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)               
         else:
             outtmpl_ ='%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
             realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
