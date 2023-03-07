@@ -11,18 +11,19 @@ for original authorship. """
 from base64 import standard_b64encode
 from http.cookiejar import MozillaCookieJar
 from json import loads
+from math import floor, pow
 from os import path
 from re import findall, match, search, sub
 from time import sleep
 from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
+
 from bs4 import BeautifulSoup
 from cfscrape import create_scraper
 from lk21 import Bypass
 from lxml import etree
-from requests import Session, request
 
-from bot import LOGGER, config_dict
+from bot import config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
@@ -634,19 +635,45 @@ def zippyshare(url):
         raise DirectDownloadLinkException('ERROR: Something went wrong!!, Try in your browser')
     if findall(r'>File does not exist on this server<', resp.text):
         raise DirectDownloadLinkException('ERROR: File does not exist on server!!, Try in your browser')
-    if not (key:= findall(r'\/d\/.*\/" \+ \((.*?)\).*(/.*)"', resp.text)):
-        raise DirectDownloadLinkException('ERROR: Key Not found')
-    try:
-        key = key[0]
-        two_parts = key[0].replace(' ', '')
-        filename = key[1]
-        two_parts = str(two_parts).split('+',1)
-        first = two_parts[0]
-        first = int(first.split('%')[0]) % int(first.split('%')[1])
-        second = two_parts[1]
-        second = int(second.split('%')[0]) % int(second.split('%')[1])
-    except:
-        raise DirectDownloadLinkException('ERROR: Cannot process with key')
+    pages = etree.HTML(resp.text).xpath("//script[contains(text(),'dlbutton')][3]/text()")
+    if not pages:
+        raise DirectDownloadLinkException('ERROR: Page not found!!')
+    js_script = pages[0]
+    uri1 = None
+    uri2 = None
+    method = ''
+    if omg:= findall(r"\.omg.=.(.*?);", js_script):
+        omg = omg[0]
+        method = f'omg = {omg}'
+        mtk = (eval(omg) * (int(omg.split("%")[0])%3)) + 18
+        uri1 = findall(r'"/(d/\S+)/"', js_script)
+        uri2 = findall(r'\/d.*?\+"/(\S+)";', js_script)
+    elif var_a := findall(r"var.a.=.(\d+)", js_script):
+        var_a = var_a[0]
+        method = f'var_a = {var_a}'
+        mtk = int(pow(int(var_a),3) + 3)
+        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
+        uri2 = findall(r"\+\"/(.*?)\"", js_script)
+    elif var_ab := findall(r"var.[ab].=.(\d+)", js_script):
+        a = var_ab[0]
+        b = var_ab[1]
+        method = f'a = {a}, b = {b}'
+        mtk = eval(f"{floor(int(a)/3) + int(a) % int(b)}")
+        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
+        uri2 = findall(r"\)\+\"/(.*?)\"", js_script)
+    elif unknown:= findall(r"\+\((.*?).\+", js_script):
+        method = f'unknown = {unknown[0]}'
+        mtk = eval(f"{unknown[0]}+ 11")
+        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
+        uri2 = findall(r"\)\+\"/(.*?)\"", js_script)
+    elif unknown1:= findall(r"\+.\((.*?)\).\+", js_script):
+        method = f'unknown1 = {unknown1[0]}'
+        mtk = eval(unknown1[0])
+        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
+        uri2 = findall(r"\+.\"/(.*?)\"", js_script)
+    else:
+        raise DirectDownloadLinkException("ERROR: Direct link not found")
+    if not any([uri1, uri2]):
+        raise DirectDownloadLinkException(f"ERROR: uri1 or uri2 not found with method {method}")
     domain = urlparse(url).hostname
-    file_id = url.split('/')[-2]
-    return f'https://{domain}/d/{file_id}/{first+second}{filename}'
+    return f"https://{domain}/{uri1[0]}/{mtk}/{uri2[0]}"
