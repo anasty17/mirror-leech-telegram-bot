@@ -6,3 +6,8 @@ class DirectDownloadLinkException(Exception):
 class NotSupportedExtractionArchive(Exception):
     """The archive format use is trying to extract is not supported"""
     pass
+
+
+class RssShutdownException(Exception):
+    """This exception should be raised when shutdown is called to stop the montior"""
+    pass
