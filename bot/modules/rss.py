@@ -119,7 +119,7 @@ async def rssSub(client, message, pre_event):
                 last_link = rss_d.entries[0]['link']
             msg += f"\nLink: <code>{last_link}</code>"
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
-            msg += f"\n<b>Filters:</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}<code/>\n\n"
+            msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}<code/>\n\n"
             async with rss_dict_lock:
                 if rss_dict.get(user_id, False):
                     rss_dict[user_id][title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
@@ -127,7 +127,7 @@ async def rssSub(client, message, pre_event):
                 else:
                     rss_dict[user_id] = {title: {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
                                      'inf': inf_lists, 'exf': exf_lists, 'paused': False, 'command': cmd, 'tag': tag}}
-            LOGGER.info(f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - esf: {exf}")
+            LOGGER.info(f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf}")
         except (IndexError, AttributeError) as e:
             emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
             await sendMessage(message, emsg + '\nError: ' + str(e))
@@ -566,7 +566,10 @@ async def rssMonitor():
                     async with session.get(data['link']) as res:
                         html = await res.text()
                 rss_d = feedparse(html)
-                last_link = rss_d.entries[0]['link']
+                try:
+                    last_link = rss_d.entries[0]['links'][1]['href']
+                except IndexError:
+                    last_link = rss_d.entries[0]['link']
                 last_title = rss_d.entries[0]['title']
                 if data['last_feed'] == last_link or data['last_title'] == last_title:
                     all_paused = False
