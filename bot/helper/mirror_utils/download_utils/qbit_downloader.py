@@ -164,7 +164,6 @@ async def __stop_duplicate(client, tor):
                  if qbmsg:
                      qbmsg = 'File/Folder is already available in Drive.\nHere are the search results:'
                      await __onDownloadError(qbmsg, client, tor, button)
-                     return
     except:
         pass
 

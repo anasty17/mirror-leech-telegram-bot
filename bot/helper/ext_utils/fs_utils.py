@@ -14,7 +14,7 @@ from sys import exit as sexit
 
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, IS_PREMIUM_USER, MAX_SPLIT_SIZE, config_dict, user_data
+from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, MAX_SPLIT_SIZE, config_dict, user_data
 from bot.helper.ext_utils.bot_utils import sync_to_async
 
 ARCH_EXT = [".tar.bz2", ".tar.gz", ".bz2", ".gz", ".tar.xz", ".tar", ".tbz2", ".tgz", ".lzma2",
@@ -93,7 +93,7 @@ async def clean_unwanted(path):
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
             await aiormtree(dirpath)
     for dirpath, subdir, files in await sync_to_async(walk, path, topdown=False):
-        if not listdir(dirpath):
+        if not await listdir(dirpath):
             await rmdir(dirpath)
 
 async def get_path_size(path):
