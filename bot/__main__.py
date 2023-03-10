@@ -57,7 +57,7 @@ async def start(client, message):
 '''
         await sendMessage(message, start_string, reply_markup)
     else:
-        await sendMessage(message, '<code>Oh sorry, you are not allowed to use pik4bot in private massage, please join the group to use this bot.</code>', reply_markup)
+        await sendMessage(message, '<code>Oh sorry, you are not allowed to use pik4bot in private massage, please join the</code> <b><a href="https://t.me/+VyejY_I48AYxZjg1">GROUP</a></b> <code>to use this bot.</code>', reply_markup)
 
 async def restart(client, message):
     restart_message = await sendMessage(message, "⏳ Restarting...")
