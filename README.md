@@ -55,7 +55,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Store bot settings
 - Store user settings including thumbnails in database
 - Store private files
-- Store RSS last recorded data
+- Store RSS data
 - Store incomplete task notifier to get incomplete task messages after restart
 ### Torrents Search
 - Torrent search support
@@ -201,8 +201,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### RSS
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Int`
-- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If using channel then add channel id. Add `-100` before channel id. `Int`
-  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` OR bot should be added in group and channel and used in group linked to that channel so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
+- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
+  - **RSS NOTE**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- bot should be added in both channel and group(linked to channel) so messages sent by the bot to channel will be forwarded to group without using `USER_STRING_SESSION`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
 ### MEGA
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`
@@ -260,7 +260,7 @@ Make sure you still mount the app folder and installed the docker from official 
 
 #### Build And Run The Docker Image Using Official Docker Commands
 
-- Start Docker daemon (SKIP if already running):
+- Start Docker daemon (SKIP if already running, mostly you don't need to do this):
 ```
 sudo dockerd
 ```
@@ -304,6 +304,10 @@ sudo docker-compose stop
 - To run the image:
 ```
 sudo docker-compose start
+```
+- To get latest log from already running image (after mounting the folder):
+```
+sudo docker-compose up
 ```
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports
 <p><a href="https://youtu.be/c8_TU1sPK08"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
@@ -387,7 +391,7 @@ help - All cmds with description
 - Using `d` perfix alone will lead to use global options for aria2c or qbittorrent.
 
 ### Qbittorrent
-- Global options: `MaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
+- Global options: `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can cancel manually.
   - **NOTE**: Don't change `MaxRatioAction`.
 
 ### Aria2c
@@ -528,5 +532,14 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 <p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
+
+USDT Address: TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f
+Network: TRC20
+
+BTC Addrese:
+17dkvxjqdc3yiaTs6dpjUB1TjV3tD7ScWe
+
+ETH Address:
+0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309
 
 -----
