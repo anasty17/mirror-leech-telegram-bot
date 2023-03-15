@@ -18,7 +18,7 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
-from .modules import authorize, list, cancel_mirror, mirror_status, mirror_leech, clone, ytdlp, rss, shell, eval, delete, count, users_settings, search, bt_select, bot_settings
+from .modules import authorize, list, cancel_mirror, mirror_leech, clone, status, ytdlp, rss, shell, eval, delete, count, users_settings, search, bt_select, bot_settings
 
 
 async def stats(client, message):
@@ -73,7 +73,7 @@ async def restart(client, message):
         QbInterval[0].cancel()
         QbInterval.clear()
     await sync_to_async(clean_all)
-    await (await create_subprocess_exec('pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg')).wait()
+    await (await create_subprocess_exec('pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')).wait()
     await (await create_subprocess_exec('python3', 'update.py')).wait()
     async with aiopen(".restartmsg", "w") as f:
         await f.truncate(0)

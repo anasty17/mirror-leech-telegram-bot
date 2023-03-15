@@ -33,15 +33,8 @@ class QbDownloadStatus:
         """
         return f'{round(self.__info.progress*100, 2)}%'
 
-    def size_raw(self):
-        """
-        Gets total size of the mirror file/folder
-        :return: total size of mirror
-        """
-        return self.__info.size
-
     def processed_bytes(self):
-        return self.__info.downloaded
+        return get_readable_file_size(self.__info.downloaded)
 
     def speed(self):
         self.__update()
@@ -114,3 +107,5 @@ class QbDownloadStatus:
             await sleep(0.3)
             await self.__listener.onDownloadError('Download stopped by user!')
             await sync_to_async(self.__client.torrents_delete, torrent_hashes=self.__hash, delete_files=True)
+            await sync_to_async(self.__client.torrents_delete_tags, tags=self.__info.tags)
+            await sync_to_async(self.__client.auth_log_out)

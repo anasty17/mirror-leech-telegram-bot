@@ -244,7 +244,7 @@ class MirrorLeechListener:
                 size = size - s
             LOGGER.info(f"Leech Name: {up_name}")
             tg = TgUploader(up_name, up_dir, size, self)
-            tg_upload_status = TgUploadStatus(tg, size, gid, self)
+            tg_upload_status = TgUploadStatus(tg, size, gid, self.message)
             async with download_dict_lock:
                 download_dict[self.uid] = tg_upload_status
             await update_all_messages()
@@ -254,7 +254,7 @@ class MirrorLeechListener:
             size = await get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
             drive = GoogleDriveHelper(up_name, up_dir, size, self)
-            upload_status = UploadStatus(drive, size, gid, self)
+            upload_status = UploadStatus(drive, size, gid, self.message)
             async with download_dict_lock:
                 download_dict[self.uid] = upload_status
             await update_all_messages()

@@ -17,7 +17,7 @@ async def shell(client, message):
         await sendMessage(message, 'No command to execute was given.')
         return
     cmd = cmd[1]
-    stdout, stderr, returncode = await cmd_exec(cmd, shell=True)
+    stdout, stderr, _ = await cmd_exec(cmd, shell=True)
     reply = ''
     if len(stdout) != 0:
         reply += f"*Stdout*\n<code>{stdout}</code>\n"

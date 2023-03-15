@@ -59,7 +59,7 @@ class MegaAppListener(MegaListener):
     def onRequestFinish(self, api, request, error):
         if str(error).lower() != "no error":
             self.error = error.copy()
-            LOGGER.error(self.error)
+            LOGGER.error(f'Mega onRequestFinishError: {self.error}')
             async_to_sync(self.event_setter)
             return
         request_type = request.getType()
@@ -195,7 +195,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {mname}")
             async with download_dict_lock:
-                download_dict[listener.uid] = QueueStatus(mname, size, gid, listener, 'Dl')
+                download_dict[listener.uid] = QueueStatus(mname, size, gid, listener.message, 'Dl')
             await listener.onDownloadStart()
             await sendStatusMessage(listener.message)
             await sync_to_async(api.removeListener, mega_listener)
@@ -203,7 +203,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
                 await sync_to_async(folder_api.removeListener, mega_listener)
             return
     async with download_dict_lock:
-        download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener)
+        download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener.message)
     async with queue_dict_lock:
         non_queued_dl.add(listener.uid)
     await makedirs(path, exist_ok=True)

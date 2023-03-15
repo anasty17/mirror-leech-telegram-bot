@@ -28,4 +28,3 @@ class CustomFilters:
         return bool(uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo'))
 
     sudo = create(sudo_user)
-

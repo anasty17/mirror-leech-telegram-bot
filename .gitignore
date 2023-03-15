@@ -9,9 +9,11 @@ data*
 log.txt
 accounts/*
 Thumbnails/*
+rclone/*
 list_drives.txt
 cookies.txt
 downloads
 bot.session
 user.session
 terabox.txt
+rclone.conf

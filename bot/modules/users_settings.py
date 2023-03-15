@@ -3,7 +3,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex, create
 from aiofiles import open as aiopen
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir
-from os import path as ospath
+from os import path as ospath, getcwd
 from PIL import Image
 from time import time
 from functools import partial
@@ -26,6 +26,7 @@ async def get_user_settings(from_user):
     name = from_user.mention
     buttons = ButtonMaker()
     thumbpath = f"Thumbnails/{user_id}.jpg"
+    rclone_path = f'rclone/{user_id}.conf'
     user_dict = user_data.get(user_id, {})
     if user_dict.get('as_doc', False) or 'as_doc' not in user_dict and config_dict['AS_DOCUMENT']:
         ltype = "DOCUMENT"
@@ -62,10 +63,14 @@ async def get_user_settings(from_user):
     buttons.ibutton("Thumbnail", f"userset {user_id} sthumb")
     thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
 
+    buttons.ibutton("Rclone", f"userset {user_id} rcc")
+    rccmsg = "Exists" if await aiopath.exists(rclone_path) else "Not Exists"
+
     buttons.ibutton("Close", f"userset {user_id} close")
     text = f"<u>Settings for {name}</u>\n"\
            f"Leech Type is <b>{ltype}</b>\n"\
            f"Custom Thumbnail <b>{thumbmsg}</b>\n"\
+           f"Rclone Config <b>{rccmsg}</b>\n"\
            f"Leech Split Size is <b>{split_size}</b>\n"\
            f"Equal Splits is <b>{equal_splits}</b>\n"\
            f"Media Group is <b>{media_group}</b>\n"\
@@ -104,7 +109,21 @@ async def set_thumb(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_thumb(user_id, des_dir)
+        await DbManger().update_doc(user_id, des_dir)
+
+async def add_rclone(client, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    path = f'{getcwd()}/rclone/'
+    if not await aiopath.isdir(path):
+        await mkdir(path)
+    des_dir = ospath.join(path, f'{user_id}.conf')
+    await message.download(file_name=des_dir)
+    update_user_ldata(user_id, 'rclone', f'rclone/{user_id}.conf')
+    await message.delete()
+    await update_user_settings(pre_event)
+    if DATABASE_URL:
+        await DbManger().update_user_doc(user_id, des_dir)
 
 async def leech_split_size(client, message, pre_event):
     user_id = message.from_user.id
@@ -116,13 +135,13 @@ async def leech_split_size(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
 
-async def event_handler(client, query, pfunc, photo=False):
+async def event_handler(client, query, pfunc, photo=False, document=False):
     user_id = query.from_user.id
     handler_dict[user_id] = True
     start_time = time()
     async def event_filter(_, __, event):
-        return bool(event.from_user.id == user_id and event.chat.id == query.message.chat.id and
-                    (event.text or event.photo and photo))
+        return bool(event.from_user.id or event.sender_chat.id == user_id and event.chat.id == query.message.chat.id and
+                    (event.text or event.photo and photo or event.document and document))
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[user_id]:
         await sleep(0.5)
@@ -137,7 +156,8 @@ async def edit_user_settings(client, query):
     user_id = from_user.id
     message = query.message
     data = query.data.split()
-    thumb_path = f"Thumbnails/{user_id}.jpg"
+    thumb_path = f'Thumbnails/{user_id}.jpg'
+    rclone_path = f'rclone/{user_id}.conf'
     user_dict = user_data.get(user_id, {})
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
@@ -160,7 +180,7 @@ async def edit_user_settings(client, query):
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManger().update_thumb(user_id)
+                await DbManger().update_user_doc(user_id)
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
@@ -205,7 +225,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         if user_dict.get('split_size', False):
             buttons.ibutton("Reset Split Size", f"userset {user_id} rlss")
         ES = config_dict['EQUAL_SPLITS']
-        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
+        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and ES:
             buttons.ibutton("Disable Equal Splits", f"userset {user_id} esplits")
         else:
             buttons.ibutton("Enable Equal Splits", f"userset {user_id} esplits")
@@ -239,6 +259,28 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
+    elif data[2] == 'rcc':
+        await query.answer()
+        buttons = ButtonMaker()
+        if await aiopath.exists(rclone_path):
+            buttons.ibutton("Delete rclone.conf", f"userset {user_id} drcc")
+        buttons.ibutton("Back", f"userset {user_id} back")
+        buttons.ibutton("Close", f"userset {user_id} close")
+        await editMessage(message, 'Send rclone.conf. Timeout: 60 sec', buttons.build_menu(1))
+        pfunc = partial(add_rclone, pre_event=query)
+        await event_handler(client, query, pfunc, document=True)
+    elif data[2] == 'drcc':
+        handler_dict[user_id] = False
+        if await aiopath.exists(rclone_path):
+            await query.answer()
+            await aioremove(rclone_path)
+            update_user_ldata(user_id, 'rclone', '')
+            await update_user_settings(query)
+            if DATABASE_URL:
+                await DbManger().update_user_doc(user_id)
+        else:
+            await query.answer("Old Settings", show_alert=True)
+            await update_user_settings(query)
     elif data[2] == 'back':
         handler_dict[user_id] = False
         await query.answer()

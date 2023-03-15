@@ -5,10 +5,11 @@ from functools import partial
 from asyncio import create_subprocess_exec, create_subprocess_shell, sleep
 from aiofiles.os import remove, rename, path as aiopath
 from aiofiles import open as aiopen
-from os import environ
+from os import environ, getcwd
 from dotenv import load_dotenv
 from time import time
 from io import BytesIO
+from aioshutil import rmtree as aiormtree
 
 from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER, bot
 from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages
@@ -153,7 +154,7 @@ async def load_config():
     DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
 
     STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
-    STATUS_LIMIT = '' if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+    STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
     RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
     RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
@@ -524,7 +525,7 @@ async def update_private_file(client, message, pre_message):
             await remove(fn)
         if fn == 'accounts':
             if await aiopath.exists('accounts'):
-                await (await create_subprocess_exec("rm", "-rf", "accounts")).wait()
+                await aiormtree('accounts')
             config_dict['USE_SERVICE_ACCOUNTS'] = False
             if DATABASE_URL:
                 await DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
@@ -535,10 +536,10 @@ async def update_private_file(client, message, pre_message):
         await message.delete()
     elif doc := message.document:
         file_name = doc.file_name
-        await message.download(file_name=f'/usr/src/app/{file_name}')
+        await message.download(file_name=f'{getcwd()}/{file_name}')
         if file_name == 'accounts.zip':
             if await aiopath.exists('accounts'):
-                await (await create_subprocess_exec("rm", "-rf", "accounts")).wait()
+                await aiormtree('accounts')
             await (await create_subprocess_exec("7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json")).wait()
             await (await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
         elif file_name == 'list_drives.txt':
@@ -587,8 +588,8 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     handler_dict[chat_id] = True
     start_time = time()
     async def event_filter(_, __, event):
-        return bool(event.from_user.id == query.from_user.id and event.chat.id == chat_id and
-                    (event.text or event.document and document))
+        return bool(event.from_user.id or event.sender_chat.id == query.from_user.id and event.chat.id == chat_id 
+                    and (event.text or event.document and document))
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[chat_id]:
         await sleep(0.5)
@@ -786,13 +787,13 @@ async def edit_bot_settings(client, query):
         filename = data[2].rsplit('.zip', 1)[0]
         if await aiopath.exists(filename):
             await (await create_subprocess_shell(f"git add -f {filename} \
-                                            && git commit -sm botsettings -q \
-                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")).wait()
+                                                   && git commit -sm botsettings -q \
+                                                   && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
         else:
             await (await create_subprocess_shell(f"git rm -r --cached {filename} \
-                                            && git commit -sm botsettings -q \
-                                            && git push origin {config_dict['UPSTREAM_BRANCH']} -q")).wait()
-        await message.reply_to_mssage.delete()
+                                                   && git commit -sm botsettings -q \
+                                                   && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
+        await message.reply_to_message.delete()
         await message.delete()
 
 async def bot_settings(client, message):

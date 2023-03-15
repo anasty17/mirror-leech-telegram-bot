@@ -3,8 +3,8 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
 from asyncio import sleep
 from re import split as re_split
+from aiohttp import ClientSession
 
-from requests import request
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -17,15 +17,16 @@ from bot.helper.listener import MirrorLeechListener
 listener_dict = {}
 
 
-def _mdisk(link, name):
+async def _mdisk(link, name):
     key = link.split('/')[-1]
-    resp = request('GET', f'https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}')
-    if resp.ok:
-        resp = resp.json()
-        link = resp['source']
-        if not name:
-            name = resp['filename']
-    return name, link
+    async with ClientSession() as session:
+        async with session.get(f'https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}') as resp:
+            if resp.status == 200:
+                resp_json = await resp.json()
+                link = resp_json['source']
+                if not name:
+                    name = resp_json['filename']
+            return name, link
 
 async def _auto_cancel(msg, task_id):
     await sleep(120)
@@ -46,13 +47,13 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     qual = ''
     select = False
     multi = 0
-    index = 1
     link = ''
     folder_name = ''
 
     args = mssg.split(maxsplit=3)
     args.pop(0)
     if len(args) > 0:
+        index = 1
         for x in args:
             x = x.strip()
             if x == 's':
@@ -158,7 +159,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
 
     listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir)
     if 'mdisk.me' in link:
-        name, link = await sync_to_async(_mdisk, link, name)
+        name, link = await _mdisk(link, name)
     ydl = YoutubeDLHelper(listener)
     try:
         result = await sync_to_async(ydl.extractMetaData, link, name, opt, True)

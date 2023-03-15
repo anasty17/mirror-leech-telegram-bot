@@ -13,7 +13,6 @@ class DbManger:
         self.__conn = None
         self.__connect()
 
-
     def __connect(self):
         try:
             self.__conn = AsyncIOMotorClient(DATABASE_URL)
@@ -36,17 +35,24 @@ class DbManger:
         # User Data
         if await self.__db.users.find_one():
             rows = self.__db.users.find({})
-            # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_ql, media_group, equal_splits, split_size}
+            # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_ql, media_group, equal_splits, split_size, rclone}
             async for row in rows:
                 uid = row['_id']
                 del row['_id']
-                path = f"Thumbnails/{uid}.jpg"
+                thumb_path = f'Thumbnails/{uid}.jpg'
+                rclone_path = f'rclone/{uid}.conf'
                 if row.get('thumb'):
                     if not await aiopath.exists('Thumbnails'):
                         await makedirs('Thumbnails')
-                    async with aiopen(path, 'wb+') as f:
+                    async with aiopen(thumb_path, 'wb+') as f:
                         await f.write(row['thumb'])
-                    row['thumb'] = path
+                    row['thumb'] = thumb_path
+                if row.get('rclone'):
+                    if not await aiopath.exists('rclone'):
+                        await makedirs('rclone')
+                    async with aiopen(rclone_path, 'wb+') as f:
+                        await f.write(row['rclone'])
+                    row['rclone'] = rclone_path
                 user_data[uid] = row
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
@@ -95,18 +101,21 @@ class DbManger:
         data = user_data[user_id]
         if data.get('thumb'):
             del data['thumb']
+        if data.get('rclone'):
+            del data['rclone']
         await self.__db.users.replace_one({'_id': user_id}, data, upsert=True)
         self.__conn.close
 
-    async def update_thumb(self, user_id, path=None):
+    async def update_user_doc(self, user_id, path=None):
         if self.__err:
             return
+        key = 'rclone' if path.endswith('.conf') else 'thumb'
         if path is not None:
-            async with aiopen(path, 'rb+') as image:
-                image_bin = await image.read()
+            async with aiopen(path, 'rb+') as doc:
+                doc_bin = await doc.read()
         else:
-            image_bin = ''
-        await self.__db.users.update_one({'_id': user_id}, {'$set': {'thumb': image_bin}}, upsert=True)
+            doc_bin = ''
+        await self.__db.users.update_one({'_id': user_id}, {'$set': {key: doc_bin}}, upsert=True)
         self.__conn.close
 
     async def rss_update_all(self):

@@ -48,13 +48,13 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {name}")
             async with download_dict_lock:
-                download_dict[listener.uid] = QueueStatus(name, size, gid, listener, 'Dl')
+                download_dict[listener.uid] = QueueStatus(name, size, gid, listener.message, 'Dl')
             await listener.onDownloadStart()
             await sendStatusMessage(listener.message)
             return
     drive = GoogleDriveHelper(name, path, size, listener)
     async with download_dict_lock:
-        download_dict[listener.uid] = GdDownloadStatus(drive, size, listener, gid)
+        download_dict[listener.uid] = GdDownloadStatus(drive, size, listener.message, gid)
     async with queue_dict_lock:
         non_queued_dl.add(listener.uid)
     if not from_queue:

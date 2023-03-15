@@ -7,7 +7,7 @@ from bot import bot, aria2, download_dict, download_dict_lock, OWNER_ID, user_da
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
-from bot.helper.ext_utils.bot_utils import async_to_sync, getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
 
 
 async def select(client, message):
@@ -110,7 +110,7 @@ async def get_confirm(client, query):
                     except:
                         pass
             try:
-                await async_to_sync(aria2.client.unpause, id_)
+                await sync_to_async(aria2.client.unpause, id_)
             except Exception as e:
                 LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)

@@ -159,7 +159,7 @@ class GoogleDriveHelper:
                 break
         return files
 
-    async def _progress(self):
+    async def __progress(self):
         if self.__status is not None:
             chunk_size = self.__status.total_size * self.__status.progress() - self._file_processed_bytes
             self._file_processed_bytes = self.__status.total_size * self.__status.progress()
@@ -198,7 +198,7 @@ class GoogleDriveHelper:
         file_path = f"{self.__path}/{file_name}"
         size = get_readable_file_size(self.__size)
         LOGGER.info(f"Uploading: {file_path}")
-        self.__updater = setInterval(self.__update_interval, self._progress)
+        self.__updater = setInterval(self.__update_interval, self.__progress)
         try:
             if ospath.isfile(file_path):
                 mime_type = get_mime_type(file_path)
@@ -722,7 +722,7 @@ class GoogleDriveHelper:
             self.__service = self.__authorize()
         self.__is_downloading = True
         file_id = self.__getIdFromUrl(link)
-        self.__updater = setInterval(self.__update_interval, self._progress)
+        self.__updater = setInterval(self.__update_interval, self.__progress)
         try:
             meta = self.__getFileMetadata(file_id)
             if meta.get("mimeType") == self.__G_DRIVE_DIR_MIME_TYPE:

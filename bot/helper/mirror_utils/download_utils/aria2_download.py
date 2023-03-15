@@ -25,7 +25,7 @@ async def __onDownloadStarted(api, gid):
                 while True:
                     await sleep(0.5)
                     if download.is_removed or download.followed_by_ids:
-                        await deleteMessage(listener.message, meta)
+                        await deleteMessage(meta)
                         break
                     download = download.live
         return
@@ -191,11 +191,17 @@ async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_
         LOGGER.info(f"Download Error: {error}")
         await sendMessage(listener.message, error)
         return
+    gid = download.gid
     async with download_dict_lock:
-        download_dict[listener.uid] = AriaDownloadStatus(download.gid, listener)
-        LOGGER.info(f"Aria2Download started: {download.gid}")
+        download_dict[listener.uid] = AriaDownloadStatus(gid, listener)
+        LOGGER.info(f"Aria2Download started: {gid}")
     await listener.onDownloadStart()
-    if not listener.select:
+    if not listener.select or not config_dict['BASE_URL']:
         await sendStatusMessage(listener.message)
+    elif download.is_torrent and not download.is_metadata:
+        await sync_to_async(aria2.client.force_pause, gid)
+        SBUTTONS = bt_selection_buttons(gid)
+        msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
+        await sendMessage(listener.message, msg, SBUTTONS)
 
 start_listener()

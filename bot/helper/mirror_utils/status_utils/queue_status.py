@@ -18,9 +18,6 @@ class QueueStatus:
     def name(self):
         return self.__name
 
-    def size_raw(self):
-        return self.__size
-
     def size(self):
         return get_readable_file_size(self.__size)
 
