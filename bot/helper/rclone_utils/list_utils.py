@@ -9,6 +9,7 @@ from functools import partial
 from json import loads
 from math import ceil
 
+from bot import LOGGER
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from ..ext_utils.bot_utils import cmd_exec, new_thread, get_readable_file_size, new_task
@@ -132,7 +133,8 @@ class RcloneHelper:
         cmd = ['rclone', 'lsjson', f'--config={self.config_path}', self.path]
         res, _, code = await cmd_exec(cmd)
         if code != 0:
-            self.path = 'Internal Error!'
+            LOGGER.error(f'While rclone listing. Path: {self.path}')
+            self.path = res
             self.event.set()
         else:
             self.path_list = sorted(loads(res), key=lambda x: not x['IsDir'])

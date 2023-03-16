@@ -15,6 +15,19 @@ from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.fs_utils import get_base_name
 
 
+async def getItemName(path):
+    pre_name = path.rsplit('/', 1)
+    if '' in pre_name:
+        pre_name.remove('')
+    if len(pre_name) > 1:
+        name = pre_name[1]
+    elif pre_name := path.split(':', 1):
+        if '' in pre_name:
+            pre_name.remove('')
+        name = pre_name[1] if len(pre_name) > 1 else pre_name[0]
+    return name
+
+
 class RcloneDownloadHelper:
     def __init__(self, listener):
         self.__listener = listener
@@ -53,15 +66,13 @@ class RcloneDownloadHelper:
             if data := re_findall(r'Transferred:\s+([\d.]+\s*\w+)\s+/\s+([\d.]+\s*\w+),\s+([\d.]+%)\s*,\s+([\d.]+\s*\w+/s),\s+ETA\s+([\dwdhms]+)', data):
                 self.__transferred_size, _, self.__percentage, self.__speed, self.__eta = data[0]
   
-    async def add_download(self, link, config_path, path, name, from_queue=False):
-        if not name:
-            pre_name = link.rsplit('/', 1)
-            name = pre_name[1] if len(pre_name) > 1 else link.split(':', 1)[1]
-        if not name:
-            name = link.strip(':')
+    async def add_download(self, rc_path, config_path, path, name, from_queue=False):
+        if not from_queue: 
+            if not name:
+                name = await getItemName(rc_path)
+            path += name
         self.name = name
-        path += name
-        cmd = ['rclone', 'size', '--json', f'--config={config_path}', link]
+        cmd = ['rclone', 'size', '--json', f'--config={config_path}', rc_path]
         res = (await cmd_exec(cmd))[0]
         try:
             rdict = loads(res)
@@ -94,7 +105,7 @@ class RcloneDownloadHelper:
                 up = len(non_queued_up)
                 if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
                     added_to_queue = True
-                    queued_dl[self.__listener.uid] = ['rcd', link, config_path, path, name, self.__listener]
+                    queued_dl[self.__listener.uid] = ['rcd', rc_path, config_path, path, name, self.__listener]
             if added_to_queue:
                 LOGGER.info(f"Added to Queue/Download: {name}")
                 async with download_dict_lock:
@@ -109,11 +120,11 @@ class RcloneDownloadHelper:
         if not from_queue:
             await self.__listener.onDownloadStart()
             await sendStatusMessage(self.__listener.message)
-            LOGGER.info(f"Download with rclone: {link}")
+            LOGGER.info(f"Download with rclone: {rc_path}")
         else:
-            LOGGER.info(f'Start Queued Download with rclone: {link}')
+            LOGGER.info(f'Start Queued Download with rclone: {rc_path}')
         ext = ','.join([f'*.{ext}' for ext in GLOBAL_EXTENSION_FILTER])
-        cmd = ['rclone', 'copy', f'--config={config_path}', '-P', link, path, '--exclude', ext]
+        cmd = ['rclone', 'copy', f'--config={config_path}', '-P', rc_path, path, '--exclude', ext]
         self.__proc = await create_subprocess_exec(*cmd, stdout=PIPE)
         self.__progress()
         await self.__proc.wait()
