@@ -195,7 +195,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {mname}")
             async with download_dict_lock:
-                download_dict[listener.uid] = QueueStatus(mname, size, gid, listener.message, 'Dl')
+                download_dict[listener.uid] = QueueStatus(mname, size, gid, listener, 'Dl')
             await listener.onDownloadStart()
             await sendStatusMessage(listener.message)
             await sync_to_async(api.removeListener, mega_listener)

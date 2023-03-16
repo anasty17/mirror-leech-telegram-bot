@@ -48,7 +48,7 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {name}")
             async with download_dict_lock:
-                download_dict[listener.uid] = QueueStatus(name, size, gid, listener.message, 'Dl')
+                download_dict[listener.uid] = QueueStatus(name, size, gid, listener, 'Dl')
             await listener.onDownloadStart()
             await sendStatusMessage(listener.message)
             return

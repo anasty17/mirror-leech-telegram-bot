@@ -98,7 +98,7 @@ class RcloneDownloadHelper:
             if added_to_queue:
                 LOGGER.info(f"Added to Queue/Download: {name}")
                 async with download_dict_lock:
-                    download_dict[self.__listener.uid] = QueueStatus(name, self.size, self.gid, self.__listener.message, 'Dl')
+                    download_dict[self.__listener.uid] = QueueStatus(name, self.size, self.gid, self.__listener, 'Dl')
                 await self.__listener.onDownloadStart()
                 await sendStatusMessage(self.__listener.message)
                 return
