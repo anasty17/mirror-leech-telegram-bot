@@ -109,7 +109,7 @@ async def set_thumb(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_doc(user_id, des_dir)
+        await DbManger().update_user_doc(user_id, des_dir)
 
 async def add_rclone(client, message, pre_event):
     user_id = message.from_user.id
@@ -140,8 +140,14 @@ async def event_handler(client, query, pfunc, photo=False, document=False):
     handler_dict[user_id] = True
     start_time = time()
     async def event_filter(_, __, event):
-        return bool(event.from_user.id or event.sender_chat.id == user_id and event.chat.id == query.message.chat.id and
-                    (event.text or event.photo and photo or event.document and document))
+        if photo:
+            mtype = event.photo
+        elif document:
+            mtype = event.document
+        else:
+            mtype = event.text
+        user = event.from_user or event.sender_chat
+        return bool(user.id == user_id and event.chat.id == query.message.chat.id and mtype)
     handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[user_id]:
         await sleep(0.5)
