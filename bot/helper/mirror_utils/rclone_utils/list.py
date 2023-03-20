@@ -168,7 +168,7 @@ class RcloneList:
             self.event.set()
             return
         result = loads(res)
-        if len(result) == 0 and itype != self.item_type and self.list_config == 'rcd':
+        if len(result) == 0 and itype != self.item_type and self.list_status == 'rcd':
             itype = '--dirs-only' if self.item_type == '--files-only' else '--files-only'
             self.item_type = itype
             return await self.get_path(itype)
