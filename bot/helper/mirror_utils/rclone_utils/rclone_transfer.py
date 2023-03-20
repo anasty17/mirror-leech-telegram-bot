@@ -59,7 +59,7 @@ class RcloneTransferHelper:
     async def add_download(self, rc_path, config_path, path, name, from_queue=False):
         if not from_queue: 
             if not name:
-                name = await self.__getItemName(rc_path)
+                name = await self.__getItemName(rc_path.strip('/'))
             path += name
         self.name = name
         cmd = ['rclone', 'size', '--fast-list', '--json', '--config', config_path, rc_path]
@@ -134,7 +134,7 @@ class RcloneTransferHelper:
         async with download_dict_lock:
             download_dict[self.__listener.uid] = RcloneStatus(self, self.__listener.message, 'up')
         await update_all_messages()
-        rc_path = self.__listener.upload or config_dict['RCLONE_PATH'].lower()
+        rc_path = (self.__listener.upload or config_dict['RCLONE_PATH']).strip('/')
         if rc_path == 'rc':
             rc_path = config_dict['RCLONE_PATH']
         if rc_path.startswith('mrcc:'):

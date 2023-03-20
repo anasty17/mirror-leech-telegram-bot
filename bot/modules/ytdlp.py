@@ -156,6 +156,8 @@ You can add tuple and dict also. Use double quotes inside dict.
 You can directly add the upload path. up: remote:dir/subdir
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
+If you want to add path manually from your config add <code>mrcc:</code> before the path without space
+<code>/cmd</code> link up: <code>mrcc:</code>main:/dump
 
 <b>Rclone Flags</b>:
 <code>/cmd</code> link up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
