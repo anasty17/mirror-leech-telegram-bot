@@ -6,19 +6,25 @@ from configparser import ConfigParser
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram.filters import regex, user
 from functools import partial
-from json import loads
 from math import ceil
+from json import loads
+from time import time
 
 from bot import LOGGER
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
-from ..ext_utils.bot_utils import cmd_exec, new_thread, get_readable_file_size, new_task
+from bot.helper.ext_utils.bot_utils import cmd_exec, new_thread, get_readable_file_size, new_task, get_readable_time
 
 LIST_LIMIT = 6
+TIMEOUT = 240
+
 
 @new_task
 async def path_updates(client, query, obj):
     await query.answer()
+    if obj.query_proc:
+        return
+    obj.query_proc = True
     message = query.message
     data = query.data.split()
     if data[1] == 'pre':
@@ -28,7 +34,7 @@ async def path_updates(client, query, obj):
         obj.iter_start += LIST_LIMIT * obj.page_step
         await obj.get_path_buttons()
     elif data[1] == 'cancel':
-        obj.path = ''
+        obj.path = 'Task has been cancelled!'
         obj.event.set()
         await message.delete()
     elif data[1] == 'back':
@@ -37,11 +43,11 @@ async def path_updates(client, query, obj):
         else:
             await obj.back_from_path()
     elif data[1] == 're':
-        obj.path = data[2]
+        obj.path += data[2]
         await obj.get_path()
     elif data[1] == 'pa':
         index = int(data[3])
-        obj.path = f"{obj.path}{obj.path_list[index]['Path']}" if obj.path.endswith(':') else f"{obj.path}/{obj.path_list[index]['Path']}"
+        obj.path += f"/{obj.path_list[index]['Path']}"
         if data[2] == 'fo':
             await obj.get_path()
         else:
@@ -53,23 +59,28 @@ async def path_updates(client, query, obj):
         obj.page_step = int(data[2])
         await obj.get_path_buttons()
     elif data[1] == 'root':
-        path = obj.path.split(':', 1)
-        if '' in path:
-            path.remove('')
+        path = obj.path.split('/', 1)
         if len(path) > 1:
-            obj.path = f"{path[0]}:"
+            obj.path = path[0]
             await obj.get_path()
+    elif data[1] == 'itype':
+        obj.item_type = data[2]
+        await obj.get_path()
     elif data[1] == 'cur':
         await message.delete()
         obj.event.set()
     elif data[1] == 'owner':
         obj.config_path = 'rclone.conf'
+        obj.up_path = ''
         await obj.list_remotes()
     elif data[1] == 'user':
         obj.config_path = obj.user_rcc_path
+        obj.path = 'mrcc:'
         await obj.list_remotes()
+    obj.query_proc = False
 
-class RcloneHelper:
+
+class RcloneList:
     def __init__(self, client, message):
         self.__user_id = message.from_user.id
         self.__rc_user = False
@@ -78,10 +89,14 @@ class RcloneHelper:
         self.__message = message
         self.__sections = []
         self.__reply_to = None
+        self.__time = time()
+        self.query_proc = False
+        self.item_type = '--dirs-only'
         self.event = Event()
         self.user_rcc_path = f'rclone/{self.__user_id}.conf'
         self.config_path = ''
         self.path = ''
+        self.list_status = ''
         self.path_list = []
         self.iter_start = 0
         self.page_step = 1
@@ -93,7 +108,7 @@ class RcloneHelper:
         try:
             await wait_for(self.event.wait(), timeout=240)
         except:
-            self.path = ''
+            self.path = 'Timeout. Task has been cancelled!'
             self.event.set()
         self.__client.remove_handler(*handler)
 
@@ -102,44 +117,64 @@ class RcloneHelper:
         pages = ceil(items_no/LIST_LIMIT)
         if items_no <= self.iter_start:
             self.iter_start = 0
-        elif self.iter_start < 0:
+        elif self.iter_start < 0 or self.iter_start > items_no:
             self.iter_start = LIST_LIMIT * (pages - 1)
         page = (self.iter_start/LIST_LIMIT) + 1 if self.iter_start != 0 else 1
         buttons = ButtonMaker()
         for index, idict in enumerate(self.path_list[self.iter_start:LIST_LIMIT+self.iter_start]):
             orig_index = index + self.iter_start
-            ptype = 'fo' if idict['IsDir'] else 'fi'
-            name = idict['Path'] if idict['IsDir'] else f"[{get_readable_file_size(idict['Size'])}] {idict['Path']}"
+            if idict['IsDir']:
+                ptype = 'fo'
+                name = idict['Path']
+            else:
+                ptype = 'fi'
+                name = f"[{get_readable_file_size(idict['Size'])}] {idict['Path']}"
             buttons.ibutton(name, f'rcq pa {ptype} {orig_index}')
         if items_no > LIST_LIMIT:
-            for i in [1, 2, 4, 6, 8, 10]:
+            for i in [1, 2, 4, 6, 10, 30, 50, 100]:
                 buttons.ibutton(i, f'rcq ps {i}', position='header')
             buttons.ibutton('Previous', 'rcq pre', position='footer')
             buttons.ibutton('Next', 'rcq nex', position='footer')
+        if self.list_status == 'rcd':
+            if self.item_type == '--dirs-only':
+                buttons.ibutton('Files', 'rcq itype --files-only', position='footer')
+            else:
+                buttons.ibutton('Folders', 'rcq itype --dirs-only', position='footer')
         buttons.ibutton('Choose Current Path', 'rcq cur', position='footer')
         buttons.ibutton('Back', 'rcq back pa', position='footer')
         if len(self.path.split(':', 1)) > 1 and len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
             buttons.ibutton('Back To Root', 'rcq root', position='footer')
         buttons.ibutton('Cancel', 'rcq cancel', position='footer')
         button = buttons.build_menu(f_cols=2)
-        msg = f'Choose Path:\n\nItems: {items_no} | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
-        msg += f'\n\nCurrent Path: <code>{self.path}</code>'
+        msg = 'Choose Path:' + ('\nTransfer Type: <i>Download</i>' if self.list_status == 'rcd' else '\nTransfer Type: <i>Upload</i>')
+        msg += f'\n\nItems: {items_no} | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
+        msg += f'\n\nItem Type: {self.item_type}\nConfig Path: {self.config_path}\nCurrent Path: <code>{self.path}</code>'
+        msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
         if self.__reply_to is None:
             self.__reply_to = await sendMessage(self.__message, msg, button)
         else:
             await editMessage(self.__reply_to, msg, button)
 
-    async def get_path(self):
-        cmd = ['rclone', 'lsjson', f'--config={self.config_path}', self.path]
-        res, _, code = await cmd_exec(cmd)
-        if code != 0:
-            LOGGER.error(f'While rclone listing. Path: {self.path}')
-            self.path = res
+    async def get_path(self, itype=''):
+        if itype:
+            self.item_type == itype
+        elif self.list_status == 'rcu':
+            self.item_type == '--dirs-only'
+        cmd = ['rclone', 'lsjson', self.item_type, '--fast-list', '--no-mimetype', '--no-modtime', '--config', self.config_path, self.path]
+        res, err, code = await cmd_exec(cmd)
+        if code not in [0, -9]:
+            LOGGER.error(f'While rclone listing. Path: {self.path}. Stderr: {err}')
+            self.path = err
             self.event.set()
-        else:
-            self.path_list = sorted(loads(res), key=lambda x: not x['IsDir'])
-            self.iter_start = 0
-            await self.get_path_buttons()
+            return
+        result = loads(res)
+        if len(result) == 0 and itype != self.item_type and self.list_config == 'rcd':
+            itype = '--dirs-only' if self.item_type == '--files-only' else '--files-only'
+            self.item_type = itype
+            return await self.get_path(itype)
+        self.path_list = sorted(result, key=lambda x: x["Path"])
+        self.iter_start = 0
+        await self.get_path_buttons()
 
     async def list_remotes(self):
         config = ConfigParser()
@@ -151,57 +186,62 @@ class RcloneHelper:
             self.path = f'{self.__sections[0]}:'
             await self.get_path()
         else:
+            msg = 'Choose Rclone remote:' + ('\nTransfer Type: <i>Download</i>' if self.list_status == 'rcd' else '\nTransfer Type: <i>Upload</i>')
+            if self.config_path == 'rclone.conf':
+                msg += f'\nConfig Path: Owner'
+            else:
+                msg += f'\nConfig Path: User'
+            msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
             buttons = ButtonMaker()
             for remote in self.__sections:
                 buttons.ibutton(remote, f'rcq re {remote}:')
             if self.__rc_user and self.__rc_owner:
-                buttons.ibutton('Back', 'rcq back re')
-            buttons.ibutton('Cancel', 'rcq cancel')
+                buttons.ibutton('Back', 'rcq back re', position='footer')
+            buttons.ibutton('Cancel', 'rcq cancel', position='footer')
             button = buttons.build_menu(2)
             if self.__reply_to is None:
-                self.__reply_to = await sendMessage(self.__message, 'Choose Rclone remote:', button)
+                self.__reply_to = await sendMessage(self.__message, msg, button)
             else:
-                await editMessage(self.__reply_to, 'Choose Rclone remote:', button)
+                await editMessage(self.__reply_to, msg, button)
 
     async def list_config(self):
-        if not self.__rc_owner and not self.__rc_user:
-            return None
-        elif self.__rc_user and self.__rc_owner:
+        if self.__rc_user and self.__rc_owner:
+            msg = 'Choose Rclone config:' + ('\nTransfer Type: Download' if self.list_status == 'rcd' else '\nTransfer Type: Upload')
+            msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
             buttons = ButtonMaker()
             buttons.ibutton('Owner Config', 'rcq owner')
             buttons.ibutton('My Config', 'rcq user')
             buttons.ibutton('Cancel', 'rcq cancel')
             button = buttons.build_menu(2)
             if self.__reply_to is None:
-                self.__reply_to = await sendMessage(self.__message, 'Choose Rclone config:', button)
+                self.__reply_to = await sendMessage(self.__message, msg, button)
             else:
-                await editMessage(self.__reply_to, 'Choose Rclone config:', button)
+                await editMessage(self.__reply_to, msg, button)
         else:
             self.config_path = 'rclone.conf' if self.__rc_owner else self.user_rcc_path
             await self.list_remotes()
-        return ''
     
     async def back_from_path(self):
-        re_path = self.path.split(':', 1)
-        if '' in re_path:
-            re_path.remove('')
-        if len(re_path) > 1:
             path = self.path.rsplit('/', 1)
-            self.path = path[0] if len(path) > 1 else f'{re_path[0]}:'
-            await self.get_path()
-        elif len(self.__sections) > 1:
-            await self.list_remotes()
-        else:
-            await self.list_config()
+            if len(path) > 1:
+                self.path = path[0]
+                await self.get_path()
+            elif len(self.__sections) > 1:
+                await self.list_remotes()
+            else:
+                await self.list_config()
 
-    async def get_rclone_path(self):
+    async def get_rclone_path(self, status):
+        self.list_status = status
         future = self.__event_handler()
         self.__rc_user = await aiopath.exists(self.user_rcc_path)
         self.__rc_owner = await aiopath.exists('rclone.conf')
-        path = await self.list_config()
-        if path is None:
+        if not self.__rc_owner and not self.__rc_user:
             self.event.set()
-            return None, None
+            return 'Rclone Config not Exists!'
+        await self.list_config()  
         await wrap_future(future)
         await self.__reply_to.delete()
-        return self.config_path, self.path
+        if self.config_path != 'rclone.conf':
+            self.path = f'mrcc:{self.path}'
+        return self.path

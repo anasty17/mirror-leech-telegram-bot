@@ -15,10 +15,10 @@ from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_excep
 
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot import config_dict, DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, GLOBAL_EXTENSION_FILTER
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, setInterval
+from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.ext_utils.bot_utils import async_to_sync
+from bot.helper.ext_utils.bot_utils import async_to_sync, get_readable_file_size
 
 LOGGER = getLogger(__name__)
 getLogger('googleapiclient.discovery').setLevel(ERROR)
@@ -115,7 +115,7 @@ class GoogleDriveHelper:
         self.__service = self.__authorize()
 
     @staticmethod
-    def __getIdFromUrl(link: str):
+    def __getIdFromUrl(link):
         if "folders" in link or "file" in link:
             regex = r"https:\/\/drive\.google\.com\/(?:drive(.*?)\/folders\/|file(.*?)?\/d\/)([-\w]+)"
             res = re_search(regex,link)
@@ -195,26 +195,25 @@ class GoogleDriveHelper:
     def upload(self, file_name):
         self.__service = self.__authorize()
         self.__is_uploading = True
-        file_path = f"{self.__path}/{file_name}"
-        size = get_readable_file_size(self.__size)
-        LOGGER.info(f"Uploading: {file_path}")
+        item_path = f"{self.__path}/{file_name}"
+        LOGGER.info(f"Uploading: {item_path}")
         self.__updater = setInterval(self.__update_interval, self.__progress)
         try:
-            if ospath.isfile(file_path):
-                mime_type = get_mime_type(file_path)
-                link = self.__upload_file(file_path, file_name, mime_type, config_dict['GDRIVE_ID'])
+            if ospath.isfile(item_path):
+                mime_type = get_mime_type(item_path)
+                link = self.__upload_file(item_path, file_name, mime_type, config_dict['GDRIVE_ID'], is_dir=False)
                 if self.__is_cancelled:
                     return
                 if link is None:
                     raise Exception('Upload has been manually cancelled')
-                LOGGER.info(f"Uploaded To G-Drive: {file_path}")
+                LOGGER.info(f"Uploaded To G-Drive: {item_path}")
             else:
                 mime_type = 'Folder'
                 dir_id = self.__create_directory(ospath.basename(ospath.abspath(file_name)), config_dict['GDRIVE_ID'])
-                result = self.__upload_dir(file_path, dir_id)
+                result = self.__upload_dir(item_path, dir_id)
                 if result is None:
                     raise Exception('Upload has been manually cancelled!')
-                link = f"https://drive.google.com/folderview?id={dir_id}"
+                link = self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
                 if self.__is_cancelled:
                     return
                 LOGGER.info(f"Uploaded To G-Drive: {file_name}")
@@ -229,13 +228,13 @@ class GoogleDriveHelper:
             if self.__is_cancelled and not self.__is_errored:
                 if mime_type == 'Folder':
                     LOGGER.info("Deleting uploaded data from Drive...")
-                    link = f"https://drive.google.com/folderview?id={dir_id}"
+                    link = self.__G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
                     self.deletefile(link)
                 return
             elif self.__is_errored:
                 return
-        async_to_sync(self.__listener.onUploadComplete, link, size, self.__total_files,
-                         self.__total_folders, mime_type, self.name)
+        async_to_sync(self.__listener.onUploadComplete, link, self.__size, self.__total_files,
+                         self.__total_folders, mime_type, file_name)
 
     def __upload_dir(self, input_directory, dest_id):
         list_dirs = listdir(input_directory)
@@ -256,6 +255,7 @@ class GoogleDriveHelper:
                 self.__total_files += 1
                 new_id = dest_id
             else:
+                osremove(current_file_name)
                 new_id = 'filter'
             if self.__is_cancelled:
                 break
@@ -280,7 +280,7 @@ class GoogleDriveHelper:
 
     @retry(wait=wait_exponential(multiplier=2, min=3, max=6), stop=stop_after_attempt(3),
            retry=(retry_if_exception_type(Exception)))
-    def __upload_file(self, file_path, file_name, mime_type, dest_id):
+    def __upload_file(self, file_path, file_name, mime_type, dest_id, is_dir=True):
         # File body description
         file_metadata = {
             'name': file_name,
@@ -345,8 +345,10 @@ class GoogleDriveHelper:
         if not config_dict['IS_TEAM_DRIVE']:
             self.__set_permission(response['id'])
         # Define file instance and get url for download
-        drive_file = self.__service.files().get(fileId=response['id'], supportsAllDrives=True).execute()
-        return self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+        if not is_dir:
+            drive_file = self.__service.files().get(fileId=response['id'], supportsAllDrives=True).execute()
+            return self.__G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get('id'))
+        return
 
     def clone(self, link):
         if self.__service is None:

@@ -67,6 +67,18 @@ async def load_config():
     if len(GDRIVE_ID) == 0:
         GDRIVE_ID = ''
 
+    RCLONE_PATH = environ.get('RCLONE_PATH', '')
+    if len(RCLONE_PATH) == 0:
+        RCLONE_PATH = ''
+
+    DEFAULT_UPLOAD = environ.get('DEFAULT_UPLOAD', '')
+    if DEFAULT_UPLOAD != 'rc':
+        DEFAULT_UPLOAD = 'gd'
+
+    RCLONE_FLAGS = environ.get('RCLONE_FLAGS', '')
+    if len(RCLONE_FLAGS) == 0:
+        RCLONE_FLAGS = ''
+
     AUTHORIZED_CHATS = environ.get('AUTHORIZED_CHATS', '')
     if len(AUTHORIZED_CHATS) != 0:
         aid = AUTHORIZED_CHATS.split()
@@ -85,6 +97,8 @@ async def load_config():
         GLOBAL_EXTENSION_FILTER.clear()
         GLOBAL_EXTENSION_FILTER.append('.aria2')
         for x in fx:
+            if x.strip().startswith('.'):
+                x = x.lstrip('.')
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
     MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
@@ -275,6 +289,7 @@ async def load_config():
                         'BOT_TOKEN': BOT_TOKEN,
                         'CMD_SUFFIX': CMD_SUFFIX,
                         'DATABASE_URL': DATABASE_URL,
+                        'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
                         'DOWNLOAD_DIR': DOWNLOAD_DIR,
                         'DUMP_CHAT': DUMP_CHAT,
                         'EQUAL_SPLITS': EQUAL_SPLITS,
@@ -293,6 +308,8 @@ async def load_config():
                         'QUEUE_ALL': QUEUE_ALL,
                         'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
                         'QUEUE_UPLOAD': QUEUE_UPLOAD,
+                        'RCLONE_FLAGS': RCLONE_FLAGS,
+                        'RCLONE_PATH': RCLONE_PATH,
                         'RSS_CHAT_ID': RSS_CHAT_ID,
                         'RSS_DELAY': RSS_DELAY,
                         'SEARCH_API_LINK': SEARCH_API_LINK,
@@ -451,6 +468,8 @@ async def edit_variable(client, message, pre_message, key):
         GLOBAL_EXTENSION_FILTER.clear()
         GLOBAL_EXTENSION_FILTER.append('.aria2')
         for x in fx:
+            if x.strip().startswith('.'):
+                x = x.lstrip('.')
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
     elif key == 'GDRIVE_ID':
         if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':

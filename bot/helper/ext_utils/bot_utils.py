@@ -240,7 +240,7 @@ def is_mega_link(url):
     return "mega.nz" in url or "mega.co.nz" in url
 
 def is_rclone_path(path):
-    return bool(re_match(r'^(mrcc:)?(?!magnet:)(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).+$|^rcd$', path))
+    return bool(re_match(r'^(mrcc:)?(?!magnet:)(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$', path))
 
 def get_mega_link_type(url):
     if "folder" in url:

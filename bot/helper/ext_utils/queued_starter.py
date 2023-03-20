@@ -4,7 +4,7 @@ from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
-from bot.helper.mirror_utils.download_utils.rclone_downloader import RcloneDownloadHelper
+from bot.helper.mirror_utils.rclone_utils.rclone_transfer import RcloneTransferHelper
 
 
 def start_dl_from_queued(uid):
@@ -20,7 +20,7 @@ def start_dl_from_queued(uid):
         tg = TelegramDownloadHelper(dl[4])
         bot_loop.create_task(tg.add_download(dl[1], dl[2], dl[3], True))
     elif dl[0] == 'rcd':
-        rc = RcloneDownloadHelper(dl[5])
+        rc = RcloneTransferHelper(dl[5])
         bot_loop.create_task(rc.add_download(dl[1], dl[2], dl[3], dl[4], True))
     del queued_dl[uid]
 

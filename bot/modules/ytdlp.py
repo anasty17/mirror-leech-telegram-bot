@@ -8,8 +8,9 @@ from aiohttp import ClientSession
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path
 from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
+from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.listener import MirrorLeechListener
@@ -38,9 +39,6 @@ async def _auto_cancel(msg, task_id):
 
 @new_task
 async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
-    if not isLeech and not config_dict['GDRIVE_ID']:
-        await sendMessage(message, 'GDRIVE_ID not Provided!')
-        return
     mssg = message.text
     user_id = message.from_user.id
     msg_id = message.id
@@ -75,8 +73,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             args = mssg.split(maxsplit=index)
             if len(args) > index:
                 x = args[index].strip()
-                if not x.startswith(("n:", "pswd:", "opt:")):
-                    link = re_split(r" opt: | pswd: | n: ", x)[0].strip()
+                if not x.startswith(('n:', 'pswd:', 'up:', 'rcf:', 'opt:')):
+                    link = re_split(r' opt: | pswd: | n: | rcf: | up: ', x)[0].strip()
 
     @new_task
     async def __run_multi():
@@ -97,13 +95,20 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 
     name = mssg.split(' n: ', 1)
-    name = re_split(' pswd: | opt: ', name[1])[0].strip() if len(name) > 1 else ''
+    name = re_split(' pswd: | opt: | up: | rcf: ', name[1])[0].strip() if len(name) > 1 else ''
 
     pswd = mssg.split(' pswd: ', 1)
-    pswd = re_split(' n: | opt: ', pswd[1])[0] if len(pswd) > 1 else None
+    pswd = re_split(' n: | opt: | up: | rcf: ', pswd[1])[0] if len(pswd) > 1 else None
 
     opt = mssg.split(' opt: ', 1)
-    opt = re_split(' n: | pswd: ', opt[1])[0].strip() if len(opt) > 1 else ''
+    opt = re_split(' n: | pswd: | up: | rcf: ', opt[1])[0].strip() if len(opt) > 1 else ''
+
+    rcf = mssg.split(' rcf: ', 1)
+    rcf = re_split(' n: | pswd: | up: | opt: ', rcf[1])[0].strip() if len(rcf) > 1 else None
+
+    up = mssg.split(' up: ', 1)
+    up = re_split(' n: | pswd: | rcf: | opt: ', up[1])[0].strip() if len(up) > 1 else None
+
 
     if username := message.from_user.username:
         tag = f"@{username}"
@@ -146,6 +151,17 @@ Number and m:folder_name should be always before n:, pswd: and opt:
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
 
+<b>Rclone Upload</b>:
+<code>/cmd</code> link up: <code>rcl</code> (To select config, remote and path)
+You can directly add the upload path. up: remote:dir/subdir
+If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
+If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
+
+<b>Rclone Flags</b>:
+<code>/cmd</code> link up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
+This will override all other flags except --exclude
+Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
+
 <b>NOTES:</b>
 1. When use cmd by reply don't add any option in link msg! Always add them after cmd msg!
 2. Options (<b>s, m: and multi</b>) should be added randomly before link and before any other option.
@@ -157,7 +173,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await sendMessage(message, help_msg)
         return
 
-    listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir)
+    if up == 'rcl':
+        up = await RcloneList(client, message).get_rclone_path('rcu')
+        if not is_rclone_path(up):
+            await sendMessage(message, up)
+            return
+
+    listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upload=up)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
     ydl = YoutubeDLHelper(listener)

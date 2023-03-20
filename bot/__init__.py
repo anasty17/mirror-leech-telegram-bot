@@ -128,6 +128,18 @@ GDRIVE_ID = environ.get('GDRIVE_ID', '')
 if len(GDRIVE_ID) == 0:
     GDRIVE_ID = ''
 
+RCLONE_PATH = environ.get('RCLONE_PATH', '')
+if len(RCLONE_PATH) == 0:
+    RCLONE_PATH = ''
+
+RCLONE_FLAGS = environ.get('RCLONE_FLAGS', '')
+if len(RCLONE_FLAGS) == 0:
+    RCLONE_FLAGS = ''
+
+DEFAULT_UPLOAD = environ.get('DEFAULT_UPLOAD', '')
+if DEFAULT_UPLOAD != 'rc':
+    DEFAULT_UPLOAD = 'gd'
+
 DOWNLOAD_DIR = environ.get('DOWNLOAD_DIR', '')
 if len(DOWNLOAD_DIR) == 0:
     DOWNLOAD_DIR = '/usr/src/app/downloads/'
@@ -150,6 +162,8 @@ EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
 if len(EXTENSION_FILTER) > 0:
     fx = EXTENSION_FILTER.split()
     for x in fx:
+        if x.strip().startswith('.'):
+            x = x.lstrip('.')
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
 IS_PREMIUM_USER = False
@@ -299,6 +313,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'BOT_TOKEN': BOT_TOKEN,
                'CMD_SUFFIX': CMD_SUFFIX,
                'DATABASE_URL': DATABASE_URL,
+               'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
                'DOWNLOAD_DIR': DOWNLOAD_DIR,
                'DUMP_CHAT': DUMP_CHAT,
                'EQUAL_SPLITS': EQUAL_SPLITS,
@@ -317,6 +332,8 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'QUEUE_ALL': QUEUE_ALL,
                'QUEUE_DOWNLOAD': QUEUE_DOWNLOAD,
                'QUEUE_UPLOAD': QUEUE_UPLOAD,
+               'RCLONE_FLAGS': RCLONE_FLAGS,
+               'RCLONE_PATH': RCLONE_PATH,
                'RSS_CHAT_ID': RSS_CHAT_ID,
                'RSS_DELAY': RSS_DELAY,
                'SEARCH_API_LINK': SEARCH_API_LINK,
@@ -405,10 +422,7 @@ if not aria2_options:
     aria2_options = aria2.client.get_global_option()
     del aria2_options['dir']
 else:
-    a2c_glo = {}
-    for op in aria2c_global:
-        if op in aria2_options:
-            a2c_glo[op] = aria2_options[op]
+    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
     aria2.set_global_options(a2c_glo)
 
 qb_client = get_client()

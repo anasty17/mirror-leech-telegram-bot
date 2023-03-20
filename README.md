@@ -74,8 +74,9 @@ In each single file there is a major change from base code, it's almost totaly d
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
 ### Rclone
-- Download using rclone
+- Download and Upload using rclone
 - Ability to choose config, remote and path from list with buttons
+- Ability to set rclone flags
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
 - Switch from sync to async
@@ -163,15 +164,18 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 **2. Optional Fields**
 
-- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors. Required for `Google Drive` upload. `Str`
-- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive. Default is `False`. `Bool`
+- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors using gdrive tools. `Str`
+- `RCLONE_PATH`: Default rclone path to which you want to upload all the mirrors using rclone. `Str`
+- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `gd`. `Str`
+- `RCLONE_FLAGS`: key:value|key|key|key:value . Check here all [RcloneFlags](https://rclone.org/flags/). `Str`
+- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using gdrive tools. Default is `False`. `Bool`
 - `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
 - `STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
 - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Int`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not with gdrive tools. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. Default is `10`. **NOTE**: Recommended limit is `4` tasks. `Int`
 - `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
