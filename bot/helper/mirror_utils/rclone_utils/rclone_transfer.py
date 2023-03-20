@@ -168,7 +168,7 @@ class RcloneTransferHelper:
                 folders = 0
                 files = 1
             if remote_type == 'drive':
-                epath = rc_path.rsplit('/', 1)[0] if mime_type == 'Folder' else rc_path
+                epath = rc_path.rsplit('/', 1)[0] if mime_type == 'Folder' else f'{rc_path}/{self.name}'
                 cmd = ['rclone', 'lsjson', '--fast-list', '--no-mimetype', '--no-modtime', '--config', config_path, epath]
                 res, err, code = await cmd_exec(cmd)
                 if code == 0:
