@@ -153,7 +153,8 @@ class RcloneList:
                 buttons.ibutton('Files', 'rcq itype --files-only', position='footer')
             else:
                 buttons.ibutton('Folders', 'rcq itype --dirs-only', position='footer')
-        buttons.ibutton('Choose Current Path', 'rcq cur', position='footer')
+        if self.list_status == 'rcu' or len(self.path_list) > 0:
+            buttons.ibutton('Choose Current Path', 'rcq cur', position='footer')
         buttons.ibutton('Back', 'rcq back pa', position='footer')
         if len(self.path.split(':', 1)) > 1 and len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
             buttons.ibutton('Back To Root', 'rcq root', position='footer')
@@ -161,7 +162,9 @@ class RcloneList:
         button = buttons.build_menu(f_cols=2)
         msg = 'Choose Path:' + ('\nTransfer Type: <i>Download</i>' if self.list_status ==
                                 'rcd' else '\nTransfer Type: <i>Upload</i>')
-        msg += f'\n\nItems: {items_no} | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
+        msg += f'\n\nItems: {items_no}'
+        if items_no > LIST_LIMIT:
+            msg += f' | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
         msg += f'\n\nItem Type: {self.item_type}\nConfig Path: {self.config_path}\nCurrent Path: <code>{self.path}</code>'
         msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
         await self.__send_list_message(msg, button)
