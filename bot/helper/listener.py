@@ -275,6 +275,7 @@ class MirrorLeechListener:
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{get_readable_file_size(size)}"
+        LOGGER.info(f'Done Uploading {name}')
         if self.isLeech:
             msg += f'\n<b>Total Files: </b>{folders}'
             if typ != 0:
@@ -305,10 +306,12 @@ class MirrorLeechListener:
             if typ == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
+            if not link.startswith('Path:'):
+                buttons = ButtonMaker()
+                buttons.ubutton("☁️ Cloud Link", link)
+            else:
+                msg += f'\nPath: <code>{link}</code>'
             msg += f'\n\n<b>cc: </b>{self.tag}'
-            buttons = ButtonMaker()
-            buttons.ubutton("☁️ Cloud Link", link)
-            LOGGER.info(f'Done Uploading {name}')
             if (INDEX_URL := config_dict['INDEX_URL']) and not isRclone:
                 url_path = rutils.quote(f'{name}')
                 share_url = f'{INDEX_URL}/{url_path}'

@@ -221,7 +221,8 @@ class GoogleDriveHelper:
             if isinstance(err, RetryError):
                 LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
                 err = err.last_attempt.exception()
-            async_to_sync(self.__listener.onUploadError, str(err))
+            err = str(err).replace('>', '').replace('<', '')
+            async_to_sync(self.__listener.onUploadError, err)
             self.__is_errored = True
         finally:
             self.__updater.cancel()
