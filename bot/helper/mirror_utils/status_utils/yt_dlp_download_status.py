@@ -5,7 +5,7 @@ from bot.helper.ext_utils.fs_utils import get_path_size
 class YtDlpDownloadStatus:
     def __init__(self, obj, listener, gid):
         self.__obj = obj
-        self.__uid = listener.uid
+        self.__listener = listener
         self.__gid = gid
         self.message = listener.message
 
