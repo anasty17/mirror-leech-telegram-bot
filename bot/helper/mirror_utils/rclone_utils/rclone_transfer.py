@@ -139,7 +139,7 @@ class RcloneTransferHelper:
             rc_path = config_dict['RCLONE_PATH']
         if rc_path.startswith('mrcc:'):
             rc_path = rc_path.split('mrcc:', 1)[1]
-            config_path = f'{self.__listener.message.from_user.id}.conf'
+            config_path = f'rclone/{self.__listener.message.from_user.id}.conf'
         else:
             config_path = 'rclone.conf'
         if await aiopath.isdir(path):
