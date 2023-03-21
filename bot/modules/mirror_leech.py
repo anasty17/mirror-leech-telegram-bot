@@ -230,7 +230,7 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
     if file_ is not None:
         await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
-    elif is_rclone_path(link) is not None:
+    elif is_rclone_path(link):
         if link.startswith('mrcc:'):
             link = link.split('mrcc:', 1)[1]
             config_path = f'rclone/{message.from_user.id}.conf'
