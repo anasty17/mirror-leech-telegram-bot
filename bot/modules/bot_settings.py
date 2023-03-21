@@ -436,7 +436,7 @@ async def edit_variable(client, message, pre_message, key):
         addJob(value)
     elif key == 'DOWNLOAD_DIR':
         if not value.endswith('/'):
-            value = f'{value}/'
+            value += '/'
     elif key in ['DUMP_CHAT', 'RSS_CHAT_ID']:
         value = int(value)
     elif key == 'STATUS_UPDATE_INTERVAL':
