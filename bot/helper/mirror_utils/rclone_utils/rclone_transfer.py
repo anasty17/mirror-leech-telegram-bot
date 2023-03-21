@@ -188,7 +188,7 @@ class RcloneTransferHelper:
                     link = res
                 elif code != -9:
                     LOGGER.error(f'while getting link. Path: {rc_path}. Stderr: {err}')
-                    link = '_|_'
+                    link = 'https://nolink.com'
             LOGGER.info(f'Upload Done. Path: {rc_path}. Name: {self.name}')
             await self.__listener.onUploadComplete(link, self.size, files, folders, mime_type, self.name, True)
         else:

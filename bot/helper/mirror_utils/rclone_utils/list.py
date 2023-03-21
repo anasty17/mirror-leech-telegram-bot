@@ -22,28 +22,30 @@ TIMEOUT = 240
 @new_task
 async def path_updates(client, query, obj):
     await query.answer()
+    message = query.message
+    data = query.data.split()
+    if data[1] == 'cancel':
+        obj.path = 'Task has been cancelled!'
+        obj.is_cancelled = True
+        obj.event.set()
+        await message.delete()
+        return
     if obj.query_proc:
         return
     obj.query_proc = True
-    message = query.message
-    data = query.data.split()
     if data[1] == 'pre':
         obj.iter_start -= LIST_LIMIT * obj.page_step
         await obj.get_path_buttons()
     elif data[1] == 'nex':
         obj.iter_start += LIST_LIMIT * obj.page_step
         await obj.get_path_buttons()
-    elif data[1] == 'cancel':
-        obj.path = 'Task has been cancelled!'
-        obj.event.set()
-        await message.delete()
     elif data[1] == 'back':
         if data[2] == 're':
             await obj.list_config()
         else:
             await obj.back_from_path()
     elif data[1] == 're':
-        obj.path += data[2]
+        obj.path = data[2]
         await obj.get_path()
     elif data[1] == 'pa':
         index = int(data[3])
@@ -71,11 +73,11 @@ async def path_updates(client, query, obj):
         obj.event.set()
     elif data[1] == 'owner':
         obj.config_path = 'rclone.conf'
-        obj.up_path = ''
+        obj.path = ''
         await obj.list_remotes()
     elif data[1] == 'user':
         obj.config_path = obj.user_rcc_path
-        obj.path = 'mrcc:'
+        obj.path = ''
         await obj.list_remotes()
     obj.query_proc = False
 
@@ -90,6 +92,7 @@ class RcloneList:
         self.__sections = []
         self.__reply_to = None
         self.__time = time()
+        self.is_cancelled = False
         self.query_proc = False
         self.item_type = '--dirs-only'
         self.event = Event()
@@ -100,17 +103,27 @@ class RcloneList:
         self.path_list = []
         self.iter_start = 0
         self.page_step = 1
-        
+
     @new_thread
     async def __event_handler(self):
         pfunc = partial(path_updates, obj=self)
-        handler = self.__client.add_handler(CallbackQueryHandler(pfunc, filters=regex('^rcq') & user(self.__user_id)), group=-1)
+        handler = self.__client.add_handler(CallbackQueryHandler(
+            pfunc, filters=regex('^rcq') & user(self.__user_id)), group=-1)
         try:
             await wait_for(self.event.wait(), timeout=240)
         except:
-            self.path = 'Timeout. Task has been cancelled!'
+            self.path = 'Timed Out. Task has been cancelled!'
+            self.is_cancelled = True
             self.event.set()
-        self.__client.remove_handler(*handler)
+        finally:
+            self.__client.remove_handler(*handler)
+
+    async def __send_list_message(self, msg, button):
+        if not self.is_cancelled:
+            if self.__reply_to is None:
+                self.__reply_to = await sendMessage(self.__message, msg, button)
+            else:
+                await editMessage(self.__reply_to, msg, button)
 
     async def get_path_buttons(self):
         items_no = len(self.path_list)
@@ -146,21 +159,22 @@ class RcloneList:
             buttons.ibutton('Back To Root', 'rcq root', position='footer')
         buttons.ibutton('Cancel', 'rcq cancel', position='footer')
         button = buttons.build_menu(f_cols=2)
-        msg = 'Choose Path:' + ('\nTransfer Type: <i>Download</i>' if self.list_status == 'rcd' else '\nTransfer Type: <i>Upload</i>')
+        msg = 'Choose Path:' + ('\nTransfer Type: <i>Download</i>' if self.list_status ==
+                                'rcd' else '\nTransfer Type: <i>Upload</i>')
         msg += f'\n\nItems: {items_no} | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
         msg += f'\n\nItem Type: {self.item_type}\nConfig Path: {self.config_path}\nCurrent Path: <code>{self.path}</code>'
         msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
-        if self.__reply_to is None:
-            self.__reply_to = await sendMessage(self.__message, msg, button)
-        else:
-            await editMessage(self.__reply_to, msg, button)
+        await self.__send_list_message(msg, button)
 
     async def get_path(self, itype=''):
         if itype:
             self.item_type == itype
         elif self.list_status == 'rcu':
             self.item_type == '--dirs-only'
-        cmd = ['rclone', 'lsjson', self.item_type, '--fast-list', '--no-mimetype', '--no-modtime', '--config', self.config_path, self.path]
+        cmd = ['rclone', 'lsjson', self.item_type, '--fast-list', '--no-mimetype',
+               '--no-modtime', '--config', self.config_path, self.path]
+        if self.is_cancelled:
+            return
         res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
             LOGGER.error(f'While rclone listing. Path: {self.path}. Stderr: {err}')
@@ -186,11 +200,10 @@ class RcloneList:
             self.path = f'{self.__sections[0]}:'
             await self.get_path()
         else:
-            msg = 'Choose Rclone remote:' + ('\nTransfer Type: <i>Download</i>' if self.list_status == 'rcd' else '\nTransfer Type: <i>Upload</i>')
-            if self.config_path == 'rclone.conf':
-                msg += f'\nConfig Path: Owner'
-            else:
-                msg += f'\nConfig Path: User'
+            msg = 'Choose Rclone remote:' + \
+                ('\nTransfer Type: <i>Download</i>' if self.list_status ==
+                 'rcd' else '\nTransfer Type: <i>Upload</i>')
+            msg += f'\nConfig Path: {self.config_path}'
             msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
             buttons = ButtonMaker()
             for remote in self.__sections:
@@ -199,37 +212,33 @@ class RcloneList:
                 buttons.ibutton('Back', 'rcq back re', position='footer')
             buttons.ibutton('Cancel', 'rcq cancel', position='footer')
             button = buttons.build_menu(2)
-            if self.__reply_to is None:
-                self.__reply_to = await sendMessage(self.__message, msg, button)
-            else:
-                await editMessage(self.__reply_to, msg, button)
+            await self.__send_list_message(msg, button)
 
     async def list_config(self):
         if self.__rc_user and self.__rc_owner:
-            msg = 'Choose Rclone config:' + ('\nTransfer Type: Download' if self.list_status == 'rcd' else '\nTransfer Type: Upload')
+            msg = 'Choose Rclone config:' + \
+                ('\nTransfer Type: Download' if self.list_status ==
+                 'rcd' else '\nTransfer Type: Upload')
             msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
             buttons = ButtonMaker()
             buttons.ibutton('Owner Config', 'rcq owner')
             buttons.ibutton('My Config', 'rcq user')
             buttons.ibutton('Cancel', 'rcq cancel')
             button = buttons.build_menu(2)
-            if self.__reply_to is None:
-                self.__reply_to = await sendMessage(self.__message, msg, button)
-            else:
-                await editMessage(self.__reply_to, msg, button)
+            await self.__send_list_message(msg, button)
         else:
             self.config_path = 'rclone.conf' if self.__rc_owner else self.user_rcc_path
             await self.list_remotes()
-    
+
     async def back_from_path(self):
-            path = self.path.rsplit('/', 1)
-            if len(path) > 1:
-                self.path = path[0]
-                await self.get_path()
-            elif len(self.__sections) > 1:
-                await self.list_remotes()
-            else:
-                await self.list_config()
+        path = self.path.rsplit('/', 1)
+        if len(path) > 1:
+            self.path = path[0]
+            await self.get_path()
+        elif len(self.__sections) > 1:
+            await self.list_remotes()
+        else:
+            await self.list_config()
 
     async def get_rclone_path(self, status):
         self.list_status = status
@@ -239,9 +248,9 @@ class RcloneList:
         if not self.__rc_owner and not self.__rc_user:
             self.event.set()
             return 'Rclone Config not Exists!'
-        await self.list_config()  
+        await self.list_config()
         await wrap_future(future)
         await self.__reply_to.delete()
-        if self.config_path != 'rclone.conf':
+        if self.config_path != 'rclone.conf' and not self.is_cancelled:
             self.path = f'mrcc:{self.path}'
         return self.path

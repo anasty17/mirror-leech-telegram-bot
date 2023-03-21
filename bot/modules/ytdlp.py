@@ -175,7 +175,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await sendMessage(message, help_msg)
         return
 
-    if up == 'rcl':
+    if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
         if not is_rclone_path(up):
             await sendMessage(message, up)

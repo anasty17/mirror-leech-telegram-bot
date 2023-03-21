@@ -120,6 +120,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     else:
         tag = message.from_user.mention
 
+    file_ = None
     if reply_to := message.reply_to_message:
         file_ = reply_to.document or reply_to.photo or reply_to.video or reply_to.audio or \
                  reply_to.voice or reply_to.video_note or reply_to.sticker or reply_to.animation or None
@@ -135,13 +136,9 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                     link = reply_text
             elif reply_to.document and (file_.mime_type == 'application/x-bittorrent' or file_.file_name.endswith('.torrent')):
                 link = await reply_to.download()
-            else:
-                listener = MirrorLeechListener(message, isZip, extract, isQbit, isLeech, pswd, tag, sameDir=sameDir, rcFlags=rcf, upload=up)
-                __run_multi()
-                await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
-                return
+                file_ = None
 
-    if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link) and not is_rclone_path(link):
+    if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link) and not is_rclone_path(link) and file_ is None:
         help_msg = '''
 <code>/cmd</code> link n: newname pswd: xx(zip/unzip)
 
@@ -199,11 +196,12 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 '''
         await sendMessage(message, help_msg)
         return
-
-    LOGGER.info(link)
+    
+    if link:
+        LOGGER.info(link)
 
     if not is_mega_link(link) and not isQbit and not is_magnet(link) and not is_rclone_path(link) \
-       and not is_gdrive_link(link) and not link.endswith('.torrent'):
+       and not is_gdrive_link(link) and not link.endswith('.torrent') and file_ is None:
         content_type = await sync_to_async(get_content_type, link)
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
@@ -222,7 +220,7 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
         if not is_rclone_path(link):
             await sendMessage(message, link)
             return
-    if up == 'rcl':
+    if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
         if not is_rclone_path(up):
             await sendMessage(message, up)
@@ -230,7 +228,9 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
     listener = MirrorLeechListener(message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, rcf, up)
 
-    if is_rclone_path(link):
+    if file_ is not None:
+        await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
+    elif is_rclone_path(link) is not None:
         if link.startswith('mrcc:'):
             link = link.split('mrcc:', 1)[1]
             config_path = f'rclone/{message.from_user.id}.conf'
