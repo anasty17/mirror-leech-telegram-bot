@@ -181,7 +181,7 @@ class RcloneList:
         res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
             LOGGER.error(f'While rclone listing. Path: {self.path}. Stderr: {err}')
-            self.path = err
+            self.path = err[:4090]
             self.event.set()
             return
         result = loads(res)

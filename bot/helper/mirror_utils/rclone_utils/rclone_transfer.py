@@ -70,7 +70,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         if code not in [0, -9]:
-            await self.__listener.onDownloadError(f'while getting rclone size. Path: {rc_path}. Stderr: {err}')
+            await self.__listener.onDownloadError(f'while getting rclone size. Path: {rc_path}. Stderr: {err[:4090]}')
             return
         rdict = loads(res)
         self.size = rdict['bytes']
@@ -133,7 +133,8 @@ class RcloneTransferHelper:
             await self.__listener.onDownloadComplete()
         elif return_code != -9:
             error = (await self.__proc.stderr.read()).decode().strip()
-            await self.__listener.onDownloadError(error)
+            LOGGER.error(error)
+            await self.__listener.onDownloadError(error[:4090])
 
     async def upload(self, path):
         self.__is_upload = True
@@ -205,7 +206,7 @@ class RcloneTransferHelper:
         else:
             error = (await self.__proc.stderr.read()).decode().strip()
             LOGGER.error(error)
-            await self.__listener.onUploadError(error)
+            await self.__listener.onUploadError(error[:4090])
 
     @staticmethod
     async def __getItemName(path):

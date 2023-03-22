@@ -309,21 +309,23 @@ class MirrorLeechListener:
             if not link.startswith('Path:'):
                 buttons = ButtonMaker()
                 buttons.ubutton("☁️ Cloud Link", link)
+                if (INDEX_URL := config_dict['INDEX_URL']) and not isRclone:
+                    url_path = rutils.quote(f'{name}')
+                    share_url = f'{INDEX_URL}/{url_path}'
+                    if typ == "Folder":
+                        share_url += '/'
+                        buttons.ubutton("⚡ Index Link", share_url)
+                    else:
+                        buttons.ubutton("⚡ Index Link", share_url)
+                        if config_dict['VIEW_LINK']:
+                            share_urls = f'{INDEX_URL}/{url_path}?a=view'
+                            buttons.ubutton("🌐 View Link", share_urls)
+                button = buttons.build_menu(2)
             else:
-                msg += f'\nPath: <code>{link}</code>'
+                msg += f'\n\nPath: <code>{link.split("Path: ")[1]}</code>'
+                button = None
             msg += f'\n\n<b>cc: </b>{self.tag}'
-            if (INDEX_URL := config_dict['INDEX_URL']) and not isRclone:
-                url_path = rutils.quote(f'{name}')
-                share_url = f'{INDEX_URL}/{url_path}'
-                if typ == "Folder":
-                    share_url += '/'
-                    buttons.ubutton("⚡ Index Link", share_url)
-                else:
-                    buttons.ubutton("⚡ Index Link", share_url)
-                    if config_dict['VIEW_LINK']:
-                        share_urls = f'{INDEX_URL}/{url_path}?a=view'
-                        buttons.ubutton("🌐 View Link", share_urls)
-            await sendMessage(self.message, msg, buttons.build_menu(2))
+            await sendMessage(self.message, msg, button)
             if self.seed:
                 if self.isZip:
                     await clean_target(f"{self.dir}/{name}")
