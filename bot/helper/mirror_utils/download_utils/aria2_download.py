@@ -6,7 +6,7 @@ from asyncio import sleep
 from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, aria2_options, aria2c_global
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, bt_selection_buttons, new_thread, sync_to_async
-from bot.helper.mirror_utils.status_utils.aria_download_status import AriaDownloadStatus
+from bot.helper.mirror_utils.status_utils.aria_status import Aria2Status
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage, deleteMessage, update_all_messages
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
 
@@ -131,7 +131,7 @@ async def __onBtDownloadComplete(api, gid):
                     if listener.uid not in download_dict:
                         await sync_to_async(api.remove, [download], force=True, files=True)
                         return
-                    download_dict[listener.uid] = AriaDownloadStatus(gid, listener, True)
+                    download_dict[listener.uid] = Aria2Status(gid, listener, True)
                     download_dict[listener.uid].start_time = seed_start_time
                 LOGGER.info(f"Seeding started: {download.name} - Gid: {gid}")
                 await update_all_messages()
@@ -193,7 +193,7 @@ async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_
         return
     gid = download.gid
     async with download_dict_lock:
-        download_dict[listener.uid] = AriaDownloadStatus(gid, listener)
+        download_dict[listener.uid] = Aria2Status(gid, listener)
         LOGGER.info(f"Aria2Download started: {gid}")
     await listener.onDownloadStart()
     if not listener.select or not config_dict['BASE_URL']:

@@ -4,27 +4,27 @@ from asyncio import sleep
 from bot import LOGGER, get_client
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, sync_to_async
 
-def get_download(client, hash_):
+def get_download(client, tag):
     try:
-        return client.torrents_info(torrent_hashes=hash_)[0]
+        return client.torrents_info(tag=tag)[0]
     except Exception as e:
-        LOGGER.error(f'{e}: Qbittorrent, Error while getting torrent info')
-        client = get_client()
-        return get_download(client, hash_)
+        LOGGER.error(f'Error: Qbittorrent, while getting torrent info. Hash: {tag}')
+        return None
 
 
-class QbDownloadStatus:
+class QbittorrentStatus:
 
-    def __init__(self, listener, hash_, seeding=False):
+    def __init__(self, listener, seeding=False):
         self.__client = get_client()
         self.__listener = listener
-        self.__hash = hash_
-        self.__info = get_download(self.__client, hash_)
+        self.__info = get_download(self.__client, f'{self.__listener.uid}')
         self.seeding = seeding
         self.message = listener.message
 
     def __update(self):
-        self.__info = get_download(self.__client, self.__hash)
+        new_info = get_download(self.__client, f'{self.__listener.uid}')
+        if new_info is not None:
+            self.__info = new_info
 
     def progress(self):
         """
@@ -89,10 +89,10 @@ class QbDownloadStatus:
         return self
 
     def gid(self):
-        return self.__hash[:12]
+        return self.__info.hash[:12]
 
     def hash(self):
-        return self.__hash
+        return self.__info.hash
 
     def client(self):
         return self.__client
@@ -101,11 +101,11 @@ class QbDownloadStatus:
         return self.__listener
 
     async def cancel_download(self):
-        await sync_to_async(self.__client.torrents_pause, torrent_hashes=self.__hash)
+        await sync_to_async(self.__client.torrents_pause, torrent_hashes=self.hash())
         if self.status() != MirrorStatus.STATUS_SEEDING:
             LOGGER.info(f"Cancelling Download: {self.__info.name}")
             await sleep(0.3)
             await self.__listener.onDownloadError('Download stopped by user!')
-            await sync_to_async(self.__client.torrents_delete, torrent_hashes=self.__hash, delete_files=True)
+            await sync_to_async(self.__client.torrents_delete, torrent_hashes=self.hash(), delete_files=True)
             await sync_to_async(self.__client.torrents_delete_tags, tags=self.__info.tags)
             await sync_to_async(self.__client.auth_log_out)

@@ -8,7 +8,7 @@ from aiofiles.os import remove as aioremove, path as aiopath
 from asyncio import Lock, sleep
 
 from bot import download_dict, download_dict_lock, get_client, LOGGER, QbInterval, config_dict, bot_loop
-from bot.helper.mirror_utils.status_utils.qbit_download_status import QbDownloadStatus
+from bot.helper.mirror_utils.status_utils.qbit_status import QbittorrentStatus
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage, update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_time, setInterval, bt_selection_buttons, getDownloadByGid, new_task, sync_to_async
@@ -67,7 +67,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
             await sendMessage(listener.message, "This is an unsupported/invalid link.")
             return
         async with download_dict_lock:
-            download_dict[listener.uid] = QbDownloadStatus(listener, ext_hash)
+            download_dict[listener.uid] = QbittorrentStatus(listener)
         async with qb_download_lock:
             STALLED_TIME[ext_hash] = time()
             if not QbInterval:
@@ -80,7 +80,7 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(listener.message, metamsg)
                 while True:
-                    tor_info = await sync_to_async(client.torrents_info, torrent_hashes=ext_hash)
+                    tor_info = await sync_to_async(client.torrents_info, tag=f'{listener.uid}')
                     if len(tor_info) == 0:
                         await deleteMessage(meta)
                         return
@@ -181,7 +181,7 @@ async def __onDownloadComplete(tor):
         async with download_dict_lock:
             if listener.uid in download_dict:
                 removed = False
-                download_dict[listener.uid] = QbDownloadStatus(listener, tor.hash, True)
+                download_dict[listener.uid] = QbittorrentStatus(listener, True)
             else:
                 removed = True
         if removed:
