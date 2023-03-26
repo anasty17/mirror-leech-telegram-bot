@@ -33,7 +33,8 @@ async def rclone_serve_booter():
             RcloneServe.clear()
         except:
             pass
-    rcs = await create_subprocess_exec("rclone", "serve", "http", "--config", "rclone.conf", "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}")
+    rcs = await create_subprocess_exec("rclone", "serve", "http", "--config", "rclone.conf", "--no-modtime",
+                                       "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}")
     RcloneServe.append(rcs)
 
 bot_loop.run_until_complete(rclone_serve_booter())

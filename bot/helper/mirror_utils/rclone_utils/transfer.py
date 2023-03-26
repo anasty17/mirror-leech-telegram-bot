@@ -184,8 +184,9 @@ class RcloneTransferHelper:
                 files = 1
             if remote_type == 'drive':
                 if mime_type == 'Folder':
-                    epath = rc_path.split(':', 1)[1].strip('/')
-                    epath = epath.rsplit('/', 1)[0]
+                    remote, epath = rc_path.split(':', 1)
+                    epath = epath.strip('/').rsplit('/', 1)
+                    epath = f'{remote}:{epath[0]}' if len(epath) > 1 else f'{remote}:'
                     destination = rc_path
                 elif rc_path.split(':', 1)[1]:
                     epath = f"{rc_path}/{self.name}"
@@ -241,7 +242,7 @@ class RcloneTransferHelper:
 
     async def __getUpdatedCommand(self, config_path, fpath, tpath):
         ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
-        cmd = ['rclone', 'copy', '-M', '--config', config_path, '-P', fpath, tpath, '--exclude', ext, '--ignore-case']
+        cmd = ['rclone', 'copy', '--config', config_path, '-P', fpath, tpath, '--exclude', ext, '--ignore-case']
         if rcf := self.__listener.rcFlags or config_dict['RCLONE_FLAGS']:
             rcflags = rcf.split('|')
             for flag in rcflags:
