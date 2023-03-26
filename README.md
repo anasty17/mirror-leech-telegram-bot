@@ -77,6 +77,8 @@ In each single file there is a major change from base code, it's almost totaly d
 - Download and Upload using rclone
 - Ability to choose config, remote and path from list with buttons
 - Ability to set rclone flags
+- Rclone.conf for each user
+- Rclone serve for combine remote to use it as index from all remotes
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
 - Switch from sync to async
@@ -164,19 +166,21 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 **2. Optional Fields**
 
-- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive Folder or `root` to which you want to upload all the mirrors using gdrive tools. `Str`
+- `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors using google-api-python-client. `Str`
 - `RCLONE_PATH`: Default rclone path to which you want to upload all the mirrors using rclone. `Str`
-- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `gd`. `Str`
+- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `gd`. Read More [HERE](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upload).`Str`
 - `RCLONE_FLAGS`: key:value|key|key|key:value . Check here all [RcloneFlags](https://rclone.org/flags/). `Str`
-- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using gdrive tools. Default is `False`. `Bool`
+- `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`. `Bool`
 - `DOWNLOAD_DIR`: The path to the local folder where the downloads should be downloaded to. `Str`
 - `STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10` seconds at least. `Int`
 - `AUTO_DELETE_MESSAGE_DURATION`: Interval of time (in seconds), after which the bot deletes it's message and command message which is expected to be viewed instantly. **NOTE**: Set to `-1` to disable auto message deletion. `Int`
 - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to generate database. Data will be saved in Database: auth and sudo users, users settings including thumbnails for each user, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. Separate them by space. `Int`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not with gdrive tools. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
+- `RCLONE_SERVE_URL`: Valid URL where the bot is deployed to use rclone serve. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
+- `RCLONE_SERVE_PORT`: Which is the **RCLONE_SERVE_URL** Port. Default is `8080`. `Int`
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. Default is `10`. **NOTE**: Recommended limit is `4` tasks. `Int`
 - `STOP_DUPLICATE`: Bot will check file in Drive, if it is present in Drive, downloading or cloning will be stopped. (**NOTE**: File will be checked using filename not file hash, so this feature is not perfect yet). Default is `False`. `Bool`
 - `CMD_SUFFIX`: commands index number. This number will added at the end all commands. `Str`|`Int`
@@ -202,7 +206,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### qBittorrent/Aria2c
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use qbittorrent web selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
-- `SERVER_PORT`: Only For VPS, which is the **BASE_URL_OF_BOT** Port. Default is `80`. `Int`
+- `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `80`. `Int`
 - `WEB_PINCODE`: If empty or `False` means no more pincode required while torrent files web selection. `Bool`
   - **Qbittorrent NOTE**: If your facing ram exceeded issue then set limit for `MaxConnecs`, decrease `AsyncIOThreadsCount` in qbittorrent config and set limit of `DiskWriteCacheSize` to `32`.
 
@@ -277,7 +281,7 @@ sudo docker build . -t mltb
 ```
 - Run the image:
 ```
-sudo docker run -p 80:80 mltb
+sudo docker run -p 80:80 -p 8080:8080 mltb
 ```
 - To stop the running image:
 ```
@@ -291,7 +295,7 @@ sudo docker stop id
 
 #### Build And Run The Docker Image Using docker-compose
 
-**NOTE**: If you want to use port other than 80, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml) also.
+**NOTE**: If you want to use ports other than 80 and 8080 for torrent file selection and rclone serve respectively, change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml) also.
 
 ```
 sudo apt install docker-compose
@@ -324,7 +328,7 @@ sudo docker-compose up
 #### Docker Notes
 
 **IMPORTANT NOTES**:
-1. You must set `SERVER_PORT` variable to any port you want to use. Default is `80`.
+1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080` respectively.
 2. You should stop the running image before deleting the container and you should delete the container before the image.
 3. To delete the container (this will not affect on the image):
 ```
@@ -484,7 +488,17 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 
 ------
 
-### Generate Database
+## Upload
+
+- `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In additional to those variables `DEFAULT_UPLOAD` to choose the default tool whether it's rclone or google-api-python-client.
+- If `DEFAULT_UPLOAD` = 'rc' then you must fill `RCLONE_PATH` with path as default one or with `rcl` to select destination path on each new task.
+- If `DEFAULT_UPLOAD` = 'gd' then you must fill `GDRIVE_ID` with folder/TD id.
+- If rclone.conf uploaded from usetting or added in `rclone/{user_id}.conf` then RCLONE_PATH must start with `mrcc:`.
+- Whenever you want to write path manually to use user rclone.conf that added from usetting you must add the `mrcc:` at the beginning.
+
+------
+
+## Generate Database
 
 1. Go to `https://mongodb.com/` and sign-up.
 2. Create Shared Cluster.

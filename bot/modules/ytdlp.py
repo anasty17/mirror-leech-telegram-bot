@@ -151,13 +151,13 @@ Number and m:folder_name should be always before n:, pswd: and opt:
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
 
-<b>Rclone Upload</b>:
-<code>/cmd</code> link up: <code>rcl</code> (To select config, remote and path)
+<b>Upload</b>:
+<code>/cmd</code> link up: <code>rcl</code> (To select rclone config, remote and path)
 You can directly add the upload path. up: remote:dir/subdir
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path manually from your config add <code>mrcc:</code> before the path without space
-<code>/cmd</code> link up: <code>mrcc:</code>main:/dump
+If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
+<code>/cmd</code> link up: <code>mrcc:</code>main:dump
 
 <b>Rclone Flags</b>:
 <code>/cmd</code> link up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
@@ -175,7 +175,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await sendMessage(message, help_msg)
         return
 
-    if up == 'rcl' and not isLeech:
+    if (up == 'rcl' or config_dict['RCLONE_PATH'] == 'rcl' and config_dict['DEFAULT_UPLOAD'] == 'rc') and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
         if not is_rclone_path(up):
             await sendMessage(message, up)

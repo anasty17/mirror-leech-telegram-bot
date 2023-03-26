@@ -3,6 +3,7 @@ from aiofiles.os import path as aiopath, makedirs
 from aiofiles import open as aiopen
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import PyMongoError
+from dotenv import dotenv_values
 
 from bot import DATABASE_URL, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options, bot_loop
 
@@ -65,6 +66,13 @@ class DbManger:
             LOGGER.info("Rss data has been imported from Database.")
         self.__conn.close
 
+    async def update_deploy_config(self):
+        if self.__err:
+            return
+        current_config = dict(dotenv_values('config.env'))
+        await self.__db.settings.deployConfig.replace_one({'_id': bot_id}, current_config, upsert=True)
+        self.__conn.close
+
     async def update_config(self, dict_):
         if self.__err:
             return
@@ -93,7 +101,10 @@ class DbManger:
             pf_bin = ''
         path = path.replace('.', '__')
         await self.__db.settings.files.update_one({'_id': bot_id}, {'$set': {path: pf_bin}}, upsert=True)
-        self.__conn.close
+        if path == 'config.env':
+            await self.update_deploy_config()
+        else:
+            self.__conn.close
 
     async def update_user_data(self, user_id):
         if self.__err:

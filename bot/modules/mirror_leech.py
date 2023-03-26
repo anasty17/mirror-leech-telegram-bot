@@ -13,7 +13,7 @@ from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_dow
 from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
-from bot.helper.mirror_utils.rclone_utils.rclone_transfer import RcloneTransferHelper
+from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
@@ -174,13 +174,13 @@ Users can add their own rclone from user settings
 If you want to add path manually from your config add <code>mrcc:</code> before the path without space
 <code>/cmd</code> <code>mrcc:</code>main:/dump/ubuntu.iso
 
-<b>Rclone Upload</b>:
-<code>/cmd</code> link up: <code>rcl</code> (To select config, remote and path)
+<b>Upload</b>:
+<code>/cmd</code> link up: <code>rcl</code> (To select rclone config, remote and path)
 You can directly add the upload path. up: remote:dir/subdir
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path manually from your config add <code>mrcc:</code> before the path without space
-<code>/cmd</code> link up: <code>mrcc:</code>main:/dump
+If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
+<code>/cmd</code> link up: <code>mrcc:</code>main:dump
 
 <b>Rclone Flags</b>:
 <code>/cmd</code> link|path|rcl up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
@@ -220,7 +220,7 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
         if not is_rclone_path(link):
             await sendMessage(message, link)
             return
-    if up == 'rcl' and not isLeech:
+    if (up == 'rcl' or config_dict['RCLONE_PATH'] == 'rcl' and config_dict['DEFAULT_UPLOAD'] == 'rc') and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
         if not is_rclone_path(up):
             await sendMessage(message, up)

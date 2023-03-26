@@ -25,7 +25,8 @@ async def path_updates(client, query, obj):
     message = query.message
     data = query.data.split()
     if data[1] == 'cancel':
-        obj.path = 'Task has been cancelled!'
+        obj.remote = 'Task has been cancelled!'
+        obj.path = ''
         obj.is_cancelled = True
         obj.event.set()
         await message.delete()
@@ -45,11 +46,11 @@ async def path_updates(client, query, obj):
         else:
             await obj.back_from_path()
     elif data[1] == 're':
-        obj.path = data[2]
+        obj.remote = data[2]
         await obj.get_path()
     elif data[1] == 'pa':
         index = int(data[3])
-        obj.path += f"/{obj.path_list[index]['Path']}"
+        obj.path += f"/{obj.path_list[index]['Path']}" if obj.path else obj.path_list[index]['Path']
         if data[2] == 'fo':
             await obj.get_path()
         else:
@@ -61,10 +62,8 @@ async def path_updates(client, query, obj):
         obj.page_step = int(data[2])
         await obj.get_path_buttons()
     elif data[1] == 'root':
-        path = obj.path.split('/', 1)
-        if len(path) > 1:
-            obj.path = path[0]
-            await obj.get_path()
+        obj.path = ''
+        await obj.get_path()
     elif data[1] == 'itype':
         obj.item_type = data[2]
         await obj.get_path()
@@ -74,10 +73,12 @@ async def path_updates(client, query, obj):
     elif data[1] == 'owner':
         obj.config_path = 'rclone.conf'
         obj.path = ''
+        obj.remote = ''
         await obj.list_remotes()
     elif data[1] == 'user':
         obj.config_path = obj.user_rcc_path
         obj.path = ''
+        obj.remote = ''
         await obj.list_remotes()
     obj.query_proc = False
 
@@ -92,6 +93,7 @@ class RcloneList:
         self.__sections = []
         self.__reply_to = None
         self.__time = time()
+        self.remote = ''
         self.is_cancelled = False
         self.query_proc = False
         self.item_type = '--dirs-only'
@@ -112,7 +114,8 @@ class RcloneList:
         try:
             await wait_for(self.event.wait(), timeout=240)
         except:
-            self.path = 'Timed Out. Task has been cancelled!'
+            self.path = ''
+            self.remote = 'Timed Out. Task has been cancelled!'
             self.is_cancelled = True
             self.event.set()
         finally:
@@ -155,8 +158,9 @@ class RcloneList:
                 buttons.ibutton('Folders', 'rcq itype --dirs-only', position='footer')
         if self.list_status == 'rcu' or len(self.path_list) > 0:
             buttons.ibutton('Choose Current Path', 'rcq cur', position='footer')
-        buttons.ibutton('Back', 'rcq back pa', position='footer')
-        if len(self.path.split(':', 1)) > 1 and len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
+        if self.path or len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
+                buttons.ibutton('Back', 'rcq back pa', position='footer')
+        if self.path:
             buttons.ibutton('Back To Root', 'rcq root', position='footer')
         buttons.ibutton('Cancel', 'rcq cancel', position='footer')
         button = buttons.build_menu(f_cols=2)
@@ -165,7 +169,8 @@ class RcloneList:
         msg += f'\n\nItems: {items_no}'
         if items_no > LIST_LIMIT:
             msg += f' | Page: {int(page)}/{pages} | Page Step: {self.page_step}'
-        msg += f'\n\nItem Type: {self.item_type}\nConfig Path: {self.config_path}\nCurrent Path: <code>{self.path}</code>'
+        msg += f'\n\nItem Type: {self.item_type}\nConfig Path: {self.config_path}'
+        msg += f'\nCurrent Path: <code>{self.remote}{self.path}</code>'
         msg += f'\nTimeout: {get_readable_time(TIMEOUT-(time()-self.__time))}'
         await self.__send_list_message(msg, button)
 
@@ -175,13 +180,14 @@ class RcloneList:
         elif self.list_status == 'rcu':
             self.item_type == '--dirs-only'
         cmd = ['rclone', 'lsjson', self.item_type, '--fast-list', '--no-mimetype',
-               '--no-modtime', '--config', self.config_path, self.path]
+               '--no-modtime', '--config', self.config_path, f"{self.remote}{self.path}"]
         if self.is_cancelled:
             return
         res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
-            LOGGER.error(f'While rclone listing. Path: {self.path}. Stderr: {err}')
-            self.path = err[:4090]
+            LOGGER.error(f'While rclone listing. Path: {self.remote}{self.path}. Stderr: {err}')
+            self.remote = err[:4090]
+            self.path = ''
             self.event.set()
             return
         result = loads(res)
@@ -198,9 +204,11 @@ class RcloneList:
         async with aiopen(self.config_path, 'r') as f:
             contents = await f.read()
             config.read_string(contents)
+        if config.has_section('combine'):
+            config.remove_section('combine')
         self.__sections = config.sections()
         if len(self.__sections) == 1:
-            self.path = f'{self.__sections[0]}:'
+            self.remote = f'{self.__sections[0]}:'
             await self.get_path()
         else:
             msg = 'Choose Rclone remote:' + \
@@ -234,9 +242,9 @@ class RcloneList:
             await self.list_remotes()
 
     async def back_from_path(self):
-        path = self.path.rsplit('/', 1)
-        if len(path) > 1:
-            self.path = path[0]
+        if self.path:
+            path = self.path.rsplit('/', 1)
+            self.path = path[0] if len(path) > 1 else ''
             await self.get_path()
         elif len(self.__sections) > 1:
             await self.list_remotes()
@@ -255,5 +263,5 @@ class RcloneList:
         await wrap_future(future)
         await self.__reply_to.delete()
         if self.config_path != 'rclone.conf' and not self.is_cancelled:
-            self.path = f'mrcc:{self.path}'
-        return self.path
+            return f'mrcc:{self.remote}{self.path}'
+        return f'{self.remote}{self.path}'
