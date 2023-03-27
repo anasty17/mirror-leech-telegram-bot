@@ -107,7 +107,7 @@ class TelegramDownloadHelper:
                     path = path + name
                 size = media.file_size
                 gid = media.file_unique_id
-                if config_dict['STOP_DUPLICATE'] and not self.__listener.isLeech:
+                if config_dict['STOP_DUPLICATE'] and not self.__listener.isLeech and self.__listener.upPath == 'gd':
                     LOGGER.info('Checking File/Folder if already in Drive...')
                     smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, name, True, True)
                     if smsg:

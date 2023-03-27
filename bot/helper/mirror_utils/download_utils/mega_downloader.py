@@ -161,7 +161,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
             await sync_to_async(folder_api.removeListener, mega_listener)
         return
     mname = name or await sync_to_async(node.getName)
-    if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
+    if config_dict['STOP_DUPLICATE'] and not listener.isLeech and listener.upPath == 'gd':
         LOGGER.info('Checking File/Folder if already in Drive')
         if listener.isZip:
             mname = f"{mname}.zip"

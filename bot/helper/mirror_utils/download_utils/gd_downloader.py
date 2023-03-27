@@ -19,7 +19,7 @@ async def add_gd_download(link, path, listener, newname, from_queue=False):
         return
     if newname:
         name = newname
-    if config_dict['STOP_DUPLICATE'] and not listener.isLeech:
+    if config_dict['STOP_DUPLICATE'] and not listener.isLeech and listener.upPath == 'gd':
         LOGGER.info('Checking File/Folder if already in Drive...')
         if listener.isZip:
             gname = f"{name}.zip"

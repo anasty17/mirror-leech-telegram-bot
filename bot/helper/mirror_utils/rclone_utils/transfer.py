@@ -13,8 +13,9 @@ non_queued_up, queued_dl, LOGGER, GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async, new_task
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.telegram_helper.message_utils import sendStatusMessage, update_all_messages
-from bot.helper.ext_utils.fs_utils import get_mime_type, count_files_and_folders
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, update_all_messages
+from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.ext_utils.fs_utils import get_base_name, get_mime_type, count_files_and_folders
 
 
 class RcloneTransferHelper:
@@ -83,6 +84,23 @@ class RcloneTransferHelper:
             return
         rdict = loads(res)
         self.size = rdict['bytes']
+        if config_dict['STOP_DUPLICATE'] and not self.__listener.isLeech and self.__listener.upPath == 'gd':
+            LOGGER.info('Checking File/Folder if already in Drive')
+            if self.__listener.isZip:
+                rname = f"{name}.zip"
+            elif self.__listener.extract:
+                try:
+                    rname = get_base_name(name)
+                except:
+                    rname = None
+            else:
+                rname = name
+            if rname is not None:
+                smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, rname, True)
+                if smsg:
+                    msg = "File/Folder is already available in Drive.\nHere are the search results:"
+                    await sendMessage(self.__listener.message, msg, button)
+                    return
         self.gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
         all_limit = config_dict['QUEUE_ALL']
         dl_limit = config_dict['QUEUE_DOWNLOAD']
@@ -132,7 +150,7 @@ class RcloneTransferHelper:
         async with download_dict_lock:
             download_dict[self.__listener.uid] = RcloneStatus(self, self.__listener.message, 'up')
         await update_all_messages()
-        rc_path = (self.__listener.upload or config_dict['RCLONE_PATH']).strip('/')
+        rc_path = self.__listener.upPath.strip('/')
         if rc_path == 'rc':
             rc_path = config_dict['RCLONE_PATH']
         if rc_path.startswith('mrcc:'):

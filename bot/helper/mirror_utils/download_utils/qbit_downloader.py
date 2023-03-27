@@ -147,21 +147,22 @@ async def __stop_duplicate(tor):
     download = await getDownloadByGid(tor.hash[:12])
     if hasattr(download, 'listener'):
         listener = download.listener()
-        if not listener.select and not listener.isLeech:
-            LOGGER.info('Checking File/Folder if already in Drive')
-            qbname = tor.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
-            if listener.isZip:
-                qbname = f"{qbname}.zip"
-            elif listener.extract:
-                try:
-                    qbname = get_base_name(qbname)
-                except:
-                    qbname = None
-            if qbname is not None:
-                 qbmsg, button = await sync_to_async(GoogleDriveHelper().drive_list, qbname, True)
-                 if qbmsg:
-                     qbmsg = 'File/Folder is already available in Drive.\nHere are the search results:'
-                     await __onDownloadError(qbmsg, tor, button)
+        if listener.select or listener.isLeech or listener.upPath != 'gd':
+            return
+        LOGGER.info('Checking File/Folder if already in Drive')
+        qbname = tor.content_path.rsplit('/', 1)[-1].rsplit('.!qB', 1)[0]
+        if listener.isZip:
+            qbname = f"{qbname}.zip"
+        elif listener.extract:
+            try:
+                qbname = get_base_name(qbname)
+            except:
+                qbname = None
+        if qbname is not None:
+                qbmsg, button = await sync_to_async(GoogleDriveHelper().drive_list, qbname, True)
+                if qbmsg:
+                    qbmsg = 'File/Folder is already available in Drive.\nHere are the search results:'
+                    await __onDownloadError(qbmsg, tor, button)
 
 @new_task
 async def __onDownloadComplete(tor):

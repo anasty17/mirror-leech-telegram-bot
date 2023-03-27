@@ -206,7 +206,7 @@ class YoutubeDLHelper:
             folder_name = self.name.rsplit('.', 1)[0]
             self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
             self.name = folder_name
-        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.__listener.isLeech:
+        if config_dict['STOP_DUPLICATE'] and self.name != 'NA' and not self.__listener.isLeech and self.__listener.upPath == 'gd':
             LOGGER.info('Checking File/Folder if already in Drive...')
             sname = self.name
             if self.__listener.isZip:

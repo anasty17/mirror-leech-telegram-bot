@@ -20,7 +20,7 @@ from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_threa
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
-from bot.modules.search import initiate_search_tools
+from bot.modules.torrent_search import initiate_search_tools
 from bot.modules.rss import addJob
 
 START = 0

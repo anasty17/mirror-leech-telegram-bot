@@ -38,7 +38,7 @@ async def __onDownloadStarted(api, gid):
                 LOGGER.warning(f"onDownloadStart: {gid}. STOP_DUPLICATE didn't pass since download completed earlier!")
                 return
             listener = dl.listener()
-            if listener.isLeech or listener.select:
+            if listener.isLeech or listener.select or listener.upPath != 'gd':
                 return
             download = await sync_to_async(api.get_download, gid)
             if not download.is_torrent:
