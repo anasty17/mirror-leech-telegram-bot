@@ -6,7 +6,7 @@ apscheduler
 aria2p
 asyncio
 beautifulsoup4
-cfscrape
+cloudscraper
 dnspython
 feedparser
 flask
