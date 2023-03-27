@@ -18,7 +18,7 @@ from time import sleep
 from urllib.parse import quote, unquote, urlparse
 from uuid import uuid4
 from bs4 import BeautifulSoup
-from cloudscraper import create_scraper
+from cfscrape import create_scraper
 from lk21 import Bypass
 from lxml import etree
 
