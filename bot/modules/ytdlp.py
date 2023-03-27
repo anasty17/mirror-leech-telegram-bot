@@ -181,7 +181,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             await sendMessage(message, up)
             return
 
-    listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upload=up)
+    listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
     ydl = YoutubeDLHelper(listener)
