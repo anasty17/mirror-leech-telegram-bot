@@ -117,10 +117,9 @@ class DbManger:
         await self.__db.users.replace_one({'_id': user_id}, data, upsert=True)
         self.__conn.close
 
-    async def update_user_doc(self, user_id, path=''):
+    async def update_user_doc(self, user_id, key, path=''):
         if self.__err:
             return
-        key = 'rclone' if path.endswith('.conf') else 'thumb'
         if path:
             async with aiopen(path, 'rb+') as doc:
                 doc_bin = await doc.read()

@@ -109,7 +109,7 @@ async def set_thumb(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_user_doc(user_id, des_dir)
+        await DbManger().update_user_doc(user_id, 'thumb', des_dir)
 
 async def add_rclone(client, message, pre_event):
     user_id = message.from_user.id
@@ -123,7 +123,7 @@ async def add_rclone(client, message, pre_event):
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManger().update_user_doc(user_id, des_dir)
+        await DbManger().update_user_doc(user_id, 'rclone', des_dir)
 
 async def leech_split_size(client, message, pre_event):
     user_id = message.from_user.id
@@ -186,7 +186,7 @@ async def edit_user_settings(client, query):
             update_user_ldata(user_id, 'thumb', '')
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManger().update_user_doc(user_id)
+                await DbManger().update_user_doc(user_id, 'thumb')
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
@@ -283,7 +283,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
             update_user_ldata(user_id, 'rclone', '')
             await update_user_settings(query)
             if DATABASE_URL:
-                await DbManger().update_user_doc(user_id)
+                await DbManger().update_user_doc(user_id, 'rclone')
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)

@@ -8,7 +8,7 @@ def get_download(client, tag):
     try:
         return client.torrents_info(tag=tag)[0]
     except Exception as e:
-        LOGGER.error(f'Error: Qbittorrent, while getting torrent info. Hash: {tag}')
+        LOGGER.error(f'Error: Qbittorrent, while getting torrent info. Tag: {tag}')
         return None
 
 
