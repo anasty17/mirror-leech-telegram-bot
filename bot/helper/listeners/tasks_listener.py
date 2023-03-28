@@ -6,9 +6,13 @@ from html import escape
 from aioshutil import move
 from asyncio import create_subprocess_exec, sleep, Event
 
-from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, queued_dl, queue_dict_lock
+from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, \
+    MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, \
+    queued_dl, queue_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size
-from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, split_file, clean_download, clean_target, is_first_archive_split, is_archive, is_archive_split
+from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, clean_download, clean_target, \
+    is_first_archive_split, is_archive, is_archive_split
+from bot.helper.ext_utils.leech_utils import split_file
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.queued_starter import start_from_queued
 from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus

@@ -34,7 +34,8 @@ async def rclone_serve_booter():
         except:
             pass
     rcs = await create_subprocess_exec("rclone", "serve", "http", "--config", "rclone.conf", "--no-modtime",
-                                       "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}")
+                                       "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}",
+                                       "--vfs-cache-mode", "full", "--vfs-cache-max-age", "30s")
     RcloneServe.append(rcs)
 
 bot_loop.run_until_complete(rclone_serve_booter())

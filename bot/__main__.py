@@ -18,8 +18,10 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.listeners.aria2_listener import start_aria2_listener
 from .modules import authorize, gd_clone, gd_count, gd_delete, gd_list, cancel_mirror, mirror_leech, status, torrent_search, torrent_select, ytdlp, rss, shell, eval, users_settings, bot_settings
 
+start_aria2_listener()
 
 async def stats(client, message):
     if await aiopath.exists('.git'):

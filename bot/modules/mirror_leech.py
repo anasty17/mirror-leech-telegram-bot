@@ -20,7 +20,7 @@ from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramD
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage
-from bot.helper.listener import MirrorLeechListener
+from bot.helper.listeners.tasks_listener import MirrorLeechListener
 
 
 @new_task

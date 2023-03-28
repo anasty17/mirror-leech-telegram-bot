@@ -33,6 +33,7 @@ load_dotenv('config.env', override=True)
 
 Interval = []
 QbInterval = []
+QbTorrents = {}
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
@@ -55,6 +56,7 @@ except:
 download_dict_lock = Lock()
 status_reply_dict_lock = Lock()
 queue_dict_lock = Lock()
+qb_listener_lock = Lock()
 status_reply_dict = {}
 download_dict = {}
 rss_dict = {}
