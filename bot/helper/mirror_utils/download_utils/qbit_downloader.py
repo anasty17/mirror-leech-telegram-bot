@@ -140,7 +140,7 @@ async def __onSeedFinish(tor):
     if hasattr(download, 'listener'):
         listener = download.listener()
         await listener.onUploadError(f"Seeding stopped with Ratio: {round(tor.ratio, 3)} and Time: {get_readable_time(tor.seeding_time)}")
-    await __remove_torrent(client, tor.hash)
+    await __remove_torrent(client, tor.hash, tor.tags)
 
 @new_task
 async def __stop_duplicate(tor):
