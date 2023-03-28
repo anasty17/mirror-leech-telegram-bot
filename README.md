@@ -351,25 +351,25 @@ mirror - or /m Mirror
 zipmirror - or /zm Mirror and upload as zip
 unzipmirror - or /uzm Mirror and extract files
 qbmirror - or /qm Mirror torrent using qBittorrent
-qbzipmirror - or /qzm Mirror torrent and upload as zip using qb
-qbunzipmirror - or /quzm Mirror torrent and extract files using qb
+qbzipmirror - or /qzm Mirror torrent using qb and upload as zip
+qbunzipmirror - or /quzm Mirror torrent using qb and extract files
 leech - or /l Leech
 zipleech - or /zl Leech and upload as zip
 unzipleech - or /uzl Leech and extract files
 qbleech - or /ql Leech torrent using qBittorrent
-qbzipleech - or /qzl Leech torrent and upload as zip using qb
-qbunzipleech - or /quzl Leech torrent and extract using qb
+qbzipleech - or /qzl Leech torrent using qb and upload as zip
+qbunzipleech - or /quzl Leech torrent using qb and extract
 clone - Copy file/folder to Drive
-count - Count file/folder of Drive
+count - Count file/folder from Drive
 ytdl - or /y Mirror yt-dlp supported link
 ytdlzip - or /yz Mirror yt-dlp supported link as zip
 ytdlleech - or /yl Leech through yt-dlp supported link
 ytdlzipleech - or /yzl Leech yt-dlp support link as zip
-usetting - users settings
-bsetting - bot settings
+usetting - User settings
+bsetting - Bot settings
 status - Get Mirror Status message
-btsel - select files from torrent
-rss - rss menu
+btsel - Select files from torrent
+rss - Rss menu
 list - Search files in Drive
 search - Search for torrents with API
 cancel - Cancel a task
@@ -493,8 +493,8 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 - `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In additional to those variables `DEFAULT_UPLOAD` to choose the default tool whether it's rclone or google-api-python-client.
 - If `DEFAULT_UPLOAD` = 'rc' then you must fill `RCLONE_PATH` with path as default one or with `rcl` to select destination path on each new task.
 - If `DEFAULT_UPLOAD` = 'gd' then you must fill `GDRIVE_ID` with folder/TD id.
-- If rclone.conf uploaded from usetting or added in `rclone/{user_id}.conf` then RCLONE_PATH must start with `mrcc:`.
-- Whenever you want to write path manually to use user rclone.conf that added from usetting you must add the `mrcc:` at the beginning.
+- If rclone.conf uploaded from usetting or added in `rclone/{user_id}.conf` then `RCLONE_PATH` must start with `mrcc:`.
+- Whenever you want to write path manually to use user rclone.conf that added from usetting then you must add the `mrcc:` at the beginning.
 
 ------
 
@@ -554,13 +554,21 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
 
-USDT Address: TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f
-Network: TRC20
-
-BTC Addrese:
+USDT Address:
+```
+TEzjjfkxLKQqndpsdpkA7jgiX7QQCL5p4f
+```
+Network:
+```
+TRC20
+```
+BTC Address:
+```
 17dkvxjqdc3yiaTs6dpjUB1TjV3tD7ScWe
-
+```
 ETH Address:
+```
 0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309
+```
 
 -----
