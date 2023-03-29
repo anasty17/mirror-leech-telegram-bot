@@ -5,6 +5,7 @@ from string import ascii_letters, digits
 from logging import getLogger
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
+from asyncio import Event
 
 from bot import download_dict_lock, download_dict, config_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -111,7 +112,7 @@ class YoutubeDLHelper:
             except:
                 pass
 
-    async def __onDownloadStart(self, from_queue):
+    async def __onDownloadStart(self, from_queue=False):
         async with download_dict_lock:
             download_dict[self.__listener.uid] = YtDlpDownloadStatus(self, self.__listener, self.__gid)
         if not from_queue:
@@ -179,12 +180,12 @@ class YoutubeDLHelper:
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
-    async def add_download(self, link, path, name, qual, playlist, args, from_queue=False):
+    async def add_download(self, link, path, name, qual, playlist, args):
         if playlist:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
         self.__gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=10))
-        await self.__onDownloadStart(from_queue)
+        await self.__onDownloadStart()
         if qual.startswith('ba/b-'):
             mp3_info = qual.split('-')
             qual = mp3_info[0]
@@ -194,10 +195,6 @@ class YoutubeDLHelper:
         await sync_to_async(self.extractMetaData, link, name, args)
         if self.__is_cancelled:
             return
-        if not from_queue:
-            LOGGER.info(f'Download with YT_DLP: {self.name}')
-        else:
-            LOGGER.info(f'Start Queued Download with YT_DLP: {self.name}')
         if self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
         elif not args:
@@ -219,6 +216,7 @@ class YoutubeDLHelper:
                     return
         all_limit = config_dict['QUEUE_ALL']
         dl_limit = config_dict['QUEUE_DOWNLOAD']
+        from_queue = False
         if all_limit or dl_limit:
             added_to_queue = False
             async with queue_dict_lock:
@@ -226,14 +224,22 @@ class YoutubeDLHelper:
                 up = len(non_queued_up)
                 if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
                     added_to_queue = True
-                    queued_dl[self.__listener.uid] = ['yt', link, path, name, qual, playlist, args, self.__listener]
+                    event = Event()
+                    queued_dl[self.__listener.uid] = event
             if added_to_queue:
                 LOGGER.info(f"Added to Queue/Download: {self.name}")
                 async with download_dict_lock:
                     download_dict[self.__listener.uid] = QueueStatus(self.name, self.__size, self.__gid, self.__listener, 'Dl')
-                await self.__listener.onDownloadStart()
-                await sendStatusMessage(self.__listener.message)
-                return
+                await event.wait()
+                async with download_dict_lock:
+                    if self.__listener.uid not in download_dict:
+                        return
+                from_queue = True
+        if not from_queue:
+            LOGGER.info(f'Download with YT_DLP: {self.name}')
+        else:
+            LOGGER.info(f'Start Queued Download with YT_DLP: {self.name}')
+            await self.__onDownloadStart(from_queue)
         async with queue_dict_lock:
             non_queued_dl.add(self.__listener.uid)
         await sync_to_async(self.__download, link, path)

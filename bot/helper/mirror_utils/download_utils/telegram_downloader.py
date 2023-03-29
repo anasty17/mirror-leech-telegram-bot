@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from logging import getLogger, ERROR
 from time import time
-from asyncio import Lock
+from asyncio import Lock, Event
 
 from bot import LOGGER, download_dict, download_dict_lock, config_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER
 from ..status_utils.telegram_download_status import TelegramDownloadStatus
@@ -88,7 +88,7 @@ class TelegramDownloadHelper:
         elif not self.__is_cancelled:
             await self.__onDownloadError('Internal error occurred')
 
-    async def add_download(self, message, path, filename, from_queue=False):
+    async def add_download(self, message, path, filename):
         if IS_PREMIUM_USER:
             if not self.__listener.isSuperGroup:
                 await sendMessage(message, 'Use SuperGroup to download with User!')
@@ -99,7 +99,7 @@ class TelegramDownloadHelper:
         if media is not None:
             async with global_lock:
                 download = media.file_unique_id not in GLOBAL_GID
-            if from_queue or download:
+            if download:
                 if filename == "":
                     name = media.file_name if hasattr(media, 'file_name') else 'None'
                 else:
@@ -116,6 +116,7 @@ class TelegramDownloadHelper:
                         return
                 all_limit = config_dict['QUEUE_ALL']
                 dl_limit = config_dict['QUEUE_DOWNLOAD']
+                from_queue = False
                 if all_limit or dl_limit:
                     added_to_queue = False
                     async with queue_dict_lock:
@@ -123,16 +124,19 @@ class TelegramDownloadHelper:
                         up = len(non_queued_up)
                         if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
                             added_to_queue = True
-                            queued_dl[self.__listener.uid] = ['tg', message, path, filename, self.__listener]
+                            event = Event()
+                            queued_dl[self.__listener.uid] = event
                     if added_to_queue:
                         LOGGER.info(f"Added to Queue/Download: {name}")
                         async with download_dict_lock:
                             download_dict[self.__listener.uid] = QueueStatus(name, size, gid, self.__listener, 'Dl')
                         await self.__listener.onDownloadStart()
                         await sendStatusMessage(self.__listener.message)
-                        async with global_lock:
-                            GLOBAL_GID.add(gid)
-                        return
+                        await event.wait()
+                        async with download_dict_lock:
+                            if self.__listener.uid not in download_dict:
+                                return
+                        from_queue = True
                 await self.__onDownloadStart(name, size, gid, from_queue)
                 await self.__download(message, path)
             else:

@@ -47,7 +47,6 @@ class MirrorLeechListener:
         self.select = select
         self.isSuperGroup = message.chat.type.name in ['SUPERGROUP', 'CHANNEL']
         self.suproc = None
-        self.queuedUp = None
         self.sameDir = sameDir
         self.rcFlags = rcFlags
         self.upPath = upPath or config_dict['DEFAULT_UPLOAD']
@@ -237,14 +236,14 @@ class MirrorLeechListener:
             if (all_limit and dl + up >= all_limit and (not up_limit or up >= up_limit)) or (up_limit and up >= up_limit):
                 added_to_queue = True
                 LOGGER.info(f"Added to Queue/Upload: {name}")
-                queued_up[self.uid] = self
+                event = Event()
+                queued_up[self.uid] = event
         if added_to_queue:
             async with download_dict_lock:
                 download_dict[self.uid] = QueueStatus(name, size, gid, self, 'Up')
-            self.queuedUp = Event()
-            await self.queuedUp.wait()
+            await event.wait()
             async with download_dict_lock:
-                if self.uid not in download_dict.keys():
+                if self.uid not in download_dict:
                     return
             LOGGER.info(f'Start from Queued/Upload: {name}')
         async with queue_dict_lock:
@@ -389,15 +388,15 @@ class MirrorLeechListener:
 
         async with queue_dict_lock:
             if self.uid in queued_dl:
+                queued_dl[self.uid].set()
                 del queued_dl[self.uid]
+            if self.uid in queued_up:
+                queued_up[self.uid].set()
+                del queued_up[self.uid]
             if self.uid in non_queued_dl:
                 non_queued_dl.remove(self.uid)
-            if self.uid in queued_up:
-                del queued_up[self.uid]
             if self.uid in non_queued_up:
                 non_queued_up.remove(self.uid)
-        if self.queuedUp is not None:
-            self.queuedUp.set()
         await start_from_queued()
 
     async def onUploadError(self, error):
@@ -421,14 +420,13 @@ class MirrorLeechListener:
 
         async with queue_dict_lock:
             if self.uid in queued_dl:
+                queued_dl[self.uid].set()
                 del queued_dl[self.uid]
+            if self.uid in queued_up:
+                queued_up[self.uid].set()
+                del queued_up[self.uid]
             if self.uid in non_queued_dl:
                 non_queued_dl.remove(self.uid)
-            if self.uid in queued_up:
-                del queued_up[self.uid]
             if self.uid in non_queued_up:
                 non_queued_up.remove(self.uid)
-
-        if self.queuedUp is not None:
-            self.queuedUp.set()
         await start_from_queued()

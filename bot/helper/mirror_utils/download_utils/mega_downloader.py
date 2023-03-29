@@ -135,7 +135,7 @@ class AsyncExecutor:
         await self.continue_event.wait()
 
 
-async def add_mega_download(mega_link, path, listener, name, from_queue=False):
+async def add_mega_download(mega_link, path, listener, name):
     MEGA_API_KEY = config_dict['MEGA_API_KEY']
     MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
     MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
@@ -184,6 +184,7 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
     size = await sync_to_async(api.getSize, node)
     all_limit = config_dict['QUEUE_ALL']
     dl_limit = config_dict['QUEUE_DOWNLOAD']
+    from_queue = False
     if all_limit or dl_limit:
         added_to_queue = False
         async with queue_dict_lock:
@@ -191,17 +192,19 @@ async def add_mega_download(mega_link, path, listener, name, from_queue=False):
             up = len(non_queued_up)
             if (all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)) or (dl_limit and dl >= dl_limit):
                 added_to_queue = True
-                queued_dl[listener.uid] = ['mega', mega_link, path, listener, name]
+                event = Event()
+                queued_dl[listener.uid] = event
         if added_to_queue:
             LOGGER.info(f"Added to Queue/Download: {mname}")
             async with download_dict_lock:
                 download_dict[listener.uid] = QueueStatus(mname, size, gid, listener, 'Dl')
             await listener.onDownloadStart()
             await sendStatusMessage(listener.message)
-            await sync_to_async(api.removeListener, mega_listener)
-            if folder_api is not None:
-                await sync_to_async(folder_api.removeListener, mega_listener)
-            return
+            await event.wait()
+            async with download_dict_lock:
+                if listener.uid not in download_dict:
+                    return
+            from_queue = True
     async with download_dict_lock:
         download_dict[listener.uid] = MegaDownloadStatus(mega_listener, listener.message)
     async with queue_dict_lock:
