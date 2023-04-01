@@ -33,10 +33,13 @@ async def rclone_serve_booter():
             RcloneServe.clear()
         except:
             pass
-    rcs = await create_subprocess_exec("rclone", "serve", "http", "--config", "rclone.conf", "--no-modtime",
-                                       "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}",
-                                       "--vfs-cache-mode", "full", "--vfs-cache-max-age", "1m0s",
-                                       "--buffer-size", "64M")
+    cmd = ["rclone", "serve", "http", "--config", "rclone.conf", "--no-modtime",
+            "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}",
+            "--vfs-cache-mode", "full", "--vfs-cache-max-age", "1m0s",
+            "--buffer-size", "64M"]
+    if (user := config_dict['RCLONE_SERVE_USER']) and (pswd := config_dict['RCLONE_SERVE_PASS']):
+        cmd.extend(("--user", user, "--pass", pswd))
+    rcs = await create_subprocess_exec(*cmd)
     RcloneServe.append(rcs)
 
 bot_loop.run_until_complete(rclone_serve_booter())

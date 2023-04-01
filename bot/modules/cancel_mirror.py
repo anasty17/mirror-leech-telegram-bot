@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from asyncio import sleep
+from asyncio import sleep, gather
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
 
@@ -17,14 +17,13 @@ async def cancel_mirror(client, message):
     if len(msg) > 1:
         gid = msg[1]
         dl = await getDownloadByGid(gid)
-        if not dl:
+        if dl is None:
             await sendMessage(message, f"GID: <code>{gid}</code> Not Found.")
             return
     elif reply_to_id := message.reply_to_message_id:
-        omsg_id = reply_to_id
         async with download_dict_lock:
-            dl = download_dict.get(omsg_id, None)
-        if not dl:
+            dl = download_dict.get(reply_to_id, None)
+        if dl is None:
             await sendMessage(message, "This is not an active task!")
             return
     elif len(msg) == 1:
@@ -32,7 +31,6 @@ async def cancel_mirror(client, message):
               f" or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         await sendMessage(message, msg)
         return
-
     if OWNER_ID != user_id and dl.message.from_user.id != user_id and \
        (user_id not in user_data or not user_data[user_id].get('is_sudo')):
         await sendMessage(message, "This task is not for you!")
@@ -40,15 +38,19 @@ async def cancel_mirror(client, message):
     obj = dl.download()
     await obj.cancel_download()
 
+async def cancel_and_sleep(obj):
+    await obj.cancel_download()
+    await sleep(1)
+
 @new_task
 async def cancel_all(status):
-    gid = ''
-    while dl := await getAllDownload(status):
-        if dl.gid() != gid:
-            gid = dl.gid()
-            obj = dl.download()
-            await obj.cancel_download()
-            await sleep(1)
+    matches = await getAllDownload(status)
+    if matches:
+        tasks = [cancel_and_sleep(dl.download()) for dl in matches]
+        await gather(*tasks)
+        return True
+    else:
+        return False
 
 @new_task
 async def cancell_all_buttons(client, message):
@@ -77,12 +79,16 @@ async def cancell_all_buttons(client, message):
 async def cancel_all_update(client, query):
     data = query.data.split()
     message = query.message
+    reply_to = message.reply_to_message
     await query.answer()
     if data[1] == 'close':
-        await message.reply_to_message.delete()
+        await reply_to.delete()
         await message.delete()
     else:
-        await cancel_all(data[1])
+        res = await cancel_all(data[1])
+        if not res:
+            await sendMessage(reply_to, f"No matching tasks for {data[1]}!")
+
 
 
 bot.add_handler(MessageHandler(cancel_mirror, filters=command(BotCommands.CancelMirror) & CustomFilters.authorized))

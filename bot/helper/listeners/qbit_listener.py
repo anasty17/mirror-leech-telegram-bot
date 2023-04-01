@@ -2,7 +2,7 @@
 from asyncio import Lock, sleep
 from time import time
 
-from bot import download_dict, download_dict_lock, get_client, LOGGER, QbInterval, config_dict, QbTorrents, qb_listener_lock
+from bot import download_dict, download_dict_lock, get_client, QbInterval, config_dict, QbTorrents, qb_listener_lock, LOGGER
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.qbit_status import QbittorrentStatus
 from bot.helper.telegram_helper.message_utils import update_all_messages
@@ -143,7 +143,7 @@ async def __qb_listener():
                 elif state == "missingFiles":
                     await sync_to_async(client.torrents_recheck, torrent_hashes=tor_info.hash)
                 elif state == "error":
-                    __onDownloadError("No enough space for this torrent on device", client, tor_info)
+                    __onDownloadError("No enough space for this torrent on device", tor_info)
                 elif tor_info.completion_on != 0 and not QbTorrents[tag]['uploaded'] and \
                         state not in ['checkingUP', 'checkingDL', 'checkingResumeData']:
                     QbTorrents[tag]['uploaded'] = True

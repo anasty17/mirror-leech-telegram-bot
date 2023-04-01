@@ -254,12 +254,20 @@ async def load_config():
     RCLONE_SERVE_PORT = environ.get('RCLONE_SERVE_PORT', '')
     RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
 
+    RCLONE_SERVE_USER = environ.get('RCLONE_SERVE_USER', '')
+    if len(RCLONE_SERVE_USER) == 0:
+        RCLONE_SERVE_USER = ''
+
+    RCLONE_SERVE_PASS = environ.get('RCLONE_SERVE_PASS', '')
+    if len(RCLONE_SERVE_PASS) == 0:
+        RCLONE_SERVE_PASS = ''
+
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get('BASE_URL', '').rstrip("/")
     if len(BASE_URL) == 0:
         BASE_URL = ''
     else:
-        await create_subprocess_shell(f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT}")
+        await create_subprocess_shell(f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent")
 
     UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
     if len(UPSTREAM_REPO) == 0:
@@ -320,6 +328,8 @@ async def load_config():
                         'RCLONE_FLAGS': RCLONE_FLAGS,
                         'RCLONE_PATH': RCLONE_PATH,
                         'RCLONE_SERVE_URL': RCLONE_SERVE_URL,
+                        'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
+                        'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
                         'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
                         'RSS_CHAT_ID': RSS_CHAT_ID,
                         'RSS_DELAY': RSS_DELAY,
@@ -346,6 +356,7 @@ async def load_config():
         await DbManger().update_config(config_dict)
     await initiate_search_tools()
     await start_from_queued()
+    await rclone_serve_booter()
 
 async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
@@ -473,7 +484,7 @@ async def edit_variable(client, message, pre_message, key):
         value = int(value)
         if config_dict['BASE_URL']:
             await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
-            await create_subprocess_shell(f"gunicorn web.wserver:app --bind 0.0.0.0:{value}")
+            await create_subprocess_shell(f"gunicorn web.wserver:app --bind 0.0.0.0:{value} --worker-class gevent")
     elif key == 'EXTENSION_FILTER':
         fx = value.split()
         GLOBAL_EXTENSION_FILTER.clear()
@@ -503,7 +514,7 @@ async def edit_variable(client, message, pre_message, key):
         await initiate_search_tools()
     elif key in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
         await start_from_queued()
-    elif key in ['RCLONE_SERVE_URL', 'RCLONE_SERVE_PORT']:   
+    elif key in ['RCLONE_SERVE_URL', 'RCLONE_SERVE_PORT', 'RCLONE_SERVE_USER', 'RCLONE_SERVE_PASS']:
         await rclone_serve_booter()
 
 async def edit_aria(client, message, pre_message, key):
@@ -683,7 +694,7 @@ async def edit_bot_settings(client, query):
             value = 80
             if config_dict['BASE_URL']:
                 await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
-                await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:80")
+                await create_subprocess_shell("gunicorn web.wserver:app --bind 0.0.0.0:80 --worker-class gevent")
         elif data[2] == 'GDRIVE_ID':
             if DRIVES_NAMES and DRIVES_NAMES[0] == 'Main':
                 DRIVES_NAMES.pop(0)
@@ -702,7 +713,7 @@ async def edit_bot_settings(client, query):
             await initiate_search_tools()
         elif data[2] in ['QUEUE_ALL', 'QUEUE_DOWNLOAD', 'QUEUE_UPLOAD']:
             await start_from_queued()
-        elif data[2] in ['RCLONE_SERVE_URL', 'RCLONE_SERVE_PORT']:
+        elif data[2] in ['RCLONE_SERVE_URL', 'RCLONE_SERVE_PORT', 'RCLONE_SERVE_USER', 'RCLONE_SERVE_PASS']:
             await rclone_serve_booter()
     elif data[1] == 'resetaria':
         handler_dict[message.chat.id] = False

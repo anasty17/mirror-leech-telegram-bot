@@ -7,15 +7,18 @@ from json import loads
 from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from configparser import ConfigParser
+from logging import getLogger
 
 from bot import download_dict, download_dict_lock, config_dict, queue_dict_lock, non_queued_dl, \
-non_queued_up, queued_dl, LOGGER, GLOBAL_EXTENSION_FILTER
+non_queued_up, queued_dl, GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async, new_task
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, update_all_messages
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.ext_utils.fs_utils import get_base_name, get_mime_type, count_files_and_folders
+
+LOGGER = getLogger(__name__)
 
 
 class RcloneTransferHelper:
@@ -59,7 +62,8 @@ class RcloneTransferHelper:
   
     async def add_download(self, rc_path, config_path, path, name):
         self.__is_download = True
-        cmd = ['rclone', 'lsjson', '--stat', '--no-mimetype', '--no-modtime', '--config', config_path, rc_path]
+        cmd = ['rclone', 'lsjson', '--fast-list', '--stat', '--no-mimetype',
+               '--no-modtime', '--config', config_path, rc_path]
         res, err, code = await cmd_exec(cmd)
         if self.__is_cancelled:
             return
@@ -172,7 +176,7 @@ class RcloneTransferHelper:
         remote_type = await self.__get_remote_type(config_path, remote)
         cmd = await self.__getUpdatedCommand(config_path, path, rc_path)
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
-            cmd.extend(('--drive-chunk-size', '32M', '--drive-upload-cutoff', '32M'))
+            cmd.extend(('--drive-chunk-size', '64M', '--drive-upload-cutoff', '32M'))
         self.__proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         self.__progress()
         return_code = await self.__proc.wait()
@@ -245,9 +249,10 @@ class RcloneTransferHelper:
         pre_name = ipath.rsplit('/', 1)
         return pre_name[1] if len(pre_name) > 1 else pre_name[0]
 
-    async def __getUpdatedCommand(self, config_path, fpath, tpath):
+    async def __getUpdatedCommand(self, config_path, source, destination):
         ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
-        cmd = ['rclone', 'copy', '--config', config_path, '-P', fpath, tpath, '--exclude', ext, '--ignore-case']
+        cmd = ['rclone', 'copy', '--fast-list', '--config', config_path, '-P', source, destination,
+               '--exclude', ext, '--ignore-case']
         if rcf := self.__listener.rcFlags or config_dict['RCLONE_FLAGS']:
             rcflags = rcf.split('|')
             for flag in rcflags:

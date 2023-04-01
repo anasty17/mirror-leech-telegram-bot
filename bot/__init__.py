@@ -174,7 +174,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
-                    parse_mode=enums.ParseMode.HTML, no_updates=True).start()
+                    parse_mode=enums.ParseMode.HTML, no_updates=True, max_concurrent_transmissions=1000).start()
     IS_PREMIUM_USER = user.me.is_premium
 
 MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
@@ -312,6 +312,14 @@ if len(RCLONE_SERVE_URL) == 0:
 RCLONE_SERVE_PORT = environ.get('RCLONE_SERVE_PORT', '')
 RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
 
+RCLONE_SERVE_USER = environ.get('RCLONE_SERVE_USER', '')
+if len(RCLONE_SERVE_USER) == 0:
+    RCLONE_SERVE_USER = ''
+
+RCLONE_SERVE_PASS = environ.get('RCLONE_SERVE_PASS', '')
+if len(RCLONE_SERVE_PASS) == 0:
+    RCLONE_SERVE_PASS = ''
+
 config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
@@ -342,6 +350,8 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'RCLONE_FLAGS': RCLONE_FLAGS,
                'RCLONE_PATH': RCLONE_PATH,
                'RCLONE_SERVE_URL': RCLONE_SERVE_URL,
+               'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
+               'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
                'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
                'RSS_CHAT_ID': RSS_CHAT_ID,
                'RSS_DELAY': RSS_DELAY,
@@ -382,7 +392,7 @@ if ospath.exists('list_drives.txt'):
                 INDEX_URLS.append('')
 
 if BASE_URL:
-    Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT}", shell=True)
+    Popen(f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent", shell=True)
 
 srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists('.netrc'):
@@ -448,7 +458,8 @@ else:
     qb_client.app_set_preferences(qb_opt)
 
 log_info("Creating client from BOT_TOKEN")
-bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN, parse_mode=enums.ParseMode.HTML).start()
+bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN,
+                parse_mode=enums.ParseMode.HTML, max_concurrent_transmissions=1000).start()
 bot_loop = bot.loop
 bot_name = bot.me.username
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
