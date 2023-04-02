@@ -141,6 +141,8 @@ async def restart_notification():
     if await aiopath.isfile(".restartmsg"):
         with open(".restartmsg") as f:
             chat_id, msg_id = map(int, f)
+    else:
+        chat_id, msg_id = 0, 0
 
     async def send_incompelete_task_message(chat_id, msg_id, cid, msg):
         try:
