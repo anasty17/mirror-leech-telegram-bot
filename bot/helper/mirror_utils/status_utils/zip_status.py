@@ -66,4 +66,6 @@ class ZipStatus:
         LOGGER.info(f'Cancelling Archive: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
+        else:
+            self.__listener.suproc = 'cancelled'
         await self.__listener.onUploadError('archiving stopped by user!')

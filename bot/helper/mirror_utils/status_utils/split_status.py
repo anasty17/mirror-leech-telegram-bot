@@ -42,4 +42,6 @@ class SplitStatus:
         LOGGER.info(f'Cancelling Split: {self.__name}')
         if self.__listener.suproc is not None:
             self.__listener.suproc.kill()
+        else:
+            self.__listener.suproc = 'cancelled'
         await self.__listener.onUploadError('splitting stopped by user!')

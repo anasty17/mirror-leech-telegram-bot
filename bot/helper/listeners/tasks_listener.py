@@ -121,9 +121,11 @@ class MirrorLeechListener:
                 if self.pswd is None:
                     del cmd[3]
                 LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
+            if self.suproc == 'cancelled':
+                return
             self.suproc = await create_subprocess_exec(*cmd)
-            await self.suproc.wait()
-            if self.suproc.returncode == -9:
+            code = await self.suproc.wait()
+            if code == -9:
                 return
             elif not self.seed:
                 await clean_target(m_path)
@@ -148,11 +150,13 @@ class MirrorLeechListener:
                                 cmd = ["7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot", "-xr!@PaxHeader"]
                                 if self.pswd is None:
                                     del cmd[2]
-                                self.suproc = await create_subprocess_exec(*cmd)
-                                await self.suproc.wait()
-                                if self.suproc.returncode == -9:
+                                if self.suproc == 'cancelled' or self.suproc is not None and self.suproc.returncode == -9:
                                     return
-                                elif self.suproc.returncode != 0:
+                                self.suproc = await create_subprocess_exec(*cmd)
+                                code = await self.suproc.wait()
+                                if code == -9:
+                                    return
+                                elif code != 0:
                                     LOGGER.error('Unable to extract archive splits!')
                         if not self.seed and self.suproc is not None and self.suproc.returncode == 0:
                             for file_ in files:
@@ -169,11 +173,13 @@ class MirrorLeechListener:
                     cmd = ["7z", "x", f"-p{self.pswd}", m_path, f"-o{path}", "-aot", "-xr!@PaxHeader"]
                     if self.pswd is None:
                         del cmd[2]
-                    self.suproc = await create_subprocess_exec(*cmd)
-                    await self.suproc.wait()
-                    if self.suproc.returncode == -9:
+                    if self.suproc == 'cancelled':
                         return
-                    elif self.suproc.returncode == 0:
+                    self.suproc = await create_subprocess_exec(*cmd)
+                    code = await self.suproc.wait()
+                    if code == -9:
+                        return
+                    elif code == 0:
                         LOGGER.info(f"Extracted Path: {path}")
                         if not self.seed:
                             try:
@@ -349,7 +355,7 @@ class MirrorLeechListener:
                         non_queued_up.remove(self.uid)
                 await start_from_queued()
                 return
-            
+
         await clean_download(self.dir)
         async with download_dict_lock:
             if self.uid in download_dict.keys():
@@ -367,9 +373,6 @@ class MirrorLeechListener:
         await start_from_queued()
 
     async def onDownloadError(self, error, button=None):
-        await clean_download(self.dir)
-        if self.newDir:
-            await clean_download(self.newDir)
         async with download_dict_lock:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
@@ -397,12 +400,14 @@ class MirrorLeechListener:
                 non_queued_dl.remove(self.uid)
             if self.uid in non_queued_up:
                 non_queued_up.remove(self.uid)
-        await start_from_queued()
 
-    async def onUploadError(self, error):
+        await start_from_queued()
+        await sleep(3)
         await clean_download(self.dir)
         if self.newDir:
             await clean_download(self.newDir)
+
+    async def onUploadError(self, error):
         async with download_dict_lock:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
@@ -429,4 +434,9 @@ class MirrorLeechListener:
                 non_queued_dl.remove(self.uid)
             if self.uid in non_queued_up:
                 non_queued_up.remove(self.uid)
+
         await start_from_queued()
+        await sleep(3)
+        await clean_download(self.dir)
+        if self.newDir:
+            await clean_download(self.newDir)

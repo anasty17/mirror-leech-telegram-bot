@@ -108,6 +108,8 @@ async def take_ss(video_file, duration):
     return des_dir
 
 async def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, multi_streams=True):
+    if listener.suproc == 'cancelled' or listener.suproc is not None and listener.suproc.returncode == -9:
+        return False
     if listener.seed and not listener.newDir:
         dirpath = f"{dirpath}/splited_files_mltb"
         if not await aiopath.exists(dirpath):
@@ -133,6 +135,8 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
             if not multi_streams:
                 del cmd[10]
                 del cmd[10]
+            if listener.suproc == 'cancelled' or listener.suproc is not None and listener.suproc.returncode == -9:
+                return False
             listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
             code = await listener.suproc.wait()
             if code == -9:
