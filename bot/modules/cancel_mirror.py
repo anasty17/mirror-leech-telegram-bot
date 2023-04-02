@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from asyncio import sleep, gather
+from asyncio import sleep
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
 
@@ -38,19 +38,16 @@ async def cancel_mirror(client, message):
     obj = dl.download()
     await obj.cancel_download()
 
-async def cancel_and_sleep(obj):
-    await obj.cancel_download()
-    await sleep(1)
-
 @new_task
 async def cancel_all(status):
     matches = await getAllDownload(status)
-    if matches:
-        tasks = [cancel_and_sleep(dl.download()) for dl in matches]
-        await gather(*tasks)
-        return True
-    else:
+    if not matches:
         return False
+    for dl in matches:
+        obj = dl.download()
+        await obj.cancel_download()
+        await sleep(1)
+    return True
 
 @new_task
 async def cancell_all_buttons(client, message):
