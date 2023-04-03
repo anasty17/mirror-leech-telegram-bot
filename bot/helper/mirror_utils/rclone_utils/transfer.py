@@ -38,15 +38,15 @@ class RcloneTransferHelper:
     @property
     def transferred_size(self):
         return self.__transferred_size
-    
+
     @property
     def percentage(self):
         return self.__percentage
-    
+
     @property
     def speed(self):
         return self.__speed
-    
+
     @property
     def eta(self):
         return self.__eta
@@ -59,7 +59,7 @@ class RcloneTransferHelper:
                 break
             if data := re_findall(r'Transferred:\s+([\d.]+\s*\w+)\s+/\s+([\d.]+\s*\w+),\s+([\d.]+%)\s*,\s+([\d.]+\s*\w+/s),\s+ETA\s+([\dwdhms]+)', data):
                 self.__transferred_size, _, self.__percentage, self.__speed, self.__eta = data[0]
-  
+
     async def add_download(self, rc_path, config_path, path, name):
         self.__is_download = True
         cmd = ['rclone', 'lsjson', '--fast-list', '--stat', '--no-mimetype',
@@ -68,7 +68,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         if code not in [0, -9]:
-            await sendMessage(f'Error: While getting rclone stat. Path: {rc_path}. Stderr: {err[:4000]}')
+            await sendMessage(self.__listener.message, f'Error: While getting rclone stat. Path: {rc_path}. Stderr: {err[:4000]}')
             return
         result = loads(res)
         if result['IsDir']:
@@ -83,7 +83,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         if code not in [0, -9]:
-            await sendMessage(f'Error: While getting rclone size. Path: {rc_path}. Stderr: {err[:4000]}')
+            await sendMessage(self.__listener.message, f'Error: While getting rclone size. Path: {rc_path}. Stderr: {err[:4000]}')
             return
         rdict = loads(res)
         self.size = rdict['bytes']
@@ -219,7 +219,7 @@ class RcloneTransferHelper:
                     link = ''
             else:
                 if mime_type == 'Folder':
-                    epath = rc_path 
+                    epath = rc_path
                 elif rc_path.split(':', 1)[1]:
                     epath = f"{rc_path}/{self.name}"
                 else:
@@ -262,7 +262,7 @@ class RcloneTransferHelper:
                 elif len(flag) > 0:
                     cmd.append(flag)
         return cmd
-    
+
     @staticmethod
     async def __get_remote_type(config_path, remote):
         config = ConfigParser()
