@@ -21,6 +21,7 @@ from bot.helper.ext_utils.bot_utils import update_user_ldata, sync_to_async, new
 
 handler_dict = {}
 
+
 async def get_user_settings(from_user):
     user_id = from_user.id
     name = from_user.mention
@@ -77,13 +78,16 @@ async def get_user_settings(from_user):
            f"YT-DLP Quality is <b><code>{escape(ytq)}</code></b>"
     return text, buttons.build_menu(1)
 
+
 async def update_user_settings(query):
     msg, button = await get_user_settings(query.from_user)
     await editMessage(query.message, msg, button)
 
+
 async def user_settings(client, message):
     msg, button = await get_user_settings(message.from_user)
     await sendMessage(message, msg, button)
+
 
 async def set_yt_quality(client, message, pre_event):
     user_id = message.from_user.id
@@ -94,6 +98,7 @@ async def set_yt_quality(client, message, pre_event):
     await update_user_settings(pre_event)
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
+
 
 async def set_thumb(client, message, pre_event):
     user_id = message.from_user.id
@@ -111,6 +116,7 @@ async def set_thumb(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_doc(user_id, 'thumb', des_dir)
 
+
 async def add_rclone(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -125,6 +131,7 @@ async def add_rclone(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_doc(user_id, 'rclone', des_dir)
 
+
 async def leech_split_size(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -135,10 +142,12 @@ async def leech_split_size(client, message, pre_event):
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
 
+
 async def event_handler(client, query, pfunc, photo=False, document=False):
     user_id = query.from_user.id
     handler_dict[user_id] = True
     start_time = time()
+
     async def event_filter(_, __, event):
         if photo:
             mtype = event.photo
@@ -148,13 +157,15 @@ async def event_handler(client, query, pfunc, photo=False, document=False):
             mtype = event.text
         user = event.from_user or event.sender_chat
         return bool(user.id == user_id and event.chat.id == query.message.chat.id and mtype)
-    handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
+    handler = client.add_handler(MessageHandler(
+        pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[user_id]:
         await sleep(0.5)
         if time() - start_time > 60:
             handler_dict[user_id] = False
             await update_user_settings(query)
     client.remove_handler(*handler)
+
 
 @new_thread
 async def edit_user_settings(client, query):
@@ -168,7 +179,8 @@ async def edit_user_settings(client, query):
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
     elif data[2] == "doc":
-        update_user_ldata(user_id, 'as_doc', not user_dict.get('as_doc', False))
+        update_user_ldata(user_id, 'as_doc',
+                          not user_dict.get('as_doc', False))
         await query.answer()
         await update_user_settings(query)
         if DATABASE_URL:
@@ -206,7 +218,8 @@ async def edit_user_settings(client, query):
         buttons = ButtonMaker()
         buttons.ibutton("Back", f"userset {user_id} back")
         if user_dict.get('yt_ql', False) or config_dict['YT_DLP_QUALITY']:
-            buttons.ibutton("Remove YT-DLP Quality", f"userset {user_id} rytq", 'header')
+            buttons.ibutton("Remove YT-DLP Quality",
+                            f"userset {user_id} rytq", 'header')
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = f'''
 Send YT-DLP Qaulity. Timeout: 60 sec
@@ -232,9 +245,11 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
             buttons.ibutton("Reset Split Size", f"userset {user_id} rlss")
         ES = config_dict['EQUAL_SPLITS']
         if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and ES:
-            buttons.ibutton("Disable Equal Splits", f"userset {user_id} esplits")
+            buttons.ibutton("Disable Equal Splits",
+                            f"userset {user_id} esplits")
         else:
-            buttons.ibutton("Enable Equal Splits", f"userset {user_id} esplits")
+            buttons.ibutton("Enable Equal Splits",
+                            f"userset {user_id} esplits")
         if user_dict.get('media_group', False) or 'media_group' not in user_dict and config_dict['MEDIA_GROUP']:
             buttons.ibutton("Disable Media Group", f"userset {user_id} mgroup")
         else:
@@ -254,14 +269,16 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
     elif data[2] == 'esplits':
         handler_dict[user_id] = False
         await query.answer()
-        update_user_ldata(user_id, 'equal_splits', not user_dict.get('equal_splits', False))
+        update_user_ldata(user_id, 'equal_splits',
+                          not user_dict.get('equal_splits', False))
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
     elif data[2] == 'mgroup':
         handler_dict[user_id] = False
         await query.answer()
-        update_user_ldata(user_id, 'media_group', not user_dict.get('media_group', False))
+        update_user_ldata(user_id, 'media_group',
+                          not user_dict.get('media_group', False))
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
@@ -297,6 +314,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         await message.reply_to_message.delete()
         await message.delete()
 
+
 async def send_users_settings(client, message):
     if msg := ''.join(f'<code>{u}</code>: {escape(str(d))}\n\n' for u, d in user_data.items()):
         if len(msg.encode()) > 4000:
@@ -309,6 +327,9 @@ async def send_users_settings(client, message):
         await sendMessage(message, 'No users data!')
 
 
-bot.add_handler(MessageHandler(send_users_settings, filters=command(BotCommands.UsersCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(user_settings, filters=command(BotCommands.UserSetCommand) & CustomFilters.authorized))
-bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex("^userset")))
+bot.add_handler(MessageHandler(send_users_settings, filters=command(
+    BotCommands.UsersCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(user_settings, filters=command(
+    BotCommands.UserSetCommand) & CustomFilters.authorized))
+bot.add_handler(CallbackQueryHandler(
+    edit_user_settings, filters=regex("^userset")))

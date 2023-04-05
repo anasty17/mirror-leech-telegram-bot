@@ -29,4 +29,5 @@ async def deletefile(client, message):
     await auto_delete_message(message, reply_message)
 
 
-bot.add_handler(MessageHandler(deletefile, filters=command(BotCommands.DeleteCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(deletefile, filters=command(
+    BotCommands.DeleteCommand) & CustomFilters.authorized))

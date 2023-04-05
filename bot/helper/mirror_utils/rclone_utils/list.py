@@ -152,13 +152,16 @@ class RcloneList:
             buttons.ibutton('Next', 'rcq nex', position='footer')
         if self.list_status == 'rcd':
             if self.item_type == '--dirs-only':
-                buttons.ibutton('Files', 'rcq itype --files-only', position='footer')
+                buttons.ibutton(
+                    'Files', 'rcq itype --files-only', position='footer')
             else:
-                buttons.ibutton('Folders', 'rcq itype --dirs-only', position='footer')
+                buttons.ibutton(
+                    'Folders', 'rcq itype --dirs-only', position='footer')
         if self.list_status == 'rcu' or len(self.path_list) > 0:
-            buttons.ibutton('Choose Current Path', 'rcq cur', position='footer')
+            buttons.ibutton('Choose Current Path',
+                            'rcq cur', position='footer')
         if self.path or len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
-                buttons.ibutton('Back', 'rcq back pa', position='footer')
+            buttons.ibutton('Back', 'rcq back pa', position='footer')
         if self.path:
             buttons.ibutton('Back To Root', 'rcq root', position='footer')
         buttons.ibutton('Cancel', 'rcq cancel', position='footer')
@@ -184,7 +187,8 @@ class RcloneList:
             return
         res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
-            LOGGER.error(f'While rclone listing. Path: {self.remote}{self.path}. Stderr: {err}')
+            LOGGER.error(
+                f'While rclone listing. Path: {self.remote}{self.path}. Stderr: {err}')
             self.remote = err[:4000]
             self.path = ''
             self.event.set()

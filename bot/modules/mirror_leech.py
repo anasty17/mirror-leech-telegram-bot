@@ -10,17 +10,18 @@ from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, is_rclone_path
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
-from bot.helper.mirror_utils.download_utils.gd_downloader import add_gd_download
-from bot.helper.mirror_utils.download_utils.qbit_downloader import add_qb_torrent
-from bot.helper.mirror_utils.download_utils.mega_downloader import add_mega_download
-from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
+from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
+from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
+from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
-from bot.helper.mirror_utils.download_utils.telegram_downloader import TelegramDownloadHelper
+from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
+from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
 
 
 @new_task
@@ -42,8 +43,8 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         for x in args:
             x = x.strip()
             if x == 's':
-               select = True
-               index += 1
+                select = True
+                index += 1
             elif x == 'd':
                 seed = True
                 index += 1
@@ -92,21 +93,25 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             sameDir.add(nextmsg.id)
         nextmsg.from_user = message.from_user
         await sleep(4)
-        _mirror_leech(client, nextmsg, isZip, extract, isQbit, isLeech, sameDir)
+        _mirror_leech(client, nextmsg, isZip, extract,
+                      isQbit, isLeech, sameDir)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 
     name = mesg[0].split(' n: ', 1)
-    name = re_split(' pswd: | rcf: | up: ', name[1])[0].strip() if len(name) > 1 else ''
+    name = re_split(' pswd: | rcf: | up: ', name[1])[
+        0].strip() if len(name) > 1 else ''
 
     pswd = mesg[0].split(' pswd: ', 1)
     pswd = re_split(' n: | rcf: | up: ', pswd[1])[0] if len(pswd) > 1 else None
 
     rcf = mesg[0].split(' rcf: ', 1)
-    rcf = re_split(' n: | pswd: | up: ', rcf[1])[0].strip() if len(rcf) > 1 else None
+    rcf = re_split(' n: | pswd: | up: ', rcf[1])[
+        0].strip() if len(rcf) > 1 else None
 
     up = mesg[0].split(' up: ', 1)
-    up = re_split(' n: | pswd: | rcf: ', up[1])[0].strip() if len(up) > 1 else None
+    up = re_split(' n: | pswd: | rcf: ', up[1])[
+        0].strip() if len(up) > 1 else None
 
     if len(mesg) > 1 and mesg[1].startswith('Tag: '):
         tag, id_ = mesg[1].split('Tag: ')[1].split()
@@ -123,7 +128,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     file_ = None
     if reply_to := message.reply_to_message:
         file_ = reply_to.document or reply_to.photo or reply_to.video or reply_to.audio or \
-                 reply_to.voice or reply_to.video_note or reply_to.sticker or reply_to.animation or None
+            reply_to.voice or reply_to.video_note or reply_to.sticker or reply_to.animation or None
         if not reply_to.from_user.is_bot:
             if username := reply_to.from_user.username:
                 tag = f"@{username}"
@@ -139,64 +144,9 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 file_ = None
 
     if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link) and not is_rclone_path(link) and file_ is None:
-        help_msg = '''
-<code>/cmd</code> link n: newname pswd: xx(zip/unzip)
-
-<b>By replying to link/file:</b>
-<code>/cmd</code> n: newname pswd: xx(zip/unzip)
-
-<b>Direct link authorization:</b>
-<code>/cmd</code> link n: newname pswd: xx(zip/unzip)
-<b>username</b>
-<b>password</b>
-
-<b>Bittorrent selection:</b>
-<code>/cmd</code> <b>s</b> link or by replying to file/link
-This option should be always before n: or pswd:
-
-<b>Bittorrent seed</b>:
-<code>/cmd</code> <b>d</b> link or by replying to file/link
-To specify ratio and seed time add d:ratio:time. Ex: d:0.7:10 (ratio and time) or d:0.7 (only ratio) or d::10 (only time) where time in minutes.
-Those options should be always before n: or pswd:
-
-<b>Multi links only by replying to first link/file:</b>
-<code>/cmd</code> 10(number of links/files)
-Number should be always before n: or pswd:
-
-<b>Multi links within same upload directory only by replying to first link/file:</b>
-<code>/cmd</code> 10(number of links/files) m:folder_name
-Number and m:folder_name (folder_name without space) should be always before n: or pswd:
-
-<b>Rclone Download</b>:
-Treat rclone paths exactly like links
-<code>/cmd</code> main:dump/ubuntu.iso or <code>rcl</code> (To select config, remote and path)
-Users can add their own rclone from user settings
-If you want to add path manually from your config add <code>mrcc:</code> before the path without space
-<code>/cmd</code> <code>mrcc:</code>main:/dump/ubuntu.iso
-
-<b>Upload</b>:
-<code>/cmd</code> link up: <code>rcl</code> (To select rclone config, remote and path)
-You can directly add the upload path. up: remote:dir/subdir
-If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
-If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
-<code>/cmd</code> link up: <code>mrcc:</code>main:dump
-
-<b>Rclone Flags</b>:
-<code>/cmd</code> link|path|rcl up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
-This will override all other flags except --exclude
-Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
-
-<b>NOTES:</b>
-1. When use cmd by reply don't add any option in link msg! Always add them after cmd msg!
-2. Options (<b>n: and pswd:</b>) should be added randomly after the link if link along with the cmd and after any other option
-3. Options (<b>d, s, m: and multi</b>) should be added randomly before the link and before any other option.
-4. Commands that start with <b>qb</b> are ONLY for torrents.
-5. (n:) option doesn't work with torrents. 
-'''
-        await sendMessage(message, help_msg)
+        await sendMessage(message, MIRROR_HELP_MESSAGE)
         return
-    
+
     if link:
         LOGGER.info(link)
 
@@ -226,7 +176,8 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
             await sendMessage(message, up)
             return
 
-    listener = MirrorLeechListener(message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, rcf, up)
+    listener = MirrorLeechListener(
+        message, isZip, extract, isQbit, isLeech, pswd, tag, select, seed, sameDir, rcf, up)
 
     if file_ is not None:
         await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name)
@@ -239,15 +190,9 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
         if not await aiopath.exists(config_path):
             await sendMessage(message, f"Rclone Config: {config_path} not Exists!")
             return
-        await RcloneTransferHelper(listener).add_download(link, config_path, f'{path}/', name)
+        await add_rclone_download(link, config_path, f'{path}/', name, listener)
     elif is_gdrive_link(link):
-        if not isZip and not extract and not isLeech:
-            gmsg = f"Use /{BotCommands.CloneCommand} to clone Google Drive file/folder\n\n"
-            gmsg += f"Use /{BotCommands.ZipMirrorCommand[0]} to make zip of Google Drive folder\n\n"
-            gmsg += f"Use /{BotCommands.UnzipMirrorCommand[0]} to extracts Google Drive archive folder/file"
-            await sendMessage(message, gmsg)
-        else:
-            await add_gd_download(link, path, listener, name)
+        await add_gd_download(link, path, listener, name)
     elif is_mega_link(link):
         await add_mega_download(link, f'{path}/', listener, name)
     elif isQbit:
@@ -266,49 +211,72 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 async def mirror(client, message):
     _mirror_leech(client, message)
 
+
 async def unzip_mirror(client, message):
     _mirror_leech(client, message, extract=True)
+
 
 async def zip_mirror(client, message):
     _mirror_leech(client, message, True)
 
+
 async def qb_mirror(client, message):
     _mirror_leech(client, message, isQbit=True)
+
 
 async def qb_unzip_mirror(client, message):
     _mirror_leech(client, message, extract=True, isQbit=True)
 
+
 async def qb_zip_mirror(client, message):
     _mirror_leech(client, message, True, isQbit=True)
+
 
 async def leech(client, message):
     _mirror_leech(client, message, isLeech=True)
 
+
 async def unzip_leech(client, message):
     _mirror_leech(client, message, extract=True, isLeech=True)
+
 
 async def zip_leech(client, message):
     _mirror_leech(client, message, True, isLeech=True)
 
+
 async def qb_leech(client, message):
     _mirror_leech(client, message, isQbit=True, isLeech=True)
 
+
 async def qb_unzip_leech(client, message):
     _mirror_leech(client, message, extract=True, isQbit=True, isLeech=True)
+
 
 async def qb_zip_leech(client, message):
     _mirror_leech(client, message, True, isQbit=True, isLeech=True)
 
 
-bot.add_handler(MessageHandler(mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(unzip_mirror, filters=command(BotCommands.UnzipMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(zip_mirror, filters=command(BotCommands.ZipMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_mirror, filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_unzip_mirror, filters=command(BotCommands.QbUnzipMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_zip_mirror, filters=command(BotCommands.QbZipMirrorCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(leech, filters=command(BotCommands.LeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(unzip_leech, filters=command(BotCommands.UnzipLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(zip_leech, filters=command(BotCommands.ZipLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_leech, filters=command(BotCommands.QbLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_unzip_leech, filters=command(BotCommands.QbUnzipLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(qb_zip_leech, filters=command(BotCommands.QbZipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(mirror, filters=command(
+    BotCommands.MirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(unzip_mirror, filters=command(
+    BotCommands.UnzipMirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(zip_mirror, filters=command(
+    BotCommands.ZipMirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_mirror, filters=command(
+    BotCommands.QbMirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_unzip_mirror, filters=command(
+    BotCommands.QbUnzipMirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_zip_mirror, filters=command(
+    BotCommands.QbZipMirrorCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(leech, filters=command(
+    BotCommands.LeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(unzip_leech, filters=command(
+    BotCommands.UnzipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(zip_leech, filters=command(
+    BotCommands.ZipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_leech, filters=command(
+    BotCommands.QbLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_unzip_leech, filters=command(
+    BotCommands.QbUnzipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(qb_zip_leech, filters=command(
+    BotCommands.QbZipLeechCommand) & CustomFilters.authorized))

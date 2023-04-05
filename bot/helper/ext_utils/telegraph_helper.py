@@ -27,28 +27,30 @@ class TelegraphHelper:
 
     async def create_page(self, title, content):
         try:
-           return await self.telegraph.create_page(
-                title = title,
+            return await self.telegraph.create_page(
+                title=title,
                 author_name=self.author_name,
                 author_url=self.author_url,
                 html_content=content
-           )
+            )
         except RetryAfterError as st:
-            LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
+            LOGGER.warning(
+                f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
             await sleep(st.retry_after)
             return await self.create_page(title, content)
 
     async def edit_page(self, path, title, content):
         try:
             return await self.telegraph.edit_page(
-                path = path,
-                title = title,
+                path=path,
+                title=title,
                 author_name=self.author_name,
                 author_url=self.author_url,
                 html_content=content
             )
         except RetryAfterError as st:
-            LOGGER.warning(f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
+            LOGGER.warning(
+                f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
             await sleep(st.retry_after)
             return await self.edit_page(path, title, content)
 
@@ -56,11 +58,11 @@ class TelegraphHelper:
         nxt_page = 1
         prev_page = 0
         num_of_path = len(path)
-        for content in telegraph_content :
-            if nxt_page == 1 :
+        for content in telegraph_content:
+            if nxt_page == 1:
                 content += f'<b><a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
                 nxt_page += 1
-            else :
+            else:
                 if prev_page <= num_of_path:
                     content += f'<b><a href="https://telegra.ph/{path[prev_page]}">Prev</a></b>'
                     prev_page += 1
@@ -68,13 +70,14 @@ class TelegraphHelper:
                     content += f'<b> | <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
             await self.edit_page(
-                path = path[prev_page],
-                title = 'Mirror-leech-bot Torrent Search',
+                path=path[prev_page],
+                title='Mirror-leech-bot Torrent Search',
                 content=content
             )
         return
 
 
-telegraph = TelegraphHelper('Mirror-Leech-Telegram-Bot', 'https://github.com/anasty17/mirror-leech-telegram-bot')
+telegraph = TelegraphHelper('Mirror-Leech-Telegram-Bot',
+                            'https://github.com/anasty17/mirror-leech-telegram-bot')
 
 bot_loop.run_until_complete(telegraph.create_account())

@@ -23,10 +23,10 @@ getLogger("pyrogram").setLevel(ERROR)
 
 class TgUploader:
 
-    def __init__(self, name=None, path=None, size=0, listener=None):
+    def __init__(self, name=None, path=None, listener=None):
         self.name = name
-        self.uploaded_bytes = 0
         self._last_uploaded = 0
+        self.__processed_bytes = 0
         self.__listener = listener
         self.__path = path
         self.__start_time = time()
@@ -36,7 +36,6 @@ class TgUploader:
         self.__msgs_dict = {}
         self.__corrupted = 0
         self.__is_corrupted = False
-        self.__size = size
         self.__media_dict = {'videos': {}, 'documents': {}}
         self.__last_msg_in_group = False
         self.__up_path = ''
@@ -49,13 +48,14 @@ class TgUploader:
                 bot.stop_transmission()
         chunk_size = current - self._last_uploaded
         self._last_uploaded = current
-        self.uploaded_bytes += chunk_size
+        self.__processed_bytes += chunk_size
 
     async def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
         self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
-        self.__media_group = user_dict.get('media_group') or config_dict['MEDIA_GROUP']
+        self.__media_group = user_dict.get(
+            'media_group') or config_dict['MEDIA_GROUP']
         if not await aiopath.exists(self.__thumb):
             self.__thumb = None
 
@@ -73,7 +73,7 @@ class TgUploader:
                 await self.__listener.onUploadError('Use SuperGroup to leech with User!')
                 return
             self.__sent_msg = await user.get_messages(chat_id=self.__listener.message.chat.id,
-                                                          message_ids=self.__listener.uid)
+                                                      message_ids=self.__listener.uid)
         else:
             self.__sent_msg = self.__listener.message
 
@@ -83,10 +83,12 @@ class TgUploader:
             if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                 dirpath = f'{dirpath}/copied_mltb'
                 await makedirs(dirpath, exist_ok=True)
-                new_path = ospath.join(dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
+                new_path = ospath.join(
+                    dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
                 self.__up_path = await copy(self.__up_path, new_path)
             else:
-                new_path = ospath.join(dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
+                new_path = ospath.join(
+                    dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
                 await aiorename(self.__up_path, new_path)
                 self.__up_path = new_path
         else:
@@ -122,9 +124,11 @@ class TgUploader:
         rlist = []
         for msg in self.__media_dict[key][subkey]:
             if key == 'videos':
-                input_media = InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
+                input_media = InputMediaVideo(
+                    media=msg.video.file_id, caption=msg.caption)
             else:
-                input_media = InputMediaDocument(media=msg.document.file_id, caption=msg.caption)
+                input_media = InputMediaDocument(
+                    media=msg.document.file_id, caption=msg.caption)
             rlist.append(input_media)
         return rlist
 
@@ -142,7 +146,7 @@ class TgUploader:
                 self.__msgs_dict[m.link] = m.caption
         self.__sent_msg = msgs_list[-1]
 
-    async def upload(self, o_files, m_size):
+    async def upload(self, o_files, m_size, size):
         await self.__msg_to_reply()
         await self.__user_settings()
         for dirpath, _, files in sorted(await sync_to_async(walk, self.__path)):
@@ -157,14 +161,16 @@ class TgUploader:
                         continue
                     self.__total_files += 1
                     if f_size == 0:
-                        LOGGER.error(f"{self.__up_path} size is zero, telegram don't upload zero size files")
+                        LOGGER.error(
+                            f"{self.__up_path} size is zero, telegram don't upload zero size files")
                         self.__corrupted += 1
                         continue
                     if self.__is_cancelled:
                         return
                     cap_mono = await self.__prepare_file(file_, dirpath)
                     if self.__last_msg_in_group:
-                        group_lists = [x for v in self.__media_dict.values() for x in v.keys()]
+                        group_lists = [x for v in self.__media_dict.values()
+                                       for x in v.keys()]
                         if (match := re_match(r'.+(?=\.0*\d+$)|.+(?=\.part\d+\..+)', self.__up_path)) and match.group(0) not in group_lists:
                             for key, value in list(self.__media_dict.items()):
                                 for subkey, msgs in list(value.items()):
@@ -180,7 +186,8 @@ class TgUploader:
                     await sleep(1)
                 except Exception as err:
                     if isinstance(err, RetryError):
-                        LOGGER.info(f"Total Attempts: {err.last_attempt.attempt_number}")
+                        LOGGER.info(
+                            f"Total Attempts: {err.last_attempt.attempt_number}")
                     else:
                         LOGGER.error(f"{err}. Path: {self.__up_path}")
                     if self.__is_cancelled:
@@ -188,8 +195,8 @@ class TgUploader:
                     continue
                 finally:
                     if not self.__is_cancelled and await aiopath.exists(self.__up_path) and \
-                          (not self.__listener.seed or self.__listener.newDir or
-                          dirpath.endswith("splited_files_mltb") or '/copied_mltb/' in self.__up_path):
+                        (not self.__listener.seed or self.__listener.newDir or
+                         dirpath.endswith("splited_files_mltb") or '/copied_mltb/' in self.__up_path):
                         await aioremove(self.__up_path)
         for key, value in list(self.__media_dict.items()):
             for subkey, msgs in list(value.items()):
@@ -206,7 +213,7 @@ class TgUploader:
             await self.__listener.onUploadError('Files Corrupted or unable to upload. Check logs!')
             return
         LOGGER.info(f"Leech Completed: {self.name}")
-        await self.__listener.onUploadComplete(None, self.__size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
+        await self.__listener.onUploadComplete(None, size, self.__msgs_dict, self.__total_files, self.__corrupted, self.name)
 
     @retry(wait=wait_exponential(multiplier=2, min=4, max=8), stop=stop_after_attempt(3),
            retry=retry_if_exception_type(Exception))
@@ -248,7 +255,8 @@ class TgUploader:
                     if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("splited_files_mltb"):
                         dirpath = f"{dirpath}/copied_mltb"
                         await makedirs(dirpath, exist_ok=True)
-                        new_path = ospath.join(dirpath, f"{file_.rsplit('.', 1)[0]}.mp4")
+                        new_path = ospath.join(
+                            dirpath, f"{file_.rsplit('.', 1)[0]}.mp4")
                         self.__up_path = await copy(self.__up_path, new_path)
                     else:
                         new_path = f"{self.__up_path.rsplit('.', 1)[0]}.mp4"
@@ -266,7 +274,7 @@ class TgUploader:
                                                                     progress=self.__upload_progress)
             elif is_audio:
                 key = 'audios'
-                duration , artist, title = await get_media_info(self.__up_path)
+                duration, artist, title = await get_media_info(self.__up_path)
                 self.__sent_msg = await self.__sent_msg.reply_audio(audio=self.__up_path,
                                                                     quote=True,
                                                                     caption=cap_mono,
@@ -316,9 +324,13 @@ class TgUploader:
     @property
     def speed(self):
         try:
-            return self.uploaded_bytes / (time() - self.__start_time)
+            return self.__processed_bytes / (time() - self.__start_time)
         except:
             return 0
+
+    @property
+    def processed_bytes(self):
+        return self.__processed_bytes
 
     async def cancel_download(self):
         self.__is_cancelled = True

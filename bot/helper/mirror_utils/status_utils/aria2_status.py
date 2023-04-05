@@ -4,6 +4,7 @@ from time import time
 from bot import aria2, LOGGER
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_time, sync_to_async
 
+
 def get_download(gid):
     try:
         return aria2.get_download(gid)

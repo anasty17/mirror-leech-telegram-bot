@@ -10,7 +10,7 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 from asyncio import create_subprocess_exec, gather
 
-from bot import bot, botStartTime, LOGGER, Interval, DATABASE_URL, user, QbInterval, INCOMPLETE_TASK_NOTIFIER, scheduler
+from bot import bot, botStartTime, LOGGER, Interval, DATABASE_URL, QbInterval, INCOMPLETE_TASK_NOTIFIER, scheduler
 from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, cmd_exec, sync_to_async
 from .helper.ext_utils.db_handler import DbManger
@@ -22,6 +22,7 @@ from bot.helper.listeners.aria2_listener import start_aria2_listener
 from .modules import authorize, gd_clone, gd_count, gd_delete, gd_list, cancel_mirror, mirror_leech, status, torrent_search, torrent_select, ytdlp, rss, shell, eval, users_settings, bot_settings
 
 start_aria2_listener()
+
 
 async def stats(client, message):
     if await aiopath.exists('.git'):
@@ -50,9 +51,11 @@ async def stats(client, message):
             f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
     await sendMessage(message, stats)
 
+
 async def start(client, message):
     buttons = ButtonMaker()
-    buttons.ubutton("Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
+    buttons.ubutton(
+        "Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
     buttons.ubutton("Owner", "https://t.me/anas_tayyar")
     reply_markup = buttons.build_menu(2)
     if await CustomFilters.authorized(client, message):
@@ -64,14 +67,15 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
     else:
         await sendMessage(message, 'You Are not authorized user! Deploy your own mirror-leech bot', reply_markup)
 
+
 async def restart(client, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
-    for interval in [Interval, QbInterval]:
-        if interval:
-            interval[0].cancel()
-            interval.clear()
+    if QbInterval:
+        QbInterval[0].kill()
+    if Interval:
+        Interval[0].cancel()
     await sync_to_async(clean_all)
     proc1 = await create_subprocess_exec('pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')
     proc2 = await create_subprocess_exec('python3', 'update.py')
@@ -80,11 +84,13 @@ async def restart(client, message):
         await f.write(f"{restart_message.chat.id}\n{restart_message.id}\n")
     osexecl(executable, executable, "-m", "bot")
 
+
 async def ping(client, message):
     start_time = int(round(time() * 1000))
     reply = await sendMessage(message, "Starting Ping")
     end_time = int(round(time() * 1000))
     await editMessage(reply, f'{end_time - start_time} ms')
+
 
 async def log(client, message):
     await sendFile(message, 'log.txt')
@@ -134,8 +140,10 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.RssCommand}: RSS Menu.
 '''
 
+
 async def bot_help(client, message):
     await sendMessage(message, help_string)
+
 
 async def restart_notification():
     if await aiopath.isfile(".restartmsg"):
@@ -144,14 +152,14 @@ async def restart_notification():
     else:
         chat_id, msg_id = 0, 0
 
-    async def send_incompelete_task_message(chat_id, msg_id, cid, msg):
+    async def send_incompelete_task_message(cid, msg):
         try:
             if msg.startswith('Restarted Successfully!'):
                 await bot.edit_message_text(chat_id=chat_id, message_id=msg_id, text=msg)
                 await aioremove(".restartmsg")
             else:
                 await bot.send_message(chat_id=cid, text=msg, disable_web_page_preview=True,
-                                        disable_notification=True)
+                                       disable_notification=True)
         except Exception as e:
             LOGGER.error(e)
 
@@ -164,10 +172,10 @@ async def restart_notification():
                     for index, link in enumerate(links, start=1):
                         msg += f" <a href='{link}'>{index}</a> |"
                         if len(msg.encode()) > 4000:
-                            await send_incompelete_task_message(chat_id, msg_id, cid, msg)
+                            await send_incompelete_task_message(cid, msg)
                             msg = ''
                 if msg:
-                    await send_incompelete_task_message(chat_id, msg_id, cid, msg)
+                    await send_incompelete_task_message(cid, msg)
 
     if await aiopath.isfile(".restartmsg"):
         try:
@@ -176,15 +184,22 @@ async def restart_notification():
             pass
         await aioremove(".restartmsg")
 
+
 async def main():
     await gather(start_cleanup(), torrent_search.initiate_search_tools(), restart_notification())
 
-    bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
-    bot.add_handler(MessageHandler(log, filters=command(BotCommands.LogCommand) & CustomFilters.sudo))
-    bot.add_handler(MessageHandler(restart, filters=command(BotCommands.RestartCommand) & CustomFilters.sudo))
-    bot.add_handler(MessageHandler(ping, filters=command(BotCommands.PingCommand) & CustomFilters.authorized))
-    bot.add_handler(MessageHandler(bot_help, filters=command(BotCommands.HelpCommand) & CustomFilters.authorized))
-    bot.add_handler(MessageHandler(stats, filters=command(BotCommands.StatsCommand) & CustomFilters.authorized))
+    bot.add_handler(MessageHandler(
+        start, filters=command(BotCommands.StartCommand)))
+    bot.add_handler(MessageHandler(log, filters=command(
+        BotCommands.LogCommand) & CustomFilters.sudo))
+    bot.add_handler(MessageHandler(restart, filters=command(
+        BotCommands.RestartCommand) & CustomFilters.sudo))
+    bot.add_handler(MessageHandler(ping, filters=command(
+        BotCommands.PingCommand) & CustomFilters.authorized))
+    bot.add_handler(MessageHandler(bot_help, filters=command(
+        BotCommands.HelpCommand) & CustomFilters.authorized))
+    bot.add_handler(MessageHandler(stats, filters=command(
+        BotCommands.StatsCommand) & CustomFilters.authorized))
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 

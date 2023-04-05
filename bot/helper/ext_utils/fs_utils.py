@@ -25,11 +25,14 @@ SPLIT_REGEX = r'\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$'
 def is_first_archive_split(file):
     return bool(re_search(FIRST_SPLIT_REGEX, file))
 
+
 def is_archive(file):
     return file.endswith(tuple(ARCH_EXT))
 
+
 def is_archive_split(file):
     return bool(re_search(SPLIT_REGEX, file))
+
 
 async def clean_target(path):
     if await aiopath.exists(path):
@@ -45,6 +48,7 @@ async def clean_target(path):
             except:
                 pass
 
+
 async def clean_download(path):
     if await aiopath.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
@@ -52,6 +56,7 @@ async def clean_download(path):
             await aiormtree(path)
         except:
             pass
+
 
 async def start_cleanup():
     get_client().torrents_delete(torrent_hashes="all")
@@ -61,6 +66,7 @@ async def start_cleanup():
         pass
     await makedirs(DOWNLOAD_DIR)
 
+
 def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
@@ -69,15 +75,18 @@ def clean_all():
     except:
         pass
 
+
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up and stop the running downloads")
+        LOGGER.info(
+            "Please wait, while we clean up and stop the running downloads")
         clean_all()
         srun(['pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg'])
         sexit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
         sexit(1)
+
 
 async def clean_unwanted(path):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
@@ -91,6 +100,7 @@ async def clean_unwanted(path):
         if not await listdir(dirpath):
             await rmdir(dirpath)
 
+
 async def get_path_size(path):
     if await aiopath.isfile(path):
         return await aiopath.getsize(path)
@@ -100,6 +110,7 @@ async def get_path_size(path):
             abs_path = ospath.join(root, f)
             total_size += await aiopath.getsize(abs_path)
     return total_size
+
 
 async def count_files_and_folders(path):
     total_files = 0
@@ -112,6 +123,7 @@ async def count_files_and_folders(path):
         total_folders += len(dirs)
     return total_folders, total_files
 
+
 def get_base_name(orig_path):
     extension = next(
         (ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), ''
@@ -119,7 +131,9 @@ def get_base_name(orig_path):
     if extension != '':
         return re_split(f'{extension}$', orig_path, maxsplit=1, flags=I)[0]
     else:
-        raise NotSupportedExtractionArchive('File format not supported for extraction')
+        raise NotSupportedExtractionArchive(
+            'File format not supported for extraction')
+
 
 def get_mime_type(file_path):
     mime = Magic(mime=True)

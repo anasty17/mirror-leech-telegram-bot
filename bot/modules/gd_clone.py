@@ -116,4 +116,5 @@ async def cloneNode(client, message):
         await sendMessage(message, "Send Gdrive link along with command or by replying to the link by command\n\n<b>Multi links only by replying to first link:</b>\n<code>/cmd</code> 10(number of links)")
 
 
-bot.add_handler(MessageHandler(cloneNode, filters=command(BotCommands.CloneCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(cloneNode, filters=command(
+    BotCommands.CloneCommand) & CustomFilters.authorized))

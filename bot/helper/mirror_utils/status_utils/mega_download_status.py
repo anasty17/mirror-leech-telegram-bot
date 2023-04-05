@@ -28,7 +28,8 @@ class MegaDownloadStatus:
 
     def eta(self):
         try:
-            seconds = (self.__obj.size - self.__obj.downloaded_bytes) / self.__obj.speed
+            seconds = (self.__obj.size -
+                       self.__obj.downloaded_bytes) / self.__obj.speed
             return f'{get_readable_time(seconds)}'
         except ZeroDivisionError:
             return '-'

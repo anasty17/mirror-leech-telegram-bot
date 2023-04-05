@@ -6,6 +6,7 @@ from time import time
 from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, user, download_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval, sync_to_async
 
+
 async def sendMessage(message, text, buttons=None):
     try:
         return await message.reply(text=text, quote=True, disable_web_page_preview=True,
@@ -18,6 +19,7 @@ async def sendMessage(message, text, buttons=None):
         LOGGER.error(str(e))
         return str(e)
 
+
 async def editMessage(message, text, buttons=None):
     try:
         await message.edit(text=text, disable_web_page_preview=True, reply_markup=buttons)
@@ -29,6 +31,7 @@ async def editMessage(message, text, buttons=None):
         LOGGER.error(str(e))
         return str(e)
 
+
 async def sendFile(message, file, caption=None):
     try:
         return await message.reply_document(document=file, quote=True, caption=caption, disable_notification=True)
@@ -39,6 +42,7 @@ async def sendFile(message, file, caption=None):
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
+
 
 async def sendRss(text):
     try:
@@ -56,11 +60,13 @@ async def sendRss(text):
         LOGGER.error(str(e))
         return str(e)
 
+
 async def deleteMessage(message):
     try:
         await message.delete()
     except:
         pass
+
 
 async def auto_delete_message(cmd_message=None, bot_message=None):
     if config_dict['AUTO_DELETE_MESSAGE_DURATION'] != -1:
@@ -70,6 +76,7 @@ async def auto_delete_message(cmd_message=None, bot_message=None):
         if bot_message is not None:
             await deleteMessage(bot_message)
 
+
 async def delete_all_messages():
     async with status_reply_dict_lock:
         for key, data in list(status_reply_dict.items()):
@@ -78,6 +85,7 @@ async def delete_all_messages():
                 await deleteMessage(data[0])
             except Exception as e:
                 LOGGER.error(str(e))
+
 
 async def update_all_messages(force=False):
     async with status_reply_dict_lock:
@@ -99,6 +107,7 @@ async def update_all_messages(force=False):
                 status_reply_dict[chat_id][0].text = msg
                 status_reply_dict[chat_id][1] = time()
 
+
 async def sendStatusMessage(msg):
     async with download_dict_lock:
         progress, buttons = await sync_to_async(get_readable_message)
@@ -114,4 +123,5 @@ async def sendStatusMessage(msg):
         message.text = progress
         status_reply_dict[chat_id] = [message, time()]
         if not Interval:
-            Interval.append(setInterval(config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))
+            Interval.append(setInterval(
+                config_dict['STATUS_UPDATE_INTERVAL'], update_all_messages))

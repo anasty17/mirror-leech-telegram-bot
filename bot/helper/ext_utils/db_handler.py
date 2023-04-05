@@ -7,6 +7,7 @@ from dotenv import dotenv_values
 
 from bot import DATABASE_URL, user_data, rss_dict, LOGGER, bot_id, config_dict, aria2_options, qbit_options, bot_loop
 
+
 class DbManger:
     def __init__(self):
         self.__err = False
@@ -58,7 +59,8 @@ class DbManger:
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
         if await self.__db.rss[bot_id].find_one():
-            rows = self.__db.rss[bot_id].find({})  # return a dict ==> {_id, title: {link, last_feed, last_name, inf, exf, command, paused}
+            # return a dict ==> {_id, title: {link, last_feed, last_name, inf, exf, command, paused}
+            rows = self.__db.rss[bot_id].find({})
             async for row in rows:
                 user_id = row['_id']
                 del row['_id']
@@ -164,24 +166,27 @@ class DbManger:
         if self.__err:
             return notifier_dict
         if await self.__db.tasks[bot_id].find_one():
-            rows = self.__db.tasks[bot_id].find({})  # return a dict ==> {_id, cid, tag}
+            # return a dict ==> {_id, cid, tag}
+            rows = self.__db.tasks[bot_id].find({})
             async for row in rows:
                 if row['cid'] in list(notifier_dict.keys()):
                     if row['tag'] in list(notifier_dict[row['cid']]):
-                        notifier_dict[row['cid']][row['tag']].append(row['_id'])
+                        notifier_dict[row['cid']][row['tag']].append(
+                            row['_id'])
                     else:
                         notifier_dict[row['cid']][row['tag']] = [row['_id']]
                 else:
                     notifier_dict[row['cid']] = {row['tag']: [row['_id']]}
         await self.__db.tasks[bot_id].drop()
         self.__conn.close
-        return notifier_dict # return a dict ==> {cid: {tag: [_id, _id, ...]}}
+        return notifier_dict  # return a dict ==> {cid: {tag: [_id, _id, ...]}}
 
     async def trunc_table(self, name):
         if self.__err:
             return
         await self.__db[name][bot_id].drop()
         self.__conn.close
+
 
 if DATABASE_URL:
     bot_loop.run_until_complete(DbManger().db_load())

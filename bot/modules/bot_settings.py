@@ -18,7 +18,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async, new_thread
 from bot.helper.ext_utils.db_handler import DbManger
-from bot.helper.ext_utils.queued_starter import start_from_queued
+from bot.helper.ext_utils.task_manager import start_from_queued
 from bot.helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
 from bot.modules.torrent_search import initiate_search_tools
 from bot.modules.rss import addJob
@@ -150,9 +150,11 @@ async def load_config():
             if Interval:
                 Interval[0].cancel()
                 Interval.clear()
-                Interval.append(setInterval(STATUS_UPDATE_INTERVAL, update_all_messages))
+                Interval.append(setInterval(
+                    STATUS_UPDATE_INTERVAL, update_all_messages))
 
-    AUTO_DELETE_MESSAGE_DURATION = environ.get('AUTO_DELETE_MESSAGE_DURATION', '')
+    AUTO_DELETE_MESSAGE_DURATION = environ.get(
+        'AUTO_DELETE_MESSAGE_DURATION', '')
     if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
         AUTO_DELETE_MESSAGE_DURATION = 30
     else:
@@ -252,7 +254,8 @@ async def load_config():
         RCLONE_SERVE_URL = ''
 
     RCLONE_SERVE_PORT = environ.get('RCLONE_SERVE_PORT', '')
-    RCLONE_SERVE_PORT = 8080 if len(RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
+    RCLONE_SERVE_PORT = 8080 if len(
+        RCLONE_SERVE_PORT) == 0 else int(RCLONE_SERVE_PORT)
 
     RCLONE_SERVE_USER = environ.get('RCLONE_SERVE_USER', '')
     if len(RCLONE_SERVE_USER) == 0:
@@ -271,7 +274,7 @@ async def load_config():
 
     UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
     if len(UPSTREAM_REPO) == 0:
-       UPSTREAM_REPO = ''
+        UPSTREAM_REPO = ''
 
     UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
     if len(UPSTREAM_BRANCH) == 0:
@@ -358,6 +361,7 @@ async def load_config():
     await start_from_queued()
     await rclone_serve_booter()
 
+
 async def get_buttons(key=None, edit_type=None):
     buttons = ButtonMaker()
     if key is None:
@@ -377,7 +381,8 @@ async def get_buttons(key=None, edit_type=None):
         buttons.ibutton('Back', "botset back")
         buttons.ibutton('Close', "botset close")
         for x in range(0, len(config_dict)-1, 10):
-            buttons.ibutton(f'{int(x/10)}', f"botset start var {x}", position='footer')
+            buttons.ibutton(
+                f'{int(x/10)}', f"botset start var {x}", position='footer')
         msg = f'Config Variables | Page: {int(START/10)} | State: {STATE}'
     elif key == 'private':
         buttons.ibutton('Back', "botset back")
@@ -397,7 +402,8 @@ Timeout: 60 sec'''
         buttons.ibutton('Back', "botset back")
         buttons.ibutton('Close', "botset close")
         for x in range(0, len(aria2_options)-1, 10):
-            buttons.ibutton(f'{int(x/10)}', f"botset start aria {x}", position='footer')
+            buttons.ibutton(
+                f'{int(x/10)}', f"botset start aria {x}", position='footer')
         msg = f'Aria2c Options | Page: {int(START/10)} | State: {STATE}'
     elif key == 'qbit':
         for k in list(qbit_options.keys())[START:10+START]:
@@ -409,7 +415,8 @@ Timeout: 60 sec'''
         buttons.ibutton('Back', "botset back")
         buttons.ibutton('Close', "botset close")
         for x in range(0, len(qbit_options)-1, 10):
-            buttons.ibutton(f'{int(x/10)}', f"botset start qbit {x}", position='footer')
+            buttons.ibutton(
+                f'{int(x/10)}', f"botset start qbit {x}", position='footer')
         msg = f'Qbittorrent Options | Page: {int(START/10)} | State: {STATE}'
     elif edit_type == 'editvar':
         msg = ''
@@ -439,9 +446,11 @@ Timeout: 60 sec'''
     button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
+
 async def update_buttons(message, key=None, edit_type=None):
     msg, button = await get_buttons(key, edit_type)
     await editMessage(message, msg, button)
+
 
 async def edit_variable(client, message, pre_message, key):
     handler_dict[message.chat.id] = False
@@ -517,6 +526,7 @@ async def edit_variable(client, message, pre_message, key):
     elif key in ['RCLONE_SERVE_URL', 'RCLONE_SERVE_PORT', 'RCLONE_SERVE_USER', 'RCLONE_SERVE_PASS']:
         await rclone_serve_booter()
 
+
 async def edit_aria(client, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -542,6 +552,7 @@ async def edit_aria(client, message, pre_message, key):
     if DATABASE_URL:
         await DbManger().update_aria2(key, value)
 
+
 async def edit_qbit(client, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -560,6 +571,7 @@ async def edit_qbit(client, message, pre_message, key):
     if DATABASE_URL:
         await DbManger().update_qbittorrent(key, value)
 
+
 async def update_private_file(client, message, pre_message):
     handler_dict[message.chat.id] = False
     if not message.media and (file_name := message.text):
@@ -569,6 +581,7 @@ async def update_private_file(client, message, pre_message):
         if fn == 'accounts':
             if await aiopath.exists('accounts'):
                 await aiormtree('accounts')
+                await aiormtree('rclone_sa')
             config_dict['USE_SERVICE_ACCOUNTS'] = False
             if DATABASE_URL:
                 await DbManger().update_config({'USE_SERVICE_ACCOUNTS': False})
@@ -583,6 +596,7 @@ async def update_private_file(client, message, pre_message):
         if file_name == 'accounts.zip':
             if await aiopath.exists('accounts'):
                 await aiormtree('accounts')
+                await aiormtree('rclone_sa')
             await (await create_subprocess_exec("7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json")).wait()
             await (await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
         elif file_name == 'list_drives.txt':
@@ -628,20 +642,24 @@ async def update_private_file(client, message, pre_message):
     if await aiopath.exists('accounts.zip'):
         await remove('accounts.zip')
 
+
 async def event_handler(client, query, pfunc, rfunc, document=False):
     chat_id = query.message.chat.id
     handler_dict[chat_id] = True
     start_time = time()
+
     async def event_filter(_, __, event):
         user = event.from_user or event.sender_chat
         return bool(user.id == query.from_user.id and event.chat.id == chat_id and (event.text or event.document and document))
-    handler = client.add_handler(MessageHandler(pfunc, filters=create(event_filter)), group=-1)
+    handler = client.add_handler(MessageHandler(
+        pfunc, filters=create(event_filter)), group=-1)
     while handler_dict[chat_id]:
         await sleep(0.5)
         if time() - start_time > 60:
             handler_dict[chat_id] = False
             await rfunc()
     client.remove_handler(*handler)
+
 
 @new_thread
 async def edit_bot_settings(client, query):
@@ -673,7 +691,8 @@ async def edit_bot_settings(client, query):
                     if Interval:
                         Interval[0].cancel()
                         Interval.clear()
-                        Interval.append(setInterval(value, update_all_messages))
+                        Interval.append(setInterval(
+                            value, update_all_messages))
         elif data[2] == 'EXTENSION_FILTER':
             GLOBAL_EXTENSION_FILTER.clear()
             GLOBAL_EXTENSION_FILTER.append('.aria2')
@@ -844,11 +863,14 @@ async def edit_bot_settings(client, query):
         await message.reply_to_message.delete()
         await message.delete()
 
+
 async def bot_settings(client, message):
     msg, button = await get_buttons()
     globals()['START'] = 0
     await sendMessage(message, msg, button)
 
 
-bot.add_handler(MessageHandler(bot_settings, filters=command(BotCommands.BotSetCommand) & CustomFilters.sudo))
-bot.add_handler(CallbackQueryHandler(edit_bot_settings, filters=regex("^botset") & CustomFilters.sudo))
+bot.add_handler(MessageHandler(bot_settings, filters=command(
+    BotCommands.BotSetCommand) & CustomFilters.sudo))
+bot.add_handler(CallbackQueryHandler(edit_bot_settings,
+                filters=regex("^botset") & CustomFilters.sudo))

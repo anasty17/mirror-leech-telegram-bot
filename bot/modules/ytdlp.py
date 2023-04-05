@@ -9,11 +9,12 @@ from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path
-from bot.helper.mirror_utils.download_utils.yt_dlp_download_helper import YoutubeDLHelper
+from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
+from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
 
 listener_dict = {}
 
@@ -29,6 +30,7 @@ async def _mdisk(link, name):
                     name = resp_json['filename']
             return name, link
 
+
 async def _auto_cancel(msg, task_id):
     await sleep(120)
     try:
@@ -36,6 +38,7 @@ async def _auto_cancel(msg, task_id):
         await editMessage(msg, 'Timed out! Task has been cancelled.')
     except:
         pass
+
 
 @new_task
 async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
@@ -55,8 +58,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         for x in args:
             x = x.strip()
             if x == 's':
-               select = True
-               index += 1
+                select = True
+                index += 1
             elif x.strip().isdigit():
                 multi = int(x)
                 mi = index
@@ -74,7 +77,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             if len(args) > index:
                 x = args[index].strip()
                 if not x.startswith(('n:', 'pswd:', 'up:', 'rcf:', 'opt:')):
-                    link = re_split(r' opt: | pswd: | n: | rcf: | up: ', x)[0].strip()
+                    link = re_split(r' opt: | pswd: | n: | rcf: | up: ', x)[
+                        0].strip()
 
     @new_task
     async def __run_multi():
@@ -95,20 +99,24 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
 
     name = mssg.split(' n: ', 1)
-    name = re_split(' pswd: | opt: | up: | rcf: ', name[1])[0].strip() if len(name) > 1 else ''
+    name = re_split(' pswd: | opt: | up: | rcf: ', name[1])[
+        0].strip() if len(name) > 1 else ''
 
     pswd = mssg.split(' pswd: ', 1)
-    pswd = re_split(' n: | opt: | up: | rcf: ', pswd[1])[0] if len(pswd) > 1 else None
+    pswd = re_split(' n: | opt: | up: | rcf: ', pswd[1])[
+        0] if len(pswd) > 1 else None
 
     opt = mssg.split(' opt: ', 1)
-    opt = re_split(' n: | pswd: | up: | rcf: ', opt[1])[0].strip() if len(opt) > 1 else ''
+    opt = re_split(' n: | pswd: | up: | rcf: ', opt[1])[
+        0].strip() if len(opt) > 1 else ''
 
     rcf = mssg.split(' rcf: ', 1)
-    rcf = re_split(' n: | pswd: | up: | opt: ', rcf[1])[0].strip() if len(rcf) > 1 else None
+    rcf = re_split(' n: | pswd: | up: | opt: ', rcf[1])[
+        0].strip() if len(rcf) > 1 else None
 
     up = mssg.split(' up: ', 1)
-    up = re_split(' n: | pswd: | rcf: | opt: ', up[1])[0].strip() if len(up) > 1 else None
-
+    up = re_split(' n: | pswd: | rcf: | opt: ', up[1])[
+        0].strip() if len(up) > 1 else None
 
     if username := message.from_user.username:
         tag = f"@{username}"
@@ -125,54 +133,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
                 tag = reply_to.from_user.mention
 
     if not is_url(link):
-        help_msg = """
-<b>Send link along with command line:</b>
-<code>/cmd</code> s link n: newname pswd: xx(zip) opt: x:y|x1:y1
-
-<b>By replying to link:</b>
-<code>/cmd</code> n: newname pswd: xx(zip) opt: x:y|x1:y1
-
-<b>Quality Buttons:</b>
-Incase default quality added but you need to select quality for specific link or links with multi links feature.
-<code>/cmd</code> s link
-This option should be always before n:, pswd: and opt:
-
-<b>Options Example:</b> opt: playliststart:^10|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
-
-<b>Multi links only by replying to first link:</b>
-<code>/cmd</code> 10(number of links)
-Number should be always before n:, pswd: and opt:
-
-<b>Multi links within same upload directory only by replying to first link:</b>
-<code>/cmd</code> 10(number of links) m:folder_name
-Number and m:folder_name should be always before n:, pswd: and opt:
-
-<b>Options Note:</b> Add `^` before integer, some values must be integer and some string.
-Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
-You can add tuple and dict also. Use double quotes inside dict.
-
-<b>Upload</b>:
-<code>/cmd</code> link up: <code>rcl</code> (To select rclone config, remote and path)
-You can directly add the upload path. up: remote:dir/subdir
-If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
-If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
-<code>/cmd</code> link up: <code>mrcc:</code>main:dump
-
-<b>Rclone Flags</b>:
-<code>/cmd</code> link up: path|rcl rcf: --buffer-size:8M|--drive-starred-only|key|key:value
-This will override all other flags except --exclude
-Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
-
-<b>NOTES:</b>
-1. When use cmd by reply don't add any option in link msg! Always add them after cmd msg!
-2. Options (<b>s, m: and multi</b>) should be added randomly before link and before any other option.
-3. Options (<b>n:, pswd: and opt:</b>) should be added randomly after the link if link along with the cmd or after cmd if by reply.
-4. You can always add video quality from yt-dlp api options.
-
-Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a>.
-        """
-        await sendMessage(message, help_msg)
+        await sendMessage(message, YT_HELP_MESSAGE)
         return
 
     if (up == 'rcl' or config_dict['RCLONE_PATH'] == 'rcl' and config_dict['DEFAULT_UPLOAD'] == 'rc') and not isLeech:
@@ -181,7 +142,8 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             await sendMessage(message, up)
             return
 
-    listener = MirrorLeechListener(message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
+    listener = MirrorLeechListener(
+        message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
     ydl = YoutubeDLHelper(listener)
@@ -265,15 +227,18 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
                             continue
 
                         if b_name in formats_dict:
-                            formats_dict[b_name][str(frmt['tbr'])] = [size, v_format]
+                            formats_dict[b_name][str(frmt['tbr'])] = [
+                                size, v_format]
                         else:
-                            formats_dict[b_name] = {str(frmt['tbr']): [size, v_format]}
+                            formats_dict[b_name] = {
+                                str(frmt['tbr']): [size, v_format]}
 
                 for b_name, d_dict in formats_dict.items():
                     if len(d_dict) == 1:
                         tbr, v_list = list(d_dict.items())[0]
                         buttonName = f"{b_name} ({get_readable_file_size(v_list[0])})"
-                        buttons.ibutton(buttonName, f"qu {msg_id} {b_name}|{tbr}")
+                        buttons.ibutton(
+                            buttonName, f"qu {msg_id} {b_name}|{tbr}")
                     else:
                         buttons.ibutton(b_name, f"qu {msg_id} dict {b_name}")
             buttons.ibutton("MP3", f"qu {msg_id} mp3")
@@ -283,8 +248,10 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             YTBUTTONS = buttons.build_menu(2)
             bmsg = await sendMessage(message, 'Choose Video Quality:', YTBUTTONS)
 
-        listener_dict[msg_id] = [listener, user_id, link, name, YTBUTTONS, opt, formats_dict, path]
+        listener_dict[msg_id] = [listener, user_id, link,
+                                 name, YTBUTTONS, opt, formats_dict, path]
         await _auto_cancel(bmsg, msg_id)
+
 
 async def _qual_subbuttons(task_id, b_name, msg):
     buttons = ButtonMaker()
@@ -297,6 +264,7 @@ async def _qual_subbuttons(task_id, b_name, msg):
     buttons.ibutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = buttons.build_menu(2)
     await editMessage(msg, f"Choose Bit rate for <b>{b_name}</b>:", SUBBUTTONS)
+
 
 async def _mp3_subbuttons(task_id, msg, playlist=False):
     buttons = ButtonMaker()
@@ -313,6 +281,7 @@ async def _mp3_subbuttons(task_id, msg, playlist=False):
     buttons.ibutton("Cancel", f"qu {task_id} cancel")
     SUBBUTTONS = buttons.build_menu(2)
     await editMessage(msg, f"Choose Audio{i} Bitrate:", SUBBUTTONS)
+
 
 @new_task
 async def select_format(client, query):
@@ -370,20 +339,28 @@ async def select_format(client, query):
         del listener_dict[task_id]
         await ydl.add_download(link, path, name, qual, playlist, opt)
 
+
 async def ytdl(client, message):
     _ytdl(client, message)
+
 
 async def ytdlZip(client, message):
     _ytdl(client, message, True)
 
+
 async def ytdlleech(client, message):
     _ytdl(client, message, isLeech=True)
+
 
 async def ytdlZipleech(client, message):
     _ytdl(client, message, True, True)
 
-bot.add_handler(MessageHandler(ytdl, filters=command(BotCommands.YtdlCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(ytdlZip, filters=command(BotCommands.YtdlZipCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(ytdlleech, filters=command(BotCommands.YtdlLeechCommand) & CustomFilters.authorized))
-bot.add_handler(MessageHandler(ytdlZipleech, filters=command(BotCommands.YtdlZipLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(ytdl, filters=command(
+    BotCommands.YtdlCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(ytdlZip, filters=command(
+    BotCommands.YtdlZipCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(ytdlleech, filters=command(
+    BotCommands.YtdlLeechCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(ytdlZipleech, filters=command(
+    BotCommands.YtdlZipLeechCommand) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(select_format, filters=regex("^qu")))

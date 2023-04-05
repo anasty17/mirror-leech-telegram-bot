@@ -16,6 +16,7 @@ def create_thumb(des_dir):
     with Image.open(des_dir) as img:
         img.convert("RGB").save(des_dir, "JPEG")
 
+
 async def is_multi_streams(path):
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
@@ -38,6 +39,7 @@ async def is_multi_streams(path):
             audios += 1
     return videos > 1 or audios > 1
 
+
 async def get_media_info(path):
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
@@ -56,6 +58,7 @@ async def get_media_info(path):
     artist = tags.get('artist') or tags.get('ARTIST')
     title = tags.get('title') or tags.get('TITLE')
     return duration, artist, title
+
 
 async def get_document_type(path):
     is_video, is_audio, is_image = False, False, False
@@ -87,6 +90,7 @@ async def get_document_type(path):
             is_audio = True
     return is_video, is_audio, is_image
 
+
 async def take_ss(video_file, duration):
     des_dir = 'Thumbnails'
     if not await aiopath.exists(des_dir):
@@ -102,10 +106,12 @@ async def take_ss(video_file, duration):
     status = await create_subprocess_exec(*cmd, stderr=PIPE)
     if await status.wait() != 0 or not await aiopath.exists(des_dir):
         err = (await status.stderr.read()).decode().strip()
-        LOGGER.error(f'Error while extracting screentshot. Name: {video_file} stderr: {err}')
+        LOGGER.error(
+            f'Error while extracting screentshot. Name: {video_file} stderr: {err}')
         return None
     await sync_to_async(create_thumb, des_dir)
     return des_dir
+
 
 async def split_file(path, size, file_, dirpath, split_size, listener, start_time=0, i=1, inLoop=False, multi_streams=True):
     if listener.suproc == 'cancelled' or listener.suproc is not None and listener.suproc.returncode == -9:
@@ -116,7 +122,8 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
             await mkdir(dirpath)
     user_id = listener.message.from_user.id
     user_dict = user_data.get(user_id, {})
-    leech_split_size = user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
+    leech_split_size = user_dict.get(
+        'split_size') or config_dict['LEECH_SPLIT_SIZE']
     parts = -(-size // leech_split_size)
     if (user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS']) and not inLoop:
         split_size = ((size + parts - 1) // parts) + 1000
@@ -148,10 +155,12 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
                 except:
                     pass
                 if multi_streams:
-                    LOGGER.warning(f"{err}. Retrying without map, -map 0 not working in all situations. Path: {path}")
+                    LOGGER.warning(
+                        f"{err}. Retrying without map, -map 0 not working in all situations. Path: {path}")
                     return await split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, False)
                 else:
-                    LOGGER.warning(f"{err}. Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
+                    LOGGER.warning(
+                        f"{err}. Unable to split this video, if it's size less than {MAX_SPLIT_SIZE} will be uploaded as it is. Path: {path}")
                 return "errored"
             out_size = await aiopath.getsize(out_path)
             if out_size > MAX_SPLIT_SIZE:
@@ -161,10 +170,12 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
                 return await split_file(path, size, file_, dirpath, split_size, listener, start_time, i, True, )
             lpd = (await get_media_info(out_path))[0]
             if lpd == 0:
-                LOGGER.error(f'Something went wrong while splitting, mostly file is corrupted. Path: {path}')
+                LOGGER.error(
+                    f'Something went wrong while splitting, mostly file is corrupted. Path: {path}')
                 break
             elif duration == lpd:
-                LOGGER.warning(f"This file has been splitted with default stream and audio, so you will only see one part with less size from orginal one because it doesn't have all streams and audios. This happens mostly with MKV videos. Path: {path}")
+                LOGGER.warning(
+                    f"This file has been splitted with default stream and audio, so you will only see one part with less size from orginal one because it doesn't have all streams and audios. This happens mostly with MKV videos. Path: {path}")
                 break
             elif lpd <= 3:
                 await aioremove(out_path)
@@ -174,7 +185,7 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
     else:
         out_path = ospath.join(dirpath, f"{file_}.")
         listener.suproc = await create_subprocess_exec("split", "--numeric-suffixes=1", "--suffix-length=3",
-                                                      f"--bytes={split_size}", path, out_path, stderr=PIPE)
+                                                       f"--bytes={split_size}", path, out_path, stderr=PIPE)
         code = await listener.suproc.wait()
         if code == -9:
             return False

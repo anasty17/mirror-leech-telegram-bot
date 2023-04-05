@@ -18,7 +18,7 @@ class CustomFilters:
         uid = user.id
         chat_id = update.chat.id
         return bool(uid == OWNER_ID or (uid in user_data and (user_data[uid].get('is_auth', False) or
-              user_data[uid].get('is_sudo', False))) or (chat_id in user_data and user_data[chat_id].get('is_auth', False)))
+                                                              user_data[uid].get('is_sudo', False))) or (chat_id in user_data and user_data[chat_id].get('is_auth', False)))
 
     authorized = create(authorized_user)
 

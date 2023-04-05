@@ -4,11 +4,13 @@ from asyncio import sleep
 from bot import LOGGER, get_client, QbTorrents, qb_listener_lock
 from bot.helper.ext_utils.bot_utils import MirrorStatus, get_readable_file_size, get_readable_time, sync_to_async
 
+
 def get_download(client, tag):
     try:
         return client.torrents_info(tag=tag)[0]
     except Exception as e:
-        LOGGER.error(f'{e}: Qbittorrent, while getting torrent info. Tag: {tag}')
+        LOGGER.error(
+            f'{e}: Qbittorrent, while getting torrent info. Tag: {tag}')
         return None
 
 

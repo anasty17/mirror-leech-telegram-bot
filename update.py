@@ -10,8 +10,8 @@ if ospath.exists('log.txt'):
         f.truncate(0)
 
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                    handlers=[FileHandler('log.txt'), StreamHandler()],
-                    level=INFO)
+            handlers=[FileHandler('log.txt'), StreamHandler()],
+            level=INFO)
 
 load_dotenv('config.env', override=True)
 
@@ -41,14 +41,14 @@ if DATABASE_URL is not None:
     if old_config is not None:
         del old_config['_id']
     if (old_config is not None and old_config == dict(dotenv_values('config.env')) or old_config is None) \
-           and config_dict is not None:
+            and config_dict is not None:
         environ['UPSTREAM_REPO'] = config_dict['UPSTREAM_REPO']
         environ['UPSTREAM_BRANCH'] = config_dict['UPSTREAM_BRANCH']
     conn.close()
 
 UPSTREAM_REPO = environ.get('UPSTREAM_REPO', '')
 if len(UPSTREAM_REPO) == 0:
-   UPSTREAM_REPO = None
+    UPSTREAM_REPO = None
 
 UPSTREAM_BRANCH = environ.get('UPSTREAM_BRANCH', '')
 if len(UPSTREAM_BRANCH) == 0:
@@ -70,4 +70,5 @@ if UPSTREAM_REPO is not None:
     if update.returncode == 0:
         log_info('Successfully updated with latest commit from UPSTREAM_REPO')
     else:
-        log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
+        log_error(
+            'Something went wrong while updating, check UPSTREAM_REPO if valid or not!')

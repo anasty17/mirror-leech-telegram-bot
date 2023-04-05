@@ -27,8 +27,8 @@ async def select(client, message):
             return
     elif len(msg) == 1:
         msg = ("Reply to an active /cmd which was used to start the qb-download or add gid along with cmd\n\n"
-             + "This command mainly for selection incase you decided to select files from already added torrent. "
-             + "But you can always use /cmd with arg `s` to select files before download start.")
+               + "This command mainly for selection incase you decided to select files from already added torrent. "
+               + "But you can always use /cmd with arg `s` to select files before download start.")
         await sendMessage(message, msg)
         return
 
@@ -54,7 +54,8 @@ async def select(client, message):
             try:
                 await sync_to_async(aria2.client.force_pause, id_)
             except Exception as e:
-                LOGGER.error(f"{e} Error in pause, this mostly happens after abuse aria2")
+                LOGGER.error(
+                    f"{e} Error in pause, this mostly happens after abuse aria2")
         listener.select = True
     except:
         await sendMessage(message, "This is not a bittorrent task!")
@@ -63,6 +64,7 @@ async def select(client, message):
     SBUTTONS = bt_selection_buttons(id_)
     msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
     await sendMessage(message, msg, SBUTTONS)
+
 
 async def get_confirm(client, query):
     user_id = query.from_user.id
@@ -94,11 +96,11 @@ async def get_confirm(client, query):
                 if f.priority == 0:
                     f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
                     for f_path in f_paths:
-                       if await aiopath.exists(f_path):
-                           try:
-                               await aioremove(f_path)
-                           except:
-                               pass
+                        if await aiopath.exists(f_path):
+                            try:
+                                await aioremove(f_path)
+                            except:
+                                pass
             await sync_to_async(client.torrents_resume, torrent_hashes=id_)
         else:
             res = await sync_to_async(aria2.client.get_files, id_)
@@ -111,10 +113,12 @@ async def get_confirm(client, query):
             try:
                 await sync_to_async(aria2.client.unpause, id_)
             except Exception as e:
-                LOGGER.error(f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
+                LOGGER.error(
+                    f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)
         await message.delete()
 
 
-bot.add_handler(MessageHandler(select, filters=command(BotCommands.BtSelectCommand) & CustomFilters.authorized))
+bot.add_handler(MessageHandler(select, filters=command(
+    BotCommands.BtSelectCommand) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(get_confirm, filters=regex("^btsel")))

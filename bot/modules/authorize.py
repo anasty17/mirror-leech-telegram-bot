@@ -27,6 +27,7 @@ async def authorize(client, message):
         msg = 'Authorized'
     await sendMessage(message, msg)
 
+
 async def unauthorize(client, message):
     msg = message.text.split()
     if len(msg) > 1:
@@ -43,6 +44,7 @@ async def unauthorize(client, message):
     else:
         msg = 'Already Unauthorized!'
     await sendMessage(message, msg)
+
 
 async def addSudo(client, message):
     id_ = ""
@@ -63,6 +65,7 @@ async def addSudo(client, message):
         msg = "Give ID or Reply To message of whom you want to Promote."
     await sendMessage(message, msg)
 
+
 async def removeSudo(client, message):
     id_ = ""
     msg = message.text.split()
@@ -79,7 +82,11 @@ async def removeSudo(client, message):
         msg = "Give ID or Reply To message of whom you want to remove from Sudo"
     await sendMessage(message, msg)
 
-bot.add_handler(MessageHandler(authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(unauthorize, filters=command(BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(addSudo, filters=command(BotCommands.AddSudoCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(removeSudo, filters=command(BotCommands.RmSudoCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(authorize, filters=command(
+    BotCommands.AuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(unauthorize, filters=command(
+    BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(addSudo, filters=command(
+    BotCommands.AddSudoCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(removeSudo, filters=command(
+    BotCommands.RmSudoCommand) & CustomFilters.sudo))
