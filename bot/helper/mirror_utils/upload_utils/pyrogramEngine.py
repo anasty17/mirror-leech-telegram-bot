@@ -134,7 +134,7 @@ class TgUploader:
 
     async def __send_media_group(self, subkey, key, msgs):
         msgs_list = await msgs[0].reply_to_message.reply_media_group(media=self.__get_input_media(subkey, key),
-                                                                     quote=True,
+                                                                     quote=False,
                                                                      disable_notification=True)
         for msg in msgs:
             if msg.link in self.__msgs_dict:
@@ -231,7 +231,7 @@ class TgUploader:
                     if self.__is_cancelled:
                         return
                 self.__sent_msg = await self.__sent_msg.reply_document(document=self.__up_path,
-                                                                       quote=True,
+                                                                       quote=False,
                                                                        thumb=thumb,
                                                                        caption=cap_mono,
                                                                        force_document=True,
@@ -263,7 +263,7 @@ class TgUploader:
                         await aiorename(self.__up_path, new_path)
                         self.__up_path = new_path
                 self.__sent_msg = await self.__sent_msg.reply_video(video=self.__up_path,
-                                                                    quote=True,
+                                                                    quote=False,
                                                                     caption=cap_mono,
                                                                     duration=duration,
                                                                     width=width,
@@ -276,7 +276,7 @@ class TgUploader:
                 key = 'audios'
                 duration, artist, title = await get_media_info(self.__up_path)
                 self.__sent_msg = await self.__sent_msg.reply_audio(audio=self.__up_path,
-                                                                    quote=True,
+                                                                    quote=False,
                                                                     caption=cap_mono,
                                                                     duration=duration,
                                                                     performer=artist,
