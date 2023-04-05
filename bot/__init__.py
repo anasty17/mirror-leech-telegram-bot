@@ -445,7 +445,6 @@ aria2c_global = ['bt-max-open-files', 'download-result', 'keep-unfinished-downlo
 
 if not aria2_options:
     aria2_options = aria2.client.get_global_option()
-    del aria2_options['dir']
 else:
     a2c_glo = {op: aria2_options[op]
                for op in aria2c_global if op in aria2_options}
