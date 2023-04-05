@@ -72,10 +72,9 @@ async def restart(client, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
-    if QbInterval:
-        QbInterval[0].kill()
-    if Interval:
-        Interval[0].cancel()
+    for interval in [QbInterval, Interval]:
+        if interval:
+            interval[0].cancel()
     await sync_to_async(clean_all)
     proc1 = await create_subprocess_exec('pkill', '-9', '-f', 'gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone')
     proc2 = await create_subprocess_exec('python3', 'update.py')
