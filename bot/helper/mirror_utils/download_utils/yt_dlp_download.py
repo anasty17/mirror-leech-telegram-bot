@@ -228,13 +228,10 @@ class YoutubeDLHelper:
             async with download_dict_lock:
                 if self.__listener.uid not in download_dict:
                     return
-            from_queue = True
             LOGGER.info(f'Start Queued Download with YT_DLP: {self.name}')
+            await self.__onDownloadStart(True)
         else:
-            from_queue = False
             LOGGER.info(f'Download with YT_DLP: {self.name}')
-
-        await self.__onDownloadStart(from_queue)
 
         async with queue_dict_lock:
             non_queued_dl.add(self.__listener.uid)
