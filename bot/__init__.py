@@ -323,8 +323,8 @@ if len(RCLONE_SERVE_PASS) == 0:
     RCLONE_SERVE_PASS = ''
 
 RD_KEY = environ.get('RD_KEY', '')
-if len(RCLONE_SERVE_PASS) == 0:
-    RCLONE_SERVE_PASS = ''
+if len(RD_KEY) == 0:
+    RD_KEY = ''
 
 config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
