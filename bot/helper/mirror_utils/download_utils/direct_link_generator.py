@@ -36,12 +36,13 @@ anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload
 
 http = httpx.Client(
     base_url="https://api.real-debrid.com/rest/1.0/",
-    headers={"Authorization": f"Bearer {config_dict['RD_KEY']}", "Content-Type": "multipart/form-data"},
+    headers={"Authorization": f"Bearer {config_dict['RD_KEY']}", "Content-Type": "application/json"},
 )
 
 def rd_unrestrict(link: str) -> str:
     if RD_KEY := config_dict['RD_KEY']:
         res = http.post("/unrestrict/link", data={"link": link})
+        print(res)
         return res.json()["download"]
     else:
         raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
