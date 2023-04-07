@@ -21,8 +21,7 @@ from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
 from lk21 import Bypass
 from lxml import etree
-import requests
-
+import httpx
 from bot import config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
@@ -35,15 +34,17 @@ anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload
                       'openload.cc', 'share-online.is', 'upvid.cc']
 
 
+http = httpx.Client(
+    base_url="https://api.real-debrid.com/rest/1.0/",
+    headers={"Authorization": f"Bearer {RD_KEY}"},
+
+
 def rd_unrestrict(link: str) -> str:
     if RD_KEY := config_dict['RD_KEY']:
-        rd_form_data = {'link': link}
-        rd_req = requests.post("https://api.real-debrid.com/rest/1.0/unrestrict/link",data=rd_form_data,headers={ "authorization": "Bearer " + RD_KEY, "Content-Type": "multipart/form-data"})
-    rd_data = rd_req.json()
-    if ("download" in rd_data):
-      return rd_data["download"]
+        res = http.post("/unrestrict/link", data={"link": link})
+        return res.json()["download"]
     else:
-      raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
+        raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
 
 
 def direct_link_generator(link: str):
