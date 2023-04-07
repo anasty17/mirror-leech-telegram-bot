@@ -43,6 +43,7 @@ def rd_unrestrict(link: str) -> str:
     if RD_KEY := config_dict['RD_KEY']:
         res = http.post("/unrestrict/link", data={"link": link})
         print(res)
+        res.raise_for_status()
         return res.json()["download"]
     else:
         raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
