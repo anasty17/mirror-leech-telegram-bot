@@ -54,7 +54,7 @@ def direct_link_generator(link: str):
     if 'youtube.com' in domain or 'youtu.be' in domain:
         raise DirectDownloadLinkException(
             "ERROR: Use ytdl cmds for Youtube links")
-    if domain:
+    elif domain:
         return rd_unrestrict(link) 
     elif 'yadi.sk' in domain or 'disk.yandex.com' in domain:
         return yandex_disk(link)
