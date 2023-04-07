@@ -322,6 +322,10 @@ RCLONE_SERVE_PASS = environ.get('RCLONE_SERVE_PASS', '')
 if len(RCLONE_SERVE_PASS) == 0:
     RCLONE_SERVE_PASS = ''
 
+RD_KEY = environ.get('RD_KEY', '')
+if len(RCLONE_SERVE_PASS) == 0:
+    RCLONE_SERVE_PASS = ''
+
 config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
@@ -355,6 +359,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
                'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
                'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
+               'RD_KEY': RD_KEY,
                'RSS_CHAT_ID': RSS_CHAT_ID,
                'RSS_DELAY': RSS_DELAY,
                'SEARCH_API_LINK': SEARCH_API_LINK,
