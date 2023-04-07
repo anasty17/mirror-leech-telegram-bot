@@ -34,6 +34,17 @@ anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload
                       'openload.cc', 'share-online.is', 'upvid.cc']
 
 
+def rd_unrestrict(link: str) -> str:
+    if RD_KEY := config_dict['RD_KEY']:
+        rd_form_data = {'link': link}
+        rd_req = rpost("https://api.real-debrid.com/rest/1.0/unrestrict/link",data=rd_form_data,headers={ "authorization": "Bearer " + RD_KEY, "Content-Type": "multipart/form-data"})
+    rd_data = rd_req.json()
+    if ("download" in rd_data):
+      return rd_data["download"]
+    else:
+      raise DirectDownloadLinkException(f"Real debrid cant unrestrict link {link}")
+
+
 def direct_link_generator(link: str):
     """ direct links generator """
     domain = urlparse(link).hostname
@@ -42,6 +53,8 @@ def direct_link_generator(link: str):
     if 'youtube.com' in domain or 'youtu.be' in domain:
         raise DirectDownloadLinkException(
             "ERROR: Use ytdl cmds for Youtube links")
+    if domain:
+        return rd_unrestrict(link) 
     elif 'yadi.sk' in domain or 'disk.yandex.com' in domain:
         return yandex_disk(link)
     elif 'mediafire.com' in domain:
