@@ -36,7 +36,7 @@ anonfilesBaseSites = ['anonfiles.com', 'hotfile.io', 'bayfiles.com', 'megaupload
 
 http = httpx.Client(
     base_url="https://api.real-debrid.com/rest/1.0/",
-    headers={"Authorization": f"Bearer {config_dict['RD_KEY']}"},
+    headers={"Authorization": f"Bearer {config_dict['RD_KEY']}", "Content-Type": "multipart/form-data"},
 )
 
 def rd_unrestrict(link: str) -> str:
