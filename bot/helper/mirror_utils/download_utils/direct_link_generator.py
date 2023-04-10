@@ -8,15 +8,14 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
-from base64 import standard_b64encode
 from http.cookiejar import MozillaCookieJar
 from json import loads
-from math import floor, pow
 from os import path
 from re import findall, match, search, sub
 from time import sleep
-from urllib.parse import quote, unquote, urlparse
+from urllib.parse import parse_qs, quote, unquote, urlparse
 from uuid import uuid4
+
 from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
 from lk21 import Bypass
@@ -80,8 +79,6 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     elif 'letsupload.io' in domain:
         return letsupload(link)
-    elif 'zippyshare.com' in domain:
-        return zippyshare(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in anonfilesBaseSites):
@@ -99,6 +96,8 @@ def direct_link_generator(link: str):
             return filepress(link)
         else:
             return sharer_scraper(link)
+    elif 'zippyshare.com' in domain:
+        raise DirectDownloadLinkException('ERROR: R.I.P Zippyshare')
     else:
         raise DirectDownloadLinkException(
             f'No Direct link function found for {link}')
@@ -269,20 +268,35 @@ def sbembed(link: str) -> str:
 
 def onedrive(link: str) -> str:
     """ Onedrive direct link generator
-    Based on https://github.com/UsergeTeam/Userge """
-    link_without_query = urlparse(link)._replace(query=None).geturl()
-    direct_link_encoded = str(standard_b64encode(
-        bytes(link_without_query, "utf-8")), "utf-8")
-    direct_link1 = f"https://api.onedrive.com/v1.0/shares/u!{direct_link_encoded}/root/content"
+    By https://github.com/junedkh """
     cget = create_scraper().request
     try:
-        resp = cget('head', direct_link1)
+        link = cget('get', link).url
+        parsed_link = urlparse(link)
+        link_data = parse_qs(parsed_link.query)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if resp.status_code != 302:
-        raise DirectDownloadLinkException(
-            "ERROR: Unauthorized link, the link may be private")
-    return resp.next.url
+    if not link_data:
+        raise DirectDownloadLinkException("ERROR: Unable to find link_data")
+    folder_id = link_data.get('resid')
+    if not folder_id:
+        raise DirectDownloadLinkException('ERROR: folder id not found')
+    folder_id = folder_id[0]
+    authkey = link_data.get('authkey')
+    if not authkey:
+        raise DirectDownloadLinkException('ERROR: authkey not found')
+    authkey = authkey[0]
+    boundary = uuid4()
+    headers = {'content-type': f'multipart/form-data;boundary={boundary}'}
+    data = f'--{boundary}\r\nContent-Disposition: form-data;name=data\r\nPrefer: Migration=EnableRedirect;FailOnMigratedFiles\r\nX-HTTP-Method-Override: GET\r\nContent-Type: application/json\r\n\r\n--{boundary}--'
+    try:
+        resp = cget(
+            'get', f'https://api.onedrive.com/v1.0/drives/{folder_id.split("!", 1)[0]}/items/{folder_id}?$select=id,@content.downloadUrl&ump=1&authKey={authkey}', headers=headers, data=data).json()
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if "@content.downloadUrl" not in resp:
+        raise DirectDownloadLinkException('ERROR: Direct link not found')
+    return resp['@content.downloadUrl']
 
 
 def pixeldrain(url: str) -> str:
@@ -312,9 +326,12 @@ def antfiles(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
     """
     try:
-        return Bypass().bypass_antfiles(url)
+        link = Bypass().bypass_antfiles(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if not link:
+        raise DirectDownloadLinkException("ERROR: Download link not found")
+    return link
 
 
 def streamtape(url: str) -> str:
@@ -322,9 +339,12 @@ def streamtape(url: str) -> str:
     Based on https://github.com/zevtyardt/lk21
     """
     try:
-        return Bypass().bypass_streamtape(url)
+        link = Bypass().bypass_streamtape(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if not link:
+        raise DirectDownloadLinkException("ERROR: Download link not found")
+    return link
 
 
 def racaty(url: str) -> str:
@@ -692,62 +712,3 @@ def linkbox(url):
     name = quote(itemInfo["name"])
     raw = itemInfo['url'].split("/", 3)[-1]
     return f'https://wdl.nuplink.net/{raw}&filename={name}'
-
-
-def zippyshare(url):
-    cget = create_scraper().request
-    try:
-        url = cget('GET', url).url
-        resp = cget('GET', url)
-    except Exception as e:
-        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if not resp.ok:
-        raise DirectDownloadLinkException(
-            'ERROR: Something went wrong!!, Try in your browser')
-    if findall(r'>File does not exist on this server<', resp.text):
-        raise DirectDownloadLinkException(
-            'ERROR: File does not exist on server!!, Try in your browser')
-    pages = etree.HTML(resp.text).xpath(
-        "//script[contains(text(),'dlbutton')][3]/text()")
-    if not pages:
-        raise DirectDownloadLinkException('ERROR: Page not found!!')
-    js_script = pages[0]
-    uri1 = None
-    uri2 = None
-    method = ''
-    if omg := findall(r"\.omg.=.(.*?);", js_script):
-        omg = omg[0]
-        method = f'omg = {omg}'
-        mtk = (eval(omg) * (int(omg.split("%")[0]) % 3)) + 18
-        uri1 = findall(r'"/(d/\S+)/"', js_script)
-        uri2 = findall(r'\/d.*?\+"/(\S+)";', js_script)
-    elif var_a := findall(r"var.a.=.(\d+)", js_script):
-        var_a = var_a[0]
-        method = f'var_a = {var_a}'
-        mtk = int(pow(int(var_a), 3) + 3)
-        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
-        uri2 = findall(r"\+\"/(.*?)\"", js_script)
-    elif var_ab := findall(r"var.[ab].=.(\d+)", js_script):
-        a = var_ab[0]
-        b = var_ab[1]
-        method = f'a = {a}, b = {b}'
-        mtk = eval(f"{floor(int(a)/3) + int(a) % int(b)}")
-        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
-        uri2 = findall(r"\)\+\"/(.*?)\"", js_script)
-    elif unknown := findall(r"\+\((.*?).\+", js_script):
-        method = f'unknown = {unknown[0]}'
-        mtk = eval(f"{unknown[0]}+ 11")
-        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
-        uri2 = findall(r"\)\+\"/(.*?)\"", js_script)
-    elif unknown1 := findall(r"\+.\((.*?)\).\+", js_script):
-        method = f'unknown1 = {unknown1[0]}'
-        mtk = eval(unknown1[0])
-        uri1 = findall(r"\.href.=.\"/(.*?)/\"", js_script)
-        uri2 = findall(r"\+.\"/(.*?)\"", js_script)
-    else:
-        raise DirectDownloadLinkException("ERROR: Direct link not found")
-    if not any([uri1, uri2]):
-        raise DirectDownloadLinkException(
-            f"ERROR: uri1 or uri2 not found with method {method}")
-    domain = urlparse(url).hostname
-    return f"https://{domain}/{uri1[0]}/{mtk}/{uri2[0]}"
