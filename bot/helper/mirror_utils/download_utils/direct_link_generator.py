@@ -267,6 +267,8 @@ def sbembed(link: str) -> str:
 
 
 def onedrive(link: str) -> str:
+    """ Onedrive direct link generator
+    By https://github.com/junedkh """
     cget = create_scraper().request
     try:
         link = cget('get', link).url
