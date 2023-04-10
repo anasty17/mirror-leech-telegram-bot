@@ -152,7 +152,7 @@ class RcloneTransferHelper:
             if re_findall(".*User.*Rate.*(Limit|Quota).*Exceeded.*", error, flags=I):
                 if self.__sa_count < self.__sa_number:
                     remote = self.__switchServiceAccount()
-                    cmd[6] = f"{remote}:{cmd[6].split(':', 1)[1]}"
+                    cmd[7] = f"{remote}:{cmd[7].split(':', 1)[1]}"
                     return False if self.__is_cancelled else self.__start_upload(cmd)
                 else:
                     LOGGER.info(

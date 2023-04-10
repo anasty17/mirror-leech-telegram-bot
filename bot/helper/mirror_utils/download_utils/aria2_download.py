@@ -8,21 +8,20 @@ from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMess
 
 
 async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_time):
-    args = {'dir': path, 'max-upload-limit': '1K'}
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
-    args |= a2c_opt
+    a2c_opt['dir'] = path
     if filename:
-        args['out'] = filename
+        a2c_opt['out'] = filename
     if auth:
-        args['header'] = f"authorization: {auth}"
+        a2c_opt['header'] = f"authorization: {auth}"
     if ratio:
-        args['seed-ratio'] = ratio
+        a2c_opt['seed-ratio'] = ratio
     if seed_time:
-        args['seed-time'] = seed_time
+        a2c_opt['seed-time'] = seed_time
     if TORRENT_TIMEOUT := config_dict['TORRENT_TIMEOUT']:
-        args['bt-stop-timeout'] = str(TORRENT_TIMEOUT)
-    download = (await sync_to_async(aria2.add, link, args))[0]
+        a2c_opt['bt-stop-timeout'] = f'{TORRENT_TIMEOUT}'
+    download = (await sync_to_async(aria2.add, link, a2c_opt))[0]
     if await aiopath.exists(link):
         await aioremove(link)
     if download.error_message:
