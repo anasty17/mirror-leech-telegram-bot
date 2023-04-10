@@ -21,6 +21,7 @@ from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
 from lk21 import Bypass
 from lxml import etree
+from requests import head as rhead
 
 from bot import config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
@@ -276,7 +277,7 @@ def onedrive(link: str) -> str:
     direct_link1 = f"https://api.onedrive.com/v1.0/shares/u!{direct_link_encoded}/root/content"
     cget = create_scraper().request
     try:
-        resp = cget('head', direct_link1)
+        resp = rhead(direct_link1)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
     if resp.status_code != 302:
