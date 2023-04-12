@@ -5,7 +5,7 @@ print("\n\n"\
       "        Use the following format: (You can use 'root' in the ID in case you wan to use main drive.)\n"\
       "        teamdrive NAME      -->   anything that you likes\n"\
       "        teamdrive ID        -->   id of teamdrives in which you likes to search ('root' for main drive)\n"\
-      "        teamdrive INDEX URL -->   enter index url for this drive.\n" \
+      "   gjj     teamdrive INDEX URL -->   enter index url for this drive.\n" \
       "                                  go to the respective drive and copy the url from address bar\n")
 msg = ''
 if os.path.exists('list_drives.txt'):
