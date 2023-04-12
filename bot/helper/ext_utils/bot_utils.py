@@ -107,8 +107,8 @@ def get_readable_message():
     tasks = len(download_dict)
     globals()['PAGES'] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT
     if PAGE_NO > PAGES:
-        globals()['STATUS_START'] -= STATUS_LIMIT
-        globals()['PAGE_NO'] -= 1
+        globals()['STATUS_START'] = STATUS_LIMIT * (PAGES - 1)
+        globals()['PAGE_NO'] = PAGES
     for download in list(download_dict.values())[STATUS_START:STATUS_LIMIT+STATUS_START]:
         if download.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']:
             msg += f"<b><a href='{download.message.link}'>{download.status()}</a>: </b>"
