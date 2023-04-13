@@ -3,7 +3,7 @@ from asyncio import sleep
 from pyrogram.errors import FloodWait
 from time import time
 
-from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, user, download_dict_lock
+from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, user, download_dict_lock, bot_name
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval, sync_to_async
 
 
@@ -56,6 +56,24 @@ async def sendRss(text):
         LOGGER.warning(str(f))
         await sleep(f.value * 1.5)
         return await sendRss(text)
+    except Exception as e:
+        LOGGER.error(str(e))
+        return str(e)
+    
+async def sendRssAutoCommand(command):
+    try:
+        if user:
+            _bot_name = bot_name
+            if not '@' in bot_name:
+                _bot_name = '@' + bot_name
+            return await user.send_message(chat_id=bot_name, text=command, disable_web_page_preview=True,
+                                           disable_notification=True)
+        else:
+            LOGGER.warning('User is not define! Please use generate_string as a user (put your phone number)')
+    except FloodWait as f:
+        LOGGER.warning(str(f))
+        await sleep(f.value * 1.5)
+        return await sendRss(command)
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)

@@ -10,8 +10,8 @@ from aiohttp import ClientSession
 from apscheduler.triggers.interval import IntervalTrigger
 from re import split as re_split
 
-from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss
+from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot, bot_name
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendRssAutoCommand
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -614,14 +614,18 @@ async def rssMonitor():
                             break
                     if not parse:
                         continue
+                    command_msg = ''
                     if command := data['command']:
                         options = opt if (opt := data['options']) else ''
                         feed_msg = f"/{command.replace('/', '')} {url} {options}"
+                        command_msg = feed_msg
                     else:
                         feed_msg = f"<b>Name: </b><code>{item_title.replace('>', '').replace('<', '')}</code>\n\n"
                         feed_msg += f"<b>Link: </b><code>{url}</code>"
                     feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
                     await sendRss(feed_msg)
+                    if config_dict.get('AUT') and command_msg:
+                        sendRssAutoCommand(command_msg)
                     feed_count += 1
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):

@@ -251,6 +251,11 @@ RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
 RSS_DELAY = environ.get('RSS_DELAY', '')
 RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
 
+RSS_AUTO_COMMAND = environ.get('RSS_AUTO_COMMAND', '')
+RSS_AUTO_COMMAND = RSS_AUTO_COMMAND.lower() == 'true'
+
+RSS_AUTO_BOT_USERNAME = environ.get('RSS_AUTO_COMMAND', '')
+
 TORRENT_TIMEOUT = environ.get('TORRENT_TIMEOUT', '')
 TORRENT_TIMEOUT = '' if len(TORRENT_TIMEOUT) == 0 else int(TORRENT_TIMEOUT)
 
@@ -357,6 +362,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
                'RSS_CHAT_ID': RSS_CHAT_ID,
                'RSS_DELAY': RSS_DELAY,
+               'RSS_AUTO_COMMAND': RSS_AUTO_COMMAND,
                'SEARCH_API_LINK': SEARCH_API_LINK,
                'SEARCH_LIMIT': SEARCH_LIMIT,
                'SEARCH_PLUGINS': SEARCH_PLUGINS,

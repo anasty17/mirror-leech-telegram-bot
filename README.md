@@ -227,6 +227,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
   - **RSS NOTES**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT_ID` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT_ID`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
+- `RSS_AUTO_COMMAND`: Send automatically the rss with the command to the bot. It will helpful for auto leech, mirror. With BIN_CHANNEL you can have an automated system to upload new torrents
+
 ### MEGA
 
 - `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`
@@ -522,12 +524,18 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 
 ## Generate Database
 
+### From mongoDB Repo
 1. Go to `https://mongodb.com/` and sign-up.
 2. Create Shared Cluster.
 3. Press on `Database` under `Deployment` Header, your created cluster will be there.
 5. Press on connect, choose `Allow Acces From Anywhere` and press on `Add IP Address` without editing the ip, then create user.
 6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` **python** and `version` **3.6 or later**.
 7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
+
+### Docker
+1. docker compose -f docker-compose-mongodb.yml up -d
+2. docker network connect mongo_default mirrorbot
+3. add database url `mongodb://mongodb:27017/`
 
 ------
 

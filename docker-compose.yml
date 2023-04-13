@@ -3,6 +3,7 @@ version: "3.3"
 services:
   app:
     build: .
+    container_name: mirrorbot
     command: bash start.sh
     restart: on-failure
     ports:
