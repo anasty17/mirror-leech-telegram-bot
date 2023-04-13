@@ -62,7 +62,8 @@ class TgUploader:
     async def __msg_to_reply(self):
         if DUMP_CHAT := config_dict['DUMP_CHAT']:
             msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text
-            if IS_PREMIUM_USER:
+            f_size = await aiopath.getsize(self.__up_path)
+            if IS_PREMIUM_USER and f_size >= 2 * 1024**3:
                 self.__sent_msg = await user.send_message(chat_id=DUMP_CHAT, text=msg,
                                                           disable_web_page_preview=False, disable_notification=True)
             else:
