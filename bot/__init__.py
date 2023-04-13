@@ -274,6 +274,31 @@ INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == 'true'
 STOP_DUPLICATE = environ.get('STOP_DUPLICATE', '')
 STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
 
+STORAGE_THRESHOLD = environ.get('STORAGE_THRESHOLD', '')
+STORAGE_THRESHOLD = '' if len(
+    STORAGE_THRESHOLD) == 0 else float(STORAGE_THRESHOLD)
+
+TORRENT_LIMIT = environ.get('TORRENT_LIMIT', '')
+TORRENT_LIMIT = '' if len(TORRENT_LIMIT) == 0 else float(TORRENT_LIMIT)
+
+DIRECT_LIMIT = environ.get('DIRECT_LIMIT', '')
+DIRECT_LIMIT = '' if len(DIRECT_LIMIT) == 0 else float(DIRECT_LIMIT)
+
+YTDLP_LIMIT = environ.get('YTDLP_LIMIT', '')
+YTDLP_LIMIT = '' if len(YTDLP_LIMIT) == 0 else float(YTDLP_LIMIT)
+
+GDRIVE_LIMIT = environ.get('GDRIVE_LIMIT', '')
+GDRIVE_LIMIT = '' if len(GDRIVE_LIMIT) == 0 else float(GDRIVE_LIMIT)
+
+CLONE_LIMIT = environ.get('CLONE_LIMIT', '')
+CLONE_LIMIT = '' if len(CLONE_LIMIT) == 0 else float(CLONE_LIMIT)
+
+MEGA_LIMIT = environ.get('MEGA_LIMIT', '')
+MEGA_LIMIT = '' if len(MEGA_LIMIT) == 0 else float(MEGA_LIMIT)
+
+LEECH_LIMIT = environ.get('LEECH_LIMIT', '')
+LEECH_LIMIT = '' if len(LEECH_LIMIT) == 0 else float(LEECH_LIMIT)
+
 VIEW_LINK = environ.get('VIEW_LINK', '')
 VIEW_LINK = VIEW_LINK.lower() == 'true'
 
@@ -360,6 +385,14 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
                'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
                'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
+                "STORAGE_THRESHOLD": STORAGE_THRESHOLD,
+                "TORRENT_LIMIT": TORRENT_LIMIT,
+                "DIRECT_LIMIT": DIRECT_LIMIT,
+                "YTDLP_LIMIT": YTDLP_LIMIT,
+                "GDRIVE_LIMIT": GDRIVE_LIMIT,
+                "CLONE_LIMIT": CLONE_LIMIT,
+                "MEGA_LIMIT": MEGA_LIMIT,
+                "LEECH_LIMIT": LEECH_LIMIT,
                'RSS_CHAT_ID': RSS_CHAT_ID,
                'RSS_DELAY': RSS_DELAY,
                'RSS_AUTO_COMMAND': RSS_AUTO_COMMAND,

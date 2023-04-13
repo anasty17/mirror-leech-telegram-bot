@@ -7,7 +7,7 @@ from bot.helper.mirror_utils.status_utils.qbit_status import QbittorrentStatus
 from bot.helper.telegram_helper.message_utils import update_all_messages
 from bot.helper.ext_utils.bot_utils import get_readable_time, getDownloadByGid, new_task, sync_to_async
 from bot.helper.ext_utils.fs_utils import clean_unwanted
-from bot.helper.ext_utils.task_manager import stop_duplicate_check
+from bot.helper.ext_utils.task_manager import stop_duplicate_check, limit_checker
 
 
 async def __remove_torrent(client, hash_, tag):
@@ -59,6 +59,15 @@ async def __stop_duplicate(tor):
     if msg:
         __onDownloadError(msg, tor, button)
 
+
+@new_task
+async def __size_checked(tor):
+    download = await getDownloadByGid(tor.hash[:12])
+    if hasattr(download, 'listener'):
+        listener = download.listener()
+        size = tor.size
+        if limit_exceeded := await limit_checker(size, listener, True):
+            await __onDownloadError(limit_exceeded, tor)
 
 @new_task
 async def __onDownloadComplete(tor):
@@ -123,6 +132,9 @@ async def __qb_listener():
                         if config_dict['STOP_DUPLICATE'] and not QbTorrents[tag]['stop_dup_check']:
                             QbTorrents[tag]['stop_dup_check'] = True
                             __stop_duplicate(tor_info)
+                    if any([config_dict['STORAGE_THRESHOLD'], config_dict['TORRENT_LIMIT'], config_dict['LEECH_LIMIT']]) and not QbTorrents[tag]['size_checked']:
+                        QbTorrents[tag]['size_checked'] = True
+                        __size_checked(tor_info)
                     elif state == "stalledDL":
                         TORRENT_TIMEOUT = config_dict['TORRENT_TIMEOUT']
                         if not QbTorrents[tag]['rechecked'] and 0.99989999999999999 < tor_info.progress < 1:
@@ -156,7 +168,7 @@ async def __qb_listener():
 async def onDownloadStart(tag):
     async with qb_listener_lock:
         QbTorrents[tag] = {'stalled_time': time(
-        ), 'stop_dup_check': False, 'rechecked': False, 'uploaded': False, 'seeding': False}
+        ), 'stop_dup_check': False, 'rechecked': False, 'uploaded': False, 'seeding': False, 'size_checked': False}
         if not QbInterval:
             periodic = bot_loop.create_task(__qb_listener())
             QbInterval.append(periodic)

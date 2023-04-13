@@ -9,6 +9,7 @@ from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, new_thread, bt_selection_buttons, sync_to_async
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, update_all_messages
+from bot.helper.ext_utils.task_manager import limit_checker
 
 
 @new_thread
@@ -60,6 +61,36 @@ async def __onDownloadStarted(api, gid):
                     smsg = 'File/Folder already available in Drive.\nHere are the search results:'
                     await listener.onDownloadError(smsg, button)
                     await sync_to_async(api.remove, [download], force=True, files=True)
+                    
+    if any([config_dict['DIRECT_LIMIT'],
+            config_dict['TORRENT_LIMIT'],
+            config_dict['LEECH_LIMIT'],
+            config_dict['STORAGE_THRESHOLD']]):
+        await sleep(1)
+        if dl is None:
+            dl = await getDownloadByGid(gid)
+        if dl is not None:
+            if not hasattr(dl, 'listener'):
+                LOGGER.warning(
+                    f"onDownloadStart: {gid}. at Download limit didn't pass since download completed earlier!")
+                return
+            listener = dl.listener()
+            download = await sync_to_async(api.get_download, gid)
+            download = download.live
+            if download.total_length == 0:
+                start_time = time()
+                while time() - start_time <= 15:
+                    await sleep(0.5)
+                    download = await sync_to_async(api.get_download, gid)
+                    download = download.live
+                    if download.followed_by_ids:
+                        download = await sync_to_async(api.get_download, download.followed_by_ids[0])
+                    if download.total_length > 0:
+                        break
+            size = download.total_length
+            if limit_exceeded := await limit_checker(size, listener, download.is_torrent):
+                await listener.onDownloadError(limit_exceeded)
+                await sync_to_async(api.remove, [download], force=True, files=True)
 
 
 @new_thread

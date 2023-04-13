@@ -2,7 +2,7 @@
 from os import walk, path as ospath
 from aiofiles.os import remove as aioremove, path as aiopath, listdir, rmdir, makedirs
 from aioshutil import rmtree as aiormtree
-from shutil import rmtree
+from shutil import rmtree, disk_usage
 from magic import Magic
 from re import split as re_split, I, search as re_search
 from subprocess import run as srun
@@ -140,3 +140,20 @@ def get_mime_type(file_path):
     mime_type = mime.from_file(file_path)
     mime_type = mime_type or "text/plain"
     return mime_type
+
+def check_storage_threshold(size, threshold, arch=False, alloc=False):
+    free = disk_usage(DOWNLOAD_DIR).free
+    if not alloc:
+        if (
+            not arch
+            and free - size < threshold
+            or arch
+            and free - (size * 2) < threshold
+        ):
+            return False
+    elif not arch:
+        if free < threshold:
+            return False
+    elif free - size < threshold:
+        return False
+    return True
