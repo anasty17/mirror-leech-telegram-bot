@@ -62,11 +62,12 @@ async def sendRss(text):
     
 async def sendRssAutoCommand(command):
     try:
+        LOGGER.info(f'Going to send auto RSS, {command} to {bot_name}')
         if user:
             _bot_name = bot_name
             if not '@' in bot_name:
                 _bot_name = '@' + bot_name
-            return await user.send_message(chat_id=bot_name, text=command, disable_web_page_preview=True,
+            return await user.send_message(chat_id=_bot_name, text=command, disable_web_page_preview=True,
                                            disable_notification=True)
         else:
             LOGGER.warning('User is not define! Please use generate_string as a user (put your phone number)')

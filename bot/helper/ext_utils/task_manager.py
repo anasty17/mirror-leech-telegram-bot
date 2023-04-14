@@ -112,6 +112,7 @@ async def start_from_queued():
 
 
 async def limit_checker(size, listener, isTorrent=False, isMega=False, isDriveLink=False, isYtdlp=False):
+    LOGGER.info(f'Checing limits, size: {size}, IsTorrent: {isTorrent}')
     limit_exceeded = ''
     if isMega:
         if MEGA_LIMIT := config_dict['MEGA_LIMIT']:
