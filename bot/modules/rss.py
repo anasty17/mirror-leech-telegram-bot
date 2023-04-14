@@ -627,7 +627,7 @@ async def rssMonitor():
                     LOGGER.info('RSS Auto Command: {} and command message: {}'.format(config_dict.get('RSS_AUTO_COMMAND'), command_msg))
                     if config_dict.get('RSS_AUTO_COMMAND') and command_msg:
                         LOGGER.info(f"Going to check AUTO command: RSS command: {command_msg} title: {title}")
-                        sendRssAutoCommand(command_msg)
+                        await sendRssAutoCommand(command_msg)
                     feed_count += 1
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):
