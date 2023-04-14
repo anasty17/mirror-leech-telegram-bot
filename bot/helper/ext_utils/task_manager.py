@@ -141,7 +141,7 @@ async def limit_checker(size, listener, isTorrent=False, isMega=False, isDriveLi
         limit = LEECH_LIMIT * 1024**3
         if size > limit:
             limit_exceeded = f'Leech limit is {get_readable_file_size(limit)}'
-    if not limit_exceeded and (STORAGE_THRESHOLD := config_dict['STORAGE_THRESHOLD']) and not listener.isClone:
+    if not limit_exceeded and (STORAGE_THRESHOLD := config_dict['STORAGE_THRESHOLD']):
         arch = any([listener.isZip, listener.extract])
         limit = STORAGE_THRESHOLD * 1024**3
         acpt = await sync_to_async(check_storage_threshold, size, limit, arch)
