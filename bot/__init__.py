@@ -502,7 +502,7 @@ else:
         if v in ["", "*"]:
             del qb_opt[k]
     qb_client.app_set_preferences(qb_opt)
-
+LOGGER.info(config_dict)
 log_info("Creating client from BOT_TOKEN")
 bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN,
                parse_mode=enums.ParseMode.HTML, max_concurrent_transmissions=1000).start()
