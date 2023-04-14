@@ -509,8 +509,5 @@ bot = tgClient('bot', TELEGRAM_API, TELEGRAM_HASH, bot_token=BOT_TOKEN,
 bot_loop = bot.loop
 bot_name = bot.me.username
 LOGGER.info(f'This is bot name: {bot_name}, and user: {user}')
-if user != '':
-    LOGGER.info(f'Sending a message from account to the bot')
-    user.send_message(chat_id='@'+bot_name, text='Hello world! {bot_name}')
 scheduler = AsyncIOScheduler(timezone=str(
     get_localzone()), event_loop=bot_loop)
