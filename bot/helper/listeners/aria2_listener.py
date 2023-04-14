@@ -61,7 +61,7 @@ async def __onDownloadStarted(api, gid):
                         await listener.onDownloadError(smsg, button)
                         await sync_to_async(api.remove, [download], force=True, files=True)
                         return
-    LOGGER.info('Checking Limits')
+    # LOGGER.info('Checking Limits')
     if any([config_dict['DIRECT_LIMIT'],
             config_dict['TORRENT_LIMIT'],
             config_dict['LEECH_LIMIT'],
