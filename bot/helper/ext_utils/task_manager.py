@@ -113,12 +113,7 @@ async def start_from_queued():
 
 async def limit_checker(size, listener, isTorrent=False, isMega=False, isDriveLink=False, isYtdlp=False):
     limit_exceeded = ''
-    if listener.isClone:
-        if CLONE_LIMIT := config_dict['CLONE_LIMIT']:
-            limit = CLONE_LIMIT * 1024**3
-            if size > limit:
-                limit_exceeded = f'Clone limit is {get_readable_file_size(limit)}.'
-    elif isMega:
+    if isMega:
         if MEGA_LIMIT := config_dict['MEGA_LIMIT']:
             limit = MEGA_LIMIT * 1024**3
             if size > limit:
