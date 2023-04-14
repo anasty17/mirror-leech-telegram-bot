@@ -168,11 +168,11 @@ async def clone(client, message):
     multi = 0
     if len(args) > 1:
         link = args[1].strip()
+        if not link.startswith(('up:', 'rcf:')):
+            link = re_split(r' up: | rcf: ', link)[0].strip()
         if link.isdigit():
             multi = int(link)
             link = ''
-        elif not link.startswith(('up:', 'rcf:')):
-            link = re_split(r' up: | rcf: ', link)[0].strip()
         elif username := message.from_user.username:
             tag = f"@{username}"
         else:
@@ -212,7 +212,7 @@ async def clone(client, message):
         return
 
     if is_rclone_path(link):
-        if not aiopath.exists('rclone.conf') and not await aiopath.exists(f'rclone/{message.from_user.id}.conf'):
+        if not await aiopath.exists('rclone.conf') and not await aiopath.exists(f'rclone/{message.from_user.id}.conf'):
             await sendMessage(message, 'Rclone Config Not exists!')
             return
         if not config_dict['RCLONE_PATH'] and not dst_path:
