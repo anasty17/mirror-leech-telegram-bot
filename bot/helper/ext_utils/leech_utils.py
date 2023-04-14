@@ -6,17 +6,37 @@ from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 
+import requests
+
 from bot import LOGGER, MAX_SPLIT_SIZE, config_dict, user_data
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.fs_utils import ARCH_EXT, get_mime_type
 
 
+def add_markup(des_dir):
+    try:
+        img = Image.open(des_dir)
+        x = img.width//2
+        y = img.height//2
+        markup = Image.open(requests.get(config_dict.get('MARKUP_URL'), stream=True).raw)
+        ratio = markup.height / markup.width
+        markup = markup.resize((img.width//2, int(img.width//2 * ratio)))
+        x = (img.width // 2) - (markup.width // 2)
+        y = (img.height // 2) - (markup.height // 2)
+        img.paste(markup, (x, y), mask=markup)
+        img.save(des_dir)
+        return des_dir
+    except Exception as e:
+        LOGGER.error(f'Creating markup for files {e}')
+        return des_dir
+
 def create_thumb(des_dir):
     with Image.open(des_dir) as img:
         img.convert("RGB").save(des_dir, "JPEG")
-
-
+        if config_dict.get('MARKUP_URL'):
+            add_markup(des_dir)
+            
 async def is_multi_streams(path):
     try:
         result = await cmd_exec(["ffprobe", "-hide_banner", "-loglevel", "error", "-print_format",
