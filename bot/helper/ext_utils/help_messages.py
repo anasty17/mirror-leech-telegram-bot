@@ -128,3 +128,14 @@ Filter Notes:
 4. Take look on title if it has static special character after or before the qualities or extensions or whatever and use them in filter to avoid wrong match.
 Timeout: 60 sec.
 """
+
+CLONE_HELP_MESSAGE = """Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command
+<b>Multi links only by replying to first gdlink or rclone_path:</b>
+<code>/cmd</code> 10(number of links/pathies)
+<b>Gdrive:</b>
+<code>/cmd</code> gdrivelink
+<b>Rclone:</b>
+<code>/cmd</code> rcl or rclone_path up: rcl or rclone_path rcf: flagkey:flagvalue|flagkey|flagkey:flagvalue
+Notes:
+if up: not specified then rclone destination will be the RCLONE_PATH from config.env
+"""

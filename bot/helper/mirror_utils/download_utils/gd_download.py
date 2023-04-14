@@ -13,10 +13,11 @@ from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
 
 async def add_gd_download(link, path, listener, newname):
     drive = GoogleDriveHelper()
-    res, size, name, _ = await sync_to_async(drive.helper, link)
-    if res:
-        await sendMessage(listener.message, res)
+    name, mime_type, size, _, _ = await sync_to_async(drive.count, link)
+    if mime_type is None:
+        await sendMessage(listener.message, name)
         return
+
     name = newname or name
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
 

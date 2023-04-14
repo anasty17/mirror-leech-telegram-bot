@@ -229,8 +229,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### MEGA
 
-- `MEGA_API_KEY`: Mega.nz API key to mirror mega.nz links. Get it from [Mega SDK Page](https://mega.nz/sdk). `Int`
-- `MEGA_EMAIL_ID`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
+- `MEGA_EMAIL`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
 
 ### Queue System

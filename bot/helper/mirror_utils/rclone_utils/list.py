@@ -254,15 +254,19 @@ class RcloneList:
         else:
             await self.list_config()
 
-    async def get_rclone_path(self, status):
+    async def get_rclone_path(self, status, config_path=None):
         self.list_status = status
         future = self.__event_handler()
-        self.__rc_user = await aiopath.exists(self.user_rcc_path)
-        self.__rc_owner = await aiopath.exists('rclone.conf')
-        if not self.__rc_owner and not self.__rc_user:
-            self.event.set()
-            return 'Rclone Config not Exists!'
-        await self.list_config()
+        if config_path is None:
+            self.__rc_user = await aiopath.exists(self.user_rcc_path)
+            self.__rc_owner = await aiopath.exists('rclone.conf')
+            if not self.__rc_owner and not self.__rc_user:
+                self.event.set()
+                return 'Rclone Config not Exists!'
+            await self.list_config()
+        else:
+            self.config_path = config_path
+            await self.list_remotes()
         await wrap_future(future)
         await self.__reply_to.delete()
         if self.config_path != 'rclone.conf' and not self.is_cancelled:

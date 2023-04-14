@@ -13,7 +13,7 @@ async def sendMessage(message, text, buttons=None):
                                    disable_notification=True, reply_markup=buttons)
     except FloodWait as f:
         LOGGER.warning(str(f))
-        await sleep(f.value * 1.5)
+        await sleep(f.value * 1.2)
         return await sendMessage(message, text, buttons)
     except Exception as e:
         LOGGER.error(str(e))
@@ -25,7 +25,7 @@ async def editMessage(message, text, buttons=None):
         await message.edit(text=text, disable_web_page_preview=True, reply_markup=buttons)
     except FloodWait as f:
         LOGGER.warning(str(f))
-        await sleep(f.value * 1.5)
+        await sleep(f.value * 1.2)
         return await editMessage(message, text, buttons)
     except Exception as e:
         LOGGER.error(str(e))
@@ -37,7 +37,7 @@ async def sendFile(message, file, caption=None):
         return await message.reply_document(document=file, quote=True, caption=caption, disable_notification=True)
     except FloodWait as f:
         LOGGER.warning(str(f))
-        await sleep(f.value * 1.5)
+        await sleep(f.value * 1.2)
         return await sendFile(message, file, caption)
     except Exception as e:
         LOGGER.error(str(e))
@@ -54,7 +54,7 @@ async def sendRss(text):
                                           disable_notification=True)
     except FloodWait as f:
         LOGGER.warning(str(f))
-        await sleep(f.value * 1.5)
+        await sleep(f.value * 1.2)
         return await sendRss(text)
     except Exception as e:
         LOGGER.error(str(e))
@@ -64,8 +64,8 @@ async def sendRss(text):
 async def deleteMessage(message):
     try:
         await message.delete()
-    except:
-        pass
+    except Exception as e:
+        LOGGER.error(str(e))
 
 
 async def auto_delete_message(cmd_message=None, bot_message=None):

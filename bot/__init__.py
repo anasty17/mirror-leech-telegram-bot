@@ -178,16 +178,11 @@ if len(USER_SESSION_STRING) != 0:
                     parse_mode=enums.ParseMode.HTML, no_updates=True, max_concurrent_transmissions=1000).start()
     IS_PREMIUM_USER = user.me.is_premium
 
-MEGA_API_KEY = environ.get('MEGA_API_KEY', '')
-if len(MEGA_API_KEY) == 0:
-    log_warning('MEGA API KEY not provided!')
-    MEGA_API_KEY = ''
-
-MEGA_EMAIL_ID = environ.get('MEGA_EMAIL_ID', '')
+MEGA_EMAIL = environ.get('MEGA_EMAIL', '')
 MEGA_PASSWORD = environ.get('MEGA_PASSWORD', '')
-if len(MEGA_EMAIL_ID) == 0 or len(MEGA_PASSWORD) == 0:
+if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
     log_warning('MEGA Credentials not provided!')
-    MEGA_EMAIL_ID = ''
+    MEGA_EMAIL = ''
     MEGA_PASSWORD = ''
 
 UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
@@ -342,8 +337,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                'MEDIA_GROUP': MEDIA_GROUP,
-               'MEGA_API_KEY': MEGA_API_KEY,
-               'MEGA_EMAIL_ID': MEGA_EMAIL_ID,
+               'MEGA_EMAIL': MEGA_EMAIL,
                'MEGA_PASSWORD': MEGA_PASSWORD,
                'OWNER_ID': OWNER_ID,
                'QUEUE_ALL': QUEUE_ALL,

@@ -50,7 +50,7 @@ class MirrorLeechListener:
         self.suproc = None
         self.sameDir = sameDir
         self.rcFlags = rcFlags
-        self.upPath = upPath or config_dict['DEFAULT_UPLOAD']
+        self.upPath = upPath
 
     async def clean(self):
         try:
@@ -294,19 +294,19 @@ class MirrorLeechListener:
             RCTransfer = RcloneTransferHelper(self, up_name)
             async with download_dict_lock:
                 download_dict[self.uid] = RcloneStatus(
-                    RCTransfer, self.message, size, gid, 'up')
+                    RCTransfer, self.message, gid, 'up')
             await update_all_messages()
             await RCTransfer.upload(path, size)
 
-    async def onUploadComplete(self, link, size, files, folders, typ, name, rclonePath=''):
+    async def onUploadComplete(self, link, size, files, folders, mime_type, name, rclonePath=''):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{get_readable_file_size(size)}"
-        LOGGER.info(f'Done Uploading {name}')
+        LOGGER.info(f'Task Done: {name}')
         if self.isLeech:
             msg += f'\n<b>Total Files: </b>{folders}'
-            if typ != 0:
-                msg += f'\n<b>Corrupted Files: </b>{typ}'
+            if mime_type != 0:
+                msg += f'\n<b>Corrupted Files: </b>{mime_type}'
             msg += f'\n<b>cc: </b>{self.tag}\n\n'
             if not files:
                 await sendMessage(self.message, msg)
@@ -329,8 +329,8 @@ class MirrorLeechListener:
                 await start_from_queued()
                 return
         else:
-            msg += f'\n\n<b>Type: </b>{typ}'
-            if typ == "Folder":
+            msg += f'\n\n<b>Type: </b>{mime_type}'
+            if mime_type == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
             if link or rclonePath and config_dict['RCLONE_SERVE_URL']:
@@ -343,13 +343,13 @@ class MirrorLeechListener:
                     remote, path = rclonePath.split(':', 1)
                     url_path = rutils.quote(f'{path}')
                     share_url = f'{RCLONE_SERVE_URL}/{remote}/{url_path}'
-                    if typ == "Folder":
+                    if mime_type == "Folder":
                         share_url += '/'
                     buttons.ubutton("🔗 Rclone Link", share_url)
                 elif (INDEX_URL := config_dict['INDEX_URL']) and not rclonePath:
                     url_path = rutils.quote(f'{name}')
                     share_url = f'{INDEX_URL}/{url_path}'
-                    if typ == "Folder":
+                    if mime_type == "Folder":
                         share_url += '/'
                         buttons.ubutton("⚡ Index Link", share_url)
                     else:
@@ -397,7 +397,7 @@ class MirrorLeechListener:
             count = len(download_dict)
             if self.uid in self.sameDir:
                 self.sameDir.remove(self.uid)
-        msg = f"{self.tag} your download has been stopped due to: {escape(error)}"
+        msg = f"{self.tag} Download: {escape(error)}"
         await sendMessage(self.message, msg, button)
         if count == 0:
             await self.clean()

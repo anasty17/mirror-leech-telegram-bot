@@ -7,7 +7,7 @@ from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
 from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
-from bot.helper.ext_utils.bot_utils import getDownloadByGid, new_thread, bt_selection_buttons, sync_to_async
+from bot.helper.ext_utils.bot_utils import getDownloadByGid, new_thread, bt_selection_buttons, sync_to_async, get_telegraph_list
 from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, update_all_messages
 
 
@@ -55,10 +55,11 @@ async def __onDownloadStarted(api, gid):
                 except:
                     name = None
             if name is not None:
-                smsg, button = await sync_to_async(GoogleDriveHelper().drive_list, name, True)
-                if smsg:
-                    smsg = 'File/Folder already available in Drive.\nHere are the search results:'
-                    await listener.onDownloadError(smsg, button)
+                telegraph_content, contents_no = await sync_to_async(GoogleDriveHelper().drive_list, name, True)
+                if telegraph_content:
+                    msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
+                    button = await get_telegraph_list(telegraph_content)
+                    await listener.onDownloadError(msg, button)
                     await sync_to_async(api.remove, [download], force=True, files=True)
 
 

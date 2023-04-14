@@ -5,7 +5,6 @@ from string import ascii_letters, digits
 from logging import getLogger
 from yt_dlp import YoutubeDL, DownloadError
 from re import search as re_search
-from asyncio import Event
 
 from bot import download_dict_lock, download_dict, non_queued_dl, queue_dict_lock
 from bot.helper.telegram_helper.message_utils import sendStatusMessage

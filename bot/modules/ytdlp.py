@@ -4,6 +4,7 @@ from pyrogram.filters import command, regex
 from asyncio import sleep
 from re import split as re_split
 from aiohttp import ClientSession
+from aiofiles.os import path as aiopath
 
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
@@ -136,7 +137,27 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         await sendMessage(message, YT_HELP_MESSAGE)
         return
 
-    if (up == 'rcl' or config_dict['RCLONE_PATH'] == 'rcl' and config_dict['DEFAULT_UPLOAD'] == 'rc') and not isLeech:
+    if not isLeech:
+        if config_dict['DEFAULT_UPLOAD'] == 'rc' and up is None or up == 'rc':
+            up = config_dict['RCLONE_PATH']
+        if up is None and config_dict['DEFAULT_UPLOAD'] == 'gd':
+            up = 'gd'
+        if up == 'gd' and not config_dict['GDRIVE_ID']:
+            await sendMessage(message, 'GDRIVE_ID not Provided!')
+            return
+        elif not up:
+            await sendMessage(message, 'No Rclone Destination!')
+            return
+        elif up != 'rcl':
+            if up.startswith('mrcc:'):
+                config_path = f'rclone/{message.from_user.id}.conf'
+            else:
+                config_path = 'rclone.conf'
+            if not await aiopath.exists(config_path):
+                await sendMessage(message, f"Rclone Config: {config_path} not Exists!")
+                return
+
+    if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')
         if not is_rclone_path(up):
             await sendMessage(message, up)
@@ -154,7 +175,9 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         await sendMessage(message, f"{tag} {msg}")
         __run_multi()
         return
+
     __run_multi()
+
     if not select:
         YTQ = config_dict['YT_DLP_QUALITY']
         user_dict = user_data.get(user_id, {})

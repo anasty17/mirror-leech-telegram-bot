@@ -138,22 +138,21 @@ class AsyncExecutor:
 
 
 async def add_mega_download(mega_link, path, listener, name):
-    MEGA_API_KEY = config_dict['MEGA_API_KEY']
-    MEGA_EMAIL_ID = config_dict['MEGA_EMAIL_ID']
+    MEGA_EMAIL = config_dict['MEGA_EMAIL']
     MEGA_PASSWORD = config_dict['MEGA_PASSWORD']
 
     executor = AsyncExecutor()
-    api = MegaApi(MEGA_API_KEY, None, None, 'mirror-leech-telegram-bot')
+    api = MegaApi(None, None, None, 'mirror-leech-telegram-bot')
     folder_api = None
     mega_listener = MegaAppListener(executor.continue_event, listener)
     await sync_to_async(api.addListener, mega_listener)
-    if MEGA_EMAIL_ID and MEGA_PASSWORD:
-        await executor.do(api.login, (MEGA_EMAIL_ID, MEGA_PASSWORD))
+    if MEGA_EMAIL and MEGA_PASSWORD:
+        await executor.do(api.login, (MEGA_EMAIL, MEGA_PASSWORD))
     if get_mega_link_type(mega_link) == "file":
         await executor.do(api.getPublicNode, (mega_link,))
         node = mega_listener.public_node
     else:
-        folder_api = MegaApi(MEGA_API_KEY, None, None, 'mltb')
+        folder_api = MegaApi(None, None, None, 'mirror-leech-telegram-bot')
         await sync_to_async(folder_api.addListener, mega_listener)
         await executor.do(folder_api.loginToFolder, (mega_link,))
         node = await sync_to_async(folder_api.authorizeNode, mega_listener.node)

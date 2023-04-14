@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 from logging import getLogger, ERROR
 from time import time
-from asyncio import Lock, Event
+from asyncio import Lock
 
-from bot import LOGGER, download_dict, download_dict_lock, config_dict, non_queued_dl, non_queued_up, queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER
+from bot import LOGGER, download_dict, download_dict_lock, non_queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER
 from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage

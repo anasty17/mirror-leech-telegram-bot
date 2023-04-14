@@ -91,4 +91,3 @@ async def add_qb_torrent(link, path, listener, ratio, seed_time):
     finally:
         if await aiopath.exists(link):
             await aioremove(link)
-        await sync_to_async(client.auth_log_out)
