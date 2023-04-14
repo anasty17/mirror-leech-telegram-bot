@@ -2,8 +2,11 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 # Features:
 
-## By [anasty17](https://github.com/anasty17)
+
+## Cloned by [anasty17](https://github.com/anasty17)
 In each single file there is a major change from base code, it's almost totaly different. Here some of features and fixes that I remember.
+
+I just add new features such as Limits from [junedkh](https://github.com/junedkh/jmdkh-mltb), and Auto Leech RSS from my side! If you add an RSS and it has command (find in the rss section), the message automatically will send to the bot with the command and the rss link! So, you can add `l` or `ql` command for rss feed, and it will be automatically leeched.
 ### qBittorrent
 - Qbittorrent support
 - Select files from Torrent before and while downloading
@@ -252,6 +255,19 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   >1337x, Piratebay, Nyaasi, Torlock, Torrent Galaxy, Zooqle, Kickass, Bitsearch, MagnetDL, Libgen, YTS, Limetorrent, TorrentFunk, Glodls, TorrentProject and YourBittorrent
 - `SEARCH_LIMIT`: Search limit for search api, limit for each site and not overall result limit. Default is zero (Default api limit for each site). `Int`
 - `SEARCH_PLUGINS`: List of qBittorrent search plugins (github raw links). I have added some plugins, you can remove/add plugins as you want. Main Source: [qBittorrent Search Plugins (Official/Unofficial)](https://github.com/qbittorrent/search-plugins/wiki/Unofficial-search-plugins). `List`
+
+### Limits
+
+- Storage threshold limit
+- Leech limit
+- Clone limit
+- Mega limits
+- Torrent limits
+- Direct download limits
+- YTDLP limits
+- Google drive limits
+- User task limits
+- Ratelimiter
 
 ------
 
