@@ -140,20 +140,20 @@ async def gdcloneNode(message, link, tag):
         listener = MirrorLeechListener(message, tag=tag)
         await listener.onDownloadStart()
         LOGGER.info(f'Clone Started: Name: {name} - Source: {link}')
+        drive = GoogleDriveHelper(name, listener=listener)
         if files <= 20:
             msg = await sendMessage(message, f"Cloning: <code>{link}</code>")
-            link, size, mime_type, files, folders = await sync_to_async(gd.clone, link)
+            link, size, mime_type, files, folders = await sync_to_async(drive.clone, link)
             await deleteMessage(msg)
         else:
-            drive = GoogleDriveHelper(name, listener=listener)
             gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with download_dict_lock:
                 download_dict[message.id] = CloneStatus(
                     drive, size, message, gid)
             await sendStatusMessage(message)
             link, size, mime_type, files, folders = await sync_to_async(drive.clone, link)
-            if not link:
-                return
+        if not link:
+            return
         LOGGER.info(f'Cloning Done: {name}')
         await listener.onUploadComplete(link, size, files, folders, mime_type, name)
     else:
