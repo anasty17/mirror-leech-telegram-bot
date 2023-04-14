@@ -624,8 +624,9 @@ async def rssMonitor():
                         feed_msg += f"<b>Link: </b><code>{url}</code>"
                     feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
                     await sendRss(feed_msg)
-                    LOGGER.info(f"Going to check AUTO command: RSS command: {command_msg} title: {title}")
+                    LOGGER.info('RSS Auto Command: {} and command message: {}'.format(config_dict.get('RSS_AUTO_COMMAND'), command_msg))
                     if config_dict.get('RSS_AUTO_COMMAND') and command_msg:
+                        LOGGER.info(f"Going to check AUTO command: RSS command: {command_msg} title: {title}")
                         sendRssAutoCommand(command_msg)
                     feed_count += 1
                 async with rss_dict_lock:
