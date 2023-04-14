@@ -176,7 +176,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         elif not up:
             await sendMessage(message, 'No Rclone Destination!')
             return
-        elif up != 'rcl':
+        elif up not in ['rcl', 'gd']:
             if up.startswith('mrcc:'):
                 config_path = f'rclone/{message.from_user.id}.conf'
             else:

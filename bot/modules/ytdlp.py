@@ -148,7 +148,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         elif not up:
             await sendMessage(message, 'No Rclone Destination!')
             return
-        elif up != 'rcl':
+        elif up not in ['rcl', 'gd']:
             if up.startswith('mrcc:'):
                 config_path = f'rclone/{message.from_user.id}.conf'
             else:
