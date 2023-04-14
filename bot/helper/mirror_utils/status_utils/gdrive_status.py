@@ -19,7 +19,10 @@ class GdriveStatus:
     def status(self):
         if self.__status == 'up':
             return MirrorStatus.STATUS_UPLOADING
-        return MirrorStatus.STATUS_DOWNLOADING
+        elif self.__status == 'dl':
+            return MirrorStatus.STATUS_DOWNLOADING
+        else:
+            return MirrorStatus.STATUS_CLONING
 
     def name(self):
         return self.__obj.name
@@ -37,12 +40,12 @@ class GdriveStatus:
         return f'{round(self.progress_raw(), 2)}%'
 
     def speed(self):
-        return f'{get_readable_file_size(self.__obj.speed())}/s'
+        return f'{get_readable_file_size(self.__obj.speed)}/s'
 
     def eta(self):
         try:
             seconds = (self.__size - self.__obj.processed_bytes) / \
-                self.__obj.speed()
+                self.__obj.speed
             return f'{get_readable_time(seconds)}'
         except:
             return '-'
