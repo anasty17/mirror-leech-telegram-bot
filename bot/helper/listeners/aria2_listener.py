@@ -61,11 +61,12 @@ async def __onDownloadStarted(api, gid):
                     smsg = 'File/Folder already available in Drive.\nHere are the search results:'
                     await listener.onDownloadError(smsg, button)
                     await sync_to_async(api.remove, [download], force=True, files=True)
-                    
+    LOGGER.info('Checking Limits')
     if any([config_dict['DIRECT_LIMIT'],
             config_dict['TORRENT_LIMIT'],
             config_dict['LEECH_LIMIT'],
             config_dict['STORAGE_THRESHOLD']]):
+        LOGGER.info('Limits must be checked')
         await sleep(1)
         if dl is None:
             dl = await getDownloadByGid(gid)
@@ -88,7 +89,9 @@ async def __onDownloadStarted(api, gid):
                     if download.total_length > 0:
                         break
             size = download.total_length
+            LOGGER.info(f'The leech file size to checking limit {size}')
             if limit_exceeded := await limit_checker(size, listener, download.is_torrent):
+                LOGGER.info(f'The leech file size exceeded')
                 await listener.onDownloadError(limit_exceeded)
                 await sync_to_async(api.remove, [download], force=True, files=True)
 
