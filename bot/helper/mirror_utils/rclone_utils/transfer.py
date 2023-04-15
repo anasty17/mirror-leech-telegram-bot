@@ -55,7 +55,10 @@ class RcloneTransferHelper:
 
     async def __progress(self):
         while not (self.__proc is None or self.__is_cancelled):
-            data = (await self.__proc.stdout.readline()).decode()
+            try:
+                data = (await self.__proc.stdout.readline()).decode()
+            except:
+                continue
             if not data:
                 break
             if data := re_findall(r'Transferred:\s+([\d.]+\s*\w+)\s+/\s+([\d.]+\s*\w+),\s+([\d.]+%)\s*,\s+([\d.]+\s*\w+/s),\s+ETA\s+([\dwdhms]+)', data):
@@ -137,7 +140,7 @@ class RcloneTransferHelper:
                 LOGGER.info(f'Download with service account {remote}')
 
         rcflags = self.__listener.rcFlags or config_dict['RCLONE_FLAGS']
-        cmd = await self.__getUpdatedCommand(config_path, f'{remote}:{rc_path}', path, rcflags)
+        cmd = await self.__getUpdatedCommand(config_path, f'{remote}:{rc_path}', path, rcflags, 'copy')
 
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
             cmd.append('--drive-acknowledge-abuse')
@@ -210,9 +213,12 @@ class RcloneTransferHelper:
 
         if await aiopath.isdir(path):
             mime_type = 'Folder'
+            folders, files = await count_files_and_folders(path)
             rc_path += f"/{self.name}" if rc_path else self.name
         else:
-            mime_type = 'File'
+            mime_type = await sync_to_async(get_mime_type, path)
+            folders = 0
+            files = 1
 
         remote_opts = await self.__get_remote_options(oconfig_path, oremote)
         remote_type = remote_opts['type']
@@ -230,7 +236,7 @@ class RcloneTransferHelper:
                 LOGGER.info(f'Upload with service account {fremote}')
 
         rcflags = self.__listener.rcFlags or config_dict['RCLONE_FLAGS']
-        cmd = await self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags)
+        cmd = await self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags, 'move')
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
             cmd.extend(('--drive-chunk-size', '64M',
                        '--drive-upload-cutoff', '32M'))
@@ -238,13 +244,6 @@ class RcloneTransferHelper:
         result = await self.__start_upload(cmd)
         if not result:
             return
-
-        if mime_type == 'Folder':
-            folders, files = await count_files_and_folders(path)
-        else:
-            mime_type = await sync_to_async(get_mime_type, path)
-            folders = 0
-            files = 1
 
         if remote_type == 'drive':
             link, destination = await self.__get_gdrive_link(oconfig_path, oremote, rc_path, mime_type)
@@ -274,7 +273,7 @@ class RcloneTransferHelper:
         remote_opts = await self.__get_remote_options(config_path, remote)
         remote_type = remote_opts['type']
 
-        cmd = await self.__getUpdatedCommand(config_path, f'{remote}:{source}', destination, rcflags)
+        cmd = await self.__getUpdatedCommand(config_path, f'{remote}:{source}', destination, rcflags, 'copy')
         if remote_type == 'drive' and not rcflags:
             cmd.extend(('--drive-chunk-size', '64M', '--tpslimit', '3', '--transfers',
                        '3', '--drive-upload-cutoff', '32M', '--drive-acknowledge-abuse'))
@@ -321,10 +320,10 @@ class RcloneTransferHelper:
                     return None, None
 
     @staticmethod
-    async def __getUpdatedCommand(config_path, source, destination, rcflags):
+    async def __getUpdatedCommand(config_path, source, destination, rcflags, method):
         ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
-        cmd = ['rclone', 'copy', '--fast-list', '--config', config_path, '-P', source, destination,
-               '--exclude', ext, '--ignore-case', '--low-level-retries', '1']
+        cmd = ['rclone', method, '--fast-list', '--config', config_path, '-P', source, destination,
+               '--exclude', ext, '--ignore-case', '--low-level-retries', '1', '-M']
         if rcflags:
             rcflags = rcflags.split('|')
             for flag in rcflags:

@@ -141,12 +141,18 @@ async def add_mega_download(mega_link, path, listener, name):
         node = await sync_to_async(folder_api.authorizeNode, mega_listener.node)
     if mega_listener.error is not None:
         await sendMessage(listener.message, str(mega_listener.error))
+        await executor.do(api.logout, ())
+        if folder_api is not None:
+            await executor.do(folder_api.logout, ())
         return
 
     name = name or node.getName()
     msg, button = await stop_duplicate_check(name, listener)
     if msg:
         await sendMessage(listener.message, msg, button)
+        await executor.do(api.logout, ())
+        if folder_api is not None:
+            await executor.do(folder_api.logout, ())
         return
 
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=8))
@@ -163,6 +169,9 @@ async def add_mega_download(mega_link, path, listener, name):
         await event.wait()
         async with download_dict_lock:
             if listener.uid not in download_dict:
+                await executor.do(api.logout, ())
+                if folder_api is not None:
+                    await executor.do(folder_api.logout, ())
                 return
         from_queue = True
         LOGGER.info(f'Start Queued Download from Mega: {name}')
@@ -183,3 +192,6 @@ async def add_mega_download(mega_link, path, listener, name):
 
     await makedirs(path, exist_ok=True)
     await executor.do(api.startDownload, (node, path, name, None, False, None))
+    await executor.do(api.logout, ())
+    if folder_api is not None:
+        await executor.do(folder_api.logout, ())
