@@ -5,6 +5,7 @@ from asyncio import sleep
 from re import split as re_split
 from aiohttp import ClientSession
 from aiofiles.os import path as aiopath
+from yt_dlp import YoutubeDL
 
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
@@ -18,6 +19,14 @@ from bot.helper.listeners.tasks_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
 
 listener_dict = {}
+
+
+def extract_info(link):
+    with YoutubeDL({'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}) as ydl:
+        result = ydl.extract_info(link, download=False)
+        if result is None:
+            raise ValueError('Info result is None')
+        return result
 
 
 async def _mdisk(link, name):
@@ -167,9 +176,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
-    ydl = YoutubeDLHelper(listener)
     try:
-        result = await sync_to_async(ydl.extractMetaData, link, name, opt, True)
+        result = await sync_to_async(extract_info, link)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         await sendMessage(message, f"{tag} {msg}")
@@ -179,20 +187,22 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     __run_multi()
 
     if not select:
-        YTQ = config_dict['YT_DLP_QUALITY']
         user_dict = user_data.get(user_id, {})
         if 'format:' in opt:
             opts = opt.split('|')
             for f in opts:
                 if f.startswith('format:'):
                     qual = f.split('format:', 1)[1]
+                    break
         elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
-        elif 'yt_ql' not in user_dict and YTQ:
-            qual = YTQ
+        else:
+            qual = config_dict.get('YT_DLP_QUALITY')
+
     if qual:
         playlist = 'entries' in result
         LOGGER.info(f"Downloading with YT-DLP: {link}")
+        ydl = YoutubeDLHelper(listener)
         await ydl.add_download(link, path, name, qual, playlist, opt)
     else:
         buttons = ButtonMaker()
@@ -213,8 +223,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             buttons.ibutton("Best Videos", f"qu {msg_id} {best_video} t")
             buttons.ibutton("Best Audios", f"qu {msg_id} {best_audio} t")
             buttons.ibutton("Cancel", f"qu {msg_id} cancel")
-            YTBUTTONS = buttons.build_menu(3)
-            bmsg = await sendMessage(message, 'Choose Playlist Videos Quality:', YTBUTTONS)
+            mbuttons = buttons.build_menu(3)
+            bmsg = await sendMessage(message, 'Choose Playlist Videos Quality:', mbuttons)
         else:
             formats = result.get('formats')
             is_m4a = False
@@ -241,24 +251,17 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
                             ext = frmt['ext']
                             fps = frmt['fps'] if frmt.get('fps') else ''
                             b_name = f"{height}p{fps}-{ext}"
-                            if ext == 'mp4':
-                                ba_ext = '[ext=m4a]' if is_m4a else ''
-                                v_format = f"bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]"
-                            else:
-                                v_format = f"bv*[format_id={format_id}]+ba/b[height=?{height}]"
+                            ba_ext = '[ext=m4a]' if is_m4a and ext == 'mp4' else ''
+                            v_format = f"bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]"
                         else:
                             continue
 
-                        if b_name in formats_dict:
-                            formats_dict[b_name][str(frmt['tbr'])] = [
-                                size, v_format]
-                        else:
-                            formats_dict[b_name] = {
-                                str(frmt['tbr']): [size, v_format]}
+                        formats_dict.setdefault(b_name, {})[str(frmt['tbr'])] = [
+                            size, v_format]
 
-                for b_name, d_dict in formats_dict.items():
-                    if len(d_dict) == 1:
-                        tbr, v_list = list(d_dict.items())[0]
+                for b_name, tbr_dict in formats_dict.items():
+                    if len(tbr_dict) == 1:
+                        tbr, v_list = next(iter(tbr_dict.items()))
                         buttonName = f"{b_name} ({get_readable_file_size(v_list[0])})"
                         buttons.ibutton(
                             buttonName, f"qu {msg_id} {b_name}|{tbr}")
@@ -268,25 +271,24 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             buttons.ibutton("Best Video", f"qu {msg_id} {best_video}")
             buttons.ibutton("Best Audio", f"qu {msg_id} {best_audio}")
             buttons.ibutton("Cancel", f"qu {msg_id} cancel")
-            YTBUTTONS = buttons.build_menu(2)
-            bmsg = await sendMessage(message, 'Choose Video Quality:', YTBUTTONS)
+            mbuttons = buttons.build_menu(2)
+            bmsg = await sendMessage(message, 'Choose Video Quality:', mbuttons)
 
         listener_dict[msg_id] = [listener, user_id, link,
-                                 name, YTBUTTONS, opt, formats_dict, path]
+                                 name, mbuttons, opt, formats_dict, path]
         await _auto_cancel(bmsg, msg_id)
 
 
 async def _qual_subbuttons(task_id, b_name, msg):
     buttons = ButtonMaker()
-    task_info = listener_dict[task_id]
-    formats_dict = task_info[6]
-    for tbr, d_data in formats_dict[b_name].items():
-        buttonName = f"{tbr}K ({get_readable_file_size(d_data[0])})"
-        buttons.ibutton(buttonName, f"qu {task_id} {b_name}|{tbr}")
+    tbr_dict = listener_dict[task_id][6][b_name]
+    for tbr, d_data in tbr_dict.items():
+        button_name = f"{tbr}K ({get_readable_file_size(d_data[0])})"
+        buttons.ibutton(button_name, f"qu {task_id} {b_name}|{tbr}")
     buttons.ibutton("Back", f"qu {task_id} back")
     buttons.ibutton("Cancel", f"qu {task_id} cancel")
-    SUBBUTTONS = buttons.build_menu(2)
-    await editMessage(msg, f"Choose Bit rate for <b>{b_name}</b>:", SUBBUTTONS)
+    subbuttons = buttons.build_menu(2)
+    await editMessage(msg, f"Choose Bit rate for <b>{b_name}</b>:", subbuttons)
 
 
 async def _mp3_subbuttons(task_id, msg, playlist=False):
@@ -302,8 +304,8 @@ async def _mp3_subbuttons(task_id, msg, playlist=False):
         buttons.ibutton(f"{q}K-mp3", f"qu {task_id} {audio_format}")
     buttons.ibutton("Back", f"qu {task_id} back")
     buttons.ibutton("Cancel", f"qu {task_id} cancel")
-    SUBBUTTONS = buttons.build_menu(2)
-    await editMessage(msg, f"Choose Audio{i} Bitrate:", SUBBUTTONS)
+    subbuttons = buttons.build_menu(2)
+    await editMessage(msg, f"Choose Audio{i} Bitrate:", subbuttons)
 
 
 @new_task
@@ -356,10 +358,10 @@ async def select_format(client, query):
             if '|' in qual:
                 b_name, tbr = qual.split('|')
                 qual = task_info[6][b_name][tbr][1]
-        ydl = YoutubeDLHelper(listener)
         LOGGER.info(f"Downloading with YT-DLP: {link}")
         await message.delete()
         del listener_dict[task_id]
+        ydl = YoutubeDLHelper(listener)
         await ydl.add_download(link, path, name, qual, playlist, opt)
 
 

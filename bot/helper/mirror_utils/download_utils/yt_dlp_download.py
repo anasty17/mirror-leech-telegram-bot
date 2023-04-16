@@ -123,23 +123,15 @@ class YoutubeDLHelper:
         self.__is_cancelled = True
         async_to_sync(self.__listener.onDownloadError, error)
 
-    def extractMetaData(self, link, name, args, get_info=False):
-        if args:
-            self.__set_args(args)
-        if get_info:
-            self.opts['playlist_items'] = '0'
+    def extractMetaData(self, link, name):
         if link.startswith(('rtmp', 'mms', 'rstp', 'rtmps')):
             self.opts['external_downloader'] = 'ffmpeg'
         with YoutubeDL(self.opts) as ydl:
             try:
                 result = ydl.extract_info(link, download=False)
-                if get_info:
-                    return result
-                elif result is None:
+                if result is None:
                     raise ValueError('Info result is None')
             except Exception as e:
-                if get_info:
-                    raise e
                 return self.__onDownloadError(str(e))
         if 'entries' in result:
             self.name = name
@@ -181,7 +173,7 @@ class YoutubeDLHelper:
         except ValueError:
             self.__onDownloadError("Download Stopped by User!")
 
-    async def add_download(self, link, path, name, qual, playlist, args):
+    async def add_download(self, link, path, name, qual, playlist, options):
         if playlist:
             self.opts['ignoreerrors'] = True
             self.is_playlist = True
@@ -203,13 +195,16 @@ class YoutubeDLHelper:
 
         self.opts['format'] = qual
 
-        await sync_to_async(self.extractMetaData, link, name, args)
+        if options:
+            self.__set_options(options)
+
+        await sync_to_async(self.extractMetaData, link, name)
         if self.__is_cancelled:
             return
 
         if self.is_playlist:
             self.opts['outtmpl'] = f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
-        elif not args:
+        elif not options:
             self.opts['outtmpl'] = f"{path}/{self.name}"
         else:
             folder_name = self.name.rsplit('.', 1)[0]
@@ -247,20 +242,28 @@ class YoutubeDLHelper:
         if not self.__downloading:
             await self.__listener.onDownloadError("Download Cancelled by User!")
 
-    def __set_args(self, args):
-        args = args.split('|')
-        for arg in args:
-            xy = arg.split(':', 1)
-            karg = xy[0].strip()
-            if karg == 'format':
+    def __set_options(self, options):
+        options = options.split('|')
+        for opt in options:
+            kv = opt.split(':', 1)
+            key = kv[0].strip()
+            if key == 'format':
                 continue
-            varg = xy[1].strip()
-            if varg.startswith('^'):
-                varg = float(varg.split('^')[1])
-            elif varg.lower() == 'true':
-                varg = True
-            elif varg.lower() == 'false':
-                varg = False
-            elif varg.startswith(('{', '[', '(')) and varg.endswith(('}', ']', ')')):
-                varg = eval(varg)
-            self.opts[karg] = varg
+            value = kv[1].strip()
+            if value.startswith('^'):
+                value = float(value.split('^')[1])
+            elif value.lower() == 'true':
+                value = True
+            elif value.lower() == 'false':
+                value = False
+            elif value.startswith(('{', '[', '(')) and value.endswith(('}', ']', ')')):
+                value = eval(value)
+
+            if key == 'postprocessors':
+                if isinstance(value, list):
+                    values = tuple(value)
+                    self.opts[key].extend(values)
+                elif isinstance(value, dict):
+                    self.opts[key].append(value)
+            else:
+                self.opts[key] = value
