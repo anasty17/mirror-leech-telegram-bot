@@ -115,7 +115,7 @@ def get_readable_message():
     STATUS_LIMIT = config_dict['STATUS_LIMIT']
     tasks = len(download_dict)
     globals()['PAGES'] = (tasks + STATUS_LIMIT - 1) // STATUS_LIMIT
-    if PAGE_NO > PAGES:
+    if PAGE_NO > PAGES and PAGES != 0:
         globals()['STATUS_START'] = STATUS_LIMIT * (PAGES - 1)
         globals()['PAGE_NO'] = PAGES
     for download in list(download_dict.values())[STATUS_START:STATUS_LIMIT+STATUS_START]:

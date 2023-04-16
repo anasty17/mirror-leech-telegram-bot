@@ -28,6 +28,7 @@ class MegaAppListener(MegaListener):
         self.error = None
         self.__bytes_transferred = 0
         self.__speed = 0
+        self.__name = ''
         super().__init__()
 
     @property
@@ -49,11 +50,13 @@ class MegaAppListener(MegaListener):
             api.fetchNodes()
         elif request_type == MegaRequest.TYPE_GET_PUBLIC_NODE:
             self.public_node = request.getPublicMegaNode()
+            self.__name = self.public_node.getName()
         elif request_type == MegaRequest.TYPE_FETCH_NODES:
             LOGGER.info("Fetching Root Node.")
             self.node = api.getRootNode()
+            self.__name = self.node.getName()
             LOGGER.info(f"Node Name: {self.node.getName()}")
-        if request_type not in self._NO_EVENT_ON or self.node and "cloud drive" not in self.node.getName().lower():
+        if request_type not in self._NO_EVENT_ON or self.node and "cloud drive" not in self.__name.lower():
             self.continue_event.set()
 
     def onRequestTemporaryError(self, api, request, error: MegaError):
@@ -77,7 +80,7 @@ class MegaAppListener(MegaListener):
         try:
             if self.is_cancelled:
                 self.continue_event.set()
-            elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == (self.node or self.public_node).getName()):
+            elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.__name):
                 async_to_sync(self.listener.onDownloadComplete)
                 self.continue_event.set()
         except Exception as e:
