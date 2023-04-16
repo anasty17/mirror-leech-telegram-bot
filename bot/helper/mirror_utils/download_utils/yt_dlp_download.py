@@ -191,12 +191,16 @@ class YoutubeDLHelper:
 
         await self.__onDownloadStart()
 
+        self.opts['postprocessors'] = [
+            {'add_chapters': True, 'add_infojson': 'if_exists', 'add_metadata': True, 'key': 'FFmpegMetadata'}]
+
         if qual.startswith('ba/b-'):
             mp3_info = qual.split('-')
             qual = mp3_info[0]
             rate = mp3_info[1]
-            self.opts['postprocessors'] = [
-                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate}]
+            self.opts['postprocessors'].append(
+                {'key': 'FFmpegExtractAudio', 'preferredcodec': 'mp3', 'preferredquality': rate})
+
         self.opts['format'] = qual
 
         await sync_to_async(self.extractMetaData, link, name, args)
