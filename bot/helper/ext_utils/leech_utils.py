@@ -1,7 +1,6 @@
 from os import path as ospath
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir
 from time import time
-from PIL import Image
 from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
@@ -10,11 +9,6 @@ from bot import LOGGER, MAX_SPLIT_SIZE, config_dict, user_data
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.fs_utils import ARCH_EXT, get_mime_type
-
-
-def create_thumb(des_dir):
-    with Image.open(des_dir) as img:
-        img.convert("RGB").save(des_dir, "JPEG")
 
 
 async def is_multi_streams(path):
@@ -102,14 +96,13 @@ async def take_ss(video_file, duration):
         duration = 3
     duration = duration // 2
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", str(duration),
-           "-i", video_file, "-frames:v", "1", des_dir]
+           "-i", video_file, "-vf", "thumbnail", "-frames:v", "1", des_dir]
     status = await create_subprocess_exec(*cmd, stderr=PIPE)
     if await status.wait() != 0 or not await aiopath.exists(des_dir):
         err = (await status.stderr.read()).decode().strip()
         LOGGER.error(
-            f'Error while extracting screentshot. Name: {video_file} stderr: {err}')
+            f'Error while extracting thumbnail. Name: {video_file} stderr: {err}')
         return None
-    await sync_to_async(create_thumb, des_dir)
     return des_dir
 
 
