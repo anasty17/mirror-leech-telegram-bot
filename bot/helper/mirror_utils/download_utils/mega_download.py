@@ -77,7 +77,7 @@ class MegaAppListener(MegaListener):
         try:
             if self.is_cancelled:
                 self.continue_event.set()
-            elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == self.name):
+            elif transfer.isFinished() and (transfer.isFolderTransfer() or transfer.getFileName() == (self.node or self.public_node).getName()):
                 async_to_sync(self.listener.onDownloadComplete)
                 self.continue_event.set()
         except Exception as e:
