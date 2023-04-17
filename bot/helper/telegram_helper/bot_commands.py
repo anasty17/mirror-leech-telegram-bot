@@ -3,7 +3,7 @@ from bot import CMD_SUFFIX
 
 class _BotCommands:
     def __init__(self):
-        self.StartCommand = f'start{CMD_SUFFIX}'
+        self.StartCommand = [f'start{CMD_SUFFIX}', 'start']
         self.MirrorCommand = [f'mirror{CMD_SUFFIX}', f'm{CMD_SUFFIX}']
         self.UnzipMirrorCommand = [
             f'unzipmirror{CMD_SUFFIX}', f'uzm{CMD_SUFFIX}']
@@ -40,10 +40,10 @@ class _BotCommands:
         self.UnAuthorizeCommand = f'unauthorize{CMD_SUFFIX}'
         self.AddSudoCommand = f'addsudo{CMD_SUFFIX}'
         self.RmSudoCommand = f'rmsudo{CMD_SUFFIX}'
-        self.PingCommand = f'ping{CMD_SUFFIX}'
+        self.PingCommand = [f'ping{CMD_SUFFIX}', 'ping']
         self.RestartCommand = f'restart{CMD_SUFFIX}'
         self.StatsCommand = f'stats{CMD_SUFFIX}'
-        self.HelpCommand = f'help{CMD_SUFFIX}'
+        self.HelpCommand = [f'help{CMD_SUFFIX}', 'help']
         self.LogCommand = f'log{CMD_SUFFIX}'
         self.ShellCommand = f'shell{CMD_SUFFIX}'
         self.EvalCommand = f'eval{CMD_SUFFIX}'

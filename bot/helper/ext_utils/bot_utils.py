@@ -92,11 +92,11 @@ def bt_selection_buttons(id_):
     return buttons.build_menu(2)
 
 async def get_telegraph_list(telegraph_content):
-    path = [(await telegraph.create_page(title='Mirror-Leech-Bot Drive Search', content=content))["path"] for content in telegraph_content]
+    path = [(await telegraph.create_page(title='Mirror Bot Drive Search', content=content))["path"] for content in telegraph_content]
     if len(path) > 1:
         await telegraph.edit_telegraph(path, telegraph_content)
     buttons = ButtonMaker()
-    buttons.ubutton("🔎 VIEW", f"https://telegra.ph/{path[0]}")
+    buttons.ubutton("Result", f"https://telegra.ph/{path[0]}")
     return buttons.build_menu(1)
 
 

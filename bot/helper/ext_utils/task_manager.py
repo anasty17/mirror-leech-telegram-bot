@@ -26,7 +26,10 @@ async def stop_duplicate_check(name, listener):
     if name is not None:
         telegraph_content, contents_no = await sync_to_async(GoogleDriveHelper().drive_list, name, stopDup=True)
         if telegraph_content:
-            msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
+            msg = f'''
+                  File/Folder is already available Drive.
+                  Here are {contents_no} list results:
+                  '''
             button = await get_telegraph_list(telegraph_content)
             return msg, button
     return False, None

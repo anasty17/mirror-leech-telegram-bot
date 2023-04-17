@@ -111,7 +111,7 @@ async def __search(key, site, message, method):
         await sync_to_async(client.auth_log_out)
     link = await __getResult(search_results, key, message, method)
     buttons = ButtonMaker()
-    buttons.ubutton("🔎 VIEW", link)
+    buttons.ubutton("Result", link)
     button = buttons.build_menu(1)
     await editMessage(message, msg, button)
 
@@ -177,7 +177,7 @@ async def __getResult(search_results, key, message, method):
         telegraph_content.append(msg)
 
     await editMessage(message, f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>")
-    path = [(await telegraph.create_page(title='Mirror-leech-bot Torrent Search',
+    path = [(await telegraph.create_page(title='Mirror Leech Bot Torrent Search',
                                          content=content))["path"] for content in telegraph_content]
     if len(path) > 1:
         await editMessage(message, f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>")
