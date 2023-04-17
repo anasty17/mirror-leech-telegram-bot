@@ -19,6 +19,7 @@ git+https://github.com/zevtyardt/lk21.git
 httpx
 lxml
 motor
+mutagen
 natsort
 pillow
 psutil

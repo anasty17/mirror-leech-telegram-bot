@@ -236,7 +236,8 @@ class RcloneTransferHelper:
                 LOGGER.info(f'Upload with service account {fremote}')
 
         rcflags = self.__listener.rcFlags or config_dict['RCLONE_FLAGS']
-        cmd = await self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags, 'move')
+        method = 'move' if not self.__listener.seed or self.__listener.newDir else 'copy'
+        cmd = await self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags, method)
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
             cmd.extend(('--drive-chunk-size', '64M',
                        '--drive-upload-cutoff', '32M'))

@@ -12,8 +12,6 @@ from bot.helper.mirror_utils.status_utils.mega_download_status import MegaDownlo
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
 
-DumpSession = None
-
 
 class MegaAppListener(MegaListener):
     _NO_EVENT_ON = (MegaRequest.TYPE_LOGIN, MegaRequest.TYPE_FETCH_NODES)

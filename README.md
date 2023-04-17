@@ -180,12 +180,12 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
 - `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
 - `YT_DLP_QUALITY`: Default yt-dlp quality. Check all possible formats [HERE](https://github.com/yt-dlp/yt-dlp#filtering-formats). `str`
+- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 
 ### GDrirve Tools
 
 - `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors using google-api-python-client. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`. `Bool`
-- `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 - `INDEX_URL`: Refer to https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index. `Str`
 - `STOP_DUPLICATE`: Bot will check file/folder name in Drive incase uploading to `GDRIVE_ID`. If it's present in Drive then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature is not perfect yet). Default is `False`. `Bool`
 
@@ -211,14 +211,14 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `DUMP_CHAT`: Chat ID. Upload files to specific chat. `str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
+- `DUMP_CHAT_ID`: Chat ID to where leeched files would be uploaded. `Int`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
 
 ### qBittorrent/Aria2c
 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Int`
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
 - `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `80`. `Int`
-- `WEB_PINCODE`: If empty or `False` means no more pincode required before selecting torrent files from web. `Bool`
+- `WEB_PINCODE`: Whether to ask for pincode before selecting files from torrent in web or not. Default is `False`. `Bool`.
   - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`, decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit` from qbittorrent.conf or bsetting command.
 
 ### RSS
@@ -229,7 +229,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### MEGA
 
-- `MEGA_EMAIL`: E-Mail ID used to sign up on mega.nz for using premium account. `Str`
+- `MEGA_EMAIL`: E-Mail used to sign-in on mega.nz for using premium account. `Str`
 - `MEGA_PASSWORD`: Password for mega.nz account. `Str`
 
 ### Queue System
@@ -252,30 +252,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ------
 
-### 3. Getting Google OAuth API credential file and token.pickle
-
-**NOTES**
-- Old authentication changed, now we can't use bot or replit to generate token.pickle. You need OS with a local browser. For example `Termux`.
-- Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
-- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
-
-1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
-2. Go to the OAuth Consent tab, fill it, and save.
-3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
-4. Choose Desktop and Create.
-5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
-6. Use the download button to download your credentials.
-7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
-8. Visit [Google API page](https://console.developers.google.com/apis/library)
-9. Search for Google Drive Api and enable it
-10. Finally, run the script to generate **token.pickle** file for Google Drive:
-```
-pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
-python3 generate_drive_token.py
-```
-------
-
-### 4. Build And Run the Docker Image
+### 3. Build And Run the Docker Image
 
 Make sure you still mount the app folder and installed the docker from official documentation.
 - There are two methods to build and run the docker:
@@ -398,6 +375,37 @@ stats - Bot Usage Stats
 ping - Ping the Bot
 help - All cmds with description
 ```
+
+------
+
+## Getting Google OAuth API credential file and token.pickle
+
+**NOTES**
+- Old authentication changed, now we can't use bot or replit to generate token.pickle. You need OS with a local browser. For example `Termux`.
+- Windows users should install python3 and pip. You can find how to install and use them from google or from this [telegraph](https://telegra.ph/Create-Telegram-Mirror-Leech-Bot-by-Deploying-App-with-Heroku-Branch-using-Github-Workflow-12-06) from [Wiszky](https://github.com/vishnoe115) tutorial.
+- You can ONLY open the generated link from `generate_drive_token.py` in local browser.
+
+1. Visit the [Google Cloud Console](https://console.developers.google.com/apis/credentials)
+2. Go to the OAuth Consent tab, fill it, and save.
+3. Go to the Credentials tab and click Create Credentials -> OAuth Client ID
+4. Choose Desktop and Create.
+5. Publish your OAuth consent screen App to prevent **token.pickle** from expire
+6. Use the download button to download your credentials.
+7. Move that file to the root of mirrorbot, and rename it to **credentials.json**
+8. Visit [Google API page](https://console.developers.google.com/apis/library)
+9. Search for Google Drive Api and enable it
+10. Finally, run the script to generate **token.pickle** file for Google Drive:
+```
+pip3 install google-api-python-client google-auth-httplib2 google-auth-oauthlib
+python3 generate_drive_token.py
+```
+------
+
+## Getting rclone.conf
+
+1. Install rclone from [Official Site](https://rclone.org/install/)
+2. Create new remote(s) using `rclone config` command.
+3. Copy rclone.conf from .config/rclone/rclone.conf to repo folder
 
 ------
 

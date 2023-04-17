@@ -163,8 +163,8 @@ async def load_config():
     SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
     SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 
-    DUMP_CHAT = environ.get('DUMP_CHAT', '')
-    DUMP_CHAT = '' if len(DUMP_CHAT) == 0 else int(DUMP_CHAT)
+    DUMP_CHAT_ID = environ.get('DUMP_CHAT_ID', '')
+    DUMP_CHAT_ID = '' if len(DUMP_CHAT_ID) == 0 else int(DUMP_CHAT_ID)
 
     STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
     STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
@@ -307,7 +307,7 @@ async def load_config():
                         'DATABASE_URL': DATABASE_URL,
                         'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
                         'DOWNLOAD_DIR': DOWNLOAD_DIR,
-                        'DUMP_CHAT': DUMP_CHAT,
+                        'DUMP_CHAT_ID': DUMP_CHAT_ID,
                         'EQUAL_SPLITS': EQUAL_SPLITS,
                         'EXTENSION_FILTER': EXTENSION_FILTER,
                         'GDRIVE_ID': GDRIVE_ID,
@@ -462,7 +462,7 @@ async def edit_variable(client, message, pre_message, key):
     elif key == 'DOWNLOAD_DIR':
         if not value.endswith('/'):
             value += '/'
-    elif key in ['DUMP_CHAT', 'RSS_CHAT_ID']:
+    elif key in ['DUMP_CHAT_ID', 'RSS_CHAT_ID']:
         value = int(value)
     elif key == 'STATUS_UPDATE_INTERVAL':
         value = int(value)
