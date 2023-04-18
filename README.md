@@ -50,6 +50,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Ability to use specific yt-dlp option for each task
 - Custom default video quality for each user
 - Fix download progress
+- Embed original thumbnail and add it for leech
 ### Database
 - Mongo Database support
 - Store bot settings
@@ -78,6 +79,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Ability to choose config, remote and path from list with buttons
 - Ability to set rclone flags
 - Rclone.conf for each user
+- Clone server-side
 - Rclone serve for combine remote to use it as index from all remotes
 ### Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7`

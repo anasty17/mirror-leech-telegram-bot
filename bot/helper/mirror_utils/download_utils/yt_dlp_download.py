@@ -63,6 +63,7 @@ class YoutubeDLHelper:
                      'noprogress': True,
                      'allow_playlist_files': True,
                      'overwrites': True,
+                     'writethumbnail': True,
                      'trim_file_name': 220}
 
     @property
@@ -133,26 +134,26 @@ class YoutubeDLHelper:
                     raise ValueError('Info result is None')
             except Exception as e:
                 return self.__onDownloadError(str(e))
-        if 'entries' in result:
-            self.name = name
-            for entry in result['entries']:
-                if not entry:
-                    continue
-                elif 'filesize_approx' in entry:
-                    self.__size += entry['filesize_approx']
-                elif 'filesize' in entry:
-                    self.__size += entry['filesize']
-                if name == "":
-                    outtmpl_ = '%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
-                    self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
-        else:
-            outtmpl_ = '%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
-            realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
-            if name == "":
-                self.name = realName
+            if 'entries' in result:
+                self.name = name
+                for entry in result['entries']:
+                    if not entry:
+                        continue
+                    elif 'filesize_approx' in entry:
+                        self.__size += entry['filesize_approx']
+                    elif 'filesize' in entry:
+                        self.__size += entry['filesize']
+                    if name == "":
+                        outtmpl_ = '%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d'
+                        self.name = ydl.prepare_filename(entry, outtmpl=outtmpl_)
             else:
-                ext = realName.rsplit('.', 1)[-1]
-                self.name = f"{name}.{ext}"
+                outtmpl_ = '%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s'
+                realName = ydl.prepare_filename(result, outtmpl=outtmpl_)
+                if name == "":
+                    self.name = realName
+                else:
+                    ext = ospath.splitext(realName)[-1]
+                    self.name = f"{name}.{ext}"
 
     def __download(self, link, path):
         try:
@@ -198,18 +199,24 @@ class YoutubeDLHelper:
         if options:
             self.__set_options(options)
 
+        self.opts['postprocessors'].extend(({'format': 'jpg', 'key': 'FFmpegThumbnailsConvertor', 'when': 'before_dl'}, {
+                                               'already_have_thumbnail': self.__listener.isLeech, 'key': 'EmbedThumbnail'}))
+
         await sync_to_async(self.extractMetaData, link, name)
         if self.__is_cancelled:
             return
 
         if self.is_playlist:
-            self.opts['outtmpl'] = f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"
+            self.opts['outtmpl'] = {'default': f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s",
+                                    'thumbnail': f"{path}/yt-dlp-thumb/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"}
         elif not options:
-            self.opts['outtmpl'] = f"{path}/{self.name}"
+            self.opts['outtmpl'] = {'default': f"{path}/{self.name}",
+                                    'thumbnail': f"{path}/yt-dlp-thumb/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"}
         else:
-            folder_name = self.name.rsplit('.', 1)[0]
-            self.opts['outtmpl'] = f"{path}/{folder_name}/{self.name}"
-            self.name = folder_name
+            pure_name = ospath.splitext(self.name)[0]
+            self.opts['outtmpl'] = {'default': f"{path}/{pure_name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s",
+                                    'thumbnail': f"{path}/yt-dlp-thumb/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"}
+            self.name = pure_name
 
         msg, button = await stop_duplicate_check(name, self.__listener)
         if msg:
