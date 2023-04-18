@@ -102,7 +102,7 @@ class TgUploader:
                 ext = file_.split(name, 1)[1]
             elif len(fsplit := ospath.splitext(file_)) > 1:
                 name = fsplit[0]
-                ext = f'.{fsplit[1]}'
+                ext = fsplit[1]
             else:
                 name = file_
                 ext = ''
