@@ -217,8 +217,8 @@ class YtSelection:
         await editMessage(self.__reply_to, msg, subbuttons)
 
 
-def extract_info(link):
-    with YoutubeDL({'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}) as ydl:
+def extract_info(link, options):
+    with YoutubeDL(options) as ydl:
         result = ydl.extract_info(link, download=False)
         if result is None:
             raise ValueError('Info result is None')
@@ -362,8 +362,26 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         message, isZip, isLeech=isLeech, pswd=pswd, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
+
+    options = {'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}
+    if opt is not None:
+        yt_opt = opt.split('|')
+        for ytopt in yt_opt:
+            kv = ytopt.split(':', 1)
+            key = kv[0].strip()
+            value = kv[1].strip()
+            if value.startswith('^'):
+                value = float(value.split('^')[1])
+            elif value.lower() == 'true':
+                value = True
+            elif value.lower() == 'false':
+                value = False
+            elif value.startswith(('{', '[', '(')) and value.endswith(('}', ']', ')')):
+                value = eval(value)
+            options[key] = value
+
     try:
-        result = await sync_to_async(extract_info, link)
+        result = await sync_to_async(extract_info, link, options)
     except Exception as e:
         msg = str(e).replace('<', ' ').replace('>', ' ')
         await sendMessage(message, f'{tag} {msg}')
@@ -374,12 +392,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
 
     if not select:
         user_dict = user_data.get(user_id, {})
-        if 'format:' in opt:
-            opts = opt.split('|')
-            for f in opts:
-                if f.startswith('format:'):
-                    qual = f.split('format:', 1)[1]
-                    break
+        if 'format:' in options:
+            qual = options['format']
         elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
         else:

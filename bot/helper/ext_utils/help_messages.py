@@ -46,7 +46,7 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 4. You can always add video quality from yt-dlp api options.
 5. Don't add file extension while rename using `n:`
 
-Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a>.
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
 """
 
 MIRROR_HELP_MESSAGE = """
