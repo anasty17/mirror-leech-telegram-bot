@@ -51,6 +51,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Custom default video quality for each user
 - Fix download progress
 - Embed original thumbnail and add it for leech
+- All supported audio formats
 ### Database
 - Mongo Database support
 - Store bot settings

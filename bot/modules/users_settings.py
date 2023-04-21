@@ -317,8 +317,9 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
 
 async def send_users_settings(client, message):
     if msg := ''.join(f'<code>{u}</code>: {escape(str(d))}\n\n' for u, d in user_data.items()):
-        if len(msg.encode()) > 4000:
-            with BytesIO(str.encode(msg)) as ofile:
+        msg_ecd = msg.encode()
+        if len(msg_ecd) > 4000:
+            with BytesIO(msg_ecd) as ofile:
                 ofile.name = 'users_settings.txt'
                 await sendFile(message, ofile)
         else:
