@@ -224,7 +224,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   - Example: "format:bv*+mergeall[vcodec=none]|nocheckcertificate:True"
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 
-### GDrirve Tools
+### GDrive Tools
 
 - `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors using google-api-python-client. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`. `Bool`
