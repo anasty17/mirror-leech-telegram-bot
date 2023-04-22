@@ -55,7 +55,7 @@ async def get_user_settings(from_user):
     buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get('yt_opt', False):
         ytopt = user_dict['yt_opt']
-    elif 'yt_ql' not in user_dict and (YTO := config_dict['YT_DLP_QUALITY']):
+    elif 'yt_opt' not in user_dict and (YTO := config_dict['YT_DLP_OPTIONS']):
         ytopt = YTO
     else:
         ytopt = 'None'
