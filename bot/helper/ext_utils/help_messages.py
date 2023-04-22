@@ -22,7 +22,7 @@ Number should be always before n:, pswd: and opt:
 <code>/cmd</code> 10(number of links) m:folder_name
 Number and m:folder_name should be always before n:, pswd: and opt:
 
-<b>Options Note:</b> Add `^` before integer or inf or float, some values must be numeric and some string.
+<b>Options Note:</b> Add `^` before integer or float, some values must be numeric and some string.
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict.
 

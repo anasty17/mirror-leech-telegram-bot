@@ -313,6 +313,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     up = mssg.split(' up: ', 1)
     up = re_split(' n: | pswd: | rcf: | opt: ', up[1])[
         0].strip() if len(up) > 1 else None
+    
+    opt = opt or config_dict['YT_DLP_OPTIONS']
 
     if username := message.from_user.username:
         tag = f'@{username}'
@@ -364,12 +366,10 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         name, link = await _mdisk(link, name)
 
     options = {'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}
-    if opt is not None:
+    if opt:
         yt_opt = opt.split('|')
         for ytopt in yt_opt:
-            kv = ytopt.split(':', 1)
-            key = kv[0].strip()
-            value = kv[1].strip()
+            key, value = map(str.strip, ytopt.split(':', 1))
             if value.startswith('^'):
                 value = float(value.split('^')[1])
             elif value.lower() == 'true':
@@ -396,8 +396,6 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
             qual = options['format']
         elif user_dict.get('yt_ql'):
             qual = user_dict['yt_ql']
-        else:
-            qual = config_dict.get('YT_DLP_QUALITY')
 
     if not qual:
         qual = await YtSelection(client, message).get_quality(result)

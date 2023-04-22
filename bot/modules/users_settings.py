@@ -52,14 +52,21 @@ async def get_user_settings(from_user):
     else:
         media_group = 'Disabled'
 
-    buttons.ibutton("YT-DLP Quality", f"userset {user_id} ytq")
-    YQ = config_dict['YT_DLP_QUALITY']
-    if user_dict.get('yt_ql', False):
-        ytq = user_dict['yt_ql']
-    elif 'yt_ql' not in user_dict and YQ:
-        ytq = YQ
+    buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
+    if user_dict.get('yt_opt', False):
+        ytopt = user_dict['yt_opt']
+    elif 'yt_ql' not in user_dict and (YTO := config_dict['YT_DLP_QUALITY']):
+        ytopt = YTO
     else:
-        ytq = 'None'
+        ytopt = 'None'
+
+    buttons.ibutton("Leech Prefix", f"userset {user_id} lprefix")
+    if user_dict.get('lprefix', False):
+        lprefix = user_dict['lprefix']
+    elif 'lprefix' not in user_dict and (LP := config_dict['LEECH_FILENAME_PREFIX']):
+        lprefix = LP
+    else:
+        lprefix = 'None'
 
     buttons.ibutton("Thumbnail", f"userset {user_id} sthumb")
     thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
@@ -68,14 +75,17 @@ async def get_user_settings(from_user):
     rccmsg = "Exists" if await aiopath.exists(rclone_path) else "Not Exists"
 
     buttons.ibutton("Close", f"userset {user_id} close")
-    text = f"<u>Settings for {name}</u>\n"\
-           f"Leech Type is <b>{ltype}</b>\n"\
-           f"Custom Thumbnail <b>{thumbmsg}</b>\n"\
-           f"Rclone Config <b>{rccmsg}</b>\n"\
-           f"Leech Split Size is <b>{split_size}</b>\n"\
-           f"Equal Splits is <b>{equal_splits}</b>\n"\
-           f"Media Group is <b>{media_group}</b>\n"\
-           f"YT-DLP Quality is <b><code>{escape(ytq)}</code></b>"
+
+    text = f"""<u>Settings for {name}</u>
+Leech Type is <b>{ltype}</b>
+Custom Thumbnail <b>{thumbmsg}</b>
+Rclone Config <b>{rccmsg}</b>
+Leech Split Size is <b>{split_size}</b>
+Equal Splits is <b>{equal_splits}</b>
+Media Group is <b>{media_group}</b>
+Leech Prefix is <code>{escape(lprefix)}</code>
+YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
+
     return text, buttons.build_menu(1)
 
 
@@ -89,11 +99,22 @@ async def user_settings(client, message):
     await sendMessage(message, msg, button)
 
 
-async def set_yt_quality(client, message, pre_event):
+async def set_yt_options(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
-    update_user_ldata(user_id, 'yt_ql', value)
+    update_user_ldata(user_id, 'yt_opt', value)
+    await message.delete()
+    await update_user_settings(pre_event)
+    if DATABASE_URL:
+        await DbManger().update_user_data(user_id)
+
+
+async def set_prefix(client, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    value = message.text
+    update_user_ldata(user_id, 'lprefix', value)
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
@@ -213,28 +234,27 @@ async def edit_user_settings(client, query):
         await editMessage(message, 'Send a photo to save it as custom thumbnail. Timeout: 60 sec', buttons.build_menu(1))
         pfunc = partial(set_thumb, pre_event=query)
         await event_handler(client, query, pfunc, True)
-    elif data[2] == 'ytq':
+    elif data[2] == 'yto':
         await query.answer()
         buttons = ButtonMaker()
         buttons.ibutton("Back", f"userset {user_id} back")
-        if user_dict.get('yt_ql', False) or config_dict['YT_DLP_QUALITY']:
-            buttons.ibutton("Remove YT-DLP Quality",
-                            f"userset {user_id} rytq", 'header')
+        if user_dict.get('yt_opt', False) or config_dict['YT_DLP_OPTIONS']:
+            buttons.ibutton("Remove YT-DLP Options",
+                            f"userset {user_id} ryto", 'header')
         buttons.ibutton("Close", f"userset {user_id} close")
-        rmsg = f'''
-Send YT-DLP Qaulity. Timeout: 60 sec
-Examples:
-1. <code>{escape('bv*[height<=1080][ext=mp4]+ba[ext=m4a]/b[height<=1080]')}</code> this will give 1080p-mp4.
-2. <code>{escape('bv*[height<=720][ext=webm]+ba/b[height<=720]')}</code> this will give 720p-webm.
-Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#filtering-formats">HERE</a>.
+        rmsg = '''
+Send YT-DLP Options. Timeout: 60 sec
+Format: key:value|key:value|key:value.
+Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
         '''
         await editMessage(message, rmsg, buttons.build_menu(1))
-        pfunc = partial(set_yt_quality, pre_event=query)
+        pfunc = partial(set_yt_options, pre_event=query)
         await event_handler(client, query, pfunc)
-    elif data[2] == 'rytq':
+    elif data[2] == 'ryto':
         handler_dict[user_id] = False
         await query.answer()
-        update_user_ldata(user_id, 'yt_ql', '')
+        update_user_ldata(user_id, 'yt_opt', '')
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
@@ -243,8 +263,7 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         buttons = ButtonMaker()
         if user_dict.get('split_size', False):
             buttons.ibutton("Reset Split Size", f"userset {user_id} rlss")
-        ES = config_dict['EQUAL_SPLITS']
-        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and ES:
+        if user_dict.get('equal_splits', False) or 'equal_splits' not in user_dict and config_dict['EQUAL_SPLITS']:
             buttons.ibutton("Disable Equal Splits",
                             f"userset {user_id} esplits")
         else:
@@ -304,6 +323,23 @@ Check all available qualities options <a href="https://github.com/yt-dlp/yt-dlp#
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
+    elif data[2] == 'lprefix':
+        await query.answer()
+        buttons = ButtonMaker()
+        if user_dict.get('lprefix', False) or config_dict['LEECH_FILENAME_PREFIX']:
+            buttons.ibutton("Remove Leech Prefix", f"userset {user_id} rlprefix")
+        buttons.ibutton("Back", f"userset {user_id} back")
+        buttons.ibutton("Close", f"userset {user_id} close")
+        await editMessage(message, 'Send Leech Filename Prefix. You can add HTML tags. Timeout: 60 sec', buttons.build_menu(1))
+        pfunc = partial(set_prefix, pre_event=query)
+        await event_handler(client, query, pfunc)
+    elif data[2] == 'rlprefix':
+        handler_dict[user_id] = False
+        await query.answer()
+        update_user_ldata(user_id, 'lprefix', '')
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManger().update_user_data(user_id)
     elif data[2] == 'back':
         handler_dict[user_id] = False
         await query.answer()

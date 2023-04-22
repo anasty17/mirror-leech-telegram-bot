@@ -67,7 +67,7 @@ class GoogleDriveHelper:
 
     def __authorize(self):
         credentials = None
-        if config_dict['USE_SERVICE_ACCOUNTS'] and not self.__alt_auth:
+        if config_dict['USE_SERVICE_ACCOUNTS']:
             json_files = listdir("accounts")
             self.__sa_number = len(json_files)
             self.__sa_index = randrange(self.__sa_number)
@@ -82,8 +82,19 @@ class GoogleDriveHelper:
                 credentials = pload(f)
         else:
             LOGGER.error('token.pickle not found!')
-            return None
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+    
+    def __alt_authorize(self):
+        if not self.__alt_auth:
+            self.__alt_auth = True
+            if ospath.exists('token.pickle'):
+                LOGGER.info("Authorize with token.pickle")
+                with open('token.pickle', 'rb') as f:
+                    credentials = pload(f)
+                return build('drive', 'v3', credentials=credentials, cache_discovery=False)
+            else:
+                LOGGER.error('token.pickle not found!')
+        return None
 
     def __switchServiceAccount(self):
         if self.__sa_index == self.__sa_number - 1:
@@ -159,16 +170,15 @@ class GoogleDriveHelper:
             LOGGER.info(f"Delete Result: {msg}")
         except HttpError as err:
             if "File not found" in str(err) or "insufficientFilePermissions" in str(err):
-                self.__alt_auth = True
-                token_service = self.__authorize()
+                token_service = self.__alt_authorize()
                 if token_service is not None:
                     LOGGER.error('File not found. Trying with token.pickle...')
                     self.__service = token_service
                     return self.deletefile(link)
+                err = "File not found or insufficientFilePermissions!"
             LOGGER.error(f"Delete Result: {err}")
-            msg = err
-        finally:
-            return msg
+            msg = str(err)
+        return msg
 
     def upload(self, file_name, size):
         self.__is_uploading = True
@@ -214,8 +224,8 @@ class GoogleDriveHelper:
                 return
             elif self.__is_errored:
                 return
-        async_to_sync(self.__listener.onUploadComplete, link, size, self.__total_files,
-                      self.__total_folders, mime_type, file_name)
+            async_to_sync(self.__listener.onUploadComplete, link, size, self.__total_files,
+                        self.__total_folders, mime_type, file_name)
 
     def __upload_dir(self, input_directory, dest_id):
         list_dirs = listdir(input_directory)
@@ -388,8 +398,7 @@ class GoogleDriveHelper:
                 msg = "User rate limit exceeded."
             elif "File not found" in err:
                 if not self.__alt_auth:
-                    self.__alt_auth = True
-                    token_service = self.__authorize()
+                    token_service = self.__alt_authorize()
                     if token_service is not None:
                         LOGGER.error('File not found. Trying with token.pickle...')
                         self.__service = token_service
@@ -530,8 +539,7 @@ class GoogleDriveHelper:
         telegraph_content = []
         Title = False
         if len(DRIVES_IDS) > 1:
-            self.__alt_auth = True
-            token_service = self.__authorize()
+            token_service = self.__alt_authorize()
             if token_service is not None:
                 self.__service = token_service
         for drive_name, dir_id, index_url in zip(DRIVES_NAMES, DRIVES_IDS, INDEX_URLS):
@@ -611,8 +619,7 @@ class GoogleDriveHelper:
             err = str(err).replace('>', '').replace('<', '')
             if "File not found" in err:
                 if not self.__alt_auth:
-                    self.__alt_auth = True
-                    token_service = self.__authorize()
+                    token_service = self.__alt_authorize()
                     if token_service is not None:
                         LOGGER.error('File not found. Trying with token.pickle...')
                         self.__service = token_service
@@ -682,8 +689,7 @@ class GoogleDriveHelper:
                 err = "Download Quota Exceeded."
             elif "File not found" in err:
                 if not self.__alt_auth:
-                    self.__alt_auth = True
-                    token_service = self.__authorize()
+                    token_service = self.__alt_authorize()
                     if token_service is not None:
                         LOGGER.error('File not found. Trying with token.pickle...')
                         self.__service = token_service
@@ -696,7 +702,7 @@ class GoogleDriveHelper:
             self.__updater.cancel()
             if self.__is_cancelled:
                 return
-        async_to_sync(self.__listener.onDownloadComplete)
+            async_to_sync(self.__listener.onDownloadComplete)
 
     def __download_folder(self, folder_id, path, folder_name):
         folder_name = folder_name.replace('/', '')

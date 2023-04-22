@@ -266,11 +266,7 @@ class YoutubeDLHelper:
     def __set_options(self, options):
         options = options.split('|')
         for opt in options:
-            kv = opt.split(':', 1)
-            key = kv[0].strip()
-            if key == 'format':
-                continue
-            value = kv[1].strip()
+            key, value = map(str.strip, opt.split(':', 1))
             if value.startswith('^'):
                 value = float(value.split('^')[1])
             elif value.lower() == 'true':
@@ -282,8 +278,7 @@ class YoutubeDLHelper:
 
             if key == 'postprocessors':
                 if isinstance(value, list):
-                    values = tuple(value)
-                    self.opts[key].extend(values)
+                    self.opts[key].extend(tuple(value))
                 elif isinstance(value, dict):
                     self.opts[key].append(value)
             else:

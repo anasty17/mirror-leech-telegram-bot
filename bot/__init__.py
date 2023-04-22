@@ -225,9 +225,9 @@ if len(AUTO_DELETE_MESSAGE_DURATION) == 0:
 else:
     AUTO_DELETE_MESSAGE_DURATION = int(AUTO_DELETE_MESSAGE_DURATION)
 
-YT_DLP_QUALITY = environ.get('YT_DLP_QUALITY', '')
-if len(YT_DLP_QUALITY) == 0:
-    YT_DLP_QUALITY = ''
+YT_DLP_OPTIONS = environ.get('YT_DLP_OPTIONS', '')
+if len(YT_DLP_OPTIONS) == 0:
+    YT_DLP_OPTIONS = ''
 
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
@@ -368,7 +368,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                'VIEW_LINK': VIEW_LINK,
                'WEB_PINCODE': WEB_PINCODE,
-               'YT_DLP_QUALITY': YT_DLP_QUALITY}
+               'YT_DLP_OPTIONS': YT_DLP_OPTIONS}
 
 if GDRIVE_ID:
     DRIVES_NAMES.append("Main")

@@ -8,7 +8,7 @@ from pyrogram.types import InputMediaVideo, InputMediaDocument
 from pyrogram.errors import FloodWait, RPCError
 from asyncio import sleep
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
-from re import match as re_match
+from re import match as re_match, sub as re_sub
 from natsort import natsorted
 from aioshutil import copy
 
@@ -25,7 +25,7 @@ class TgUploader:
 
     def __init__(self, name=None, path=None, listener=None):
         self.name = name
-        self._last_uploaded = 0
+        self.__last_uploaded = 0
         self.__processed_bytes = 0
         self.__listener = listener
         self.__path = path
@@ -39,6 +39,9 @@ class TgUploader:
         self.__media_dict = {'videos': {}, 'documents': {}}
         self.__last_msg_in_group = False
         self.__up_path = ''
+        self.__lprefix = ''
+        self.__as_doc = False
+        self.__media_group = False
 
     async def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -46,8 +49,8 @@ class TgUploader:
                 user.stop_transmission()
             else:
                 bot.stop_transmission()
-        chunk_size = current - self._last_uploaded
-        self._last_uploaded = current
+        chunk_size = current - self.__last_uploaded
+        self.__last_uploaded = current
         self.__processed_bytes += chunk_size
 
     async def __user_settings(self):
@@ -56,6 +59,8 @@ class TgUploader:
         self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
         self.__media_group = user_dict.get(
             'media_group') or config_dict['MEDIA_GROUP']
+        self.__lprefix = user_dict.get(
+            'lprefix') or config_dict['LEECH_FILENAME_PREFIX']
         if not await aiopath.exists(self.__thumb):
             self.__thumb = None
 
@@ -78,17 +83,18 @@ class TgUploader:
             self.__sent_msg = self.__listener.message
 
     async def __prepare_file(self, file_, dirpath):
-        if LEECH_FILENAME_PREFIX := config_dict['LEECH_FILENAME_PREFIX']:
-            cap_mono = f"{LEECH_FILENAME_PREFIX} <code>{file_}</code>"
+        if self.__lprefix:
+            cap_mono = f"{self.__lprefix} <code>{file_}</code>"
+            self.__lprefix = re_sub('<.*?>', '', self.__lprefix)
             if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("/splited_files_mltb"):
                 dirpath = f'{dirpath}/copied_mltb'
                 await makedirs(dirpath, exist_ok=True)
                 new_path = ospath.join(
-                    dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
+                    dirpath, f"{self.__lprefix} {file_}")
                 self.__up_path = await copy(self.__up_path, new_path)
             else:
                 new_path = ospath.join(
-                    dirpath, f"{LEECH_FILENAME_PREFIX} {file_}")
+                    dirpath, f"{self.__lprefix} {file_}")
                 await aiorename(self.__up_path, new_path)
                 self.__up_path = new_path
         else:
@@ -179,7 +185,7 @@ class TgUploader:
                                     if len(msgs) > 1:
                                         await self.__send_media_group(subkey, key, msgs)
                     self.__last_msg_in_group = False
-                    self._last_uploaded = 0
+                    self.__last_uploaded = 0
                     await self.__upload_file(cap_mono, file_)
                     if self.__is_cancelled:
                         return

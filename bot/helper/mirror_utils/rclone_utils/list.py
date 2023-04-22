@@ -44,6 +44,8 @@ async def path_updates(client, query, obj):
         else:
             await obj.back_from_path()
     elif data[1] == 're':
+        # some remotes has space
+        data = query.data.split(maxsplit=2)
         obj.remote = data[2]
         await obj.get_path()
     elif data[1] == 'pa':
