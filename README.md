@@ -28,7 +28,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Leech support
 - Splitting
 - Thumbnail for each user
-- Leech filename prefix for each user. Stolen from @junedkh
+- Leech filename prefix for each user. Stolen from [Juned KH](https://github.com/junedkh)
 - Set upload as document or as media for each user
 - 4GB file upload with premium account
 - Upload all files to specific superGroup/channel.
@@ -224,7 +224,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
   - Example: "format:bv*+mergeall[vcodec=none]|nocheckcertificate:True"
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`. `Bool`
 
-### GDrirve Tools
+### GDrive Tools
 
 - `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors using google-api-python-client. `Str`
 - `IS_TEAM_DRIVE`: Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`. `Bool`
