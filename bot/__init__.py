@@ -264,9 +264,6 @@ INCOMPLETE_TASK_NOTIFIER = INCOMPLETE_TASK_NOTIFIER.lower() == 'true'
 STOP_DUPLICATE = environ.get('STOP_DUPLICATE', '')
 STOP_DUPLICATE = STOP_DUPLICATE.lower() == 'true'
 
-VIEW_LINK = environ.get('VIEW_LINK', '')
-VIEW_LINK = VIEW_LINK.lower() == 'true'
-
 IS_TEAM_DRIVE = environ.get('IS_TEAM_DRIVE', '')
 IS_TEAM_DRIVE = IS_TEAM_DRIVE.lower() == 'true'
 
@@ -366,7 +363,6 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                'USER_SESSION_STRING': USER_SESSION_STRING,
                'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
-               'VIEW_LINK': VIEW_LINK,
                'WEB_PINCODE': WEB_PINCODE,
                'YT_DLP_OPTIONS': YT_DLP_OPTIONS}
 

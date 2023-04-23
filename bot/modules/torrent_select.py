@@ -48,14 +48,16 @@ async def select(client, message):
         if listener.isQbit:
             id_ = dl.hash()
             client = dl.client()
-            await sync_to_async(client.torrents_pause, torrent_hashes=id_)
+            if not dl.queued:
+                await sync_to_async(client.torrents_pause, torrent_hashes=id_)
         else:
             id_ = dl.gid()
-            try:
-                await sync_to_async(aria2.client.force_pause, id_)
-            except Exception as e:
-                LOGGER.error(
-                    f"{e} Error in pause, this mostly happens after abuse aria2")
+            if not dl.queued:
+                try:
+                    await sync_to_async(aria2.client.force_pause, id_)
+                except Exception as e:
+                    LOGGER.error(
+                        f"{e} Error in pause, this mostly happens after abuse aria2")
         listener.select = True
     except:
         await sendMessage(message, "This is not a bittorrent task!")
@@ -101,7 +103,8 @@ async def get_confirm(client, query):
                                 await aioremove(f_path)
                             except:
                                 pass
-            await sync_to_async(client.torrents_resume, torrent_hashes=id_)
+            if not dl.queued:
+                await sync_to_async(client.torrents_resume, torrent_hashes=id_)
         else:
             res = await sync_to_async(aria2.client.get_files, id_)
             for f in res:
@@ -110,11 +113,12 @@ async def get_confirm(client, query):
                         await aioremove(f['path'])
                     except:
                         pass
-            try:
-                await sync_to_async(aria2.client.unpause, id_)
-            except Exception as e:
-                LOGGER.error(
-                    f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
+            if not dl.queued:
+                try:
+                    await sync_to_async(aria2.client.unpause, id_)
+                except Exception as e:
+                    LOGGER.error(
+                        f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)
         await message.delete()
 

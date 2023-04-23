@@ -83,7 +83,7 @@ class GoogleDriveHelper:
         else:
             LOGGER.error('token.pickle not found!')
         return build('drive', 'v3', credentials=credentials, cache_discovery=False)
-    
+
     def __alt_authorize(self):
         if not self.__alt_auth:
             self.__alt_auth = True
@@ -225,7 +225,7 @@ class GoogleDriveHelper:
             elif self.__is_errored:
                 return
             async_to_sync(self.__listener.onUploadComplete, link, size, self.__total_files,
-                        self.__total_folders, mime_type, file_name)
+                          self.__total_folders, mime_type, file_name)
 
     def __upload_dir(self, input_directory, dest_id):
         list_dirs = listdir(input_directory)
@@ -400,7 +400,8 @@ class GoogleDriveHelper:
                 if not self.__alt_auth:
                     token_service = self.__alt_authorize()
                     if token_service is not None:
-                        LOGGER.error('File not found. Trying with token.pickle...')
+                        LOGGER.error(
+                            'File not found. Trying with token.pickle...')
                         self.__service = token_service
                         return self.clone(link)
                 msg = "File not found."
@@ -574,7 +575,7 @@ class GoogleDriveHelper:
                 elif mime_type == 'application/vnd.google-apps.shortcut':
                     furl = f"https://drive.google.com/drive/folders/{file.get('id')}"
                     msg += f"⁍<a href='https://drive.google.com/drive/folders/{file.get('id')}'>{file.get('name')}" \
-                            f"</a> (shortcut)"
+                        f"</a> (shortcut)"
                 else:
                     furl = f"https://drive.google.com/uc?id={file.get('id')}&export=download"
                     msg += f"📄 <code>{file.get('name')}<br>({get_readable_file_size(int(file.get('size', 0)))})</code><br>"
@@ -587,7 +588,7 @@ class GoogleDriveHelper:
                             url_path = rquote(f'{file.get("name")}')
                         url = f'{index_url}/{url_path}'
                         msg += f' <b>| <a href="{url}">Index Link</a></b>'
-                        if config_dict['VIEW_LINK']:
+                        if mime_type.startswith(('image', 'video', 'audio')):
                             urlv = f'{index_url}/{url_path}?a=view'
                             msg += f' <b>| <a href="{urlv}">View Link</a></b>'
                 msg += '<br><br>'
@@ -621,7 +622,8 @@ class GoogleDriveHelper:
                 if not self.__alt_auth:
                     token_service = self.__alt_authorize()
                     if token_service is not None:
-                        LOGGER.error('File not found. Trying with token.pickle...')
+                        LOGGER.error(
+                            'File not found. Trying with token.pickle...')
                         self.__service = token_service
                         return self.count(link)
                 msg = "File not found."
@@ -691,7 +693,8 @@ class GoogleDriveHelper:
                 if not self.__alt_auth:
                     token_service = self.__alt_authorize()
                     if token_service is not None:
-                        LOGGER.error('File not found. Trying with token.pickle...')
+                        LOGGER.error(
+                            'File not found. Trying with token.pickle...')
                         self.__service = token_service
                         self.__updater.cancel()
                         return self.download(link)

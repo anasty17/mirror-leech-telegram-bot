@@ -354,7 +354,7 @@ class MirrorLeechListener:
                         buttons.ubutton("⚡ Index Link", share_url)
                     else:
                         buttons.ubutton("⚡ Index Link", share_url)
-                        if config_dict['VIEW_LINK']:
+                        if mime_type.startswith(('image', 'video', 'audio')):
                             share_urls = f'{INDEX_URL}/{url_path}?a=view'
                             buttons.ubutton("🌐 View Link", share_urls)
                 button = buttons.build_menu(2)

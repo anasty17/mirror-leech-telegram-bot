@@ -120,7 +120,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
 - Extensions Filter for the files to be uploaded/cloned
 - View Link button. Extra button to open index link in broswer instead of direct download for file
-- Queueing System
+- Queueing System for all tasks
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
@@ -276,13 +276,9 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### Queue System
 
-- `QUEUE_ALL`: Number of parallel tasks of downloads from (mega, telegram, yt-dlp, gdrive) + all uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
-- `QUEUE_DOWNLOAD`: Number of parallel downloading tasks from mega, telegram, yt-dlp and gdrive. `Int`
+- `QUEUE_ALL`: Number of parallel tasks of downloads and uploads. For example if 20 task added and `QUEUE_ALL` is `8`, then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
+- `QUEUE_DOWNLOAD`: Number of all parallel downloading tasks. `Int`
 - `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
-
-### Buttons
-
-- `VIEW_LINK`: View Link button to open file Index Link in browser instead of direct download link, you can figure out if it's compatible with your Index code or not, open any video from you Index and check if its URL ends with `?a=view`. Compatible with [BhadooIndex](https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index) Code. Default is `False`. `Bool`
 
 ### Torrent Search
 
