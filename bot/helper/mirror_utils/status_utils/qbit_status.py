@@ -73,7 +73,7 @@ class QbittorrentStatus:
         return self.__info.num_leechs
 
     def uploaded_bytes(self):
-        return f"{get_readable_file_size(self.__info.uploaded)}"
+        return get_readable_file_size(self.__info.uploaded)
 
     def upload_speed(self):
         return f"{get_readable_file_size(self.__info.upspeed)}/s"
@@ -82,7 +82,7 @@ class QbittorrentStatus:
         return f"{round(self.__info.ratio, 3)}"
 
     def seeding_time(self):
-        return f"{get_readable_time(self.__info.seeding_time)}"
+        return get_readable_time(self.__info.seeding_time)
 
     def download(self):
         return self

@@ -82,7 +82,7 @@ class Aria2Status:
         return f"{round(self.__download.upload_length / self.__download.completed_length, 3)}"
 
     def seeding_time(self):
-        return f"{get_readable_time(time() - self.start_time)}"
+        return get_readable_time(time() - self.start_time)
 
     def download(self):
         return self
