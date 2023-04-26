@@ -46,7 +46,7 @@ class GdriveStatus:
         try:
             seconds = (self.__size - self.__obj.processed_bytes) / \
                 self.__obj.speed
-            return f'{get_readable_time(seconds)}'
+            return get_readable_time(seconds)
         except:
             return '-'
 
