@@ -22,7 +22,7 @@ from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
 
 
 @new_task
-async def select_format(client, query, obj):
+async def select_format(_, query, obj):
     data = query.data.split()
     message = query.message
     await query.answer()
@@ -313,7 +313,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     up = mssg.split(' up: ', 1)
     up = re_split(' n: | pswd: | rcf: | opt: ', up[1])[
         0].strip() if len(up) > 1 else None
-    
+
     opt = opt or config_dict['YT_DLP_OPTIONS']
 
     if username := message.from_user.username:
@@ -365,7 +365,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)
 
-    options = {'usenetrc': True, 'cookiefile': 'cookies.txt', 'playlist_items': '0'}
+    options = {'usenetrc': True,
+               'cookiefile': 'cookies.txt', 'playlist_items': '0'}
     if opt:
         yt_opt = opt.split('|')
         for ytopt in yt_opt:

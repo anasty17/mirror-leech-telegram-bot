@@ -103,7 +103,7 @@ class QbittorrentStatus:
     async def cancel_download(self):
         self.__update()
         await sync_to_async(self.__client.torrents_pause, torrent_hashes=self.__info.hash)
-        if self.status() != MirrorStatus.STATUS_SEEDING:
+        if not self.seeding:
             if self.queued:
                 LOGGER.info(f'Cancelling QueueDL: {self.name()}')
                 msg = 'task have been removed from queue/download'

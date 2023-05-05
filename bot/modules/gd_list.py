@@ -39,7 +39,7 @@ async def _list_drive(key, message, item_type, isRecursive):
 
 
 @new_task
-async def select_type(client, query):
+async def select_type(_, query):
     user_id = query.from_user.id
     message = query.message
     key = message.reply_to_message.text.split(maxsplit=1)[1].strip()
@@ -61,7 +61,7 @@ async def select_type(client, query):
     await _list_drive(key, message, item_type, isRecursive)
 
 
-async def drive_list(client, message):
+async def drive_list(_, message):
     if len(message.text.split()) == 1:
         return await sendMessage(message, 'Send a search key along with command')
     user_id = message.from_user.id

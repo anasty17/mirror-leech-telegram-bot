@@ -104,7 +104,8 @@ async def rcloneNode(client, message, link, dst_path, rcf, tag):
         files = None
         folders = None
         size = 0
-        LOGGER.error(f'Error: While getting rclone stat. Path: {destination}. Stderr: {res1[1][:4000]}')
+        LOGGER.error(
+            f'Error: While getting rclone stat. Path: {destination}. Stderr: {res1[1][:4000]}')
     else:
         files = len(res1[0].split("\n"))
         folders = len(res2[0].split("\n"))
@@ -203,7 +204,7 @@ async def clone(client, message):
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
             nextmsg.from_user = message.from_user
             await sleep(4)
-            await clone(client, nextmsg)
+            clone(client, nextmsg)
 
     __run_multi()
 

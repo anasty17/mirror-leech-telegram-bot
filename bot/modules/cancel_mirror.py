@@ -11,7 +11,7 @@ from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload, Mir
 from bot.helper.telegram_helper import button_build
 
 
-async def cancel_mirror(client, message):
+async def cancel_mirror(_, message):
     user_id = message.from_user.id
     msg = message.text.split()
     if len(msg) > 1:
@@ -39,7 +39,6 @@ async def cancel_mirror(client, message):
     await obj.cancel_download()
 
 
-@new_task
 async def cancel_all(status):
     matches = await getAllDownload(status)
     if not matches:
@@ -51,8 +50,7 @@ async def cancel_all(status):
     return True
 
 
-@new_task
-async def cancell_all_buttons(client, message):
+async def cancell_all_buttons(_, message):
     async with download_dict_lock:
         count = len(download_dict)
     if count == 0:
@@ -76,7 +74,7 @@ async def cancell_all_buttons(client, message):
 
 
 @new_task
-async def cancel_all_update(client, query):
+async def cancel_all_update(_, query):
     data = query.data.split()
     message = query.message
     reply_to = message.reply_to_message

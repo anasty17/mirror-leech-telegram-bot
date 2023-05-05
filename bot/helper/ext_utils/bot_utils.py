@@ -15,6 +15,8 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.telegraph_helper import telegraph
 
+THREADPOOL = ThreadPoolExecutor(max_workers=1000)
+
 MAGNET_REGEX = r'magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*\s*'
 
 URL_REGEX = r'^(?!\/)(rtmps?:\/\/|mms:\/\/|rtsp:\/\/|https?:\/\/|ftp:\/\/)?([^\/:]+:[^\/@]+@)?(www\.)?(?=[^\/:\s]+\.[^\/:\s]+)([^\/:\s]+\.[^\/:\s]+)(:\d+)?(\/[^#\s]*[\s\S]*)?(\?[^#\s]*)?(#.*)?$'
@@ -90,6 +92,7 @@ def bt_selection_buttons(id_):
             "Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}")
     buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
     return buttons.build_menu(2)
+
 
 async def get_telegraph_list(telegraph_content):
     path = [(await telegraph.create_page(title='Mirror-Leech-Bot Drive Search', content=content))["path"] for content in telegraph_content]
@@ -276,9 +279,8 @@ def new_task(func):
 
 async def sync_to_async(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
-    with ThreadPoolExecutor() as pool:
-        future = bot_loop.run_in_executor(pool, pfunc)
-        return await future if wait else future
+    future = bot_loop.run_in_executor(THREADPOOL, pfunc)
+    return await future if wait else future
 
 
 def async_to_sync(func, *args, wait=True, **kwargs):

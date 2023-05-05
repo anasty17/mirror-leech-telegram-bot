@@ -443,7 +443,7 @@ async def update_buttons(message, key=None, edit_type=None):
     await editMessage(message, msg, button)
 
 
-async def edit_variable(client, message, pre_message, key):
+async def edit_variable(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
     if value.lower() == 'true':
@@ -518,7 +518,7 @@ async def edit_variable(client, message, pre_message, key):
         await rclone_serve_booter()
 
 
-async def edit_aria(client, message, pre_message, key):
+async def edit_aria(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
     if key == 'newkey':
@@ -544,7 +544,7 @@ async def edit_aria(client, message, pre_message, key):
         await DbManger().update_aria2(key, value)
 
 
-async def edit_qbit(client, message, pre_message, key):
+async def edit_qbit(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
     if value.lower() == 'true':
@@ -563,7 +563,7 @@ async def edit_qbit(client, message, pre_message, key):
         await DbManger().update_qbittorrent(key, value)
 
 
-async def update_private_file(client, message, pre_message):
+async def update_private_file(_, message, pre_message):
     handler_dict[message.chat.id] = False
     if not message.media and (file_name := message.text):
         fn = file_name.rsplit('.zip', 1)[0]
@@ -857,7 +857,7 @@ async def edit_bot_settings(client, query):
         await message.delete()
 
 
-async def bot_settings(client, message):
+async def bot_settings(_, message):
     msg, button = await get_buttons()
     globals()['START'] = 0
     await sendMessage(message, msg, button)

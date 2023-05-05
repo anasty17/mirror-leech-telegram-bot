@@ -11,7 +11,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 
 
 @new_task
-async def shell(client, message):
+async def shell(_, message):
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
         await sendMessage(message, 'No command to execute was given.')

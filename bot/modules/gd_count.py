@@ -11,7 +11,7 @@ from bot.helper.ext_utils.bot_utils import is_gdrive_link, sync_to_async, new_ta
 
 
 @new_task
-async def countNode(client, message):
+async def countNode(_, message):
     args = message.text.split()
     link = ''
     if len(args) > 1:

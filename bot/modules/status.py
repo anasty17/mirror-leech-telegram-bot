@@ -12,7 +12,7 @@ from bot.helper.ext_utils.bot_utils import get_readable_file_size, get_readable_
 
 
 @new_task
-async def mirror_status(client, message):
+async def mirror_status(_, message):
     async with download_dict_lock:
         count = len(download_dict)
     if count == 0:
@@ -35,7 +35,7 @@ async def mirror_status(client, message):
 
 
 @new_task
-async def status_pages(client, query):
+async def status_pages(_, query):
     await query.answer()
     data = query.data.split()
     if data[1] == "ref":

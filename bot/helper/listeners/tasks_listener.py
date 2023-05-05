@@ -95,7 +95,7 @@ class MirrorLeechListener:
             await self.onUploadError('Downloaded! Waiting for other tasks...')
             return
         if name == "None" or self.isQbit or not await aiopath.exists(f"{self.dir}/{name}"):
-            name = (await listdir(self.dir))[-1]
+            name = (await listdir(self.dir))[0]
         m_path = f"{self.dir}/{name}"
         size = await get_path_size(m_path)
         async with queue_dict_lock:
