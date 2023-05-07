@@ -273,7 +273,10 @@ class YoutubeDLHelper:
         for opt in options:
             key, value = map(str.strip, opt.split(':', 1))
             if value.startswith('^'):
-                value = float(value.split('^')[1])
+                if '.' in value:
+                    value = float(value.split('^')[1])
+                else:
+                    value = int(value.split('^')[1])
             elif value.lower() == 'true':
                 value = True
             elif value.lower() == 'false':
