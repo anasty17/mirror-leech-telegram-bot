@@ -84,6 +84,14 @@ Users can add their own rclone from user settings
 If you want to add path manually from your config add <code>mrcc:</code> before the path without space
 <code>/cmd</code> <code>mrcc:</code>main:/dump/ubuntu.iso
 
+<b>TG Links</b>:
+Treat links like any direct link
+Some links need user access so sure you must add USER_SESSION_STRING for it.
+Three types of links:
+Public: <code>https://t.me/channel_name/message_id</code>
+Private: <code>tg://openmessage?user_id=xxxxxx&message_id=xxxxx</code>
+Super: <code>https://t.me/c/channel_id/message_id</code>
+
 <b>Upload</b>:
 <code>/cmd</code> link up: <code>rcl</code> (To select rclone config, remote and path)
 You can directly add the upload path. up: remote:dir/subdir

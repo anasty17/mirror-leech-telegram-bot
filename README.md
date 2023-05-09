@@ -23,7 +23,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Fix all download listener functions and status
 - Edit Global Options while bot running from bot settings
 
-### Leech
+### TG Upload/Download
 
 - Leech support
 - Splitting
@@ -34,6 +34,8 @@ In each single file there is a major change from base code, it's almost totaly d
 - Upload all files to specific superGroup/channel.
 - Leech Split size and equal split size settings for each user
 - Ability to leech splitted file parts in media group. Setting for each user
+- Download using premium account if available
+- Download restricted messages (document or link) by tg private/public/super links
 
 ### Google
 

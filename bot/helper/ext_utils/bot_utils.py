@@ -223,6 +223,8 @@ def is_url(url):
 def is_gdrive_link(url):
     return "drive.google.com" in url
 
+def is_telegram_link(url):
+    return url.startswith(('https://t.me/', 'tg://openmessage?user_id='))
 
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))

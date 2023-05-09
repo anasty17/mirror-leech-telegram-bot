@@ -2,6 +2,7 @@
 from asyncio import sleep
 from pyrogram.errors import FloodWait
 from time import time
+from re import match as re_match
 
 from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, user, download_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval, sync_to_async
@@ -85,6 +86,39 @@ async def delete_all_messages():
                 await deleteMessage(data[0])
             except Exception as e:
                 LOGGER.error(str(e))
+
+
+async def get_tg_link_content(link):
+    if link.startswith('https://t.me/'):
+        private = False
+        msg = re_match(r"https:\/\/t\.me\/(?:c\/)?([^\/]+)\/([0-9]+)", link)
+    else:
+        private = True
+        msg = re_match(
+            r"tg:\/\/openmessage\?user_id=([0-9]+)&message_id=([0-9]+)", link)
+
+    chat = msg.group(1)
+    msg_id = int(msg.group(2))
+    if chat.isdigit():
+        chat = int(chat) if private else int(f'-100{chat}')
+        superChat = True
+    else:
+        superChat = False
+
+    if private:
+        if not user:
+            raise Exception('USER_SESSION_STRING required for this private link!')
+        if message := await user.get_messages(chat_id=chat, message_ids=msg_id) and message.from_user:
+            return message, True
+        else:
+            raise Exception("You Don't have access to this message!")
+    elif superChat and (message := await bot.get_messages(chat_id=chat, message_ids=msg_id)) and message.from_user:
+        return message, False
+    elif user and (message := await user.get_messages(chat_id=chat, message_ids=msg_id)) and message.from_user:
+        message = await user.get_messages(chat_id=chat, message_ids=msg_id)
+        return message, True
+    else:
+        raise Exception("You Don't have access to this message!")
 
 
 async def update_all_messages(force=False):
