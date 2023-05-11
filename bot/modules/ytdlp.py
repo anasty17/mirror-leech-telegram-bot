@@ -371,7 +371,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
         for ytopt in yt_opt:
             key, value = map(str.strip, ytopt.split(':', 1))
             if value.startswith('^'):
-                if '.' in value:
+                if '.' in value or value == 'inf':
                     value = float(value.split('^')[1])
                 else:
                     value = int(value.split('^')[1])
