@@ -217,7 +217,7 @@ async def clone(client, message):
             await sendMessage(message, 'Rclone Config Not exists!')
             return
         if not config_dict['RCLONE_PATH'] and not dst_path:
-            await sendMessage(message, 'Destinantion not specified!')
+            await sendMessage(message, 'Destination not specified!')
             return
         await rcloneNode(client, message, link, dst_path, rcf, tag)
     else:
