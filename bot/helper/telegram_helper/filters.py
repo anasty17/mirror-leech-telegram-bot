@@ -12,7 +12,16 @@ class CustomFilters:
         return uid == OWNER_ID
 
     owner = create(owner_filter)
+    
+    
+    async def sudo_user(self, client, update):
+        user = update.from_user or update.sender_chat
+        uid = user.id
+        return bool(uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo'))
 
+    sudo = create(sudo_user)
+    
+"""
     async def authorized_user(self, client, update):
         user = update.from_user or update.sender_chat
         uid = user.id
@@ -21,10 +30,6 @@ class CustomFilters:
                                                               user_data[uid].get('is_sudo', False))) or (chat_id in user_data and user_data[chat_id].get('is_auth', False)))
 
     authorized = create(authorized_user)
+"""
 
-    async def sudo_user(self, client, update):
-        user = update.from_user or update.sender_chat
-        uid = user.id
-        return bool(uid == OWNER_ID or uid in user_data and user_data[uid].get('is_sudo'))
-
-    sudo = create(sudo_user)
+    

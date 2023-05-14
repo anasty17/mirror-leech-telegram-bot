@@ -95,11 +95,11 @@ def bt_selection_buttons(id_):
 
 
 async def get_telegraph_list(telegraph_content):
-    path = [(await telegraph.create_page(title='Mirror-Leech-Bot Drive Search', content=content))["path"] for content in telegraph_content]
+    path = [(await telegraph.create_page(title='Google Drive Search', content=content))["path"] for content in telegraph_content]
     if len(path) > 1:
         await telegraph.edit_telegraph(path, telegraph_content)
     buttons = ButtonMaker()
-    buttons.ubutton("🔎 VIEW", f"https://telegra.ph/{path[0]}")
+    buttons.ubutton("Result", f"https://telegra.ph/{path[0]}")
     return buttons.build_menu(1)
 
 
@@ -172,10 +172,10 @@ def get_readable_message():
     if tasks > STATUS_LIMIT:
         msg += f"<b>Page:</b> {PAGE_NO}/{PAGES} | <b>Tasks:</b> {tasks}\n"
         buttons = ButtonMaker()
-        buttons.ibutton("<<", "status pre")
-        buttons.ibutton(">>", "status nex")
-        buttons.ibutton("♻️", "status ref")
-        button = buttons.build_menu(3)
+        buttons.ibutton("Prev.", "status pre")
+        buttons.ibutton("Next", "status nex")
+        buttons.ibutton("Refresh", "status ref")
+        button = buttons.build_menu(2)
     msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(config_dict['DOWNLOAD_DIR']).free)}"
     msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - botStartTime)}"
     msg += f"\n<b>DL:</b> {get_readable_file_size(dl_speed)}/s | <b>UL:</b> {get_readable_file_size(up_speed)}/s"

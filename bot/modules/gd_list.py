@@ -13,12 +13,10 @@ from bot.helper.ext_utils.bot_utils import sync_to_async, new_task, get_telegrap
 
 async def list_buttons(user_id, isRecursive=True):
     buttons = ButtonMaker()
-    buttons.ibutton("Folders", f"list_types {user_id} folders {isRecursive}")
-    buttons.ibutton("Files", f"list_types {user_id} files {isRecursive}")
-    buttons.ibutton("Both", f"list_types {user_id} both {isRecursive}")
+    buttons.ibutton("Find", f"list_types {user_id} both {isRecursive}")
+    buttons.ibutton("Cancel", f"list_types {user_id} cancel")
     buttons.ibutton(f"Recursive: {isRecursive}",
                     f"list_types {user_id} rec {isRecursive}")
-    buttons.ibutton("Cancel", f"list_types {user_id} cancel")
     return buttons.build_menu(2)
 
 
@@ -69,6 +67,6 @@ async def drive_list(_, message):
     await sendMessage(message, 'Choose list options:', buttons)
 
 bot.add_handler(MessageHandler(drive_list, filters=command(
-    BotCommands.ListCommand) & CustomFilters.authorized))
+    BotCommands.ListCommand)))
 bot.add_handler(CallbackQueryHandler(
     select_type, filters=regex("^list_types")))

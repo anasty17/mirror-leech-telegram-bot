@@ -19,7 +19,7 @@ from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, get_tg_link_content
+from bot.helper.telegram_helper.message_utils import sendMessage, get_tg_link_content, auto_delete_message
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
 
@@ -166,7 +166,8 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 file_ = None
 
     if not is_url(link) and not is_magnet(link) and not await aiopath.exists(link) and not is_rclone_path(link) and file_ is None:
-        await sendMessage(message, MIRROR_HELP_MESSAGE)
+        msg = await sendMessage(message, MIRROR_HELP_MESSAGE)
+        await auto_delete_message(message, msg)
         return
 
     if link:
@@ -298,26 +299,26 @@ async def qb_zip_leech(client, message):
 
 
 bot.add_handler(MessageHandler(mirror, filters=command(
-    BotCommands.MirrorCommand) & CustomFilters.authorized))
+    BotCommands.MirrorCommand)))
 bot.add_handler(MessageHandler(unzip_mirror, filters=command(
-    BotCommands.UnzipMirrorCommand) & CustomFilters.authorized))
+    BotCommands.UnzipMirrorCommand)))
 bot.add_handler(MessageHandler(zip_mirror, filters=command(
-    BotCommands.ZipMirrorCommand) & CustomFilters.authorized))
+    BotCommands.ZipMirrorCommand)))
 bot.add_handler(MessageHandler(qb_mirror, filters=command(
-    BotCommands.QbMirrorCommand) & CustomFilters.authorized))
+    BotCommands.QbMirrorCommand)))
 bot.add_handler(MessageHandler(qb_unzip_mirror, filters=command(
-    BotCommands.QbUnzipMirrorCommand) & CustomFilters.authorized))
+    BotCommands.QbUnzipMirrorCommand)))
 bot.add_handler(MessageHandler(qb_zip_mirror, filters=command(
-    BotCommands.QbZipMirrorCommand) & CustomFilters.authorized))
+    BotCommands.QbZipMirrorCommand)))
 bot.add_handler(MessageHandler(leech, filters=command(
-    BotCommands.LeechCommand) & CustomFilters.authorized))
+    BotCommands.LeechCommand)))
 bot.add_handler(MessageHandler(unzip_leech, filters=command(
-    BotCommands.UnzipLeechCommand) & CustomFilters.authorized))
+    BotCommands.UnzipLeechCommand)))
 bot.add_handler(MessageHandler(zip_leech, filters=command(
-    BotCommands.ZipLeechCommand) & CustomFilters.authorized))
+    BotCommands.ZipLeechCommand)))
 bot.add_handler(MessageHandler(qb_leech, filters=command(
-    BotCommands.QbLeechCommand) & CustomFilters.authorized))
+    BotCommands.QbLeechCommand)))
 bot.add_handler(MessageHandler(qb_unzip_leech, filters=command(
-    BotCommands.QbUnzipLeechCommand) & CustomFilters.authorized))
+    BotCommands.QbUnzipLeechCommand)))
 bot.add_handler(MessageHandler(qb_zip_leech, filters=command(
-    BotCommands.QbZipLeechCommand) & CustomFilters.authorized))
+    BotCommands.QbZipLeechCommand)))

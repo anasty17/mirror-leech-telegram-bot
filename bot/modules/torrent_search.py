@@ -111,7 +111,7 @@ async def __search(key, site, message, method):
         await sync_to_async(client.auth_log_out)
     link = await __getResult(search_results, key, message, method)
     buttons = ButtonMaker()
-    buttons.ubutton("🔎 VIEW", link)
+    buttons.ubutton("Result", link)
     button = buttons.build_menu(1)
     await editMessage(message, msg, button)
 
@@ -119,13 +119,13 @@ async def __search(key, site, message, method):
 async def __getResult(search_results, key, message, method):
     telegraph_content = []
     if method == 'apirecent':
-        msg = "<h4>API Recent Results</h4>"
+        msg = "<h4>Recent Result</h4>"
     elif method == 'apisearch':
-        msg = f"<h4>API Search Result(s) For {key}</h4>"
+        msg = f"<h4>Result for {key}</h4>"
     elif method == 'apitrend':
-        msg = "<h4>API Trending Results</h4>"
+        msg = "<h4>Trending Result</h4>"
     else:
-        msg = f"<h4>PLUGINS Search Result(s) For {key}</h4>"
+        msg = f"<h4>Result for {key}</h4>"
     for index, result in enumerate(search_results, start=1):
         if method.startswith('api'):
             try:
@@ -136,10 +136,10 @@ async def __getResult(search_results, key, message, method):
                         msg += f"<b>Quality: </b>{subres['quality']} | <b>Type: </b>{subres['type']} | "
                         msg += f"<b>Size: </b>{subres['size']}<br>"
                         if 'torrent' in subres.keys():
-                            msg += f"<a href='{subres['torrent']}'>Direct Link</a><br>"
+                            msg += f"<a href='{subres['torrent']}'>Direct</a><br>"
                         elif 'magnet' in subres.keys():
                             msg += "<b>Share Magnet to</b> "
-                            msg += f"<a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a><br>"
+                            msg += f"[<a href='http://t.me/share/url?url={subres['magnet']}'>Telegram</a>]<br>"
                     msg += '<br>'
                 else:
                     msg += f"<b>Size: </b>{result['size']}<br>"
@@ -148,10 +148,10 @@ async def __getResult(search_results, key, message, method):
                     except:
                         pass
                     if 'torrent' in result.keys():
-                        msg += f"<a href='{result['torrent']}'>Direct Link</a><br><br>"
+                        msg += f"<a href='{result['torrent']}'>Direct</a><br><br>"
                     elif 'magnet' in result.keys():
                         msg += "<b>Share Magnet to</b> "
-                        msg += f"<a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a><br><br>"
+                        msg += f"[<a href='http://t.me/share/url?url={quote(result['magnet'])}'>Telegram</a>]<br><br>"
                     else:
                         msg += '<br>'
             except:
@@ -162,9 +162,9 @@ async def __getResult(search_results, key, message, method):
             msg += f"<b>Seeders: </b>{result.nbSeeders} | <b>Leechers: </b>{result.nbLeechers}<br>"
             link = result.fileUrl
             if link.startswith('magnet:'):
-                msg += f"<b>Share Magnet to</b> <a href='http://t.me/share/url?url={quote(link)}'>Telegram</a><br><br>"
+                msg += f"<b>Share Magnet to</b> [<a href='http://t.me/share/url?url={quote(link)}'>Telegram</a>]<br><br>"
             else:
-                msg += f"<a href='{link}'>Direct Link</a><br><br>"
+                msg += f"<a href='{link}'>Direct</a><br><br>"
 
         if len(msg.encode('utf-8')) > 39000:
             telegraph_content.append(msg)
@@ -177,7 +177,7 @@ async def __getResult(search_results, key, message, method):
         telegraph_content.append(msg)
 
     await editMessage(message, f"<b>Creating</b> {len(telegraph_content)} <b>Telegraph pages.</b>")
-    path = [(await telegraph.create_page(title='Mirror-leech-bot Torrent Search',
+    path = [(await telegraph.create_page(title='qBittorrent Search',
                                          content=content))["path"] for content in telegraph_content]
     if len(path) > 1:
         await editMessage(message, f"<b>Editing</b> {len(telegraph_content)} <b>Telegraph pages.</b>")
@@ -277,6 +277,6 @@ async def torrentSearchUpdate(_, query):
 
 
 bot.add_handler(MessageHandler(torrentSearch, filters=command(
-    BotCommands.SearchCommand) & CustomFilters.authorized))
+    BotCommands.SearchCommand)))
 bot.add_handler(CallbackQueryHandler(
     torrentSearchUpdate, filters=regex("^torser")))

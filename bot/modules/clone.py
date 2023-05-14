@@ -10,7 +10,7 @@ from json import loads
 
 from bot import LOGGER, download_dict, download_dict_lock, config_dict, bot
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
-from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, deleteMessage, sendStatusMessage, auto_delete_message
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
@@ -158,7 +158,8 @@ async def gdcloneNode(message, link, tag):
         LOGGER.info(f'Cloning Done: {name}')
         await listener.onUploadComplete(link, size, files, folders, mime_type, name)
     else:
-        await sendMessage(message, CLONE_HELP_MESSAGE)
+        msg = await sendMessage(message, CLONE_HELP_MESSAGE)
+        await auto_delete_message(message, msg)
 
 
 @new_task
@@ -209,7 +210,8 @@ async def clone(client, message):
     __run_multi()
 
     if not link:
-        await sendMessage(message, CLONE_HELP_MESSAGE)
+        msg = await sendMessage(message, CLONE_HELP_MESSAGE)
+        await auto_delete_message(message, msg)
         return
 
     if is_rclone_path(link):
@@ -228,4 +230,4 @@ async def clone(client, message):
 
 
 bot.add_handler(MessageHandler(clone, filters=command(
-    BotCommands.CloneCommand) & CustomFilters.authorized))
+    BotCommands.CloneCommand)))

@@ -15,11 +15,11 @@ from .helper.ext_utils.fs_utils import start_cleanup, clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import get_readable_file_size, get_readable_time, cmd_exec, sync_to_async
 from .helper.ext_utils.db_handler import DbManger
 from .helper.telegram_helper.bot_commands import BotCommands
-from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
+from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile, auto_delete_message
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.listeners.aria2_listener import start_aria2_listener
-from .modules import authorize, clone, gd_count, gd_delete, gd_list, cancel_mirror, mirror_leech, status, torrent_search, torrent_select, ytdlp, rss, shell, eval, users_settings, bot_settings
+from .modules import clone, gd_count, gd_delete, gd_list, cancel_mirror, mirror_leech, status, torrent_search, torrent_select, ytdlp, rss, shell, eval, users_settings, bot_settings
 
 start_aria2_listener()
 
@@ -49,24 +49,27 @@ async def stats(client, message):
             f'<b>Memory Total:</b> {get_readable_file_size(memory.total)}\n'\
             f'<b>Memory Free:</b> {get_readable_file_size(memory.available)}\n'\
             f'<b>Memory Used:</b> {get_readable_file_size(memory.used)}\n'
-    await sendMessage(message, stats)
+    msg = await sendMessage(message, stats)
+    await auto_delete_message(message, msg)
 
 
+start_string ='''
+<b>Bot is Activate.</b>
+This bot can mirror your [Links | Files | Torrents] to Google Drive or any Rclone Cloud or to Telegram.
+
+<b>Warning!</b>
+Cloud Storage is public, everyone can view and download it. Therefore, don't mirror files that are confidential or personal data!
+
+Type <b>/help</b> to get more information.
+'''
 async def start(client, message):
     buttons = ButtonMaker()
-    buttons.ubutton(
-        "Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot")
-    buttons.ubutton("Owner", "https://t.me/anas_tayyar")
-    reply_markup = buttons.build_menu(2)
-    if await CustomFilters.authorized(client, message):
-        start_string = f'''
-This bot can mirror all your links|files|torrents to Google Drive or any rclone cloud or to telegram.
-Type /{BotCommands.HelpCommand} to get a list of available commands
-'''
-        await sendMessage(message, start_string, reply_markup)
-    else:
-        await sendMessage(message, 'You Are not authorized user! Deploy your own mirror-leech bot', reply_markup)
-
+    buttons.ubutton("Cloud Storage", "https://mirrorbotdrive.eu.org/0:/")
+    #buttons.ubutton("Dump", "http://t.me/leechsdump")
+    reply_markup = buttons.build_menu(1)
+    msg = await sendMessage(message, start_string, reply_markup)
+    await auto_delete_message(message, msg)
+    
 
 async def restart(client, message):
     restart_message = await sendMessage(message, "Restarting...")
@@ -86,62 +89,55 @@ async def restart(client, message):
 
 async def ping(client, message):
     start_time = int(round(time() * 1000))
-    reply = await sendMessage(message, "Starting Ping")
+    reply = await sendMessage(message, "Checking ...")
     end_time = int(round(time() * 1000))
-    await editMessage(reply, f'{end_time - start_time} ms')
+    msg = await editMessage(reply, f'<b>Latency:</b> {end_time - start_time}ms')
+    await auto_delete_message(message, msg)
 
 
 async def log(client, message):
-    await sendFile(message, 'log.txt')
+    msg = await sendFile(message, 'log.txt')
+    await auto_delete_message(message, msg)
 
-help_string = f'''
-NOTE: Try each command without any argument to see more detalis.
-/{BotCommands.MirrorCommand[0]} or /{BotCommands.MirrorCommand[1]}: Start mirroring to Google Drive.
-/{BotCommands.ZipMirrorCommand[0]} or /{BotCommands.ZipMirrorCommand[1]}: Start mirroring and upload the file/folder compressed with zip extension.
-/{BotCommands.UnzipMirrorCommand[0]} or /{BotCommands.UnzipMirrorCommand[1]}: Start mirroring and upload the file/folder extracted from any archive extension.
-/{BotCommands.QbMirrorCommand[0]} or /{BotCommands.QbMirrorCommand[1]}: Start Mirroring to Google Drive using qBittorrent.
-/{BotCommands.QbZipMirrorCommand[0]} or /{BotCommands.QbZipMirrorCommand[1]}: Start mirroring using qBittorrent and upload the file/folder compressed with zip extension.
-/{BotCommands.QbUnzipMirrorCommand[0]} or /{BotCommands.QbUnzipMirrorCommand[1]}: Start mirroring using qBittorrent and upload the file/folder extracted from any archive extension.
-/{BotCommands.YtdlCommand[0]} or /{BotCommands.YtdlCommand[1]}: Mirror yt-dlp supported link.
-/{BotCommands.YtdlZipCommand[0]} or /{BotCommands.YtdlZipCommand[1]}: Mirror yt-dlp supported link as zip.
-/{BotCommands.LeechCommand[0]} or /{BotCommands.LeechCommand[1]}: Start leeching to Telegram.
-/{BotCommands.ZipLeechCommand[0]} or /{BotCommands.ZipLeechCommand[1]}: Start leeching and upload the file/folder compressed with zip extension.
-/{BotCommands.UnzipLeechCommand[0]} or /{BotCommands.UnzipLeechCommand[1]}: Start leeching and upload the file/folder extracted from any archive extension.
-/{BotCommands.QbLeechCommand[0]} or /{BotCommands.QbLeechCommand[1]}: Start leeching using qBittorrent.
-/{BotCommands.QbZipLeechCommand[0]} or /{BotCommands.QbZipLeechCommand[1]}: Start leeching using qBittorrent and upload the file/folder compressed with zip extension.
-/{BotCommands.QbUnzipLeechCommand[0]} or /{BotCommands.QbUnzipLeechCommand[1]}: Start leeching using qBittorrent and upload the file/folder extracted from any archive extension.
-/{BotCommands.YtdlLeechCommand[0]} or /{BotCommands.YtdlLeechCommand[1]}: Leech yt-dlp supported link.
-/{BotCommands.YtdlZipLeechCommand[0]} or /{BotCommands.YtdlZipLeechCommand[1]}: Leech yt-dlp supported link as zip.
-/{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
-/{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
-/{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
-/{BotCommands.UserSetCommand} [query]: Users settings.
-/{BotCommands.BotSetCommand} [query]: Bot settings.
-/{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
-/{BotCommands.CancelMirror}: Cancel task by gid or reply.
-/{BotCommands.CancelAllCommand} [query]: Cancel all [status] tasks.
-/{BotCommands.ListCommand} [query]: Search in Google Drive(s).
-/{BotCommands.SearchCommand} [query]: Search for torrents with API.
-/{BotCommands.StatusCommand}: Shows a status of all the downloads.
-/{BotCommands.StatsCommand}: Show stats of the machine where the bot is hosted in.
-/{BotCommands.PingCommand}: Check how long it takes to Ping the Bot (Only Owner & Sudo).
-/{BotCommands.AuthorizeCommand}: Authorize a chat or a user to use the bot (Only Owner & Sudo).
-/{BotCommands.UnAuthorizeCommand}: Unauthorize a chat or a user to use the bot (Only Owner & Sudo).
-/{BotCommands.UsersCommand}: show users settings (Only Owner & Sudo).
-/{BotCommands.AddSudoCommand}: Add sudo user (Only Owner).
-/{BotCommands.RmSudoCommand}: Remove sudo users (Only Owner).
-/{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
-/{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).
-/{BotCommands.ShellCommand}: Run shell commands (Only Owner).
-/{BotCommands.EvalCommand}: Run Python Code Line | Lines (Only Owner).
-/{BotCommands.ExecCommand}: Run Commands In Exec (Only Owner).
-/{BotCommands.ClearLocalsCommand}: Clear {BotCommands.EvalCommand} or {BotCommands.ExecCommand} locals (Only Owner).
-/{BotCommands.RssCommand}: RSS Menu.
+
+help_string = '''
+<b>INFORMATION</>
+<b>m</b> or <b>mirror</b>: Download and upload to Cloud Storage.
+<b>l</b> or <b>leech</b>: Download and upload to Telegram.
+q or qb: For magnet link or torrent file.
+<b>z</b> or <b>zip</b>: Archive file before upload.
+<b>uz</b> or <b>unzip</b>: Extract file before upload.
+<b>y</b> or <b>ytdl</b>p: For yt-dlp links.
+
+<b>FOR DIRECT DOWNLOAD LINK OR FILE</b>
+[ / + z/uz + m/l ] or [ / + zip/unzip + mirror/leech ]
+Ex. <code>/zm</code> [or] <code>/zipmirror</code>:
+Download and archive file before upload to Cloud Storage.
+
+<b>FOR MAGNET LINK OR TORRENT FILE</b>
+[ / + q + z/uz + l/m ] or [ qb + zip/unzip + leech/mirror ]
+Ex. <code>/qzm</code> [or] <code>/qbzipmirror</code>:
+Download torrent and archive file before upload to Cloud Storage.
+
+<b>FOR YT-DLP LINKS</b>
+[ / + y + z + l ] or [ / + ytdl + zip + leech ]
+Ex. <code>/yzl</code> [or] <code>ytdlzipleech</code>:
+Download and archive file before upload to Telegram.
+
+<b>NOTES</b>
+• <b>uz</b> or <b>unzip</b> only for archive files (zip, RAR, etc.) and not work for <b>y</b> or <b>ytdl</b>.
+• After <b>y</b> or <b>ytdl</b> no need <b>m</b> or <b>mirror</b> if you want upload to Cloud Storage.
+
+<b>MORE</b>
+Just send one of several existing command when you type "<b>/</b>" (slash), to see details of the command.
 '''
-
-
 async def bot_help(client, message):
-    await sendMessage(message, help_string)
+    buttons = ButtonMaker()
+    buttons.ubutton("Source", "https://github.com/anasty17/mirror-leech-telegram-bot")
+    buttons.ubutton("Feedback", "http://t.me/ilhamtgbot")
+    reply_markup = buttons.build_menu(2)
+    msg = await sendMessage(message, help_string, reply_markup)
+    await auto_delete_message(message, msg)
 
 
 async def restart_notification():
@@ -186,19 +182,17 @@ async def restart_notification():
 
 async def main():
     await gather(start_cleanup(), torrent_search.initiate_search_tools(), restart_notification())
-
-    bot.add_handler(MessageHandler(
-        start, filters=command(BotCommands.StartCommand)))
+    bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
     bot.add_handler(MessageHandler(log, filters=command(
-        BotCommands.LogCommand) & CustomFilters.sudo))
+        BotCommands.LogCommand) & CustomFilters.owner))
     bot.add_handler(MessageHandler(restart, filters=command(
-        BotCommands.RestartCommand) & CustomFilters.sudo))
+        BotCommands.RestartCommand) & CustomFilters.owner))
     bot.add_handler(MessageHandler(ping, filters=command(
-        BotCommands.PingCommand) & CustomFilters.authorized))
+        BotCommands.PingCommand)))
     bot.add_handler(MessageHandler(bot_help, filters=command(
-        BotCommands.HelpCommand) & CustomFilters.authorized))
+        BotCommands.HelpCommand)))
     bot.add_handler(MessageHandler(stats, filters=command(
-        BotCommands.StatsCommand) & CustomFilters.authorized))
+        BotCommands.StatsCommand) & CustomFilters.sudo))
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 

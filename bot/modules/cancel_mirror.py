@@ -27,7 +27,7 @@ async def cancel_mirror(_, message):
             await sendMessage(message, "This is not an active task!")
             return
     elif len(msg) == 1:
-        msg = "Reply to an active Command message which was used to start the download" \
+        msg = "Reply to an active command message which was used to start the download" \
               f" or send <code>/{BotCommands.CancelMirror} GID</code> to cancel it!"
         await sendMessage(message, msg)
         return
@@ -89,8 +89,8 @@ async def cancel_all_update(_, query):
 
 
 bot.add_handler(MessageHandler(cancel_mirror, filters=command(
-    BotCommands.CancelMirror) & CustomFilters.authorized))
+    BotCommands.CancelMirror)))
 bot.add_handler(MessageHandler(cancell_all_buttons, filters=command(
-    BotCommands.CancelAllCommand) & CustomFilters.sudo))
+    BotCommands.CancelAllCommand) & CustomFilters.owner))
 bot.add_handler(CallbackQueryHandler(cancel_all_update,
-                filters=regex("^canall") & CustomFilters.sudo))
+                filters=regex("^canall") & CustomFilters.owner))
