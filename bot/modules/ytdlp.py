@@ -10,7 +10,7 @@ from functools import partial
 from time import time
 
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, auto_delete_message
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path, new_thread, get_readable_time
 from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
@@ -331,7 +331,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}):
                 tag = reply_to.from_user.mention
 
     if not is_url(link):
-        await sendMessage(message, YT_HELP_MESSAGE)
+        msg = await sendMessage(message, YT_HELP_MESSAGE)
+        await auto_delete_message(message, msg)
         return
 
     if not isLeech:
@@ -428,10 +429,10 @@ async def ytdlZipleech(client, message):
     _ytdl(client, message, True, True)
 
 bot.add_handler(MessageHandler(ytdl, filters=command(
-    BotCommands.YtdlCommand) & CustomFilters.authorized))
+    BotCommands.YtdlCommand)))
 bot.add_handler(MessageHandler(ytdlZip, filters=command(
-    BotCommands.YtdlZipCommand) & CustomFilters.authorized))
+    BotCommands.YtdlZipCommand)))
 bot.add_handler(MessageHandler(ytdlleech, filters=command(
-    BotCommands.YtdlLeechCommand) & CustomFilters.authorized))
+    BotCommands.YtdlLeechCommand)))
 bot.add_handler(MessageHandler(ytdlZipleech, filters=command(
-    BotCommands.YtdlZipLeechCommand) & CustomFilters.authorized))
+    BotCommands.YtdlZipLeechCommand)))

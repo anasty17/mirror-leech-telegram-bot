@@ -864,6 +864,6 @@ async def bot_settings(_, message):
 
 
 bot.add_handler(MessageHandler(bot_settings, filters=command(
-    BotCommands.BotSetCommand) & CustomFilters.sudo))
+    BotCommands.BotSetCommand) & CustomFilters.owner))
 bot.add_handler(CallbackQueryHandler(edit_bot_settings,
-                filters=regex("^botset") & CustomFilters.sudo))
+                filters=regex("^botset") & CustomFilters.owner))

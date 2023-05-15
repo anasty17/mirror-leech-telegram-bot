@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 
-
+"""
 async def authorize(client, message):
     msg = message.text.split()
     if len(msg) > 1:
@@ -24,7 +24,7 @@ async def authorize(client, message):
         update_user_ldata(id_, 'is_auth', True)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Authorized'
+        msg = 'Authorized!'
     await sendMessage(message, msg)
 
 
@@ -40,11 +40,11 @@ async def unauthorize(client, message):
         update_user_ldata(id_, 'is_auth', False)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Unauthorized'
+        msg = 'Unauthorized!'
     else:
         msg = 'Already Unauthorized!'
     await sendMessage(message, msg)
-
+"""
 
 async def addSudo(client, message):
     id_ = ""
@@ -62,7 +62,7 @@ async def addSudo(client, message):
                 await DbManger().update_user_data(id_)
             msg = 'Promoted as Sudo'
     else:
-        msg = "Give ID or Reply To message of whom you want to Promote."
+        msg = "Give ID or reply to message of whom you want to promote."
     await sendMessage(message, msg)
 
 
@@ -77,16 +77,16 @@ async def removeSudo(client, message):
         update_user_ldata(id_, 'is_sudo', False)
         if DATABASE_URL:
             await DbManger().update_user_data(id_)
-        msg = 'Demoted'
+        msg = 'Demoted!'
     else:
-        msg = "Give ID or Reply To message of whom you want to remove from Sudo"
+        msg = "Give ID or reply to message of whom you want to remove from sudo."
     await sendMessage(message, msg)
 
-bot.add_handler(MessageHandler(authorize, filters=command(
-    BotCommands.AuthorizeCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(unauthorize, filters=command(
-    BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
+#bot.add_handler(MessageHandler(authorize, filters=command(
+    #BotCommands.AuthorizeCommand) & CustomFilters.sudo))
+#bot.add_handler(MessageHandler(unauthorize, filters=command(
+    #BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(addSudo, filters=command(
-    BotCommands.AddSudoCommand) & CustomFilters.sudo))
+    BotCommands.AddSudoCommand) & CustomFilters.owner))
 bot.add_handler(MessageHandler(removeSudo, filters=command(
-    BotCommands.RmSudoCommand) & CustomFilters.sudo))
+    BotCommands.RmSudoCommand) & CustomFilters.owner))

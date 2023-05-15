@@ -35,7 +35,7 @@ class TelegraphHelper:
             )
         except RetryAfterError as st:
             LOGGER.warning(
-                f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
+                f'Telegraph flood control exceeded. I will sleep for {st.retry_after} seconds.')
             await sleep(st.retry_after)
             return await self.create_page(title, content)
 
@@ -50,7 +50,7 @@ class TelegraphHelper:
             )
         except RetryAfterError as st:
             LOGGER.warning(
-                f'Telegraph Flood control exceeded. I will sleep for {st.retry_after} seconds.')
+                f'Telegraph flood control exceeded. I will sleep for {st.retry_after} seconds.')
             await sleep(st.retry_after)
             return await self.edit_page(path, title, content)
 
@@ -71,13 +71,13 @@ class TelegraphHelper:
                     nxt_page += 1
             await self.edit_page(
                 path=path[prev_page],
-                title='Mirror-leech-bot Torrent Search',
+                title='Google Drive Search',
                 content=content
             )
         return
 
 
-telegraph = TelegraphHelper('Mirror-Leech-Telegram-Bot',
-                            'https://github.com/anasty17/mirror-leech-telegram-bot')
+telegraph = TelegraphHelper('Mirror Leech Bot',
+                            'http://t.me/mirrorleechtgbot')
 
 bot_loop.run_until_complete(telegraph.create_account())
