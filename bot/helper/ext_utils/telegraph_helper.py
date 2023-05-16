@@ -71,7 +71,7 @@ class TelegraphHelper:
                     nxt_page += 1
             await self.edit_page(
                 path=path[prev_page],
-                title='Mirror Bot Leech Search',
+                title='Mirror Leech Bot Search',
                 content=content
             )
         return
