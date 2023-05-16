@@ -77,7 +77,7 @@ class TelegraphHelper:
         return
 
 
-telegraph = TelegraphHelper('Mirror Leech Bot',
+telegraph = TelegraphHelper('@mirrorleechtgbot',
                             'http://t.me/mirrorleechtgbot')
 
 bot_loop.run_until_complete(telegraph.create_account())
