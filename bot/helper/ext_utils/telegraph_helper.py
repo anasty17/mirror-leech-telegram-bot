@@ -67,11 +67,11 @@ class TelegraphHelper:
                     content += f'<b><a href="https://telegra.ph/{path[prev_page]}">Prev</a></b>'
                     prev_page += 1
                 if nxt_page < num_of_path:
-                    content += f'<b> | <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
+                    content += f'<b> - <a href="https://telegra.ph/{path[nxt_page]}">Next</a></b>'
                     nxt_page += 1
             await self.edit_page(
                 path=path[prev_page],
-                title='Google Drive Search',
+                title='Mirror Bot Leech Search',
                 content=content
             )
         return
