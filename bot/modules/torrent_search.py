@@ -217,13 +217,13 @@ async def torrentSearch(_, message):
     if SITES is None and not SEARCH_PLUGINS:
         await sendMessage(message, "No API link or search PLUGINS added for this function")
     elif len(key) == 1 and SITES is None:
-        await sendMessage(message, "Send a search key along with command")
+        await sendMessage(message, "Send a search key along with command.")
     elif len(key) == 1:
         buttons.ibutton('Trending', f"torser {user_id} apitrend")
         buttons.ibutton('Recent', f"torser {user_id} apirecent")
         buttons.ibutton("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
-        await sendMessage(message, "Send a search key along with command", button)
+        await sendMessage(message, "Send a search key along with command.", button)
     elif SITES is not None and SEARCH_PLUGINS:
         buttons.ibutton('Api', f"torser {user_id} apisearch")
         buttons.ibutton('Plugins', f"torser {user_id} plugin")

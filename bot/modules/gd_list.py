@@ -61,7 +61,7 @@ async def select_type(_, query):
 
 async def drive_list(_, message):
     if len(message.text.split()) == 1:
-        return await sendMessage(message, 'Send a search key along with command')
+        return await sendMessage(message, 'Send a search key along with command.')
     user_id = message.from_user.id
     buttons = await list_buttons(user_id)
     await sendMessage(message, 'Choose list options:', buttons)
