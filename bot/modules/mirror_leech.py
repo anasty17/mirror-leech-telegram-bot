@@ -299,26 +299,26 @@ async def qb_zip_leech(client, message):
 
 
 bot.add_handler(MessageHandler(mirror, filters=command(
-    BotCommands.MirrorCommand)))
+    BotCommands.MirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(unzip_mirror, filters=command(
-    BotCommands.UnzipMirrorCommand)))
+    BotCommands.UnzipMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(zip_mirror, filters=command(
-    BotCommands.ZipMirrorCommand)))
+    BotCommands.ZipMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_mirror, filters=command(
-    BotCommands.QbMirrorCommand)))
+    BotCommands.QbMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_unzip_mirror, filters=command(
-    BotCommands.QbUnzipMirrorCommand)))
+    BotCommands.QbUnzipMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_zip_mirror, filters=command(
-    BotCommands.QbZipMirrorCommand)))
+    BotCommands.QbZipMirrorCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(leech, filters=command(
-    BotCommands.LeechCommand)))
+    BotCommands.LeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(unzip_leech, filters=command(
-    BotCommands.UnzipLeechCommand)))
+    BotCommands.UnzipLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(zip_leech, filters=command(
-    BotCommands.ZipLeechCommand)))
+    BotCommands.ZipLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_leech, filters=command(
-    BotCommands.QbLeechCommand)))
+    BotCommands.QbLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_unzip_leech, filters=command(
-    BotCommands.QbUnzipLeechCommand)))
+    BotCommands.QbUnzipLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(qb_zip_leech, filters=command(
-    BotCommands.QbZipLeechCommand)))
+    BotCommands.QbZipLeechCommand) & CustomFilters.authorized))

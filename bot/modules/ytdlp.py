@@ -429,10 +429,10 @@ async def ytdlZipleech(client, message):
     _ytdl(client, message, True, True)
 
 bot.add_handler(MessageHandler(ytdl, filters=command(
-    BotCommands.YtdlCommand)))
+    BotCommands.YtdlCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(ytdlZip, filters=command(
-    BotCommands.YtdlZipCommand)))
+    BotCommands.YtdlZipCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(ytdlleech, filters=command(
-    BotCommands.YtdlLeechCommand)))
+    BotCommands.YtdlLeechCommand) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(ytdlZipleech, filters=command(
-    BotCommands.YtdlZipLeechCommand)))
+    BotCommands.YtdlZipLeechCommand) & CustomFilters.authorized))

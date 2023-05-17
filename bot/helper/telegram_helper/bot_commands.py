@@ -36,8 +36,8 @@ class _BotCommands:
         self.SearchCommand = f'search{CMD_SUFFIX}'
         self.StatusCommand = f'status{CMD_SUFFIX}'
         self.UsersCommand = f'users{CMD_SUFFIX}'
-#        self.AuthorizeCommand = f'authorize{CMD_SUFFIX}'
-#        self.UnAuthorizeCommand = f'unauthorize{CMD_SUFFIX}'
+        self.AuthorizeCommand = f'authorize{CMD_SUFFIX}'
+        self.UnAuthorizeCommand = f'unauthorize{CMD_SUFFIX}'
         self.AddSudoCommand = f'addsudo{CMD_SUFFIX}'
         self.RmSudoCommand = f'rmsudo{CMD_SUFFIX}'
         self.PingCommand = [f'ping{CMD_SUFFIX}', 'ping']

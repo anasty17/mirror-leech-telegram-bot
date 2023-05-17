@@ -9,7 +9,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata
 
-"""
+
 async def authorize(client, message):
     msg = message.text.split()
     if len(msg) > 1:
@@ -44,7 +44,7 @@ async def unauthorize(client, message):
     else:
         msg = 'Already Unauthorized!'
     await sendMessage(message, msg)
-"""
+
 
 async def addSudo(client, message):
     id_ = ""
@@ -82,11 +82,12 @@ async def removeSudo(client, message):
         msg = "Give ID or reply to message of whom you want to remove from sudo."
     await sendMessage(message, msg)
 
-#bot.add_handler(MessageHandler(authorize, filters=command(
-    #BotCommands.AuthorizeCommand) & CustomFilters.sudo))
-#bot.add_handler(MessageHandler(unauthorize, filters=command(
-    #BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(authorize, filters=command(
+    BotCommands.AuthorizeCommand) & CustomFilters.sudo))
+bot.add_handler(MessageHandler(unauthorize, filters=command(
+    BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(addSudo, filters=command(
     BotCommands.AddSudoCommand) & CustomFilters.owner))
 bot.add_handler(MessageHandler(removeSudo, filters=command(
     BotCommands.RmSudoCommand) & CustomFilters.owner))
+    

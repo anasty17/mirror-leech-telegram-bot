@@ -146,13 +146,13 @@ if len(DOWNLOAD_DIR) == 0:
     DOWNLOAD_DIR = '/usr/src/app/downloads/'
 elif not DOWNLOAD_DIR.endswith("/"):
     DOWNLOAD_DIR = f'{DOWNLOAD_DIR}/'
-"""
+
 AUTHORIZED_CHATS = environ.get('AUTHORIZED_CHATS', '')
 if len(AUTHORIZED_CHATS) != 0:
     aid = AUTHORIZED_CHATS.split()
     for id_ in aid:
         user_data[int(id_.strip())] = {'is_auth': True}
-"""
+
 SUDO_USERS = environ.get('SUDO_USERS', '')
 if len(SUDO_USERS) != 0:
     aid = SUDO_USERS.split()
@@ -313,7 +313,7 @@ if len(RCLONE_SERVE_PASS) == 0:
     RCLONE_SERVE_PASS = ''
 
 config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
-#               'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
+               'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                'AUTO_DELETE_MESSAGE_DURATION': AUTO_DELETE_MESSAGE_DURATION,
                'BASE_URL': BASE_URL,
                'BASE_URL_PORT': BASE_URL_PORT,

@@ -67,6 +67,6 @@ async def drive_list(_, message):
     await sendMessage(message, 'Choose list options:', buttons)
 
 bot.add_handler(MessageHandler(drive_list, filters=command(
-    BotCommands.ListCommand)))
+    BotCommands.ListCommand) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(
-    select_type, filters=regex("^list_types")))
+    select_type, filters=regex("^list_types") & CustomFilters.authorized))

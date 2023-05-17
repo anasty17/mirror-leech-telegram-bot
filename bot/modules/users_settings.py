@@ -243,10 +243,16 @@ async def edit_user_settings(client, query):
                             f"userset {user_id} ryto", 'header')
         buttons.ibutton("Close", f"userset {user_id} close")
         rmsg = '''
-Send YT-DLP Options. Timeout: 60 sec
-Format: key:value|key:value|key:value.
-Example: format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
-Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official/177'>script</a> to convert cli arguments to api options.
+Send YT-DLP Options.
+Timeout: 60 sec
+
+Format:
+key:value|key:value|key:value.
+
+Example:
+format:bv*+mergeall[vcodec=none]|nocheckcertificate:True
+
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a>.
         '''
         await editMessage(message, rmsg, buttons.build_menu(1))
         pfunc = partial(set_yt_options, pre_event=query)
@@ -376,4 +382,4 @@ bot.add_handler(MessageHandler(send_users_settings, filters=command(
 bot.add_handler(MessageHandler(user_settings, filters=command(
     BotCommands.UserSetCommand)))
 bot.add_handler(CallbackQueryHandler(
-    edit_user_settings, filters=regex("^userset")))
+    edit_user_settings, filters=regex("^userset") & CustomFilters.authorized))

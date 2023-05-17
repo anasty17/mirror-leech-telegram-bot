@@ -89,7 +89,7 @@ async def cancel_all_update(_, query):
 
 
 bot.add_handler(MessageHandler(cancel_mirror, filters=command(
-    BotCommands.CancelMirror)))
+    BotCommands.CancelMirror) & CustomFilters.authorized))
 bot.add_handler(MessageHandler(cancell_all_buttons, filters=command(
     BotCommands.CancelAllCommand) & CustomFilters.owner))
 bot.add_handler(CallbackQueryHandler(cancel_all_update,
