@@ -26,9 +26,13 @@ async def select(client, message):
             await sendMessage(message, "This is not an active task!")
             return
     elif len(msg) == 1:
-        msg = ("Reply to an active /cmd which was used to start the qBittorrent-Download or add gid along with cmd.\n\n"
-               + "This command mainly for selection incase you decided to select files from already added torrent. "
-               + "But, you can always use /cmd with argument "s" to select files before download start.")
+        msg = (
+'''
+Reply to an active /cmd which was used to start the qBittorrent-Download or add gid along with cmd.
+This command mainly for selection incase you decided to select files from already added torrent.
+But, you can always use /cmd with argument "s" to select files before download start.
+'''
+       )
         await sendMessage(message, msg)
         return
 
@@ -57,7 +61,7 @@ async def select(client, message):
                     await sync_to_async(aria2.client.force_pause, id_)
                 except Exception as e:
                     LOGGER.error(
-                        f"{e} Error in pause, this mostly happens after abuse aria2")
+                        f"{e} Error in pause, this mostly happens after abuse aria2.")
         listener.select = True
     except:
         await sendMessage(message, "This is not a bittorrent task!")
