@@ -58,15 +58,15 @@ start_string ='''
 This bot can mirror your [Links | Files | Torrents] to Google Drive or any Rclone Cloud or to Telegram.
 
 <b>Warning!</b>
-Cloud Storage is public, everyone can view and download it. Therefore, don't mirror files that are confidential or personal data!
+Cloud and Dump are public, everyone can view and download it. Therefore, don't mirror or leech files that are confidential or personal data!
 
 Type <b>/help</b> to get more information.
 '''
 async def start(client, message):
     buttons = ButtonMaker()
-    buttons.ubutton("Cloud Storage", "https://mirrorbotdrive.eu.org/0:/")
-    #buttons.ubutton("Dump", "http://t.me/leechsdump")
-    reply_markup = buttons.build_menu(1)
+    buttons.ubutton("Cloud", "https://mirrorbotdrive.eu.org/0:/")
+    buttons.ubutton("Dump", "http://t.me/leechsdump")
+    reply_markup = buttons.build_menu(2)
     msg = await sendMessage(message, start_string, reply_markup)
     await auto_delete_message(message, msg)
     
