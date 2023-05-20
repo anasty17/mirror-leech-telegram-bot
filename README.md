@@ -688,8 +688,6 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 <p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/anasty17)
-
 USDT Address:
 
 ```
