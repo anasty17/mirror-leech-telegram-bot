@@ -45,7 +45,7 @@ You can use it only by reply to message(text/file). Options that came after link
 Example:
 link n: newname up: remote1:path1
 link pswd: pass(zip/unzip) opt: ytdlpoptions up: remote2:path2
-Relply to this example by this cmd for example <code>/cmd</code> b(bulk) m:folder_name(same dir)
+Reply to this example by this cmd for example <code>/cmd</code> b(bulk) m:folder_name(same dir)
 You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
 
 <b>NOTES:</b>
@@ -120,7 +120,7 @@ You can use it only by reply to message(text/file). Options that came after link
 Example:
 link n: newname up: remote1:path1
 link pswd: pass(zip/unzip) \\nusername\\npassword(authentication) up: remote2:path2
-Relply to this example by this cmd for example <code>/cmd</code> b(bulk) d:2:10(seed) m:folder_name(same dir)
+Reply to this example by this cmd for example <code>/cmd</code> b(bulk) d:2:10(seed) m:folder_name(same dir)
 You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
 
 <b>NOTES:</b>
