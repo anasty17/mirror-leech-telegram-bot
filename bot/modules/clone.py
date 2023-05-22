@@ -169,7 +169,7 @@ async def clone(client, message):
     multi = 0
 
     if username := message.from_user.username:
-            tag = f"@{username}"
+        tag = f"@{username}"
     else:
         tag = message.from_user.mention
 
