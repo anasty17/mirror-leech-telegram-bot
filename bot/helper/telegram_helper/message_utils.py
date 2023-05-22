@@ -89,6 +89,7 @@ async def delete_all_messages():
 
 
 async def get_tg_link_content(link):
+    message = None
     if link.startswith('https://t.me/'):
         private = False
         msg = re_match(r"https:\/\/t\.me\/(?:c\/)?([^\/]+)\/([0-9]+)", link)
@@ -97,29 +98,37 @@ async def get_tg_link_content(link):
         msg = re_match(
             r"tg:\/\/openmessage\?user_id=([0-9]+)&message_id=([0-9]+)", link)
         if not user:
-            raise Exception('USER_SESSION_STRING required for this private link!')
+            raise Exception(
+                'USER_SESSION_STRING required for this private link!')
 
     chat = msg.group(1)
     msg_id = int(msg.group(2))
     if chat.isdigit():
         chat = int(chat) if private else int(f'-100{chat}')
 
-    try:
-        await bot.get_chat(chat)
-    except Exception as e:
-        private = True
-        if not user:
-            raise e
+    if not private:
+        try:
+            message = await bot.get_messages(chat_id=chat, message_ids=msg_id)
+            if message.empty:
+                private = True
+        except Exception as e:
+            private = True
+            if not user:
+                raise e
 
     if private:
-        if (message := await user.get_messages(chat_id=chat, message_ids=msg_id)) and not message.empty:
-            return message, 'user'
+        try:
+            user_message = await user.get_messages(chat_id=chat, message_ids=msg_id)
+        except:
+            raise Exception("You don't have access to this chat!")
+        if not user_message.empty:
+            return user_message, 'user'
         else:
-            raise Exception("Mostly message has been deleted!")
-    elif (message := await bot.get_messages(chat_id=chat, message_ids=msg_id)) and not message.empty:
+            raise Exception("Private: Please report!")
+    elif message:
         return message, 'bot'
     else:
-        raise Exception("Mostly message has been deleted!")
+        raise Exception("Bot can't download from GROUPS without joining!")
 
 
 async def update_all_messages(force=False):

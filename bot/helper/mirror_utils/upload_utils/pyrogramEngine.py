@@ -76,11 +76,12 @@ class TgUploader:
         elif IS_PREMIUM_USER:
             if not self.__listener.isSuperGroup:
                 await self.__listener.onUploadError('Use SuperGroup to leech with User!')
-                return
+                return False
             self.__sent_msg = await user.get_messages(chat_id=self.__listener.message.chat.id,
                                                       message_ids=self.__listener.uid)
         else:
             self.__sent_msg = self.__listener.message
+        return True
 
     async def __prepare_file(self, file_, dirpath):
         if self.__lprefix:
@@ -153,7 +154,9 @@ class TgUploader:
         self.__sent_msg = msgs_list[-1]
 
     async def upload(self, o_files, m_size, size):
-        await self.__msg_to_reply()
+        res = await self.__msg_to_reply()
+        if not res:
+            return
         await self.__user_settings()
         for dirpath, _, files in sorted(await sync_to_async(walk, self.__path)):
             if dirpath.endswith('/yt-dlp-thumb'):

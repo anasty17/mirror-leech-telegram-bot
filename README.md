@@ -688,6 +688,12 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 <p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
 
+[!["Buy Me A Coffee"](https://storage.ko-fi.com/cdn/kofi2.png)](https://ko-fi.com/anasty17)
+
+Binance ID:
+```
+52187862
+```
 USDT Address:
 
 ```

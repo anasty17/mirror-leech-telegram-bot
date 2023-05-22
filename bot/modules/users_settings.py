@@ -94,12 +94,12 @@ async def update_user_settings(query):
     await editMessage(query.message, msg, button)
 
 
-async def user_settings(client, message):
+async def user_settings(_, message):
     msg, button = await get_user_settings(message.from_user)
     await sendMessage(message, msg, button)
 
 
-async def set_yt_options(client, message, pre_event):
+async def set_yt_options(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
@@ -110,7 +110,7 @@ async def set_yt_options(client, message, pre_event):
         await DbManger().update_user_data(user_id)
 
 
-async def set_prefix(client, message, pre_event):
+async def set_prefix(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
@@ -121,7 +121,7 @@ async def set_prefix(client, message, pre_event):
         await DbManger().update_user_data(user_id)
 
 
-async def set_thumb(client, message, pre_event):
+async def set_thumb(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     path = "Thumbnails/"
@@ -138,7 +138,7 @@ async def set_thumb(client, message, pre_event):
         await DbManger().update_user_doc(user_id, 'thumb', des_dir)
 
 
-async def add_rclone(client, message, pre_event):
+async def add_rclone(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     path = f'{getcwd()}/rclone/'
@@ -153,7 +153,7 @@ async def add_rclone(client, message, pre_event):
         await DbManger().update_user_doc(user_id, 'rclone', des_dir)
 
 
-async def leech_split_size(client, message, pre_event):
+async def leech_split_size(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = min(int(message.text), MAX_SPLIT_SIZE)
@@ -178,8 +178,10 @@ async def event_handler(client, query, pfunc, photo=False, document=False):
             mtype = event.text
         user = event.from_user or event.sender_chat
         return bool(user.id == user_id and event.chat.id == query.message.chat.id and mtype)
+
     handler = client.add_handler(MessageHandler(
         pfunc, filters=create(event_filter)), group=-1)
+
     while handler_dict[user_id]:
         await sleep(0.5)
         if time() - start_time > 60:
