@@ -83,9 +83,9 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
                 bi = index
                 index += 1
                 dargs = x.split(':')
-                bulk_start = int(dargs[1]) or 0
+                bulk_start = dargs[1] or 0
                 if len(dargs) == 3:
-                    bulk_end = int(dargs[2]) or 0
+                    bulk_end = dargs[2] or 0
             else:
                 break
         if multi == 0 or len(bulk) != 0:
