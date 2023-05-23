@@ -105,11 +105,10 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         if len(bulk) == 0:
             await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
             return
-        b_msg = message.text.split(maxsplit=bi)
+        b_msg = message.text.split(maxsplit=index)
         b_msg[bi] = f'{len(bulk)}'
         b_msg.insert(index, bulk[0].replace('\\n', '\n'))
-        b_msg = " ".join(b_msg)
-        nextmsg = await sendMessage(message, b_msg)
+        nextmsg = await sendMessage(message, " ".join(b_msg))
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         nextmsg.from_user = message.from_user
         _mirror_leech(client, nextmsg, isZip, extract,
@@ -124,12 +123,11 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         if multi <= 1:
             return
         await sleep(4)
-        msg = message.text.split(maxsplit=mi+1)
+        msg = message.text.split(maxsplit=index)
         msg[mi] = f"{multi - 1}"
         if len(bulk) != 0:
             msg[index] = bulk[0]
-            msg = " ".join(msg)
-            nextmsg = await sendMessage(message, msg)
+            nextmsg = await sendMessage(message, " ".join(msg))
         else:
             msg = message.text.split(maxsplit=mi+1)
             msg[mi] = f"{multi - 1}"

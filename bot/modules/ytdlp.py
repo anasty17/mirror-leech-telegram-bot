@@ -299,11 +299,10 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}, bulk=[]
         if len(bulk) == 0:
             await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
             return
-        b_msg = mssg.split(maxsplit=bi)
+        b_msg = mssg.split(maxsplit=index)
         b_msg[bi] = f'{len(bulk)}'
         b_msg.insert(index, bulk[0])
-        b_msg = " ".join(b_msg)
-        nextmsg = await sendMessage(message, b_msg)
+        nextmsg = await sendMessage(message, " ".join(b_msg))
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         nextmsg.from_user = message.from_user
         _ytdl(client, nextmsg, isZip, isLeech, sameDir, bulk)
@@ -317,11 +316,15 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}, bulk=[]
         if multi <= 1:
             return
         await sleep(4)
-        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-        ymsg = mssg.split(maxsplit=mi+1)
+        ymsg = mssg.split(maxsplit=index)
         ymsg[mi] = f'{multi - 1}'
-        nextmsg = await sendMessage(nextmsg, ' '.join(ymsg))
-        nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
+        if len(bulk) != 0:
+            ymsg[index] = bulk[0]
+            nextmsg = await sendMessage(message, " ".join(msg))
+        else:
+            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
+            nextmsg = await sendMessage(nextmsg, ' '.join(ymsg))
+            nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         if len(folder_name) > 0:
             sameDir.add(nextmsg.id)
         nextmsg.from_user = message.from_user
