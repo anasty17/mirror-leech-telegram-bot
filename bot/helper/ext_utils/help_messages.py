@@ -39,7 +39,7 @@ If you want to add path manually from your config (uploaded from usetting) add <
 This will override all other flags except --exclude
 Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
-<b>Bulk</b>:
+<b>Bulk Download</b>:
 Bulk can be used by text message and by replying to text file contains links seperated by new line.
 You can use it only by reply to message(text/file). Options that came after link should be added along with and after link and not with cmd.
 Example:
@@ -114,12 +114,12 @@ If you want to add path manually from your config (uploaded from usetting) add <
 This will override all other flags except --exclude
 Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
-<b>Bulk</b>:
+<b>Bulk Download</b>:
 Bulk can be used by text message and by replying to text file contains links seperated by new line.
 You can use it only by reply to message(text/file). Options that came after link should be added along with and after link and not with cmd.
 Example:
 link n: newname up: remote1:path1
-link pswd: pass(zip/unzip) \\nusername\\npassword(authentication) up: remote2:path2
+link pswd: pass(zip/unzip) up: remote2:path2 \\n{username}\\n{password}(authentication)(last option)
 Reply to this example by this cmd for example <code>/cmd</code> b(bulk) d:2:10(seed) m:folder_name(same dir)
 You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
 
