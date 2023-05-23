@@ -293,6 +293,11 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}, bulk=[]
                 if not x.startswith(('n:', 'pswd:', 'up:', 'rcf:', 'opt:')):
                     link = re_split(r' opt: | pswd: | n: | rcf: | up: ', x)[
                         0].strip()
+                    
+        if len(folder_name) > 0 and not is_bulk:
+            if not sameDir:
+                sameDir = set()
+            sameDir.add(message.id)
 
     if is_bulk:
         bulk = await extract_bulk_links(message, bulk_start, bulk_end)
