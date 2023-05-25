@@ -124,7 +124,7 @@ class MirrorLeechListener:
             cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
                    "-mx=0", f"-p{self.pswd}", path, m_path]
             for ext in GLOBAL_EXTENSION_FILTER:
-                ex_ext = f'-x!*.{ext}'
+                ex_ext = f'-xr!*.{ext}'
                 cmd.append(ex_ext)
             if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                 if self.pswd is None:

@@ -175,10 +175,10 @@ async def clone(client, message):
 
     if len(args) > 1:
         arg = args[1].strip()
-        if not arg.startswith(('up:', 'rcf:')):
-            link = re_split(r' up: | rcf: ', arg)[0].strip()
+        if not link.startswith(('up:', 'rcf:')):
+            link = re_split(r' up: | rcf: ', link)[0].strip()
         if arg.isdigit():
-            multi = int(arg)
+            multi = int(link)
             link = ''
 
     if len(link) == 0 and (reply_to := message.reply_to_message):
