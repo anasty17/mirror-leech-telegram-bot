@@ -8,7 +8,7 @@ from asyncio import create_subprocess_exec, sleep, Event
 
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, \
     MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, \
-    queued_dl, queue_dict_lock
+    queued_dl, queue_dict_lock, GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, clean_download, clean_target, \
     is_first_archive_split, is_archive, is_archive_split
@@ -69,7 +69,12 @@ class MirrorLeechListener:
 
     async def onDownloadComplete(self):
         if len(self.sameDir) > 0:
-            await sleep(8)
+            await sleep(3)
+            for _ in range(10):
+                if len(self.sameDir) > 1:
+                    break
+                else:
+                    await sleep(1)
         multi_links = False
         async with download_dict_lock:
             if len(self.sameDir) > 1:
@@ -118,6 +123,9 @@ class MirrorLeechListener:
                 'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
             cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
                    "-mx=0", f"-p{self.pswd}", path, m_path]
+            for ext in GLOBAL_EXTENSION_FILTER:
+                ex_ext = f'-x!*.{ext}'
+                cmd.append(ex_ext)
             if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
                 if self.pswd is None:
                     del cmd[4]

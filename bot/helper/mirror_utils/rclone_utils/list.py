@@ -9,7 +9,8 @@ from functools import partial
 from json import loads
 from time import time
 
-from bot import LOGGER
+from bot import LOGGER, config_dict
+from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.ext_utils.bot_utils import cmd_exec, new_thread, get_readable_file_size, new_task, get_readable_time
@@ -70,6 +71,13 @@ async def path_updates(client, query, obj):
     elif data[1] == 'cur':
         await message.delete()
         obj.event.set()
+    elif data[1] == 'def':
+        path = f'{obj.remote}{obj.path}' if obj.config_path == 'rclone.conf' else f'mrcc:{obj.remote}{obj.path}'
+        if path != config_dict['RCLONE_PATH']:
+            config_dict['RCLONE_PATH'] = path
+            await obj.get_path_buttons()
+            if config_dict['DATABASE_URL']:
+                await DbManger().update_config({'RCLONE_PATH': path})
     elif data[1] == 'owner':
         obj.config_path = 'rclone.conf'
         obj.path = ''
@@ -162,6 +170,9 @@ class RcloneList:
         if self.list_status == 'rcu' or len(self.path_list) > 0:
             buttons.ibutton('Choose Current Path',
                             'rcq cur', position='footer')
+        if self.list_status == 'rcu':
+            buttons.ibutton('Set as Default Path',
+                            'rcq def', position='footer')
         if self.path or len(self.__sections) > 1 or self.__rc_user and self.__rc_owner:
             buttons.ibutton('Back', 'rcq back pa', position='footer')
         if self.path:
@@ -170,6 +181,9 @@ class RcloneList:
         button = buttons.build_menu(f_cols=2)
         msg = 'Choose Path:' + ('\nTransfer Type: <i>Download</i>' if self.list_status ==
                                 'rcd' else '\nTransfer Type: <i>Upload</i>')
+        if self.list_status == 'rcu':
+            default_path = config_dict['RCLONE_PATH']
+            msg += f"\nDefault Rclone Path: {default_path}" if default_path else ''
         msg += f'\n\nItems: {items_no}'
         if items_no > LIST_LIMIT:
             msg += f' | Page: {int(page)}/{pages} | Page Step: {self.page_step}'

@@ -174,16 +174,15 @@ async def clone(client, message):
         tag = message.from_user.mention
 
     if len(args) > 1:
-        link = args[1].strip()
+        arg = args[1].strip()
         if not link.startswith(('up:', 'rcf:')):
             link = re_split(r' up: | rcf: ', link)[0].strip()
-        if link.isdigit():
+        if arg.isdigit():
             multi = int(link)
             link = ''
 
-    if reply_to := message.reply_to_message:
-        if len(link) == 0:
-            link = reply_to.text.split('\n', 1)[0].strip()
+    if len(link) == 0 and (reply_to := message.reply_to_message):
+        link = reply_to.text.split('\n', 1)[0].strip()
 
     rcf = text.split(' rcf: ', 1)
     rcf = re_split(' up: ', rcf[1])[0].strip() if len(rcf) > 1 else None
@@ -206,7 +205,7 @@ async def clone(client, message):
 
     __run_multi()
 
-    if not link:
+    if len(link) == 0:
         await sendMessage(message, CLONE_HELP_MESSAGE)
         return
 

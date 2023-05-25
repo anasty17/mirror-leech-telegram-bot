@@ -26,7 +26,7 @@ from bot.helper.ext_utils.bulk_links import extract_bulk_links
 
 
 @new_task
-async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir={}, bulk=[]):
+async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=False, isLeech=False, sameDir=None, bulk=[]):
     mesg = message.text.split('\n')
     message_args = mesg[0].split(maxsplit=1)
     ratio = None
@@ -97,7 +97,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
             ratio = None
             seed_time = None
             if not is_bulk:
-                if not sameDir:
+                if sameDir is None:
                     sameDir = set()
                 sameDir.add(message.id)
 

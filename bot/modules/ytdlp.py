@@ -239,7 +239,7 @@ async def _mdisk(link, name):
 
 
 @new_task
-async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}, bulk=[]):
+async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=[]):
     mssg = message.text
     user_id = message.from_user.id
     qual = ''
@@ -295,7 +295,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir={}, bulk=[]
                         0].strip()
                     
         if len(folder_name) > 0 and not is_bulk:
-            if not sameDir:
+            if sameDir is None:
                 sameDir = set()
             sameDir.add(message.id)
 
