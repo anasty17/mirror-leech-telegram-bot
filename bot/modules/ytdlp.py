@@ -296,8 +296,8 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
                     
         if len(folder_name) > 0 and not is_bulk:
             if sameDir is None:
-                sameDir = set()
-            sameDir.add(message.id)
+                sameDir = {'total': multi, 'tasks': set()}
+            sameDir['tasks'].add(message.id)
 
     if is_bulk:
         bulk = await extract_bulk_links(message, bulk_start, bulk_end)
@@ -331,7 +331,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
             nextmsg = await sendMessage(nextmsg, ' '.join(ymsg))
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         if len(folder_name) > 0:
-            sameDir.add(nextmsg.id)
+            sameDir['tasks'].add(nextmsg.id)
         nextmsg.from_user = message.from_user
         await sleep(4)
         _ytdl(client, nextmsg, isZip, isLeech, sameDir, bulk)
