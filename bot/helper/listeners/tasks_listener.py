@@ -407,7 +407,7 @@ class MirrorLeechListener:
             if self.uid in download_dict.keys():
                 del download_dict[self.uid]
             count = len(download_dict)
-            if self.uid in self.sameDir['tasks']:
+            if self.sameDir and self.uid in self.sameDir['tasks']:
                 self.sameDir['tasks'].remove(self.uid)
                 self.sameDir['total'] -= 1
         msg = f"{self.tag} Download: {escape(error)}"
