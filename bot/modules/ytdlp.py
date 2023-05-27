@@ -269,9 +269,6 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
                 index += 1
                 if len(marg) > 1:
                     folder_name = f'/{marg[1]}'
-                    if not sameDir:
-                        sameDir = set()
-                    sameDir.add(message.id)
             elif x == 'b':
                 is_bulk = True
                 bi = index
