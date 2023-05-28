@@ -6,7 +6,7 @@ This is a Telegram Bot written in Python for mirroring files on the Internet to 
 
 In each single file there is a major change from base code, it's almost totaly different. Here some of features and fixes that I remember.
 
-### qBittorrent
+### qBittorrent.
 
 - Qbittorrent support
 - Select files from Torrent before and while downloading
