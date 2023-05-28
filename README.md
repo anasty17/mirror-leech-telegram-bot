@@ -236,7 +236,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 
 ### Rclone
 
-- `RCLONE_PATH`: Default rclone path to which you want to upload all the mirrors using rclone. `Str`
+- `RCLONE_PATH`: Default rclone path to which you want to upload all the files/folders using rclone. `Str`
 - `RCLONE_FLAGS`: key:value|key|key|key:value . Check here all [RcloneFlags](https://rclone.org/flags/). `Str`
 - `RCLONE_SERVE_URL`: Valid URL where the bot is deployed to use rclone serve. Format of URL should be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so write it in this format `http://myip:port` (`http` and not `https`). `Str`
 - `RCLONE_SERVE_PORT`: Which is the **RCLONE_SERVE_URL** Port. Default is `8080`. `Int`
