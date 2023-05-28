@@ -117,7 +117,7 @@ class RcloneTransferHelper:
                     cmd[6] = f"{remote}:{cmd[6].split(':', 1)[1]}"
                     if self.__is_cancelled:
                         return
-                    return self.__start_download(cmd, remote_type)
+                    return await self.__start_download(cmd, remote_type)
                 else:
                     LOGGER.info(
                         f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
@@ -140,7 +140,7 @@ class RcloneTransferHelper:
                 LOGGER.info(f'Download with service account {remote}')
 
         rcflags = self.__listener.rcFlags or config_dict['RCLONE_FLAGS']
-        cmd = await self.__getUpdatedCommand(config_path, f'{remote}:{rc_path}', path, rcflags, 'copy')
+        cmd = self.__getUpdatedCommand(config_path, f'{remote}:{rc_path}', path, rcflags, 'copy')
 
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
             cmd.append('--drive-acknowledge-abuse')
@@ -193,7 +193,7 @@ class RcloneTransferHelper:
                 if self.__sa_number != 0 and self.__sa_count < self.__sa_number:
                     remote = self.__switchServiceAccount()
                     cmd[7] = f"{remote}:{cmd[7].split(':', 1)[1]}"
-                    return False if self.__is_cancelled else self.__start_upload(cmd, remote_type)
+                    return False if self.__is_cancelled else await self.__start_upload(cmd, remote_type)
                 else:
                     LOGGER.info(
                         f"Reached maximum number of service accounts switching, which is {self.__sa_count}")
@@ -239,7 +239,7 @@ class RcloneTransferHelper:
 
         rcflags = self.__listener.rcFlags or config_dict['RCLONE_FLAGS']
         method = 'move' if not self.__listener.seed or self.__listener.newDir else 'copy'
-        cmd = await self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags, method)
+        cmd = self.__getUpdatedCommand(fconfig_path, path, f'{fremote}:{rc_path}', rcflags, method)
         if remote_type == 'drive' and not config_dict['RCLONE_FLAGS'] and not self.__listener.rcFlags:
             cmd.extend(('--drive-chunk-size', '64M',
                        '--drive-upload-cutoff', '32M'))
@@ -282,7 +282,7 @@ class RcloneTransferHelper:
 
         src_remote_type, dst_remote_type = src_remote_opts['type'], dst_remote_opt['type']
 
-        cmd = await self.__getUpdatedCommand(config_path, f'{src_remote}:{src_path}', destination, rcflags, 'copy')
+        cmd = self.__getUpdatedCommand(config_path, f'{src_remote}:{src_path}', destination, rcflags, 'copy')
         if not rcflags:
             if src_remote_type == 'drive' and dst_remote_type != 'drive':
                 cmd.append('--drive-acknowledge-abuse')
@@ -328,7 +328,7 @@ class RcloneTransferHelper:
                     return None, None
 
     @staticmethod
-    async def __getUpdatedCommand(config_path, source, destination, rcflags, method):
+    def __getUpdatedCommand(config_path, source, destination, rcflags, method):
         ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
         cmd = ['rclone', method, '--fast-list', '--config', config_path, '-P', source, destination,
                '--exclude', ext, '--ignore-case', '--low-level-retries', '1', '-M', '--log-file',

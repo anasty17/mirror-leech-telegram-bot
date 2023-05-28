@@ -322,7 +322,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
         ymsg[mi] = f'{multi - 1}'
         if len(bulk) != 0:
             ymsg[index] = bulk[0]
-            nextmsg = await sendMessage(message, " ".join(msg))
+            nextmsg = await sendMessage(message, " ".join(ymsg))
         else:
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
             nextmsg = await sendMessage(nextmsg, ' '.join(ymsg))
