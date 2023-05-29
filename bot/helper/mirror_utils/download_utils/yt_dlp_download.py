@@ -65,7 +65,11 @@ class YoutubeDLHelper:
                      'allow_playlist_files': True,
                      'overwrites': True,
                      'writethumbnail': True,
-                     'trim_file_name': 230}
+                     'trim_file_name': 230,
+                     'retry_sleep_functions': {'http': lambda x: 2,
+                                               'fragment': lambda x: 2,
+                                               'file_access': lambda x: 2,
+                                               'extractor': lambda x: 2}}
 
     @property
     def download_speed(self):
@@ -222,11 +226,11 @@ class YoutubeDLHelper:
         if self.is_playlist:
             self.opts['outtmpl'] = {'default': f"{path}/{self.name}/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s",
                                     'thumbnail': f"{path}/yt-dlp-thumb/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s"}
-        elif not options:
-            self.opts['outtmpl'] = {'default': f"{path}/{self.name}",
+        elif any(key in options for key in ['writedescription', 'writeinfojson', 'writeannotations', 'writedesktoplink', 'writewebloclink', 'writeurllink', 'writesubtitles', 'writeautomaticsub']):
+            self.opts['outtmpl'] = {'default': f"{path}/{base_name}/{self.name}",
                                     'thumbnail': f"{path}/yt-dlp-thumb/{base_name}.%(ext)s"}
         else:
-            self.opts['outtmpl'] = {'default': f"{path}/{base_name}/{self.name}",
+            self.opts['outtmpl'] = {'default': f"{path}/{self.name}",
                                     'thumbnail': f"{path}/yt-dlp-thumb/{base_name}.%(ext)s"}
             self.name = base_name
 

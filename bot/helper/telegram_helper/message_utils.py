@@ -116,7 +116,7 @@ async def get_tg_link_content(link):
             if not user:
                 raise e
 
-    if private:
+    if private and user:
         try:
             user_message = await user.get_messages(chat_id=chat, message_ids=msg_id)
         except:
@@ -125,7 +125,7 @@ async def get_tg_link_content(link):
             return user_message, 'user'
         else:
             raise Exception("Private: Please report!")
-    elif message:
+    elif not private:
         return message, 'bot'
     else:
         raise Exception("Bot can't download from GROUPS without joining!")

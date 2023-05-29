@@ -388,6 +388,9 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
             if not await aiopath.exists(config_path):
                 await sendMessage(message, f'Rclone Config: {config_path} not Exists!')
                 return
+        if up != 'gd' and not is_rclone_path(up):
+            await sendMessage(message, 'Wrong Rclone Upload Destination!')
+            return
 
     if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')

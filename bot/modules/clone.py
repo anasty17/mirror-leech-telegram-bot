@@ -48,6 +48,9 @@ async def rcloneNode(client, message, link, dst_path, rcf, tag):
             return
 
     dst_path = (dst_path or config_dict['RCLONE_PATH']).strip('/')
+    if not is_rclone_path(dst_path):
+        await sendMessage(message, 'Wrong Rclone Clone Destination!')
+        return
     if dst_path.startswith('mrcc:'):
         if config_path != f'rclone/{message.from_user.id}.conf':
             await sendMessage(message, 'You should use same rclone.conf to clone between pathies!')
