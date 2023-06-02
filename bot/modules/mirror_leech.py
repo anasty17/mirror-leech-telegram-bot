@@ -123,7 +123,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
     async def __run_multi():
         if multi <= 1:
             return
-        await sleep(4)
+        await sleep(5)
         msg = message.text.split(maxsplit=index)
         msg[mi] = f"{multi - 1}"
         if len(bulk) != 0:
@@ -138,7 +138,7 @@ async def _mirror_leech(client, message, isZip=False, extract=False, isQbit=Fals
         if len(folder_name) > 0:
             sameDir['tasks'].add(nextmsg.id)
         nextmsg.from_user = message.from_user
-        await sleep(4)
+        await sleep(5)
         _mirror_leech(client, nextmsg, isZip, extract,
                       isQbit, isLeech, sameDir, bulk)
 

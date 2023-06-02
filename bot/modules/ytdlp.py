@@ -317,7 +317,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
     async def __run_multi():
         if multi <= 1:
             return
-        await sleep(4)
+        await sleep(5)
         ymsg = mssg.split(maxsplit=index)
         ymsg[mi] = f'{multi - 1}'
         if len(bulk) != 0:
@@ -330,7 +330,7 @@ async def _ytdl(client, message, isZip=False, isLeech=False, sameDir=None, bulk=
         if len(folder_name) > 0:
             sameDir['tasks'].add(nextmsg.id)
         nextmsg.from_user = message.from_user
-        await sleep(4)
+        await sleep(5)
         _ytdl(client, nextmsg, isZip, isLeech, sameDir, bulk)
 
     path = f'{DOWNLOAD_DIR}{message.id}{folder_name}'
