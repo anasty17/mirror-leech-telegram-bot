@@ -175,7 +175,7 @@ USER_SESSION_STRING = environ.get('USER_SESSION_STRING', '')
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     user = tgClient('user', TELEGRAM_API, TELEGRAM_HASH, session_string=USER_SESSION_STRING,
-                    parse_mode=enums.ParseMode.HTML, no_updates=True, max_concurrent_transmissions=1000).start()
+                    parse_mode=enums.ParseMode.HTML, max_concurrent_transmissions=1000).start()
     IS_PREMIUM_USER = user.me.is_premium
 
 MEGA_EMAIL = environ.get('MEGA_EMAIL', '')

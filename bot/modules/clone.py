@@ -4,9 +4,9 @@ from pyrogram.filters import command
 from random import SystemRandom
 from string import ascii_letters, digits
 from asyncio import sleep, gather
-from re import split as re_split
 from aiofiles.os import path as aiopath
 from json import loads
+from argparse import ArgumentParser
 
 from bot import LOGGER, download_dict, download_dict_lock, config_dict, bot
 from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
@@ -166,40 +166,38 @@ async def gdcloneNode(message, link, tag):
 
 @new_task
 async def clone(client, message):
-    text = message.text
-    args = text.split(maxsplit=1)
-    link = ''
-    multi = 0
+    input_list = message.text.split()
+
+    try:
+        args = parser.parse_args(input_list[1:])
+    except Exception as e:
+        await sendMessage(message, str(e))
+        return
+
+    multi = args.multi
+    dst_path = " ".join(args.upload)
+    rcf = " ".join(args.rcloneFlags)
+    link = " ".join(args.link)
+
+    if isinstance(multi, list):
+        multi = multi[0]
 
     if username := message.from_user.username:
         tag = f"@{username}"
     else:
         tag = message.from_user.mention
 
-    if len(args) > 1:
-        arg = args[1].strip()
-        if not arg.startswith(('up:', 'rcf:')):
-            link = re_split(r' up: | rcf: ', arg)[0].strip()
-        if arg.isdigit():
-            multi = int(arg)
-            link = ''
-
-    if len(link) == 0 and (reply_to := message.reply_to_message):
+    if not link and (reply_to := message.reply_to_message):
         link = reply_to.text.split('\n', 1)[0].strip()
-
-    rcf = text.split(' rcf: ', 1)
-    rcf = re_split(' up: ', rcf[1])[0].strip() if len(rcf) > 1 else None
-
-    dst_path = text.split(' up: ', 1)
-    dst_path = re_split(' rcf: ', dst_path[1])[
-        0].strip() if len(dst_path) > 1 else None
 
     @new_task
     async def __run_multi():
         if multi > 1:
             await sleep(5)
+            msg = [s.strip() for s in input_list]
+            index = msg.index('-i')
+            msg[index+1] = f"{multi - 1}"
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
-            args[1] = f"{multi - 1}"
             nextmsg = await sendMessage(nextmsg, " ".join(args))
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
             nextmsg.from_user = message.from_user
@@ -226,6 +224,13 @@ async def clone(client, message):
             return
         await gdcloneNode(message, link, tag)
 
+
+parser = ArgumentParser(description='Clone args usage:')
+
+parser.add_argument('link', nargs='*', default='')
+parser.add_argument('-i', nargs='+', default=0, dest='multi', type=int)
+parser.add_argument('-up', nargs='+', default='', dest='upload')
+parser.add_argument('-rcf', nargs='+', default='', dest='rcloneFlags')
 
 bot.add_handler(MessageHandler(clone, filters=command(
     BotCommands.CloneCommand) & CustomFilters.authorized))

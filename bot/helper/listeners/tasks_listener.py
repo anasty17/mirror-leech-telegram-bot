@@ -11,7 +11,7 @@ from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock
     queued_dl, queue_dict_lock, GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, clean_download, clean_target, \
-    is_first_archive_split, is_archive, is_archive_split
+    is_first_archive_split, is_archive, is_archive_split, join_files
 from bot.helper.ext_utils.leech_utils import split_file
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.task_manager import start_from_queued
@@ -31,16 +31,15 @@ from bot.helper.ext_utils.db_handler import DbManger
 
 
 class MirrorLeechListener:
-    def __init__(self, message, isZip=False, extract=False, isQbit=False, isLeech=False, pswd=None, tag=None, select=False, seed=False, sameDir=None, rcFlags=None, upPath=None):
+    def __init__(self, message, compress=None, extract=None, isQbit=False, isLeech=False, tag=None, select=False, seed=False, sameDir=None, rcFlags=None, upPath=None, join=False):
         if sameDir is None:
             sameDir = {}
         self.message = message
         self.uid = message.id
         self.extract = extract
-        self.isZip = isZip
+        self.compress = compress
         self.isQbit = isQbit
         self.isLeech = isLeech
-        self.pswd = pswd
         self.tag = tag
         self.seed = seed
         self.newDir = ""
@@ -51,6 +50,7 @@ class MirrorLeechListener:
         self.sameDir = sameDir
         self.rcFlags = rcFlags
         self.upPath = upPath
+        self.join = join
 
     async def clean(self):
         try:
@@ -75,16 +75,17 @@ class MirrorLeechListener:
                     break
             else:
                 break
-            await sleep(0)
+            await sleep(0.2)
+
         async with download_dict_lock:
             if self.sameDir and self.sameDir['total'] > 1:
                 self.sameDir['tasks'].remove(self.uid)
                 self.sameDir['total'] -= 1
-                folder_name = (await listdir(self.dir))[-1]
-                path = f"{self.dir}/{folder_name}"
+                folder_name = self.sameDir['name']
+                spath = f"{self.dir}/{folder_name}"
                 des_path = f"{DOWNLOAD_DIR}{list(self.sameDir['tasks'])[0]}/{folder_name}"
                 await makedirs(des_path, exist_ok=True)
-                for item in await listdir(path):
+                for item in await listdir(spath):
                     if item.endswith(('.aria2', '.!qB')):
                         continue
                     item_path = f"{self.dir}/{folder_name}/{item}"
@@ -97,76 +98,53 @@ class MirrorLeechListener:
             name = str(download.name()).replace('/', '')
             gid = download.gid()
         LOGGER.info(f"Download completed: {name}")
+
         if multi_links:
             await self.onUploadError('Downloaded! Waiting for other tasks...')
             return
+
         if name == "None" or self.isQbit or not await aiopath.exists(f"{self.dir}/{name}"):
             files = await listdir(self.dir)
             name = files[-1]
             if name == "yt-dlp-thumb":
                 name = files[0]
-        m_path = f"{self.dir}/{name}"
-        size = await get_path_size(m_path)
+
+        dl_path = f"{self.dir}/{name}"
+        up_path = ''
+        size = await get_path_size(dl_path)
         async with queue_dict_lock:
             if self.uid in non_queued_dl:
                 non_queued_dl.remove(self.uid)
         await start_from_queued()
         user_dict = user_data.get(self.message.from_user.id, {})
-        if self.isZip:
-            if self.seed and self.isLeech:
-                self.newDir = f"{self.dir}10000"
-                path = f"{self.newDir}/{name}.zip"
-            else:
-                path = f"{m_path}.zip"
-            async with download_dict_lock:
-                download_dict[self.uid] = ZipStatus(name, size, gid, self)
-            LEECH_SPLIT_SIZE = user_dict.get(
-                'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
-            cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
-                   "-mx=0", f"-p{self.pswd}", path, m_path]
-            for ext in GLOBAL_EXTENSION_FILTER:
-                ex_ext = f'-xr!*.{ext}'
-                cmd.append(ex_ext)
-            if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
-                if self.pswd is None:
-                    del cmd[4]
-                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}.0*')
-            else:
-                del cmd[1]
-                if self.pswd is None:
-                    del cmd[3]
-                LOGGER.info(f'Zip: orig_path: {m_path}, zip_path: {path}')
-            if self.suproc == 'cancelled':
-                return
-            self.suproc = await create_subprocess_exec(*cmd)
-            code = await self.suproc.wait()
-            if code == -9:
-                return
-            elif not self.seed:
-                await clean_target(m_path)
-        elif self.extract:
+
+        if self.join:
+            await join_files(dl_path)
+
+        if self.extract is not None:
+            pswd = self.extract
             try:
-                if await aiopath.isfile(m_path):
-                    path = get_base_name(m_path)
+                if await aiopath.isfile(dl_path):
+                    up_path = get_base_name(dl_path)
                 LOGGER.info(f"Extracting: {name}")
                 async with download_dict_lock:
                     download_dict[self.uid] = ExtractStatus(
                         name, size, gid, self)
-                if await aiopath.isdir(m_path):
+                if await aiopath.isdir(dl_path):
                     if self.seed:
                         self.newDir = f"{self.dir}10000"
-                        path = f"{self.newDir}/{name}"
+                        up_path = f"{self.newDir}/{name}"
                     else:
-                        path = m_path
-                    for dirpath, subdir, files in await sync_to_async(walk, m_path, topdown=False):
+                        up_path = dl_path
+                    for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
                         for file_ in files:
                             if is_first_archive_split(file_) or is_archive(file_) and not file_.endswith('.rar'):
                                 f_path = ospath.join(dirpath, file_)
                                 t_path = dirpath.replace(
                                     self.dir, self.newDir) if self.seed else dirpath
                                 cmd = [
-                                    "7z", "x", f"-p{self.pswd}", f_path, f"-o{t_path}", "-aot", "-xr!@PaxHeader"]
-                                if self.pswd is None:
+                                    "7z", "x", f"-p{pswd}", f_path, f"-o{t_path}", "-aot", "-xr!@PaxHeader"]
+                                if not pswd:
                                     del cmd[2]
                                 if self.suproc == 'cancelled' or self.suproc is not None and self.suproc.returncode == -9:
                                     return
@@ -186,12 +164,12 @@ class MirrorLeechListener:
                                     except:
                                         return
                 else:
-                    if self.seed and self.isLeech:
+                    if self.seed:
                         self.newDir = f"{self.dir}10000"
-                        path = path.replace(self.dir, self.newDir)
-                    cmd = ["7z", "x", f"-p{self.pswd}", m_path,
-                           f"-o{path}", "-aot", "-xr!@PaxHeader"]
-                    if self.pswd is None:
+                        up_path = up_path.replace(self.dir, self.newDir)
+                    cmd = ["7z", "x", f"-p{pswd}", dl_path,
+                           f"-o{up_path}", "-aot", "-xr!@PaxHeader"]
+                    if not pswd:
                         del cmd[2]
                     if self.suproc == 'cancelled':
                         return
@@ -200,29 +178,69 @@ class MirrorLeechListener:
                     if code == -9:
                         return
                     elif code == 0:
-                        LOGGER.info(f"Extracted Path: {path}")
+                        LOGGER.info(f"Extracted Path: {up_path}")
                         if not self.seed:
                             try:
-                                await aioremove(m_path)
+                                await aioremove(dl_path)
                             except:
                                 return
                     else:
                         LOGGER.error(
                             'Unable to extract archive! Uploading anyway')
                         self.newDir = ""
-                        path = m_path
+                        up_path = dl_path
             except NotSupportedExtractionArchive:
                 LOGGER.info("Not any valid archive, uploading file as it is.")
                 self.newDir = ""
-                path = m_path
-        else:
-            path = m_path
-        up_dir, up_name = path.rsplit('/', 1)
+                up_path = dl_path
+
+        if self.compress is not None:
+            pswd = self.compress
+            if up_path != dl_path:
+                dl_path = up_path
+                up_path = f"{up_path}.zip"
+            elif self.seed and self.isLeech:
+                self.newDir = f"{self.dir}10000"
+                up_path = f"{self.newDir}/{name}.zip"
+            else:
+                up_path = f"{dl_path}.zip"
+            async with download_dict_lock:
+                download_dict[self.uid] = ZipStatus(name, size, gid, self)
+            LEECH_SPLIT_SIZE = user_dict.get(
+                'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
+            cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
+                   "-mx=0", f"-p{pswd}", up_path, dl_path]
+            for ext in GLOBAL_EXTENSION_FILTER:
+                ex_ext = f'-xr!*.{ext}'
+                cmd.append(ex_ext)
+            if self.isLeech and int(size) > LEECH_SPLIT_SIZE:
+                if not pswd:
+                    del cmd[4]
+                LOGGER.info(
+                    f'Zip: orig_path: {dl_path}, zip_path: {up_path}.0*')
+            else:
+                del cmd[1]
+                if not pswd:
+                    del cmd[3]
+                LOGGER.info(f'Zip: orig_path: {dl_path}, zip_path: {up_path}')
+            if self.suproc == 'cancelled':
+                return
+            self.suproc = await create_subprocess_exec(*cmd)
+            code = await self.suproc.wait()
+            if code == -9:
+                return
+            elif not self.seed:
+                await clean_target(dl_path)
+
+        if self.compress is None and self.extract is None:
+            up_path = dl_path
+
+        up_dir, up_name = up_path.rsplit('/', 1)
         size = await get_path_size(up_dir)
         if self.isLeech:
             m_size = []
             o_files = []
-            if not self.isZip:
+            if self.compress is None:
                 checked = False
                 LEECH_SPLIT_SIZE = user_dict.get(
                     'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
@@ -292,7 +310,7 @@ class MirrorLeechListener:
             await update_all_messages()
             await tg.upload(o_files, m_size, size)
         elif self.upPath == 'gd':
-            size = await get_path_size(path)
+            size = await get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
             drive = GoogleDriveHelper(up_name, up_dir, self)
             upload_status = GdriveStatus(drive, size, self.message, gid, 'up')
@@ -301,14 +319,14 @@ class MirrorLeechListener:
             await update_all_messages()
             await sync_to_async(drive.upload, up_name, size)
         else:
-            size = await get_path_size(path)
+            size = await get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
             RCTransfer = RcloneTransferHelper(self, up_name)
             async with download_dict_lock:
                 download_dict[self.uid] = RcloneStatus(
                     RCTransfer, self.message, gid, 'up')
             await update_all_messages()
-            await RCTransfer.upload(path, size)
+            await RCTransfer.upload(up_path, size)
 
     async def onUploadComplete(self, link, size, files, folders, mime_type, name, rclonePath=''):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
@@ -376,10 +394,10 @@ class MirrorLeechListener:
             msg += f'\n\n<b>cc: </b>{self.tag}'
             await sendMessage(self.message, msg, button)
             if self.seed:
-                if self.isZip:
-                    await clean_target(f"{self.dir}/{name}")
-                elif self.newDir:
+                if self.newDir:
                     await clean_target(self.newDir)
+                elif self.compress is not None:
+                    await clean_target(f"{self.dir}/{name}")
                 async with queue_dict_lock:
                     if self.uid in non_queued_up:
                         non_queued_up.remove(self.uid)

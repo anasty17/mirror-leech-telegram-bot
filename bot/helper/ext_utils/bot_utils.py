@@ -3,12 +3,11 @@ from re import match as re_match
 from time import time
 from html import escape
 from psutil import virtual_memory, cpu_percent, disk_usage
-from requests import head as rhead
-from urllib.request import urlopen
 from asyncio import create_subprocess_exec, create_subprocess_shell, run_coroutine_threadsafe, sleep
 from asyncio.subprocess import PIPE
 from functools import partial, wraps
 from concurrent.futures import ThreadPoolExecutor
+from aiohttp import ClientSession
 
 from bot import download_dict, download_dict_lock, botStartTime, user_data, config_dict, bot_loop
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -223,8 +222,10 @@ def is_url(url):
 def is_gdrive_link(url):
     return "drive.google.com" in url
 
+
 def is_telegram_link(url):
     return url.startswith(('https://t.me/', 'tg://openmessage?user_id='))
+
 
 def is_share_link(url):
     return bool(re_match(r'https?:\/\/.+\.gdtot\.\S+|https?:\/\/(filepress|filebee|appdrive|gdflix)\.\S+', url))
@@ -242,18 +243,10 @@ def get_mega_link_type(url):
     return "folder" if "folder" in url or "/#F!" in url else "file"
 
 
-def get_content_type(link):
-    try:
-        res = rhead(link, allow_redirects=True, timeout=5,
-                    headers={'user-agent': 'Wget/1.12'})
-        content_type = res.headers.get('content-type')
-    except:
-        try:
-            res = urlopen(link, timeout=5)
-            content_type = res.info().get_content_type()
-        except:
-            content_type = None
-    return content_type
+async def get_content_type(url):
+    async with ClientSession(trust_env=True) as session:
+        async with session.get(url) as response:
+            return response.headers.get('Content-Type')
 
 
 def update_user_ldata(id_, key, value):

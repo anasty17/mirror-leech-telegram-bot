@@ -125,6 +125,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Queueing System for all tasks
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Bulk download from telegram txt file or text message contains links seperated by new line
+- Join splitted files that have splitted before by split linux pkg
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 
@@ -409,23 +410,13 @@ sudo docker image prune -a
 
 ```
 mirror - or /m Mirror
-zipmirror - or /zm Mirror and upload as zip
-unzipmirror - or /uzm Mirror and extract files
 qbmirror - or /qm Mirror torrent using qBittorrent
-qbzipmirror - or /qzm Mirror torrent using qb and upload as zip
-qbunzipmirror - or /quzm Mirror torrent using qb and extract files
 leech - or /l Leech
-zipleech - or /zl Leech and upload as zip
-unzipleech - or /uzl Leech and extract files
 qbleech - or /ql Leech torrent using qBittorrent
-qbzipleech - or /qzl Leech torrent using qb and upload as zip
-qbunzipleech - or /quzl Leech torrent using qb and extract
+ytdl - or /y Mirror yt-dlp supported link
+ytdlleech - or /yl Leech through yt-dlp supported link
 clone - Copy file/folder to Drive
 count - Count file/folder from Drive
-ytdl - or /y Mirror yt-dlp supported link
-ytdlzip - or /yz Mirror yt-dlp supported link as zip
-ytdlleech - or /yl Leech through yt-dlp supported link
-ytdlzipleech - or /yzl Leech yt-dlp support link as zip
 usetting - User settings
 bsetting - Bot settings
 status - Get Mirror Status message
@@ -506,8 +497,7 @@ python3 generate_drive_token.py
 
 ## Bittorrent Seed
 
-- Add `d:ratio:time` perfix along with leech or mirror cmd.
-- Using `d` perfix alone will lead to use global options for aria2c or qbittorrent.
+- Using `-d` argument alone will lead to use global options for aria2c or qbittorrent.
 
 ### Qbittorrent
 
@@ -692,9 +682,11 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 [!["Buy Me A Coffee"](https://storage.ko-fi.com/cdn/kofi2.png)](https://ko-fi.com/anasty17)
 
 Binance ID:
+
 ```
 52187862
 ```
+
 USDT Address:
 
 ```

@@ -6,6 +6,7 @@ from re import match as re_match
 
 from bot import config_dict, LOGGER, status_reply_dict, status_reply_dict_lock, Interval, bot, user, download_dict_lock
 from bot.helper.ext_utils.bot_utils import get_readable_message, setInterval, sync_to_async
+from bot.helper.ext_utils.exceptions import TgLinkException
 
 
 async def sendMessage(message, text, buttons=None):
@@ -98,7 +99,7 @@ async def get_tg_link_content(link):
         msg = re_match(
             r"tg:\/\/openmessage\?user_id=([0-9]+)&message_id=([0-9]+)", link)
         if not user:
-            raise Exception(
+            raise TgLinkException(
                 'USER_SESSION_STRING required for this private link!')
 
     chat = msg.group(1)
@@ -119,16 +120,18 @@ async def get_tg_link_content(link):
     if private and user:
         try:
             user_message = await user.get_messages(chat_id=chat, message_ids=msg_id)
-        except:
-            raise Exception("You don't have access to this chat!")
+        except Exception as e:
+            raise TgLinkException(
+                f"You don't have access to this chat!. ERROR: {e}") from e
         if not user_message.empty:
             return user_message, 'user'
         else:
-            raise Exception("Private: Please report!")
+            raise TgLinkException("Private: Please report!")
     elif not private:
         return message, 'bot'
     else:
-        raise Exception("Bot can't download from GROUPS without joining!")
+        raise TgLinkException(
+            "Bot can't download from GROUPS without joining!")
 
 
 async def update_all_messages(force=False):

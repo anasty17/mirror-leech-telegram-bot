@@ -47,9 +47,9 @@ async def __onDownloadStarted(api, gid):
                 download = download.live
             LOGGER.info('Checking File/Folder if already in Drive...')
             name = download.name
-            if listener.isZip:
+            if listener.compress is not None:
                 name = f"{name}.zip"
-            elif listener.extract:
+            elif listener.extract is not None:
                 try:
                     name = get_base_name(name)
                 except:
