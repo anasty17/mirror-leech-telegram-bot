@@ -74,11 +74,11 @@ Note: Doesn't work with torrents.
 <b>Direct link authorization</b>: -au -ap
 <code>/cmd</code> link -au username -ap password
 
-<b>Extarct/Zip</b>: -e -z
+<b>Extract/Zip</b>: -e -z
 <code>/cmd</code> link -e password (extract password protected)
 <code>/cmd</code> link -z password (zip password protected)
-<code>/cmd</code> link -z password -e (extarct and zip password protected)
-<code>/cmd</code> link -e password -z password (extarct password protected and zip password protected)
+<code>/cmd</code> link -z password -e (extract and zip password protected)
+<code>/cmd</code> link -e password -z password (extract password protected and zip password protected)
 Note: When both extract and zip added with cmd it will extract first and then zip, so always extract first
 
 <b>Bittorrent selection</b>: -s
@@ -121,7 +121,7 @@ Reply to this example by this cmd for example <code>/cmd</code> -b(bulk)
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
 
 <b>Join Splitted Files</b>: -j
-This option will only work before extarct and zip, so mostly it will be used with -m argument (samedir)
+This option will only work before extract and zip, so mostly it will be used with -m argument (samedir)
 By Reply:
 <code>/cmd</code> -i 3 -j -m folder name
 <code>/cmd</code> -b -j -m folder name
