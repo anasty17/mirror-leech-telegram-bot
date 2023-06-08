@@ -47,12 +47,13 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
 <b>Bulk Download</b>: -b
 Bulk can be used by text message and by replying to text file contains links seperated by new line.
-You can use it only by reply to message(text/file). Options that came after link should be added along with and after link and not with cmd.
+You can use it only by reply to message(text/file).
+All options should be along with link!
 Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -opt ytdlpoptions
-Note: All options should be along with link! You can't add -m arg for some links only, do it for all links or use multi without bulk!
+Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
 link pswd: pass(zip/unzip) opt: ytdlpoptions up: remote2:path2
 Reply to this example by this cmd for example <code>/cmd</code> b(bulk) m:folder_name(same dir)
 You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
@@ -111,12 +112,13 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
 <b>Bulk Download</b>: -b
 Bulk can be used by text message and by replying to text file contains links seperated by new line.
-You can use it only by reply to message(text/file). Options that came after link should be added along with and after link and not with cmd.
+You can use it only by reply to message(text/file).
+All options should be along with link!
 Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -up remote2:path2
-Note: All options should be along with link! You can't add -m arg for some links only, do it for all links or use multi without bulk!
+Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
 Reply to this example by this cmd for example <code>/cmd</code> -b(bulk)
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
 
