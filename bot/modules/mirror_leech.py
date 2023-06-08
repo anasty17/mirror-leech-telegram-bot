@@ -93,7 +93,11 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
         sameDir['tasks'].add(message.id)
 
     if isBulk:
-        bulk = await extract_bulk_links(message, bulk_start, bulk_end)
+        try:
+            bulk = await extract_bulk_links(message, bulk_start, bulk_end)
+        except:
+            await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
+            return
         if len(bulk) == 0:
             await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
             return
@@ -123,7 +127,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
         index = msg.index('-i')
         msg[index+1] = f"{multi - 1}"
         if len(bulk) != 0:
-            msg.insert(1, bulk[0])
+            msg[1] = bulk[0]
             nextmsg = await sendMessage(message, " ".join(msg))
         else:
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
