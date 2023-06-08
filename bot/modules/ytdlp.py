@@ -246,8 +246,8 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
 
     try:
         args = parser.parse_args(input_list[1:])
-    except Exception as e:
-        await sendMessage(message, str(e))
+    except:
+        await sendMessage(message, YT_HELP_MESSAGE)
         return
 
     select = args.select
@@ -285,18 +285,15 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
         sameDir['tasks'].add(message.id)
 
     if isBulk:
-        bulk = await extract_bulk_links(message, bulk_start, bulk_end)
-        if len(bulk) == 0:
-            await sendMessage(message, 'Reply to text file or to tg message that have links seperated by new line!')
+        try:
+            bulk = await extract_bulk_links(message, bulk_start, bulk_end)
+            if len(bulk) == 0:
+                raise ValueError('Bulk Empty!')
+        except:
+            await sendMessage(message, 'Reply to text file or tg message that have links seperated by new line!')
             return
-        b_msg = [s.strip() for s in input_list]
-        index = b_msg.index('-b')
-        b_msg[index] = '-i'
-        if bulk_start or bulk_end:
-            b_msg[index+1] = f'{len(bulk)}'
-        else:
-            b_msg.insert(index+1, f'{len(bulk)}')
-        b_msg.insert(1, bulk[0])
+        b_msg = input_list[:1]
+        b_msg.append(f'{bulk[0]} -i {len(bulk)}')
         nextmsg = await sendMessage(message, " ".join(b_msg))
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)
         nextmsg.from_user = message.from_user
@@ -311,13 +308,14 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
         if multi <= 1:
             return
         await sleep(5)
-        msg = [s.strip() for s in input_list]
-        index = msg.index('-i')
-        msg[index+1] = f"{multi - 1}"
         if len(bulk) != 0:
-            msg[1] = bulk[0]
+            msg = input_list[:1]
+            msg.append(f'{bulk[0]} -i {multi - 1}')
             nextmsg = await sendMessage(message, " ".join(msg))
         else:
+            msg = [s.strip() for s in input_list]
+            index = msg.index('-i')
+            msg[index+1] = f"{multi - 1}"
             nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=message.reply_to_message_id + 1)
             nextmsg = await sendMessage(nextmsg, " ".join(msg))
         nextmsg = await client.get_messages(chat_id=message.chat.id, message_ids=nextmsg.id)

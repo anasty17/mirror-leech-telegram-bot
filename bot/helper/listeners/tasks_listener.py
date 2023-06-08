@@ -196,7 +196,7 @@ class MirrorLeechListener:
 
         if self.compress is not None:
             pswd = self.compress
-            if up_path != dl_path:
+            if up_path:
                 dl_path = up_path
                 up_path = f"{up_path}.zip"
             elif self.seed and self.isLeech:

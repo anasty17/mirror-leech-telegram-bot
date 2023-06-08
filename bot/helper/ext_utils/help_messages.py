@@ -52,7 +52,7 @@ Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -opt ytdlpoptions
-Note: You can't add -m arg along with links! -m(samedir) can be only used along with cmd.
+Note: All options should be along with link! You can't add -m arg for some links only, do it for all links or use multi without bulk!
 link pswd: pass(zip/unzip) opt: ytdlpoptions up: remote2:path2
 Reply to this example by this cmd for example <code>/cmd</code> b(bulk) m:folder_name(same dir)
 You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
@@ -74,11 +74,11 @@ Note: Doesn't work with torrents.
 <b>Direct link authorization</b>: -au -ap
 <code>/cmd</code> link -au username -ap password
 
-<b>Extarct/Zip</b>: -e -z
+<b>Extract/Zip</b>: -e -z
 <code>/cmd</code> link -e password (extract password protected)
 <code>/cmd</code> link -z password (zip password protected)
-<code>/cmd</code> link -z password -e (extarct and zip password protected)
-<code>/cmd</code> link -e password -z password (extarct password protected and zip password protected)
+<code>/cmd</code> link -z password -e (extract and zip password protected)
+<code>/cmd</code> link -e password -z password (extract password protected and zip password protected)
 Note: When both extract and zip added with cmd it will extract first and then zip, so always extract first
 
 <b>Bittorrent selection</b>: -s
@@ -116,12 +116,12 @@ Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -up remote2:path2
-Note: You can't add -m arg along with links! -m(samedir) can be only used along with cmd.
+Note: All options should be along with link! You can't add -m arg for some links only, do it for all links or use multi without bulk!
 Reply to this example by this cmd for example <code>/cmd</code> -b(bulk)
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
 
 <b>Join Splitted Files</b>: -j
-This option will only work before extarct and zip, so mostly it will be used with -m argument (samedir)
+This option will only work before extract and zip, so mostly it will be used with -m argument (samedir)
 By Reply:
 <code>/cmd</code> -i 3 -j -m folder name
 <code>/cmd</code> -b -j -m folder name
@@ -170,13 +170,18 @@ Filter Notes:
 Timeout: 60 sec.
 """
 
-CLONE_HELP_MESSAGE = """Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command
+CLONE_HELP_MESSAGE = """
+Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
+
 <b>Multi links only by replying to first gdlink or rclone_path:</b>
 <code>/cmd</code> -i 10(number of links/pathies)
+
 <b>Gdrive:</b>
 <code>/cmd</code> gdrivelink
+
 <b>Rclone:</b>
 <code>/cmd</code> (rcl or rclone_path) -up (rcl or rclone_path) -rcf |flagkey:flagvalue|flagkey|flagkey:flagvalue
+
 Notes:
 1. If -up not specified then rclone destination will be the RCLONE_PATH from config.env
 2. When use -rcf start it with `|` to avoid reading it as bot argument.

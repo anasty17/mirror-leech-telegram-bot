@@ -170,8 +170,8 @@ async def clone(client, message):
 
     try:
         args = parser.parse_args(input_list[1:])
-    except Exception as e:
-        await sendMessage(message, str(e))
+    except:
+        await sendMessage(message, CLONE_HELP_MESSAGE)
         return
 
     multi = args.multi
