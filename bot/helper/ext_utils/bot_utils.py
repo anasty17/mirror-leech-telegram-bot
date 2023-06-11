@@ -247,11 +247,14 @@ def arg_parser(items, arg_base):
         return arg_base
     t = len(items)
     i = 0
-    while True:
+    while i + 1 <= t:
         part = items[i]
         if part in arg_base:
             if part in ['-s', '-j']:
                 arg_base[part] = True
+            elif t == i + 1:
+                if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
+                    arg_base[part] = True
             else:
                 sub_list = []
                 for j in range(i+1, t):
@@ -264,8 +267,6 @@ def arg_parser(items, arg_base):
                     i += 1
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
-        if t == i + 1:
-            break
         i += 1
     if items[0] not in arg_base:
         arg_base['link'] = items[0]
