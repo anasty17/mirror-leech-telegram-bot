@@ -7,12 +7,11 @@ from aiofiles.os import path as aiopath
 from yt_dlp import YoutubeDL
 from functools import partial
 from time import time
-from argparse import ArgumentParser
 
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path, new_thread, get_readable_time
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path, new_thread, get_readable_time, arg_parser
 from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -20,6 +19,10 @@ from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import YT_HELP_MESSAGE
 from bot.helper.ext_utils.bulk_links import extract_bulk_links
+
+
+arg_base = {'link': '', '-i': 0, '-m': '', '-s': False, '-opt': '',
+            '-b': False, '-n': '', '-z': False, '-up': '', '-rcf': ''}
 
 
 @new_task
@@ -241,41 +244,34 @@ async def _mdisk(link, name):
 @new_task
 async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
     text = message.text.split('\n')
-    input_list = text[0].split()
+    input_list = text[0].split(' ')
     qual = ''
 
-    try:
-        args = parser.parse_args(input_list[1:])
-    except:
-        await sendMessage(message, YT_HELP_MESSAGE)
-        return
+    args = arg_parser(input_list[1:], arg_base)
 
-    select = args.select
-    multi = args.multi
-    isBulk = args.bulk
-    opt = " ".join(args.options)
-    folder_name = " ".join(args.sameDir)
-    name = " ".join(args.newName)
-    up = " ".join(args.upload)
-    rcf = " ".join(args.rcloneFlags)
-    link = " ".join(args.link)
-    compress = args.zipPswd
+    try:
+        multi = int(args['-i'])
+    except:
+        multi = 0
+
+    select = args['-s']
+    isBulk = args['-b']
+    opt = args['-opt']
+    folder_name = args['-m']
+    name = args['-n']
+    up = args['-up']
+    rcf = args['-rcf']
+    link = args['link']
+    compress = args['-z']
+
     bulk_start = 0
     bulk_end = 0
 
-    if isinstance(multi, list):
-        multi = multi[0]
-
-    if compress is not None:
-        compress = " ".join(compress)
-
-    if isBulk:
+    if not isinstance(isBulk, bool):
         dargs = isBulk.split(':')
         bulk_start = dargs[0] or None
         if len(dargs) == 2:
             bulk_end = dargs[1] or None
-        isBulk = True
-    elif isBulk is None:
         isBulk = True
 
     if folder_name and not isBulk:
@@ -430,20 +426,6 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
     playlist = 'entries' in result
     ydl = YoutubeDLHelper(listener)
     await ydl.add_download(link, path, name, qual, playlist, opt)
-
-
-parser = ArgumentParser(description='YT-DLP args usage:', argument_default='')
-
-parser.add_argument('link', nargs='*')
-parser.add_argument('-s', action='store_true', default=False, dest='select')
-parser.add_argument('-o', nargs='+', dest='options')
-parser.add_argument('-m', nargs='+', dest='sameDir')
-parser.add_argument('-i', nargs='+', default=0, dest='multi', type=int)
-parser.add_argument('-b', nargs='?', default=False, dest='bulk')
-parser.add_argument('-n', nargs='+', dest='newName')
-parser.add_argument('-z', nargs='*', default=None, dest='zipPswd')
-parser.add_argument('-up', nargs='+', dest='upload')
-parser.add_argument('-rcf', nargs='+', dest='rcloneFlags')
 
 
 async def ytdl(client, message):

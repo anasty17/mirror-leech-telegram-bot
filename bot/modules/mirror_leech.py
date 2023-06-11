@@ -5,10 +5,9 @@ from base64 import b64encode
 from re import match as re_match
 from asyncio import sleep
 from aiofiles.os import path as aiopath
-from argparse import ArgumentParser
 
 from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict
-from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, is_rclone_path, is_telegram_link
+from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, is_rclone_path, is_telegram_link, arg_parser
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
@@ -26,29 +25,34 @@ from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
 from bot.helper.ext_utils.bulk_links import extract_bulk_links
 
 
+arg_base = {'link': '', '-i': 0, '-m': '', '-d': False, '-j': False, '-s': False, '-b': False,
+            '-n': '', '-e': False, '-z': False, '-up': '', '-rcf': '', '-au': '', '-ap': ''}
+
+
 @new_task
 async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=None, bulk=[]):
     text = message.text.split('\n')
-    input_list = text[0].split()
+    input_list = text[0].split(' ')
+
+    args = arg_parser(input_list[1:], arg_base)
 
     try:
-        args = parser.parse_args(input_list[1:])
+        multi = int(args['-i'])
     except:
-        await sendMessage(message, MIRROR_HELP_MESSAGE)
-        return
+        multi = 0
 
-    select = args.select
-    multi = args.multi
-    seed = args.seed
-    isBulk = args.bulk
-    folder_name = " ".join(args.sameDir)
-    name = " ".join(args.newName)
-    up = " ".join(args.upload)
-    rcf = " ".join(args.rcloneFlags)
-    link = " ".join(args.link)
-    compress = args.zipPswd
-    extract = args.extractPswd
-    join = args.join
+    select = args['-s']
+    seed = args['-d']
+    isBulk = args['-b']
+    folder_name = args['-m']
+    name = args['-n']
+    up = args['-up']
+    rcf = args['-rcf']
+    link = args['link']
+    compress = args['-z']
+    extract = args['-e']
+    join = args['-j']
+
     bulk_start = 0
     bulk_end = 0
     ratio = None
@@ -57,30 +61,18 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
     file_ = None
     session = ''
 
-    if isinstance(multi, list):
-        multi = multi[0]
-
-    if compress is not None:
-        compress = " ".join(compress)
-    if extract is not None:
-        extract = " ".join(extract)
-
-    if seed:
+    if not isinstance(seed, bool):
         dargs = seed.split(':')
         ratio = dargs[0] or None
         if len(dargs) == 2:
             seed_time = dargs[1] or None
         seed = True
-    elif seed is None:
-        seed = True
 
-    if isBulk:
+    if not isinstance(isBulk, bool):
         dargs = isBulk.split(':')
         bulk_start = dargs[0] or None
         if len(dargs) == 2:
             bulk_end = dargs[1] or None
-        isBulk = True
-    elif isBulk is None:
         isBulk = True
 
     if folder_name and not isBulk:
@@ -255,33 +247,14 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
     elif isQbit:
         await add_qb_torrent(link, path, listener, ratio, seed_time)
     else:
-        ussr = " ".join(args.auth_user)
-        pssw = " ".join(args.auth_pswd)
+        ussr = args['-au']
+        pssw = args['-ap']
         if ussr or pssw:
             auth = f"{ussr}:{pssw}"
             auth = "Basic " + b64encode(auth.encode()).decode('ascii')
         else:
             auth = ''
         await add_aria2c_download(link, path, listener, name, auth, ratio, seed_time)
-
-
-parser = ArgumentParser(
-    description='Mirror-Leech args usage:', argument_default='')
-
-parser.add_argument('link', nargs='*')
-parser.add_argument('-s', action='store_true', default=False, dest='select')
-parser.add_argument('-d', nargs='?', default=False, dest='seed')
-parser.add_argument('-m', nargs='+', dest='sameDir')
-parser.add_argument('-i', nargs='+', default=0, dest='multi', type=int)
-parser.add_argument('-b', nargs='?', default=False, dest='bulk')
-parser.add_argument('-n', nargs='+', dest='newName')
-parser.add_argument('-e', nargs='*', default=None, dest='extractPswd')
-parser.add_argument('-z', nargs='*', default=None, dest='zipPswd')
-parser.add_argument('-j', action='store_true', default=False, dest='join')
-parser.add_argument('-up', nargs='+', dest='upload')
-parser.add_argument('-rcf', nargs='+', dest='rcloneFlags')
-parser.add_argument('-au', nargs='+', dest='auth_user')
-parser.add_argument('-ap', nargs='+', dest='auth_pswd')
 
 
 async def mirror(client, message):

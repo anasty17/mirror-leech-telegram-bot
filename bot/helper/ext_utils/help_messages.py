@@ -40,9 +40,8 @@ If you want to add path manually from your config (uploaded from usetting) add <
 <code>/cmd</code> link -up <code>mrcc:</code>main:dump
 
 <b>Rclone Flags</b>: -rcf
-<code>/cmd</code> link -up path|rcl -rcf |--buffer-size:8M|--drive-starred-only|key|key:value
+<code>/cmd</code> link -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
 This will override all other flags except --exclude
-Note: When use -rcf start it with `|` to avoid reading it as bot argument.
 Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
 <b>Bulk Download</b>: -b
@@ -55,8 +54,8 @@ link2 -z -n new name -up remote2:path2
 link3 -e -n new name -opt ytdlpoptions
 Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
 link pswd: pass(zip/unzip) opt: ytdlpoptions up: remote2:path2
-Reply to this example by this cmd for example <code>/cmd</code> b(bulk) m:folder_name(same dir)
-You can set start and end of the links from the bulk with b:start:end or only end by b::end or only start by b:start. The default start is from zero(first link) to inf.
+Reply to this example by this cmd <code>/cmd</code> b(bulk)
+You can set start and end of the links from the bulk with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
 
 
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
@@ -105,9 +104,8 @@ If you want to add path manually from your config (uploaded from usetting) add <
 <code>/cmd</code> link -up <code>mrcc:</code>main:dump
 
 <b>Rclone Flags</b>: -rcf
-<code>/cmd</code> link|path|rcl -up path|rcl -rcf |--buffer-size:8M|--drive-starred-only|key|key:value
+<code>/cmd</code> link|path|rcl -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
 This will override all other flags except --exclude
-Note: When use -rcf start it with `|` to avoid reading it as bot argument.
 Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
 
 <b>Bulk Download</b>: -b
@@ -119,7 +117,7 @@ link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -up remote2:path2
 Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
-Reply to this example by this cmd for example <code>/cmd</code> -b(bulk)
+Reply to this example by this cmd <code>/cmd</code> -b(bulk)
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
 
 <b>Join Splitted Files</b>: -j
@@ -182,9 +180,7 @@ Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along wit
 <code>/cmd</code> gdrivelink
 
 <b>Rclone:</b>
-<code>/cmd</code> (rcl or rclone_path) -up (rcl or rclone_path) -rcf |flagkey:flagvalue|flagkey|flagkey:flagvalue
+<code>/cmd</code> (rcl or rclone_path) -up (rcl or rclone_path) -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
 
-Notes:
-1. If -up not specified then rclone destination will be the RCLONE_PATH from config.env
-2. When use -rcf start it with `|` to avoid reading it as bot argument.
+Note: If -up not specified then rclone destination will be the RCLONE_PATH from config.env
 """

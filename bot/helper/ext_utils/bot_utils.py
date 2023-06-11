@@ -242,6 +242,35 @@ def is_rclone_path(path):
 def get_mega_link_type(url):
     return "folder" if "folder" in url or "/#F!" in url else "file"
 
+def arg_parser(items, arg_base):
+    if not items:
+        return arg_base
+    t = len(items)
+    i = 0
+    while True:
+        part = items[i]
+        if part in arg_base:
+            if part in ['-s', '-j']:
+                arg_base[part] = True
+            else:
+                sub_list = []
+                for j in range(i+1, t):
+                    item = items[j]
+                    if item in arg_base:
+                        if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
+                            arg_base[part] = True
+                        break
+                    sub_list.append(item)
+                    i += 1
+                if sub_list:
+                    arg_base[part] = " ".join(sub_list)
+        if t == i + 1:
+            break
+        i += 1
+    if items[0] not in arg_base:
+        arg_base['link'] = items[0]
+    return arg_base
+
 
 async def get_content_type(url):
     async with ClientSession(trust_env=True) as session:
