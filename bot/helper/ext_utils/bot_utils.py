@@ -242,6 +242,7 @@ def is_rclone_path(path):
 def get_mega_link_type(url):
     return "folder" if "folder" in url or "/#F!" in url else "file"
 
+
 def arg_parser(items, arg_base):
     if not items:
         return arg_base
