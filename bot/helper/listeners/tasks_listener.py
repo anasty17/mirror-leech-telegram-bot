@@ -119,7 +119,8 @@ class MirrorLeechListener:
         user_dict = user_data.get(self.message.from_user.id, {})
 
         if self.join:
-            await join_files(dl_path)
+            if await aiopath.isdir(dl_path):
+                await join_files(dl_path)
 
         if self.extract:
             pswd = self.extract if isinstance(self.extract, str) else ''
