@@ -328,7 +328,7 @@ class RcloneTransferHelper:
             await self.__listener.onUploadError(error[:4000])
             return None, None
         else:
-            if dst_remote_opt == 'drive':
+            if dst_remote_type == 'drive':
                 link, destination = await self.__get_gdrive_link(config_path, dst_remote, dst_path, mime_type)
                 return (None, None) if self.__is_cancelled else (link, destination)
             else:
