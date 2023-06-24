@@ -249,7 +249,7 @@ def arg_parser(items, arg_base):
     t = len(items)
     i = 0
     while i + 1 <= t:
-        part = items[i]
+        part = items[i].strip()
         if part in arg_base:
             if part in ['-s', '-j']:
                 arg_base[part] = True
@@ -259,7 +259,7 @@ def arg_parser(items, arg_base):
             else:
                 sub_list = []
                 for j in range(i+1, t):
-                    item = items[j]
+                    item = items[j].strip()
                     if item in arg_base:
                         if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
                             arg_base[part] = True

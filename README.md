@@ -36,6 +36,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Ability to leech splitted file parts in media group. Setting for each user
 - Download using premium account if available
 - Download restricted messages (document or link) by tg private/public/super links
+- Custom upload destination for each task or user
 
 ### Google
 
@@ -257,7 +258,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `DUMP_CHAT_ID`: Chat ID to where leeched files would be uploaded. `Int`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot id or your id!
+- `LEECH_DUMP_CHAT`: Chat ID or USERNAME to where files would be uploaded. `Int`|`Str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot or account id!
 
 ### qBittorrent/Aria2c
 
@@ -270,8 +271,8 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 ### RSS
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `900` second at least. Default is `900` in sec. `Int`
-- `RSS_CHAT_ID`: Chat ID where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`
-  - **RSS NOTES**: `RSS_CHAT_ID` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT_ID` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT_ID`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
+- `RSS_CHAT`: Chat ID/USERNAME where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`|`Str`
+  - **RSS NOTES**: `RSS_CHAT` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
 
 ### MEGA
 

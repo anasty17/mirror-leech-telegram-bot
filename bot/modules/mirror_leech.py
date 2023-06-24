@@ -211,6 +211,9 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
         if up != 'gd' and not is_rclone_path(up):
             await sendMessage(message, 'Wrong Rclone Upload Destination!')
             return
+    elif up.isdigit() or up.startswith('-'):
+        up = int(up)
+
 
     if link == 'rcl':
         link = await RcloneList(client, message).get_rclone_path('rcd')

@@ -42,6 +42,7 @@ class TgUploader:
         self.__lprefix = ''
         self.__as_doc = False
         self.__media_group = False
+        self.__upload_dest = ''
 
     async def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -56,23 +57,30 @@ class TgUploader:
     async def __user_settings(self):
         user_id = self.__listener.message.from_user.id
         user_dict = user_data.get(user_id, {})
-        self.__as_doc = user_dict.get('as_doc') or config_dict['AS_DOCUMENT']
+        self.__as_doc = user_dict.get(
+            'as_doc', False) or config_dict['AS_DOCUMENT'] if 'as_doc' not in user_dict else False
         self.__media_group = user_dict.get(
-            'media_group') or config_dict['MEDIA_GROUP']
+            'media_group') or config_dict['MEDIA_GROUP'] if 'media_group' not in user_dict else False
         self.__lprefix = user_dict.get(
-            'lprefix') or config_dict['LEECH_FILENAME_PREFIX']
+            'lprefix') or config_dict['LEECH_FILENAME_PREFIX'] if 'lprefix' not in user_dict else ''
         if not await aiopath.exists(self.__thumb):
             self.__thumb = None
+        self.__upload_dest = self.__listener.upPath or user_dict.get(
+            'leech_dest') or config_dict['LEECH_DUMP_CHAT']
 
     async def __msg_to_reply(self):
-        if DUMP_CHAT_ID := config_dict['DUMP_CHAT_ID']:
-            msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text
-            if IS_PREMIUM_USER:
-                self.__sent_msg = await user.send_message(chat_id=DUMP_CHAT_ID, text=msg,
-                                                          disable_web_page_preview=False, disable_notification=True)
-            else:
-                self.__sent_msg = await bot.send_message(chat_id=DUMP_CHAT_ID, text=msg,
-                                                         disable_web_page_preview=False, disable_notification=True)
+        if self.__upload_dest:
+            msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text.lstrip('/')
+            try:
+                if IS_PREMIUM_USER:
+                    self.__sent_msg = await user.send_message(chat_id=self.__upload_dest, text=msg,
+                                                              disable_web_page_preview=False, disable_notification=True)
+                else:
+                    self.__sent_msg = await bot.send_message(chat_id=self.__upload_dest, text=msg,
+                                                             disable_web_page_preview=False, disable_notification=True)
+            except Exception as e:
+                await self.__listener.onUploadError(str(e))
+                return False
         elif IS_PREMIUM_USER:
             if not self.__listener.isSuperGroup:
                 await self.__listener.onUploadError('Use SuperGroup to leech with User!')
@@ -148,16 +156,16 @@ class TgUploader:
                 del self.__msgs_dict[msg.link]
             await msg.delete()
         del self.__media_dict[key][subkey]
-        if self.__listener.isSuperGroup or config_dict['DUMP_CHAT_ID']:
+        if self.__listener.isSuperGroup or self.__upload_dest:
             for m in msgs_list:
                 self.__msgs_dict[m.link] = m.caption
         self.__sent_msg = msgs_list[-1]
 
     async def upload(self, o_files, m_size, size):
+        await self.__user_settings()
         res = await self.__msg_to_reply()
         if not res:
             return
-        await self.__user_settings()
         for dirpath, _, files in sorted(await sync_to_async(walk, self.__path)):
             if dirpath.endswith('/yt-dlp-thumb'):
                 continue
@@ -192,7 +200,7 @@ class TgUploader:
                     await self.__upload_file(cap_mono, file_)
                     if self.__is_cancelled:
                         return
-                    if not self.__is_corrupted and (self.__listener.isSuperGroup or config_dict['DUMP_CHAT_ID']):
+                    if not self.__is_corrupted and (self.__listener.isSuperGroup or self.__upload_dest):
                         self.__msgs_dict[self.__sent_msg.link] = file_
                     await sleep(1)
                 except Exception as err:

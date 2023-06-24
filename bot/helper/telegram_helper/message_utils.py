@@ -49,10 +49,10 @@ async def sendFile(message, file, caption=None):
 async def sendRss(text):
     try:
         if user:
-            return await user.send_message(chat_id=config_dict['RSS_CHAT_ID'], text=text, disable_web_page_preview=True,
+            return await user.send_message(chat_id=config_dict['RSS_CHAT'], text=text, disable_web_page_preview=True,
                                            disable_notification=True)
         else:
-            return await bot.send_message(chat_id=config_dict['RSS_CHAT_ID'], text=text, disable_web_page_preview=True,
+            return await bot.send_message(chat_id=config_dict['RSS_CHAT'], text=text, disable_web_page_preview=True,
                                           disable_notification=True)
     except FloodWait as f:
         LOGGER.warning(str(f))

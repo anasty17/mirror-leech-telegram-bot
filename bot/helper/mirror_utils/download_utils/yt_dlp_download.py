@@ -111,7 +111,7 @@ class YoutubeDLHelper:
                 elif d.get('total_bytes_estimate'):
                     self.__size = d['total_bytes_estimate']
                 self.__downloaded_bytes = d['downloaded_bytes']
-                self.__eta = d.get('eta', '-')
+                self.__eta = d.get('eta', '-') or '-'
             try:
                 self.__progress = (self.__downloaded_bytes / self.__size) * 100
             except:

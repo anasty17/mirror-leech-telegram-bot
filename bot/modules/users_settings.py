@@ -36,6 +36,9 @@ async def get_user_settings(from_user):
         ltype = "MEDIA"
         buttons.ibutton("Send As Document", f"userset {user_id} doc")
 
+    buttons.ibutton("Thumbnail", f"userset {user_id} sthumb")
+    thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
+
     buttons.ibutton("Leech Splits", f"userset {user_id} lss")
     if user_dict.get('split_size', False):
         split_size = user_dict['split_size']
@@ -52,14 +55,6 @@ async def get_user_settings(from_user):
     else:
         media_group = 'Disabled'
 
-    buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
-    if user_dict.get('yt_opt', False):
-        ytopt = user_dict['yt_opt']
-    elif 'yt_opt' not in user_dict and (YTO := config_dict['YT_DLP_OPTIONS']):
-        ytopt = YTO
-    else:
-        ytopt = 'None'
-
     buttons.ibutton("Leech Prefix", f"userset {user_id} lprefix")
     if user_dict.get('lprefix', False):
         lprefix = user_dict['lprefix']
@@ -68,22 +63,36 @@ async def get_user_settings(from_user):
     else:
         lprefix = 'None'
 
-    buttons.ibutton("Thumbnail", f"userset {user_id} sthumb")
-    thumbmsg = "Exists" if await aiopath.exists(thumbpath) else "Not Exists"
+    buttons.ibutton("Leech Destination", f"userset {user_id} ldest")
+    if user_dict.get('leech_dest', False):
+        leech_dest = user_dict['leech_dest']
+    elif 'leech_dest' not in user_dict and (LD := config_dict['LEECH_DUMP_CHAT']):
+        leech_dest = LD
+    else:
+        leech_dest = 'None'
 
     buttons.ibutton("Rclone", f"userset {user_id} rcc")
     rccmsg = "Exists" if await aiopath.exists(rclone_path) else "Not Exists"
+
+    buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
+    if user_dict.get('yt_opt', False):
+        ytopt = user_dict['yt_opt']
+    elif 'yt_opt' not in user_dict and (YTO := config_dict['YT_DLP_OPTIONS']):
+        ytopt = YTO
+    else:
+        ytopt = 'None'
 
     buttons.ibutton("Close", f"userset {user_id} close")
 
     text = f"""<u>Settings for {name}</u>
 Leech Type is <b>{ltype}</b>
 Custom Thumbnail <b>{thumbmsg}</b>
-Rclone Config <b>{rccmsg}</b>
 Leech Split Size is <b>{split_size}</b>
 Equal Splits is <b>{equal_splits}</b>
 Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
+Leech Destination is <code>{leech_dest}</code>
+Rclone Config <b>{rccmsg}</b>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
     return text, buttons.build_menu(1)
@@ -95,7 +104,9 @@ async def update_user_settings(query):
 
 
 async def user_settings(_, message):
-    msg, button = await get_user_settings(message.from_user)
+    from_user = message.from_user
+    handler_dict[from_user.id] = False
+    msg, button = await get_user_settings(from_user)
     await sendMessage(message, msg, button)
 
 
@@ -158,6 +169,19 @@ async def leech_split_size(_, message, pre_event):
     handler_dict[user_id] = False
     value = min(int(message.text), MAX_SPLIT_SIZE)
     update_user_ldata(user_id, 'split_size', value)
+    await message.delete()
+    await update_user_settings(pre_event)
+    if DATABASE_URL:
+        await DbManger().update_user_data(user_id)
+
+
+async def set_leech_destination(_, message, pre_event):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    value = message.text
+    if value.isdigit() or value.startswith('-'):
+        value = int(value)
+    update_user_ldata(user_id, 'leech_dest', value)
     await message.delete()
     await update_user_settings(pre_event)
     if DATABASE_URL:
@@ -328,7 +352,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == 'lprefix':
         await query.answer()
         buttons = ButtonMaker()
-        if user_dict.get('lprefix', False) or config_dict['LEECH_FILENAME_PREFIX']:
+        if user_dict.get('lprefix', False) or 'lprefix' not in user_dict and config_dict['LEECH_FILENAME_PREFIX']:
             buttons.ibutton("Remove Leech Prefix",
                             f"userset {user_id} rlprefix")
         buttons.ibutton("Back", f"userset {user_id} back")
@@ -340,6 +364,24 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         handler_dict[user_id] = False
         await query.answer()
         update_user_ldata(user_id, 'lprefix', '')
+        await update_user_settings(query)
+        if DATABASE_URL:
+            await DbManger().update_user_data(user_id)
+    elif data[2] == 'ldest':
+        await query.answer()
+        buttons = ButtonMaker()
+        if user_dict.get('leech_dest', False) or 'leech_dest' not in user_dict and config_dict['LEECH_DUMP_CHAT']:
+            buttons.ibutton("Remove Leech Destination",
+                            f"userset {user_id} rldest")
+        buttons.ibutton("Back", f"userset {user_id} back")
+        buttons.ibutton("Close", f"userset {user_id} close")
+        await editMessage(message, 'Send leech destination ID/USERNAME. Timeout: 60 sec', buttons.build_menu(1))
+        pfunc = partial(set_leech_destination, pre_event=query)
+        await event_handler(client, query, pfunc)
+    elif data[2] == 'rldest':
+        handler_dict[user_id] = False
+        await query.answer()
+        update_user_ldata(user_id, 'leech_dest', '')
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)

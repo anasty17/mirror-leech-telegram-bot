@@ -366,6 +366,8 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
         if up != 'gd' and not is_rclone_path(up):
             await sendMessage(message, 'Wrong Rclone Upload Destination!')
             return
+    elif up.isdigit() or up.startswith('-'):
+        up = int(up)
 
     if up == 'rcl' and not isLeech:
         up = await RcloneList(client, message).get_rclone_path('rcu')

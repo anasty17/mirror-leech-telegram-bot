@@ -165,8 +165,7 @@ EXTENSION_FILTER = environ.get('EXTENSION_FILTER', '')
 if len(EXTENSION_FILTER) > 0:
     fx = EXTENSION_FILTER.split()
     for x in fx:
-        if x.strip().startswith('.'):
-            x = x.lstrip('.')
+        x = x.lstrip('.')
         GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
 
 IS_PREMIUM_USER = False
@@ -232,16 +231,20 @@ if len(YT_DLP_OPTIONS) == 0:
 SEARCH_LIMIT = environ.get('SEARCH_LIMIT', '')
 SEARCH_LIMIT = 0 if len(SEARCH_LIMIT) == 0 else int(SEARCH_LIMIT)
 
-DUMP_CHAT_ID = environ.get('DUMP_CHAT_ID', '')
-DUMP_CHAT_ID = '' if len(DUMP_CHAT_ID) == 0 else int(DUMP_CHAT_ID)
+LEECH_DUMP_CHAT = environ.get('LEECH_DUMP_CHAT', '')
+LEECH_DUMP_CHAT = '' if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
+if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith('-'):
+    LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
 
 STATUS_LIMIT = environ.get('STATUS_LIMIT', '')
 STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
 CMD_SUFFIX = environ.get('CMD_SUFFIX', '')
 
-RSS_CHAT_ID = environ.get('RSS_CHAT_ID', '')
-RSS_CHAT_ID = '' if len(RSS_CHAT_ID) == 0 else int(RSS_CHAT_ID)
+RSS_CHAT = environ.get('RSS_CHAT', '')
+RSS_CHAT = '' if len(RSS_CHAT) == 0 else RSS_CHAT
+if RSS_CHAT.isdigit() or RSS_CHAT.startswith('-'):
+    RSS_CHAT = int(RSS_CHAT)
 
 RSS_DELAY = environ.get('RSS_DELAY', '')
 RSS_DELAY = 900 if len(RSS_DELAY) == 0 else int(RSS_DELAY)
@@ -324,13 +327,13 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'DATABASE_URL': DATABASE_URL,
                'DEFAULT_UPLOAD': DEFAULT_UPLOAD,
                'DOWNLOAD_DIR': DOWNLOAD_DIR,
-               'DUMP_CHAT_ID': DUMP_CHAT_ID,
                'EQUAL_SPLITS': EQUAL_SPLITS,
                'EXTENSION_FILTER': EXTENSION_FILTER,
                'GDRIVE_ID': GDRIVE_ID,
                'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                'INDEX_URL': INDEX_URL,
                'IS_TEAM_DRIVE': IS_TEAM_DRIVE,
+               'LEECH_DUMP_CHAT': LEECH_DUMP_CHAT,
                'LEECH_FILENAME_PREFIX': LEECH_FILENAME_PREFIX,
                'LEECH_SPLIT_SIZE': LEECH_SPLIT_SIZE,
                'MEDIA_GROUP': MEDIA_GROUP,
@@ -346,7 +349,7 @@ config_dict = {'AS_DOCUMENT': AS_DOCUMENT,
                'RCLONE_SERVE_USER': RCLONE_SERVE_USER,
                'RCLONE_SERVE_PASS': RCLONE_SERVE_PASS,
                'RCLONE_SERVE_PORT': RCLONE_SERVE_PORT,
-               'RSS_CHAT_ID': RSS_CHAT_ID,
+               'RSS_CHAT': RSS_CHAT,
                'RSS_DELAY': RSS_DELAY,
                'SEARCH_API_LINK': SEARCH_API_LINK,
                'SEARCH_LIMIT': SEARCH_LIMIT,
