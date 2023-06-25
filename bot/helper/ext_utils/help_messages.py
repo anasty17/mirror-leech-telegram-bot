@@ -32,12 +32,14 @@ You can add tuple and dict also. Use double quotes inside dict.
 <code>/cmd</code> -i 10(number of links) -m folder name
 
 <b>Upload</b>: -up
-<code>/cmd</code> link -up <code>rcl</code> (To select rclone config, remote and path)
+<code>/cmd</code> link -up <code>rcl</code> (To select rclone config, remote & path or Tg id/username)
 You can directly add the upload path: -up remote:dir/subdir
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
 <code>/cmd</code> link -up <code>mrcc:</code>main:dump
+DEFAULT_UPLOAD doesn't effect on leech cmds.
+<code>/yl</code> link -up chat_id or username
 
 <b>Rclone Flags</b>: -rcf
 <code>/cmd</code> link -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
@@ -96,12 +98,14 @@ To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time)
 <code>/cmd</code> -b -m folder name (bulk-message/file)
 
 <b>Upload</b>: -up
-<code>/cmd</code> link -up <code>rcl</code> (To select rclone config, remote and path)
+<code>/cmd</code> link -up <code>rcl</code> (To select rclone config, remote & path or Tg id/username)
 You can directly add the upload path: -up remote:dir/subdir
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 If you want to add path manually from your config (uploaded from usetting) add <code>mrcc:</code> before the path without space
 <code>/cmd</code> link -up <code>mrcc:</code>main:dump
+DEFAULT_UPLOAD doesn't effect on leech cmds.
+<code>/leech</code> link -up chat_id or username
 
 <b>Rclone Flags</b>: -rcf
 <code>/cmd</code> link|path|rcl -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
