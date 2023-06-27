@@ -246,31 +246,38 @@ def get_mega_link_type(url):
 def arg_parser(items, arg_base):
     if not items:
         return arg_base
+    bool_arg_set = {'-b', '-e', '-z', '-s', '-j', '-d'}
     t = len(items)
     i = 0
+    arg_start = -1
+
     while i + 1 <= t:
         part = items[i].strip()
         if part in arg_base:
-            if part in ['-s', '-j']:
+            arg_start = i
+            if i + 1 == t and part in bool_arg_set or part in ['-s', '-j']:
                 arg_base[part] = True
-            elif t == i + 1:
-                if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
-                    arg_base[part] = True
             else:
                 sub_list = []
-                for j in range(i+1, t):
+                for j in range(i + 1, t):
                     item = items[j].strip()
                     if item in arg_base:
-                        if part in ['-b', '-e', '-z', '-s', '-j', '-d']:
+                        if part in bool_arg_set and not sub_list:
                             arg_base[part] = True
                         break
-                    sub_list.append(item)
+                    sub_list.append(item.strip())
                     i += 1
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
         i += 1
-    if items[0] not in arg_base:
-        arg_base['link'] = items[0]
+
+    link = []
+    if arg_start == -1:
+        link.extend(item.strip() for item in items)
+    else:
+        link.extend(items[r].strip() for r in range(arg_start))
+    if link:
+        arg_base['link'] = " ".join(link)
     return arg_base
 
 

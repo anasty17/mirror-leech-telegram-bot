@@ -28,8 +28,12 @@ async def add_rclone_download(rc_path, config_path, path, name, listener):
             msg = f'Error: While getting rclone stat/size. Path: {remote}:{rc_path}. Stderr: {err[:4000]}'
             await sendMessage(listener.message, msg)
         return
-    rstat = loads(res1[0])
-    rsize = loads(res2[0])
+    try:
+        rstat = loads(res1[0])
+        rsize = loads(res2[0])
+    except Exception as err:
+        await sendMessage(listener.message, f'RcloneDownload JsonLoad: {err}')
+        return
     if rstat['IsDir']:
         if not name:
             name = rc_path.rsplit('/', 1)[-1] if rc_path else remote

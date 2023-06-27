@@ -136,7 +136,7 @@ class RcloneTransferHelper:
         remote_type = remote_opts['type']
 
         if remote_type == 'drive' and config_dict['USE_SERVICE_ACCOUNTS'] and config_path == 'rclone.conf' \
-                and await aiopath.isdir('accounts'):
+                and await aiopath.isdir('accounts') and not remote_opts.get('service_account_file'):
             config_path = await self.__create_rc_sa(remote, remote_opts)
             if config_path != 'rclone.conf':
                 sa_files = await listdir('accounts')
@@ -244,7 +244,7 @@ class RcloneTransferHelper:
         fremote = oremote
         fconfig_path = oconfig_path
         if remote_type == 'drive' and config_dict['USE_SERVICE_ACCOUNTS'] and fconfig_path == 'rclone.conf' \
-                and await aiopath.isdir('accounts'):
+                and await aiopath.isdir('accounts') and not remote_opts.get('service_account_file'):
             fconfig_path = await self.__create_rc_sa(oremote, remote_opts)
             if fconfig_path != 'rclone.conf':
                 sa_files = await listdir('accounts')

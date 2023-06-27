@@ -104,7 +104,11 @@ class MirrorLeechListener:
             return
 
         if name == "None" or self.isQbit or not await aiopath.exists(f"{self.dir}/{name}"):
-            files = await listdir(self.dir)
+            try:
+                files = await listdir(self.dir)
+            except Exception as e:
+                await self.onUploadError(str(e))
+                return
             name = files[-1]
             if name == "yt-dlp-thumb":
                 name = files[0]
