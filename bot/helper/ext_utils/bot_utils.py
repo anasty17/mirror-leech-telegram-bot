@@ -272,12 +272,13 @@ def arg_parser(items, arg_base):
         i += 1
 
     link = []
-    if arg_start == -1:
-        link.extend(item.strip() for item in items)
-    else:
-        link.extend(items[r].strip() for r in range(arg_start))
-    if link:
-        arg_base['link'] = " ".join(link)
+    if items[0].strip() not in arg_base:
+        if arg_start == -1:
+            link.extend(item.strip() for item in items)
+        else:
+            link.extend(items[r].strip() for r in range(arg_start))
+        if link:
+            arg_base['link'] = " ".join(link)
     return arg_base
 
 
