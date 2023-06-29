@@ -244,7 +244,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
     qual = ''
 
     arg_base = {'link': '', '-i': 0, '-m': '', '-s': False, '-opt': '',
-            '-b': False, '-n': '', '-z': False, '-up': '', '-rcf': ''}
+                '-b': False, '-n': '', '-z': False, '-up': '', '-rcf': ''}
 
     args = arg_parser(input_list[1:], arg_base)
 

@@ -254,7 +254,8 @@ def arg_parser(items, arg_base):
     while i + 1 <= t:
         part = items[i].strip()
         if part in arg_base:
-            arg_start = i
+            if arg_start == -1:
+                arg_start = i
             if i + 1 == t and part in bool_arg_set or part in ['-s', '-j']:
                 arg_base[part] = True
             else:
