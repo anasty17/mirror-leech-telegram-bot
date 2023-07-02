@@ -171,7 +171,7 @@ async def edit_variable(_, message, pre_message, key):
     elif key == 'EXTENSION_FILTER':
         fx = value.split()
         GLOBAL_EXTENSION_FILTER.clear()
-        GLOBAL_EXTENSION_FILTER.append(['aria2', '!qB'])
+        GLOBAL_EXTENSION_FILTER.extend(['aria2', '!qB'])
         for x in fx:
             x = x.lstrip('.')
             GLOBAL_EXTENSION_FILTER.append(x.strip().lower())
@@ -370,7 +370,7 @@ async def edit_bot_settings(client, query):
                             value, update_all_messages))
         elif data[2] == 'EXTENSION_FILTER':
             GLOBAL_EXTENSION_FILTER.clear()
-            GLOBAL_EXTENSION_FILTER.append('.aria2')
+            GLOBAL_EXTENSION_FILTER.extend(['aria2', '!qB'])
         elif data[2] == 'TORRENT_TIMEOUT':
             downloads = await sync_to_async(aria2.get_downloads)
             for download in downloads:
@@ -606,7 +606,7 @@ async def load_config():
     if len(EXTENSION_FILTER) > 0:
         fx = EXTENSION_FILTER.split()
         GLOBAL_EXTENSION_FILTER.clear()
-        GLOBAL_EXTENSION_FILTER.append('aria2')
+        GLOBAL_EXTENSION_FILTER.extend(['aria2', '!qB'])
         for x in fx:
             if x.strip().startswith('.'):
                 x = x.lstrip('.')
