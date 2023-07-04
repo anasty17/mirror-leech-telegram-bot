@@ -54,12 +54,13 @@ async def rcloneNode(client, message, link, dst_path, rcf, tag):
         if config_path != f'rclone/{message.from_user.id}.conf':
             await sendMessage(message, 'You should use same rclone.conf to clone between pathies!')
             return
+        dst_path = dst_path.lstrip('mrcc:')
     elif config_path != 'rclone.conf':
         await sendMessage(message, 'You should use same rclone.conf to clone between pathies!')
         return
 
     remote, src_path = link.split(':', 1)
-    src_path = src_path .strip('/')
+    src_path = src_path.strip('/')
 
     cmd = ['rclone', 'lsjson', '--fast-list', '--stat',
            '--no-modtime', '--config', config_path, f'{remote}:{src_path}']
