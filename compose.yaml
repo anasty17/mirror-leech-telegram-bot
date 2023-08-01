@@ -1,14 +1,14 @@
-v-uffizzi:zi:
-  ingress:
-    service: app
-    port: 80
+    x-uffizzi:
+      ingress:
+        service: app
+        port: 80
 
-services:
-  myservice:
-    image: mirror-leech-telegram-bot:latest
-    env_file:
-      - ./envs/config.env
-      
-    build:
-      context: https://github.com/ilhammass/mirror-leech-telegram-bot
-      dockerfile: Dockerfile
+    services:
+      mysevice:
+      image: mirror-leech-telegram-bot:latest
+      env_file: ./envs/config.env
+      app:
+        build:
+          context: https://github.com/ilhammass/mirror-leech-telegram-bot
+          dockerfile: Dockerfile
+
