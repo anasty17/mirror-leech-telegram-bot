@@ -4,6 +4,9 @@
         port: 80
 
     services:
+      mysevice:
+      image: mirror-leech-telegram-bot:latest
+      env_file: ./envs/config.env
       app:
         build:
           context: https://github.com/ilhammass/mirror-leech-telegram-bot
