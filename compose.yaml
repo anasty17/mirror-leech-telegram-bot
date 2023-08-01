@@ -10,8 +10,7 @@ services:
     image: mirror-leech-telegram-bot:latest
     env_file:
       - ./envs/config.env
-    ports:
-      - "8080:80"
+      
     build:
       context: https://github.com/ilhammass/mirror-leech-telegram-bot
       dockerfile: Dockerfile
