@@ -1,6 +1,4 @@
-version: "3"
-
-x-uffizzi:
+v-uffizzi:zi:
   ingress:
     service: app
     port: 80
