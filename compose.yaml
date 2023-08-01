@@ -1,6 +1,6 @@
 x-uffizzi:
   ingress:
-    service: loadbalancer
+    service: ubuntu-latest
     port: 8080  
   continuous_preview:
     deploy_preview_when_pull_request_is_opened: true
