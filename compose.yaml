@@ -6,12 +6,10 @@ x-uffizzi:
     deploy_preview_when_pull_request_is_opened: true
     delete_preview_when_pull_request_is_closed: true
 
-services:
-  webapp:
-    build: .
-      image: mirror-leech-telegram-bot:latest
-      env_file: ./envs/config.env
-      app:
-        build:
-          context: https://github.com/ilhammass/mirror-leech-telegram-bot
-          dockerfile: Dockerfile
+mysevice:
+  image: mirror-leech-telegram-bot:latest
+    env_file: ./envs/config.env
+    app:
+  build:
+    context: https://github.com/ilhammass/mirror-leech-telegram-bot
+    dockerfile: Dockerfile
