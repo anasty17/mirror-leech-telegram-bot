@@ -1,14 +1,28 @@
 x-uffizzi:
   ingress:
     service: app
-    port: 3000
-  continuous_previews:
-    deploy_preview_when_pull_request_is_opened: true
-    delete_preview_when_pull_request_is_closed: true
-    share_to_github: true
+    port: 8080
 
 services:
   app:
-    build:
-      context: https://github.com/Abdulrouf48/mirror-leech-telegram-bot
-      dockerfile: Dockerfile
+    build: .
+    context: https://github.com/Abdulrouf48/mirror-leech-telegram-bot
+    dockerfile: Dockerfile
+    environment:
+      NODE_ENV: staging
+    deploy:
+      resources:
+        limits:
+          memory: 1000M 
+    restart: always
+    ports:
+      - "8000:8000"
+    privileged: true
+    depends_on:
+      - app
+    cap_add:
+      - SYS_ADMIN
+    restart: always
+volumes:
+  data:
+  
