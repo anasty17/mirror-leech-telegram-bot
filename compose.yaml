@@ -9,5 +9,9 @@ x-uffizzi:
 services:
   webapp:
     build: .
-      context: https://github.com/Abdulrouf48/mirror-leech-telegram-bot
-      dockerfile: Dockerfile    
+      image: mirror-leech-telegram-bot:latest
+      env_file: ./envs/config.env
+      app:
+        build:
+          context: https://github.com/ilhammass/mirror-leech-telegram-bot
+          dockerfile: Dockerfile
