@@ -1,15 +1,14 @@
 x-uffizzi:
   ingress:
     service: app
-    port: 8080
+    port: 3000
   continuous_previews:
     deploy_preview_when_pull_request_is_opened: true
     delete_preview_when_pull_request_is_closed: true
+    share_to_github: true
 
-mysevice:
-  image: mirror-leech-telegram-bot:latest
-    env_file: ./envs/config.env
-    app:
-  build:
-    context: https://github.com/ilhammass/mirror-leech-telegram-bot
-    dockerfile: Dockerfile
+services:
+  app:
+    build:
+      context: https://github.com/Abdulrouf48/mirror-leech-telegram-bot
+      dockerfile: Dockerfile
