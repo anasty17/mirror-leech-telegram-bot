@@ -23,7 +23,7 @@ async def stop_duplicate_check(name, listener):
         except:
             name = None
     if name is not None:
-        telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest)
+        telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, listener=listener).drive_list, name)
         if telegraph_content:
             msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
             button = await get_telegraph_list(telegraph_content)

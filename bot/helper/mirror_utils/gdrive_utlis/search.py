@@ -11,8 +11,8 @@ LOGGER = getLogger(__name__)
 
 class gdSearch(GoogleDriveHelper):
 
-    def __init__(self, stopDup=False, noMulti=False, isRecursive=True, itemType=''):
-        super().__init__()
+    def __init__(self, stopDup=False, noMulti=False, isRecursive=True, itemType='', listener=None):
+        super().__init__(listener)
         self.__stopDup = stopDup
         self.__noMulti = noMulti
         self.__isRecursive = isRecursive
@@ -68,14 +68,9 @@ class gdSearch(GoogleDriveHelper):
             LOGGER.error(err)
             return {'files': []}
 
-    def drive_list(self, fileName, target_id=''):
-        INDEX = ''
-        if target_id.startswith('mtp:'):
-            self.token_path = f'tokens/{self.listener.user_id}.pickle'
-            self.use_sa = False
-            if self.listener.user_dict.get('index_url'):
-                INDEX = self.listener.user_dict['index_url']
-            drives = [('User Choice', target_id, INDEX)]
+    def drive_list(self, fileName):
+        if self.listener and self.listener.upDest.startswith('mtp:'):
+            drives = self.get_user_drive()
         else:
             drives = zip(DRIVES_NAMES, DRIVES_IDS, INDEX_URLS)
         self.service = self.authorize()
@@ -84,7 +79,7 @@ class gdSearch(GoogleDriveHelper):
         contents_no = 0
         telegraph_content = []
         Title = False
-        if len(DRIVES_IDS) > 1 and not target_id.startswith('mtp:'):
+        if len(drives) > 1:
             token_service = self.alt_authorize()
             if token_service is not None:
                 self.service = token_service
@@ -140,3 +135,12 @@ class gdSearch(GoogleDriveHelper):
             telegraph_content.append(msg)
 
         return telegraph_content, contents_no
+
+    def get_user_drive(self):
+        dest_id = self.listener.upDest.lstrip('mtp:')
+        self.token_path = f'tokens/{self.listener.user_id}.pickle'
+        self.use_sa = False
+        INDEX = ''
+        if self.listener.user_dict.get('index_url'):
+            INDEX = self.listener.user_dict['index_url']
+        return [('User Choice', dest_id, INDEX)]

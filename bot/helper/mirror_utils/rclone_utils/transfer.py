@@ -293,8 +293,8 @@ class RcloneTransferHelper:
         LOGGER.info(f'Upload Done. Path: {destination}')
         await self.__listener.onUploadComplete(link, size, files, folders, mime_type, self.name, destination, private=private)
 
-    async def clone(self, config_path, src_remote, src_path, destination, rcflags, mime_type):
-        dst_remote, dst_path = destination.split(':', 1)
+    async def clone(self, config_path, src_remote, src_path, rcflags, mime_type):
+        dst_remote, dst_path = self.__listener.upDest.split(':', 1)
 
         try:
             src_remote_opts, dst_remote_opt = await gather(self.__get_remote_options(config_path, src_remote),

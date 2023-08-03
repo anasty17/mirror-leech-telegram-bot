@@ -19,7 +19,14 @@ class gdClone(GoogleDriveHelper):
         self.__start_time = time()
         self.is_cloning = True
 
-    def clone(self, link, dest_id):
+    def user_setting(self, link):
+        if self.listener.upDest.startswith('mtp:') or link.starstwith('mtp:'):
+            self.token_path = f'tokens/{self.listener.user_id}.pickle'
+            self.listener.upDest = self.listener.upDest.lstrip('mtp:')
+            self.use_sa = False
+
+    def clone(self, link):
+        self.user_setting(link)
         try:
             file_id = self.getIdFromUrl(link)
         except (KeyError, IndexError):
@@ -32,7 +39,7 @@ class gdClone(GoogleDriveHelper):
             mime_type = meta.get("mimeType")
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
                 dir_id = self.create_directory(
-                    meta.get('name'), dest_id)
+                    meta.get('name'), self.listener.upDest)
                 self.__cloneFolder(meta.get('name'), meta.get('id'), dir_id)
                 durl = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
                 if self.is_cancelled:
@@ -43,7 +50,7 @@ class gdClone(GoogleDriveHelper):
                 size = self.proc_bytes
             else:
                 file = self.__copyFile(
-                    meta.get('id'), dest_id)
+                    meta.get('id'), self.listener.upDest)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 if mime_type is None:

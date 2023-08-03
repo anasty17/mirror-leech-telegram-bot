@@ -247,10 +247,11 @@ class gdriveList(GoogleDriveHelper):
             msg += f'\nToken Path: {self.token_path}'
             msg += f'\nTimeout: {get_readable_time(self.__timeout-(time()-self.__time))}'
             buttons = ButtonMaker()
-            buttons.ibutton('root', "gdq dr root")
+            buttons.ibutton('root', "gdq dr 0")
             self.drives.clear()
             self.parents.clear()
-            for index, item in enumerate(drives):
+            self.drives = [{'id': 'root', 'name': 'root'}]
+            for index, item in enumerate(drives, start=1):
                 self.drives.append({'id': item['id'], 'name': item['name']})
                 buttons.ibutton(item['name'], f"gdq dr {index}")
             if self.__token_user and self.__token_owner:
@@ -273,7 +274,7 @@ class gdriveList(GoogleDriveHelper):
             await self.__send_list_message(msg, button)
         else:
             self.token_path = 'token.pickle' if self.__token_owner else self.user_token_path
-            await self.list_drives
+            await self.list_drives()
 
     async def get_pevious_id(self):
         if self.parents:

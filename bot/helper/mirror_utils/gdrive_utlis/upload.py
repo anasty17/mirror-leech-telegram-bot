@@ -20,15 +20,12 @@ class gdUpload(GoogleDriveHelper):
         self.__updater = None
         self.__path = path
         self.__is_errored = False
-        self.__upload_dest = ''
         self.is_uploading = True
 
     def user_setting(self):
-        self.__upload_dest = self.listener.upDest or self.listener.user_dict.get(
-            'gdrive_id') or config_dict['GDRIVE_ID']
-        if self.__upload_dest.startswith('mtp:'):
+        if self.listener.upDest.startswith('mtp:'):
             self.token_path = f'tokens/{self.listener.user_id}.pickle'
-            self.__upload_dest = self.__upload_dest.lstrip('mtp:')
+            self.listener.upDest = self.listener.upDest.lstrip('mtp:')
             self.use_sa = False
 
     def upload(self, size):
@@ -44,7 +41,7 @@ class gdUpload(GoogleDriveHelper):
                         'This file extension is excluded by extension filter!')
                 mime_type = get_mime_type(item_path)
                 link = self.__upload_file(
-                    item_path, self.name, mime_type, self.__upload_dest, is_dir=False)
+                    item_path, self.name, mime_type, self.listener.upDest, is_dir=False)
                 if self.is_cancelled:
                     return
                 if link is None:
@@ -53,7 +50,7 @@ class gdUpload(GoogleDriveHelper):
             else:
                 mime_type = 'Folder'
                 dir_id = self.create_directory(ospath.basename(
-                    ospath.abspath(self.name)), self.__upload_dest)
+                    ospath.abspath(self.name)), self.listener.upDest)
                 result = self.__upload_dir(item_path, dir_id)
                 if result is None:
                     raise Exception('Upload has been manually cancelled!')
