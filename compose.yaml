@@ -13,7 +13,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 0M 
+          memory: 125M 
     restart: unless-stopped
     ports:
       - "80:80"
