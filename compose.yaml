@@ -13,8 +13,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1000M 
-    restart: always
+          memory: 2000M 
+    restart: unless-stopped
     ports:
       - "8000:8000"
     privileged: true
@@ -22,7 +22,7 @@ services:
       - app
     cap_add:
       - SYS_ADMIN
-    restart: always
+    restart: unless-stopped
 volumes:
   data:
   
