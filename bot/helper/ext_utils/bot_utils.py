@@ -240,7 +240,7 @@ def is_rclone_path(path):
 
 
 def is_gdrive_id(id_):
-    return bool(re_match(r'^(mtp:)?(?:[a-zA-Z0-9-]{33}|[a-zA-Z0-9]{19})$|^gdl$', id_))
+    return bool(re_match(r'^(mtp:)?(?:[a-zA-Z0-9-_]{33}|[a-zA-Z0-9]{19})$|^gdl$', id_))
 
 
 def get_mega_link_type(url):

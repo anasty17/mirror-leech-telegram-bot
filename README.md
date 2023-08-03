@@ -37,16 +37,22 @@ In each single file there is a major change from base code, it's almost totaly d
 - Download using premium account if available
 - Download restricted messages (document or link) by tg private/public/super links
 - Custom upload destination for each task or user
+- Choose leech by bot or user session incase you have premium plan
 
 ### Google
 
-- Stop duplicates for all tasks
+- Stop duplicates for all tasks and setting for each user
 - Download from Google Drive
 - Counting Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
 - Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
 - Use Token.pickle if file not found with Service Account, for all Gdrive functions
 - Random Service Account for each task
+- Custom upload destination for each user
+- Ability to choose token, drive and id from list with buttons
+- Token.pickle for each user
+- Default upload destination for each user
+- Index link for each user
 
 ### Status
 
@@ -74,7 +80,7 @@ In each single file there is a major change from base code, it's almost totaly d
 
 - Mongo Database support
 - Store bot settings
-- Store user settings including thumbnails and rclone config in database
+- Store user settings including thumbnails, rclone config and token.pickle in database
 - Store private files
 - Store RSS data
 - Store incompleted task messages
@@ -109,6 +115,7 @@ In each single file there is a major change from base code, it's almost totaly d
 - Rclone.conf for each user
 - Clone server-side
 - Rclone serve for combine remote to use it as index from all remotes
+- Default upload destination for each user
 
 ### Overall
 
