@@ -10,10 +10,6 @@ services:
     dockerfile: Dockerfile
     environment:
       NODE_ENV: staging
-    deploy:
-      resources:
-        limits:
-          memory: 125M 
     restart: unless-stopped
     ports:
       - "80:80"
