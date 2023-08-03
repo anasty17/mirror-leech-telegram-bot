@@ -107,7 +107,7 @@ class GoogleDriveHelper:
         if link.startswith('mtp:'):
             self.use_sa = False
             link = link.lstrip('mtp:')
-            self.token_path = f'tokens/{self.listener.message.from_user.id}.pickle'
+            self.token_path = f'tokens/{self.listener.user_id}.pickle'
         if is_gdrive_id(link):
             return link
         if "folders" in link or "file" in link:

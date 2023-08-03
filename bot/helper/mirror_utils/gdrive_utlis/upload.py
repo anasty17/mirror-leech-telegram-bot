@@ -5,7 +5,7 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type, RetryError
 
-from bot import config_dict, GLOBAL_EXTENSION_FILTER, user_data
+from bot import config_dict, GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.fs_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import async_to_sync, setInterval
 from bot.helper.mirror_utils.gdrive_utlis.helper import GoogleDriveHelper
@@ -24,12 +24,10 @@ class gdUpload(GoogleDriveHelper):
         self.is_uploading = True
 
     def user_setting(self):
-        user_id = self.listener.message.from_user.id
-        user_dict = user_data.get(user_id, {})
-        self.__upload_dest = self.listener.upDest or user_dict.get(
+        self.__upload_dest = self.listener.upDest or self.listener.user_dict.get(
             'gdrive_id') or config_dict['GDRIVE_ID']
         if self.__upload_dest.startswith('mtp:'):
-            self.token_path = f'tokens/{self.listener.message.from_user.id}.pickle'
+            self.token_path = f'tokens/{self.listener.user_id}.pickle'
             self.__upload_dest = self.__upload_dest.lstrip('mtp:')
             self.use_sa = False
 

@@ -12,7 +12,7 @@ from re import match as re_match, sub as re_sub
 from natsort import natsorted
 from aioshutil import copy
 
-from bot import config_dict, user_data, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
+from bot import config_dict, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
 from bot.helper.ext_utils.fs_utils import clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss
@@ -32,7 +32,7 @@ class TgUploader:
         self.__start_time = time()
         self.__total_files = 0
         self.__is_cancelled = False
-        self.__thumb = f"Thumbnails/{listener.message.from_user.id}.jpg"
+        self.__thumb = f"Thumbnails/{listener.user_id}.jpg"
         self.__msgs_dict = {}
         self.__corrupted = 0
         self.__is_corrupted = False
@@ -56,19 +56,17 @@ class TgUploader:
         self.__processed_bytes += chunk_size
 
     async def __user_settings(self):
-        user_id = self.__listener.message.from_user.id
-        user_dict = user_data.get(user_id, {})
-        self.__as_doc = user_dict.get(
-            'as_doc', False) or (config_dict['AS_DOCUMENT'] if 'as_doc' not in user_dict else False)
-        self.__media_group = user_dict.get(
-            'media_group') or (config_dict['MEDIA_GROUP'] if 'media_group' not in user_dict else False)
-        self.__lprefix = user_dict.get(
-            'lprefix') or (config_dict['LEECH_FILENAME_PREFIX'] if 'lprefix' not in user_dict else '')
+        self.__as_doc = self.__listener.user_dict.get(
+            'as_doc', False) or (config_dict['AS_DOCUMENT'] if 'as_doc' not in self.__listener.user_dict else False)
+        self.__media_group = self.__listener.user_dict.get(
+            'media_group') or (config_dict['MEDIA_GROUP'] if 'media_group' not in self.__listener.user_dict else False)
+        self.__lprefix = self.__listener.user_dict.get(
+            'lprefix') or (config_dict['LEECH_FILENAME_PREFIX'] if 'lprefix' not in self.__listener.user_dict else '')
         if not await aiopath.exists(self.__thumb):
             self.__thumb = None
-        if IS_PREMIUM_USER and (user_dict.get('user_leech', False) or 'user_leech' not in user_dict and config_dict['USER_LEECH']):
+        if IS_PREMIUM_USER and (self.__listener.user_dict.get('user_leech', False) or 'user_leech' not in self.__listener.user_dict and config_dict['USER_LEECH']):
             self.__user_leech = True
-        self.__upload_dest = self.__listener.upDest or user_dict.get(
+        self.__upload_dest = self.__listener.upDest or self.__listener.user_dict.get(
             'leech_dest') or config_dict['LEECH_DUMP_CHAT']
         if self.__upload_dest.startswith('b:'):
             self.__upload_dest = self.__upload_dest.lstrip('b:')

@@ -82,7 +82,7 @@ async def get_confirm(client, query):
     else:
         await query.answer("Not in download state anymore! Keep this message to resume the seed if seed enabled!", show_alert=True)
         return
-    if user_id != listener.message.from_user.id:
+    if user_id != listener.user_id:
         await query.answer("This task is not for you!", show_alert=True)
     elif data[1] == "pin":
         await query.answer(data[3], show_alert=True)

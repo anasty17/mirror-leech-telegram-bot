@@ -5,7 +5,7 @@ from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 
-from bot import LOGGER, MAX_SPLIT_SIZE, config_dict, user_data
+from bot import LOGGER, MAX_SPLIT_SIZE, config_dict
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.fs_utils import ARCH_EXT, get_mime_type
@@ -113,18 +113,15 @@ async def split_file(path, size, file_, dirpath, split_size, listener, start_tim
         dirpath = f"{dirpath}/splited_files_mltb"
         if not await aiopath.exists(dirpath):
             await mkdir(dirpath)
-    user_id = listener.message.from_user.id
-    user_dict = user_data.get(user_id, {})
-    leech_split_size = user_dict.get(
+    leech_split_size = listener.user_dict.get(
         'split_size') or config_dict['LEECH_SPLIT_SIZE']
     if listener.upDest.startswith('b:') and leech_split_size > 2097152000:
         leech_split_size = 2097152000
     elif listener.upDest.startswith('u:') and leech_split_size > 4194304000:
         leech_split_size = 4194304000
-    if leech_split_size > MAX_SPLIT_SIZE:
-        leech_split_size = MAX_SPLIT_SIZE
+    leech_split_size = min(leech_split_size, MAX_SPLIT_SIZE)
     parts = -(-size // leech_split_size)
-    if (user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS'] and 'equal_splits' not in user_dict) and not inLoop:
+    if (listener.user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS'] and 'equal_splits' not in listener.user_dict) and not inLoop:
         split_size = ((size + parts - 1) // parts) + 1000
     if (await get_document_type(path))[0]:
         if multi_streams:

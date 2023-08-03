@@ -3,7 +3,7 @@ from asyncio import sleep
 from time import time
 from aiofiles.os import remove as aioremove, path as aiopath
 
-from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict, user_data
+from bot import aria2, download_dict_lock, download_dict, LOGGER, config_dict
 from bot.helper.mirror_utils.gdrive_utlis.search import gdSearch
 from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.ext_utils.fs_utils import get_base_name, clean_unwanted
@@ -31,8 +31,7 @@ async def __onDownloadStarted(api, gid):
         return
     else:
         LOGGER.info(f'onDownloadStarted: {download.name} - Gid: {gid}')
-    user_dict = user_data.get(listener.message.from_user.id, {})
-    if listener.upDest.startswith('mtp:') and user_dict('stop_duplicate', False) or not listener.upDest.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
+    if listener.upDest.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not listener.upDest.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
         await sleep(1)
         if dl := await getDownloadByGid(gid):
             if not hasattr(dl, 'listener'):

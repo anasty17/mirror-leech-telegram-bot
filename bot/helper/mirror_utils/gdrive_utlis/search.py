@@ -2,7 +2,7 @@
 from logging import getLogger
 from urllib.parse import quote as rquote
 
-from bot import DRIVES_NAMES, DRIVES_IDS, INDEX_URLS, user_data
+from bot import DRIVES_NAMES, DRIVES_IDS, INDEX_URLS
 from bot.helper.ext_utils.bot_utils import get_readable_file_size
 from bot.helper.mirror_utils.gdrive_utlis.helper import GoogleDriveHelper
 
@@ -71,11 +71,10 @@ class gdSearch(GoogleDriveHelper):
     def drive_list(self, fileName, target_id=''):
         INDEX = ''
         if target_id.startswith('mtp:'):
-            self.token_path = f'tokens/{self.listener.message.from_user.id}.pickle'
+            self.token_path = f'tokens/{self.listener.user_id}.pickle'
             self.use_sa = False
-            user_dict = user_data.get(self.listener.message.from_user.id, {})
-            if user_dict.get('index_url'):
-                INDEX = user_dict['index_url']
+            if self.listener.user_dict.get('index_url'):
+                INDEX = self.listener.user_dict['index_url']
             drives = [('User Choice', target_id, INDEX)]
         else:
             drives = zip(DRIVES_NAMES, DRIVES_IDS, INDEX_URLS)

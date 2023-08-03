@@ -49,7 +49,7 @@ class gdClone(GoogleDriveHelper):
                 if mime_type is None:
                     mime_type = 'File'
                 size = int(meta.get('size', 0))
-            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(link), self.token_path.startswith('tokens/')
+            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(link)
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(
@@ -70,7 +70,7 @@ class gdClone(GoogleDriveHelper):
             else:
                 msg = f"Error.\n{err}"
             async_to_sync(self.listener.onUploadError, msg)
-            return None, None, None, None, None
+            return None, None, None, None, None, None
 
     def __cloneFolder(self, folder_name, folder_id, dest_id):
         LOGGER.info(f"Syncing: {folder_name}")

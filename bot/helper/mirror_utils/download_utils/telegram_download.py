@@ -3,7 +3,7 @@ from logging import getLogger, ERROR
 from time import time
 from asyncio import Lock
 
-from bot import LOGGER, download_dict, download_dict_lock, non_queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER, user_data, config_dict
+from bot import LOGGER, download_dict, download_dict_lock, non_queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER, config_dict
 from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage
@@ -86,8 +86,7 @@ class TelegramDownloadHelper:
             await self.__onDownloadError('Internal error occurred')
 
     async def add_download(self, message, path, filename, session):
-        user_dict = user_data.get(self.__listener.message.from_user.id, {})
-        if IS_PREMIUM_USER and not session and (user_dict.get('user_leech', False) or 'user_leech' not in user_dict and config_dict['USER_LEECH']):
+        if IS_PREMIUM_USER and not session and (self.__listener.user_dict.get('user_leech', False) or 'user_leech' not in self.__listener.user_dict and config_dict['USER_LEECH']):
             session = 'user'
         elif not session:
             session = 'bot'

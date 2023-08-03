@@ -28,8 +28,7 @@ async def id_updates(_, query, obj):  # sourcery skip: avoid-builtin-shadow
     message = query.message
     data = query.data.split()
     if data[1] == 'cancel':
-        obj.remote = 'Task has been cancelled!'
-        obj.id = ''
+        obj.id = 'Task has been cancelled!'
         obj.is_cancelled = True
         obj.event.set()
         await message.delete()
@@ -293,10 +292,10 @@ class gdriveList(GoogleDriveHelper):
             if not self.__token_owner and not self.__token_user:
                 self.event.set()
                 return 'token.pickle not Exists!'
-            await self.list_drives()
+            await self.choose_token()
         else:
             self.token_path = token_path
-            await self.choose_token()
+            await self.list_drives()
         await wrap_future(future)
         if self.__reply_to:
             await self.__reply_to.delete()

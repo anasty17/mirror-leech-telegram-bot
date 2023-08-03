@@ -51,6 +51,8 @@ class MirrorLeechListener:
         self.rcFlags = rcFlags
         self.upDest = upDest
         self.join = join
+        self.user_id = message.from_user.id
+        self.user_dict = user_data.get(self.user_id, {})
 
     async def clean(self):
         try:
@@ -120,7 +122,6 @@ class MirrorLeechListener:
             if self.uid in non_queued_dl:
                 non_queued_dl.remove(self.uid)
         await start_from_queued()
-        user_dict = user_data.get(self.message.from_user.id, {})
 
         if self.join and await aiopath.isdir(dl_path):
             await join_files(dl_path)
@@ -210,7 +211,7 @@ class MirrorLeechListener:
                 up_path = f"{dl_path}.zip"
             async with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
-            LEECH_SPLIT_SIZE = user_dict.get(
+            LEECH_SPLIT_SIZE = self.user_dict.get(
                 'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
             cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
                    "-mx=0", f"-p{pswd}", up_path, dl_path]
@@ -246,7 +247,7 @@ class MirrorLeechListener:
             o_files = []
             if not self.compress:
                 checked = False
-                LEECH_SPLIT_SIZE = user_dict.get(
+                LEECH_SPLIT_SIZE = self.user_dict.get(
                     'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
                 for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
                     for file_ in files:
@@ -383,8 +384,7 @@ class MirrorLeechListener:
                 if not rclonePath and dir_id:
                     INDEX_URL = ''
                     if private:
-                        user_dict = user_data.get(self.message.from_user.id, {})
-                        INDEX_URL = user_dict['index_url'] if user_dict.get('index_url') else ''
+                        INDEX_URL = self.user_dict['index_url'] if self.user_dict.get('index_url') else ''
                     elif config_dict['INDEX_URL']:
                         INDEX_URL = config_dict['INDEX_URL']
                     if INDEX_URL:

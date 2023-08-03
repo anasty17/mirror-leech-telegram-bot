@@ -139,8 +139,14 @@ async def gdcloneNode(client, message, link, dest_id, tag, user_dict):
             if not is_gdrive_id(link):
                 await sendMessage(message, link)
                 return
+        if link.startswith('mtp:'):
+            token_path = f'tokens/{message.from_user.id}.pickle'
+            private = True
+        else:
+            token_path = 'token.pickle'
+            private = False
         if dest_id == 'gdl' or config_dict['GDRIVE_ID'] == 'gdl' or user_dict.get('gdrive_id') == 'gdl':
-            dest_id = await gdriveList(client, message).get_target_id('gdu')
+            dest_id = await gdriveList(client, message).get_target_id('gdu', token_path)
             if not is_gdrive_id(dest_id):
                 await sendMessage(message, dest_id)
                 return
@@ -174,7 +180,7 @@ async def gdcloneNode(client, message, link, dest_id, tag, user_dict):
                 download_dict[message.id] = GdriveStatus(
                     drive, size, message, gid, 'cl')
             await sendStatusMessage(message)
-        link, size, mime_type, files, folders, dir_id, private = await sync_to_async(drive.clone, link, dest_id)
+        link, size, mime_type, files, folders, dir_id = await sync_to_async(drive.clone, link, dest_id)
         if msg:
             await deleteMessage(msg)
         if not link:
