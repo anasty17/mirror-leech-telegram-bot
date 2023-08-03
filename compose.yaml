@@ -1,24 +1,16 @@
 x-uffizzi:
   ingress:
-    service: app
-    port: 80
-
+    service: vencoder
+    port: 8080
+  continuous_preview:
+    deploy_preview_when_pull_request_is_opened: true
+    delete_preview_when_pull_request_is_closed: true
+    share_to_github: true
 services:
-  app:
+  vencoder:
+    image: veapapa:latest
     build: .
-    context: https://github.com/Abdulrouf48/mirror-leech-telegram-bot
-    dockerfile: Dockerfile
-    environment:
-      NODE_ENV: staging
-    restart: unless-stopped
-    ports:
-      - "80:80"
-    privileged: true
-    depends_on:
-      - app
-    cap_add:
-      - SYS_ADMIN
-    restart: unless-stopped
-volumes:
-  data:
-  
+    deploy:
+      resources:
+        limits:
+          memory: 4000M
