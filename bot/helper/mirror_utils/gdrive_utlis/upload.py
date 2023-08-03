@@ -69,7 +69,7 @@ class gdUpload(GoogleDriveHelper):
                     f"Total Attempts: {err.last_attempt.attempt_number}")
                 err = err.last_attempt.exception()
             err = str(err).replace('>', '').replace('<', '')
-            async_to_sync(self.__listener.onUploadError, err)
+            async_to_sync(self.listener.onUploadError, err)
             self.__is_errored = True
         finally:
             self.__updater.cancel()
