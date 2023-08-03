@@ -5,6 +5,5 @@ services:
     build: .
     command: bash start.sh
     restart: on-failure
-    ports:
-      - "80:80"
+    ports: 
       - "8080:8080"
