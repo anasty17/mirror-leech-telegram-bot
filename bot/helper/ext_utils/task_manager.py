@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 from asyncio import Event
 
-from bot import config_dict, queued_dl, queued_up, non_queued_up, non_queued_dl, queue_dict_lock, LOGGER
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot import config_dict, queued_dl, queued_up, non_queued_up, non_queued_dl, queue_dict_lock, LOGGER, user_data
+from bot.helper.mirror_utils.gdrive_utlis.search import gdSearch
 from bot.helper.ext_utils.fs_utils import get_base_name
-from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list
+from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list, is_gdrive_id
 
 
 async def stop_duplicate_check(name, listener):
-    if (
-        not config_dict['STOP_DUPLICATE']
+    user_dict = user_data.get(listener.message.from_user.id, {})
+    if (not config_dict['STOP_DUPLICATE'] and not user_dict('stop_duplicate', False)
         or listener.isLeech
-        or listener.upPath != 'gd'
+        or not is_gdrive_id(listener.upDest)
         or listener.select
     ):
         return False, None
@@ -24,7 +24,7 @@ async def stop_duplicate_check(name, listener):
         except:
             name = None
     if name is not None:
-        telegraph_content, contents_no = await sync_to_async(GoogleDriveHelper().drive_list, name, stopDup=True)
+        telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest)
         if telegraph_content:
             msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
             button = await get_telegraph_list(telegraph_content)

@@ -9,7 +9,7 @@ from asyncio import create_subprocess_exec, sleep, Event
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, \
     MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, \
     queued_dl, queue_dict_lock, GLOBAL_EXTENSION_FILTER
-from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size
+from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size, is_gdrive_id
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, clean_download, clean_target, \
     is_first_archive_split, is_archive, is_archive_split, join_files
 from bot.helper.ext_utils.leech_utils import split_file
@@ -22,7 +22,7 @@ from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
 from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.gdrive_utlis.upload import gdUpload
 from bot.helper.mirror_utils.upload_utils.pyrogramEngine import TgUploader
 from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
 from bot.helper.telegram_helper.message_utils import sendMessage, delete_all_messages, update_all_messages
@@ -31,7 +31,7 @@ from bot.helper.ext_utils.db_handler import DbManger
 
 
 class MirrorLeechListener:
-    def __init__(self, message, compress=False, extract=False, isQbit=False, isLeech=False, tag=None, select=False, seed=False, sameDir=None, rcFlags=None, upPath=None, join=False):
+    def __init__(self, message, compress=False, extract=False, isQbit=False, isLeech=False, tag=None, select=False, seed=False, sameDir=None, rcFlags=None, upDest=None, join=False):
         if sameDir is None:
             sameDir = {}
         self.message = message
@@ -49,7 +49,7 @@ class MirrorLeechListener:
         self.suproc = None
         self.sameDir = sameDir
         self.rcFlags = rcFlags
-        self.upPath = upPath
+        self.upDest = upDest
         self.join = join
 
     async def clean(self):
@@ -313,15 +313,15 @@ class MirrorLeechListener:
                 download_dict[self.uid] = tg_upload_status
             await update_all_messages()
             await tg.upload(o_files, m_size, size)
-        elif self.upPath == 'gd':
+        elif is_gdrive_id(self.upDest):
             size = await get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
-            drive = GoogleDriveHelper(up_name, up_dir, self)
+            drive = gdUpload(up_name, up_dir, self)
             upload_status = GdriveStatus(drive, size, self.message, gid, 'up')
             async with download_dict_lock:
                 download_dict[self.uid] = upload_status
             await update_all_messages()
-            await sync_to_async(drive.upload, up_name, size)
+            await sync_to_async(drive.upload, size)
         else:
             size = await get_path_size(up_path)
             LOGGER.info(f"Upload Name: {up_name}")
@@ -332,7 +332,7 @@ class MirrorLeechListener:
             await update_all_messages()
             await RCTransfer.upload(up_path, size)
 
-    async def onUploadComplete(self, link, size, files, folders, mime_type, name, rclonePath=''):
+    async def onUploadComplete(self, link, size, files, folders, mime_type, name, rclonePath='', dir_id='', private=False):
         if self.isSuperGroup and config_dict['INCOMPLETE_TASK_NOTIFIER'] and DATABASE_URL:
             await DbManger().rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(name)}</code>\n\n<b>Size: </b>{get_readable_file_size(size)}"
@@ -373,23 +373,25 @@ class MirrorLeechListener:
                     buttons.ubutton("☁️ Cloud Link", link)
                 else:
                     msg += f'\n\nPath: <code>{rclonePath}</code>'
-                if rclonePath and (RCLONE_SERVE_URL := config_dict['RCLONE_SERVE_URL']):
+                if rclonePath and (RCLONE_SERVE_URL := config_dict['RCLONE_SERVE_URL']) and not private:
                     remote, path = rclonePath.split(':', 1)
                     url_path = rutils.quote(f'{path}')
                     share_url = f'{RCLONE_SERVE_URL}/{remote}/{url_path}'
                     if mime_type == "Folder":
                         share_url += '/'
                     buttons.ubutton("🔗 Rclone Link", share_url)
-                elif (INDEX_URL := config_dict['INDEX_URL']) and not rclonePath:
-                    url_path = rutils.quote(f'{name}')
-                    share_url = f'{INDEX_URL}/{url_path}'
-                    if mime_type == "Folder":
-                        share_url += '/'
-                        buttons.ubutton("⚡ Index Link", share_url)
-                    else:
+                if not rclonePath and dir_id:
+                    INDEX_URL = ''
+                    if private:
+                        user_dict = user_data.get(self.message.from_user.id, {})
+                        INDEX_URL = user_dict['index_url'] if user_dict.get('index_url') else ''
+                    elif config_dict['INDEX_URL']:
+                        INDEX_URL = config_dict['INDEX_URL']
+                    if INDEX_URL:
+                        share_url = f'{INDEX_URL}findpath?id={dir_id}'
                         buttons.ubutton("⚡ Index Link", share_url)
                         if mime_type.startswith(('image', 'video', 'audio')):
-                            share_urls = f'{INDEX_URL}/{url_path}?a=view'
+                            share_urls = f'{INDEX_URL}findpath?id={dir_id}&?a=view'
                             buttons.ubutton("🌐 View Link", share_urls)
                 button = buttons.build_menu(2)
             else:

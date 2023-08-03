@@ -213,12 +213,14 @@ class RcloneTransferHelper:
 
     async def upload(self, path, size):
         self.__is_upload = True
-        rc_path = self.__listener.upPath.strip('/')
+        rc_path = self.__listener.upDest.strip('/')
         if rc_path.startswith('mrcc:'):
             rc_path = rc_path.split('mrcc:', 1)[1]
             oconfig_path = f'rclone/{self.__listener.message.from_user.id}.conf'
+            private = True
         else:
             oconfig_path = 'rclone.conf'
+            private = False
 
         oremote, rc_path = rc_path.split(':', 1)
 
@@ -289,7 +291,7 @@ class RcloneTransferHelper:
         if self.__is_cancelled:
             return
         LOGGER.info(f'Upload Done. Path: {destination}')
-        await self.__listener.onUploadComplete(link, size, files, folders, mime_type, self.name, destination)
+        await self.__listener.onUploadComplete(link, size, files, folders, mime_type, self.name, destination, private=private)
 
     async def clone(self, config_path, src_remote, src_path, destination, rcflags, mime_type):
         dst_remote, dst_path = destination.split(':', 1)

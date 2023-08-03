@@ -11,7 +11,7 @@ from time import time
 from bot import DOWNLOAD_DIR, bot, config_dict, user_data, LOGGER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path, new_thread, get_readable_time, arg_parser
+from bot.helper.ext_utils.bot_utils import get_readable_file_size, is_url, new_task, sync_to_async, new_task, is_rclone_path, new_thread, get_readable_time, arg_parser, is_gdrive_id
 from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -345,26 +345,33 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
         return
 
     if not isLeech:
-        if config_dict['DEFAULT_UPLOAD'] == 'rc' and not up or up == 'rc':
-            up = config_dict['RCLONE_PATH']
-        if not up and config_dict['DEFAULT_UPLOAD'] == 'gd':
-            up = 'gd'
-        if up == 'gd' and not config_dict['GDRIVE_ID']:
-            await sendMessage(message, 'GDRIVE_ID not Provided!')
+        user_dict = user_data.get(message.from_user.id, {})
+        default_upload = user_dict.get('default_upload', '')
+        if not up and (default_upload == 'rc' or not default_upload and config_dict['DEFAULT_UPLOAD'] == 'rc') or up == 'rc':
+            up = user_dict.get('rclone_path') or config_dict['RCLONE_PATH']
+        if not up and (default_upload == 'gd' or not default_upload and config_dict['DEFAULT_UPLOAD'] == 'gd') or up == 'gd':
+            up = user_dict.get('gdrive_id') or config_dict['GDRIVE_ID']
+        if not up:
+            await sendMessage(message, 'No Upload Destination!')
             return
-        elif not up:
-            await sendMessage(message, 'No Rclone Destination!')
-            return
-        elif up not in ['rcl', 'gd']:
+        elif up != 'rcl' and is_rclone_path(up):
             if up.startswith('mrcc:'):
                 config_path = f'rclone/{message.from_user.id}.conf'
             else:
                 config_path = 'rclone.conf'
             if not await aiopath.exists(config_path):
-                await sendMessage(message, f'Rclone Config: {config_path} not Exists!')
+                await sendMessage(message, f"Rclone Config: {config_path} not Exists!")
                 return
-        if up != 'gd' and not is_rclone_path(up):
-            await sendMessage(message, 'Wrong Rclone Upload Destination!')
+        elif up != 'gdl' and is_gdrive_id(up):
+            if up.startswith('mtp:'):
+                token_path = f'tokens/{message.from_user.id}.pickle'
+            else:
+                token_path = 'token.pickle'
+            if not await aiopath.exists(token_path):
+                await sendMessage(message, f"token.pickle: {token_path} not Exists!")
+                return
+        if not is_gdrive_id(up) and not is_rclone_path(up):
+            await sendMessage(message, 'Wrong Upload Destination!')
             return
     elif up.isdigit() or up.startswith('-'):
         up = int(up)
@@ -376,7 +383,7 @@ async def _ytdl(client, message, isLeech=False, sameDir=None, bulk=[]):
             return
 
     listener = MirrorLeechListener(
-        message, compress, isLeech=isLeech, tag=tag, sameDir=sameDir, rcFlags=rcf, upPath=up)
+        message, compress, isLeech=isLeech, tag=tag, sameDir=sameDir, rcFlags=rcf, upDest=up)
 
     if 'mdisk.me' in link:
         name, link = await _mdisk(link, name)

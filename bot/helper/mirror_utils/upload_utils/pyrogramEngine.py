@@ -43,6 +43,7 @@ class TgUploader:
         self.__as_doc = False
         self.__media_group = False
         self.__upload_dest = ''
+        self.__user_leech = False
 
     async def __upload_progress(self, current, total):
         if self.__is_cancelled:
@@ -65,14 +66,25 @@ class TgUploader:
             'lprefix') or (config_dict['LEECH_FILENAME_PREFIX'] if 'lprefix' not in user_dict else '')
         if not await aiopath.exists(self.__thumb):
             self.__thumb = None
-        self.__upload_dest = self.__listener.upPath or user_dict.get(
+        if IS_PREMIUM_USER and (user_dict.get('user_leech', False) or 'user_leech' not in user_dict and config_dict['USER_LEECH']):
+            self.__user_leech = True
+        self.__upload_dest = self.__listener.upDest or user_dict.get(
             'leech_dest') or config_dict['LEECH_DUMP_CHAT']
+        if self.__upload_dest.startswith('b:'):
+            self.__upload_dest = self.__upload_dest.lstrip('b:')
+            self.__user_leech = False
+        elif self.__upload_dest.startswith('u:'):
+            self.__upload_dest = self.__upload_dest.lstrip('u:')
+            self.__user_leech = IS_PREMIUM_USER
+        if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
+            self.__upload_dest = int(self.__upload_dest)
 
     async def __msg_to_reply(self):
         if self.__upload_dest:
-            msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text.lstrip('/')
+            msg = self.__listener.message.link if self.__listener.isSuperGroup else self.__listener.message.text.lstrip(
+                '/')
             try:
-                if IS_PREMIUM_USER:
+                if self.__user_leech:
                     self.__sent_msg = await user.send_message(chat_id=self.__upload_dest, text=msg,
                                                               disable_web_page_preview=False, disable_notification=True)
                 else:
@@ -81,7 +93,7 @@ class TgUploader:
             except Exception as e:
                 await self.__listener.onUploadError(str(e))
                 return False
-        elif IS_PREMIUM_USER:
+        elif self.__user_leech:
             if not self.__listener.isSuperGroup:
                 await self.__listener.onUploadError('Use SuperGroup to leech with User!')
                 return False
@@ -274,7 +286,7 @@ class TgUploader:
                 else:
                     width = 480
                     height = 320
-                if not self.__up_path.upper().endswith(("MKV", "MP4")):
+                if not self.__up_path.upper().endswith(("MP4", "MKV")):
                     dirpath, file_ = self.__up_path.rsplit('/', 1)
                     if self.__listener.seed and not self.__listener.newDir and not dirpath.endswith("/splited_files_mltb"):
                         dirpath = f"{dirpath}/copied_mltb"

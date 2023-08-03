@@ -3,7 +3,7 @@ from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
 
 from bot import bot
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.gdrive_utlis.count import gdCount
 from bot.helper.telegram_helper.message_utils import deleteMessage, sendMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -24,8 +24,7 @@ async def countNode(_, message):
 
     if is_gdrive_link(link):
         msg = await sendMessage(message, f"Counting: <code>{link}</code>")
-        gd = GoogleDriveHelper()
-        name, mime_type, size, files, folders = await sync_to_async(gd.count, link)
+        name, mime_type, size, files, folders = await sync_to_async(gdCount().count, link)
         if mime_type is None:
             await sendMessage(message, name)
             return

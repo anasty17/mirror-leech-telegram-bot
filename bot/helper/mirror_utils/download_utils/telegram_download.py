@@ -3,7 +3,7 @@ from logging import getLogger, ERROR
 from time import time
 from asyncio import Lock
 
-from bot import LOGGER, download_dict, download_dict_lock, non_queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER
+from bot import LOGGER, download_dict, download_dict_lock, non_queued_dl, queue_dict_lock, bot, user, IS_PREMIUM_USER, user_data, config_dict
 from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage
@@ -86,14 +86,17 @@ class TelegramDownloadHelper:
             await self.__onDownloadError('Internal error occurred')
 
     async def add_download(self, message, path, filename, session):
+        user_dict = user_data.get(self.__listener.message.from_user.id, {})
+        if IS_PREMIUM_USER and not session and (user_dict.get('user_leech', False) or 'user_leech' not in user_dict and config_dict['USER_LEECH']):
+            session = 'user'
+        elif not session:
+            session = 'bot'
         if IS_PREMIUM_USER and session != 'bot' or session == 'user':
-            if not self.__listener.isSuperGroup and session != 'user':
-                await sendMessage(message, 'Use SuperGroup to download with User!')
-                return
             message = await user.get_messages(chat_id=message.chat.id, message_ids=message.id)
 
         media = message.document or message.photo or message.video or message.audio or \
             message.voice or message.video_note or message.sticker or message.animation or None
+
         if media is not None:
 
             async with global_lock:
@@ -134,7 +137,7 @@ class TelegramDownloadHelper:
             else:
                 await self.__onDownloadError('File already being downloaded!')
         else:
-            await self.__onDownloadError('No document in the replied message')
+            await self.__onDownloadError('No document in the replied message! Use SuperGroup incase you are trying to download with User session!')
 
     async def cancel_download(self):
         self.__is_cancelled = True

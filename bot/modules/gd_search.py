@@ -3,7 +3,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
 
 from bot import LOGGER, bot
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.gdrive_utlis.search import gdSearch
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -24,8 +24,7 @@ async def list_buttons(user_id, isRecursive=True):
 
 async def _list_drive(key, message, item_type, isRecursive):
     LOGGER.info(f"listing: {key}")
-    gdrive = GoogleDriveHelper()
-    telegraph_content, contents_no = await sync_to_async(gdrive.drive_list, key, isRecursive=isRecursive, itemType=item_type)
+    telegraph_content, contents_no = await sync_to_async(gdSearch(isRecursive=isRecursive, itemType=item_type).drive_list, key)
     if telegraph_content:
         try:
             button = await get_telegraph_list(telegraph_content)

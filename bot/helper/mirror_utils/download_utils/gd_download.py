@@ -3,7 +3,8 @@ from random import SystemRandom
 from string import ascii_letters, digits
 
 from bot import download_dict, download_dict_lock, LOGGER, non_queued_dl, queue_dict_lock
-from bot.helper.mirror_utils.upload_utils.gdriveTools import GoogleDriveHelper
+from bot.helper.mirror_utils.gdrive_utlis.download import gdDownload
+from bot.helper.mirror_utils.gdrive_utlis.count import gdCount
 from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
@@ -12,7 +13,7 @@ from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
 
 
 async def add_gd_download(link, path, listener, newname):
-    drive = GoogleDriveHelper()
+    drive = gdCount()
     name, mime_type, size, _, _ = await sync_to_async(drive.count, link)
     if mime_type is None:
         await sendMessage(listener.message, name)
@@ -42,7 +43,7 @@ async def add_gd_download(link, path, listener, newname):
     else:
         from_queue = False
 
-    drive = GoogleDriveHelper(name, path, listener)
+    drive = gdDownload(name, path, listener)
     async with download_dict_lock:
         download_dict[listener.uid] = GdriveStatus(
             drive, size, listener.message, gid, 'dl')

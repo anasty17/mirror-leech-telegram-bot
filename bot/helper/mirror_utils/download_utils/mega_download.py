@@ -180,7 +180,8 @@ async def add_mega_download(mega_link, path, listener, name):
         from_queue = False
 
     async with download_dict_lock:
-        download_dict[listener.uid] = MegaDownloadStatus(name, size, gid, mega_listener, listener.message)
+        download_dict[listener.uid] = MegaDownloadStatus(
+            name, size, gid, mega_listener, listener.message)
     async with queue_dict_lock:
         non_queued_dl.add(listener.uid)
 

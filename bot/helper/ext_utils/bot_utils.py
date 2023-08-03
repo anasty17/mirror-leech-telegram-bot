@@ -239,6 +239,10 @@ def is_rclone_path(path):
     return bool(re_match(r'^(mrcc:)?(?!magnet:)(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$', path))
 
 
+def is_gdrive_id(id_):
+    return bool(re_match(r'^(mtp:)?(?:[a-zA-Z0-9-]{33}|[a-zA-Z0-9]{19})$|^gdl$', id_))
+
+
 def get_mega_link_type(url):
     return "folder" if "folder" in url or "/#F!" in url else "file"
 
