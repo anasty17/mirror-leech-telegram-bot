@@ -6,7 +6,7 @@ from aiofiles.os import remove as aioremove, path as aiopath
 from bot import bot, aria2, download_dict, download_dict_lock, OWNER_ID, user_data, LOGGER
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage, deleteMessage
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, MirrorStatus, bt_selection_buttons, sync_to_async
 
 
@@ -75,7 +75,7 @@ async def get_confirm(client, query):
     dl = await getDownloadByGid(data[2])
     if dl is None:
         await query.answer("This task has been cancelled!", show_alert=True)
-        await message.delete()
+        await deleteMessage(message)
         return
     if hasattr(dl, 'listener'):
         listener = dl.listener()
@@ -120,7 +120,7 @@ async def get_confirm(client, query):
                     LOGGER.error(
                         f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!")
         await sendStatusMessage(message)
-        await message.delete()
+        await deleteMessage(message)
 
 
 bot.add_handler(MessageHandler(select, filters=command(

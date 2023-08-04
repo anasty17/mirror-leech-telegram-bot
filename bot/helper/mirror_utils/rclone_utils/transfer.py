@@ -32,6 +32,8 @@ class RcloneTransferHelper:
         self.__sa_index = 0
         self.__sa_number = 0
         self.name = name
+        self.extension_filter = ['aria2', '!qB']
+        self.user_settings()
 
     @property
     def transferred_size(self):
@@ -52,6 +54,12 @@ class RcloneTransferHelper:
     @property
     def size(self):
         return self.__size
+
+    def user_settings(self):
+        if self.__listener.user_dict.get('excluded_extensions', False):
+            self.extension_filter = self.__listener.user_dict['excluded_extensions']
+        elif 'excluded_extensions' not in self.__listener.user_dict:
+            self.extension_filter = GLOBAL_EXTENSION_FILTER
 
     async def __progress(self):
         while not (self.__proc is None or self.__is_cancelled):
@@ -229,7 +237,7 @@ class RcloneTransferHelper:
             folders, files = await count_files_and_folders(path)
             rc_path += f"/{self.name}" if rc_path else self.name
         else:
-            if path.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+            if path.lower().endswith(tuple(self.extension_filter)):
                 await self.__listener.onUploadError('This file extension is excluded by extension filter!')
                 return
             mime_type = await sync_to_async(get_mime_type, path)
@@ -351,9 +359,8 @@ class RcloneTransferHelper:
                     await self.__listener.onUploadError(err[:4000])
                     return None, None
 
-    @staticmethod
-    def __getUpdatedCommand(config_path, source, destination, rcflags, method):
-        ext = '*.{' + ','.join(GLOBAL_EXTENSION_FILTER) + '}'
+    def __getUpdatedCommand(self, config_path, source, destination, rcflags, method):
+        ext = '*.{' + ','.join(self.extension_filter) + '}'
         cmd = ['rclone', method, '--fast-list', '--config', config_path, '-P', source, destination,
                '--exclude', ext, '--ignore-case', '--low-level-retries', '1', '-M', '--log-file',
                'rlog.txt', '--log-level', 'DEBUG']

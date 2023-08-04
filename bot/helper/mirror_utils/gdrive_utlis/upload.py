@@ -35,8 +35,14 @@ class gdUpload(GoogleDriveHelper):
         LOGGER.info(f"Uploading: {item_path}")
         self.__updater = setInterval(self.update_interval, self.progress)
         try:
+            if self.listener.user_dict.get('excluded_extensions', False):
+                extension_filter = self.listener.user_dict['excluded_extensions']
+            elif 'excluded_extensions' not in self.listener.user_dict:
+                extension_filter = GLOBAL_EXTENSION_FILTER
+            else:
+                extension_filter = ['aria2', '!qB']
             if ospath.isfile(item_path):
-                if item_path.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                if item_path.lower().endswith(tuple(extension_filter)):
                     raise Exception(
                         'This file extension is excluded by extension filter!')
                 mime_type = get_mime_type(item_path)
@@ -51,7 +57,7 @@ class gdUpload(GoogleDriveHelper):
                 mime_type = 'Folder'
                 dir_id = self.create_directory(ospath.basename(
                     ospath.abspath(self.name)), self.listener.upDest)
-                result = self.__upload_dir(item_path, dir_id)
+                result = self.__upload_dir(item_path, dir_id, extension_filter)
                 if result is None:
                     raise Exception('Upload has been manually cancelled!')
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
@@ -76,9 +82,11 @@ class gdUpload(GoogleDriveHelper):
             elif self.__is_errored:
                 return
             async_to_sync(self.listener.onUploadComplete, link, size, self.total_files,
-                          self.total_folders, mime_type, self.name, dir_id=self.getIdFromUrl(link), private=self.token_path.startswith('tokens/'))
+                          self.total_folders, mime_type, self.name,
+                          dir_id=self.getIdFromUrl(link, self.listener.user_id),
+                          private=self.token_path.startswith('tokens/'))
 
-    def __upload_dir(self, input_directory, dest_id):
+    def __upload_dir(self, input_directory, dest_id, extension_filter):
         list_dirs = listdir(input_directory)
         if len(list_dirs) == 0:
             return dest_id
@@ -89,7 +97,7 @@ class gdUpload(GoogleDriveHelper):
                 current_dir_id = self.create_directory(item, dest_id)
                 new_id = self.__upload_dir(current_file_name, current_dir_id)
                 self.total_folders += 1
-            elif not item.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+            elif not item.lower().endswith(tuple(extension_filter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 # current_file_name will have the full path

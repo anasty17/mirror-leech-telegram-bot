@@ -16,6 +16,7 @@ from bot import config_dict, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
 from bot.helper.ext_utils.fs_utils import clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss
+from bot.helper.telegram_helper.message_utils import deleteMessage
 
 LOGGER = getLogger(__name__)
 getLogger("pyrogram").setLevel(ERROR)
@@ -68,12 +69,13 @@ class TgUploader:
             self.__user_leech = True
         self.__upload_dest = self.__listener.upDest or self.__listener.user_dict.get(
             'leech_dest') or config_dict['LEECH_DUMP_CHAT']
-        if self.__upload_dest.startswith('b:'):
-            self.__upload_dest = self.__upload_dest.lstrip('b:')
-            self.__user_leech = False
-        elif self.__upload_dest.startswith('u:'):
-            self.__upload_dest = self.__upload_dest.lstrip('u:')
-            self.__user_leech = IS_PREMIUM_USER
+        if not self.__upload_dest.isdigit():
+            if self.__upload_dest.startswith('b:'):
+                self.__upload_dest = self.__upload_dest.lstrip('b:')
+                self.__user_leech = False
+            elif self.__upload_dest.startswith('u:'):
+                self.__upload_dest = self.__upload_dest.lstrip('u:')
+                self.__user_leech = IS_PREMIUM_USER
         if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
             self.__upload_dest = int(self.__upload_dest)
 
@@ -164,7 +166,7 @@ class TgUploader:
         for msg in msgs:
             if msg.link in self.__msgs_dict:
                 del self.__msgs_dict[msg.link]
-            await msg.delete()
+            await deleteMessage(msg)
         del self.__media_dict[key][subkey]
         if self.__listener.isSuperGroup or self.__upload_dest:
             for m in msgs_list:
@@ -176,12 +178,18 @@ class TgUploader:
         res = await self.__msg_to_reply()
         if not res:
             return
+        if self.__listener.user_dict.get('excluded_extensions', False):
+                extension_filter = self.__listener.user_dict['excluded_extensions']
+        elif 'excluded_extensions' not in self.__listener.user_dict:
+            extension_filter = GLOBAL_EXTENSION_FILTER
+        else:
+            extension_filter = ['aria2', '!qB']
         for dirpath, _, files in sorted(await sync_to_async(walk, self.__path)):
             if dirpath.endswith('/yt-dlp-thumb'):
                 continue
             for file_ in natsorted(files):
                 self.__up_path = ospath.join(dirpath, file_)
-                if file_.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+                if file_.lower().endswith(tuple(extension_filter)):
                     await aioremove(self.__up_path)
                     continue
                 try:

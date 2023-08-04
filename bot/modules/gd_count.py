@@ -14,7 +14,7 @@ from bot.helper.ext_utils.bot_utils import is_gdrive_link, sync_to_async, new_ta
 async def countNode(_, message):
     args = message.text.split()
     if username := message.from_user.username:
-            tag = f"@{username}"
+        tag = f"@{username}"
     else:
         tag = message.from_user.mention
 
@@ -24,7 +24,7 @@ async def countNode(_, message):
 
     if is_gdrive_link(link):
         msg = await sendMessage(message, f"Counting: <code>{link}</code>")
-        name, mime_type, size, files, folders = await sync_to_async(gdCount().count, link)
+        name, mime_type, size, files, folders = await sync_to_async(gdCount().count, link, message.from_user.id)
         if mime_type is None:
             await sendMessage(message, name)
             return

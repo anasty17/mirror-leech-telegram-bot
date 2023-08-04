@@ -8,7 +8,8 @@ from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list, is
 
 
 async def stop_duplicate_check(name, listener):
-    if (not config_dict['STOP_DUPLICATE'] and not listener.user_dict.get('stop_duplicate', False)
+    if (listener.upDest.startswith('mtp:') and not listener.user_dict.get('stop_duplicate', False)
+        or config_dict['STOP_DUPLICATE'] and not listener.upDest.startswith('mtp:')
         or listener.isLeech
         or not is_gdrive_id(listener.upDest)
         or listener.select
@@ -23,7 +24,7 @@ async def stop_duplicate_check(name, listener):
         except:
             name = None
     if name is not None:
-        telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, listener=listener).drive_list, name)
+        telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest, listener.user_id)
         if telegraph_content:
             msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
             button = await get_telegraph_list(telegraph_content)

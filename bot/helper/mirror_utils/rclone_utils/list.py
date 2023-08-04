@@ -12,7 +12,7 @@ from time import time
 from bot import LOGGER, config_dict, user_data
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, deleteMessage
 from bot.helper.ext_utils.bot_utils import cmd_exec, new_thread, get_readable_file_size, new_task, get_readable_time, update_user_ldata
 
 LIST_LIMIT = 6
@@ -28,7 +28,7 @@ async def path_updates(_, query, obj):
         obj.path = ''
         obj.is_cancelled = True
         obj.event.set()
-        await message.delete()
+        await deleteMessage(message)
         return
     if obj.query_proc:
         return
@@ -55,7 +55,7 @@ async def path_updates(_, query, obj):
         if data[2] == 'fo':
             await obj.get_path()
         else:
-            await message.delete()
+            await deleteMessage(message)
             obj.event.set()
     elif data[1] == 'ps':
         if obj.page_step == int(data[2]):
@@ -69,7 +69,7 @@ async def path_updates(_, query, obj):
         obj.item_type = data[2]
         await obj.get_path()
     elif data[1] == 'cur':
-        await message.delete()
+        await deleteMessage(message)
         obj.event.set()
     elif data[1] == 'def':
         path = f'{obj.remote}{obj.path}' if obj.config_path == 'rclone.conf' else f'mrcc:{obj.remote}{obj.path}'
@@ -285,7 +285,7 @@ class RcloneList:
             self.config_path = config_path
             await self.list_remotes()
         await wrap_future(future)
-        await self.__reply_to.delete()
+        await deleteMessage(self.__reply_to)
         if self.config_path != 'rclone.conf' and not self.is_cancelled:
             return f'mrcc:{self.remote}{self.path}'
         return f'{self.remote}{self.path}'

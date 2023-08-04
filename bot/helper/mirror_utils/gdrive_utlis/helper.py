@@ -103,11 +103,11 @@ class GoogleDriveHelper:
         LOGGER.info(f"Switching to {self.sa_index} index")
         self.service = self.__authorize()
 
-    def getIdFromUrl(self, link):
+    def getIdFromUrl(self, link, user_id):
         if link.startswith('mtp:'):
             self.use_sa = False
             link = link.lstrip('mtp:')
-            self.token_path = f'tokens/{self.listener.user_id}.pickle'
+            self.token_path = f'tokens/{user_id}.pickle'
         if is_gdrive_id(link):
             return link
         if "folders" in link or "file" in link:

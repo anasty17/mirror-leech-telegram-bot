@@ -155,14 +155,14 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         if not is_gdrive_id(dest_id):
             await sendMessage(message, 'Wrong Gdrive ID!')
             return
-        name, mime_type, size, files, _ = await sync_to_async(gdCount().count, link)
+        name, mime_type, size, files, _ = await sync_to_async(gdCount().count, link, listener.user_id)
         if mime_type is None:
             await sendMessage(message, name)
             return
         listener.upDest = dest_id
         if dest_id.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not dest_id.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
             LOGGER.info('Checking File/Folder if already in Drive...')
-            telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, noMulti=True, listener=listener).drive_list, name, dest_id)
+            telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, noMulti=True).drive_list, name, dest_id, listener.user_id)
             if telegraph_content:
                 msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
                 button = await get_telegraph_list(telegraph_content)

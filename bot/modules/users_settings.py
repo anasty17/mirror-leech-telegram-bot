@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex, create
-from aiofiles import open as aiopen
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir
 from os import path as ospath, getcwd
 from PIL import Image
@@ -11,8 +10,8 @@ from html import escape
 from io import BytesIO
 from asyncio import sleep
 
-from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
+from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE, GLOBAL_EXTENSION_FILTER
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -103,6 +102,14 @@ async def get_user_settings(from_user):
     buttons.ibutton(f"Upload using {du}",
                     f"userset {user_id} {default_upload}")
 
+    buttons.ibutton("Excluded Extensions", f"userset {user_id} ex_ex")
+    if user_dict.get('excluded_extensions', False):
+        ex_ex = user_dict['excluded_extensions']
+    elif 'excluded_extensions' not in user_dict and GLOBAL_EXTENSION_FILTER:
+        ex_ex = GLOBAL_EXTENSION_FILTER
+    else:
+        ex_ex = 'None'
+
     buttons.ibutton("YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get('yt_opt', False):
         ytopt = user_dict['yt_opt']
@@ -129,6 +136,7 @@ Gdrive ID is <code>{gdrive_id}</code>
 Index Link is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>
 Default Upload using <b>{du}</b>
+Excluded Extensions is <code>{ex_ex}</code>
 YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
 
     return text, buttons.build_menu(1)
@@ -157,7 +165,7 @@ async def set_thumb(_, message, pre_event):
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
     await aioremove(photo_dir)
     update_user_ldata(user_id, 'thumb', des_dir)
-    await message.delete()
+    await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
         await DbManger().update_user_doc(user_id, 'thumb', des_dir)
@@ -172,7 +180,7 @@ async def add_rclone(_, message, pre_event):
     des_dir = ospath.join(path, f'{user_id}.conf')
     await message.download(file_name=des_dir)
     update_user_ldata(user_id, 'rclone', f'rclone/{user_id}.conf')
-    await message.delete()
+    await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
         await DbManger().update_user_doc(user_id, 'rclone_config', des_dir)
@@ -187,7 +195,7 @@ async def add_token_pickle(_, message, pre_event):
     des_dir = ospath.join(path, f'{user_id}.pickle')
     await message.download(file_name=des_dir)
     update_user_ldata(user_id, 'token_pickle', f'tokens/{user_id}.pickle')
-    await message.delete()
+    await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
         await DbManger().update_user_doc(user_id, 'token_pickle', des_dir)
@@ -201,8 +209,14 @@ async def set_option(_, message, pre_event, option):
         value = int(value)
     elif option == 'split_size':
         value = min(int(message.text), MAX_SPLIT_SIZE)
+    elif option == 'excluded_extensions':
+        fx = value.split()
+        value = ['aria2', '!qB']
+        for x in fx:
+            x = x.lstrip('.')
+            value.append(x.strip().lower())
     update_user_ldata(user_id, option, value)
-    await message.delete()
+    await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
         await DbManger().update_user_data(user_id)
@@ -272,7 +286,7 @@ async def edit_user_settings(client, query):
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
-    elif data[2] in ['yt_opt', 'lprefix', 'index_url']:
+    elif data[2] in ['yt_opt', 'lprefix', 'index_url', 'excluded_extensions']:
         await query.answer()
         update_user_ldata(user_id, data[2], '')
         await update_user_settings(query)
@@ -377,7 +391,12 @@ Rclone Path is <code>{rccpath}</code>"""
         buttons.ibutton("token.pickle", f"userset {user_id} token")
         buttons.ibutton("Default Gdrive ID", f"userset {user_id} gdid")
         buttons.ibutton("Index URL", f"userset {user_id} index")
-        buttons.ibutton("Stop Duplicate", f"userset {user_id} stop_duplicate")
+        if user_dict.get('stop_duplicate', False) or 'stop_duplicate' not in user_dict and config_dict['STOP_DUPLICATE']:
+            buttons.ibutton("Disable Stop Duplicate", f"userset {user_id} stop_duplicate")
+            sd_msg = 'Enabled'
+        else:
+            buttons.ibutton("Enable Stop Duplicate", f"userset {user_id} stop_duplicate")
+            sd_msg = 'Disabled'
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
         tokenmsg = "Exists" if await aiopath.exists(token_pickle) else "Not Exists"
@@ -388,10 +407,6 @@ Rclone Path is <code>{rccpath}</code>"""
         else:
             gdrive_id = 'None'
         index = user_dict['index_url'] if user_dict.get('index_url', False) else 'None'
-        if user_dict.get('stop_duplicate', False) or 'stop_duplicate' not in user_dict and config_dict['STOP_DUPLICATE']:
-            sd_msg = 'Enabled'
-        else:
-            sd_msg = 'Disabled'
         text = f"""<u>Gdrive Tools Settings for {name}</u>
 Gdrive Token <b>{tokenmsg}</b>
 Gdrive ID is <code>{gdrive_id}</code>
@@ -521,6 +536,17 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await editMessage(message, 'Send leech destination ID/USERNAME. Timeout: 60 sec', buttons.build_menu(1))
         pfunc = partial(set_option, pre_event=query, option='leech_dest')
         await event_handler(client, query, pfunc)
+    elif data[2] == 'ex_ex':
+        await query.answer()
+        buttons = ButtonMaker()
+        if user_dict.get('excluded_extensions', False) or 'excluded_extensions' not in user_dict and GLOBAL_EXTENSION_FILTER:
+            buttons.ibutton("Remove Excluded Extensions",
+                            f"userset {user_id} excluded_extensions")
+        buttons.ibutton("Back", f"userset {user_id} back")
+        buttons.ibutton("Close", f"userset {user_id} close")
+        await editMessage(message, 'Send exluded extenions seperated by space without dot at beginning. Timeout: 60 sec', buttons.build_menu(1))
+        pfunc = partial(set_option, pre_event=query, option='excluded_extensions')
+        await event_handler(client, query, pfunc)
     elif data[2] in ['gd', 'rc']:
         await query.answer()
         du = 'rc' if data[2] == 'gd' else 'gd'
@@ -543,8 +569,8 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await update_user_settings(query)
     else:
         await query.answer()
-        await message.reply_to_message.delete()
-        await message.delete()
+        await deleteMessage(message.reply_to_message)
+        await deleteMessage(message)
 
 
 async def send_users_settings(client, message):

@@ -128,12 +128,12 @@ In each single file there is a major change from base code, it's almost totaly d
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - Mirror/Leech/Clone multi links/files with one command
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links
-- Extensions Filter for the files to be uploaded/cloned
+- Extensions Filter for the files to be uploaded/cloned for each user
 - View Link button. Extra button to open index link in broswer instead of direct download for file
 - Queueing System for all tasks
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Bulk download from telegram txt file or text message contains links seperated by new line
-- Join splitted files that have splitted before by split linux pkg
+- Join splitted files that have splitted before by split(linux pkg)
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 

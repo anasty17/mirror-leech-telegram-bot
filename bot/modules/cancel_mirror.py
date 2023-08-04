@@ -6,7 +6,7 @@ from pyrogram.filters import command, regex
 from bot import download_dict, bot, download_dict_lock, OWNER_ID, user_data
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, auto_delete_message
+from bot.helper.telegram_helper.message_utils import sendMessage, auto_delete_message, deleteMessage
 from bot.helper.ext_utils.bot_utils import getDownloadByGid, getAllDownload, MirrorStatus, new_task
 from bot.helper.telegram_helper import button_build
 
@@ -80,8 +80,8 @@ async def cancel_all_update(_, query):
     reply_to = message.reply_to_message
     await query.answer()
     if data[1] == 'close':
-        await reply_to.delete()
-        await message.delete()
+        await deleteMessage(reply_to)
+        await deleteMessage(message)
     else:
         res = await cancel_all(data[1])
         if not res:

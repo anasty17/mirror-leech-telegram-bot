@@ -55,7 +55,7 @@ async def __onDownloadStarted(api, gid):
                 except:
                     name = None
             if name is not None:
-                telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, listener=listener).drive_list, name)
+                telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest, listener.user_id)
                 if telegraph_content:
                     msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
                     button = await get_telegraph_list(telegraph_content)

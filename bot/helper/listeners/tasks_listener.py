@@ -35,7 +35,7 @@ class MirrorLeechListener:
         if sameDir is None:
             sameDir = {}
         self.message = message
-        self.uid = message.id
+        self.uid = self.message.id
         self.extract = extract
         self.compress = compress
         self.isQbit = isQbit
@@ -45,13 +45,13 @@ class MirrorLeechListener:
         self.newDir = ""
         self.dir = f"{DOWNLOAD_DIR}{self.uid}"
         self.select = select
-        self.isSuperGroup = message.chat.type.name in ['SUPERGROUP', 'CHANNEL']
+        self.isSuperGroup = self.message.chat.type.name in ['SUPERGROUP', 'CHANNEL']
         self.suproc = None
         self.sameDir = sameDir
         self.rcFlags = rcFlags
         self.upDest = upDest
         self.join = join
-        self.user_id = message.from_user.id
+        self.user_id = self.message.from_user.id
         self.user_dict = user_data.get(self.user_id, {})
 
     async def clean(self):

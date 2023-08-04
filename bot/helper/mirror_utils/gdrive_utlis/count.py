@@ -12,9 +12,9 @@ class gdCount(GoogleDriveHelper):
     def __init__(self):
         super().__init__()
 
-    def count(self, link):
+    def count(self, link, user_id):
         try:
-            file_id = self.getIdFromUrl(link)
+            file_id = self.getIdFromUrl(link, user_id)
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link", None, None, None, None
         self.service = self.authorize()

@@ -23,7 +23,7 @@ class gdDownload(GoogleDriveHelper):
         self.is_downloading = True
 
     def download(self, link):
-        file_id = self.getIdFromUrl(link)
+        file_id = self.getIdFromUrl(link, self.listener.user_id)
         self.service = self.authorize()
         self.__updater = setInterval(self.update_interval, self.progress)
         try:

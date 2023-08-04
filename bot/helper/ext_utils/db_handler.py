@@ -43,6 +43,7 @@ class DbManger:
                 del row['_id']
                 thumb_path = f'Thumbnails/{uid}.jpg'
                 rclone_path = f'rclone/{uid}.conf'
+                token_path = f'tokens/{uid}.pickle'
                 if row.get('thumb'):
                     if not await aiopath.exists('Thumbnails'):
                         await makedirs('Thumbnails')
@@ -55,6 +56,11 @@ class DbManger:
                     async with aiopen(rclone_path, 'wb+') as f:
                         await f.write(row['rclone'])
                     row['rclone'] = rclone_path
+                if row.get('token_pickle'):
+                    if not await aiopath.exists('tokens'):
+                        await makedirs('tokens')
+                    async with aiopen(token_path, 'wb+') as f:
+                        await f.write(row['token_pickle'])
                 user_data[uid] = row
             LOGGER.info("Users data has been imported from Database")
         # Rss Data

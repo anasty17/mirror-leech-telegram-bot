@@ -12,7 +12,7 @@ from io import BytesIO
 from aioshutil import rmtree as aiormtree
 
 from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER, bot
-from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages
+from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -189,7 +189,7 @@ async def edit_variable(_, message, pre_message, key):
         value = int(value)
     config_dict[key] = value
     await update_buttons(pre_message, 'var')
-    await message.delete()
+    await deleteMessage(message)
     if DATABASE_URL:
         await DbManger().update_config({key: value})
     if key in ['SEARCH_PLUGINS', 'SEARCH_API_LINK']:
@@ -221,7 +221,7 @@ async def edit_aria(_, message, pre_message, key):
                     LOGGER.error(e)
     aria2_options[key] = value
     await update_buttons(pre_message, 'aria')
-    await message.delete()
+    await deleteMessage(message)
     if DATABASE_URL:
         await DbManger().update_aria2(key, value)
 
@@ -240,7 +240,7 @@ async def edit_qbit(_, message, pre_message, key):
     await sync_to_async(get_client().app_set_preferences, {key: value})
     qbit_options[key] = value
     await update_buttons(pre_message, 'qbit')
-    await message.delete()
+    await deleteMessage(message)
     if DATABASE_URL:
         await DbManger().update_qbittorrent(key, value)
 
@@ -263,7 +263,7 @@ async def update_private_file(_, message, pre_message):
             await (await create_subprocess_exec("touch", ".netrc")).wait()
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
-        await message.delete()
+        await deleteMessage(message)
     elif doc := message.document:
         file_name = doc.file_name
         await message.download(file_name=f'{getcwd()}/{file_name}')
@@ -308,7 +308,7 @@ async def update_private_file(_, message, pre_message):
             buttons.ibutton('No', "botset close")
             await sendMessage(message, msg, buttons.build_menu(2))
         else:
-            await message.delete()
+            await deleteMessage(message)
     if file_name == 'rclone.conf':
         await rclone_serve_booter()
     await update_buttons(pre_message)
@@ -343,8 +343,8 @@ async def edit_bot_settings(client, query):
     if data[1] == 'close':
         handler_dict[message.chat.id] = False
         await query.answer()
-        await message.reply_to_message.delete()
-        await message.delete()
+        await deleteMessage(message.reply_to_message)
+        await deleteMessage(message)
     elif data[1] == 'back':
         handler_dict[message.chat.id] = False
         await query.answer()
@@ -535,8 +535,8 @@ async def edit_bot_settings(client, query):
             await (await create_subprocess_shell(f"git rm -r --cached {filename} \
                                                    && git commit -sm botsettings -q \
                                                    && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
-        await message.reply_to_message.delete()
-        await message.delete()
+        await deleteMessage(message.reply_to_message)
+        await deleteMessage(message)
 
 
 async def bot_settings(_, message):

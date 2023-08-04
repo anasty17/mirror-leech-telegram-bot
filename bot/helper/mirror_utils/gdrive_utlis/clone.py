@@ -28,7 +28,7 @@ class gdClone(GoogleDriveHelper):
     def clone(self, link):
         self.user_setting(link)
         try:
-            file_id = self.getIdFromUrl(link)
+            file_id = self.getIdFromUrl(link, self.listener.user_id)
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link"
         self.service = self.authorize()
@@ -56,7 +56,7 @@ class gdClone(GoogleDriveHelper):
                 if mime_type is None:
                     mime_type = 'File'
                 size = int(meta.get('size', 0))
-            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(link)
+            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(link, self.listener.user_id)
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(

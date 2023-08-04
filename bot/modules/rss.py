@@ -12,7 +12,7 @@ from re import split as re_split
 from io import BytesIO
 
 from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot
-from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendFile
+from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendRss, sendFile, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.ext_utils.db_handler import DbManger
@@ -275,7 +275,7 @@ async def rssGet(client, message, pre_event):
                     with BytesIO(item_info_ecd) as out_file:
                         out_file.name = f"rssGet {title} items_no. {count}.txt"
                         await sendFile(message, out_file)
-                    await msg.delete()
+                    await deleteMessage(msg)
                 else:
                     await editMessage(msg, item_info)
             except IndexError as e:
@@ -378,8 +378,8 @@ async def rssListener(client, query):
     elif data[1] == 'close':
         await query.answer()
         handler_dict[user_id] = False
-        await message.reply_to_message.delete()
-        await message.delete()
+        await deleteMessage(message.reply_to_message)
+        await deleteMessage(message)
     elif data[1] == 'back':
         await query.answer()
         handler_dict[user_id] = False
