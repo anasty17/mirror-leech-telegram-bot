@@ -145,6 +145,12 @@ async def rssSub(client, message, pre_event):
     if msg:
         await sendMessage(message, msg)
     await updateRssMenu(pre_event)
+    is_sudo = await CustomFilters.sudo(client, message)
+    if scheduler.state == 2:
+        scheduler.resume()
+    elif is_sudo and not scheduler.running:
+        addJob(config_dict['RSS_DELAY'])
+        scheduler.start()
 
 
 async def getUserId(title):

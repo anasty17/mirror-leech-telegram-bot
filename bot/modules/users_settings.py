@@ -205,9 +205,7 @@ async def set_option(_, message, pre_event, option):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     value = message.text
-    if option == 'leech_dest' and value.isdigit() or value.startswith('-'):
-        value = int(value)
-    elif option == 'split_size':
+    if option == 'split_size':
         value = min(int(message.text), MAX_SPLIT_SIZE)
     elif option == 'excluded_extensions':
         fx = value.split()
