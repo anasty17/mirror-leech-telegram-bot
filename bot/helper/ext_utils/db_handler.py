@@ -122,6 +122,8 @@ class DbManger:
             del data['thumb']
         if data.get('rclone'):
             del data['rclone']
+        if data.get('token_pickle'):
+            del data['token_pickle']
         await self.__db.users.replace_one({'_id': user_id}, data, upsert=True)
         self.__conn.close
 
