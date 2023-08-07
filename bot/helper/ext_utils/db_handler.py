@@ -61,6 +61,7 @@ class DbManger:
                         await makedirs('tokens')
                     async with aiopen(token_path, 'wb+') as f:
                         await f.write(row['token_pickle'])
+                    row['token_pickle'] = token_path
                 user_data[uid] = row
             LOGGER.info("Users data has been imported from Database")
         # Rss Data
