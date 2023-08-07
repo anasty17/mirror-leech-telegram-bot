@@ -20,7 +20,7 @@ class gdClone(GoogleDriveHelper):
         self.is_cloning = True
 
     def user_setting(self, link):
-        if self.listener.upDest.startswith('mtp:') or link.starstwith('mtp:'):
+        if self.listener.upDest.startswith('mtp:') or link.startswith('mtp:'):
             self.token_path = f'tokens/{self.listener.user_id}.pickle'
             self.listener.upDest = self.listener.upDest.lstrip('mtp:')
             self.use_sa = False
