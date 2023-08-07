@@ -245,7 +245,7 @@ async def clone(client, message):
         if not config_dict['RCLONE_PATH'] and not listener.user_dict.get('rclone_path') and not dst_path:
             await sendMessage(message, 'Destination not specified!')
             return
-        await rcloneNode(client, message, link, dst_path, rcf, tag, listener)
+        await rcloneNode(client, message, link, dst_path, rcf, listener)
     else:
         if not await aiopath.exists('token.pickle') and not await aiopath.exists(f'tokens/{message.from_user.id}.pickle'):
             await sendMessage(message, 'Token.pickle Not exists!')
@@ -253,7 +253,7 @@ async def clone(client, message):
         if not config_dict['GDRIVE_ID'] and not listener.user_dict.get('gdrive_id') and not dst_path:
             await sendMessage(message, 'GDRIVE_ID not Provided!')
             return
-        await gdcloneNode(client, message, link, dst_path, tag, listener)
+        await gdcloneNode(client, message, link, dst_path, listener)
 
 
 bot.add_handler(MessageHandler(clone, filters=command(

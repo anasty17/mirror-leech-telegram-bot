@@ -9,7 +9,7 @@ from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list, is
 
 async def stop_duplicate_check(name, listener):
     if (listener.upDest.startswith('mtp:') and not listener.user_dict.get('stop_duplicate', False)
-        or config_dict['STOP_DUPLICATE'] and not listener.upDest.startswith('mtp:')
+        or config_dict['STOP_DUPLICATE'] and listener.upDest.startswith('mtp:')
         or listener.isLeech
         or not is_gdrive_id(listener.upDest)
         or listener.select
