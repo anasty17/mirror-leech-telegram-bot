@@ -121,7 +121,7 @@ class gdSearch(GoogleDriveHelper):
                         url = f'{index_url}findpath?id={file.get("id")}'
                         msg += f' <b>| <a href="{url}">Index Link</a></b>'
                         if mime_type.startswith(('image', 'video', 'audio')):
-                            urlv = f'{index_url}findpath?id={file.get("id")}&?a=view'
+                            urlv = f'{index_url}findpath?id={file.get("id")}&view=true'
                             msg += f' <b>| <a href="{urlv}">View Link</a></b>'
                 msg += '<br><br>'
                 contents_no += 1
