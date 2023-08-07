@@ -191,8 +191,9 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
                     await sendMessage(message, str(e))
                     return
 
+    user_id = message.from_user.id
     if not isLeech:
-        user_dict = user_data.get(message.from_user.id, {})
+        user_dict = user_data.get(user_id, {})
         default_upload = user_dict.get('default_upload', '')
         if not up and (default_upload == 'rc' or not default_upload and config_dict['DEFAULT_UPLOAD'] == 'rc') or up == 'rc':
             up = user_dict.get('rclone_path') or config_dict['RCLONE_PATH']
@@ -203,7 +204,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
             return
         elif up != 'rcl' and is_rclone_path(up):
             if up.startswith('mrcc:'):
-                config_path = f'rclone/{message.from_user.id}.conf'
+                config_path = f'rclone/{user_id}.conf'
             else:
                 config_path = 'rclone.conf'
             if not await aiopath.exists(config_path):
@@ -211,7 +212,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
                 return
         elif up != 'gdl' and is_gdrive_id(up):
             if up.startswith('mtp:'):
-                token_path = f'tokens/{message.from_user.id}.pickle'
+                token_path = f'tokens/{user_id}.pickle'
             else:
                 token_path = 'token.pickle'
             if not await aiopath.exists(token_path):
@@ -252,7 +253,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
     elif is_rclone_path(link):
         if link.startswith('mrcc:'):
             link = link.split('mrcc:', 1)[1]
-            config_path = f'rclone/{message.from_user.id}.conf'
+            config_path = f'rclone/{user_id}.conf'
         else:
             config_path = 'rclone.conf'
         if not await aiopath.exists(config_path):
