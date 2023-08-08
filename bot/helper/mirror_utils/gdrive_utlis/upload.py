@@ -106,7 +106,8 @@ class gdUpload(GoogleDriveHelper):
                 self.total_files += 1
                 new_id = dest_id
             else:
-                osremove(current_file_name)
+                if not self.listener.seed or self.listener.newDir:
+                    osremove(current_file_name)
                 new_id = 'filter'
             if self.is_cancelled:
                 break

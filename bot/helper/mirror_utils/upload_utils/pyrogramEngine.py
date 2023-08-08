@@ -190,7 +190,8 @@ class TgUploader:
             for file_ in natsorted(files):
                 self.__up_path = ospath.join(dirpath, file_)
                 if file_.lower().endswith(tuple(extension_filter)):
-                    await aioremove(self.__up_path)
+                    if not self.__listener.seed or self.__listener.newDir:
+                        await aioremove(self.__up_path)
                     continue
                 try:
                     f_size = await aiopath.getsize(self.__up_path)
