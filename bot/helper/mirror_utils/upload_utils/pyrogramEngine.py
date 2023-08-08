@@ -69,14 +69,15 @@ class TgUploader:
             self.__user_leech = True
         self.__upload_dest = self.__listener.upDest or self.__listener.user_dict.get(
             'leech_dest') or config_dict['LEECH_DUMP_CHAT']
-        if self.__upload_dest.startswith('b:'):
-            self.__upload_dest = self.__upload_dest.lstrip('b:')
-            self.__user_leech = False
-        elif self.__upload_dest.startswith('u:'):
-            self.__upload_dest = self.__upload_dest.lstrip('u:')
-            self.__user_leech = IS_PREMIUM_USER
-        if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
-            self.__upload_dest = int(self.__upload_dest)
+        if not isinstance(self.__upload_dest, int):
+            if self.__upload_dest.startswith('b:'):
+                self.__upload_dest = self.__upload_dest.lstrip('b:')
+                self.__user_leech = False
+            elif self.__upload_dest.startswith('u:'):
+                self.__upload_dest = self.__upload_dest.lstrip('u:')
+                self.__user_leech = IS_PREMIUM_USER
+            if self.__upload_dest.isdigit() or self.__upload_dest.startswith('-'):
+                self.__upload_dest = int(self.__upload_dest)
 
     async def __msg_to_reply(self):
         if self.__upload_dest:

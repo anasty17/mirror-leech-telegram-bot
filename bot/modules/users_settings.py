@@ -10,7 +10,7 @@ from html import escape
 from io import BytesIO
 from asyncio import sleep
 
-from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, IS_PREMIUM_USER, MAX_SPLIT_SIZE, GLOBAL_EXTENSION_FILTER
+from bot import bot, IS_PREMIUM_USER, user_data, config_dict, DATABASE_URL, MAX_SPLIT_SIZE, GLOBAL_EXTENSION_FILTER
 from bot.helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -206,7 +206,10 @@ async def set_option(_, message, pre_event, option):
     handler_dict[user_id] = False
     value = message.text
     if option == 'split_size':
-        value = min(int(message.text), MAX_SPLIT_SIZE)
+        value = min(int(value), MAX_SPLIT_SIZE)
+    elif option == 'leech_dest':
+        if value.startswith('-') or value.is_digit():
+            value = int(value)
     elif option == 'excluded_extensions':
         fx = value.split()
         value = ['aria2', '!qB']
@@ -413,7 +416,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         await editMessage(message, text, buttons.build_menu(1))
     elif data[2] == 'vthumb':
         await query.answer()
-        await sendFile(message, thumb_path, from_user.mention)
+        await sendFile(message, thumb_path, name)
         await update_user_settings(query)
     elif data[2] == "sthumb":
         await query.answer()
