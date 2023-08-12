@@ -22,7 +22,7 @@ from bot.helper.listeners.aria2_listener import start_aria2_listener
 from .modules import authorize, clone, gd_count, gd_delete, cancel_mirror, gd_search, mirror_leech, status, torrent_search, torrent_select, ytdlp, rss, shell, eval, users_settings, bot_settings
 
 
-async def stats(client, message):
+async def stats(_, message):
     if await aiopath.exists('.git'):
         last_commit = await cmd_exec("git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True)
         last_commit = last_commit[0]
@@ -66,7 +66,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         await sendMessage(message, 'You Are not authorized user! Deploy your own mirror-leech bot', reply_markup)
 
 
-async def restart(client, message):
+async def restart(_, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
@@ -82,14 +82,14 @@ async def restart(client, message):
     osexecl(executable, executable, "-m", "bot")
 
 
-async def ping(client, message):
+async def ping(_, message):
     start_time = int(round(time() * 1000))
     reply = await sendMessage(message, "Starting Ping")
     end_time = int(round(time() * 1000))
     await editMessage(reply, f'{end_time - start_time} ms')
 
 
-async def log(client, message):
+async def log(_, message):
     await sendFile(message, 'log.txt')
 
 help_string = f'''
@@ -128,7 +128,7 @@ NOTE: Try each command without any argument to see more detalis.
 '''
 
 
-async def bot_help(client, message):
+async def bot_help(_, message):
     await sendMessage(message, help_string)
 
 

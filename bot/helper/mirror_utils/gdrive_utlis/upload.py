@@ -100,7 +100,6 @@ class gdUpload(GoogleDriveHelper):
             elif not item.lower().endswith(tuple(extension_filter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
-                # current_file_name will have the full path
                 self.__upload_file(current_file_name,
                                    file_name, mime_type, dest_id)
                 self.total_files += 1

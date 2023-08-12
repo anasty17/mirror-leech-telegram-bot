@@ -8,7 +8,7 @@ class YtDlpDownloadStatus:
         self.__obj = obj
         self.__listener = listener
         self.__gid = gid
-        self.message = listener.message
+        self.message = self.__listener.message
 
     def gid(self):
         return self.__gid

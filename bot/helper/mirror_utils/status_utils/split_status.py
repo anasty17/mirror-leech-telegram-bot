@@ -9,7 +9,7 @@ class SplitStatus:
         self.__gid = gid
         self.__size = size
         self.__listener = listener
-        self.message = listener.message
+        self.message = self.__listener.message
 
     def gid(self):
         return self.__gid

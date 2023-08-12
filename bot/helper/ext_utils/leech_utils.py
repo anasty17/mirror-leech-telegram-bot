@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from os import path as ospath
 from aiofiles.os import remove as aioremove, path as aiopath, mkdir
 from time import time

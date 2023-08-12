@@ -101,7 +101,7 @@ class GoogleDriveHelper:
             self.sa_index += 1
         self.sa_count += 1
         LOGGER.info(f"Switching to {self.sa_index} index")
-        self.service = self.__authorize()
+        self.service = self.authorize()
 
     def getIdFromUrl(self, link, user_id):
         if link.startswith('mtp:'):

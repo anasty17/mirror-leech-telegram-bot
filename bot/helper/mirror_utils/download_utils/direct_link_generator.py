@@ -533,10 +533,10 @@ def terabox(url) -> str:
         raise DirectDownloadLinkException(
             "ERROR: Can't download mutiple files")
     result = result[0]
-    
+
     if result['isdir'] != '0':
         raise DirectDownloadLinkException("ERROR: Can't download folder")
-    
+
     try:
         dlink = result['dlink']
     except Exception as e:

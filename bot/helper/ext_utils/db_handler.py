@@ -37,7 +37,7 @@ class DbManger:
         # User Data
         if await self.__db.users.find_one():
             rows = self.__db.users.find({})
-            # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_opt, media_group, equal_splits, split_size, rclone}
+            # return a dict ==> {_id, is_sudo, is_auth, as_doc, thumb, yt_opt, media_group, equal_splits, split_size, rclone, rclone_path, token_pickle, gdrive_id, leech_dest, lperfix, lprefix, excluded_extensions, user_leech, index_url, index_url, default_upload}
             async for row in rows:
                 uid = row['_id']
                 del row['_id']
