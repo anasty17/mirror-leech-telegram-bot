@@ -314,7 +314,7 @@ class RcloneTransferHelper:
         src_remote_type, dst_remote_type = src_remote_opts['type'], dst_remote_opt['type']
 
         cmd = self.__getUpdatedCommand(
-            config_path, f'{src_remote}:{src_path}', destination, rcflags, 'copy')
+            config_path, f'{src_remote}:{src_path}', self.__listener.upDest, rcflags, 'copy')
         if not rcflags:
             if src_remote_type == 'drive' and dst_remote_type != 'drive':
                 cmd.append('--drive-acknowledge-abuse')

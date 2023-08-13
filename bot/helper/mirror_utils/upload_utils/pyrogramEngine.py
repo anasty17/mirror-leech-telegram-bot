@@ -226,8 +226,9 @@ class TgUploader:
                     if isinstance(err, RetryError):
                         LOGGER.info(
                             f"Total Attempts: {err.last_attempt.attempt_number}")
-                    else:
-                        LOGGER.error(f"{err}. Path: {self.__up_path}")
+                        err = err.last_attempt.exception()
+                    LOGGER.error(f"{err}. Path: {self.__up_path}")
+                    self.__corrupted += 1
                     if self.__is_cancelled:
                         return
                     continue
