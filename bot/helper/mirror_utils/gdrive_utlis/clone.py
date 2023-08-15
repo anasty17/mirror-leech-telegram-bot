@@ -45,7 +45,7 @@ class gdClone(GoogleDriveHelper):
                 if self.is_cancelled:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.service.files().delete(fileId=dir_id, supportsAllDrives=True).execute()
-                    return None, None, None, None, None
+                    return None, None, None, None, None, None
                 mime_type = 'Folder'
                 size = self.proc_bytes
             else:

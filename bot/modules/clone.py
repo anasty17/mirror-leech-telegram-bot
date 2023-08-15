@@ -133,15 +133,22 @@ async def gdcloneNode(client, message, link, dest_id, listener):
             if str(e).startswith('ERROR:'):
                 await sendMessage(message, str(e))
                 return
-    if is_gdrive_link(link):
+    if is_gdrive_link(link) or is_gdrive_id(link):
+        sa = config_dict['USE_SERVICE_ACCOUNTS']
         if link == 'gdl':
-            link = await gdriveList(client, message).get_target_id('gdd')
+            gdl = gdriveList(client, message)
+            link = await gdl.get_target_id('gdd')
             if not is_gdrive_id(link):
                 await sendMessage(message, link)
                 return
+            sa = gdl.use_sa
         if link.startswith('mtp:'):
             token_path = f'tokens/{message.from_user.id}.pickle'
             private = True
+            sa = False
+        elif sa:
+            token_path = 'accounts'
+            private = False
         else:
             token_path = 'token.pickle'
             private = False
@@ -155,14 +162,20 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         if not is_gdrive_id(dest_id):
             await sendMessage(message, 'Wrong Gdrive ID!')
             return
-        name, mime_type, size, files, _ = await sync_to_async(gdCount().count, link, listener.user_id)
+        gdc = gdCount()
+        if sa:
+            gdc.use_sa = True
+        name, mime_type, size, files, _ = await sync_to_async(gdc.count, link, listener.user_id)
         if mime_type is None:
             await sendMessage(message, name)
             return
         listener.upDest = dest_id
         if dest_id.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not dest_id.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
             LOGGER.info('Checking File/Folder if already in Drive...')
-            telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True, noMulti=True).drive_list, name, dest_id, listener.user_id)
+            gds = gdSearch(stopDup=True, noMulti=True)
+            if sa:
+                gds.use_sa = True
+            telegraph_content, contents_no = await sync_to_async(gds.drive_list, name, dest_id, listener.user_id)
             if telegraph_content:
                 msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
                 button = await get_telegraph_list(telegraph_content)
@@ -171,6 +184,8 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         await listener.onDownloadStart()
         LOGGER.info(f'Clone Started: Name: {name} - Source: {link}')
         drive = gdClone(name, listener=listener)
+        if sa:
+            drive.use_sa = True
         if files <= 10:
             msg = await sendMessage(message, f"Cloning: <code>{link}</code>")
         else:
@@ -216,6 +231,8 @@ async def clone(client, message):
     if not link and (reply_to := message.reply_to_message):
         link = reply_to.text.split('\n', 1)[0].strip()
 
+    LOGGER.info(link)
+
     @new_task
     async def __run_multi():
         if multi > 1:
@@ -247,8 +264,9 @@ async def clone(client, message):
             return
         await rcloneNode(client, message, link, dst_path, rcf, listener)
     else:
-        if not await aiopath.exists('token.pickle') and not await aiopath.exists(f'tokens/{message.from_user.id}.pickle'):
-            await sendMessage(message, 'Token.pickle Not exists!')
+        if not await aiopath.exists('token.pickle') and not await aiopath.exists(f'tokens/{message.from_user.id}.pickle') \
+            and not await aiopath.exists('accounts'):
+            await sendMessage(message, 'Token.pickle and service accounts Not exists!')
             return
         if not config_dict['GDRIVE_ID'] and not listener.user_dict.get('gdrive_id') and not dst_path:
             await sendMessage(message, 'GDRIVE_ID not Provided!')

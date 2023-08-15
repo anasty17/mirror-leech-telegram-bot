@@ -79,7 +79,7 @@ async def id_updates(_, query, obj):  # sourcery skip: avoid-builtin-shadow
         await deleteMessage(message)
         obj.event.set()
     elif data[1] == 'def':
-        id = obj.id if obj.token_path == 'token.pickle' else f'mtp:{obj.id}'
+        id = obj.id if obj.token_path != obj.user_token_path else f'mtp:{obj.id}'
         if id != obj.user_dict.get('gdrive_id'):
             update_user_ldata(obj.user_id, 'gdrive_id', id)
             await obj.get_items_buttons()
@@ -87,11 +87,19 @@ async def id_updates(_, query, obj):  # sourcery skip: avoid-builtin-shadow
                 await DbManger().update_user_data(obj.user_id)
     elif data[1] == 'owner':
         obj.token_path = 'token.pickle'
+        obj.use_sa = False
         obj.id = ''
         obj.parents = []
         await obj.list_drives()
     elif data[1] == 'user':
         obj.token_path = obj.user_token_path
+        obj.use_sa = False
+        obj.id = ''
+        obj.parents = []
+        await obj.list_drives()
+    elif data[1] == 'sa':
+        obj.token_path = 'accounts'
+        obj.use_sa = True
         obj.id = ''
         obj.parents = []
         await obj.list_drives()
@@ -102,6 +110,7 @@ class gdriveList(GoogleDriveHelper):
     def __init__(self, client, message):
         self.__token_user = False
         self.__token_owner = False
+        self.__sa_owner = False
         self.__client = client
         self.__message = message
         self.__reply_to = None
@@ -235,10 +244,22 @@ class gdriveList(GoogleDriveHelper):
             self.event.set()
             return
         drives = result['drives']
-        if len(drives) == 0:
+        if len(drives) == 0 and not self.use_sa:
             self.drives = [{'id': 'root', 'name': 'root'}]
             self.parents = [{'id': 'root', 'name': 'root'}]
             self.id = 'root'
+            await self.get_items()
+        elif len(drives) == 0:
+            msg = "Service accounts Doesn't have access to any drive!"
+            if self.__token_user and self.__token_owner:
+                buttons.ibutton('Back', 'gdq back dr', position='footer')
+            buttons.ibutton('Cancel', 'gdq cancel', position='footer')
+            button = buttons.build_menu(2)
+            await self.__send_list_message(msg, button)
+        elif self.use_sa and len(drives) == 1:
+            self.id = drives[0]['id']
+            self.drives = [{'id': self.id, 'name': drives[0]['name']}]
+            self.parents = [{'id': self.id, 'name': drives[0]['name']}]
             await self.get_items()
         else:
             msg = 'Choose Drive:' + \
@@ -247,10 +268,11 @@ class gdriveList(GoogleDriveHelper):
             msg += f'\nToken Path: {self.token_path}'
             msg += f'\nTimeout: {get_readable_time(self.__timeout-(time()-self.__time))}'
             buttons = ButtonMaker()
-            buttons.ibutton('root', "gdq dr 0")
             self.drives.clear()
             self.parents.clear()
-            self.drives = [{'id': 'root', 'name': 'root'}]
+            if not self.use_sa:
+                buttons.ibutton('root', "gdq dr 0")
+                self.drives = [{'id': 'root', 'name': 'root'}]
             for index, item in enumerate(drives, start=1):
                 self.drives.append({'id': item['id'], 'name': item['name']})
                 buttons.ibutton(item['name'], f"gdq dr {index}")
@@ -261,19 +283,31 @@ class gdriveList(GoogleDriveHelper):
             await self.__send_list_message(msg, button)
 
     async def choose_token(self):
-        if self.__token_user and self.__token_owner:
+        if self.__token_user and self.__token_owner or self.__sa_owner and self.__token_owner or self.__sa_owner and self.__token_user:
             msg = 'Choose Token:' + \
                 ('\nTransfer Type: Download' if self.list_status ==
                  'gdd' else '\nTransfer Type: Upload')
             msg += f'\nTimeout: {get_readable_time(self.__timeout-(time()-self.__time))}'
             buttons = ButtonMaker()
-            buttons.ibutton('Owner Token', 'gdq owner')
-            buttons.ibutton('My Token', 'gdq user')
+            if self.__token_owner:
+                buttons.ibutton('Owner Token', 'gdq owner')
+            if self.__sa_owner:
+                buttons.ibutton('Service Accounts', 'gdq sa')
+            if self.__token_user:
+                buttons.ibutton('My Token', 'gdq user')
             buttons.ibutton('Cancel', 'gdq cancel')
             button = buttons.build_menu(2)
             await self.__send_list_message(msg, button)
         else:
-            self.token_path = 'token.pickle' if self.__token_owner else self.user_token_path
+            if self.__token_owner:
+                self.token_path = 'token.pickle'
+                self.use_sa = False
+            elif self.__token_user:
+                self.token_path = self.user_token_path
+                self.use_sa = False
+            else:
+                self.token_path = 'accounts'
+                self.use_sa = True
             await self.list_drives()
 
     async def get_pevious_id(self):
@@ -293,16 +327,18 @@ class gdriveList(GoogleDriveHelper):
         if token_path is None:
             self.__token_user = await aiopath.exists(self.user_token_path)
             self.__token_owner = await aiopath.exists('token.pickle')
-            if not self.__token_owner and not self.__token_user:
+            self.__sa_owner = await aiopath.exists('accounts')
+            if not self.__token_owner and not self.__token_user and not self.__sa_owner:
                 self.event.set()
-                return 'token.pickle not Exists!'
+                return 'token.pickle or service accounts are not Exists!'
             await self.choose_token()
         else:
             self.token_path = token_path
+            self.use_sa = self.token_path == 'accounts'
             await self.list_drives()
         await wrap_future(future)
         if self.__reply_to:
             await deleteMessage(self.__reply_to)
-        if self.token_path != 'token.pickle' and not self.is_cancelled:
+        if self.token_path == self.user_token_path and not self.is_cancelled:
             return f'mtp:{self.id}'.replace('>', '').replace('<', '')
         return self.id.replace('>', '').replace('<', '')

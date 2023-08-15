@@ -179,10 +179,10 @@ Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along wit
 <code>/cmd</code> -i 10(number of links/pathies)
 
 <b>Gdrive:</b>
-<code>/cmd</code> gdrivelink
+<code>/cmd</code> gdrivelink/gdl/gdrive_id -up gdl/gdrive_id/gd
 
 <b>Rclone:</b>
-<code>/cmd</code> (rcl or rclone_path) -up (rcl or rclone_path) -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
+<code>/cmd</code> rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
 
 Note: If -up not specified then rclone destination will be the RCLONE_PATH from config.env
 """
