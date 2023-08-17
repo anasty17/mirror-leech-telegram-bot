@@ -56,7 +56,7 @@ class gdClone(GoogleDriveHelper):
                 if mime_type is None:
                     mime_type = 'File'
                 size = int(meta.get('size', 0))
-            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(link, self.listener.user_id)
+            return durl, size, mime_type, self.total_files, self.total_folders, self.getIdFromUrl(durl, self.listener.user_id)
         except Exception as err:
             if isinstance(err, RetryError):
                 LOGGER.info(
