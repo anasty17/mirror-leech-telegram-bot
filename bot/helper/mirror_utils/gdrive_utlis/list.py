@@ -79,9 +79,9 @@ async def id_updates(_, query, obj):  # sourcery skip: avoid-builtin-shadow
         await deleteMessage(message)
         obj.event.set()
     elif data[1] == 'def':
-        id = obj.id if obj.token_path != obj.user_token_path else f'mtp:{obj.id}'
-        if id != obj.user_dict.get('gdrive_id'):
-            update_user_ldata(obj.user_id, 'gdrive_id', id)
+        id_ = obj.id if obj.token_path != obj.user_token_path else f'mtp:{obj.id}'
+        if id_ != obj.user_dict.get('gdrive_id'):
+            update_user_ldata(obj.user_id, 'gdrive_id', id_)
             await obj.get_items_buttons()
             if config_dict['DATABASE_URL']:
                 await DbManger().update_user_data(obj.user_id)

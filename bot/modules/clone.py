@@ -26,43 +26,43 @@ from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.listeners.tasks_listener import MirrorLeechListener
 
 
-async def rcloneNode(client, message, link, dst_path, rcf, listener):
+async def rcloneNode(client, link, dst_path, rcf, listener):
     if link == 'rcl':
-        link = await RcloneList(client, message).get_rclone_path('rcd')
+        link = await RcloneList(client, listener.message).get_rclone_path('rcd')
         if not is_rclone_path(link):
-            await sendMessage(message, link)
+            await sendMessage(listener.message, link)
             return
 
     if link.startswith('mrcc:'):
         link = link.split('mrcc:', 1)[1]
-        config_path = f'rclone/{message.from_user.id}.conf'
+        config_path = f'rclone/{listener.user_id}.conf'
         private = True
     else:
         config_path = 'rclone.conf'
         private = False
 
     if not await aiopath.exists(config_path):
-        await sendMessage(message, f"Rclone Config: {config_path} not Exists!")
+        await sendMessage(listener.message, f"Rclone Config: {config_path} not Exists!")
         return
 
     if dst_path == 'rcl' or config_dict['RCLONE_PATH'] == 'rcl' or listener.user_dict.get('rclone_path') == 'rcl':
-        dst_path = await RcloneList(client, message).get_rclone_path('rcu', config_path)
+        dst_path = await RcloneList(client, listener.message).get_rclone_path('rcu', config_path)
         if not is_rclone_path(dst_path):
-            await sendMessage(message, dst_path)
+            await sendMessage(listener.message, dst_path)
             return
 
     dst_path = (dst_path or listener.user_dict.get('rclone_path', '')
                 or config_dict['RCLONE_PATH']).strip('/')
     if not is_rclone_path(dst_path):
-        await sendMessage(message, 'Wrong Rclone Clone Destination!')
+        await sendMessage(listener.message, 'Wrong Rclone Clone Destination!')
         return
     if dst_path.startswith('mrcc:'):
-        if config_path != f'rclone/{message.from_user.id}.conf':
-            await sendMessage(message, 'You should use same rclone.conf to clone between pathies!')
+        if config_path != f'rclone/{listener.user_id}.conf':
+            await sendMessage(listener.message, 'You should use same rclone.conf to clone between pathies!')
             return
         dst_path = dst_path.lstrip('mrcc:')
     elif config_path != 'rclone.conf':
-        await sendMessage(message, 'You should use same rclone.conf to clone between pathies!')
+        await sendMessage(listener.message, 'You should use same rclone.conf to clone between pathies!')
         return
 
     remote, src_path = link.split(':', 1)
@@ -74,7 +74,7 @@ async def rcloneNode(client, message, link, dst_path, rcf, listener):
     if res[2] != 0:
         if res[2] != -9:
             msg = f'Error: While getting rclone stat. Path: {remote}:{src_path}. Stderr: {res[1][:4000]}'
-            await sendMessage(message, msg)
+            await sendMessage(listener.message, msg)
         return
     rstat = loads(res[0])
     if rstat['IsDir']:
@@ -93,9 +93,9 @@ async def rcloneNode(client, message, link, dst_path, rcf, listener):
         f'Clone Started: Name: {name} - Source: {link} - Destination: {dst_path}')
     gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
     async with download_dict_lock:
-        download_dict[message.id] = RcloneStatus(
-            RCTransfer, message, gid, 'cl')
-    await sendStatusMessage(message)
+        download_dict[listener.uid] = RcloneStatus(
+            RCTransfer, listener.message, gid, 'cl')
+    await sendStatusMessage(listener.message)
     link, destination = await RCTransfer.clone(config_path, remote, src_path, rcf, mime_type)
     if not link:
         return
@@ -123,7 +123,7 @@ async def rcloneNode(client, message, link, dst_path, rcf, listener):
     await listener.onUploadComplete(link, size, files, folders, mime_type, name, destination, private=private)
 
 
-async def gdcloneNode(client, message, link, dest_id, listener):
+async def gdcloneNode(client, link, dest_id, listener):
     if is_share_link(link):
         try:
             link = await sync_to_async(direct_link_generator, link)
@@ -131,19 +131,19 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         except DirectDownloadLinkException as e:
             LOGGER.error(str(e))
             if str(e).startswith('ERROR:'):
-                await sendMessage(message, str(e))
+                await sendMessage(listener.message, str(e))
                 return
     if is_gdrive_link(link) or is_gdrive_id(link):
         sa = config_dict['USE_SERVICE_ACCOUNTS']
         if link == 'gdl':
-            gdl = gdriveList(client, message)
+            gdl = gdriveList(client, listener.message)
             link = await gdl.get_target_id('gdd')
             if not is_gdrive_id(link):
-                await sendMessage(message, link)
+                await sendMessage(listener.message, link)
                 return
             sa = gdl.use_sa
         if link.startswith('mtp:'):
-            token_path = f'tokens/{message.from_user.id}.pickle'
+            token_path = f'tokens/{listener.user_id}.pickle'
             private = True
             sa = False
         elif sa:
@@ -153,21 +153,21 @@ async def gdcloneNode(client, message, link, dest_id, listener):
             token_path = 'token.pickle'
             private = False
         if dest_id == 'gdl' or config_dict['GDRIVE_ID'] == 'gdl' or listener.user_dict.get('gdrive_id') == 'gdl':
-            dest_id = await gdriveList(client, message).get_target_id('gdu', token_path)
+            dest_id = await gdriveList(client, listener.message).get_target_id('gdu', token_path)
             if not is_gdrive_id(dest_id):
-                await sendMessage(message, dest_id)
+                await sendMessage(listener.message, dest_id)
                 return
         dest_id = dest_id or listener.user_dict.get(
             'gdrive_id', '') or config_dict['GDRIVE_ID']
         if not is_gdrive_id(dest_id):
-            await sendMessage(message, 'Wrong Gdrive ID!')
+            await sendMessage(listener.message, 'Wrong Gdrive ID!')
             return
         gdc = gdCount()
         if sa:
             gdc.use_sa = True
         name, mime_type, size, files, _ = await sync_to_async(gdc.count, link, listener.user_id)
         if mime_type is None:
-            await sendMessage(message, name)
+            await sendMessage(listener.message, name)
             return
         listener.upDest = dest_id
         if dest_id.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not dest_id.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
@@ -179,7 +179,7 @@ async def gdcloneNode(client, message, link, dest_id, listener):
             if telegraph_content:
                 msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
                 button = await get_telegraph_list(telegraph_content)
-                await sendMessage(message, msg, button)
+                await sendMessage(listener.message, msg, button)
                 return
         await listener.onDownloadStart()
         LOGGER.info(f'Clone Started: Name: {name} - Source: {link}')
@@ -187,14 +187,14 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         if sa:
             drive.use_sa = True
         if files <= 10:
-            msg = await sendMessage(message, f"Cloning: <code>{link}</code>")
+            msg = await sendMessage(listener.message, f"Cloning: <code>{link}</code>")
         else:
             msg = ''
             gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
             async with download_dict_lock:
-                download_dict[message.id] = GdriveStatus(
-                    drive, size, message, gid, 'cl')
-            await sendStatusMessage(message)
+                download_dict[listener.uid] = GdriveStatus(
+                    drive, size, listener.message, gid, 'cl')
+            await sendStatusMessage(listener.message)
         link, size, mime_type, files, folders, dir_id = await sync_to_async(drive.clone, link)
         if msg:
             await deleteMessage(msg)
@@ -203,7 +203,7 @@ async def gdcloneNode(client, message, link, dest_id, listener):
         LOGGER.info(f'Cloning Done: {name}')
         await listener.onUploadComplete(link, size, files, folders, mime_type, name, dir_id=dir_id, private=private)
     else:
-        await sendMessage(message, CLONE_HELP_MESSAGE)
+        await sendMessage(listener.message, CLONE_HELP_MESSAGE)
 
 
 @new_task
@@ -262,7 +262,7 @@ async def clone(client, message):
         if not config_dict['RCLONE_PATH'] and not listener.user_dict.get('rclone_path') and not dst_path:
             await sendMessage(message, 'Destination not specified!')
             return
-        await rcloneNode(client, message, link, dst_path, rcf, listener)
+        await rcloneNode(client, link, dst_path, rcf, listener)
     else:
         if not await aiopath.exists('token.pickle') and not await aiopath.exists(f'tokens/{message.from_user.id}.pickle') \
             and not await aiopath.exists('accounts'):
@@ -271,7 +271,7 @@ async def clone(client, message):
         if not config_dict['GDRIVE_ID'] and not listener.user_dict.get('gdrive_id') and not dst_path:
             await sendMessage(message, 'GDRIVE_ID not Provided!')
             return
-        await gdcloneNode(client, message, link, dst_path, listener)
+        await gdcloneNode(client, link, dst_path, listener)
 
 
 bot.add_handler(MessageHandler(clone, filters=command(
