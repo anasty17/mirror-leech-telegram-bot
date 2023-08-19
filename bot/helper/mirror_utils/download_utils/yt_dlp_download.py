@@ -66,10 +66,10 @@ class YoutubeDLHelper:
                      'overwrites': True,
                      'writethumbnail': True,
                      'trim_file_name': 220,
-                     'retry_sleep_functions': {'http': lambda x: 2,
-                                               'fragment': lambda x: 2,
-                                               'file_access': lambda x: 2,
-                                               'extractor': lambda x: 2}}
+                     'retry_sleep_functions': {'http': lambda n: 3,
+                                               'fragment': lambda n: 3,
+                                               'file_access': lambda n: 3,
+                                               'extractor': lambda n: 3}}
 
     @property
     def download_speed(self):
@@ -282,9 +282,9 @@ class YoutubeDLHelper:
             key, value = map(str.strip, opt.split(':', 1))
             if value.startswith('^'):
                 if '.' in value or value == '^inf':
-                    value = float(value.split('^')[1])
+                    value = float(value.split('^', 1)[1])
                 else:
-                    value = int(value.split('^')[1])
+                    value = int(value.split('^', 1)[1])
             elif value.lower() == 'true':
                 value = True
             elif value.lower() == 'false':
