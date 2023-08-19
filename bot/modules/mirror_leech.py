@@ -268,7 +268,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
         await add_mega_download(link, f'{path}/', listener, name)
     elif isQbit:
         await add_qb_torrent(link, path, listener, ratio, seed_time)
-    else:
+    elif not is_telegram_link(link):
         ussr = args['-au']
         pssw = args['-ap']
         if ussr or pssw:
