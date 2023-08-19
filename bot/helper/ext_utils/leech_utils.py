@@ -50,8 +50,8 @@ async def get_media_info(path):
         return 0, None, None
     duration = round(float(fields.get('duration', 0)))
     tags = fields.get('tags', {})
-    artist = tags.get('artist') or tags.get('ARTIST')
-    title = tags.get('title') or tags.get('TITLE')
+    artist = tags.get('artist') or tags.get('ARTIST') or tags.get("Artist")
+    title = tags.get('title') or tags.get('TITLE') or tags.get("Title")
     return duration, artist, title
 
 
