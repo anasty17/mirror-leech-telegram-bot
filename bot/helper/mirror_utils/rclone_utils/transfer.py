@@ -302,7 +302,8 @@ class RcloneTransferHelper:
         await self.__listener.onUploadComplete(link, size, files, folders, mime_type, self.name, destination, private=private)
 
     async def clone(self, config_path, src_remote, src_path, rcflags, mime_type):
-        dst_remote, dst_path = self.__listener.upDest.split(':', 1)
+        destination = self.__listener.upDest
+        dst_remote, dst_path = destination.split(':', 1)
 
         try:
             src_remote_opts, dst_remote_opt = await gather(self.__get_remote_options(config_path, src_remote),
@@ -314,7 +315,7 @@ class RcloneTransferHelper:
         src_remote_type, dst_remote_type = src_remote_opts['type'], dst_remote_opt['type']
 
         cmd = self.__getUpdatedCommand(
-            config_path, f'{src_remote}:{src_path}', self.__listener.upDest, rcflags, 'copy')
+            config_path, f'{src_remote}:{src_path}', destination, rcflags, 'copy')
         if not rcflags:
             if src_remote_type == 'drive' and dst_remote_type != 'drive':
                 cmd.append('--drive-acknowledge-abuse')
