@@ -60,6 +60,8 @@ class RcloneTransferHelper:
             self.extension_filter = self.__listener.user_dict['excluded_extensions']
         elif 'excluded_extensions' not in self.__listener.user_dict:
             self.extension_filter = GLOBAL_EXTENSION_FILTER
+        else:
+            self.extension_filter = ['aria2', '!qB']
 
     async def __progress(self):
         while not (self.__proc is None or self.__is_cancelled):

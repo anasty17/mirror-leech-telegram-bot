@@ -368,7 +368,7 @@ class MirrorLeechListener:
             if mime_type == "Folder":
                 msg += f'\n<b>SubFolders: </b>{folders}'
                 msg += f'\n<b>Files: </b>{files}'
-            if link or rclonePath and config_dict['RCLONE_SERVE_URL']:
+            if link or rclonePath and config_dict['RCLONE_SERVE_URL'] and not private:
                 buttons = ButtonMaker()
                 if link:
                     buttons.ubutton("☁️ Cloud Link", link)

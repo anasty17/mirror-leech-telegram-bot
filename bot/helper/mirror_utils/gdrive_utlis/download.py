@@ -68,6 +68,12 @@ class gdDownload(GoogleDriveHelper):
         result = self.getFilesByFolderId(folder_id)
         if len(result) == 0:
             return
+        if self.listener.user_dict.get('excluded_extensions', False):
+            extension_filter = self.listener.user_dict['excluded_extensions']
+        elif 'excluded_extensions' not in self.listener.user_dict:
+            extension_filter = GLOBAL_EXTENSION_FILTER
+        else:
+            extension_filter = ['aria2', '!qB']
         result = sorted(result, key=lambda k: k['name'])
         for item in result:
             file_id = item['id']
@@ -80,7 +86,7 @@ class gdDownload(GoogleDriveHelper):
                 mime_type = item.get('mimeType')
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
                 self.__download_folder(file_id, path, filename)
-            elif not ospath.isfile(f"{path}{filename}") and not filename.lower().endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+            elif not ospath.isfile(f"{path}{filename}") and not filename.lower().endswith(tuple(extension_filter)):
                 self.__download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
                 break
