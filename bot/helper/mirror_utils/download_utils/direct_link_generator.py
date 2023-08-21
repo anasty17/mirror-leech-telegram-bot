@@ -17,6 +17,7 @@ from urllib.parse import parse_qs, quote, unquote, urlparse
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
+from requests import Session
 from cloudscraper import create_scraper
 from lk21 import Bypass
 from lxml import etree
@@ -507,27 +508,31 @@ def uploadee(url: str) -> str:
 def terabox(url) -> str:
     if not path.isfile('terabox.txt'):
         raise DirectDownloadLinkException("ERROR: terabox.txt not found")
-    session = create_scraper()
     try:
-        key = url.split('?surl=')[-1]
-        url = f'http://www.terabox.com/wap/share/filelist?surl={key}'
         jar = MozillaCookieJar('terabox.txt')
         jar.load()
-        session.cookies.update(jar)
+        cookie_string = ''
+        cookie_dict = {}
+        for cookie in jar:
+            cookie_string += f'{cookie.name}={cookie.value}; '
+            cookie_dict[cookie.name] = cookie.value
+        session = Session()
+        session.cookies.update(cookie_dict)
         res = session.request('GET', url)
-        key = res.url.split('?surl=')[-1]
+        surl = res.url.split('?surl=')[-1]
         soup = BeautifulSoup(res.content, 'lxml')
         jsToken = None
         for fs in soup.find_all('script'):
             fstring = fs.string
             if fstring and fstring.startswith('try {eval(decodeURIComponent'):
                 jsToken = fstring.split('%22')[1]
+        headers = {"Cookie": cookie_string}
         res = session.request(
-            'GET', f'https://www.terabox.com/share/list?app_id=250528&jsToken={jsToken}&shorturl={key}&root=1')
+            'GET', f'https://www.terabox.com/share/list?app_id=250528&jsToken={jsToken}&shorturl={surl}&root=1', headers=headers)
         result = res.json()
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if result['errno'] != 0: raise DirectDownloadLinkException(f"ERROR: '{result['errmsg']}' Check cookies")
+    if result['errno'] != 0: raise DirectDownloadLinkException(f"ERROR: '{result}' Check cookies")
     result = result['list']
     if len(result) > 1:
         raise DirectDownloadLinkException(
