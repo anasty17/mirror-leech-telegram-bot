@@ -32,7 +32,8 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'RSS_DELAY': 600,
                   'STATUS_UPDATE_INTERVAL': 10,
                   'SEARCH_LIMIT': 0,
-                  'UPSTREAM_BRANCH': 'master'}
+                  'UPSTREAM_BRANCH': 'master',
+                  'DEFAULT_UPLOAD': 'gd'}
 
 
 async def get_buttons(key=None, edit_type=None):
