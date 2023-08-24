@@ -42,7 +42,7 @@ class DbManger:
                 uid = row['_id']
                 del row['_id']
                 thumb_path = f'Thumbnails/{uid}.jpg'
-                rclone_path = f'rclone/{uid}.conf'
+                rclone_config_path = f'rclone/{uid}.conf'
                 token_path = f'tokens/{uid}.pickle'
                 if row.get('thumb'):
                     if not await aiopath.exists('Thumbnails'):
@@ -50,12 +50,12 @@ class DbManger:
                     async with aiopen(thumb_path, 'wb+') as f:
                         await f.write(row['thumb'])
                     row['thumb'] = thumb_path
-                if row.get('rclone'):
+                if row.get('rclone_config'):
                     if not await aiopath.exists('rclone'):
                         await makedirs('rclone')
-                    async with aiopen(rclone_path, 'wb+') as f:
-                        await f.write(row['rclone'])
-                    row['rclone'] = rclone_path
+                    async with aiopen(rclone_config_path, 'wb+') as f:
+                        await f.write(row['rclone_config'])
+                    row['rclone_config'] = rclone_config_path
                 if row.get('token_pickle'):
                     if not await aiopath.exists('tokens'):
                         await makedirs('tokens')
@@ -121,8 +121,8 @@ class DbManger:
         data = user_data[user_id]
         if data.get('thumb'):
             del data['thumb']
-        if data.get('rclone'):
-            del data['rclone']
+        if data.get('rclone_config'):
+            del data['rclone_config']
         if data.get('token_pickle'):
             del data['token_pickle']
         await self.__db.users.replace_one({'_id': user_id}, data, upsert=True)

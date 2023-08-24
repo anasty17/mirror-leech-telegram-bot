@@ -180,7 +180,7 @@ async def add_rclone(_, message, pre_event):
         await mkdir(path)
     des_dir = ospath.join(path, f'{user_id}.conf')
     await message.download(file_name=des_dir)
-    update_user_ldata(user_id, 'rclone', f'rclone/{user_id}.conf')
+    update_user_ldata(user_id, 'rclone_config', f'rclone/{user_id}.conf')
     await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
@@ -274,7 +274,7 @@ async def edit_user_settings(client, query):
     elif data[2] in ['thumb', 'rclone_config', 'token_pickle']:
         if data[2] == 'thumb':
             path = thumb_path
-        elif data[2] == 'rclone':
+        elif data[2] == 'rclone_config':
             path = rclone_conf
         else:
             path = token_pickle
