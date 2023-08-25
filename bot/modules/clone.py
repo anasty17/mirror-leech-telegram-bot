@@ -23,7 +23,7 @@ from bot.helper.mirror_utils.gdrive_utlis.list import gdriveList
 from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
 from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.listeners.tasks_listener import MirrorLeechListener
+from bot.helper.listeners.task_listener import MirrorLeechListener
 
 
 async def rcloneNode(client, link, dst_path, rcf, listener):

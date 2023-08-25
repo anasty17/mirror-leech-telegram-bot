@@ -21,7 +21,7 @@ from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDow
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import sendMessage, get_tg_link_content
-from bot.helper.listeners.tasks_listener import MirrorLeechListener
+from bot.helper.listeners.task_listener import MirrorLeechListener
 from bot.helper.ext_utils.help_messages import MIRROR_HELP_MESSAGE
 from bot.helper.ext_utils.bulk_links import extract_bulk_links
 

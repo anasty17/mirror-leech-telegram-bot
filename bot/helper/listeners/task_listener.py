@@ -8,7 +8,7 @@ from asyncio import create_subprocess_exec, sleep, Event
 
 from bot import Interval, aria2, DOWNLOAD_DIR, download_dict, download_dict_lock, LOGGER, DATABASE_URL, \
     MAX_SPLIT_SIZE, config_dict, status_reply_dict_lock, user_data, non_queued_up, non_queued_dl, queued_up, \
-    queued_dl, queue_dict_lock, GLOBAL_EXTENSION_FILTER
+    queued_dl, queue_dict_lock, GLOBAL_EXTENSION_FILTER, IS_PREMIUM_USER
 from bot.helper.ext_utils.bot_utils import sync_to_async, get_readable_file_size, is_gdrive_id
 from bot.helper.ext_utils.fs_utils import get_base_name, get_path_size, clean_download, clean_target, \
     is_first_archive_split, is_archive, is_archive_split, join_files
@@ -126,6 +126,20 @@ class MirrorLeechListener:
         if self.join and await aiopath.isdir(dl_path):
             await join_files(dl_path)
 
+        if self.isLeech:
+            LEECH_SPLIT_SIZE = self.user_dict.get('split_size') or config_dict['LEECH_SPLIT_SIZE']
+            if self.upDest.startswith('b:') and LEECH_SPLIT_SIZE > 2097152000:
+                LEECH_SPLIT_SIZE = 2097152000
+                user_leech = False
+            elif self.upDest.startswith('u:') and IS_PREMIUM_USER and LEECH_SPLIT_SIZE > 4194304000:
+                LEECH_SPLIT_SIZE = 4194304000
+                user_leech = True
+            else:
+                user_leech = (self.user_dict.get('user_leech') or config_dict['USER_LEECH'] and 'user_leech' not in self.user_dict) and IS_PREMIUM_USER
+
+            MAX_SIZE = MAX_SPLIT_SIZE if user_leech else 2097152000
+            LEECH_SPLIT_SIZE = min(LEECH_SPLIT_SIZE, MAX_SIZE)
+
         if self.extract:
             pswd = self.extract if isinstance(self.extract, str) else ''
             try:
@@ -211,8 +225,6 @@ class MirrorLeechListener:
                 up_path = f"{dl_path}.zip"
             async with download_dict_lock:
                 download_dict[self.uid] = ZipStatus(name, size, gid, self)
-            LEECH_SPLIT_SIZE = self.user_dict.get(
-                'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
             cmd = ["7z", f"-v{LEECH_SPLIT_SIZE}b", "a",
                    "-mx=0", f"-p{pswd}", up_path, dl_path]
             for ext in GLOBAL_EXTENSION_FILTER:
@@ -247,8 +259,6 @@ class MirrorLeechListener:
             o_files = []
             if not self.compress:
                 checked = False
-                LEECH_SPLIT_SIZE = self.user_dict.get(
-                    'split_size', False) or config_dict['LEECH_SPLIT_SIZE']
                 for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
                     for file_ in files:
                         f_path = ospath.join(dirpath, file_)
@@ -260,11 +270,11 @@ class MirrorLeechListener:
                                     download_dict[self.uid] = SplitStatus(
                                         up_name, size, gid, self)
                                 LOGGER.info(f"Splitting: {up_name}")
-                            res = await split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, self)
+                            res = await split_file(f_path, f_size, file_, dirpath, LEECH_SPLIT_SIZE, LEECH_SPLIT_SIZE, MAX_SIZE, self)
                             if not res:
                                 return
                             if res == "errored":
-                                if f_size <= MAX_SPLIT_SIZE:
+                                if f_size <= MAX_SIZE:
                                     continue
                                 try:
                                     await aioremove(f_path)
