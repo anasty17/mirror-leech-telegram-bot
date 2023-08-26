@@ -107,6 +107,19 @@ async def take_ss(video_file, duration):
     return des_dir
 
 
+async def extract_album_art(audio_file):
+    des_dir = 'Thumbnails'
+    if not await aiopath.exists(des_dir):
+        await mkdir(des_dir)
+    des_dir = ospath.join(des_dir, f"{time()}.jpg")
+    cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error",
+           "-i", audio_file, "-an", "-vcodec", "copy", des_dir]
+    status = await create_subprocess_exec(*cmd, stderr=PIPE)
+    if await status.wait() != 0 or not await aiopath.exists(des_dir):
+        return None
+    return des_dir
+
+
 async def split_file(path, size, file_, dirpath, o_split_size, f_split_size, max_size, listener, start_time=0, i=1, inLoop=False, multi_streams=True):
     if listener.suproc == 'cancelled' or listener.suproc is not None and listener.suproc.returncode == -9:
         return False

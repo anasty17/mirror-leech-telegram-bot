@@ -15,7 +15,7 @@ from aioshutil import copy
 from bot import config_dict, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
 from bot.helper.ext_utils.fs_utils import clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss
+from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss, extract_album_art
 from bot.helper.telegram_helper.message_utils import deleteMessage
 
 LOGGER = getLogger(__name__)
@@ -274,6 +274,8 @@ class TgUploader:
                 key = 'documents'
                 if is_video and thumb is None:
                     thumb = await take_ss(self.__up_path, None)
+                elif is_audio and thumb is None:
+                    thumb = await extract_album_art(self.__up_path)
                 if self.__is_cancelled:
                     return
                 self.__sent_msg = await self.__sent_msg.reply_document(document=self.__up_path,
@@ -321,6 +323,8 @@ class TgUploader:
             elif is_audio:
                 key = 'audios'
                 duration, artist, title = await get_media_info(self.__up_path)
+                if thumb is None:
+                    thumb = await extract_album_art(self.__up_path)
                 if self.__is_cancelled:
                     return
                 self.__sent_msg = await self.__sent_msg.reply_audio(audio=self.__up_path,
