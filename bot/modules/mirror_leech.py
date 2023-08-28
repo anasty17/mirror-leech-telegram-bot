@@ -9,6 +9,7 @@ from aiofiles.os import path as aiopath
 from bot import bot, DOWNLOAD_DIR, LOGGER, config_dict, user_data
 from bot.helper.ext_utils.bot_utils import is_url, is_magnet, is_mega_link, is_gdrive_link, get_content_type, new_task, sync_to_async, is_rclone_path, is_telegram_link, arg_parser, is_gdrive_id
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_download
 from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
 from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
@@ -184,7 +185,8 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
         if content_type is None or re_match(r'text/html|text/plain', content_type):
             try:
                 link = await sync_to_async(direct_link_generator, link)
-                LOGGER.info(f"Generated link: {link}")
+                if not isinstance(link, dict):
+                    LOGGER.info(f"Generated link: {link}")
             except DirectDownloadLinkException as e:
                 LOGGER.info(str(e))
                 if str(e).startswith('ERROR:'):
@@ -252,6 +254,8 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
 
     if file_ is not None:
         await TelegramDownloadHelper(listener).add_download(reply_to, f'{path}/', name, session)
+    elif isinstance(link, dict):
+        await add_direct_download(link, path, listener, name)
     elif is_rclone_path(link):
         if link.startswith('mrcc:'):
             link = link.split('mrcc:', 1)[1]
