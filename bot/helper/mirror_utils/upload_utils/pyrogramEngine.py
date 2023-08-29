@@ -15,7 +15,7 @@ from aioshutil import copy
 from bot import config_dict, GLOBAL_EXTENSION_FILTER, bot, user, IS_PREMIUM_USER
 from bot.helper.ext_utils.fs_utils import clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss, get_audio_thumb
+from bot.helper.ext_utils.leech_utils import get_media_info, get_document_type, take_ss, get_audio_thumb, , convert_to_mp4
 from bot.helper.telegram_helper.message_utils import deleteMessage
 
 LOGGER = getLogger(__name__)
@@ -303,10 +303,11 @@ class TgUploader:
                         await makedirs(dirpath, exist_ok=True)
                         new_path = ospath.join(
                             dirpath, f"{ospath.splitext(file_)[0]}.mp4")
-                        self.__up_path = await copy(self.__up_path, new_path)
+                        await convert_to_mp4(self.__up_path, new_path)
+                        self.__up_path = new_path
                     else:
                         new_path = f"{ospath.splitext(self.__up_path)[0]}.mp4"
-                        await aiorename(self.__up_path, new_path)
+                        await convert_to_mp4(self.__up_path, new_path, True)
                         self.__up_path = new_path
                 if self.__is_cancelled:
                     return

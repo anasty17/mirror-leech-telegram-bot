@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 from os import path as ospath
-from aiofiles.os import remove as aioremove, path as aiopath, mkdir
+from aiofiles.os import remove as aioremove, path as aiopath, rename as aiorename, mkdir
 from time import time
 from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
+from aioshutil import copy
 
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -121,6 +122,33 @@ async def take_ss(video_file, duration):
             f'Error while extracting thumbnail from video. Name: {video_file} stderr: {err}')
         return None
     return des_dir
+
+
+async def convert_to_mp4(in_path, out_path, delete_old=False, multi_streams=True):
+    cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", in_path,
+           "-map", "0", "-c:v", "copy", "-c:a", "copy", out_path]
+    if multi_streams:
+        multi_streams = await is_multi_streams(in_path)
+    if not multi_streams:
+        del cmd[6]
+        del cmd[6]
+    status = await create_subprocess_exec(*cmd, stderr=PIPE)
+    if await status.wait() != 0 or not await aiopath.exists(des_dir):
+        err = (await status.stderr.read()).decode().strip()
+        if multi_streams:
+            LOGGER.warning(f"{err}. Retrying without map, -map 0 not working in all situations. Path: {in_path}")
+            return await convert_to_mp4(in_path, out_path, delete_old, False)
+        else:
+            LOGGER.error(f'Error while converting to mp4, using rename method. Name: {in_path} stderr: {err}')
+            if delete_old:
+                await aiorename(in_path, out_path)
+            else:
+                await copy(in_path, out_path)
+            return
+    else:
+        if delete_old:
+            await aioremove(in_path)
+        return
 
 
 async def split_file(path, size, file_, dirpath, o_split_size, f_split_size, max_size, listener, start_time=0, i=1, inLoop=False, multi_streams=True):
