@@ -83,7 +83,7 @@ def direct_link_generator(link: str):
         return letsupload(link)
     elif 'gofile.io' in domain:
         return gofile(link)
-    elif any(x in domain for x in ['streamtape.com', 'streamtape.co']):
+    elif any(x in domain for x in ['streamtape.com', 'streamtape.co', 'streamtape.cc', 'streamtape.to', 'streamtape.net', 'streamta.pe', 'streamtape.xyz']):
         return streamtape(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
@@ -538,10 +538,17 @@ def terabox(url) -> str:
     details["header"] = ' '.join(f'{key}: {value}' for key, value in cookies.items())
 
     def __fetch_links(folderPath=''):
-        _url = f'https://www.1024tera.com/share/list?app_id=250528&jsToken={jsToken}&shorturl={shortUrl}&'
-        _url += f'dir={folderPath}' if folderPath else "root=1"
+        params = {
+            'app_id': '250528',
+            'jsToken': jsToken,
+            'shorturl': shortUrl
+            }
+        if folderPath:
+            params['dir'] = folderPath
+        else:
+            params['root'] = '1'
         try:
-            _json = session.get(_url, cookies=cookies).json()
+            _json = session.get("https://www.1024tera.com/share/list", params=params, cookies=cookies).json()
         except Exception as e:
             raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
         if _json['errno'] not in [0, '0']:
