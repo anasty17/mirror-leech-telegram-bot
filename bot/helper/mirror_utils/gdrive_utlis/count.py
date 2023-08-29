@@ -34,7 +34,7 @@ class gdCount(GoogleDriveHelper):
                         LOGGER.error(
                             'File not found. Trying with token.pickle...')
                         self.service = token_service
-                        return self.count(link)
+                        return self.count(link, user_id)
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"

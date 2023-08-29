@@ -29,7 +29,7 @@ class gdDelete(GoogleDriveHelper):
                 if token_service is not None:
                     LOGGER.error('File not found. Trying with token.pickle...')
                     self.service = token_service
-                    return self.deletefile(link)
+                    return self.deletefile(link, user_id)
                 err = "File not found or insufficientFilePermissions!"
             LOGGER.error(f"Delete Result: {err}")
             msg = str(err)

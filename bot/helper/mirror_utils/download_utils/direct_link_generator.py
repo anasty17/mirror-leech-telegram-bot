@@ -806,7 +806,7 @@ def gofile(url):
     except Exception as e:
         session.close()
         raise DirectDownloadLinkException(e)
-    
+
     details = {'contents':[], 'title': '', 'total_size': 0, 'root_path': ''}
     headers = {"Cookie": f"accountToken={token}"}
     details["header"] = ' '.join(f'{key}: {value}' for key, value in headers.items())

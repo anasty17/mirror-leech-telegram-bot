@@ -47,7 +47,7 @@ async def add_direct_download(details, path, listener, foldername):
         from_queue = True
     else:
         from_queue = False
-    
+
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
     if header:= details.get('header'):
