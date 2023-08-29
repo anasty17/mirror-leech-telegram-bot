@@ -154,7 +154,10 @@ async def join_files(path):
                 LOGGER.error(f'Failed to join {final_name}, stderr: {stderr}')
             else:
                 results.append(final_name)
+        else:
+            LOGGER.warning('No Binary files to join!')
     if results:
+        LOGGER.info('Join Completed!')
         for res in results:
             for file_ in files:
                 if re_search(fr"{res}\.0[0-9]+$", file_):

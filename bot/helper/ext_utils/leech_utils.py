@@ -86,6 +86,22 @@ async def get_document_type(path):
     return is_video, is_audio, is_image
 
 
+async def get_audio_thumb(audio_file):
+    des_dir = 'Thumbnails'
+    if not await aiopath.exists(des_dir):
+        await mkdir(des_dir)
+    des_dir = ospath.join(des_dir, f"{time()}.jpg")
+    cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error",
+           "-i", audio_file, "-an", "-vcodec", "copy", des_dir]
+    status = await create_subprocess_exec(*cmd, stderr=PIPE)
+    if await status.wait() != 0 or not await aiopath.exists(des_dir):
+        err = (await status.stderr.read()).decode().strip()
+        LOGGER.error(
+            f'Error while extracting thumbnail from audio. Name: {audio_file} stderr: {err}')
+        return None
+    return des_dir
+
+
 async def take_ss(video_file, duration):
     des_dir = 'Thumbnails'
     if not await aiopath.exists(des_dir):
@@ -102,7 +118,7 @@ async def take_ss(video_file, duration):
     if await status.wait() != 0 or not await aiopath.exists(des_dir):
         err = (await status.stderr.read()).decode().strip()
         LOGGER.error(
-            f'Error while extracting thumbnail. Name: {video_file} stderr: {err}')
+            f'Error while extracting thumbnail from video. Name: {video_file} stderr: {err}')
         return None
     return des_dir
 
