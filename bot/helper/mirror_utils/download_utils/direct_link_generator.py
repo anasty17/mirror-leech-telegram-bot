@@ -63,8 +63,6 @@ def direct_link_generator(link: str):
         return pixeldrain(link)
     elif 'antfiles.com' in domain:
         return antfiles(link)
-    elif 'streamtape.com' in domain:
-        return streamtape(link)
     elif 'racaty' in domain:
         return racaty(link)
     elif '1fichier.com' in domain:
@@ -85,11 +83,13 @@ def direct_link_generator(link: str):
         return letsupload(link)
     elif 'gofile.io' in domain:
         return gofile(link)
+    elif any(x in domain for x in ['streamtape.com', 'streamtape.co']):
+        return streamtape(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in anonfilesBaseSites):
         return anonfilesBased(link)
-    elif any(x in domain for x in ['terabox', 'nephobox', '4funbox', 'mirrobox', 'momerybox', 'teraboxapp', '1024tera']):
+    elif any(x in domain for x in ['terabox.com', 'nephobox.com', '4funbox.com', 'mirrobox.com', 'momerybox.com', 'teraboxapp.com', '1024tera.com']):
         return terabox(link)
     elif any(x in domain for x in fmed_list):
         return fembed(link)
@@ -341,16 +341,15 @@ def antfiles(url: str) -> str:
 
 
 def streamtape(url: str) -> str:
-    """ Streamtape direct link generator
-    Based on https://github.com/zevtyardt/lk21
-    """
     try:
-        link = Bypass().bypass_streamtape(url)
+        with Session() as session:
+            res = session.get(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if not link:
+    if link := findall(r"document.*((?=id\=)[^\"']+)", res.text):
+        return f"https://streamtape.com/get_video?{link[-1]}"
+    else:
         raise DirectDownloadLinkException("ERROR: Download link not found")
-    return link
 
 
 def racaty(url: str) -> str:
