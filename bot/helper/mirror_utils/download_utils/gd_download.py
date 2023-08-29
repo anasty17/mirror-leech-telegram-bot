@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from random import SystemRandom
-from string import ascii_letters, digits
+from secrets import token_urlsafe
 
 from bot import download_dict, download_dict_lock, LOGGER, non_queued_dl, queue_dict_lock
 from bot.helper.mirror_utils.gdrive_utlis.download import gdDownload
@@ -20,7 +19,7 @@ async def add_gd_download(link, path, listener, newname):
         return
 
     name = newname or name
-    gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
+    gid = token_urlsafe(12)
 
     msg, button = await stop_duplicate_check(name, listener)
     if msg:

@@ -8,6 +8,7 @@ from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no c
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
 
+from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from json import loads
 from os import path
@@ -25,6 +26,8 @@ from lxml import etree
 from bot import config_dict
 from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+
+_caches = {}
 
 fmed_list = ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com', 'layarkacaxxi.icu',
              'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com', 'mm9842.com']
@@ -80,6 +83,8 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     elif 'letsupload.io' in domain:
         return letsupload(link)
+    elif 'gofile.io' in domain:
+        return gofile(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in anonfilesBaseSites):
@@ -511,44 +516,75 @@ def terabox(url) -> str:
     try:
         jar = MozillaCookieJar('terabox.txt')
         jar.load()
-        cookie_string = ''
-        cookie_dict = {}
-        for cookie in jar:
-            cookie_string += f'{cookie.name}={cookie.value}; '
-            cookie_dict[cookie.name] = cookie.value
-        session = Session()
-        session.cookies.update(cookie_dict)
-        res = session.request('GET', url)
-        surl = res.url.split('?surl=')[-1]
-        soup = BeautifulSoup(res.content, 'lxml')
-        jsToken = None
-        for fs in soup.find_all('script'):
-            fstring = fs.string
-            if fstring and fstring.startswith('try {eval(decodeURIComponent'):
-                jsToken = fstring.split('%22')[1]
-        headers = {"Cookie": cookie_string}
-        res = session.request(
-            'GET', f'https://www.terabox.com/share/list?app_id=250528&jsToken={jsToken}&shorturl={surl}&root=1', headers=headers)
-        result = res.json()
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if result['errno'] != 0: raise DirectDownloadLinkException(f"ERROR: '{result}' Check cookies")
-    result = result['list']
-    if len(result) > 1:
-        raise DirectDownloadLinkException(
-            "ERROR: Can't download mutiple files")
-    result = result[0]
+    cookies = {}
+    for cookie in jar:
+        cookies[cookie.name] = cookie.value
+    session = Session()
+    try:
+        _res = session.get(url, cookies=cookies)
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
 
-    if result['isdir'] != '0':
-        raise DirectDownloadLinkException("ERROR: Can't download folder")
+    if jsToken := findall(r'window\.jsToken.*%22(.*)%22', _res.text):
+        jsToken = jsToken[0]
+    else:
+        session.close()
+        raise DirectDownloadLinkException('ERROR: jsToken not found!.')
+    shortUrl = _res.url.split('?surl=')[-1]
+
+    details = {'contents':[], 'title': '', 'total_size': 0}
+    details["header"] = ' '.join(f'{key}: {value}' for key, value in cookies.items())
+
+    def __fetch_links(folderPath=''):
+        _url = f'https://www.1024tera.com/share/list?app_id=250528&jsToken={jsToken}&shorturl={shortUrl}&'
+        _url += f'dir={folderPath}' if folderPath else "root=1"
+        try:
+            _json = session.get(_url, cookies=cookies).json()
+        except Exception as e:
+            raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+        if _json['errno'] not in [0, '0']:
+            if 'errmsg' in _json:
+                raise DirectDownloadLinkException(f"ERROR: {_json['errmsg']}")
+            else:
+                raise DirectDownloadLinkException('ERROR: Something went wrong!')
+
+        if not details['title']:
+            if "title" in _json:
+                title = _json["title"].split("/")
+                title = title[-1]
+            else:
+                title = shortUrl
+            details['title'] = title
+        if "list" not in _json:
+            return
+        contents = _json["list"]
+        for content in contents:
+            if content['isdir'] in ['1', 1]:
+                __fetch_links(content['path'])
+            else:
+                filepaths = content["path"].split('/')
+                item = {
+                    'url': content['dlink'],
+                    'filename': content['server_filename'],
+                    'path' : path.join(*filepaths).rsplit("/", 1)[0],
+                }
+                if 'size' in content:
+                    size = content["size"]
+                    if isinstance(size, str) and size.isdigit():
+                        size = float(size)
+                    details['total_size'] += size
+                details['contents'].append(item)
 
     try:
-        dlink = result['dlink']
+        __fetch_links()
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}, Check cookies")
-
-    return dlink
-
+        session.close()
+        raise DirectDownloadLinkException(e)
+    session.close()
+    return details
 
 def filepress(url):
     cget = create_scraper().request
@@ -734,3 +770,102 @@ def linkbox(url):
     name = quote(itemInfo["name"])
     raw = itemInfo['url'].split("/", 3)[-1]
     return f'https://wdl.nuplink.net/{raw}&filename={name}'
+
+
+def gofile(url):
+    try:
+        if "::" in url:
+            _password = url.split("::")[-1]
+            _password = sha256(_password.encode("utf-8")).hexdigest()
+            url = url.split("::")[-2]
+        else:
+            _password = ''
+        _id = url.split("/")[-1]
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+
+    session = Session()
+
+    def __get_token():
+        if 'gofile_token' in _caches:
+            __url = f"https://api.gofile.io/getAccountDetails?token={_caches['gofile_token']}"
+        else:
+            __url = 'https://api.gofile.io/createAccount'
+        try:
+            __res = session.get(__url, verify=False).json()
+            if __res["status"] != 'ok':
+                if 'gofile_token' in _caches:
+                    del _caches['gofile_token']
+                return __get_token()
+            _caches['gofile_token'] = __res["data"]["token"]
+            return _caches['gofile_token']
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+
+    try:
+        token = __get_token()
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(e)
+    
+    details = {'contents':[], 'title': '', 'total_size': 0, 'root_path': ''}
+    headers = {"Cookie": f"accountToken={token}"}
+    details["header"] = ' '.join(f'{key}: {value}' for key, value in headers.items())
+
+    def __fetch_links(_id, folderPath=''):
+        _url = f"https://api.gofile.io/getContent?contentId={_id}&token={token}&websiteToken=7fd94ds12fds4&cache=true"
+        if _password:
+            _url += f"&password={_password}"
+        try:
+            _json = session.get(_url, verify=False).json()
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+        if _json['status'] in 'error-passwordRequired':
+            raise DirectDownloadLinkException(f'ERROR: This link requires a password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> {url}::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!')
+        if _json['status'] in 'error-passwordWrong':
+            raise DirectDownloadLinkException('ERROR: This password is wrong !')
+        if _json['status'] in 'error-notFound':
+            raise DirectDownloadLinkException("ERROR: File not found on gofile's server")
+        if _json['status'] in 'error-notPublic':
+            raise DirectDownloadLinkException("ERROR: This folder is not public")
+
+        data = _json["data"]
+
+        if not details['title']:
+            details['title'] = data['name'] if data['type'] == "folder" else _id
+
+        if not details['root_path']:
+            details['root_path'] = path.join(details['title'])
+
+        contents = data["contents"]
+        for content in contents.values():
+            if content["type"] == "folder":
+                if not content['public']:
+                    continue
+                if not folderPath:
+                    newFolderPath = path.join(details['root_path'], content["name"])
+                else:
+                    newFolderPath = path.join(folderPath, content["name"])
+                __fetch_links(content["id"], newFolderPath)
+            else:
+                if not folderPath:
+                    folderPath = details['root_path']
+                item = {
+                    "path": path.join(folderPath),
+                    "filename": content["name"],
+                    "url": content["link"],
+                }
+                if 'size' in content:
+                    size = content["size"]
+                    if isinstance(size, str) and size.isdigit():
+                        size = float(size)
+                    details['total_size'] += size
+                details['contents'].append(item)
+
+    try:
+        __fetch_links(_id)
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(e)
+    session.close()
+    return details
