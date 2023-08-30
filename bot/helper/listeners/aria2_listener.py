@@ -37,31 +37,33 @@ async def __onDownloadStarted(api, gid):
 
     if dl := await getDownloadByGid(gid):
         if not hasattr(dl, 'listener'):
+            LOGGER.warning(
+                f"onDownloadStart: {gid}. STOP_DUPLICATE didn't pass since download completed earlier!")
             return
         listener = dl.listener()
-    if listener.upDest.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not listener.upDest.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
-        if listener.isLeech or listener.select or not is_gdrive_id(listener.upDest):
-            return
-        download = await sync_to_async(api.get_download, gid)
-        if not download.is_torrent:
-            await sleep(2)
-            download = download.live
-        LOGGER.info('Checking File/Folder if already in Drive...')
-        name = download.name
-        if listener.compress:
-            name = f"{name}.zip"
-        elif listener.extract:
-            try:
-                name = get_base_name(name)
-            except:
-                name = None
-        if name is not None:
-            telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest, listener.user_id)
-            if telegraph_content:
-                msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
-                button = await get_telegraph_list(telegraph_content)
-                await listener.onDownloadError(msg, button)
-                await sync_to_async(api.remove, [download], force=True, files=True)
+        if listener.upDest.startswith('mtp:') and listener.user_dict('stop_duplicate', False) or not listener.upDest.startswith('mtp:') and config_dict['STOP_DUPLICATE']:
+            if listener.isLeech or listener.select or not is_gdrive_id(listener.upDest):
+                return
+            download = await sync_to_async(api.get_download, gid)
+            if not download.is_torrent:
+                await sleep(2)
+                download = download.live
+            LOGGER.info('Checking File/Folder if already in Drive...')
+            name = download.name
+            if listener.compress:
+                name = f"{name}.zip"
+            elif listener.extract:
+                try:
+                    name = get_base_name(name)
+                except:
+                    name = None
+            if name is not None:
+                telegraph_content, contents_no = await sync_to_async(gdSearch(stopDup=True).drive_list, name, listener.upDest, listener.user_id)
+                if telegraph_content:
+                    msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
+                    button = await get_telegraph_list(telegraph_content)
+                    await listener.onDownloadError(msg, button)
+                    await sync_to_async(api.remove, [download], force=True, files=True)
 
 
 @new_thread

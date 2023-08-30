@@ -31,6 +31,7 @@ class gdCount(GoogleDriveHelper):
                 if not self.alt_auth and self.use_sa:
                     self.alt_auth = True
                     self.use_sa = False
+                    LOGGER.error('File not found. Trying with token.pickle...')
                     return self.count(link, user_id)
                 msg = "File not found."
             else:
