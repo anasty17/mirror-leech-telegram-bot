@@ -311,10 +311,10 @@ def pixeldrain(url: str) -> str:
     file_id = url.split("/")[-1]
     if url.split("/")[-2] == "l":
         info_link = f"https://pixeldrain.com/api/list/{file_id}"
-        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip"
+        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip?download"
     else:
         info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
-        dl_link = f"https://pixeldrain.com/api/file/{file_id}"
+        dl_link = f"https://pixeldrain.com/api/file/{file_id}?download"
     cget = create_scraper().request
     try:
         resp = cget('get', info_link).json()
