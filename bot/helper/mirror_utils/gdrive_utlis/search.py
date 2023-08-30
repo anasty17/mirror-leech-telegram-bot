@@ -73,16 +73,14 @@ class gdSearch(GoogleDriveHelper):
             drives = self.get_user_drive(target_id, user_id)
         else:
             drives = zip(DRIVES_NAMES, DRIVES_IDS, INDEX_URLS)
-        self.service = self.authorize()
         msg = ""
         fileName = self.escapes(str(fileName))
         contents_no = 0
         telegraph_content = []
         Title = False
         if not target_id.startswith('mtp:') and len(DRIVES_IDS) > 1:
-            token_service = self.alt_authorize()
-            if token_service is not None:
-                self.service = token_service
+            self.use_sa = False
+        self.service = self.authorize()
         for drive_name, dir_id, index_url in drives:
             isRecur = False if self.__isRecursive and len(
                 dir_id) > 23 else self.__isRecursive

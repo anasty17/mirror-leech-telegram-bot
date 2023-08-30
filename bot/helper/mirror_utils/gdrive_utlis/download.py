@@ -43,14 +43,12 @@ class gdDownload(GoogleDriveHelper):
             if "downloadQuotaExceeded" in err:
                 err = "Download Quota Exceeded."
             elif "File not found" in err:
-                if not self.alt_auth:
-                    token_service = self.alt_authorize()
-                    if token_service is not None:
-                        LOGGER.error(
-                            'File not found. Trying with token.pickle...')
-                        self.service = token_service
-                        self.__updater.cancel()
-                        return self.download(link)
+                if not self.alt_auth and self.use_sa:
+                    self.alt_auth = True
+                    self.use_sa = False
+                    LOGGER.error('File not found. Trying with token.pickle...')
+                    self.__updater.cancel()
+                    return self.download(link)
                 err = 'File not found!'
             async_to_sync(self.listener.onDownloadError, err)
             self.is_cancelled = True

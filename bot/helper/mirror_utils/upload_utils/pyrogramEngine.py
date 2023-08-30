@@ -269,7 +269,7 @@ class TgUploader:
                 thumb_path = f"{self.__path}/yt-dlp-thumb/{file_name}.jpg"
                 if await aiopath.isfile(thumb_path):
                     thumb = thumb_path
-                elif is_audio:
+                elif is_audio and not is_video:
                     thumb = await get_audio_thumb(self.__up_path)
 
             if self.__as_doc or force_document or (not is_video and not is_audio and not is_image):

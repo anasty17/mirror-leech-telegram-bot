@@ -28,13 +28,10 @@ class gdCount(GoogleDriveHelper):
                 err = err.last_attempt.exception()
             err = str(err).replace('>', '').replace('<', '')
             if "File not found" in err:
-                if not self.alt_auth:
-                    token_service = self.alt_authorize()
-                    if token_service is not None:
-                        LOGGER.error(
-                            'File not found. Trying with token.pickle...')
-                        self.service = token_service
-                        return self.count(link, user_id)
+                if not self.alt_auth and self.use_sa:
+                    self.alt_auth = True
+                    self.use_sa = False
+                    return self.count(link, user_id)
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"

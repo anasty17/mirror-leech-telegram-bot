@@ -25,10 +25,9 @@ class gdDelete(GoogleDriveHelper):
             LOGGER.info(f"Delete Result: {msg}")
         except HttpError as err:
             if "File not found" in str(err) or "insufficientFilePermissions" in str(err):
-                token_service = self.alt_authorize()
-                if token_service is not None:
-                    LOGGER.error('File not found. Trying with token.pickle...')
-                    self.service = token_service
+                if not self.alt_auth and self.use_sa:
+                    self.alt_auth = True
+                    self.use_sa = False
                     return self.deletefile(link, user_id)
                 err = "File not found or insufficientFilePermissions!"
             LOGGER.error(f"Delete Result: {err}")

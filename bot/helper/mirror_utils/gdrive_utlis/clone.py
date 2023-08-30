@@ -66,13 +66,10 @@ class gdClone(GoogleDriveHelper):
             if "User rate limit exceeded" in err:
                 msg = "User rate limit exceeded."
             elif "File not found" in err:
-                if not self.alt_auth:
-                    token_service = self.alt_authorize()
-                    if token_service is not None:
-                        LOGGER.error(
-                            'File not found. Trying with token.pickle...')
-                        self.service = token_service
-                        return self.clone(link)
+                if not self.alt_auth and self.use_sa:
+                    self.alt_auth = True
+                    self.use_sa = False
+                    return self.clone(link)
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
