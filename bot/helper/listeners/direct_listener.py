@@ -1,7 +1,7 @@
-from time import sleep, time
+from time import sleep
 
 from bot import LOGGER, aria2
-from bot.helper.ext_utils.bot_utils import async_to_sync, sync_to_async
+from bot.helper.ext_utils.bot_utils import async_to_sync
 
 
 class DirectListener:
@@ -12,28 +12,42 @@ class DirectListener:
         self.__listener = listener
         self.__downloads = []
         self.is_downloading = False
+        self.is_finished = False
         self.__a2c_opt = a2c_opt
         self.proc_bytes = 0
-        self.__startTime = time()
-
-    @property
-    def speed(self):
-        try:
-            return self.proc_bytes / (time() - self.__startTime)
-        except:
-            return 0
+        self.file_processed_bytes = 0
+        self.failed = 0
+        self.speed = 0
 
     @property
     def processed_bytes(self):
-        self.proc_bytes = 0
-        for download in self.__downloads:
-            download = download.live
-            self.proc_bytes += download.completed_length
         return self.proc_bytes
+
+    def progress(self):
+        self.proc_bytes = self.file_processed_bytes
+        should_remove = []
+        self.speed = 0
+        for i, download in enumerate(self.__downloads):
+            download = download.live
+            self.speed += download.download_speed
+            self.proc_bytes += download.completed_length
+            if error_message:= download.error_message:
+                self.failed += 1
+                LOGGER.error(f'Unable to download {download.name} due to: {error_message}')
+                download.remove(True, True)
+                should_remove.append(i)
+            elif download.is_complete:
+                self.file_processed_bytes += download.completed_length
+                download.remove(True)
+                should_remove.append(i)
+        if should_remove:
+            for i in should_remove:
+                del self.__downloads[i]
+        if not self.__downloads:
+            self.is_finished = True
 
     def download(self, contents):
         self.is_downloading = True
-        failed = 0
         for content in contents:
             if not self.is_downloading:
                 break
@@ -46,45 +60,25 @@ class DirectListener:
             try:
                 download = aria2.add_uris([content['url']], self.__a2c_opt)
             except Exception as e:
-                failed += 1
+                self.failed += 1
                 LOGGER.error(f'Unable to download {filename} due to: {e}')
                 continue
             download = download.live
             self.__downloads.append(download)
-            while True:
-                if error_message:= download.error_message:
-                    failed += 1
-                    LOGGER.error(f'Unable to download {filename} due to: {error_message}')
-                    break
-                if download.is_removed:
-                    break
-                if download.is_complete:
-                    break
-                if not self.is_downloading:
-                    break
-                download = download.live
-                sleep(1)
+        while not self.is_finished and self.is_downloading:
+            self.progress()
+            sleep(3)
         if not self.is_downloading:
             return
-        if failed == len(contents):
-            self.__remove(True)
+        if self.failed == len(contents):
             async_to_sync(self.__listener.onDownloadError, 'All files are failed to download!')
             return
-        self.__remove()
         async_to_sync(self.__listener.onDownloadComplete)
-    
-    def __remove(self, files=False):
-        for download in self.__downloads:
-            try:
-                if download.is_removed:
-                    continue
-                download = download.live
-                download.remove(True, files)
-            except:
-                pass
-    
     async def cancel_download(self):
         self.is_downloading = False
         LOGGER.info(f"Cancelling Download: {self.name}")
         await self.__listener.onDownloadError("Download Cancelled by User!")
-        await sync_to_async(self.__remove)
+        if self.__downloads:
+            for download in self.__downloads:
+                download = download.live
+                download.remove(True, True)

@@ -352,17 +352,15 @@ def streamtape(url: str) -> str:
         raise DirectDownloadLinkException("ERROR: Download link not found")
 
 
-def racaty(url: str) -> str:
-    """ Racaty direct link generator
-    By https://github.com/junedkh """
-    cget = create_scraper().request
+def racaty(url):
     try:
-        url = cget('GET', url).url
-        json_data = {
-            'op': 'download2',
-            'id': url.split('/')[-1]
-        }
-        res = cget('POST', url, data=json_data)
+        with create_scraper() as scraper:
+            url = scraper.get(url).url
+            json_data = {
+                'op': 'download2',
+                'id': url.split('/')[-1]
+            }
+            res = scraper.post(url, data=json_data)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
     if (direct_link := etree.HTML(res.text).xpath("//a[contains(@id,'uniqueExpirylink')]/@href")):
@@ -371,7 +369,7 @@ def racaty(url: str) -> str:
         raise DirectDownloadLinkException('ERROR: Direct link not found')
 
 
-def fichier(link: str) -> str:
+def fichier(link):
     """ 1Fichier direct link generator
     Based on https://github.com/Maujar
     """
@@ -457,56 +455,45 @@ def solidfiles(url: str) -> str:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
 
 
-def krakenfiles(page_link: str) -> str:
-    """ krakenfiles direct link generator
-    Based on https://github.com/tha23rd/py-kraken
-    By https://github.com/junedkh """
-    cget = create_scraper().request
+def krakenfiles(url):
+    session = Session()
     try:
-        page_resp = cget('get', page_link)
+        _res = session.get(url)
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    soup = BeautifulSoup(page_resp.text, "lxml")
-    try:
-        token = soup.find("input", id="dl-token")["value"]
-    except:
-        raise DirectDownloadLinkException(
-            f"ERROR: Page link is wrong: {page_link}")
-    hashes = [
-        item["data-file-hash"]
-        for item in soup.find_all("div", attrs={"data-file-hash": True})
-    ]
-    if not hashes:
-        raise DirectDownloadLinkException(
-            f"ERROR: Hash not found for : {page_link}")
-    dl_hash = hashes[0]
-    payload = f'------WebKitFormBoundary7MA4YWxkTrZu0gW\r\nContent-Disposition: form-data; name="token"\r\n\r\n{token}\r\n------WebKitFormBoundary7MA4YWxkTrZu0gW--'
-    headers = {
-        "content-type": "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW",
-        "cache-control": "no-cache",
-        "hash": dl_hash,
-    }
-    dl_link_resp = cget(
-        'post', f"https://krakenfiles.com/download/{hash}", data=payload, headers=headers)
-    dl_link_json = dl_link_resp.json()
-    if "url" in dl_link_json:
-        return dl_link_json["url"]
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    html = etree.HTML(_res.text)
+    if post_url:= html.xpath('//form[@id="dl-form"]/@action'):
+        post_url = f'https:{post_url[0]}'
     else:
-        raise DirectDownloadLinkException(
-            f"ERROR: Failed to acquire download URL from kraken for : {page_link}")
+        session.close()
+        raise DirectDownloadLinkException('ERROR: Unable to find post link.')
+    if token:= html.xpath('//input[@id="dl-token"]/@value'):
+        data = {'token': token[0]}
+    else:
+        session.close()
+        raise DirectDownloadLinkException('ERROR: Unable to find token for post.')
+    try:
+        _json = session.post(post_url, data=data).json()
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__} While send post request')
+    if _json['status'] != 'ok':
+        session.close()
+        raise DirectDownloadLinkException("ERROR: Unable to find download after post request")
+    session.close()
+    return _json['url']
 
 
 def uploadee(url: str) -> str:
-    """ uploadee direct link generator
-    By https://github.com/iron-heart-x"""
-    cget = create_scraper().request
     try:
-        soup = BeautifulSoup(cget('get', url).content, 'lxml')
-        sa = soup.find('a', attrs={'id': 'd_l'})
-        return sa['href']
-    except:
-        raise DirectDownloadLinkException(
-            f"ERROR: Failed to acquire download URL from upload.ee for : {url}")
+        with Session() as scraper:
+            _res = scraper.get(url)
+    except Exception as e:
+        raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+    if link := etree.HTML(_res.text).xpath("//a[@id='d_l']/@href"):
+        return link[0]
+    else:
+        raise DirectDownloadLinkException("ERROR: Direct Link not found")
 
 
 def terabox(url) -> str:
@@ -532,19 +519,21 @@ def terabox(url) -> str:
     else:
         session.close()
         raise DirectDownloadLinkException('ERROR: jsToken not found!.')
-    shortUrl = _res.url.split('?surl=')[-1]
+    shortUrl = parse_qs(urlparse(_res.url).query).get('surl')
+    if not shortUrl:
+        raise DirectDownloadLinkException("ERROR: Could not find surl")
 
     details = {'contents':[], 'title': '', 'total_size': 0}
     details["header"] = ' '.join(f'{key}: {value}' for key, value in cookies.items())
 
-    def __fetch_links(folderPath=''):
+    def __fetch_links(dir_='', folderPath=''):
         params = {
             'app_id': '250528',
             'jsToken': jsToken,
             'shorturl': shortUrl
             }
-        if folderPath:
-            params['dir'] = folderPath
+        if dir_:
+            params['dir'] = dir_
         else:
             params['root'] = '1'
         try:
@@ -557,25 +546,29 @@ def terabox(url) -> str:
             else:
                 raise DirectDownloadLinkException('ERROR: Something went wrong!')
 
-        if not details['title']:
-            if "title" in _json:
-                title = _json["title"].split("/")
-                title = title[-1]
-            else:
-                title = shortUrl
-            details['title'] = title
         if "list" not in _json:
             return
         contents = _json["list"]
         for content in contents:
             if content['isdir'] in ['1', 1]:
-                __fetch_links(content['path'])
+                if not folderPath:
+                    if not details['title']:
+                        details['title'] = content['server_filename']
+                        newFolderPath = path.join(details['title'])
+                    else:
+                        newFolderPath = path.join(details['title'], content['server_filename'])
+                else:
+                    newFolderPath = path.join(folderPath, content['server_filename'])
+                __fetch_links(content['path'], newFolderPath)
             else:
-                filepaths = content["path"].split('/')
+                if not folderPath:
+                    if not details['title']:
+                        details['title'] = content['server_filename']
+                    folderPath = details['title']
                 item = {
                     'url': content['dlink'],
                     'filename': content['server_filename'],
-                    'path' : path.join(*filepaths).rsplit("/", 1)[0],
+                    'path' : path.join(folderPath),
                 }
                 if 'size' in content:
                     size = content["size"]
@@ -814,7 +807,7 @@ def gofile(url):
         session.close()
         raise DirectDownloadLinkException(e)
 
-    details = {'contents':[], 'title': '', 'total_size': 0, 'root_path': ''}
+    details = {'contents':[], 'title': '', 'total_size': 0}
     headers = {"Cookie": f"accountToken={token}"}
     details["header"] = ' '.join(f'{key}: {value}' for key, value in headers.items())
 
@@ -840,22 +833,19 @@ def gofile(url):
         if not details['title']:
             details['title'] = data['name'] if data['type'] == "folder" else _id
 
-        if not details['root_path']:
-            details['root_path'] = path.join(details['title'])
-
         contents = data["contents"]
         for content in contents.values():
             if content["type"] == "folder":
                 if not content['public']:
                     continue
                 if not folderPath:
-                    newFolderPath = path.join(details['root_path'], content["name"])
+                    newFolderPath = path.join(details['title'], content["name"])
                 else:
                     newFolderPath = path.join(folderPath, content["name"])
                 __fetch_links(content["id"], newFolderPath)
             else:
                 if not folderPath:
-                    folderPath = details['root_path']
+                    folderPath = details['title']
                 item = {
                     "path": path.join(folderPath),
                     "filename": content["name"],
