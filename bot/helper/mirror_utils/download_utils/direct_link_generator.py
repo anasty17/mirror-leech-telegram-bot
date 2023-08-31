@@ -163,12 +163,13 @@ def uptobox(url: str) -> str:
 
 
 def mediafire(url: str) -> str:
+    if '/folder/' in url:
+        return mediafireFolder(url)
     if final_link := findall(r'https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+', url):
         return final_link[0]
-    cget = create_scraper().request
     try:
-        url = cget('get', url).url
-        page = cget('get', url).text
+        with Session() as scraper:
+            page = scraper.get(url).text
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
     if not (final_link := findall(r"\'(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\'", page)):
@@ -860,6 +861,89 @@ def gofile(url):
 
     try:
         __fetch_links(_id)
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(e)
+    session.close()
+    return details
+
+def mediafireFolder(url: str):
+    try:
+        raw = url.split('/', 4)[-1]
+        folderkey = raw.split('/', 1)[0]
+    except:
+        raise DirectDownloadLinkException('ERROR: Could not parse ')
+
+    details = {'contents': [], 'title': '', 'total_size': 0, 'header': ''}
+    session = Session()
+
+    try:
+        _json = session.post('https://www.mediafire.com/api/1.4/folder/get_info.php', data={
+            'recursive': 'yes',
+            'folder_key': folderkey,
+            'response_format': 'json'
+        }).json()
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting info")
+
+    _res = _json['response']
+    if 'folder_info' not in _res:
+        session.close()
+        if 'message' in _res:
+            raise DirectDownloadLinkException(f"ERROR: {_res['message']}")
+        raise DirectDownloadLinkException("ERROR: something went wrong!")
+    details['title'] = _res['folder_info']['name']
+
+    def __scraper(url):
+        try:
+            html = etree.HTML(session.get(url).text)
+        except:
+            return
+        if final_link := html.xpath("//a[@id='downloadButton']/@href"):
+            return final_link[0]
+
+    def __get_content(folderKey, folderPath='', content_type='folders'):
+        params = {
+            'content_type': content_type,
+            'folder_key': folderKey,
+            'response_format': 'json',
+        }
+        try:
+            _json = session.get(
+                'https://www.mediafire.com/api/1.4/folder/get_content.php', params=params).json()
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting content")
+        _res = _json['response']
+        _folder_content = _res['folder_content']
+        if content_type == 'folders':
+            folders = _folder_content['folders']
+            for folder in folders:
+                if not folderPath:
+                    newFolderPath = path.join(details['title'], folder["name"])
+                else:
+                    newFolderPath = path.join(folderPath, folder["name"])
+                __get_content(folder['folderkey'], newFolderPath)
+            __get_content(folderKey, folderPath, 'files')
+        else:
+            files = _folder_content['files']
+            for file in files:
+                item = {}
+                if not (_url := __scraper(file['links']['normal_download'])):
+                    continue
+                item['filename'] = file["filename"]
+                if not folderPath:
+                    folderPath = details['title']
+                item['path'] = path.join(folderPath)
+                item['url'] = _url
+                if 'size' in file:
+                    size = file["size"]
+                    if isinstance(size, str) and size.isdigit():
+                        size = float(size)
+                    details['total_size'] += size
+                details['contents'].append(item)
+    try:
+        __get_content(folderkey)
     except Exception as e:
         session.close()
         raise DirectDownloadLinkException(e)
