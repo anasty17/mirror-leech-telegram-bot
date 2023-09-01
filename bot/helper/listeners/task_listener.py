@@ -139,6 +139,8 @@ class MirrorLeechListener:
 
             MAX_SIZE = MAX_SPLIT_SIZE if user_leech else 2097152000
             LEECH_SPLIT_SIZE = min(LEECH_SPLIT_SIZE, MAX_SIZE)
+        else:
+            LEECH_SPLIT_SIZE = 0
 
         if self.extract:
             pswd = self.extract if isinstance(self.extract, str) else ''
