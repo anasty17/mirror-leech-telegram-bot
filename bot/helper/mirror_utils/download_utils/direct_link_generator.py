@@ -919,8 +919,7 @@ def mediafireFolder(url: str):
     except Exception as e:
         raise DirectDownloadLinkException(e)
 
-    if isinstance(folderkey, str):
-        details['title'] = folder_infos[0]["name"]
+    details['title'] = folder_infos[0]["name"]
 
     def __scraper(url):
         try:
