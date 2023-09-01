@@ -7,7 +7,7 @@
 from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no credit of the following code other
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
-
+from threading import Thread
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from json import loads
@@ -17,8 +17,10 @@ from time import sleep
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from uuid import uuid4
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
-from requests import Session
+from requests import Session, session as req_session
 from cloudscraper import create_scraper
 from lk21 import Bypass
 from lxml import etree
@@ -871,29 +873,54 @@ def mediafireFolder(url: str):
     try:
         raw = url.split('/', 4)[-1]
         folderkey = raw.split('/', 1)[0]
+        folderkey = folderkey.split(',')
     except:
         raise DirectDownloadLinkException('ERROR: Could not parse ')
-
+    if len(folderkey) == 1:
+        folderkey = folderkey[0]
     details = {'contents': [], 'title': '', 'total_size': 0, 'header': ''}
-    session = Session()
+    
+    session = req_session()
+    adapter = HTTPAdapter(max_retries=Retry(
+        total=10, read=10, connect=10, backoff_factor=0.3))
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    session = create_scraper(
+        browser={"browser": "firefox", "platform": "windows", "mobile": False},
+        delay=10,
+        sess=session,
+    )
+    folder_infos = []
+
+    def __get_info(folderkey):
+        try:
+            if isinstance(folderkey, list):
+                folderkey = ','.join(folderkey)
+            _json = session.post('https://www.mediafire.com/api/1.5/folder/get_info.php', data={
+                'recursive': 'yes',
+                'folder_key': folderkey,
+                'response_format': 'json'
+            }).json()
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting info")
+        _res = _json['response']
+        if 'folder_infos' in _res:
+            folder_infos.extend(_res['folder_infos'])
+        elif 'folder_info' in _res:
+            folder_infos.append(_res['folder_info'])
+        elif 'message' in _res:
+            raise DirectDownloadLinkException(f"ERROR: {_res['message']}")
+        else:
+            raise DirectDownloadLinkException("ERROR: something went wrong!")
+
 
     try:
-        _json = session.post('https://www.mediafire.com/api/1.4/folder/get_info.php', data={
-            'recursive': 'yes',
-            'folder_key': folderkey,
-            'response_format': 'json'
-        }).json()
+        __get_info(folderkey)
     except Exception as e:
-        session.close()
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting info")
+        raise DirectDownloadLinkException(e)
 
-    _res = _json['response']
-    if 'folder_info' not in _res:
-        session.close()
-        if 'message' in _res:
-            raise DirectDownloadLinkException(f"ERROR: {_res['message']}")
-        raise DirectDownloadLinkException("ERROR: something went wrong!")
-    details['title'] = _res['folder_info']['name']
+    if isinstance(folderkey, str):
+        details['title'] = folder_infos[0]["name"]
 
     def __scraper(url):
         try:
@@ -904,25 +931,26 @@ def mediafireFolder(url: str):
             return final_link[0]
 
     def __get_content(folderKey, folderPath='', content_type='folders'):
-        params = {
-            'content_type': content_type,
-            'folder_key': folderKey,
-            'response_format': 'json',
-        }
         try:
-            _json = session.get(
-                'https://www.mediafire.com/api/1.4/folder/get_content.php', params=params).json()
+            params = {
+                'content_type': content_type,
+                'folder_key': folderKey,
+                'response_format': 'json',
+            }
+            _json = session.get('https://www.mediafire.com/api/1.5/folder/get_content.php', params=params).json()
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting content")
         _res = _json['response']
+        if 'message' in _res:
+            raise DirectDownloadLinkException(f"ERROR: {_res['message']}")
         _folder_content = _res['folder_content']
         if content_type == 'folders':
             folders = _folder_content['folders']
             for folder in folders:
-                if not folderPath:
-                    newFolderPath = path.join(details['title'], folder["name"])
-                else:
+                if folderPath:
                     newFolderPath = path.join(folderPath, folder["name"])
+                else:
+                    newFolderPath = path.join(folder["name"])
                 __get_content(folder['folderkey'], newFolderPath)
             __get_content(folderKey, folderPath, 'files')
         else:
@@ -943,7 +971,14 @@ def mediafireFolder(url: str):
                     details['total_size'] += size
                 details['contents'].append(item)
     try:
-        __get_content(folderkey)
+        threads = []
+        for folder in folder_infos:
+            thread = Thread(target=__get_content, args=(folder['folderkey'], folder['name']))
+            threads.append(thread)
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
     except Exception as e:
         session.close()
         raise DirectDownloadLinkException(e)
