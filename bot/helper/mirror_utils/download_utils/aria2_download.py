@@ -15,7 +15,7 @@ async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_
     if filename:
         a2c_opt['out'] = filename
     if auth:
-        a2c_opt['header'] = f"authorization: {auth}"
+        a2c_opt['header'] = auth
     if ratio:
         a2c_opt['seed-ratio'] = ratio
     if seed_time:

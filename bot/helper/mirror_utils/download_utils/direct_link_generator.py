@@ -7,26 +7,28 @@
 from https://github.com/AvinashReddy3108/PaperplaneExtended . I hereby take no credit of the following code other
 than the modifications. See https://github.com/AvinashReddy3108/PaperplaneExtended/commits/master/userbot/modules/direct_links.py
 for original authorship. """
-from threading import Thread
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from json import loads
 from os import path
 from re import findall, match, search, sub
+from threading import Thread
 from time import sleep
 from urllib.parse import parse_qs, quote, unquote, urlparse
 from uuid import uuid4
 
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
-from requests import Session, session as req_session
 from cloudscraper import create_scraper
 from lk21 import Bypass
-from lxml import etree
+from lxml.etree import HTML
+from requests import Session, post
+from requests import session as req_session
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from bot import config_dict
-from bot.helper.ext_utils.bot_utils import get_readable_time, is_share_link
+from bot.helper.ext_utils.bot_utils import (get_readable_time, is_share_link,
+                                            text_size_to_bytes)
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 _caches = {}
@@ -85,6 +87,10 @@ def direct_link_generator(link: str):
         return letsupload(link)
     elif 'gofile.io' in domain:
         return gofile(link)
+    elif 'send.cm' in domain:
+        return send_cm(link)
+    elif 'doods.pro' in domain:
+        return doods(link)
     elif any(x in domain for x in ['streamtape.com', 'streamtape.co', 'streamtape.cc', 'streamtape.to', 'streamtape.net', 'streamta.pe', 'streamtape.xyz']):
         return streamtape(link)
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
@@ -366,7 +372,7 @@ def racaty(url):
             res = scraper.post(url, data=json_data)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if (direct_link := etree.HTML(res.text).xpath("//a[contains(@id,'uniqueExpirylink')]/@href")):
+    if (direct_link := HTML(res.text).xpath("//a[contains(@id,'uniqueExpirylink')]/@href")):
         return direct_link[0]
     else:
         raise DirectDownloadLinkException('ERROR: Direct link not found')
@@ -464,7 +470,7 @@ def krakenfiles(url):
         _res = session.get(url)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    html = etree.HTML(_res.text)
+    html = HTML(_res.text)
     if post_url:= html.xpath('//form[@id="dl-form"]/@action'):
         post_url = f'https:{post_url[0]}'
     else:
@@ -493,7 +499,7 @@ def uploadee(url: str) -> str:
             _res = scraper.get(url)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if link := etree.HTML(_res.text).xpath("//a[@id='d_l']/@href"):
+    if link := HTML(_res.text).xpath("//a[@id='d_l']/@href"):
         return link[0]
     else:
         raise DirectDownloadLinkException("ERROR: Direct Link not found")
@@ -613,7 +619,7 @@ def gdtot(url):
         res = cget('GET', f'https://gdtot.pro/file/{url.split("/")[-1]}')
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    token_url = etree.HTML(res.content).xpath(
+    token_url = HTML(res.text).xpath(
         "//a[contains(@class,'inline-flex items-center justify-center')]/@href")
     if not token_url:
         try:
@@ -657,7 +663,7 @@ def sharer_scraper(url):
     if not key:
         raise DirectDownloadLinkException("ERROR: Key not found!")
     key = key[0]
-    if not etree.HTML(res.content).xpath("//button[@id='drc']"):
+    if not HTML(res.text).xpath("//button[@id='drc']"):
         raise DirectDownloadLinkException(
             "ERROR: This link don't have direct download button")
     boundary = uuid4()
@@ -685,7 +691,7 @@ def sharer_scraper(url):
         res = cget('GET', res["url"])
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if (drive_link := etree.HTML(res.content).xpath("//a[contains(@class,'btn')]/@href")) and "drive.google.com" in drive_link[0]:
+    if (drive_link := HTML(res.text).xpath("//a[contains(@class,'btn')]/@href")) and "drive.google.com" in drive_link[0]:
         return drive_link[0]
     else:
         raise DirectDownloadLinkException(
@@ -725,7 +731,7 @@ def akmfiles(url):
         res = cget('POST', url, data=json_data)
     except Exception as e:
         raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-    if (direct_link := etree.HTML(res.content).xpath("//a[contains(@class,'btn btn-dow')]/@href")):
+    if (direct_link := HTML(res.text).xpath("//a[contains(@class,'btn btn-dow')]/@href")):
         return direct_link[0]
     else:
         raise DirectDownloadLinkException('ERROR: Direct link not found')
@@ -923,7 +929,7 @@ def mediafireFolder(url: str):
 
     def __scraper(url):
         try:
-            html = etree.HTML(session.get(url).text)
+            html = HTML(session.get(url).text)
         except:
             return
         if final_link := html.xpath("//a[@id='downloadButton']/@href"):
@@ -983,3 +989,140 @@ def mediafireFolder(url: str):
         raise DirectDownloadLinkException(e)
     session.close()
     return details
+
+def cf_bypass(url):
+    "DO NOT ABUSE THIS"
+    try:
+        data = {
+            "cmd": "request.get",
+            "url": url,
+            "maxTimeout": 60000
+        }
+        _json = post("https://cf.jmdkh.eu.org/v1", headers={"Content-Type": "application/json"}, json=data).json()
+        if _json['status'] == 'ok':
+            return _json['solution']["response"]
+    except Exception as e:
+        e
+    raise DirectDownloadLinkException("ERROR: Con't bypass cloudflare")
+
+def send_cm_file(url, file_id=None):
+    with create_scraper() as session:
+        if file_id is None:
+            try:
+                html = HTML(session.get(url).text)
+            except Exception as e:
+                raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+            if not (file_id :=html.xpath("//input[@name='id']/@value")):
+                raise DirectDownloadLinkException('ERROR: file_id not found')
+        try:
+            _res = session.post(
+                'https://send.cm/', data={'op': 'download2', 'id': file_id}, allow_redirects=False)
+            if 'Location' in _res.headers:
+                return (_res.headers['Location'], 'Referer: https://send.cm/')
+            raise DirectDownloadLinkException("ERROR: Direct link not found")
+        except Exception as e:
+            raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+
+def send_cm(url: str):
+    if '/d/' in url:
+        return send_cm_file(url)
+    elif '/s/' not in url:
+        file_id = url.split("/")[-1]
+        return send_cm_file(url, file_id)
+    splitted_url = url.split("/")
+    details = {'contents': [], 'title': '', 'total_size': 0,
+               'header': 'Referer: https://send.cm/'}
+    if len(splitted_url) == 5:
+        url += '/'
+        splitted_url = url.split("/")
+    if len(splitted_url) >= 7:
+        details['title'] = splitted_url[5]
+    else:
+        details['title'] = splitted_url[-1]
+    session = Session()
+
+    def __collectFolders(html):
+        folders = []
+        folders_urls = html.xpath('//h6/a/@href')
+        folders_names = html.xpath('//h6/a/text()')
+        for folders_url, folders_name in zip(folders_urls, folders_names):
+            item = {}
+            item['folder_link'] = folders_url.strip()
+            item['folder_name'] = folders_name.strip()
+            folders.append(item)
+        return folders
+
+    def __getFile_link(file_id):
+        try:
+            _res = session.post(
+                'https://send.cm/', data={'op': 'download2', 'id': file_id}, allow_redirects=False)
+            if 'Location' in _res.headers:
+                return _res.headers['Location']
+        except:
+            pass
+
+    def __getFiles(html):
+        files = []
+        hrefs = html.xpath('//tr[@class="selectable"]//a/@href')
+        file_names = html.xpath('//tr[@class="selectable"]//a/text()')
+        sizes = html.xpath('//tr[@class="selectable"]//span/text()')
+        for href, file_name, size_text in zip(hrefs, file_names, sizes):
+            item = {}
+            item['file_id'] = href.split('/')[-1]
+            item['filename'] = file_name.strip()
+            item['size'] = text_size_to_bytes(size_text.strip())
+            files.append(item)
+        return files
+
+    def __writeContents(html_text, folderPath=''):
+        folders = __collectFolders(html_text)
+        for folder in folders:
+            _html = HTML(cf_bypass(folder['folder_link']))
+            __writeContents(_html, path.join(folderPath, folder['folder_name']))
+        files = __getFiles(html_text)
+        for file in files:
+            if not (link := __getFile_link(file['file_id'])):
+                continue
+            item = {'url': link,
+                    'filename': file['filename'], 'path': folderPath}
+            details['total_size'] += file['size']
+            details['contents'].append(item)
+    try:
+        mainHtml = HTML(cf_bypass(url))
+    except DirectDownloadLinkException as e:
+        session.close()
+        raise e
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While getting mainHtml")
+    try:
+        __writeContents(mainHtml, details['title'])
+    except DirectDownloadLinkException as e:
+        session.close()
+        raise e
+    except Exception as e:
+        session.close()
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While writing Contents")
+    session.close()
+    return details
+
+def doods(url):
+    parsed_url = urlparse(url)
+    session = create_scraper()
+    try:
+        _res = session.get(url)
+        html = HTML(_res.text)
+    except Exception as e:
+        raise DirectDownloadLinkException(
+            f'ERROR: {e.__class__.__name__} While fetching token link')
+    if not (link := html.xpath("//div[@class='download-content']//a/@href")):
+        raise DirectDownloadLinkException('ERROR: Token Link not found')
+    link = f'{parsed_url.scheme}://{parsed_url.hostname}/{link[0]}'
+    try:
+        _res = session.get(link)
+    except Exception as e:
+        raise DirectDownloadLinkException(
+            f'ERROR: {e.__class__.__name__} While fetching download link')
+    if not (link := search(r"window\.open\('(\S+)'", _res.text)):
+        raise DirectDownloadLinkException("ERROR: Download link not found try again")
+    return (link.group(1), f'Referer: {parsed_url.scheme}://{parsed_url.hostname}/')

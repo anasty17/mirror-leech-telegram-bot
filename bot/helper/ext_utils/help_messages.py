@@ -75,6 +75,9 @@ Note: Doesn't work with torrents.
 <b>Direct link authorization</b>: -au -ap
 <code>/cmd</code> link -au username -ap password
 
+<b>Direct link custom headers</b>: -h
+<code>/cmd</code> link -h Key: value Key1: value1
+
 <b>Extract/Zip</b>: -e -z
 <code>/cmd</code> link -e password (extract password protected)
 <code>/cmd</code> link -z password (zip password protected)
