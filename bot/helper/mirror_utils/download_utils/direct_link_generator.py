@@ -89,7 +89,7 @@ def direct_link_generator(link: str):
         return gofile(link)
     elif 'send.cm' in domain:
         return send_cm(link)
-    elif 'doods.pro' in domain:
+    elif any(x in domain for x in ['dood.watch', 'doodstream.com', 'dood.to', 'dood.so', 'dood.cx', 'dood.la', 'dood.ws', 'dood.sh', 'doodstream.co', 'dood.pm', 'dood.wf', 'dood.re', 'dood.video', 'dooood.com', 'dood.yt', 'dood.stream', 'doods.pro']):
         return doods(link)
     elif any(x in domain for x in ['streamtape.com', 'streamtape.co', 'streamtape.cc', 'streamtape.to', 'streamtape.net', 'streamta.pe', 'streamtape.xyz']):
         return streamtape(link)
@@ -592,6 +592,8 @@ def terabox(url) -> str:
         session.close()
         raise DirectDownloadLinkException(e)
     session.close()
+    if len(details['contents']) == 1:
+        return details['contents'][0]['url']
     return details
 
 def filepress(url):
@@ -873,6 +875,8 @@ def gofile(url):
         session.close()
         raise DirectDownloadLinkException(e)
     session.close()
+    if len(details['contents']) == 1:
+        return (details['contents'][0]['url'], details['header'])
     return details
 
 def mediafireFolder(url: str):
@@ -988,6 +992,8 @@ def mediafireFolder(url: str):
         session.close()
         raise DirectDownloadLinkException(e)
     session.close()
+    if len(details['contents']) == 1:
+        return (details['contents'][0]['url'], details['header'])
     return details
 
 def cf_bypass(url):
@@ -1006,22 +1012,35 @@ def cf_bypass(url):
     raise DirectDownloadLinkException("ERROR: Con't bypass cloudflare")
 
 def send_cm_file(url, file_id=None):
+    if "::" in url:
+        _password = url.split("::")[-1]
+        url = url.split("::")[-2]
+    else:
+        _password = ''
+    _passwordNeed = False
     with create_scraper() as session:
         if file_id is None:
             try:
                 html = HTML(session.get(url).text)
             except Exception as e:
-                raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
-            if not (file_id :=html.xpath("//input[@name='id']/@value")):
+                raise DirectDownloadLinkException(
+                    f'ERROR: {e.__class__.__name__}')
+            if html.xpath("//input[@name='password']"):
+                _passwordNeed = True
+            if not (file_id := html.xpath("//input[@name='id']/@value")):
                 raise DirectDownloadLinkException('ERROR: file_id not found')
         try:
-            _res = session.post(
-                'https://send.cm/', data={'op': 'download2', 'id': file_id}, allow_redirects=False)
+            data = {'op': 'download2', 'id': file_id}
+            if _password and _passwordNeed:
+                data["password"] = _password
+            _res = session.post('https://send.cm/', data=data, allow_redirects=False)
             if 'Location' in _res.headers:
                 return (_res.headers['Location'], 'Referer: https://send.cm/')
-            raise DirectDownloadLinkException("ERROR: Direct link not found")
         except Exception as e:
             raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
+        if _passwordNeed:
+            raise DirectDownloadLinkException(f'ERROR: This link requires or wrong password!\n\n<b>This link requires a password!</b>\n- Insert sign <b>::</b> after the link and write the password after the sign.\n\n<b>Example:</b> {url}::love you\n\n* No spaces between the signs <b>::</b>\n* For the password, you can use a space!')
+        raise DirectDownloadLinkException("ERROR: Direct link not found")
 
 def send_cm(url: str):
     if '/d/' in url:
@@ -1104,9 +1123,13 @@ def send_cm(url: str):
         session.close()
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__} While writing Contents")
     session.close()
+    if len(details['contents']) == 1:
+        return (details['contents'][0]['url'], details['header'])
     return details
 
 def doods(url):
+    if "/e/" in url:
+        url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
     session = create_scraper()
     try:
