@@ -350,15 +350,19 @@ def antfiles(url: str) -> str:
 
 
 def streamtape(url: str) -> str:
+    splitted_url = url.split("/")
+    _id = splitted_url[4] if len(splitted_url) >= 6 else splitted_url[-1]
     try:
         with Session() as session:
             res = session.get(url)
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-    if link := findall(r"document.*((?=id\=)[^\"']+)", res.text):
-        return f"https://streamtape.com/get_video?{link[-1]}"
-    else:
+    html = HTML(res.text)
+    if not (script := html.xpath("//script[contains(text(),'ideoooolink')]/text()")):
+        raise DirectDownloadLinkException("ERROR: requeries script not found")
+    if not (link := findall(r"(&expires\S+)'", script[0])):
         raise DirectDownloadLinkException("ERROR: Download link not found")
+    return f"https://streamtape.com/get_video?id={_id}{link[-1]}"
 
 
 def racaty(url):
