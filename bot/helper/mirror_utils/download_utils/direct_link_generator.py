@@ -85,6 +85,8 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     elif 'letsupload.io' in domain:
         return letsupload(link)
+    elif 'easyupload.io' in domain:
+        return easyupload(link)
     elif 'gofile.io' in domain:
         return gofile(link)
     elif 'send.cm' in domain:
@@ -1153,3 +1155,73 @@ def doods(url):
     if not (link := search(r"window\.open\('(\S+)'", _res.text)):
         raise DirectDownloadLinkException("ERROR: Download link not found try again")
     return (link.group(1), f'Referer: {parsed_url.scheme}://{parsed_url.hostname}/')
+
+
+def easyupload(link:str):
+
+
+    def __get_captcha_token():
+        url_base = 'https://www.google.com/recaptcha/'
+        post_data = "v={}&reason=q&c={}&k={}&co={}"
+        session = Session()
+        session.headers.update({
+            'content-type': 'application/x-www-form-urlencoded'
+        })
+        matches = findall('([api2|enterprise]+)\/anchor\?(.*)', '"https://www.google.com/recaptcha/api2/anchor?ar=1&k=6LfWajMdAAAAAGLXz_nxz2tHnuqa-abQqC97DIZ3&co=aHR0cHM6Ly9lYXN5dXBsb2FkLmlvOjQ0Mw..&hl=en&v=0hCdE87LyjzAkFO5Ff-v7Hj1&size=invisible&cb=c3o1vbaxbmwe"')[0]
+        url_base += matches[0]+'/'
+        params = matches[1]
+        res = session.get(url_base+'anchor', params=params)
+        token = findall(r'"recaptcha-token" value="(.*?)"', res.text)[0]
+        params = dict(pair.split('=') for pair in params.split('&'))
+        post_data = post_data.format(params["v"], token, params["k"], params["co"])
+        res = session.post(url_base+'reload', params=f'k={params["k"]}', data=post_data)
+        token = findall(r'"rresp","(.*?)"', res.text)[0]
+        session.close()
+        return token 
+
+
+    def __get_server_url(raw_resp):
+        pattern = r'https://eu(?:[1-9][0-9]?|100)\.easyupload\.io/action\.php'
+        match = search(pattern,f"{raw_resp}" )
+        if match:
+            return match.group()
+        raise DirectDownloadLinkException("ERROR: Failed to get server for EasyUpload Link")
+
+    
+    pattern = r'https://easyupload.io/(\w+)'
+    match = search(pattern,link)
+    url = None 
+    if match:
+        url = match.group(1)
+
+    if not url:
+        raise DirectDownloadLinkException("ERROR: Invalid EasyUpload Link")
+    
+    session = Session()
+    session.headers.update({'referer': 'https://easyupload.io', 
+                            'origin': 'https://easyupload.io',
+                            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+    'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
+    'accept': 'application/json, text/javascript, */*; q=0.01'})
+
+    resp = session.post(url= __get_server_url(session.get(link).text), data={ 'type': 'download-token',
+                                                                        'url': url,
+                                                                        'value' : '',
+                                                                        'captchatoken': __get_captcha_token(), 
+                                                                        'method': 'regular'})
+    session.close()
+    try:
+        json_resp = resp.json()
+        if 'download_link' not in json_resp:
+            raise DirectDownloadLinkException("ERROR: Failed to generate direct link from EasyUpload.")
+        
+        return json_resp['download_link']
+    
+    except:
+        raise DirectDownloadLinkException("ERROR: Failed to parse response from EasyUpload. Try again few moments later.")
+    
+
+
+
+
+    
