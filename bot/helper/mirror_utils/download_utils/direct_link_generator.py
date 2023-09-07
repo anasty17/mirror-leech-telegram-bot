@@ -188,9 +188,10 @@ def mediafire(url: str) -> str:
         return mediafireFolder(url)
     if final_link := findall(r'https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+', url):
         return final_link[0]
+    cget = create_scraper().request
     try:
-        with Session() as scraper:
-            page = scraper.get(url).text
+        url = cget('get', url).url
+        page = cget('get', url).text
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
     if not (final_link := findall(r"\'(https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+)\'", page)):
