@@ -189,7 +189,7 @@ async def gdcloneNode(client, link, dest_id, listener):
             msg = await sendMessage(listener.message, f"Cloning: <code>{link}</code>")
         else:
             msg = ''
-            gid = ''.join(SystemRandom().choices(ascii_letters + digits, k=12))
+            gid = token_urlsafe(12)
             async with download_dict_lock:
                 download_dict[listener.uid] = GdriveStatus(
                     drive, size, listener.message, gid, 'cl')
