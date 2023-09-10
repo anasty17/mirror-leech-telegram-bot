@@ -623,6 +623,10 @@ async def load_config():
     if len(UPTOBOX_TOKEN) == 0:
         UPTOBOX_TOKEN = ''
 
+    FILELION_API = environ.get('FILELION_API', '')
+    if len(FILELION_API) == 0:
+        FILELION_API = ''
+
     INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
     if len(INDEX_URL) == 0:
         INDEX_URL = ''
@@ -824,6 +828,7 @@ async def load_config():
                         'DOWNLOAD_DIR': DOWNLOAD_DIR,
                         'EQUAL_SPLITS': EQUAL_SPLITS,
                         'EXTENSION_FILTER': EXTENSION_FILTER,
+                        'FILELION_API': FILELION_API,
                         'GDRIVE_ID': GDRIVE_ID,
                         'INCOMPLETE_TASK_NOTIFIER': INCOMPLETE_TASK_NOTIFIER,
                         'INDEX_URL': INDEX_URL,
