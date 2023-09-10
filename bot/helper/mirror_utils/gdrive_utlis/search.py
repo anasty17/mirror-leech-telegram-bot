@@ -11,8 +11,8 @@ LOGGER = getLogger(__name__)
 
 class gdSearch(GoogleDriveHelper):
 
-    def __init__(self, stopDup=False, noMulti=False, isRecursive=True, itemType='', listener=None):
-        super().__init__(listener)
+    def __init__(self, stopDup=False, noMulti=False, isRecursive=True, itemType=''):
+        super().__init__()
         self.__stopDup = stopDup
         self.__noMulti = noMulti
         self.__isRecursive = isRecursive

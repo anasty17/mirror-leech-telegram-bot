@@ -192,10 +192,7 @@ Note: If -up not specified then rclone destination will be the RCLONE_PATH from 
 
 PASSWORD_ERROR_MESSAGE = """
 <b>This link requires a password!</b>
-- Insert sign <b>::</b> after the link and write the password after the sign.
+- Insert <b>::</b> after the link and write the password after the sign.
 
-<b>Example:</b> {}::love you
-
-Note: No spaces between the signs <b>::</b>
-For the password, you can use a space!
+<b>Example:</b> link::my password
 """

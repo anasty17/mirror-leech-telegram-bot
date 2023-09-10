@@ -325,9 +325,9 @@ def text_size_to_bytes(size_text):
     elif 'm' in size_text:
         size += float(size_text.split('m')[0]) * 1048576
     elif 'g' in size_text:
-        size += float(size_text.split('g')[0]) *1073741824 
+        size += float(size_text.split('g')[0]) *1073741824
     elif 't' in size_text:
-        size += float(size_text.split('t')[0]) *1099511627776 
+        size += float(size_text.split('t')[0]) *1099511627776
     return size
 
 def new_thread(func):
