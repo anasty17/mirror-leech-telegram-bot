@@ -118,7 +118,8 @@ async def get_user_settings(from_user):
         ytopt = YTO
     else:
         ytopt = 'None'
-    buttons.ibutton("Reset All", f"userset {user_id} reset")
+    if user_dict:
+        buttons.ibutton("Reset All", f"userset {user_id} reset")
     buttons.ibutton("Close", f"userset {user_id} close")
 
     text = f"""<u>Settings for {name}</u>
