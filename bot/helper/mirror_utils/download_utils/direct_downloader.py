@@ -18,11 +18,10 @@ async def add_direct_download(details, path, listener, foldername):
         return
     size = details['total_size']
 
-    if foldername:
-        path = f'{path}/{foldername}'
-
     if not foldername:
         foldername = details['title']
+    path = f'{path}/{foldername}'
+
     msg, button = await stop_duplicate_check(foldername, listener)
     if msg:
         await sendMessage(listener.message, msg, button)

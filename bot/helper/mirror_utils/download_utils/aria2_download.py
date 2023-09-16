@@ -8,14 +8,14 @@ from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMess
 from bot.helper.ext_utils.task_manager import is_queued
 
 
-async def add_aria2c_download(link, path, listener, filename, auth, ratio, seed_time):
+async def add_aria2c_download(link, path, listener, filename, header, ratio, seed_time):
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
     a2c_opt['dir'] = path
     if filename:
         a2c_opt['out'] = filename
-    if auth:
-        a2c_opt['header'] = auth
+    if header:
+        a2c_opt['header'] = header
     if ratio:
         a2c_opt['seed-ratio'] = ratio
     if seed_time:

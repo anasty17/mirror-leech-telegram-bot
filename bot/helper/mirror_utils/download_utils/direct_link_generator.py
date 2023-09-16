@@ -844,7 +844,7 @@ def mediafireFolder(url):
     if len(folderkey) == 1:
         folderkey = folderkey[0]
     details = {'contents': [], 'title': '', 'total_size': 0, 'header': ''}
-    
+
     session = req_session()
     adapter = HTTPAdapter(max_retries=Retry(
         total=10, read=10, connect=10, backoff_factor=0.3))
