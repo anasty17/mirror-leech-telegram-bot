@@ -1154,6 +1154,8 @@ def filelions(url):
         spited_file_code = file_code.rsplit('_', 1)
         quality = spited_file_code[1]
         file_code = spited_file_code[0]
+    parsed_url = urlparse(url)
+    url = f'{parsed_url.scheme}://{parsed_url.hostname}/{file_code}'
     with Session() as session:
         try:
             _res = session.get('https://api.filelions.com/api/file/direct_link', params={'key': config_dict['FILELION_API'], 'file_code': file_code, 'hls': '1'}).json()
