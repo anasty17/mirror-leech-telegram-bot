@@ -10,17 +10,17 @@ class DirectListener:
         self.__listener = listener
         self.__is_cancelled = False
         self.__a2c_opt = a2c_opt
+        self.__proc_bytes = 0
+        self.__failed = 0
         self.task = None
         self.name = foldername
         self.total_size = total_size
-        self.proc_bytes = 0
-        self.failed = 0
 
     @property
     def processed_bytes(self):
         if self.task:
-            return self.proc_bytes + self.task.completed_length
-        return self.proc_bytes
+            return self.__proc_bytes + self.task.completed_length
+        return self.__proc_bytes
 
     @property
     def speed(self):
@@ -40,7 +40,7 @@ class DirectListener:
             try:
                 self.task = aria2.add_uris([content['url']], self.__a2c_opt, position=0)
             except Exception as e:
-                self.failed += 1
+                self.__failed += 1
                 LOGGER.error(f'Unable to download {filename} due to: {e}')
                 continue
             self.task = self.task.live
@@ -51,19 +51,19 @@ class DirectListener:
                     break
                 self.task = self.task.live
                 if error_message:= self.task.error_message:
-                    self.failed += 1
+                    self.__failed += 1
                     LOGGER.error(f'Unable to download {self.task.name} due to: {error_message}')
                     self.task.remove(True, True)
                     break
                 elif self.task.is_complete:
-                    self.proc_bytes += self.task.total_length
+                    self.__proc_bytes += self.task.total_length
                     self.task.remove(True)
                     break
                 sleep(1)
             self.task = None
         if self.__is_cancelled:
             return
-        if self.failed == len(contents):
+        if self.__failed == len(contents):
             async_to_sync(self.__listener.onDownloadError, 'All files are failed to download!')
             return
         async_to_sync(self.__listener.onDownloadComplete)

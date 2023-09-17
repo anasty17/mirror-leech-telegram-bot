@@ -12,7 +12,6 @@ from http.cookiejar import MozillaCookieJar
 from json import loads
 from os import path
 from re import findall, match, search
-from threading import Thread
 from time import sleep
 from urllib.parse import parse_qs, quote, urlparse
 from uuid import uuid4
@@ -936,18 +935,12 @@ def mediafireFolder(url):
                     details['total_size'] += size
                 details['contents'].append(item)
     try:
-        threads = []
         for folder in folder_infos:
-            thread = Thread(target=__get_content, args=(folder['folderkey'], folder['name']))
-            threads.append(thread)
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+            __get_content(folder['folderkey'], folder['name'])
     except Exception as e:
-        session.close()
         raise DirectDownloadLinkException(e)
-    session.close()
+    finally:
+        session.close()
     if len(details['contents']) == 1:
         return (details['contents'][0]['url'], details['header'])
     return details

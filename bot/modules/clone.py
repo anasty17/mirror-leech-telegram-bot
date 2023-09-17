@@ -25,7 +25,7 @@ from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.listeners.task_listener import MirrorLeechListener
 
 
-async def rcloneNode(client, link, dst_path, rcf, listener):
+async def rcloneNode(client, link, dst_path, listener):
     if link == 'rcl':
         link = await RcloneList(client, listener.message).get_rclone_path('rcd')
         if not is_rclone_path(link):
@@ -95,7 +95,7 @@ async def rcloneNode(client, link, dst_path, rcf, listener):
         download_dict[listener.uid] = RcloneStatus(
             RCTransfer, listener.message, gid, 'cl')
     await sendStatusMessage(listener.message)
-    link, destination = await RCTransfer.clone(config_path, remote, src_path, rcf, mime_type)
+    link, destination = await RCTransfer.clone(config_path, remote, src_path, mime_type)
     if not link:
         return
     LOGGER.info(f'Cloning Done: {name}')
@@ -261,7 +261,8 @@ async def clone(client, message):
         if not config_dict['RCLONE_PATH'] and not listener.user_dict.get('rclone_path') and not dst_path:
             await sendMessage(message, 'Destination not specified!')
             return
-        await rcloneNode(client, link, dst_path, rcf, listener)
+        listener.rcFlags = rcf
+        await rcloneNode(client, link, dst_path, listener)
     else:
         if not await aiopath.exists('token.pickle') and not await aiopath.exists(f'tokens/{message.from_user.id}.pickle') \
             and not await aiopath.exists('accounts'):
