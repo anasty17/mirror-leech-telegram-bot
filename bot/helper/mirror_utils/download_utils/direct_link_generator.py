@@ -1088,7 +1088,7 @@ def doods(url):
         if not (link := html.xpath("//div[@class='download-content']//a/@href")):
             raise DirectDownloadLinkException('ERROR: Token Link not found or maybe not allow to download! open in browser.')
         link = f'{parsed_url.scheme}://{parsed_url.hostname}{link[0]}'
-        sleep(1)
+        sleep(2)
         try:
             _res = session.get(link)
         except Exception as e:
