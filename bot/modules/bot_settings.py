@@ -627,6 +627,10 @@ async def load_config():
     if len(FILELION_API) == 0:
         FILELION_API = ''
 
+    STREAMWISH_API = environ.get('STREAMWISH_API', '')
+    if len(STREAMWISH_API) == 0:
+        STREAMWISH_API = ''
+
     INDEX_URL = environ.get('INDEX_URL', '').rstrip("/")
     if len(INDEX_URL) == 0:
         INDEX_URL = ''
@@ -857,6 +861,7 @@ async def load_config():
                         'STATUS_LIMIT': STATUS_LIMIT,
                         'STATUS_UPDATE_INTERVAL': STATUS_UPDATE_INTERVAL,
                         'STOP_DUPLICATE': STOP_DUPLICATE,
+                        'STREAMWISH_API': STREAMWISH_API,
                         'SUDO_USERS': SUDO_USERS,
                         'TELEGRAM_API': TELEGRAM_API,
                         'TELEGRAM_HASH': TELEGRAM_HASH,
