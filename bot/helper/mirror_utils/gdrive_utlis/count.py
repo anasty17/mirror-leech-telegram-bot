@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from logging import getLogger
 from tenacity import RetryError
+from google.auth.exceptions import DefaultCredentialsError
 
 from bot.helper.mirror_utils.gdrive_utlis.helper import GoogleDriveHelper
 
@@ -17,7 +18,10 @@ class gdCount(GoogleDriveHelper):
             file_id = self.getIdFromUrl(link, user_id)
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link", None, None, None, None
-        self.service = self.authorize()
+        try:
+            self.service = self.authorize()
+        except DefaultCredentialsError:
+            return "An error occurred while trying to access Google Cloud services", None, None, None, None
         LOGGER.info(f"File ID: {file_id}")
         try:
             return self.__proceed_count(file_id)
