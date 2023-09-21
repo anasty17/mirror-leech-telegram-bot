@@ -231,7 +231,6 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `STATUS_LIMIT`: Limit the no. of tasks shown in status message with buttons. Default is `10`. **NOTE**: Recommended limit is `4` tasks. `Int`
 - `EXTENSION_FILTER`: File extensions that won't upload/clone. Separate them by space. `Str`
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default is `False`. `Bool`
-- `UPTOBOX_TOKEN`: Uptobox token to mirror uptobox links. Get it from [Uptobox Premium Account](https://uptobox.com/my_account). `str`
 - `FILELION_API`: Filelion api key to mirror Filelion links. Get it from [Filelion](https://filelions.com/?op=my_account). `str`
 - `STREAMWISH_API`: Streamwish api key to mirror Streamwish links. `str`
 - `YT_DLP_OPTIONS`: Default yt-dlp options. Check all possible options [HERE](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184) or use this [script](https://t.me/mltb_official_channel/177) to convert cli arguments to api options. Format: key:value|key:value|key:value. Add `^` before integer or float, some numbers must be numeric and some string. `str`

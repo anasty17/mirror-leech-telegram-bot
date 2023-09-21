@@ -619,10 +619,6 @@ async def load_config():
         MEGA_EMAIL = ''
         MEGA_PASSWORD = ''
 
-    UPTOBOX_TOKEN = environ.get('UPTOBOX_TOKEN', '')
-    if len(UPTOBOX_TOKEN) == 0:
-        UPTOBOX_TOKEN = ''
-
     FILELION_API = environ.get('FILELION_API', '')
     if len(FILELION_API) == 0:
         FILELION_API = ''
@@ -869,7 +865,6 @@ async def load_config():
                         'USER_LEECH': USER_LEECH,
                         'UPSTREAM_REPO': UPSTREAM_REPO,
                         'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
-                        'UPTOBOX_TOKEN': UPTOBOX_TOKEN,
                         'USER_SESSION_STRING': USER_SESSION_STRING,
                         'USE_SERVICE_ACCOUNTS': USE_SERVICE_ACCOUNTS,
                         'WEB_PINCODE': WEB_PINCODE,

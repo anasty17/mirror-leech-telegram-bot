@@ -13,7 +13,7 @@ from json import loads
 from os import path
 from re import findall, match, search
 from time import sleep
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
 from cloudscraper import create_scraper
@@ -42,8 +42,6 @@ def direct_link_generator(link):
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
     elif 'mediafire.com' in domain:
         return mediafire(link)
-    elif 'uptobox.com' in domain:
-        return uptobox(link)
     elif 'osdn.net' in domain:
         return osdn(link)
     elif 'github.com' in domain:
@@ -98,7 +96,7 @@ def direct_link_generator(link):
     elif any(x in domain for x in ['filelions.com', 'filelions.live', 'filelions.to', 'filelions.online','embedwish.com',
                                    'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top']):
         return filelions_and_streamwish(link)
-    elif 'streamhub.ink' in donain
+    elif any(x in domain for x in ['streamhub.ink', 'streamhub.to']):
         return streamhub(link)
     elif any(x in domain for x in ['linkbox.to', 'lbx.to']):
         return linkBox(link)
@@ -111,7 +109,8 @@ def direct_link_generator(link):
             return sharer_scraper(link)
     elif any(x in domain for x in  ['anonfiles.com', 'zippyshare.com', 'letsupload.io', 'hotfile.io', 'bayfiles.com',
                                     'megaupload.nz', 'letsupload.cc', 'filechan.org', 'myfile.is', 'vshare.is',
-                                    'rapidshare.nu', 'lolabits.se', 'openload.cc', 'share-online.is', 'upvid.cc']):
+                                    'rapidshare.nu', 'lolabits.se', 'openload.cc', 'share-online.is', 'upvid.cc',
+                                    'uptobox.com', 'uptobox.fr']):
         raise DirectDownloadLinkException(f'ERROR: R.I.P {domain}')
     else:
         raise DirectDownloadLinkException(
@@ -128,42 +127,6 @@ def get_captcha_token(session, params):
     res = session.post(f'{recaptcha_api}/reload', params=params)
     if token := findall(r'"rresp","(.*?)"', res.text):
         return token[0]
-
-def uptobox(url):
-    """ Uptobox direct link generator
-    based on https://github.com/jovanzers/WinTenCermin and https://github.com/sinoobie/noobie-mirror """
-    try:
-        link = findall(r'\bhttps?://.*uptobox\.com\S+', url)[0]
-    except IndexError:
-        raise DirectDownloadLinkException("No Uptobox links found")
-    if link := findall(r'\bhttps?://.*\.uptobox\.com/dl\S+', url):
-        return link[0]
-    with create_scraper() as session:
-        try:
-            file_id = findall(r'\bhttps?://.*uptobox\.com/(\w+)', url)[0]
-            if UPTOBOX_TOKEN := config_dict['UPTOBOX_TOKEN']:
-                file_link = f'https://uptobox.com/api/link?token={UPTOBOX_TOKEN}&file_code={file_id}'
-            else:
-                file_link = f'https://uptobox.com/api/link?file_code={file_id}'
-            res = session.get(file_link).json()
-        except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-        if res['statusCode'] == 0:
-            return res['data']['dlLink']
-        elif res['statusCode'] == 16:
-            sleep(1)
-            waiting_token = res["data"]["waitingToken"]
-            sleep(res["data"]["waiting"])
-        elif res['statusCode'] == 39:
-            raise DirectDownloadLinkException(
-                f"ERROR: Uptobox is being limited please wait {get_readable_time(res['data']['waiting'])}")
-        else:
-            raise DirectDownloadLinkException(f"ERROR: {res['message']}")
-        try:
-            res = session.get(f"{file_link}&waitingToken={waiting_token}").json()
-            return res['data']['dlLink']
-        except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
 
 
 def mediafire(url, session=None):
@@ -1261,7 +1224,7 @@ def streamvid(url: str):
             raise DirectDownloadLinkException(f'ERROR: {error[0]}')
         raise DirectDownloadLinkException('ERROR: Something went wrong')
 
-def streamhub(url: str)
+def streamhub(url):
     file_code = url.split('/')[-1]
     parsed_url = urlparse(url)
     url = f'{parsed_url.scheme}://{parsed_url.hostname}/d/{file_code}'
@@ -1272,6 +1235,7 @@ def streamhub(url: str)
             raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
         if not (inputs := html.xpath('//form[@name="F1"]//input')):
             raise DirectDownloadLinkException('ERROR: No inputs found')
+        data = {}
         for i in inputs:
             if key := i.get('name'):
                 data[key] = i.get('value')
@@ -1283,4 +1247,6 @@ def streamhub(url: str)
             raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
         if directLink := html.xpath('//a[@class="btn btn-primary btn-go downloadbtn"]/@href'):
             return directLink[0]
+        if error := html.xpath('//div[@class="alert alert-danger"]/text()[2]'):
+            raise DirectDownloadLinkException(f"ERROR: {error[0]}")
         raise DirectDownloadLinkException("ERROR: direct link not found!")
