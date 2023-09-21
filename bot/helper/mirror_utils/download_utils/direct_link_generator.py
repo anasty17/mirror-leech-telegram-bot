@@ -98,7 +98,7 @@ def direct_link_generator(link):
     elif any(x in domain for x in ['filelions.com', 'filelions.live', 'filelions.to', 'filelions.online','embedwish.com',
                                    'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top']):
         return filelions_and_streamwish(link)
-    elif 'streamhub.ink' in donain
+    elif 'streamhub.ink' in domain:
         return streamhub(link)
     elif any(x in domain for x in ['linkbox.to', 'lbx.to']):
         return linkBox(link)
@@ -1261,10 +1261,11 @@ def streamvid(url: str):
             raise DirectDownloadLinkException(f'ERROR: {error[0]}')
         raise DirectDownloadLinkException('ERROR: Something went wrong')
 
-def streamhub(url: str)
+def streamhub(url: str):
     file_code = url.split('/')[-1]
     parsed_url = urlparse(url)
     url = f'{parsed_url.scheme}://{parsed_url.hostname}/d/{file_code}'
+    data = {}
     with create_scraper() as session:
         try:
             html = HTML(session.get(url).text)
