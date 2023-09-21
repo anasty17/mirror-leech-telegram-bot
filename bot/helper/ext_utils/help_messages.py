@@ -179,7 +179,7 @@ CLONE_HELP_MESSAGE = """
 Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
 
 <b>Multi links only by replying to first gdlink or rclone_path:</b>
-<code>/cmd</code> -i 10(number of links/pathies)
+<code>/cmd</code> -i 10(number of links/paths)
 
 <b>Gdrive:</b>
 <code>/cmd</code> gdrivelink/gdl/gdrive_id -up gdl/gdrive_id/gd
