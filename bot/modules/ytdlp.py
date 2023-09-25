@@ -126,14 +126,14 @@ class YtSelection:
                             if item.get('audio_ext') == 'm4a':
                                 self.__is_m4a = True
                             b_name = f"{item['acodec']}-{item['ext']}"
-                            v_format = f'ba[format_id={format_id}]'
+                            v_format = format_id
                         elif item.get('height'):
                             height = item['height']
                             ext = item['ext']
                             fps = item['fps'] if item.get('fps') else ''
                             b_name = f'{height}p{fps}-{ext}'
                             ba_ext = '[ext=m4a]' if self.__is_m4a and ext == 'mp4' else ''
-                            v_format = f'bv*[format_id={format_id}]+ba{ba_ext}/b[height=?{height}]'
+                            v_format = f'{format_id}+ba{ba_ext}/b[height=?{height}]'
                         else:
                             continue
 
