@@ -3,12 +3,20 @@ from time import sleep
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from aria2p import API as ariaAPI, Client as ariaClient
 from flask import Flask, request
+from os import environ
+import urllib.parse
 
 from web.nodes import make_tree
 
 app = Flask(__name__)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+
+QB_SELECTION_ROUTE = urllib.parse.urlparse(environ.get('BASE_URL', '')
+                                           ).path.rstrip('/')
+if QB_SELECTION_ROUTE[0] != '/':
+    # Add / if no BASE_URL has is provided or if it's index like https://example.com/
+    QB_SELECTION_ROUTE = '/' + QB_SELECTION_ROUTE
 
 basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     handlers=[FileHandler('log.txt'), StreamHandler()],
@@ -696,7 +704,7 @@ def re_verfiy(paused, resumed, client, hash_id):
 def list_torrent_contents(id_):
 
     if "pin_code" not in request.args.keys():
-        return code_page.replace("{form_url}", f"/app/files/{id_}")
+        return code_page.replace("{form_url}", f"{QB_SELECTION_ROUTE}/app/files/{id_}")
 
     pincode = ""
     for nbr in id_:
@@ -715,7 +723,8 @@ def list_torrent_contents(id_):
     else:
         res = aria2.client.get_files(id_)
         cont = make_tree(res, True)
-    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"/app/files/{id_}?pin_code={pincode}")
+    return page.replace("{My_content}", cont[0]).replace("{form_url}", f"{QB_SELECTION_ROUTE}/app/files/{id_}?pin_code={pincode}")
+
 
 @app.route('/app/files/<string:id_>', methods=['POST'])
 def set_priority(id_):
