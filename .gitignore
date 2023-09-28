@@ -16,3 +16,7 @@ downloads
 bot.session*
 terabox.txt
 rclone.conf
+# qBittorrent runtime files
+qBittorrent/config/rss/storage.lock
+qBittorrent/config/qBittorrent-data.conf
+qBittorrent/config/lockfile
