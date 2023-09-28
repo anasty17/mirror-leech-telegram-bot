@@ -1,4 +1,5 @@
 from asyncio import create_subprocess_exec
+import os
 from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from configparser import ConfigParser
@@ -35,10 +36,15 @@ async def rclone_serve_booter():
             RcloneServe.clear()
         except:
             pass
+    try:
+        os.remove("rlogserve.txt")
+    except OSError:
+        pass
+
     cmd = ["rclone", "serve", "http", "--config", "rclone.conf", "--no-modtime",
            "combine:", "--addr", f":{config_dict['RCLONE_SERVE_PORT']}",
            "--vfs-cache-mode", "full", "--vfs-cache-max-age", "1m0s",
-           "--buffer-size", "64M"]
+           "--buffer-size", "64M", "--log-file", "rlogserve.txt"]
     if (user := config_dict['RCLONE_SERVE_USER']) and (pswd := config_dict['RCLONE_SERVE_PASS']):
         cmd.extend(("--user", user, "--pass", pswd))
     rcs = await create_subprocess_exec(*cmd)
