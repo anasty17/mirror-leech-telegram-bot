@@ -166,7 +166,7 @@ async def _mirror_leech(client, message, isQbit=False, isLeech=False, sameDir=No
 
         if file_ is None:
             reply_text = reply_to.text.split('\n', 1)[0].strip()
-            if is_url(reply_text) or is_magnet(reply_text):
+            if is_url(reply_text) or is_magnet(reply_text) or is_rclone_path(reply_text):
                 link = reply_text
         elif reply_to.document and (file_.mime_type == 'application/x-bittorrent' or file_.file_name.endswith('.torrent')):
             link = await reply_to.download()
