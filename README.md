@@ -155,12 +155,7 @@ In each single file there is a major change from base code, it's almost totally 
 - Extract these filetypes
   > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 - Direct links Supported:
-  > mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders), shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, streamvid.net, gofile.io (file/folders), easyupload.io, mdisk.me (with ytdl), terabox.com (file/folders) (you need to add cookies txt with name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
-  > 
-### All Thanks To Our Contributors 
-<a href="https://github.com/I-Am-HappyBoy/mirror-leech-telegram-bot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=I-Am-HappyBoy/mirror-leech-telegram-bot" />
-</a>
+  > mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, streamhub.ink, streamvid.net, doodstream.com, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders), shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, gofile.io (file/folders), easyupload.io, mdisk.me (with ytdl), terabox.com (file/folders) (you need to add cookies txt with name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
 
 # How to deploy?
 
@@ -725,5 +720,13 @@ ETH Address:
 ```
 0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309
 ```
+
+-----
+
+  >
+### All Thanks To Our Contributors 
+<a href="https://github.com/anasty17/mirror-leech-telegram-bot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=anasty17/mirror-leech-telegram-bot" />
+</a>
 
 -----
