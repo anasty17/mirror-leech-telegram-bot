@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from requests import utils as rutils
+from urllib.parse import quote as url_quote
 from aiofiles.os import path as aiopath, remove as aioremove, listdir, makedirs
 from os import walk, path as ospath
 from html import escape
@@ -400,10 +401,11 @@ class MirrorLeechListener:
                     elif config_dict['INDEX_URL']:
                         INDEX_URL = config_dict['INDEX_URL']
                     if INDEX_URL:
-                        share_url = f'{INDEX_URL}findpath?id={dir_id}'
+                        url_path = url_quote(f'{name}')
+                        share_url = f'{INDEX_URL}/{url_path}'
                         buttons.ubutton("⚡ Index Link", share_url)
                         if mime_type.startswith(('image', 'video', 'audio')):
-                            share_urls = f'{INDEX_URL}findpath?id={dir_id}&view=true'
+                            share_urls = f'{INDEX_URL}/{url_path}?a=view'
                             buttons.ubutton("🌐 View Link", share_urls)
                 button = buttons.build_menu(2)
             else:
