@@ -77,7 +77,7 @@ def direct_link_generator(link):
     elif any(x in domain for x in ['dood.watch', 'doodstream.com', 'dood.to', 'dood.so', 'dood.cx',
                                    'dood.la', 'dood.ws', 'dood.sh', 'doodstream.co', 'dood.pm',
                                    'dood.wf', 'dood.re', 'dood.video', 'dooood.com', 'dood.yt',
-                                   'doods.yt', 'dood.stream', 'doods.pro']):
+                                   'doods.yt', 'dood.stream', 'doods.pro', 'ds2play.com']):
         return doods(link)
     elif any(x in domain for x in ['streamtape.com', 'streamtape.co', 'streamtape.cc', 'streamtape.to', 'streamtape.net',
                                    'streamta.pe', 'streamtape.xyz']):
@@ -85,7 +85,7 @@ def direct_link_generator(link):
     elif any(x in domain for x in ['wetransfer.com', 'we.tl']):
         return wetransfer(link)
     elif any(x in domain for x in ['terabox.com', 'nephobox.com', '4funbox.com', 'mirrobox.com', 'momerybox.com',
-                                   'teraboxapp.com', '1024tera.com']):
+                                   'teraboxapp.com', '1024tera.com', 'terabox.app']):
         return terabox(link)
     elif any(x in domain for x in ['fembed.net', 'fembed.com', 'femax20.com', 'fcdn.stream', 'feurl.com',
                                    'layarkacaxxi.icu', 'naniplay.nanime.in', 'naniplay.nanime.biz', 'naniplay.com',
@@ -94,7 +94,7 @@ def direct_link_generator(link):
     elif any(x in domain for x in ['sbembed.com', 'watchsb.com', 'streamsb.net', 'sbplay.org']):
         return sbembed(link)
     elif any(x in domain for x in ['filelions.com', 'filelions.live', 'filelions.to', 'filelions.online','embedwish.com',
-                                   'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top']):
+                                   'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top', 'streamwish.to']):
         return filelions_and_streamwish(link)
     elif any(x in domain for x in ['streamhub.ink', 'streamhub.to']):
         return streamhub(link)
@@ -508,7 +508,13 @@ def filepress(url):
                 'method': 'publicDownlaod',
             }
             api = f'{raw.scheme}://{raw.hostname}/api/file/downlaod/'
-            res = session.post(api, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=json_data).json()
+            res2 = session.post(api, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=json_data).json()
+            json_data2 = {
+               'id':res2["data"],
+               'method': 'publicUserDownlaod',
+            }
+            api2 = f'https://new2.filepress.store/api/file/downlaod2/'
+            res = session.post(api2, headers={'Referer': f'{raw.scheme}://{raw.hostname}'}, json=json_data2).json()
         except Exception as e:
             raise DirectDownloadLinkException(f'ERROR: {e.__class__.__name__}')
     if 'data' not in res:
@@ -1150,7 +1156,7 @@ def filelions_and_streamwish(url):
     if any(x in hostname for x in ['filelions.com', 'filelions.live', 'filelions.to', 'filelions.online']):
         apiKey = config_dict['FILELION_API']
         apiUrl = 'https://api.filelions.com'
-    elif any(x in hostname for x in ['embedwish.com', 'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top']):
+    elif any(x in hostname for x in ['embedwish.com', 'streamwish.com', 'kitabmarkaz.xyz', 'wishfast.top', 'streamwish.to']):
         apiKey = config_dict['STREAMWISH_API']
         apiUrl = 'https://api.streamwish.com'
     if not apiKey:
