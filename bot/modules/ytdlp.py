@@ -361,7 +361,9 @@ class YtDlp(TaskListener):
             self.link = reply_to.text.split("\n", 1)[0].strip()
 
         if not is_url(self.link):
-            await sendMessage(self.message, "Open this link for usage help!", COMMAND_USAGE["yt"])
+            await sendMessage(
+                self.message, "Open this link for usage help!", COMMAND_USAGE["yt"]
+            )
             return
 
         if "mdisk.me" in self.link:
