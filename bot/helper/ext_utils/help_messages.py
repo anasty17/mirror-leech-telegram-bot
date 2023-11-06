@@ -1,154 +1,168 @@
-#!/usr/bin/env python3
-
 YT_HELP_MESSAGE = """
-<b>Send link along with command line</b>:
-<code>/cmd</code> link -s -n new name -opt x:y|x1:y1
-
-<b>By replying to link</b>:
-<code>/cmd</code> -n  new name -z password -opt x:y|x1:y1
-
-<b>New Name</b>: -n
-<code>/cmd</code> link -n new name
-Note: Don't add file extension
-
-<b>Quality Buttons</b>: -s
-Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
-<code>/cmd</code> link -s
-
-<b>Zip</b>: -z password
-<code>/cmd</code> link -z (zip)
-<code>/cmd</code> link -z password (zip password protected)
-
-<b>Options</b>: -opt
-<code>/cmd</code> link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)
-Note: Add `^` before integer or float, some values must be numeric and some string.
-Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
-You can add tuple and dict also. Use double quotes inside dict.
-
-<b>Multi links only by replying to first link</b>: -i
-<code>/cmd</code> -i 10(number of links)
-
-<b>Multi links within same upload directory only by replying to first link</b>: -m
-<code>/cmd</code> -i 10(number of links) -m folder name
-
-<b>Upload</b>: -up
-<code>/cmd</code> link -up <code>rcl/gdl</code> (To select rclone config/token.pickle, remote & path/ gdrive id or Tg id/username)
-You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username
-If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
-If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path or gdrive manually from your config/token (uploaded from usetting) add <code>mrcc:</code> for rclone and <code>mtp:</code> before the path/gdrive_id without space
-<code>/cmd</code> link -up <code>mrcc:</code>main:dump or -up <code>mtp:</code>gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)
-DEFAULT_UPLOAD doesn't effect on leech cmds.
-
-<b>Rclone Flags</b>: -rcf
-<code>/cmd</code> link -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
-This will override all other flags except --exclude
-Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
-
-<b>Bulk Download</b>: -b
-Bulk can be used by text message and by replying to text file contains links seperated by new line.
-You can use it only by reply to message(text/file).
-All options should be along with link!
-Example:
-link1 -n new name -up remote1:path1 -rcf |key:value|key:value
-link2 -z -n new name -up remote2:path2
-link3 -e -n new name -opt ytdlpoptions
-Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
-link pswd: pass(zip/unzip) opt: ytdlpoptions up: remote2:path2
-Reply to this example by this cmd <code>/cmd</code> b(bulk)
-You can set start and end of the links from the bulk with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
-
-Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a>
-Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.
+<b>Send link along with command line</b>:<br>
+/cmd link<br>
+<br>
+<b>By replying to link</b>:<br>
+/cmd -n new name -z password -opt x:y|x1:y1<br>
+<br>
+<b>New Name</b>: -n<br>
+/cmd link -n new name<br>
+Note: Don't add file extension<br>
+<br>
+<b>Quality Buttons</b>: -s<br>
+Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.<br>
+/cmd link -s<br>
+<br>
+<b>Zip</b>: -z password<br>
+/cmd link -z (zip)<br>
+/cmd link -z password (zip password protected)<br>
+<br>
+<b>Options</b>: -opt<br>
+/cmd link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)<br>
+Note: Add `^` before integer or float, some values must be numeric and some string.<br>
+Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.<br>
+You can add tuple and dict also. Use double quotes inside dict.<br>
+<br>
+<b>Multi links only by replying to first link</b>: -i<br>
+/cmd -i 10(number of links)<br>
+<br>
+<b>Multi links within same upload directory only by replying to first link</b>: -m<br>
+/cmd -i 10(number of links/files) -m folder name (multi message)<br>
+/cmd -b -m folder name (bulk-message/file)<br>
+<br>
+<b>Thumbnail for current task</b>: -t<br>
+/cmd link -t tg-message-link(doc or photo)<br>
+<br>
+<b>Split size for current task</b>: -t<br>
+/cmd link -sp (500mb or 2gb or 4000000000)<br>
+Note: Only mb and gb are supported or write in bytes without unit!<br>
+<br>
+<b>Upload</b>: -up<br>
+/cmd link -up rcl/gdl (To select rclone config/token.pickle, remote & path/ gdrive id or Tg id/username)<br>
+You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username<br>
+If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.<br>
+If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.<br>
+If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.<br>
+/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)<br>
+Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id. This for links and upload destination.<br>
+DEFAULT_UPLOAD doesn't effect on leech cmds.<br>
+<br>
+<b>Rclone Flags</b>: -rcf<br>
+/cmd link -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value<br>
+This will override all other flags except --exclude<br>
+Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.<br>
+<br>
+<b>Bulk Download</b>: -b<br>
+Bulk can be used by text message and by replying to text file contains links seperated by new line.<br>
+You can use it only by reply to message(text/file).<br>
+Example:<br>
+link1 -n new name -up remote1:path1 -rcf |key:value|key:value<br>
+link2 -z -n new name -up remote2:path2<br>
+link3 -e -n new name -up remote2:path2<br>
+Reply to this example by this cmd /cmd -b(bulk) -m folder name<br>
+You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.<br>
+<br>
+Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a><br>
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.<br>
 """
 
 MIRROR_HELP_MESSAGE = """
-<code>/cmd</code> link -n new name
-
-<b>By replying to link/file</b>:
-<code>/cmd</code> -n new name -z -e -up upload destination
-
-<b>New Name</b>: -n
-<code>/cmd</code> link -n new name
-Note: Doesn't work with torrents.
-
-<b>Direct link authorization</b>: -au -ap
-<code>/cmd</code> link -au username -ap password
-
-<b>Direct link custom headers</b>: -h
-<code>/cmd</code> link -h Key: value Key1: value1
-
-<b>Extract/Zip</b>: -e -z
-<code>/cmd</code> link -e password (extract password protected)
-<code>/cmd</code> link -z password (zip password protected)
-<code>/cmd</code> link -z password -e (extract and zip password protected)
-<code>/cmd</code> link -e password -z password (extract password protected and zip password protected)
-Note: When both extract and zip added with cmd it will extract first and then zip, so always extract first
-
-<b>Bittorrent selection</b>: -s
-<code>/cmd</code> link -s or by replying to file/link
-
-<b>Bittorrent seed</b>: -d
-<code>/cmd</code> link -d ratio:seed_time or by replying to file/link
-To specify ratio and seed time add -d ratio:time. Ex: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.
-
-<b>Multi links only by replying to first link/file</b>: -i
-<code>/cmd</code> -i 10(number of links/files)
-
-<b>Multi links within same upload directory only by replying to first link/file</b>: -m
-<code>/cmd</code> -i 10(number of links/files) -m folder name (multi message)
-<code>/cmd</code> -b -m folder name (bulk-message/file)
-
-<b>Upload</b>: -up
-<code>/cmd</code> link -up <code>rcl/gdl</code> (To select rclone config/token.pickle, remote & path/ gdrive id or Tg id/username)
-You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username
-If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
-If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path or gdrive manually from your config/token (uploaded from usetting) add <code>mrcc:</code> for rclone and <code>mtp:</code> before the path/gdrive_id without space
-<code>/cmd</code> link -up <code>mrcc:</code>main:dump or -up <code>mtp:</code>gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)
-DEFAULT_UPLOAD doesn't effect on leech cmds.
-
-<b>Rclone Flags</b>: -rcf
-<code>/cmd</code> link|path|rcl -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value
-This will override all other flags except --exclude
-Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.
-
-<b>Bulk Download</b>: -b
-Bulk can be used by text message and by replying to text file contains links seperated by new line.
-You can use it only by reply to message(text/file).
-All options should be along with link!
-Example:
-link1 -n new name -up remote1:path1 -rcf |key:value|key:value
-link2 -z -n new name -up remote2:path2
-link3 -e -n new name -up remote2:path2
-Note: You can't add -m arg for some links only, do it for all links or use multi without bulk!
-Reply to this example by this cmd <code>/cmd</code> -b(bulk)
-You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
-
-<b>Join Splitted Files</b>: -j
-This option will only work before extract and zip, so mostly it will be used with -m argument (samedir)
-By Reply:
-<code>/cmd</code> -i 3 -j -m folder name
-<code>/cmd</code> -b -j -m folder name
-if u have link have splitted files:
-<code>/cmd</code> link -j
-
-<b>Rclone Download</b>:
-Treat rclone paths exactly like links
-<code>/cmd</code> main:dump/ubuntu.iso or <code>rcl</code>(To select config, remote and path)
-Users can add their own rclone from user settings
-If you want to add path manually from your config add <code>mrcc:</code> before the path without space
-<code>/cmd</code> <code>mrcc:</code>main:dump/ubuntu.iso
-
-<b>TG Links</b>:
-Treat links like any direct link
-Some links need user access so sure you must add USER_SESSION_STRING for it.
-Three types of links:
-Public: <code>https://t.me/channel_name/message_id</code>
-Private: <code>tg://openmessage?user_id=xxxxxx&message_id=xxxxx</code>
-Super: <code>https://t.me/c/channel_id/message_id</code>
-
-<b>NOTES:</b>
+<b>Send link along with command line</b>:<br>
+/cmd link<br>
+<br>
+<b>By replying to link/file</b>:<br>
+/cmd -n new name -z -e -up upload destination<br>
+<br>
+<b>New Name</b>: -n<br>
+/cmd link -n new name<br>
+Note: Doesn't work with torrents.<br>
+<br>
+<b>Direct link authorization</b>: -au -ap<br>
+/cmd link -au username -ap password<br>
+<br>
+<b>Direct link custom headers</b>: -h<br>
+/cmd link -h key: value key1: value1<br>
+<br>
+<b>Extract/Zip</b>: -e or -z<br>
+/cmd link -e password (extract password protected)<br>
+/cmd link -z password (zip password protected)<br>
+/cmd link -z password -e (extract and zip password protected)<br>
+/cmd link -e password -z password (extract password protected and zip password protected)<br>
+Note: When both extract and zip added with cmd it will extract first and then zip, so always extract first<br>
+<br>
+<b>Bittorrent selection</b>: -s<br>
+/cmd link -s or by replying to file/link<br>
+<br>
+<b>Bittorrent seed</b>: -d<br>
+/cmd link -d ratio:seed_time or by replying to file/link<br>
+To specify ratio and seed time add -d ratio:time.<br>
+Example: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes.<br>
+<br>
+<b>Multi links only by replying to first link/file</b>: -i<br>
+/cmd -i 10(number of links/files)<br>
+<br>
+<b>Multi links within same upload directory only by replying to first link/file</b>: -m<br>
+/cmd -i 10(number of links/files) -m folder name (multi message)<br>
+/cmd -b -m folder name (bulk-message/file)<br>
+<br>
+<b>Thumbnail for current task</b>: -t<br>
+/cmd link -t tg-message-link(doc or photo)<br>
+<br>
+<b>Split size for current task</b>: -t<br>
+/cmd link -sp (500mb or 2gb or 4000000000)<br>
+Note: Only mb and gb are supported or write in bytes without unit!<br>
+<br>
+<b>Upload</b>: -up<br>
+/cmd link -up rcl/gdl (To select rclone config/token.pickle, remote & path/ gdrive id or Tg id/username)<br>
+You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username<br>
+If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.<br>
+If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.<br>
+If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.<br>
+/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)<br>
+Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id. This for links and upload destination.<br>
+DEFAULT_UPLOAD doesn't effect on leech cmds.<br>
+<br>
+<b>Rclone Flags</b>: -rcf<br>
+/cmd link|path|rcl -up path|rcl -rcf --buffer-size:8M|--drive-starred-only|key|key:value<br>
+This will override all other flags except --exclude<br>
+Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>.<br>
+<br>
+<b>Bulk Download</b>: -b<br>
+Bulk can be used by text message and by replying to text file contains links seperated by new line.<br>
+You can use it only by reply to message(text/file).<br>
+Example:<br>
+link1 -n new name -up remote1:path1 -rcf |key:value|key:value<br>
+link2 -z -n new name -up remote2:path2<br>
+link3 -e -n new name -up remote2:path2<br>
+Reply to this example by this cmd /cmd -b(bulk) -m folder name<br>
+You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.<br>
+<br>
+<b>Join Splitted Files</b>: -j<br>
+This option will only work before extract and zip, so mostly it will be used with -m argument (samedir)<br>
+By Reply:<br>
+/cmd -i 3 -j -m folder name<br>
+/cmd -b -j -m folder name<br>
+if u have link(folder) have splitted files:<br>
+/cmd link -j<br>
+<br>
+<b>Rclone Download</b>:<br>
+Treat rclone paths exactly like links<br>
+/cmd main:dump/ubuntu.iso or rcl(To select config, remote and path)<br>
+Users can add their own rclone from user settings<br>
+If you want to add path manually from your config add mrcc: before the path without space<br>
+/cmd mrcc:main:dump/ubuntu.iso<br>
+<br>
+<b>TG Links</b>:<br>
+Treat links like any direct link<br>
+Some links need user access so sure you must add USER_SESSION_STRING for it.<br>
+Three types of links:<br>
+Public: https://t.me/channel_name/message_id<br>
+Private: tg://openmessage?user_id=xxxxxx&message_id=xxxxx<br>
+Super: https://t.me/c/channel_id/message_id<br>
+Range: https://t.me/channel_name/first_message_id-last_message_id<br>
+Range Example: tg://openmessage?user_id=xxxxxx&message_id=555-560 or https://t.me/channel_name/100-150<br>
+<br>
+<b>NOTES:</b><br>
 1. Commands that start with <b>qb</b> are ONLY for torrents.
 """
 
@@ -176,18 +190,32 @@ Timeout: 60 sec.
 """
 
 CLONE_HELP_MESSAGE = """
-Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
-
-<b>Multi links only by replying to first gdlink or rclone_path:</b>
-<code>/cmd</code> -i 10(number of links/paths)
-
-<b>Gdrive:</b>
-<code>/cmd</code> gdrivelink/gdl/gdrive_id -up gdl/gdrive_id/gd
-
-<b>Rclone:</b>
-<code>/cmd</code> rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
-
-Note: If -up not specified then rclone destination will be the RCLONE_PATH from config.env
+Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.<br>
+<br>
+<b>Multi links only by replying to first gdlink or rclone_path:</b> -i<br>
+/cmd -i 10(number of links/paths)<br>
+<br>
+<b>Bulk Clone</b>: -b<br>
+Bulk can be used by text message and by replying to text file contains links seperated by new line.<br>
+You can use it only by reply to message(text/file).<br>
+Example:<br>
+link1 -up remote1:path1 -rcf |key:value|key:value<br>
+link2 -up remote2:path2<br>
+link3 -up remote2:path2<br>
+Reply to this example by this cmd /cmd -b(bulk)<br>
+You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.<br>
+<br>
+<b>Clone Destination</b>: -up<br>
+If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.<br>
+If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.<br>
+If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.<br>
+Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id. This for links and upload destination.<br>
+<br>
+<b>Gdrive:</b><br>
+/cmd gdrivelink/gdl/gdrive_id -up gdl/gdrive_id/gd<br>
+<br>
+<b>Rclone:</b><br>
+/cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue<br>
 """
 
 PASSWORD_ERROR_MESSAGE = """

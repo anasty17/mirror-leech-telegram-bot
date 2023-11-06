@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex, create
 from functools import partial
@@ -11,8 +10,8 @@ from time import time
 from io import BytesIO
 from aioshutil import rmtree as aiormtree
 
-from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, status_reply_dict_lock, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, download_dict, qbit_options, get_client, LOGGER, bot
-from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_all_messages, deleteMessage
+from bot import config_dict, user_data, DATABASE_URL, MAX_SPLIT_SIZE, DRIVES_IDS, DRIVES_NAMES, INDEX_URLS, aria2, GLOBAL_EXTENSION_FILTER, Interval, aria2_options, aria2c_global, IS_PREMIUM_USER, task_dict, qbit_options, get_client, LOGGER, bot
+from bot.helper.telegram_helper.message_utils import sendMessage, sendFile, editMessage, update_status_message, deleteMessage
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -27,13 +26,13 @@ START = 0
 STATE = 'view'
 handler_dict = {}
 default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
-                  'DOWNLOAD_DIR': '/usr/src/app/downloads/',
-                  'LEECH_SPLIT_SIZE': MAX_SPLIT_SIZE,
-                  'RSS_DELAY': 600,
-                  'STATUS_UPDATE_INTERVAL': 10,
-                  'SEARCH_LIMIT': 0,
-                  'UPSTREAM_BRANCH': 'master',
-                  'DEFAULT_UPLOAD': 'gd'}
+                    'DOWNLOAD_DIR': '/usr/src/app/downloads/',
+                    'LEECH_SPLIT_SIZE': MAX_SPLIT_SIZE,
+                    'RSS_DELAY': 600,
+                    'STATUS_UPDATE_INTERVAL': 10,
+                    'SEARCH_LIMIT': 0,
+                    'UPSTREAM_BRANCH': 'master',
+                    'DEFAULT_UPLOAD': 'gd'}
 
 
 async def get_buttons(key=None, edit_type=None):
@@ -99,7 +98,7 @@ Timeout: 60 sec'''
             buttons.ibutton('Default', f"botset resetvar {key}")
         buttons.ibutton('Close', "botset close")
         if key in ['SUDO_USERS', 'CMD_SUFFIX', 'OWNER_ID', 'USER_SESSION_STRING', 'TELEGRAM_HASH',
-                   'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
+                    'TELEGRAM_API', 'AUTHORIZED_CHATS', 'DATABASE_URL', 'BOT_TOKEN', 'DOWNLOAD_DIR']:
             msg += 'Restart required for this edit to take effect!\n\n'
         msg += f'Send a valid value for {key}. Timeout: 60 sec'
     elif edit_type == 'editaria':
@@ -146,12 +145,10 @@ async def edit_variable(_, message, pre_message, key):
             value = int(value)
     elif key == 'STATUS_UPDATE_INTERVAL':
         value = int(value)
-        if len(download_dict) != 0:
-            async with status_reply_dict_lock:
-                if Interval:
-                    Interval[0].cancel()
-                    Interval.clear()
-                    Interval.append(setInterval(value, update_all_messages))
+        if len(task_dict) != 0 and Interval:
+            for key, intvl in list(Interval.items()):
+                intvl.cancel()
+                Interval[key] = setInterval(value, update_status_message, key)
     elif key == 'TORRENT_TIMEOUT':
         value = int(value)
         downloads = await sync_to_async(aria2.get_downloads)
@@ -362,13 +359,11 @@ async def edit_bot_settings(client, query):
         value = ''
         if data[2] in default_values:
             value = default_values[data[2]]
-            if data[2] == "STATUS_UPDATE_INTERVAL" and len(download_dict) != 0:
-                async with status_reply_dict_lock:
-                    if Interval:
-                        Interval[0].cancel()
-                        Interval.clear()
-                        Interval.append(setInterval(
-                            value, update_all_messages))
+            if data[2] == "STATUS_UPDATE_INTERVAL" and len(task_dict) != 0 and Interval:
+                for key, intvl in list(Interval.items()):
+                    intvl.cancel()
+                    Interval[key] = setInterval(
+                        value, update_status_message, key)
         elif data[2] == 'EXTENSION_FILTER':
             GLOBAL_EXTENSION_FILTER.clear()
             GLOBAL_EXTENSION_FILTER.extend(['aria2', '!qB'])
@@ -530,12 +525,12 @@ async def edit_bot_settings(client, query):
         filename = data[2].rsplit('.zip', 1)[0]
         if await aiopath.exists(filename):
             await (await create_subprocess_shell(f"git add -f {filename} \
-                                                   && git commit -sm botsettings -q \
-                                                   && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
+                                                    && git commit -sm botsettings -q \
+                                                    && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
         else:
             await (await create_subprocess_shell(f"git rm -r --cached {filename} \
-                                                   && git commit -sm botsettings -q \
-                                                   && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
+                                                    && git commit -sm botsettings -q \
+                                                    && git push origin {config_dict['UPSTREAM_BRANCH']} -qf")).wait()
         await deleteMessage(message.reply_to_message)
         await deleteMessage(message)
 
@@ -656,13 +651,11 @@ async def load_config():
         STATUS_UPDATE_INTERVAL = 10
     else:
         STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
-    if len(download_dict) != 0:
-        async with status_reply_dict_lock:
-            if Interval:
-                Interval[0].cancel()
-                Interval.clear()
-                Interval.append(setInterval(
-                    STATUS_UPDATE_INTERVAL, update_all_messages))
+    if len(task_dict) != 0 and Interval:
+        for key, intvl in list(Interval.items()):
+            intvl.cancel()
+            Interval[key] = setInterval(
+                STATUS_UPDATE_INTERVAL, update_status_message, key)
 
     AUTO_DELETE_MESSAGE_DURATION = environ.get(
         'AUTO_DELETE_MESSAGE_DURATION', '')
@@ -758,8 +751,8 @@ async def load_config():
     MEDIA_GROUP = environ.get('MEDIA_GROUP', '')
     MEDIA_GROUP = MEDIA_GROUP.lower() == 'true'
 
-    USER_LEECH = environ.get('USER_LEECH', '')
-    USER_LEECH = USER_LEECH.lower() == 'true' and IS_PREMIUM_USER
+    USER_TRANSMISSION = environ.get('USER_TRANSMISSION', '')
+    USER_TRANSMISSION = USER_TRANSMISSION.lower() == 'true' and IS_PREMIUM_USER
 
     BASE_URL_PORT = environ.get('BASE_URL_PORT', '')
     BASE_URL_PORT = 80 if len(BASE_URL_PORT) == 0 else int(BASE_URL_PORT)
@@ -862,7 +855,7 @@ async def load_config():
                         'TELEGRAM_API': TELEGRAM_API,
                         'TELEGRAM_HASH': TELEGRAM_HASH,
                         'TORRENT_TIMEOUT': TORRENT_TIMEOUT,
-                        'USER_LEECH': USER_LEECH,
+                        'USER_TRANSMISSION': USER_TRANSMISSION,
                         'UPSTREAM_REPO': UPSTREAM_REPO,
                         'UPSTREAM_BRANCH': UPSTREAM_BRANCH,
                         'USER_SESSION_STRING': USER_SESSION_STRING,

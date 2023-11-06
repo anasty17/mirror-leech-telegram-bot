@@ -1,14 +1,12 @@
-#!/usr/bin/env python3
 from logging import getLogger
 from googleapiclient.errors import HttpError
 
-from bot.helper.mirror_utils.gdrive_utlis.helper import GoogleDriveHelper
+from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 
 
 class gdDelete(GoogleDriveHelper):
-
     def __init__(self):
         super().__init__()
 
@@ -18,17 +16,21 @@ class gdDelete(GoogleDriveHelper):
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link"
         self.service = self.authorize()
-        msg = ''
+        msg = ""
         try:
-            self.service.files().delete(fileId=file_id, supportsAllDrives=True).execute()
+            self.service.files().delete(
+                fileId=file_id, supportsAllDrives=True
+            ).execute()
             msg = "Successfully deleted"
             LOGGER.info(f"Delete Result: {msg}")
         except HttpError as err:
-            if "File not found" in str(err) or "insufficientFilePermissions" in str(err):
+            if "File not found" in str(err) or "insufficientFilePermissions" in str(
+                err
+            ):
                 if not self.alt_auth and self.use_sa:
                     self.alt_auth = True
                     self.use_sa = False
-                    LOGGER.error('File not found. Trying with token.pickle...')
+                    LOGGER.error("File not found. Trying with token.pickle...")
                     return self.deletefile(link, user_id)
                 err = "File not found or insufficientFilePermissions!"
             LOGGER.error(f"Delete Result: {err}")

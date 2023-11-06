@@ -1,28 +1,25 @@
-#!/usr/bin/env python3
 from bot import LOGGER
-from bot.helper.ext_utils.bot_utils import get_readable_file_size, MirrorStatus
+from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStatus
 
 
 class QueueStatus:
-    def __init__(self, name, size, gid, listener, status):
-        self.__name = name
-        self.__size = size
-        self.__gid = gid
-        self.__listener = listener
-        self.__status = status
-        self.message = self.__listener.message
+    def __init__(self, listener, size, gid, status):
+        self._size = size
+        self._gid = gid
+        self._status = status
+        self.listener = listener
 
     def gid(self):
-        return self.__gid
+        return self._gid
 
     def name(self):
-        return self.__name
+        return self.listener.name
 
     def size(self):
-        return get_readable_file_size(self.__size)
+        return get_readable_file_size(self._size)
 
     def status(self):
-        if self.__status == 'dl':
+        if self._status == "dl":
             return MirrorStatus.STATUS_QUEUEDL
         return MirrorStatus.STATUS_QUEUEUP
 
@@ -30,20 +27,24 @@ class QueueStatus:
         return 0
 
     def progress(self):
-        return '0%'
+        return "0%"
 
     def speed(self):
-        return '0B/s'
+        return "0B/s"
 
     def eta(self):
-        return '-'
+        return "-"
 
-    def download(self):
+    def task(self):
         return self
 
-    async def cancel_download(self):
-        LOGGER.info(f'Cancelling Queue{self.__status}: {self.__name}')
-        if self.__status == 'dl':
-            await self.__listener.onDownloadError('task have been removed from queue/download')
+    async def cancel_task(self):
+        LOGGER.info(f"Cancelling Queue{self._status}: {self.listener.name}")
+        if self._status == "dl":
+            await self.listener.onDownloadError(
+                "task have been removed from queue/download"
+            )
         else:
-            await self.__listener.onUploadError('task have been removed from queue/upload')
+            await self.listener.onUploadError(
+                "task have been removed from queue/upload"
+            )

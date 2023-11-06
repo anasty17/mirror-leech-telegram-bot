@@ -26,8 +26,8 @@ In each single file there is a major change from base code, it's almost totally 
 ### TG Upload/Download
 
 - Leech support
-- Splitting
-- Thumbnail for each user
+- Split size for each user or task
+- Thumbnail for each user or task
 - Leech filename prefix for each user. Stolen from [Juned KH](https://github.com/junedkh)
 - Set upload as document or as media for each user
 - 4GB file upload with premium account
@@ -265,7 +265,7 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
 - `EQUAL_SPLITS`: Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`. `Bool`
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
-- `USER_LEECH`: Upload/Download by user session. Default is `False`. `Bool`
+- `USER_TRANSMISSION`: Upload/Download by user session. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `LEECH_DUMP_CHAT`: Chat ID or USERNAME to where files would be uploaded. `Int`|`Str`. **NOTE**: Only available for superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot or account id!
 
@@ -685,6 +685,12 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 
 -----
 
+ >
+## All Thanks To Our Contributors
+<a href="https://github.com/anasty17/mirror-leech-telegram-bot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=anasty17/mirror-leech-telegram-bot" />
+</a>
+
 ## Donations
 
 <p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
@@ -720,13 +726,5 @@ ETH Address:
 ```
 0xf798a8a1c72d593e16d8f3bb619ebd1a093c7309
 ```
-
------
-
-  >
-### All Thanks To Our Contributors 
-<a href="https://github.com/anasty17/mirror-leech-telegram-bot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=anasty17/mirror-leech-telegram-bot" />
-</a>
 
 -----
