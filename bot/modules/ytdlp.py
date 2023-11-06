@@ -393,7 +393,7 @@ class YtDlp(TaskListener):
                     value = eval(value)
                 options[key] = value
 
-            options["playlist_items"] = "0"
+        options["playlist_items"] = "0"
 
         await self.getTag(text)
 
