@@ -59,13 +59,13 @@ def bt_selection_buttons(id_):
 async def initiate_help_messages():
     mirror, yt, clone = await gather(
         telegraph.create_page(
-            title="Mirror-Leech-Bot Drive Search", content=MIRROR_HELP_MESSAGE
+            title="Mirror-Leech Command Usage", content=MIRROR_HELP_MESSAGE
         ),
         telegraph.create_page(
-            title="Mirror-Leech-Bot Drive Search", content=YT_HELP_MESSAGE
+            title="YTDLP Command Usage", content=YT_HELP_MESSAGE
         ),
         telegraph.create_page(
-            title="Mirror-Leech-Bot Drive Search", content=CLONE_HELP_MESSAGE
+            title="Clone Command Usage", content=CLONE_HELP_MESSAGE
         ),
     )
     buttons = ButtonMaker()
