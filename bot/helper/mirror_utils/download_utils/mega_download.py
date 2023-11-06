@@ -35,7 +35,7 @@ class MegaAppListener(MegaListener):
         self._bytes_transferred = 0
         self._speed = 0
         self._name = ""
-        super()._init_()
+        super().__init__()
 
     @property
     def speed(self):

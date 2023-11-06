@@ -27,7 +27,7 @@ class DirectStatus:
         return f"{get_readable_file_size(self._obj.speed)}/s"
 
     def name(self):
-        return self._obj.name
+        return self.listener.name
 
     def size(self):
         return get_readable_file_size(self._obj.total_size)

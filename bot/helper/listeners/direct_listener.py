@@ -74,7 +74,7 @@ class DirectListener:
 
     async def cancel_task(self):
         self._is_cancelled = True
-        LOGGER.info(f"Cancelling Download: {self.name}")
+        LOGGER.info(f"Cancelling Download: {self._listener.name}")
         await self._listener.onDownloadError("Download Cancelled by User!")
         if self.task:
             await sync_to_async(self.task.remove, force=True, files=True)

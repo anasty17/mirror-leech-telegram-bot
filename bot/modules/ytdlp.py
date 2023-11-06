@@ -258,7 +258,7 @@ async def _mdisk(link, name):
 
 
 class YtDlp(TaskListener):
-    def _init_(
+    def __init__(
         self,
         client,
         message,
@@ -273,7 +273,7 @@ class YtDlp(TaskListener):
             sameDir = {}
         if bulk is None:
             bulk = []
-        super()._init_(message)
+        super().__init__(message)
         self.client = client
         self.isLeech = isLeech
         self.isYtDlp = True
