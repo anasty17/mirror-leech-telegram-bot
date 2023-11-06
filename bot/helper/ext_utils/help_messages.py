@@ -161,6 +161,7 @@ Private: tg://openmessage?user_id=xxxxxx&message_id=xxxxx<br>
 Super: https://t.me/c/channel_id/message_id<br>
 Range: https://t.me/channel_name/first_message_id-last_message_id<br>
 Range Example: tg://openmessage?user_id=xxxxxx&message_id=555-560 or https://t.me/channel_name/100-150<br>
+Note: Range link will work only by replying cmd to it<br>
 <br>
 <b>NOTES:</b><br>
 1. Commands that start with <b>qb</b> are ONLY for torrents.

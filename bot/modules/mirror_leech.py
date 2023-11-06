@@ -49,7 +49,7 @@ class Mirror(TaskListener):
         isLeech=False,
         sameDir=None,
         bulk=None,
-        multiTag=0,
+        multiTag=None,
         options="",
     ):
         if sameDir is None:
@@ -175,6 +175,7 @@ class Mirror(TaskListener):
 
         if isinstance(reply_to, list):
             self.bulk = reply_to
+            self.sameDir = {}
             b_msg = input_list[:1]
             self.options = " ".join(input_list[1:])
             b_msg.append(f"{self.bulk[0]} -i {len(self.bulk)} {self.options}")

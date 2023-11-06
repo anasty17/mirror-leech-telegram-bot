@@ -38,7 +38,7 @@ def is_mega_link(url: str):
 def is_rclone_path(path: str):
     return bool(
         re_match(
-            r"^(mrcc:)?(?!(magnet:|mtp:))(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$",
+            r"^(mrcc:)?(?!(magnet:|mtp:|sa:|tp:))(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$",
             path,
         )
     )
