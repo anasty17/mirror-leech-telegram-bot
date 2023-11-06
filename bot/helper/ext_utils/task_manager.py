@@ -20,6 +20,7 @@ async def stop_duplicate_check(listener):
         not is_gdrive_id(listener.upDest)
         or listener.isLeech
         or listener.select
+        or isinstance(listener.upDest, int)
         or listener.upDest.startswith("mtp:")
         and not listener.user_dict.get("stop_duplicate", False)
         or config_dict["STOP_DUPLICATE"]
