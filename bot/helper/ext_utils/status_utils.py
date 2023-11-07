@@ -22,6 +22,7 @@ class MirrorStatus:
     STATUS_SPLITTING = "Split"
     STATUS_CHECKING = "CheckUp"
     STATUS_SEEDING = "Seed"
+    STATUS_SAMVID = "SamVid"
 
 
 STATUS_VALUES = [
@@ -57,7 +58,9 @@ def get_readable_file_size(size_in_bytes: int):
         size_in_bytes /= 1024
         index += 1
     return (
-        f"{size_in_bytes:.2f}{SIZE_UNITS[index]}" if index > 0 else f"{size_in_bytes:.2f}B"
+        f"{size_in_bytes:.2f}{SIZE_UNITS[index]}"
+        if index > 0
+        else f"{size_in_bytes:.2f}B"
     )
 
 
@@ -133,7 +136,11 @@ def get_readable_message(sid, is_user, page_no=1, status="All"):
         else:
             msg += f"<b>{index+start_position}.{tstatus}: </b>"
         msg += f"<code>{escape(f'{task.name()}')}</code>"
-        if tstatus not in [MirrorStatus.STATUS_SPLITTING, MirrorStatus.STATUS_SEEDING]:
+        if tstatus not in [
+            MirrorStatus.STATUS_SPLITTING,
+            MirrorStatus.STATUS_SEEDING,
+            MirrorStatus.STATUS_SAMVID,
+        ]:
             msg += f"\n{get_progress_bar_string(task.progress())} {task.progress()}"
             msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {task.size()}"
             msg += f"\n<b>Speed:</b> {task.speed()} | <b>ETA:</b> {task.eta()}"
@@ -144,7 +151,7 @@ def get_readable_message(sid, is_user, page_no=1, status="All"):
                     pass
         elif tstatus == MirrorStatus.STATUS_SEEDING:
             msg += f"\n<b>Size: </b>{task.size()}"
-            msg += f"\n<b>Speed: </b>{task.upload_speed()}"
+            msg += f"\n<b>Speed: </b>{task.seed_speed()}"
             msg += f" | <b>Uploaded: </b>{task.uploaded_bytes()}"
             msg += f"\n<b>Ratio: </b>{task.ratio()}"
             msg += f" | <b>Time: </b>{task.seeding_time()}"

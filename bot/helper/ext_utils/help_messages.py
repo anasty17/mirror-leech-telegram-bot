@@ -62,6 +62,11 @@ link3 -e -n new name -up remote2:path2<br>
 Reply to this example by this cmd /cmd -b(bulk) -m folder name<br>
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.<br>
 <br>
+<b>Sample Video</b>: -sv<br>
+Create sample video for one video or folder of vidoes.<br>
+/cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
+You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
+<br>
 Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a><br>
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.<br>
 """
@@ -162,6 +167,11 @@ Super: https://t.me/c/channel_id/message_id<br>
 Range: https://t.me/channel_name/first_message_id-last_message_id<br>
 Range Example: tg://openmessage?user_id=xxxxxx&message_id=555-560 or https://t.me/channel_name/100-150<br>
 Note: Range link will work only by replying cmd to it<br>
+<br>
+<b>Sample Video</b>: -sv<br>
+Create sample video for one video or folder of vidoes.<br>
+/cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
+You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
 <br>
 <b>NOTES:</b><br>
 1. Commands that start with <b>qb</b> are ONLY for torrents.

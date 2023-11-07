@@ -1,6 +1,7 @@
-from aiofiles.os import path as aiopath
-from asyncio import sleep
+from aiofiles.os import path as aiopath, remove as aioremove
+from asyncio import sleep, create_subprocess_exec
 from secrets import token_urlsafe
+from os import walk, path as ospath
 
 from bot import (
     DOWNLOAD_DIR,
@@ -10,8 +11,13 @@ from bot import (
     IS_PREMIUM_USER,
     user,
     multi_tags,
+    LOGGER,
+    task_dict_lock,
+    task_dict,
+    GLOBAL_EXTENSION_FILTER,
+    cpu_eater_lock,
 )
-from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.bot_utils import new_task, sync_to_async
 from bot.helper.ext_utils.links_utils import (
     is_gdrive_id,
     is_rclone_path,
@@ -23,11 +29,29 @@ from bot.helper.telegram_helper.message_utils import (
     sendStatusMessage,
     get_tg_link_message,
 )
+from bot.helper.ext_utils.files_utils import (
+    get_base_name,
+    is_first_archive_split,
+    is_archive,
+    is_archive_split,
+    get_path_size,
+    clean_target,
+)
 from bot.helper.ext_utils.bulk_links import extractBulkLinks
 from bot.helper.mirror_utils.rclone_utils.list import RcloneList
 from bot.helper.mirror_utils.gdrive_utils.list import gdriveList
+from bot.helper.ext_utils.media_utils import split_file, get_document_type
 from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.ext_utils.leech_utils import createThumb, getSplitSizeBytes
+from bot.helper.ext_utils.media_utils import (
+    createThumb,
+    getSplitSizeBytes,
+    createSampleVideo,
+)
+from bot.helper.mirror_utils.status_utils.extract_status import ExtractStatus
+from bot.helper.mirror_utils.status_utils.zip_status import ZipStatus
+from bot.helper.mirror_utils.status_utils.split_status import SplitStatus
+from bot.helper.mirror_utils.status_utils.sample_video_status import SampleVideoStatus
+from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 class TaskConfig:
@@ -47,6 +71,7 @@ class TaskConfig:
         self.name = ""
         self.session = ""
         self.newDir = ""
+        self.sampleVideo = ""
         self.multiTag = 0
         self.splitSize = 0
         self.maxSplitSize = 0
@@ -65,6 +90,7 @@ class TaskConfig:
         self.join = False
         self.isYtDlp = False
         self.privateLink = False
+        self.stopDuplicate = False
         self.suproc = None
         self.client = None
         self.thumb = None
@@ -120,6 +146,11 @@ class TaskConfig:
                     raise ValueError(self.link)
 
         if not self.isLeech:
+            self.stopDuplicate = (
+                self.user_dict.get("stop_duplicate")
+                or "stop_duplicate" in self.user_dict
+                and config_dict["STOP_DUPLICATE"]
+            )
             default_upload = self.user_dict.get("default_upload", "")
             if (
                 not self.upDest
@@ -345,3 +376,244 @@ class TaskConfig:
                 self.message,
                 "Reply to text file or to telegram message that have links seperated by new line!",
             )
+
+    async def proceedExtract(self, dl_path, size, gid):
+        pswd = self.extract if isinstance(self.extract, str) else ""
+        try:
+            LOGGER.info(f"Extracting: {self.name}")
+            async with task_dict_lock:
+                task_dict[self.mid] = ExtractStatus(self, size, gid)
+            if await aiopath.isdir(dl_path):
+                if self.seed:
+                    self.newDir = f"{self.dir}10000"
+                    up_path = f"{self.newDir}/{self.name}"
+                else:
+                    up_path = dl_path
+                for dirpath, _, files in await sync_to_async(
+                    walk, dl_path, topdown=False
+                ):
+                    for file_ in files:
+                        if (
+                            is_first_archive_split(file_)
+                            or is_archive(file_)
+                            and not file_.endswith(".rar")
+                        ):
+                            f_path = ospath.join(dirpath, file_)
+                            t_path = (
+                                dirpath.replace(self.dir, self.newDir)
+                                if self.seed
+                                else dirpath
+                            )
+                            cmd = [
+                                "7z",
+                                "x",
+                                f"-p{pswd}",
+                                f_path,
+                                f"-o{t_path}",
+                                "-aot",
+                                "-xr!@PaxHeader",
+                            ]
+                            if not pswd:
+                                del cmd[2]
+                            if (
+                                self.suproc == "cancelled"
+                                or self.suproc is not None
+                                and self.suproc.returncode == -9
+                            ):
+                                return False
+                            self.suproc = await create_subprocess_exec(*cmd)
+                            _, stderr = await self.suproc.communicate()
+                            code = self.suproc.returncode
+                            stderr = stderr.decode().strip()
+                            if code == -9:
+                                return False
+                            elif code != 0:
+                                LOGGER.error(
+                                    f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
+                                )
+                    if (
+                        not self.seed
+                        and self.suproc is not None
+                        and self.suproc.returncode == 0
+                    ):
+                        for file_ in files:
+                            if is_archive_split(file_) or is_archive(file_):
+                                del_path = ospath.join(dirpath, file_)
+                                try:
+                                    await aioremove(del_path)
+                                except:
+                                    return False
+                return up_path
+            else:
+                up_path = get_base_name(dl_path)
+                if self.seed:
+                    self.newDir = f"{self.dir}10000"
+                    up_path = up_path.replace(self.dir, self.newDir)
+                cmd = [
+                    "7z",
+                    "x",
+                    f"-p{pswd}",
+                    dl_path,
+                    f"-o{up_path}",
+                    "-aot",
+                    "-xr!@PaxHeader",
+                ]
+                if not pswd:
+                    del cmd[2]
+                if self.suproc == "cancelled":
+                    return False
+                self.suproc = await create_subprocess_exec(*cmd)
+                _, stderr = await self.suproc.communicate()
+                code = self.suproc.returncode
+                stderr = stderr.decode().strip()
+                if code == -9:
+                    return False
+                elif code == 0:
+                    LOGGER.info(f"Extracted Path: {up_path}")
+                    if not self.seed:
+                        try:
+                            await aioremove(dl_path)
+                        except:
+                            return False
+                    return up_path
+                else:
+                    LOGGER.error(
+                        f"{stderr}. Unable to extract archive! Uploading anyway. Path: {dl_path}"
+                    )
+                    self.newDir = ""
+                    return dl_path
+        except NotSupportedExtractionArchive:
+            LOGGER.info(
+                f"Not any valid archive, uploading file as it is. Path: {dl_path}"
+            )
+            self.newDir = ""
+            return dl_path
+
+    async def proceedCompress(self, dl_path, size, gid):
+        pswd = self.compress if isinstance(self.compress, str) else ""
+        if self.seed and self.isLeech:
+            self.newDir = f"{self.dir}10000"
+            up_path = f"{self.newDir}/{self.name}.zip"
+        else:
+            up_path = f"{up_path}.zip"
+        async with task_dict_lock:
+            task_dict[self.mid] = ZipStatus(self, size, gid)
+        if self.equalSplits:
+            size = await get_path_size(dl_path)
+            parts = -(-size // self.splitSize)
+            split_size = (size // parts) + (size % parts)
+        else:
+            split_size = self.splitSize
+        cmd = [
+            "7z",
+            f"-v{split_size}b",
+            "a",
+            "-mx=0",
+            f"-p{pswd}",
+            up_path,
+            dl_path,
+        ]
+        for ext in GLOBAL_EXTENSION_FILTER:
+            ex_ext = f"-xr!*.{ext}"
+            cmd.append(ex_ext)
+        if self.isLeech and int(size) > self.splitSize:
+            if not pswd:
+                del cmd[4]
+            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}.0*")
+        else:
+            del cmd[1]
+            if not pswd:
+                del cmd[3]
+            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}")
+        if self.suproc == "cancelled":
+            return False
+        self.suproc = await create_subprocess_exec(*cmd)
+        _, stderr = await self.suproc.communicate()
+        code = self.suproc.returncode
+        stderr = stderr.decode().strip()
+        if code == -9:
+            return False
+        elif code == 0:
+            if not self.seed:
+                await clean_target(dl_path)
+            return up_path
+        else:
+            LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
+            return dl_path
+
+    async def proceedSplit(self, up_dir, m_size, o_files, size, gid):
+        checked = False
+        for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
+            for file_ in files:
+                f_path = ospath.join(dirpath, file_)
+                f_size = await aiopath.getsize(f_path)
+                if f_size > self.splitSize:
+                    if not checked:
+                        checked = True
+                        async with task_dict_lock:
+                            task_dict[self.mid] = SplitStatus(self, size, gid)
+                        LOGGER.info(f"Splitting: {self.name}")
+                    res = await split_file(
+                        f_path, f_size, file_, dirpath, self.splitSize, self
+                    )
+                    if not res:
+                        return False
+                    if res == "errored":
+                        if f_size <= self.maxSplitSize:
+                            continue
+                        try:
+                            await aioremove(f_path)
+                        except:
+                            return False
+                    elif not self.seed or self.newDir:
+                        try:
+                            await aioremove(f_path)
+                        except:
+                            return False
+                    else:
+                        m_size.append(f_size)
+                        o_files.append(file_)
+        return True
+
+    async def generateSampleVideo(self, dl_path, size, gid):
+        data = self.sampleVideo.split(":") if isinstance(self.sampleVideo, str) else ""
+        if data:
+            sample_duration = data[0] if data[0] else 60
+            part_duration = data[1] if len(data) > 1 else 4
+        else:
+            sample_duration = 60
+            part_duration = 4
+
+        async with cpu_eater_lock:
+            checked = False
+            if await aiopath.isfile(dl_path):
+                if (await get_document_type(dl_path))[0]:
+                    if not checked:
+                        checked = True
+                        async with task_dict_lock:
+                            task_dict[self.mid] = SampleVideoStatus(self, size, gid)
+                        LOGGER.info(f"Creating Sample video: {self.name}")
+                    res = await createSampleVideo(
+                        self, dl_path, sample_duration, part_duration, True
+                    )
+                    return res
+            else:
+                for dirpath, _, files in await sync_to_async(
+                    walk, dl_path, topdown=False
+                ):
+                    for file_ in files:
+                        f_path = ospath.join(dirpath, file_)
+                        if (await get_document_type(f_path))[0]:
+                            if not checked:
+                                checked = True
+                                async with task_dict_lock:
+                                    task_dict[self.mid] = SampleVideoStatus(
+                                        self, size, gid
+                                    )
+                                LOGGER.info(f"Creating Sample videos: {self.name}")
+                            res = await createSampleVideo(
+                                self, f_path, sample_duration, part_duration
+                            )
+                            if not res:
+                                return res
+                return dl_path

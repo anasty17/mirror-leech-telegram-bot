@@ -98,13 +98,13 @@ async def get_telegraph_list(telegraph_content):
 def arg_parser(items, arg_base):
     if not items:
         return arg_base
-    bool_arg_set = {"-b", "-e", "-z", "-s", "-j", "-d"}
+    bool_arg_set = {"-b", "-e", "-z", "-s", "-j", "-d", "-sv"}
     t = len(items)
     i = 0
     arg_start = -1
 
     while i + 1 <= t:
-        part = items[i].strip()
+        part = items[i]
         if part in arg_base:
             if arg_start == -1:
                 arg_start = i
@@ -113,22 +113,22 @@ def arg_parser(items, arg_base):
             else:
                 sub_list = []
                 for j in range(i + 1, t):
-                    item = items[j].strip()
+                    item = items[j]
                     if item in arg_base:
                         if part in bool_arg_set and not sub_list:
                             arg_base[part] = True
                         break
-                    sub_list.append(item.strip())
+                    sub_list.append(item)
                     i += 1
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
         i += 1
     link = []
-    if items[0].strip() not in arg_base:
+    if items[0] not in arg_base:
         if arg_start == -1:
-            link.extend(item.strip() for item in items)
+            link.extend(iter(items))
         else:
-            link.extend(items[r].strip() for r in range(arg_start))
+            link.extend(items[r] for r in range(arg_start))
         if link:
             arg_base["link"] = " ".join(link)
     return arg_base

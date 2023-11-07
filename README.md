@@ -134,6 +134,7 @@ In each single file there is a major change from base code, it's almost totally 
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
 - Bulk download from telegram txt file or text message contains links seperated by new line
 - Join splitted files that have splitted before by split(linux pkg)
+- Sample video Generator
 - Almost all repository functions have been improved and many other details can't mention all of them
 - Many bugs have been fixed
 

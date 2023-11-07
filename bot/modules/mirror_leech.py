@@ -77,6 +77,7 @@ class Mirror(TaskListener):
             "-b": False,
             "-e": False,
             "-z": False,
+            "-sv": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -103,6 +104,7 @@ class Mirror(TaskListener):
         self.join = args["-j"]
         self.thumb = args["-t"]
         self.splitSize = args["-sp"]
+        self.sampleVideo = args["-sv"]
 
         headers = args["-h"]
         isBulk = args["-b"]

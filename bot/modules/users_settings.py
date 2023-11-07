@@ -28,7 +28,7 @@ from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.ext_utils.bot_utils import update_user_ldata, new_thread
-from bot.helper.ext_utils.leech_utils import createThumb, getSplitSizeBytes
+from bot.helper.ext_utils.media_utils import createThumb, getSplitSizeBytes
 
 handler_dict = {}
 

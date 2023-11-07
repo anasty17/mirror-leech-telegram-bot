@@ -5,6 +5,7 @@ from re import search as re_search
 from asyncio import create_subprocess_exec
 from asyncio.subprocess import PIPE
 from PIL import Image
+from aioshutil import move
 
 from bot import LOGGER
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -272,18 +273,19 @@ async def split_file(
             ):
                 return False
             listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
-            code = await listener.suproc.wait()
+            _, stderr = await listener.suproc.communicate()
+            code = listener.suproc.returncode
+            stderr = stderr.decode().strip()
             if code == -9:
                 return False
             elif code != 0:
-                err = (await listener.suproc.stderr.read()).decode().strip()
                 try:
                     await aioremove(out_path)
                 except:
                     pass
                 if multi_streams:
                     LOGGER.warning(
-                        f"{err}. Retrying without map, -map 0 not working in all situations. Path: {path}"
+                        f"{stderr}. Retrying without map, -map 0 not working in all situations. Path: {path}"
                     )
                     return await split_file(
                         path,
@@ -299,7 +301,7 @@ async def split_file(
                     )
                 else:
                     LOGGER.warning(
-                        f"{err}. Unable to split this video, if it's size less than {listener.maxSplitSize} will be uploaded as it is. Path: {path}"
+                        f"{stderr}. Unable to split this video, if it's size less than {listener.maxSplitSize} will be uploaded as it is. Path: {path}"
                     )
                 return "errored"
             out_size = await aiopath.getsize(out_path)
@@ -346,10 +348,85 @@ async def split_file(
             out_path,
             stderr=PIPE,
         )
-        code = await listener.suproc.wait()
+        _, stderr = await listener.suproc.communicate()
+        code = listener.suproc.returncode
+        stderr = stderr.decode().strip()
         if code == -9:
             return False
         elif code != 0:
-            err = (await listener.suproc.stderr.read()).decode().strip()
-            LOGGER.error(err)
+            LOGGER.error(f"{stderr}. Split Document: {path}")
     return True
+
+
+async def createSampleVideo(
+    listener, input_file, sample_duration, part_duration, oneFile=False
+):
+    filter_complex = ""
+    dir, name = input_file.rsplit("/", 1)
+    output_file = f"{dir}/SAMPLE.{name}"
+    segments = [(0, part_duration)]
+    duration = (await get_media_info(input_file))[0]
+    remaining_duration = duration - (part_duration * 2)
+    parts = (sample_duration - (part_duration * 2)) // part_duration
+    time_interval = remaining_duration // parts
+    next_segment = time_interval
+    for _ in range(parts):
+        segments.append((next_segment, next_segment + part_duration))
+        next_segment += time_interval
+    segments.append((duration - part_duration, duration))
+
+    for i, (start, end) in enumerate(segments):
+        filter_complex += (
+            f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS[v{i}]; "
+        )
+        filter_complex += (
+            f"[0:a]atrim=start={start}:end={end},asetpts=PTS-STARTPTS[a{i}]; "
+        )
+
+    for i in range(len(segments)):
+        filter_complex += f"[v{i}][a{i}]"
+
+    filter_complex += f"concat=n={len(segments)}:v=1:a=1[vout][aout]"
+
+    cmd = [
+        "ffmpeg",
+        "-i",
+        input_file,
+        "-filter_complex",
+        filter_complex,
+        "-map",
+        "[vout]",
+        "-map",
+        "[aout]",
+        "-c:v",
+        "libx264",
+        "-c:a",
+        "aac",
+        output_file,
+    ]
+
+    if (
+        listener.suproc == "cancelled"
+        or listener.suproc is not None
+        and listener.suproc.returncode == -9
+    ):
+        return False
+    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    _, stderr = await listener.suproc.communicate()
+    code = listener.suproc.returncode
+    stderr = stderr.decode().strip()
+    if code == -9:
+        return False
+    elif code != 0:
+        LOGGER.error(
+            f"Something went wrong while creating sample video, mostly file is corrupted. Path: {input_file}"
+        )
+        return input_file
+    else:
+        if oneFile:
+            newDir = input_file.rsplit(".", 1)[0]
+            await mkdir(newDir)
+            await move(input_file, f"{newDir}/{name}")
+            await move(output_file, f"{newDir}/SAMPLE.{name}")
+            return newDir
+        return True

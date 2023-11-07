@@ -73,6 +73,7 @@ except:
 task_dict_lock = Lock()
 queue_dict_lock = Lock()
 qb_listener_lock = Lock()
+cpu_eater_lock = Lock()
 status_dict = {}
 task_dict = {}
 rss_dict = {}
