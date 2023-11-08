@@ -366,6 +366,7 @@ class YtDlp(TaskListener):
             await sendMessage(
                 self.message, "Open this link for usage help!", COMMAND_USAGE["yt"]
             )
+            self.removeFromSameDir()
             return
 
         if "mdisk.me" in self.link:
@@ -406,6 +407,7 @@ class YtDlp(TaskListener):
         except Exception as e:
             msg = str(e).replace("<", " ").replace(">", " ")
             await sendMessage(self.message, f"{self.tag} {msg}")
+            self.removeFromSameDir()
             return
         finally:
             self.run_multi(input_list, folder_name, YtDlp)
@@ -416,18 +418,21 @@ class YtDlp(TaskListener):
         if not qual:
             qual = await YtSelection(self).get_quality(result)
             if qual is None:
+                self.removeFromSameDir()
                 return
 
         try:
             await self.beforeStart()
         except Exception as e:
             await sendMessage(self.message, e)
+            self.removeFromSameDir()
             return
 
         LOGGER.info(f"Downloading with YT-DLP: {self.link}")
         playlist = "entries" in result
         ydl = YoutubeDLHelper(self)
         await ydl.add_download(path, qual, playlist, opt)
+        self.removeFromSameDir()
 
 
 async def ytdl(client, message):

@@ -173,6 +173,7 @@ class Mirror(TaskListener):
                 reply_to, self.session = await get_tg_link_message(self.link)
             except Exception as e:
                 await sendMessage(self.message, f"ERROR: {e}")
+                self.removeFromSameDir()
                 return
 
         if isinstance(reply_to, list):
@@ -237,6 +238,7 @@ class Mirror(TaskListener):
             await sendMessage(
                 self.message, "Open this link for usage help!", COMMAND_USAGE["main"]
             )
+            self.removeFromSameDir()
             return
 
         if self.link:
@@ -246,6 +248,7 @@ class Mirror(TaskListener):
             await self.beforeStart()
         except Exception as e:
             await sendMessage(self.message, e)
+            self.removeFromSameDir()
             return
 
         if (
@@ -272,6 +275,7 @@ class Mirror(TaskListener):
                         LOGGER.info(e)
                     if e.startswith("ERROR:"):
                         await sendMessage(self.message, e)
+                        self.removeFromSameDir()
                         return
 
         if file_ is not None:
@@ -295,6 +299,8 @@ class Mirror(TaskListener):
                     f" authorization: Basic {b64encode(auth.encode()).decode('ascii')}"
                 )
             await add_aria2c_download(self, path, headers, ratio, seed_time)
+
+        self.removeFromSameDir()
 
 
 async def mirror(client, message):

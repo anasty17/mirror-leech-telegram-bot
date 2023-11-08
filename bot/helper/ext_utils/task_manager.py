@@ -24,6 +24,7 @@ async def stop_duplicate_check(listener):
         or listener.upDest.startswith("mtp:")
         and listener.stopDuplicate
         or not listener.stopDuplicate
+        or listener.sameDir
     ):
         return False, None
     name = listener.name

@@ -25,6 +25,11 @@ from bot.helper.ext_utils.files_utils import (
     clean_target,
     join_files,
 )
+from bot.helper.telegram_helper.message_utils import (
+    sendMessage,
+    delete_status,
+    update_status_message,
+)
 from bot.helper.ext_utils.status_utils import get_readable_file_size
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.links_utils import is_gdrive_id
@@ -36,11 +41,6 @@ from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.gdrive_utils.upload import gdUpload
 from bot.helper.mirror_utils.telegram_uploader import TgUploader
 from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
-from bot.helper.telegram_helper.message_utils import (
-    sendMessage,
-    delete_status,
-    update_status_message,
-)
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.common import TaskConfig
@@ -60,6 +60,11 @@ class TaskListener(TaskConfig):
             await delete_status()
         except:
             pass
+
+    def removeFromSameDir(self):
+        if self.sameDir and self.mid in self.sameDir["tasks"]:
+            self.sameDir["tasks"].remove(self.mid)
+            self.sameDir["total"] -= 1
 
     async def onDownloadStart(self):
         if (
@@ -331,9 +336,7 @@ class TaskListener(TaskConfig):
             if self.mid in task_dict:
                 del task_dict[self.mid]
             count = len(task_dict)
-            if self.sameDir and self.mid in self.sameDir["tasks"]:
-                self.sameDir["tasks"].remove(self.mid)
-                self.sameDir["total"] -= 1
+            self.removeFromSameDir()
         msg = f"{self.tag} Download: {escape(error)}"
         await sendMessage(self.message, msg, button)
         if count == 0:
