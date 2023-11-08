@@ -275,10 +275,10 @@ async def split_file(
             listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
             _, stderr = await listener.suproc.communicate()
             code = listener.suproc.returncode
-            stderr = stderr.decode().strip()
             if code == -9:
                 return False
             elif code != 0:
+                stderr = stderr.decode().strip()
                 try:
                     await aioremove(out_path)
                 except:
@@ -350,10 +350,10 @@ async def split_file(
         )
         _, stderr = await listener.suproc.communicate()
         code = listener.suproc.returncode
-        stderr = stderr.decode().strip()
         if code == -9:
             return False
         elif code != 0:
+            stderr = stderr.decode().strip()
             LOGGER.error(f"{stderr}. Split Document: {path}")
     return True
 
@@ -414,12 +414,12 @@ async def createSampleVideo(
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     code = listener.suproc.returncode
-    stderr = stderr.decode().strip()
     if code == -9:
         return False
     elif code != 0:
+        stderr = stderr.decode().strip()
         LOGGER.error(
-            f"Something went wrong while creating sample video, mostly file is corrupted. Path: {input_file}"
+            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {input_file}"
         )
         return input_file
     else:

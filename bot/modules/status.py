@@ -131,7 +131,9 @@ async def status_pages(_, query):
 EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}
 CL: {tasks['Clone']} | CH: {tasks['CheckUp']} | PA:{tasks['Pause']}
 
-DLS: {get_readable_file_size(dl_speed)}/s | ULS: {get_readable_file_size(up_speed)}/s | SDS: {get_readable_file_size(seed_speed)}/s
+ODLS: {get_readable_file_size(dl_speed)}/s
+OULS: {get_readable_file_size(up_speed)}/s
+OSDS: {get_readable_file_size(seed_speed)}/s
 """
         await query.answer(msg, show_alert=True)
 

@@ -424,10 +424,10 @@ class TaskConfig:
                             self.suproc = await create_subprocess_exec(*cmd)
                             _, stderr = await self.suproc.communicate()
                             code = self.suproc.returncode
-                            stderr = stderr.decode().strip()
                             if code == -9:
                                 return False
                             elif code != 0:
+                                stderr = stderr.decode().strip()
                                 LOGGER.error(
                                     f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
                                 )
@@ -465,7 +465,6 @@ class TaskConfig:
                 self.suproc = await create_subprocess_exec(*cmd)
                 _, stderr = await self.suproc.communicate()
                 code = self.suproc.returncode
-                stderr = stderr.decode().strip()
                 if code == -9:
                     return False
                 elif code == 0:
@@ -477,6 +476,7 @@ class TaskConfig:
                             return False
                     return up_path
                 else:
+                    stderr = stderr.decode().strip()
                     LOGGER.error(
                         f"{stderr}. Unable to extract archive! Uploading anyway. Path: {dl_path}"
                     )
@@ -530,7 +530,6 @@ class TaskConfig:
         self.suproc = await create_subprocess_exec(*cmd)
         _, stderr = await self.suproc.communicate()
         code = self.suproc.returncode
-        stderr = stderr.decode().strip()
         if code == -9:
             return False
         elif code == 0:
@@ -538,6 +537,7 @@ class TaskConfig:
                 await clean_target(dl_path)
             return up_path
         else:
+            stderr = stderr.decode().strip()
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
             return dl_path
 
@@ -584,14 +584,15 @@ class TaskConfig:
             sample_duration = 60
             part_duration = 4
 
+        async with task_dict_lock:
+            task_dict[self.mid] = SampleVideoStatus(self, size, gid)
+
         async with cpu_eater_lock:
             checked = False
             if await aiopath.isfile(dl_path):
                 if (await get_document_type(dl_path))[0]:
                     if not checked:
                         checked = True
-                        async with task_dict_lock:
-                            task_dict[self.mid] = SampleVideoStatus(self, size, gid)
                         LOGGER.info(f"Creating Sample video: {self.name}")
                     res = await createSampleVideo(
                         self, dl_path, sample_duration, part_duration, True
@@ -606,10 +607,6 @@ class TaskConfig:
                         if (await get_document_type(f_path))[0]:
                             if not checked:
                                 checked = True
-                                async with task_dict_lock:
-                                    task_dict[self.mid] = SampleVideoStatus(
-                                        self, size, gid
-                                    )
                                 LOGGER.info(f"Creating Sample videos: {self.name}")
                             res = await createSampleVideo(
                                 self, f_path, sample_duration, part_duration
