@@ -220,7 +220,9 @@ class RcloneTransferHelper:
 
         if code == 0:
             result = loads(res)
-            fid = next((r["ID"] for r in result if r["Path"] == self._listener.name), "err")
+            fid = next(
+                (r["ID"] for r in result if r["Path"] == self._listener.name), "err"
+            )
             link = (
                 f"https://drive.google.com/drive/folders/{fid}"
                 if mime_type == "Folder"
@@ -419,7 +421,9 @@ class RcloneTransferHelper:
                 return (None, None) if self._is_cancelled else (link, destination)
             else:
                 if mime_type != "Folder":
-                    destination += f"/{self._listener.name}" if dst_path else self._listener.name
+                    destination += (
+                        f"/{self._listener.name}" if dst_path else self._listener.name
+                    )
 
                 cmd = ["rclone", "link", "--config", config_path, destination]
                 res, err, code = await cmd_exec(cmd)

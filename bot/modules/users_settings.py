@@ -192,7 +192,7 @@ async def user_settings(_, message):
 async def set_thumb(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
-    des_dir = await createThumb(message)
+    des_dir = await createThumb(message, user_id)
     update_user_ldata(user_id, "thumb", des_dir)
     await deleteMessage(message)
     await update_user_settings(pre_event)

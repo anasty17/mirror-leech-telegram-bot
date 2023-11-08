@@ -26,12 +26,14 @@ def getSplitSizeBytes(size):
     return size
 
 
-async def createThumb(msg):
+async def createThumb(msg, _id=""):
+    if not _id:
+        _id = msg.id
     path = "Thumbnails/"
     if not await aiopath.isdir(path):
         await mkdir(path)
     photo_dir = await msg.download()
-    des_dir = f"{path}{msg.id}.jpg"
+    des_dir = f"{path}{_id}.jpg"
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
     await aioremove(photo_dir)
     return des_dir

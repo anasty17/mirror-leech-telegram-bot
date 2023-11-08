@@ -61,12 +61,8 @@ async def initiate_help_messages():
         telegraph.create_page(
             title="Mirror-Leech Command Usage", content=MIRROR_HELP_MESSAGE
         ),
-        telegraph.create_page(
-            title="YTDLP Command Usage", content=YT_HELP_MESSAGE
-        ),
-        telegraph.create_page(
-            title="Clone Command Usage", content=CLONE_HELP_MESSAGE
-        ),
+        telegraph.create_page(title="YTDLP Command Usage", content=YT_HELP_MESSAGE),
+        telegraph.create_page(title="Clone Command Usage", content=CLONE_HELP_MESSAGE),
     )
     buttons = ButtonMaker()
     buttons.ubutton("Usage Guide", f"https://telegra.ph/{mirror['path']}")
