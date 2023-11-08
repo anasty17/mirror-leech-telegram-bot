@@ -2,7 +2,7 @@ from requests import utils as rutils
 from aiofiles.os import path as aiopath, listdir, makedirs
 from html import escape
 from aioshutil import move
-from asyncio import sleep, Event
+from asyncio import sleep, Event, gather
 
 from bot import (
     Interval,
@@ -56,8 +56,7 @@ class TaskListener(TaskConfig):
                 for intvl in list(Interval.values()):
                     intvl.cancel()
             Interval.clear()
-            await sync_to_async(aria2.purge)
-            await delete_status()
+            await gather(sync_to_async(aria2.purge), delete_status())
         except:
             pass
 
@@ -200,24 +199,30 @@ class TaskListener(TaskConfig):
             tg = TgUploader(self, up_dir)
             async with task_dict_lock:
                 task_dict[self.mid] = TelegramStatus(self, tg, size, gid, "up")
-            await update_status_message(self.message.chat.id)
-            await tg.upload(o_files, m_size, size)
+            await gather(
+                update_status_message(self.message.chat.id),
+                tg.upload(o_files, m_size, size),
+            )
         elif is_gdrive_id(self.upDest):
             size = await get_path_size(up_path)
             LOGGER.info(f"Gdrive Upload Name: {self.name}")
             drive = gdUpload(self, up_path)
             async with task_dict_lock:
                 task_dict[self.mid] = GdriveStatus(self, drive, size, gid, "up")
-            await update_status_message(self.message.chat.id)
-            await sync_to_async(drive.upload, size)
+            await gather(
+                update_status_message(self.message.chat.id),
+                sync_to_async(drive.upload, size),
+            )
         else:
             size = await get_path_size(up_path)
             LOGGER.info(f"Rclone Upload Name: {self.name}")
             RCTransfer = RcloneTransferHelper(self)
             async with task_dict_lock:
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "up")
-            await update_status_message(self.message.chat.id)
-            await RCTransfer.upload(up_path, size)
+            await gather(
+                update_status_message(self.message.chat.id),
+                RCTransfer.upload(up_path, size),
+            )
 
     async def onUploadComplete(
         self, link, size, files, folders, mime_type, rclonePath="", dir_id=""

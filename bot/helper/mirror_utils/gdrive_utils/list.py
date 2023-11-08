@@ -1,5 +1,5 @@
 from logging import getLogger
-from asyncio import wait_for, Event, wrap_future
+from asyncio import wait_for, Event, wrap_future, gather
 from aiofiles.os import path as aiopath
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram.filters import regex, user
@@ -347,9 +347,11 @@ class gdriveList(GoogleDriveHelper):
         self.list_status = status
         future = self._event_handler()
         if token_path is None:
-            self._token_user = await aiopath.exists(self.user_token_path)
-            self._token_owner = await aiopath.exists("token.pickle")
-            self._sa_owner = await aiopath.exists("accounts")
+            self._token_user, self._token_owner, self._sa_owner = await gather(
+                aiopath.exists(self.user_token_path),
+                aiopath.exists("token.pickle"),
+                aiopath.exists("accounts"),
+            )
             if not self._token_owner and not self._token_user and not self._sa_owner:
                 self.event.set()
                 return "token.pickle or service accounts are not Exists!"

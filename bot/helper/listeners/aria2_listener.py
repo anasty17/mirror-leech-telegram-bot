@@ -49,7 +49,7 @@ async def _onDownloadStarted(api, gid):
         task.listener.name = download.name
         msg, button = await stop_duplicate_check(task.listener)
         if msg:
-            await sendMessage(task.listener.message, msg, button)
+            await task.listener.onDownloadError(msg, button)
             await sync_to_async(api.remove, [download], force=True, files=True)
             return
 

@@ -1,4 +1,4 @@
-from asyncio import wait_for, Event, wrap_future
+from asyncio import wait_for, Event, wrap_future, gather
 from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from configparser import ConfigParser
@@ -310,8 +310,9 @@ class RcloneList:
         self.list_status = status
         future = self._event_handler()
         if config_path is None:
-            self._rc_user = await aiopath.exists(self.user_rcc_path)
-            self._rc_owner = await aiopath.exists("rclone.conf")
+            self._rc_user, self._rc_owner = await gather(
+                aiopath.exists(self.user_rcc_path), aiopath.exists("rclone.conf")
+            )
             if not self._rc_owner and not self._rc_user:
                 self.event.set()
                 return "Rclone Config not Exists!"

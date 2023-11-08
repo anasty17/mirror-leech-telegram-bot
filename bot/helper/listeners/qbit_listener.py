@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import sleep, gather
 from time import time
 
 from bot import (
@@ -35,8 +35,10 @@ async def _onDownloadError(err, tor, button=None):
     task = await getTaskByGid(ext_hash[:12])
     if not hasattr(task, "client"):
         return
-    await task.listener.onDownloadError(err, button)
-    await sync_to_async(task.client.torrents_pause, torrent_hashes=ext_hash)
+    await gather(
+        task.listener.onDownloadError(err, button),
+        sync_to_async(task.client.torrents_pause, torrent_hashes=ext_hash),
+    )
     await sleep(0.3)
     await _remove_torrent(task.client, ext_hash, tor.tags)
 
