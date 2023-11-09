@@ -213,13 +213,10 @@ class Mirror(TaskListener):
             )
 
             if file_ is None:
-                reply_text = reply_to.text.split("\n", 1)[0].strip()
-                if (
-                    is_url(reply_text)
-                    or is_magnet(reply_text)
-                    or is_rclone_path(reply_text)
-                ):
-                    self.link = reply_text
+                if reply_text := reply_to.text:
+                    self.link = reply_text.split("\n", 1)[0].strip()
+                else:
+                    reply_to = None
             elif reply_to.document and (
                 file_.mime_type == "application/x-bittorrent"
                 or file_.file_name.endswith(".torrent")
@@ -228,12 +225,15 @@ class Mirror(TaskListener):
                 file_ = None
 
         if (
-            not is_url(self.link)
+            not self.link
+            and file_ is None
+            or is_telegram_link(self.link)
+            and reply_to is None
+            or not is_url(self.link)
             and not is_magnet(self.link)
             and not await aiopath.exists(self.link)
             and not is_rclone_path(self.link)
             and not is_gdrive_id(self.link)
-            and file_ is None
         ):
             await sendMessage(
                 self.message, "Open this link for usage help!", COMMAND_USAGE["main"]
