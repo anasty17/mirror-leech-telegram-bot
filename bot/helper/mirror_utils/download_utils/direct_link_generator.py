@@ -72,6 +72,8 @@ def direct_link_generator(link):
         return streamvid(link)
     elif "shrdsk.me" in domain:
         return shrdsk(link)
+    elif "u.pcloud.link" in domain:
+        return pcloud(link)
     elif any(x in domain for x in ["akmfiles.com", "akmfls.xyz"]):
         return akmfiles(link)
     elif any(
@@ -634,7 +636,7 @@ def filepress(url):
                 "id": res2["data"],
                 "method": "publicUserDownlaod",
             }
-            api2 = f"https://new2.filepress.store/api/file/downlaod2/"
+            api2 = "https://new2.filepress.store/api/file/downlaod2/"
             res = session.post(
                 api2,
                 headers={"Referer": f"{raw.scheme}://{raw.hostname}"},
@@ -1508,3 +1510,13 @@ def streamhub(url):
         if error := html.xpath('//div[@class="alert alert-danger"]/text()[2]'):
             raise DirectDownloadLinkException(f"ERROR: {error[0]}")
         raise DirectDownloadLinkException("ERROR: direct link not found!")
+
+def pcloud(url):
+    with create_scraper() as session:
+        try:
+            res = session.get(url)
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+    if link := findall(r'.downloadlink.:..(https:.*)..', res.text):
+        return link[0].replace('\/', '/')
+    raise DirectDownloadLinkException("ERROR: Direct link not found")
