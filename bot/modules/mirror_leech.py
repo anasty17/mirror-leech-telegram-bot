@@ -186,7 +186,10 @@ class Mirror(TaskListener):
             nextmsg = await self.client.get_messages(
                 chat_id=self.message.chat.id, message_ids=nextmsg.id
             )
-            nextmsg.from_user = self.message.from_user
+            if self.message.from_user:
+                nextmsg.from_user = self.user
+            else:
+                nextmsg.sender_chat = self.user
             Mirror(
                 self.client,
                 nextmsg,

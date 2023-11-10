@@ -13,6 +13,7 @@ from bot.helper.ext_utils.links_utils import is_gdrive_link
 @new_task
 async def deletefile(_, message):
     args = message.text.split()
+    user = message.from_user or message.sender_chat
     if len(args) > 1:
         link = args[1]
     elif reply_to := message.reply_to_message:
@@ -21,7 +22,7 @@ async def deletefile(_, message):
         link = ""
     if is_gdrive_link(link):
         LOGGER.info(link)
-        msg = await sync_to_async(gdDelete().deletefile, link, message.from_user.id)
+        msg = await sync_to_async(gdDelete().deletefile, link, user.id)
     else:
         msg = (
             "Send Gdrive link along with command or by replying to the link by command"

@@ -94,6 +94,7 @@ async def status_pages(_, query):
             "Clone": 0,
             "CheckUp": 0,
             "Pause": 0,
+            "SamVid": 0,
         }
         dl_speed = 0
         up_speed = 0
@@ -126,10 +127,12 @@ async def status_pages(_, query):
                     tasks["CheckUp"] += 1
                 elif tstatus == MirrorStatus.STATUS_PAUSED:
                     tasks["Pause"] += 1
+                elif tstatus == MirrorStatus.STATUS_SAMVID:
+                    tasks["SamVid"] += 1
 
         msg = f"""DL: {tasks['Download']} | UP: {tasks['Upload']} | SD: {tasks['Seed']} | AR: {tasks['Archive']}
 EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}
-CL: {tasks['Clone']} | CH: {tasks['CheckUp']} | PA:{tasks['Pause']}
+CL: {tasks['Clone']} | CH: {tasks['CheckUp']} | PA:{tasks['Pause']} | SV:{tasks['SamVid']}
 
 ODLS: {get_readable_file_size(dl_speed)}/s
 OULS: {get_readable_file_size(up_speed)}/s

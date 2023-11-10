@@ -16,7 +16,7 @@ from bot.helper.telegram_helper import button_build
 
 
 async def cancel_task(_, message):
-    user_id = message.from_user.id
+    user_id = message.from_user.id if message.from_user else message.sender_chat.id
     msg = message.text.split()
     if len(msg) > 1:
         gid = msg[1]

@@ -30,7 +30,7 @@ def namespace_of(message):
 
 def log_input(message):
     LOGGER.info(
-        f"IN: {message.text} (user={message.from_user.id}, chat={message.chat.id})"
+        f"IN: {message.text} (user={message.from_user.id if message.from_user else message.sender_chat.id}, chat={message.chat.id})"
     )
 
 

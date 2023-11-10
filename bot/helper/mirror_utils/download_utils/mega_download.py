@@ -1,7 +1,13 @@
 from secrets import token_urlsafe
 from aiofiles.os import makedirs
 from threading import Event
-from mega import MegaApi, MegaListener, MegaRequest, MegaTransfer, MegaError
+from mega import (
+    MegaApi,
+    MegaListener,
+    MegaRequest,
+    MegaTransfer,
+    MegaError,
+)
 
 from bot import (
     LOGGER,
@@ -45,7 +51,9 @@ class MegaAppListener(MegaListener):
     def downloaded_bytes(self):
         return self._bytes_transferred
 
-    def onRequestFinish(self, api, request, error):
+    def onRequestFinish(self, api: MegaApi, request: MegaRequest, error):
+        if self.is_cancelled:
+            return
         if str(error).lower() != "no error":
             self.error = error.copy()
             LOGGER.error(f"Mega onRequestFinishError: {self.error}")
@@ -84,7 +92,7 @@ class MegaAppListener(MegaListener):
         self._speed = transfer.getSpeed()
         self._bytes_transferred = transfer.getTransferredBytes()
 
-    def onTransferFinish(self, api: MegaApi, transfer: MegaTransfer, error):
+    def onTransferFinish(self, api, transfer: MegaTransfer, error):
         try:
             if self.is_cancelled:
                 self.continue_event.set()
@@ -94,7 +102,7 @@ class MegaAppListener(MegaListener):
         except Exception as e:
             LOGGER.error(e)
 
-    def onTransferTemporaryError(self, api, transfer, error):
+    def onTransferTemporaryError(self, api, transfer: MegaTransfer, error: MegaError):
         filen = transfer.getFileName()
         state = transfer.getState()
         errStr = error.toString()
