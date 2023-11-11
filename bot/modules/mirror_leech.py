@@ -232,7 +232,8 @@ class Mirror(TaskListener):
             and file_ is None
             or is_telegram_link(self.link)
             and reply_to is None
-            or not is_url(self.link)
+            or file_ is None
+            and not is_url(self.link)
             and not is_magnet(self.link)
             and not await aiopath.exists(self.link)
             and not is_rclone_path(self.link)
