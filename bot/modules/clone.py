@@ -108,7 +108,14 @@ class Clone(TaskListener):
         if len(self.link) == 0:
             await sendMessage(self.message, "Open this link for usage help!", COMMAND_USAGE["clone"])
             return
-        await self.beforeStart()
+
+        try:
+            await self.beforeStart()
+        except Exception as e:
+            await sendMessage(self.message, e)
+            self.removeFromSameDir()
+            return
+
         await self._proceedToClone()
 
     async def _proceedToClone(self):
