@@ -113,7 +113,6 @@ class Clone(TaskListener):
             await self.beforeStart()
         except Exception as e:
             await sendMessage(self.message, e)
-            self.removeFromSameDir()
             return
 
         await self._proceedToClone()
