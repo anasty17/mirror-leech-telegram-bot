@@ -8,7 +8,7 @@ from subprocess import run as srun
 from sys import exit as sexit
 
 from .exceptions import NotSupportedExtractionArchive
-from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client, GLOBAL_EXTENSION_FILTER
+from bot import aria2, LOGGER, DOWNLOAD_DIR, get_client
 from bot.helper.ext_utils.bot_utils import sync_to_async, cmd_exec
 
 ARCH_EXT = [
@@ -146,13 +146,13 @@ async def get_path_size(path):
     return total_size
 
 
-async def count_files_and_folders(path):
+async def count_files_and_folders(path, exclude_extensions):
     total_files = 0
     total_folders = 0
     for _, dirs, files in await sync_to_async(walk, path):
         total_files += len(files)
         for f in files:
-            if f.endswith(tuple(GLOBAL_EXTENSION_FILTER)):
+            if f.endswith(tuple(exclude_extensions)):
                 total_files -= 1
         total_folders += len(dirs)
     return total_folders, total_files

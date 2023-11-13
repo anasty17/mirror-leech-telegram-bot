@@ -96,6 +96,14 @@ class TaskConfig:
         self.client = None
         self.thumb = None
         self.isSuperChat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
+        self.excludeExtensions = ['aria2', '!qB']
+        self._ext_filters()
+
+    def _ext_filters(self):
+        if self.user_dict.get('excluded_extensions', False):
+            self.excludeExtensions = self.user_dict['excluded_extensions']
+        elif 'excluded_extensions' not in self.user_dict:
+            self.excludeExtensions = GLOBAL_EXTENSION_FILTER
 
     def getTokenPath(self, dest):
         if dest.startswith("mtp:"):
@@ -520,7 +528,7 @@ class TaskConfig:
             up_path,
             dl_path,
         ]
-        for ext in GLOBAL_EXTENSION_FILTER:
+        for ext in self.excludeExtensions:
             ex_ext = f"-xr!*.{ext}"
             cmd.append(ex_ext)
         if self.isLeech and int(size) > self.splitSize:
