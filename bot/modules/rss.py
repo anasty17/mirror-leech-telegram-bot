@@ -66,7 +66,7 @@ async def getRssMenu(_, message):
     await sendMessage(message, msg, button)
 
 
-async def rssSub(client, message, pre_event):
+async def rssSub(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     if username := message.from_user.username:

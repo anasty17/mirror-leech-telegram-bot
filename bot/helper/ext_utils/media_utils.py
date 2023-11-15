@@ -148,6 +148,39 @@ async def get_document_type(path):
     return is_video, is_audio, is_image
 
 
+async def take_ss(video_file, ss_nb) -> list:
+    if ss_nb > 10:
+        ss_nb = 10
+    duration = (await get_media_info(video_file))[0]
+    if duration != 0:
+        dirpath, name = video_file.rsplit("/", 1)
+        name = name.rsplit(".", 1)[0]
+        dirpath = f"{dirpath}/screenshots/"
+        if not await aiopath.exists(dirpath):
+            await mkdir(dirpath)
+        interval = duration // ss_nb + 1
+        cap_time = interval
+        outputs = []
+        cmd = ''
+        for i in range(ss_nb):
+            output = f"{dirpath}SS.{name}_{i:02}.png"
+            outputs.append(output)
+            cmd += f'ffmpeg -hide_banner -loglevel error -ss {cap_time} -i "{video_file}" -q:v 1 -frames:v 1 "{output}"'
+            cap_time += interval
+            if i + 1 != ss_nb:
+                cmd += ' && '
+        _, err, code = await cmd_exec(cmd, True)
+        if code != 0:
+            LOGGER.error(
+                f"Error while creating sreenshots from video. Path: {video_file} stderr: {err}"
+            )
+            return []
+        return outputs
+    else:
+        LOGGER.error("take_ss: Can't get the duration of video")
+        return []
+
+
 async def get_audio_thumb(audio_file):
     des_dir = "Thumbnails/"
     if not await aiopath.exists(des_dir):
@@ -174,7 +207,7 @@ async def get_audio_thumb(audio_file):
     return des_dir
 
 
-async def take_ss(video_file, duration):
+async def create_thumbnail(video_file, duration):
     des_dir = "Thumbnails"
     if not await aiopath.exists(des_dir):
         await mkdir(des_dir)
@@ -233,7 +266,7 @@ async def split_file(
     parts = -(-size // listener.splitSize)
     if listener.equalSplits and not inLoop:
         split_size = (size // parts) + (size % parts)
-    if (await get_document_type(path))[0]:
+    if not listener.as_doc and (await get_document_type(path))[0]:
         if multi_streams:
             multi_streams = await is_multi_streams(path)
         duration = (await get_media_info(path))[0]

@@ -293,6 +293,7 @@ class YtDlp(TaskListener):
             "-b": False,
             "-z": False,
             "-sv": False,
+            "-ss": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -320,6 +321,7 @@ class YtDlp(TaskListener):
         self.thumb = args["-t"]
         self.splitSize = args["-sp"]
         self.sampleVideo = args["-sv"]
+        self.screenShots = args["-ss"]
 
         isBulk = args["-b"]
         folder_name = args["-m"]

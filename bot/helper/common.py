@@ -72,7 +72,6 @@ class TaskConfig:
         self.name = ""
         self.session = ""
         self.newDir = ""
-        self.sampleVideo = ""
         self.multiTag = 0
         self.splitSize = 0
         self.maxSplitSize = 0
@@ -92,6 +91,9 @@ class TaskConfig:
         self.isYtDlp = False
         self.privateLink = False
         self.stopDuplicate = False
+        self.sampleVideo = False
+        self.screenShots = False
+        self.as_doc = False
         self.suproc = None
         self.client = None
         self.thumb = None
@@ -218,6 +220,27 @@ class TaskConfig:
                 ) != self.getConfigPath(self.upDest):
                     raise ValueError("You must use the same config to clone!")
         else:
+            if self.upDest:
+                if self.userTransmission:
+                    chat = await user.get_chat(self.upDest)
+                    uploader_id = user.me.id
+                else:
+                    chat = await self.client.get_chat(self.upDest)
+                    uploader_id = self.client.me.id
+                if chat.type.name not in ["SUPERGROUP", "CHANNEL"]:
+                    raise ValueError(
+                        "Custom Leech Destination only allowed for super-group or channel!"
+                    )
+                member = await chat.get_member(uploader_id)
+                if (
+                    not member.privileges.can_manage_chat
+                    or not member.privileges.can_delete_messages
+                ):
+                    raise ValueError("You don't have enough privileges in this chat!")
+            elif self.userTransmission and not self.isSuperChat:
+                raise ValueError(
+                    "Use SuperGroup incase you want to upload using User session!"
+                )
             if self.splitSize:
                 if self.splitSize.isdigit():
                     self.splitSize = int(self.splitSize)
@@ -254,27 +277,10 @@ class TaskConfig:
                     self.userTransmission = IS_PREMIUM_USER
                 if self.upDest.isdigit() or self.upDest.startswith("-"):
                     self.upDest = int(self.upDest)
-            if self.upDest:
-                if self.userTransmission:
-                    chat = await user.get_chat(self.upDest)
-                    uploader_id = user.me.id
-                else:
-                    chat = await self.client.get_chat(self.upDest)
-                    uploader_id = self.client.me.id
-                if chat.type.name not in ["SUPERGROUP", "CHANNEL"]:
-                    raise ValueError(
-                        "Custom Leech Destination only allowed for super-group or channel!"
-                    )
-                member = await chat.get_member(uploader_id)
-                if (
-                    not member.privileges.can_manage_chat
-                    or not member.privileges.can_delete_messages
-                ):
-                    raise ValueError("You don't have enough privileges in this chat!")
-            elif self.userTransmission and not self.isSuperChat:
-                raise ValueError(
-                    "Use SuperGroup incase you want to upload using User session!"
-                )
+
+            self.as_doc = self.user_dict.get("as_doc", False) or (
+                config_dict["AS_DOCUMENT"] if "as_doc" not in self.user_dict else False
+            )
 
             if is_telegram_link(self.thumb):
                 msg = (await get_tg_link_message(self.thumb))[0]
@@ -295,7 +301,7 @@ class TaskConfig:
 
     @new_task
     async def run_multi(self, input_list, folder_name, obj):
-        await sleep(5)
+        await sleep(7)
         if not self.multiTag and self.multi > 1:
             self.multiTag = token_urlsafe(3)
             multi_tags.add(self.multiTag)
@@ -585,8 +591,8 @@ class TaskConfig:
     async def generateSampleVideo(self, dl_path, size, gid):
         data = self.sampleVideo.split(":") if isinstance(self.sampleVideo, str) else ""
         if data:
-            sample_duration = data[0] if data[0] else 60
-            part_duration = data[1] if len(data) > 1 else 4
+            sample_duration = int(data[0]) if data[0] else 60
+            part_duration = int(data[1]) if len(data) > 1 else 4
         else:
             sample_duration = 60
             part_duration = 4

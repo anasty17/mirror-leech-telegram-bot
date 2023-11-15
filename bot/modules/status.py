@@ -132,7 +132,7 @@ async def status_pages(_, query):
 
         msg = f"""DL: {tasks['Download']} | UP: {tasks['Upload']} | SD: {tasks['Seed']} | AR: {tasks['Archive']}
 EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}
-CL: {tasks['Clone']} | CH: {tasks['CheckUp']} | PA:{tasks['Pause']} | SV:{tasks['SamVid']}
+CL: {tasks['Clone']} | CH: {tasks['CheckUp']} | PA: {tasks['Pause']} | SV: {tasks['SamVid']}
 
 ODLS: {get_readable_file_size(dl_speed)}/s
 OULS: {get_readable_file_size(up_speed)}/s
