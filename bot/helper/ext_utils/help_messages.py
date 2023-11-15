@@ -67,6 +67,11 @@ Create sample video for one video or folder of vidoes.<br>
 /cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
 You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
 <br>
+<b>SreensShots</b>: -ss<br>
+Create up to 10 screenshots for one video or folder of vidoes.<br>
+/cmd -ss (it will take the default values which is 10 photos).<br>
+You can control this value. Example: /cmd -ss 6.<br>
+<br>
 Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a><br>
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.<br>
 """
@@ -172,6 +177,11 @@ Note: Range link will work only by replying cmd to it<br>
 Create sample video for one video or folder of vidoes.<br>
 /cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
 You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
+<br>
+<b>SreensShots</b>: -ss<br>
+Create up to 10 screenshots for one video or folder of vidoes.<br>
+/cmd -ss (it will take the default values which is 10 photos).<br>
+You can control this value. Example: /cmd -ss 6.<br>
 <br>
 <b>NOTES:</b><br>
 1. Commands that start with <b>qb</b> are ONLY for torrents.
