@@ -37,7 +37,10 @@ class SampleVideoStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Sample Video: {self.listener.name}")
-        if self.listener.suproc is not None:
+        if (
+            self.listener.suproc is not None
+            and self.listener.suproc.returncode is None
+        ):
             self.listener.suproc.kill()
         else:
             self.listener.suproc = "cancelled"

@@ -1,5 +1,5 @@
-from os import path as ospath
-from aiofiles.os import remove as aioremove, path as aiopath, mkdir
+from os import path as ospath, cpu_count
+from aiofiles.os import remove as aioremove, path as aiopath, makedirs
 from time import time
 from re import search as re_search
 from asyncio import create_subprocess_exec, gather
@@ -7,7 +7,7 @@ from asyncio.subprocess import PIPE
 from PIL import Image
 from aioshutil import move
 
-from bot import LOGGER
+from bot import LOGGER, subprocess_lock
 from bot.helper.ext_utils.bot_utils import cmd_exec
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.files_utils import ARCH_EXT, get_mime_type
@@ -30,8 +30,7 @@ async def createThumb(msg, _id=""):
     if not _id:
         _id = msg.id
     path = "Thumbnails/"
-    if not await aiopath.isdir(path):
-        await mkdir(path)
+    await makedirs(path, exist_ok=True)
     photo_dir = await msg.download()
     des_dir = f"{path}{_id}.jpg"
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
@@ -154,21 +153,20 @@ async def take_ss(video_file, ss_nb) -> list:
     duration = (await get_media_info(video_file))[0]
     if duration != 0:
         dirpath, name = video_file.rsplit("/", 1)
-        name = name.rsplit(".", 1)[0]
+        name, _ = ospath.splitext(name)
         dirpath = f"{dirpath}/screenshots/"
-        if not await aiopath.exists(dirpath):
-            await mkdir(dirpath)
+        await makedirs(dirpath, exist_ok=True)
         interval = duration // ss_nb + 1
         cap_time = interval
         outputs = []
-        cmd = ''
+        cmd = ""
         for i in range(ss_nb):
             output = f"{dirpath}SS.{name}_{i:02}.png"
             outputs.append(output)
             cmd += f'ffmpeg -hide_banner -loglevel error -ss {cap_time} -i "{video_file}" -q:v 1 -frames:v 1 "{output}"'
             cap_time += interval
             if i + 1 != ss_nb:
-                cmd += ' && '
+                cmd += " && "
         _, err, code = await cmd_exec(cmd, True)
         if code != 0:
             LOGGER.error(
@@ -183,8 +181,7 @@ async def take_ss(video_file, ss_nb) -> list:
 
 async def get_audio_thumb(audio_file):
     des_dir = "Thumbnails/"
-    if not await aiopath.exists(des_dir):
-        await mkdir(des_dir)
+    await makedirs(des_dir, exist_ok=True)
     des_dir = f"Thumbnails/{time()}.jpg"
     cmd = [
         "ffmpeg",
@@ -209,8 +206,7 @@ async def get_audio_thumb(audio_file):
 
 async def create_thumbnail(video_file, duration):
     des_dir = "Thumbnails"
-    if not await aiopath.exists(des_dir):
-        await mkdir(des_dir)
+    await makedirs(des_dir, exist_ok=True)
     des_dir = ospath.join(des_dir, f"{time()}.jpg")
     if duration is None:
         duration = (await get_media_info(video_file))[0]
@@ -244,7 +240,6 @@ async def create_thumbnail(video_file, duration):
 async def split_file(
     path,
     size,
-    file_,
     dirpath,
     split_size,
     listener,
@@ -253,16 +248,9 @@ async def split_file(
     inLoop=False,
     multi_streams=True,
 ):
-    if (
-        listener.suproc == "cancelled"
-        or listener.suproc is not None
-        and listener.suproc.returncode == -9
-    ):
-        return False
     if listener.seed and not listener.newDir:
         dirpath = f"{dirpath}/splited_files_mltb"
-        if not await aiopath.exists(dirpath):
-            await mkdir(dirpath)
+        await makedirs(dirpath, exist_ok=True)
     parts = -(-size // listener.splitSize)
     if listener.equalSplits and not inLoop:
         split_size = (size // parts) + (size % parts)
@@ -270,11 +258,10 @@ async def split_file(
         if multi_streams:
             multi_streams = await is_multi_streams(path)
         duration = (await get_media_info(path))[0]
-        base_name, extension = ospath.splitext(file_)
+        base_name, extension = ospath.splitext(path)
         split_size -= 5000000
         while i <= parts or start_time < duration - 4:
-            parted_name = f"{base_name}.part{i:03}{extension}"
-            out_path = ospath.join(dirpath, parted_name)
+            out_path = f"{base_name}.part{i:03}{extension}"
             cmd = [
                 "ffmpeg",
                 "-hide_banner",
@@ -301,13 +288,10 @@ async def split_file(
             if not multi_streams:
                 del cmd[10]
                 del cmd[10]
-            if (
-                listener.suproc == "cancelled"
-                or listener.suproc is not None
-                and listener.suproc.returncode == -9
-            ):
-                return False
-            listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+            async with subprocess_lock:
+                if listener.suproc == "cancelled":
+                    return False
+                listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
             _, stderr = await listener.suproc.communicate()
             code = listener.suproc.returncode
             if code == -9:
@@ -325,7 +309,6 @@ async def split_file(
                     return await split_file(
                         path,
                         size,
-                        file_,
                         dirpath,
                         split_size,
                         listener,
@@ -347,7 +330,6 @@ async def split_file(
                 return await split_file(
                     path,
                     size,
-                    file_,
                     dirpath,
                     split_size,
                     listener,
@@ -373,16 +355,19 @@ async def split_file(
             start_time += lpd - 3
             i += 1
     else:
-        out_path = ospath.join(dirpath, f"{file_}.")
-        listener.suproc = await create_subprocess_exec(
-            "split",
-            "--numeric-suffixes=1",
-            "--suffix-length=3",
-            f"--bytes={split_size}",
-            path,
-            out_path,
-            stderr=PIPE,
-        )
+        out_path = f"{path}."
+        async with subprocess_lock:
+            if listener.suproc == "cancelled":
+                return False
+            listener.suproc = await create_subprocess_exec(
+                "split",
+                "--numeric-suffixes=1",
+                "--suffix-length=3",
+                f"--bytes={split_size}",
+                path,
+                out_path,
+                stderr=PIPE,
+            )
         _, stderr = await listener.suproc.communicate()
         code = listener.suproc.returncode
         if code == -9:
@@ -394,13 +379,13 @@ async def split_file(
 
 
 async def createSampleVideo(
-    listener, input_file, sample_duration, part_duration, oneFile=False
+    listener, video_file, sample_duration, part_duration, oneFile=False
 ):
     filter_complex = ""
-    dir, name = input_file.rsplit("/", 1)
+    dir, name = video_file.rsplit("/", 1)
     output_file = f"{dir}/SAMPLE.{name}"
     segments = [(0, part_duration)]
-    duration = (await get_media_info(input_file))[0]
+    duration = (await get_media_info(video_file))[0]
     remaining_duration = duration - (part_duration * 2)
     parts = (sample_duration - (part_duration * 2)) // part_duration
     time_interval = remaining_duration // parts
@@ -426,7 +411,7 @@ async def createSampleVideo(
     cmd = [
         "ffmpeg",
         "-i",
-        input_file,
+        video_file,
         "-filter_complex",
         filter_complex,
         "-map",
@@ -437,14 +422,12 @@ async def createSampleVideo(
         "libx264",
         "-c:a",
         "aac",
+        "-threads",
+        f"{cpu_count()//2}",
         output_file,
     ]
 
-    if (
-        listener.suproc == "cancelled"
-        or listener.suproc is not None
-        and listener.suproc.returncode == -9
-    ):
+    if listener.suproc == "cancelled":
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
@@ -454,15 +437,15 @@ async def createSampleVideo(
     elif code != 0:
         stderr = stderr.decode().strip()
         LOGGER.error(
-            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {input_file}"
+            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
         )
-        return input_file
+        return video_file
     else:
         if oneFile:
-            newDir = input_file.rsplit(".", 1)[0]
-            await mkdir(newDir)
+            newDir, _ = ospath.splitext(video_file)
+            await makedirs(newDir, exist_ok=True)
             await gather(
-                move(input_file, f"{newDir}/{name}"),
+                move(video_file, f"{newDir}/{name}"),
                 move(output_file, f"{newDir}/SAMPLE.{name}"),
             )
             return newDir
