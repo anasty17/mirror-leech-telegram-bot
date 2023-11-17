@@ -31,8 +31,8 @@ async def add_aria2c_download(listener, path, header, ratio, seed_time):
         a2c_opt["seed-time"] = seed_time
     if TORRENT_TIMEOUT := config_dict["TORRENT_TIMEOUT"]:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
-    added_to_queue, event = await is_queued(listener.mid)
-    if added_to_queue:
+    add_to_queue, event = await is_queued(listener.mid)
+    if add_to_queue:
         if listener.link.startswith("magnet:"):
             a2c_opt["pause-metadata"] = "true"
         else:
@@ -54,8 +54,8 @@ async def add_aria2c_download(listener, path, header, ratio, seed_time):
     gid = download.gid
     name = download.name
     async with task_dict_lock:
-        task_dict[listener.mid] = Aria2Status(listener, gid, queued=added_to_queue)
-    if added_to_queue:
+        task_dict[listener.mid] = Aria2Status(listener, gid, queued=add_to_queue)
+    if add_to_queue:
         LOGGER.info(f"Added to Queue/Download: {name}. Gid: {gid}")
         if (not listener.select or not download.is_torrent) and listener.multi <= 1:
             await sendStatusMessage(listener.message)
@@ -67,26 +67,26 @@ async def add_aria2c_download(listener, path, header, ratio, seed_time):
     await listener.onDownloadStart()
 
     if (
-        not added_to_queue
+        not add_to_queue
         and (not listener.select or not config_dict["BASE_URL"])
         and listener.multi <= 1
     ):
         await sendStatusMessage(listener.message)
     elif listener.select and download.is_torrent and not download.is_metadata:
-        if not added_to_queue:
+        if not add_to_queue:
             await sync_to_async(aria2.client.force_pause, gid)
         SBUTTONS = bt_selection_buttons(gid)
         msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
         await sendMessage(listener.message, msg, SBUTTONS)
 
-    if added_to_queue:
+    if add_to_queue:
         await event.wait()
 
         async with task_dict_lock:
             if listener.mid not in task_dict:
                 return
-            download = task_dict[listener.mid]
-            download.queued = False
+            task = task_dict[listener.mid]
+            task.queued = False
             new_gid = download.gid()
 
         await sync_to_async(aria2.client.unpause, new_gid)

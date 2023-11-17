@@ -60,7 +60,8 @@ class TaskConfig:
         self.message = message
         self.mid = self.message.id
         self.user = self.message.from_user or self.message.sender_chat
-        self.user_dict = {}
+        self.user_id = self.user.id
+        self.user_dict = user_data.get(self.user_id, {})
         self.sameDir = {}
         self.bulk = []
         self.dir = f"{DOWNLOAD_DIR}{self.mid}"
@@ -72,7 +73,6 @@ class TaskConfig:
         self.name = ""
         self.session = ""
         self.newDir = ""
-        self.user_id = 0
         self.multiTag = 0
         self.splitSize = 0
         self.maxSplitSize = 0

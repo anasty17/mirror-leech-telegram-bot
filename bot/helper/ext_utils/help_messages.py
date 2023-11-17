@@ -67,7 +67,7 @@ Create sample video for one video or folder of vidoes.<br>
 /cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
 You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
 <br>
-<b>SreensShots</b>: -ss<br>
+<b>ScreenShots</b>: -ss<br>
 Create up to 10 screenshots for one video or folder of vidoes.<br>
 /cmd -ss (it will take the default values which is 10 photos).<br>
 You can control this value. Example: /cmd -ss 6.<br>
@@ -178,7 +178,7 @@ Create sample video for one video or folder of vidoes.<br>
 /cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).<br>
 You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70.<br>
 <br>
-<b>SreensShots</b>: -ss<br>
+<b>ScreenShots</b>: -ss<br>
 Create up to 10 screenshots for one video or folder of vidoes.<br>
 /cmd -ss (it will take the default values which is 10 photos).<br>
 You can control this value. Example: /cmd -ss 6.<br>

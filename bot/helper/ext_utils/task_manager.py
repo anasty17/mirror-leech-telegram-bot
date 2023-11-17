@@ -8,6 +8,7 @@ from bot import (
     non_queued_dl,
     queue_dict_lock,
     LOGGER,
+    DOWNLOAD_DIR,
 )
 from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
 from bot.helper.ext_utils.files_utils import get_base_name
@@ -54,7 +55,7 @@ async def is_queued(mid):
     all_limit = config_dict["QUEUE_ALL"]
     dl_limit = config_dict["QUEUE_DOWNLOAD"]
     event = None
-    added_to_queue = False
+    add_to_queue = False
     if all_limit or dl_limit:
         async with queue_dict_lock:
             dl = len(non_queued_dl)
@@ -62,10 +63,10 @@ async def is_queued(mid):
             if (
                 all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)
             ) or (dl_limit and dl >= dl_limit):
-                added_to_queue = True
+                add_to_queue = True
                 event = Event()
                 queued_dl[mid] = event
-    return added_to_queue, event
+    return add_to_queue, event
 
 
 async def start_dl_from_queued(mid):

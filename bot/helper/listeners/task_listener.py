@@ -169,18 +169,18 @@ class TaskListener(TaskConfig):
 
         up_limit = config_dict["QUEUE_UPLOAD"]
         all_limit = config_dict["QUEUE_ALL"]
-        added_to_queue = False
+        add_to_queue = False
         async with queue_dict_lock:
             dl = len(non_queued_dl)
             up = len(non_queued_up)
             if (
                 all_limit and dl + up >= all_limit and (not up_limit or up >= up_limit)
             ) or (up_limit and up >= up_limit):
-                added_to_queue = True
+                add_to_queue = True
                 LOGGER.info(f"Added to Queue/Upload: {self.name}")
                 event = Event()
                 queued_up[self.mid] = event
-        if added_to_queue:
+        if add_to_queue:
             async with task_dict_lock:
                 task_dict[self.mid] = QueueStatus(self, size, gid, "Up")
             await event.wait()

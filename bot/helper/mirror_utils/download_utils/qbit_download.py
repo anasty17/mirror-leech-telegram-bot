@@ -49,13 +49,13 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
         if await aiopath.exists(listener.link):
             url = None
             tpath = listener.link
-        added_to_queue, event = await is_queued(listener.mid)
+        add_to_queue, event = await is_queued(listener.mid)
         op = await sync_to_async(
             client.torrents_add,
             url,
             tpath,
             path,
-            is_paused=added_to_queue,
+            is_paused=add_to_queue,
             tags=f"{listener.mid}",
             ratio_limit=ratio,
             seeding_time_limit=seed_time,
@@ -85,10 +85,10 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             return
 
         async with task_dict_lock:
-            task_dict[listener.mid] = QbittorrentStatus(listener, queued=added_to_queue)
+            task_dict[listener.mid] = QbittorrentStatus(listener, queued=add_to_queue)
         await onDownloadStart(f"{listener.mid}")
 
-        if added_to_queue:
+        if add_to_queue:
             LOGGER.info(f"Added to Queue/Download: {tor_info.name} - Hash: {ext_hash}")
         else:
             async with queue_dict_lock:
@@ -122,7 +122,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                         return
 
             ext_hash = tor_info.hash
-            if not added_to_queue:
+            if not add_to_queue:
                 await sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
@@ -130,7 +130,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
         elif listener.multi <= 1:
             await sendStatusMessage(listener.message)
 
-        if added_to_queue:
+        if add_to_queue:
             await event.wait()
 
             async with task_dict_lock:

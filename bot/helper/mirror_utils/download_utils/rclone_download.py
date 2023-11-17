@@ -71,8 +71,8 @@ async def add_rclone_download(listener, path):
         await sendMessage(listener.message, msg, button)
         return
 
-    added_to_queue, event = await is_queued(listener.mid)
-    if added_to_queue:
+    add_to_queue, event = await is_queued(listener.mid)
+    if add_to_queue:
         LOGGER.info(f"Added to Queue/Download: {listener.name}")
         async with task_dict_lock:
             task_dict[listener.mid] = QueueStatus(listener, size, gid, "dl")

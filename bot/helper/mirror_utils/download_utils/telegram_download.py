@@ -134,8 +134,8 @@ class TelegramDownloadHelper:
                     await sendMessage(self._listener.message, msg, button)
                     return
 
-                added_to_queue, event = await is_queued(self._listener.mid)
-                if added_to_queue:
+                add_to_queue, event = await is_queued(self._listener.mid)
+                if add_to_queue:
                     LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
                     async with task_dict_lock:
                         task_dict[self._listener.mid] = QueueStatus(

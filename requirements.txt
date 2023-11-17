@@ -1,7 +1,7 @@
 aiohttp
 aiofiles
 aioshutil
-anytree==2.8.0
+anytree
 apscheduler
 aria2p
 asyncio

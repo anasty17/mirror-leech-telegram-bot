@@ -19,7 +19,7 @@ class TorNode(NodeMixin):
         if parent is not None:
             self.parent = parent
         if size is not None:
-            self.size = size
+            self.fsize = size
         if priority is not None:
             self.priority = priority
         if file_id is not None:
@@ -95,9 +95,9 @@ def create_list(par, msg):
         else:
             msg[0] += '<li>'
             if i.priority == 0:
-                msg[0] += f'<input type="checkbox" name="filenode_{i.file_id}" data-size="{i.size}"> <label data-size="{i.size}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
+                msg[0] += f'<input type="checkbox" name="filenode_{i.file_id}" data-size="{i.fsize}"> <label data-size="{i.fsize}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
             else:
-                msg[0] += f'<input type="checkbox" checked name="filenode_{i.file_id}" data-size="{i.size}"> <label data-size="{i.size}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
+                msg[0] += f'<input type="checkbox" checked name="filenode_{i.file_id}" data-size="{i.fsize}"> <label data-size="{i.fsize}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
             msg[0] += f'<input type="hidden" value="off" name="filenode_{i.file_id}">'
             msg[0] += "</li>"
 
