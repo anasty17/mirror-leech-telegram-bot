@@ -262,7 +262,7 @@ class YtDlp(TaskListener):
         self,
         client,
         message,
-        isQbit=False,
+        _,
         isLeech=False,
         sameDir=None,
         bulk=None,
@@ -359,6 +359,8 @@ class YtDlp(TaskListener):
 
         path = f"{DOWNLOAD_DIR}{self.mid}{folder_name}"
 
+        await self.getTag(text)
+
         opt = opt or self.user_dict.get("yt_opt") or config_dict["YT_DLP_OPTIONS"]
 
         if not self.link and (reply_to := self.message.reply_to_message):
@@ -401,8 +403,6 @@ class YtDlp(TaskListener):
                 options[key] = value
 
         options["playlist_items"] = "0"
-
-        await self.getTag(text)
 
         try:
             result = await sync_to_async(extract_info, self.link, options)
