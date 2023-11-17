@@ -262,7 +262,7 @@ class YtDlp(TaskListener):
         self,
         client,
         message,
-        _,
+        _=None,
         isLeech=False,
         sameDir=None,
         bulk=None,
