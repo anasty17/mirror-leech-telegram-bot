@@ -1285,28 +1285,20 @@ def doods(url):
     if "/e/" in url:
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
-    with create_scraper() as session:
-        try:
-            html = HTML(session.get(url).text)
-        except Exception as e:
-            raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching token link"
-            )
-        if not (link := html.xpath("//div[@class='download-content']//a/@href")):
-            raise DirectDownloadLinkException(
-                "ERROR: Token Link not found or maybe not allow to download! open in browser."
-            )
-        link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
-        sleep(2)
-        try:
-            _res = session.get(link)
-        except Exception as e:
-            raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching download link"
-            )
-    if not (link := search(r"window\.open\('(\S+)'", _res.text)):
-        raise DirectDownloadLinkException("ERROR: Download link not found try again")
-    return (link.group(1), f"Referer: {parsed_url.scheme}://{parsed_url.hostname}/")
+    
+    api_url = f"https://api.pake.tk/dood?url={url}"
+    response = requests.get(api_url)
+    if response.status_code != 200:
+        raise DirectDownloadLinkException("ERROR: Failed to fetch direct link from API")
+    
+    json_data = response.json()
+    direct_link = json_data.get("data", {}).get("direct_link")
+    if not direct_link:
+        raise DirectDownloadLinkException("ERROR: Direct link not found in API response")
+
+    final_link = f"https://dd-cdn.pakai.eu.org/download?url={direct_link}"
+    
+    return final_link
 
 
 def easyupload(url):
