@@ -28,7 +28,7 @@ from bot import (
     INCOMPLETE_TASK_NOTIFIER,
     scheduler,
 )
-from .helper.ext_utils.files_utils import start_cleanup, clean_all, exit_clean_up
+from .helper.ext_utils.files_utils import clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, initiate_help_messages
 from .helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from .helper.ext_utils.db_handler import DbManger
@@ -231,7 +231,7 @@ async def restart_notification():
 
 async def main():
     await gather(
-        start_cleanup(),
+        clean_all(),
         torrent_search.initiate_search_tools(),
         restart_notification(),
         initiate_help_messages(),

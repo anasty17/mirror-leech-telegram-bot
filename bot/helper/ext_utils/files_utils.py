@@ -89,23 +89,14 @@ async def clean_download(path):
             LOGGER.error(str(e))
 
 
-async def start_cleanup():
+async def clean_all():
     aria2.remove_all(True)
     get_client().torrents_delete(torrent_hashes="all")
     try:
         await aiormtree(DOWNLOAD_DIR)
-    except Exception as e:
-        LOGGER.error(str(e))
+    except:
+        pass
     await makedirs(DOWNLOAD_DIR, exist_ok=True)
-
-
-def clean_all():
-    aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes="all")
-    try:
-        rmtree(DOWNLOAD_DIR)
-    except Exception as e:
-        LOGGER.error(str(e))
 
 
 def exit_clean_up(signal, frame):
