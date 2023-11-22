@@ -4,15 +4,13 @@ from pyrogram import Client as tgClient, enums
 from pymongo import MongoClient
 from asyncio import Lock
 from dotenv import load_dotenv, dotenv_values
-from threading import Thread
-from time import sleep, time
+from time import time
 from subprocess import Popen, run as srun
 from os import remove as osremove, path as ospath, environ, getcwd
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbClient
-
-# from faulthandler import enable as faulthandler_enable
 from socket import setdefaulttimeout
+from uvloop import install
 from logging import (
     getLogger,
     FileHandler,
@@ -24,9 +22,10 @@ from logging import (
     warning as log_warning,
     ERROR,
 )
-from uvloop import install
 
+# from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
+
 install()
 setdefaulttimeout(600)
 
@@ -454,36 +453,13 @@ if ospath.exists("accounts.zip"):
     osremove("accounts.zip")
 if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
-sleep(0.5)
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 
 
 def get_client():
-    return qbClient(
-        host="localhost",
-        port=8090,
-        VERIFY_WEBUI_CERTIFICATE=False,
-        REQUESTS_ARGS={"timeout": (30, 60)},
-    )
+    return qbClient(host="localhost", port=8090)
 
-
-def aria2c_init():
-    try:
-        log_info("Initializing Aria2c")
-        link = "https://linuxmint.com/torrents/lmde-5-cinnamon-64bit.iso.torrent"
-        dire = DOWNLOAD_DIR.rstrip("/")
-        aria2.add_uris([link], {"dir": dire})
-        sleep(3)
-        downloads = aria2.get_downloads()
-        sleep(10)
-        aria2.remove(downloads, force=True, files=True, clean=True)
-    except Exception as e:
-        log_error(f"Aria2c initializing error: {e}")
-
-
-Thread(target=aria2c_init).start()
-sleep(1.5)
 
 aria2c_global = [
     "bt-max-open-files",

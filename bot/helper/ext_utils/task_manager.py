@@ -8,7 +8,6 @@ from bot import (
     non_queued_dl,
     queue_dict_lock,
     LOGGER,
-    DOWNLOAD_DIR,
 )
 from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
 from bot.helper.ext_utils.files_utils import get_base_name

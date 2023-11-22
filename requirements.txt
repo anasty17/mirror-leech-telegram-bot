@@ -14,15 +14,12 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-git+https://github.com/zevtyardt/lk21.git
 httpx
 lxml
 motor
-mutagen
 natsort
 pillow
 psutil
-pybase64
 pymongo
 pyrogram
 python-dotenv
@@ -32,6 +29,7 @@ requests
 telegraph
 tenacity
 tgcrypto
+urllib3
 uvloop
 xattr
 yt-dlp
