@@ -90,8 +90,8 @@ async def clean_download(path):
 
 
 async def clean_all():
-    aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes="all")
+    await sync_to_async(aria2.remove_all, True)
+    await sync_to_async(get_client().torrents_delete, torrent_hashes="all")
     try:
         await aiormtree(DOWNLOAD_DIR)
     except:
