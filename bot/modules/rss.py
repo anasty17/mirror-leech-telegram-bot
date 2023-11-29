@@ -4,11 +4,16 @@ from pyrogram.filters import command, regex, create
 from asyncio import Lock, sleep
 from datetime import datetime, timedelta
 from time import time
+from pytz import timezone
 from functools import partial
 from aiohttp import ClientSession
 from apscheduler.triggers.interval import IntervalTrigger
-from re import split as re_split
+from re import split as re_split, findall
 from io import BytesIO
+from bs4 import BeautifulSoup as bs
+import lxml
+from traceback import format_exc
+
 
 from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot
 from bot.helper.telegram_helper.message_utils import (
@@ -17,6 +22,7 @@ from bot.helper.telegram_helper.message_utils import (
     sendRss,
     sendFile,
     deleteMessage,
+    #delete_links
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -28,6 +34,242 @@ from bot.helper.ext_utils.help_messages import RSS_HELP_MESSAGE
 
 rss_dict_lock = Lock()
 handler_dict = {}
+
+'''
+yts https://yts.mx/rss/0/720p/action/5 -c l
+nyasi https://sukebei.nyaa.si/?page=rss&c=2_0&f=2 -c ql -e
+nj https://nextjav.com -c ql
+ij https://ijavtorrent.com -c ql
+oj https://onejav.com -c ql
+nk https://nekopoi.care
+ph-new https://www.pornhub.com/video?o=cm -c yl
+ph-1 https://www.pornhub.com/model/broken-sluts -c yl
+ph-2 https://www.pornhub.com/pornstar/eva-elfie -c yl
+ph-3 https://www.pornhub.com/model/zxlecya -c yl
+ph-4 https://www.pornhub.com/model/adult-sex -c yl
+ph-5 https://www.pornhub.com/channels/av-taxi6 -c yl
+ph-6 https://www.pornhub.com/model/hongkongdoll -c yl
+ph-7 https://www.pornhub.com/channels/brazzers -c yl
+ph-8 https://www.pornhub.com/pornstar/alex-adams -c yl
+ph-9 https://www.pornhub.com/model/nadja-rey -c yl
+ph-10 https://www.pornhub.com/model/pinay-porn-videos -c yl
+'''
+
+async def get_html(url):
+    if is_ph_link(url):
+        url += "/videos?&page=1"
+    
+    async with ClientSession(trust_env=True) as session:
+        async with session.get(url) as res:
+            a = await res.text()
+            #LOGGER.info(a)
+            return a
+
+
+def is_ph_link(url):
+    return url.startswith('https://www.pornhub.com')
+    
+def is_nj_link(url):
+    return url.startswith("https://nextjav.com")
+
+def is_nk_link(url):
+    return url.startswith("https://nekopoi.care")
+
+def is_oj_link(url):
+    return url.startswith("https://onejav.com")
+
+def is_ij_link(url):
+    return url.startswith("https://ijavtorrent.com")
+
+# PH-START
+PH_EX = """PH-Ex:
+<code>ph-1 https://www.pornhub.com/model/lis-evans -c yl
+ph-2 https://www.pornhub.com/pornstar/angela-white -c yl
+ph-3 https://www.pornhub.com/channels/mommys-boy -c yl</code>"""
+async def ph_scraper(url):
+    base_url = "https://www.pornhub.com"
+    a = "/model/"
+    b = "/pornstar/"
+    c = "/channels/"
+    #base_url + a/b/c + {username}/videos?&page={}"
+    
+    r = []
+    l = []
+    if not url:
+        return r
+    try:
+        content = await get_html(url)
+        html = bs(content, 'lxml')
+        if a in url or b in url:
+            
+            for c in html.select('div.profileContentLeft')[0].findAll('div', attrs = {'class':'wrap'}):
+                l.append(c)
+        elif c in url:
+            try:
+                for c in html.select('div.widgetContainer')[0].findAll('div', attrs = {'class':'wrap flexibleHeight'}):
+                    l.append(c)
+                if len(l) == 0:
+                    raise AttributeError
+            except AttributeError:
+                for c in html.select('div.widgetContainer')[1].findAll('div', attrs = {'class':'wrap flexibleHeight'}):
+                    l.append(c)
+        elif 'video?o=cm' in url:
+            #newws
+            for c in html.findAll('div', attrs = {'class':'wrap flexibleHeight'}):
+                l.append(c)
+        #else:
+        #    r.append("Unsupported PH-LINK", "")
+        
+        if l:
+            for v in l:
+                #img_url = c.img['src']
+                title = v.a['title'].replace(",","")
+                link = base_url + v.a['href']
+                r.append(f"{title},{link}")
+    except Exception as e:
+        LOGGER.error(f"{url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {url}')
+    return r
+
+"""
+if __name__ == '__main__':
+    print(ph_scraper("https://www.pornhub.com/model/lis-evans"))
+    print()
+    print(ph_scraper("https://www.pornhub.com/pornstar/angela-white"))
+    print()
+    print(ph_scraper("https://www.pornhub.com/channels/mommys-boy"))
+    
+"""
+
+# NJ-START
+NJ_TAG = "NJ-"
+async def nj_scraper(last_feed=False):
+    r = []
+    base_url = "https://nextjav.com"
+    try:
+        content = await get_html(base_url)
+        html = bs(content, 'lxml')
+        for c in html.findAll('div', attrs = {'class':'portfolio_item status-publish format-standard has-post-thumbnail'}):
+            title = c.h2.text
+            link_page = base_url + c.a['href']
+            
+            new_content = await get_html(link_page)
+            new_html = bs(new_content, 'lxml')
+            link_dl = base_url + new_html.find('a', attrs = {'class':'button btn btn-danger btn-download'})['href']
+
+            r.append(f"{title},{link_dl}")
+            if last_feed:
+                return r
+    except Exception as e:
+        LOGGER.error(f"{base_url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {base_url}')
+    return r
+
+# NK-START
+async def nk_scraper(category='hentai', last_feed=False):
+    #if category not in ['jav', 'hentai']:
+        #return None
+
+    url = "https://nekopoi.care/category/" + category
+    r = []
+    try:
+        content = await get_html(url)
+        html = bs(content, 'lxml')
+        for x in html.select('div.result')[0].findAll('div', attrs = {'class' : 'top'}):
+            img_url = x.img['src']
+            title = x.h2.text
+            link_eps = x.a['href']
+    
+            #result.append(title)
+          
+            eps_content = await get_html(link_eps)
+            soup_eps = bs(eps_content, 'lxml')
+            link_stream = '\n'.join(x.iframe['src'] for x in soup_eps.select(
+                'div.show-stream')[0].findAll(
+                'div', attrs = {'class' : 'openstream'}
+                )
+            )
+    
+            link_dl = '\n'.join("\n[{}]\n{}".format(
+            findall(r'\[(.*?)]', l.find('div', attrs = {'class' : 'name'}).string)[-1], l.p)
+            for l in soup_eps.select(
+              'div.boxdownload')[0].findAll(
+                'div', attrs = {'class' : 'liner'}
+                )
+            )#.replace('<p>', '').replace('</p>', '')
+          
+            caption = f"#nekopoi_{choice}\n{title}\n{link_stream}{link_dl}"
+            #if len(caption) > 1024:
+            if len(caption) > 4000:
+                caption = f"#nekopoi_{choice}\n{title[:30]}\n{link_stream}\n\n<a href='{link_eps}'>See more</a>"
+        
+            r.append(f"{title},{caption}")
+            if last_feed:
+                return r
+            #send = TG_API.send_photo(bot_token = bot_token, chat_id = chat_id, img_url = img_url, caption = caption)
+    except Exception as e:
+        LOGGER.error(f"{url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {url}')
+    return r
+
+#OJ-START
+async def one_jav_scraper(last_feed=False):
+    base_url = "https://onejav.com"
+    r = []
+    try:
+        content = await get_html(base_url + '/new')
+        html = bs(content, 'lxml')
+        #LOGGER.info(html)
+        for c in html.findAll('div', attrs = {'class':'card mb-3'}):
+            title = c.h5.a.text.strip().replace("\n","")
+            link = base_url + c.find('a', class_='button is-primary is-fullwidth').get('href')
+            r.append(f"{title},{link}")
+            if last_feed:
+                return r
+    except Exception as e:
+        LOGGER.error(f"{base_url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {base_url}')
+    return r
+
+#IJ-START
+async def ijavtorrent_scraper(last_feed=False):
+    base_url = "https://ijavtorrent.com"
+    r = []
+    try:
+        content = await get_html(base_url + '/?sortby=lastupdated')
+        html = bs(content, 'lxml')
+        #LOGGER.info(html)
+        for c in html.findAll('table', attrs = {'class':'table table-sm mt-2'}):
+            #title = c.h5.a.text.strip().replace("\n","")
+            link = base_url + c.find('a', class_='download-click-track').get('href')
+            r.append(f"{link[-6:]},{link}")
+            if last_feed:
+                return r
+    except Exception as e:
+        LOGGER.error(f"{base_url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {base_url}')
+    return r
+
+
+
+# RSS-GLOBAL-START
+async def rss_scraper(url):
+    r = []
+    try:
+        content = await get_html(url)
+        rss_d = feedparse(content)
+        for c in rss_d.entries:
+            title = c['title']
+            try:
+                link = c['links'][1]['href']
+            except IndexError:
+                link = c['link']
+
+            r.append(f"{title},{link}")
+    except Exception as e:
+        LOGGER.error(f"{url} ERROR: {e}")
+    LOGGER.info(f'Found {len(r)} from {url}')
+    return r
 
 
 async def rssMenu(event):
@@ -41,6 +283,7 @@ async def rssMenu(event):
     buttons.ibutton("Resume", f"rss resume {user_id}")
     buttons.ibutton("Unsubscribe", f"rss unsubscribe {user_id}")
     if await CustomFilters.sudo("", event):
+        #buttons.ibutton("Local Subs", f"rss local {user_id}")
         buttons.ibutton("All Subscriptions", f"rss listall {user_id} 0")
         buttons.ibutton("Pause All", f"rss allpause {user_id}")
         buttons.ibutton("Resume All", f"rss allresume {user_id}")
@@ -55,136 +298,130 @@ async def rssMenu(event):
     msg = f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}"
     return msg, button
 
-
 async def updateRssMenu(query):
-    msg, button = await rssMenu(query)
-    await editMessage(query.message, msg, button)
-
+    msg, button = None, None
+    try:
+        msg, button = await rssMenu(query)
+        await editMessage(query.message, msg, button)
+    except Exception:
+        LOGGER.error(format_exc())
 
 async def getRssMenu(_, message):
-    msg, button = await rssMenu(message)
-    await sendMessage(message, msg, button)
+    msg, button = None, None
+    try:
+        msg, button = await rssMenu(message)
+        await sendMessage(message, msg, button)
+    except Exception:
+        LOGGER.error(format_exc())
 
-
-async def rssSub(_, message, pre_event):
+async def rssSub(client, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
     if username := message.from_user.username:
         tag = f"@{username}"
     else:
         tag = message.from_user.mention
-    msg = ""
-    items = message.text.split("\n")
+    msg = ''
+    items = message.text.split('\n')
     for index, item in enumerate(items, start=1):
         args = item.split()
         if len(args) < 2:
-            await sendMessage(
-                message,
-                f"{item}. Wrong Input format. Read help message before adding new subcription!",
-            )
+            await sendMessage(message, f'{item}. Wrong Input format. Read help message before adding new subcription!')
             continue
         title = args[0].strip()
         if (user_feeds := rss_dict.get(user_id, False)) and title in user_feeds:
-            await sendMessage(
-                message, f"This title {title} already subscribed! Choose another title!"
-            )
+            await sendMessage(message, f"This title {title} already subscribed! Choose another title!")
             continue
         feed_link = args[1].strip()
-        if feed_link.startswith(("-inf", "-exf", "-c")):
-            await sendMessage(
-                message,
-                f"Wrong input in line {index}! Re-add only the mentioned line correctly! Read the example!",
-            )
+        if feed_link.startswith(('-inf', '-exf', '-c')):
+            await sendMessage(message, f'Wrong input in line {index}! Re-add only the mentioned line correctly! Read the example!')
             continue
+        
+        inf = None
+        exf = None
+        cmd = None
         inf_lists = []
         exf_lists = []
         if len(args) > 2:
-            arg = item.split(" -c ", 1)
-            cmd = re_split(" -inf | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-            arg = item.split(" -inf ", 1)
-            inf = re_split(" -c | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-            arg = item.split(" -exf ", 1)
-            exf = re_split(" -c | -inf ", arg[1])[0].strip() if len(arg) > 1 else None
+            arg = item.split(' -c ', 1)
+            cmd = re_split(' -inf | -exf ',
+                           arg[1])[0].strip() if len(arg) > 1 else None
+            arg = item.split(' -inf ', 1)
+            inf = re_split(
+                ' -c | -exf ', arg[1])[0].strip() if len(arg) > 1 else None
+            arg = item.split(' -exf ', 1)
+            exf = re_split(
+                ' -c | -inf ', arg[1])[0].strip() if len(arg) > 1 else None
             if inf is not None:
-                filters_list = inf.split("|")
+                filters_list = inf.split('|')
                 for x in filters_list:
-                    y = x.split(" or ")
+                    y = x.split(' or ')
                     inf_lists.append(y)
             if exf is not None:
-                filters_list = exf.split("|")
+                filters_list = exf.split('|')
                 for x in filters_list:
-                    y = x.split(" or ")
+                    y = x.split(' or ')
                     exf_lists.append(y)
-        else:
-            inf = None
-            exf = None
-            cmd = None
+                    
         try:
-            async with ClientSession(trust_env=True) as session:
-                async with session.get(feed_link) as res:
-                    html = await res.text()
-            rss_d = feedparse(html)
-            last_title = rss_d.entries[0]["title"]
-            msg += "<b>Subscribed!</b>"
-            msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
-            msg += f"\n<b>latest record for </b>{rss_d.feed.title}:"
-            msg += (
-                f"\nName: <code>{last_title.replace('>', '').replace('<', '')}</code>"
-            )
-            try:
-                last_link = rss_d.entries[0]["links"][1]["href"]
-            except IndexError:
-                last_link = rss_d.entries[0]["link"]
-            msg += f"\nLink: <code>{last_link}</code>"
-            msg += f"\n<b>Command: </b><code>{cmd}</code>"
-            msg += (
-                f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}<code/>"
-            )
+            if is_ph_link(feed_link):
+                # PH-START
+                r = await ph_scraper(feed_link)
+            elif is_nj_link(feed_link):
+                # NJ-START
+                r = await nj_scraper(last_feed=True)
+            elif is_nk_link(feed_link):
+                #NK-START
+                r = await nk_scraper(last_feed=True)
+            elif is_oj_link(feed_link):
+                #OJ-START
+                r = await one_jav_scraper(last_feed=True)
+            elif is_ij_link(feed_link):
+                #IJ-START
+                r = await ijavtorrent_scraper(last_feed=True)
+            else:
+                # RSS-GLOBAL-START
+                r = await rss_scraper(feed_link)
+            
+            if len(r) > 0:
+                last_title, last_link = r[0].split(",")
+            else:
+                raise Exception('🐒')
+
+            msg += f"\n{index}."
+            msg += f"\n<b>TAG: </b><code>{title}</code>"
+            msg += f"\n<b>LINK: </b><code>{feed_link}</code>"
+            msg += f"\n<b>CMD: </b><code>{cmd}</code>"
+            msg += f"\n<b>INF: </b><code>{inf}</code>"
+            msg += f"\n<b>EXF: </b><code>{exf}</code>"
+            msg += f"\n<b>L. TITLE: </b><code>{last_title}</code>"
+            msg += f"\n<b>L. LINK: </b><code>{last_link}</code>"
+
             async with rss_dict_lock:
                 if rss_dict.get(user_id, False):
-                    rss_dict[user_id][title] = {
-                        "link": feed_link,
-                        "last_feed": last_link,
-                        "last_title": last_title,
-                        "inf": inf_lists,
-                        "exf": exf_lists,
-                        "paused": False,
-                        "command": cmd,
-                        "tag": tag,
-                    }
+                    rss_dict[user_id][title] = {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
+                                                'inf': inf_lists, 'exf': exf_lists, 'paused': False, 'command': cmd, 'tag': tag}
                 else:
-                    rss_dict[user_id] = {
-                        title: {
-                            "link": feed_link,
-                            "last_feed": last_link,
-                            "last_title": last_title,
-                            "inf": inf_lists,
-                            "exf": exf_lists,
-                            "paused": False,
-                            "command": cmd,
-                            "tag": tag,
-                        }
-                    }
+                    rss_dict[user_id] = {title: {'link': feed_link, 'last_feed': last_link, 'last_title': last_title,
+                                                'inf': inf_lists, 'exf': exf_lists, 'paused': False, 'command': cmd, 'tag': tag}}
             LOGGER.info(
-                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf}"
-            )
-        except (IndexError, AttributeError) as e:
-            emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
-            await sendMessage(message, emsg + "\nError: " + str(e))
+                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf}")
         except Exception as e:
-            await sendMessage(message, str(e))
+            await updateRssMenu(pre_event)
+            err_msg = f"<code>{feed_link}</code> doesn't seem to be a RSS feed or it's region-blocked!, \n\nERROR: {e}"
+            await sendMessage(message, err_msg)
     if DATABASE_URL:
         await DbManger().rss_update(user_id)
     if msg:
         await sendMessage(message, msg)
     await updateRssMenu(pre_event)
-    is_sudo = await CustomFilters.sudo("", message)
+    is_sudo = await CustomFilters.sudo(client, message)
     if scheduler.state == 2:
         scheduler.resume()
     elif is_sudo and not scheduler.running:
-        addJob(config_dict["RSS_DELAY"])
+        addJob(config_dict['RSS_DELAY'])
         scheduler.start()
-
+    await deleteMessage(message)
 
 async def getUserId(title):
     async with rss_dict_lock:
@@ -290,7 +527,6 @@ async def rssList(query, start, all_users=False):
     if query.message.text.html == list_feed:
         return
     await editMessage(query.message, list_feed, button)
-
 
 async def rssGet(_, message, pre_event):
     user_id = message.from_user.id
@@ -621,95 +857,110 @@ Timeout: 60 sec. Argument -c for command and options
 
 
 async def rssMonitor():
-    if not config_dict["RSS_CHAT"]:
-        LOGGER.warning("RSS_CHAT not added! Shutting down rss scheduler...")
+    if not config_dict['RSS_CHAT_ID']:
+        LOGGER.warning('RSS_CHAT_ID not added! Shutting down rss scheduler...')
         scheduler.shutdown(wait=False)
         return
-    if len(rss_dict) == 0:
+    if not rss_dict:
         scheduler.pause()
         return
     all_paused = True
     for user, items in list(rss_dict.items()):
         for title, data in list(items.items()):
             try:
-                if data["paused"]:
+                if data['paused']:
                     continue
-                async with ClientSession(trust_env=True) as session:
-                    async with session.get(data["link"]) as res:
-                        html = await res.text()
-                rss_d = feedparse(html)
-                try:
-                    last_link = rss_d.entries[0]["links"][1]["href"]
-                except IndexError:
-                    last_link = rss_d.entries[0]["link"]
-                finally:
-                    all_paused = False
-                last_title = rss_d.entries[0]["title"]
-                if data["last_feed"] == last_link or data["last_title"] == last_title:
+                if is_ph_link(data['link']):
+                    # PH-START
+                    r = await ph_scraper(data['link'])
+                    last_title, last_link = r[0].split(",")
+                elif is_nj_link(data['link']):
+                    # NJ-START
+                    r = await nj_scraper()
+                    last_title, last_link = r[0].split(",")
+                elif is_nk_link(data['link']):
+                    #NK-START
+                    r = await nk_scraper()
+                    last_title, last_link = r[0].split(",")
+                elif is_oj_link(data['link']):
+                    #OJ-START
+                    r = await one_jav_scraper()
+                    last_title, last_link = r[0].split(",")
+                elif is_ij_link(data['link']):
+                    #IJ-START
+                    r = await ijavtorrent_scraper()
+                    last_title, last_link = r[0].split(",")
+                    
+                else:
+                    # RSS-GLOBAL-START
+                    r = await rss_scraper(data['link'])
+                    last_title, last_link = r[0].split(",")
+                    
+                all_paused = False
+                if data['last_feed'] == last_link or data['last_title'] == last_title:
                     continue
                 feed_count = 0
                 while True:
                     try:
-                        await sleep(10)
+                        await sleep(config_dict['SEND_MSG_DELAY'])
                     except:
-                        raise RssShutdownException("Rss Monitor Stopped!")
+                        raise RssShutdownException('Rss Monitor Stopped!')
                     try:
-                        item_title = rss_d.entries[feed_count]["title"]
-                        try:
-                            url = rss_d.entries[feed_count]["links"][1]["href"]
-                        except IndexError:
-                            url = rss_d.entries[feed_count]["link"]
-                        if data["last_feed"] == url or data["last_title"] == item_title:
+                        item_title, url = r[feed_count].split(",")
+                        #LOGGER.info(x)
+                        #item_title, url = x.split(",")
+                        if data['last_title'] == item_title or data['last_feed'] == url:
                             break
                     except IndexError:
                         LOGGER.warning(
-                            f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents"
-                        )
+                            f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents")
                         break
                     parse = True
-                    for flist in data["inf"]:
+                    for flist in data['inf']:
                         if all(x not in item_title.lower() for x in flist):
                             parse = False
                             feed_count += 1
                             break
-                    for flist in data["exf"]:
+                    for flist in data['exf']:
                         if any(x in item_title.lower() for x in flist):
                             parse = False
                             feed_count += 1
                             break
                     if not parse:
                         continue
-                    if command := data["command"]:
+                    if command := data['command']:
                         cmd = command.split(maxsplit=1)
                         cmd.insert(1, url)
                         feed_msg = " ".join(cmd)
-                        if not feed_msg.startswith("/"):
+                        if not feed_msg.startswith('/'):
                             feed_msg = f"/{feed_msg}"
                     else:
                         feed_msg = f"<b>Name: </b><code>{item_title.replace('>', '').replace('<', '')}</code>\n\n"
                         feed_msg += f"<b>Link: </b><code>{url}</code>"
-                    feed_msg += (
-                        f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
-                    )
+                    feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
                     await sendRss(feed_msg)
                     feed_count += 1
+                
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):
                         continue
                     rss_dict[user][title].update(
-                        {"last_feed": last_link, "last_title": last_title}
-                    )
+                        {'last_feed': last_link, 'last_title': last_title})
                 await DbManger().rss_update(user)
-                LOGGER.info(f"Feed Name: {title}")
-                LOGGER.info(f"Last item: {last_link}")
-            except RssShutdownException as ex:
-                LOGGER.info(ex)
+                LOGGER.info(f"Updated. Feed Name: {title} => Last Link: {last_link}")
+            except RssShutdownException:
+                LOGGER.error(format_exc())
+                scheduler.shutdown(wait=False)
                 break
             except Exception as e:
-                LOGGER.error(f"{e} - Feed Name: {title} - Feed Link: {data['link']}")
+                LOGGER.error(
+                    f"{e} - Feed Name: {title} - Feed Link: {data['link']}")
+                #LOGGER.error(format_exc())
                 continue
-    if all_paused:
+    
+    if scheduler.running and all_paused:
         scheduler.pause()
+
 
 
 def addJob(delay):
@@ -720,7 +971,7 @@ def addJob(delay):
         name="RSS",
         misfire_grace_time=15,
         max_instances=1,
-        next_run_time=datetime.now() + timedelta(seconds=20),
+        next_run_time=datetime.now(timezone(config_dict['TIMEZONE'])) + timedelta(seconds=20),
         replace_existing=True,
     )
 
