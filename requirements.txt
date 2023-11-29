@@ -33,3 +33,4 @@ urllib3
 uvloop
 xattr
 yt-dlp
+bs4

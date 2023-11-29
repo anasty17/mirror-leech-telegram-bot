@@ -4,7 +4,6 @@ from pyrogram.filters import command, regex, create
 from asyncio import Lock, sleep
 from datetime import datetime, timedelta
 from time import time
-from pytz import timezone
 from functools import partial
 from aiohttp import ClientSession
 from apscheduler.triggers.interval import IntervalTrigger
@@ -22,7 +21,7 @@ from bot.helper.telegram_helper.message_utils import (
     sendRss,
     sendFile,
     deleteMessage,
-    #delete_links
+    
 )
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -61,9 +60,7 @@ async def get_html(url):
     
     async with ClientSession(trust_env=True) as session:
         async with session.get(url) as res:
-            a = await res.text()
-            #LOGGER.info(a)
-            return a
+            return await res.text()
 
 
 def is_ph_link(url):
@@ -206,7 +203,6 @@ async def nk_scraper(category='hentai', last_feed=False):
             r.append(f"{title},{caption}")
             if last_feed:
                 return r
-            #send = TG_API.send_photo(bot_token = bot_token, chat_id = chat_id, img_url = img_url, caption = caption)
     except Exception as e:
         LOGGER.error(f"{url} ERROR: {e}")
     LOGGER.info(f'Found {len(r)} from {url}')
@@ -971,7 +967,7 @@ def addJob(delay):
         name="RSS",
         misfire_grace_time=15,
         max_instances=1,
-        next_run_time=datetime.now(timezone(config_dict['TIMEZONE'])) + timedelta(seconds=20),
+        next_run_time=datetime.now() + timedelta(seconds=20),
         replace_existing=True,
     )
 
