@@ -853,8 +853,8 @@ Timeout: 60 sec. Argument -c for command and options
 
 
 async def rssMonitor():
-    if not config_dict['RSS_CHAT_ID']:
-        LOGGER.warning('RSS_CHAT_ID not added! Shutting down rss scheduler...')
+    if not config_dict['RSS_CHAT']:
+        LOGGER.warning('RSS_CHAT not added! Shutting down rss scheduler...')
         scheduler.shutdown(wait=False)
         return
     if not rss_dict:
