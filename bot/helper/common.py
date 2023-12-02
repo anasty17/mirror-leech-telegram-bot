@@ -152,7 +152,7 @@ class TaskConfig:
         if not self.isLeech:
             self.stopDuplicate = (
                 self.user_dict.get("stop_duplicate")
-                or "stop_duplicate" in self.user_dict
+                or "stop_duplicate" not in self.user_dict
                 and config_dict["STOP_DUPLICATE"]
             )
             default_upload = self.user_dict.get("default_upload", "")
@@ -279,8 +279,10 @@ class TaskConfig:
                 if self.upDest.isdigit() or self.upDest.startswith("-"):
                     self.upDest = int(self.upDest)
 
-            self.as_doc = self.user_dict.get("as_doc", False) or (
-                config_dict["AS_DOCUMENT"] if "as_doc" not in self.user_dict else False
+            self.as_doc = (
+                self.user_dict.get("as_doc", False)
+                or config_dict["AS_DOCUMENT"]
+                and "as_doc" not in self.user_dict
             )
 
             if is_telegram_link(self.thumb):

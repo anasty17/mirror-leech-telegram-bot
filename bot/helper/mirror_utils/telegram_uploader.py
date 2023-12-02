@@ -136,7 +136,7 @@ class TgUploader:
             if is_archive(file_):
                 name = get_base_name(file_)
                 ext = file_.split(name, 1)[1]
-            elif match := re_match(r".+(?=\..+\.0*\d+$)|.+(?=\.part\d+\..+)", file_):
+            elif match := re_match(r".+(?=\..+\.0*\d+$)|.+(?=\.part\d+\..+$)", file_):
                 name = match.group(0)
                 ext = file_.split(name, 1)[1]
             elif len(fsplit := ospath.splitext(file_)) > 1:
@@ -192,11 +192,13 @@ class TgUploader:
                 else:
                     outputs.remove(m)
             if outputs:
-                self._sent_msg = (await self._sent_msg.reply_media_group(
-                    media=inputs,
-                    quote=True,
-                    disable_notification=True,
-                ))[-1]
+                self._sent_msg = (
+                    await self._sent_msg.reply_media_group(
+                        media=inputs,
+                        quote=True,
+                        disable_notification=True,
+                    )
+                )[-1]
                 for m in outputs:
                     await aioremove(m)
 
@@ -254,11 +256,10 @@ class TgUploader:
                         group_lists = [
                             x for v in self._media_dict.values() for x in v.keys()
                         ]
-                        if (
-                            match := re_match(
-                                r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+)", self._up_path
-                            )
-                        ) and match.group(0) not in group_lists:
+                        match = re_match(
+                            r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", self._up_path
+                        )
+                        if not match or match and match.group(0) not in group_lists:
                             for key, value in list(self._media_dict.items()):
                                 for subkey, msgs in list(value.items()):
                                     if len(msgs) > 1:
@@ -299,7 +300,12 @@ class TgUploader:
         for key, value in list(self._media_dict.items()):
             for subkey, msgs in list(value.items()):
                 if len(msgs) > 1:
-                    await self._send_media_group(subkey, key, msgs)
+                    try:
+                        await self._send_media_group(subkey, key, msgs)
+                    except Exception as e:
+                        LOGGER.info(
+                            f"While sending media group at the end of task. Error: {e}"
+                        )
         if self._is_cancelled:
             return
         if self._listener.seed and not self._listener.newDir:
@@ -442,7 +448,7 @@ class TgUploader:
             ):
                 key = "documents" if self._sent_msg.document else "videos"
                 if match := re_match(
-                    r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+)", self._up_path
+                    r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", self._up_path
                 ):
                     pname = match.group(0)
                     if pname in self._media_dict[key].keys():

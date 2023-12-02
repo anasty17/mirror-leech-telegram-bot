@@ -459,7 +459,7 @@ if not ospath.exists("accounts"):
 
 
 def get_client():
-    return qbClient(host="localhost", port=8090)
+    return qbClient(host="localhost", port=8090, REQUESTS_ARGS={"timeout": (30, 60)})
 
 
 aria2c_global = [

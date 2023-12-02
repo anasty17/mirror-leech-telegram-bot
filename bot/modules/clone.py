@@ -78,7 +78,7 @@ class Clone(TaskListener):
             self.multi = 0
 
         self.upDest = args["-up"]
-        self.rcf = args["-rcf"]
+        self.rcFlags = args["-rcf"]
         self.link = args["link"]
 
         isBulk = args["-b"]
@@ -166,6 +166,7 @@ class Clone(TaskListener):
         elif is_rclone_path(self.link):
             if self.link.startswith("mrcc:"):
                 self.link = self.link.lstrip("mrcc:")
+                self.upDest = self.upDest.lstrip("mrcc:")
                 config_path = f"rclone/{self.user_id}.conf"
             else:
                 config_path = "rclone.conf"

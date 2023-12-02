@@ -98,7 +98,7 @@ class Mirror(TaskListener):
         self.seed = args["-d"]
         self.name = args["-n"]
         self.upDest = args["-up"]
-        self.rcf = args["-rcf"]
+        self.rcFlags = args["-rcf"]
         self.link = args["link"]
         self.compress = args["-z"]
         self.extract = args["-e"]
