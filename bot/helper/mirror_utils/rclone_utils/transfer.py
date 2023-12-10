@@ -1,4 +1,4 @@
-from asyncio import create_subprocess_exec, gather
+from asyncio import create_subprocess_shell, gather
 from asyncio.subprocess import PIPE
 from re import findall as re_findall
 from json import loads
@@ -117,7 +117,7 @@ class RcloneTransferHelper:
         return sa_conf_file
 
     async def _start_download(self, cmd, remote_type):
-        self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        self._proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
         if self._is_cancelled:
@@ -187,9 +187,9 @@ class RcloneTransferHelper:
             and not config_dict["RCLONE_FLAGS"]
             and not self._listener.rcFlags
         ):
-            cmd.append("--drive-acknowledge-abuse")
+            cmd += " --drive-acknowledge-abuse"
         elif remote_type != "drive":
-            cmd.extend(("--retries-sleep", "3s"))
+            cmd += " --retries-sleep 3s"
 
         await self._start_download(cmd, remote_type)
 
@@ -205,17 +205,8 @@ class RcloneTransferHelper:
             epath = f"{remote}:{rc_path}{self._listener.name}"
             destination = epath
 
-        cmd = [
-            "rclone",
-            "lsjson",
-            "--fast-list",
-            "--no-mimetype",
-            "--no-modtime",
-            "--config",
-            config_path,
-            epath,
-        ]
-        res, err, code = await cmd_exec(cmd)
+        cmd = f'rclone lsjson --fast-list --no-mimetype --no-modtime --config {config_path} "{epath}"'
+        res, err, code = await cmd_exec(cmd, shell=True)
 
         if code == 0:
             result = loads(res)
@@ -235,7 +226,7 @@ class RcloneTransferHelper:
         return link, destination
 
     async def _start_upload(self, cmd, remote_type):
-        self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        self._proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
         if self._is_cancelled:
@@ -333,9 +324,9 @@ class RcloneTransferHelper:
             and not config_dict["RCLONE_FLAGS"]
             and not self._listener.rcFlags
         ):
-            cmd.extend(("--drive-chunk-size", "64M", "--drive-upload-cutoff", "32M"))
+            cmd += " --drive-chunk-size 64M --drive-upload-cutoff 32M"
         elif remote_type != "drive":
-            cmd.extend(("--retries-sleep", "3s"))
+            cmd += " --retries-sleep 3s"
 
         result = await self._start_upload(cmd, remote_type)
         if not result:
@@ -353,8 +344,8 @@ class RcloneTransferHelper:
             else:
                 destination = f"{oremote}:{self._listener.name}"
 
-            cmd = ["rclone", "link", "--config", oconfig_path, destination]
-            res, err, code = await cmd_exec(cmd)
+            cmd = f'rclone link --config {oconfig_path} "{destination}"'
+            res, err, code = await cmd_exec(cmd, shell=True)
 
             if code == 0:
                 link = res
@@ -391,15 +382,13 @@ class RcloneTransferHelper:
         )
         if not self._listener.rcFlags and not config_dict["RCLONE_FLAGS"]:
             if src_remote_type == "drive" and dst_remote_type != "drive":
-                cmd.append("--drive-acknowledge-abuse")
+                cmd += " --drive-acknowledge-abuse"
             elif dst_remote_type == "drive" and src_remote_type != "drive":
-                cmd.extend(
-                    ("--drive-chunk-size", "64M", "--drive-upload-cutoff", "32M")
-                )
+                cmd += " --drive-chunk-size 64M --drive-upload-cutoff 32M"
             elif src_remote_type == "drive":
-                cmd.extend(("--tpslimit", "3", "--transfers", "3"))
+                cmd += " --tpslimit 3 --transfers 3"
 
-        self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        self._proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
         if self._is_cancelled:
@@ -424,8 +413,8 @@ class RcloneTransferHelper:
                         f"/{self._listener.name}" if dst_path else self._listener.name
                     )
 
-                cmd = ["rclone", "link", "--config", config_path, destination]
-                res, err, code = await cmd_exec(cmd)
+                cmd = f'rclone link --config {config_path} "{destination}"'
+                res, err, code = await cmd_exec(cmd, shell=True)
 
                 if self._is_cancelled:
                     return None, None
@@ -441,34 +430,16 @@ class RcloneTransferHelper:
 
     def _getUpdatedCommand(self, config_path, source, destination, method):
         ext = "*.{" + ",".join(self.extension_filter) + "}"
-        cmd = [
-            "rclone",
-            method,
-            "--fast-list",
-            "--config",
-            config_path,
-            "-P",
-            source,
-            destination,
-            "--exclude",
-            ext,
-            "--ignore-case",
-            "--low-level-retries",
-            "1",
-            "-M",
-            "--log-file",
-            "rlog.txt",
-            "--log-level",
-            "DEBUG",
-        ]
+        cmd = f'rclone {method} --fast-list --config {config_path} -P "{source}" "{destination}" --exclude "{ext}"'
+        cmd += " --ignore-case --low-level-retries 1 -M --log-file rlog.txt --log-level DEBUG"
         if rcflags := self._listener.rcFlags or config_dict["RCLONE_FLAGS"]:
             rcflags = rcflags.split("|")
             for flag in rcflags:
                 if ":" in flag:
                     key, value = map(str.strip, flag.split(":", 1))
-                    cmd.extend((key, value))
+                    cmd += f' {key} "{value}"'
                 elif len(flag) > 0:
-                    cmd.append(flag.strip())
+                    cmd += f" {flag.strip()}"
         return cmd
 
     @staticmethod
