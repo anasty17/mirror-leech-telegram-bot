@@ -116,7 +116,7 @@ class RcloneTransferHelper:
             await f.write(text)
         return sa_conf_file
 
-    async def _start_download(self, cmd, remote_type):
+    async def _start_download(self, cmd, remote_type, spath):
         self._proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
@@ -143,7 +143,7 @@ class RcloneTransferHelper:
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
-                    cmd[6] = f"{remote}:{cmd[6].split(':', 1)[1]}"
+                    cmd.replace(spath, f"{remote}:{cmd[6].split(':', 1)[1]}")
                     if self._is_cancelled:
                         return
                     return await self._start_download(cmd, remote_type)
@@ -178,9 +178,8 @@ class RcloneTransferHelper:
                 remote = f"sa{self._sa_index:03}"
                 LOGGER.info(f"Download with service account {remote}")
 
-        cmd = self._getUpdatedCommand(
-            config_path, f"{remote}:{self._listener.link}", path, "copy"
-        )
+        spath = f"{remote}:{self._listener.link}"
+        cmd = self._getUpdatedCommand(config_path, spath, path, "copy")
 
         if (
             remote_type == "drive"
@@ -191,7 +190,7 @@ class RcloneTransferHelper:
         elif remote_type != "drive":
             cmd += " --retries-sleep 3s"
 
-        await self._start_download(cmd, remote_type)
+        await self._start_download(cmd, remote_type, spath)
 
     async def _get_gdrive_link(self, config_path, remote, rc_path, mime_type):
         if mime_type == "Folder":
@@ -225,7 +224,7 @@ class RcloneTransferHelper:
             link = ""
         return link, destination
 
-    async def _start_upload(self, cmd, remote_type):
+    async def _start_upload(self, cmd, remote_type, spath):
         self._proc = await create_subprocess_shell(cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
@@ -251,7 +250,7 @@ class RcloneTransferHelper:
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
-                    cmd[7] = f"{remote}:{cmd[7].split(':', 1)[1]}"
+                    cmd.replace(spath, f"{remote}:{cmd[7].split(':', 1)[1]}")
                     return (
                         False
                         if self._is_cancelled
@@ -316,9 +315,8 @@ class RcloneTransferHelper:
                 LOGGER.info(f"Upload with service account {fremote}")
 
         method = "move" if not self._listener.seed or self._listener.newDir else "copy"
-        cmd = self._getUpdatedCommand(
-            fconfig_path, path, f"{fremote}:{rc_path}", method
-        )
+        spath = f"{fremote}:{rc_path}"
+        cmd = self._getUpdatedCommand(fconfig_path, path, spath, method)
         if (
             remote_type == "drive"
             and not config_dict["RCLONE_FLAGS"]
@@ -328,7 +326,7 @@ class RcloneTransferHelper:
         elif remote_type != "drive":
             cmd += " --retries-sleep 3s"
 
-        result = await self._start_upload(cmd, remote_type)
+        result = await self._start_upload(cmd, remote_type, spath)
         if not result:
             return
 
