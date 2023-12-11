@@ -22,7 +22,7 @@ from re import match as re_match, sub as re_sub
 from natsort import natsorted
 from aioshutil import copy
 
-from bot import config_dict, GLOBAL_EXTENSION_FILTER, user
+from bot import config_dict, user
 from bot.helper.ext_utils.files_utils import clean_unwanted, is_archive, get_base_name
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.media_utils import (
@@ -223,18 +223,12 @@ class TgUploader:
         res = await self._msg_to_reply()
         if not res:
             return
-        if self._listener.user_dict.get("excluded_extensions", False):
-            extension_filter = self._listener.user_dict["excluded_extensions"]
-        elif "excluded_extensions" not in self._listener.user_dict:
-            extension_filter = GLOBAL_EXTENSION_FILTER
-        else:
-            extension_filter = ["aria2", "!qB"]
         for dirpath, _, files in sorted(await sync_to_async(walk, self._path)):
             if dirpath.endswith("/yt-dlp-thumb"):
                 continue
             for file_ in natsorted(files):
                 self._up_path = ospath.join(dirpath, file_)
-                if file_.lower().endswith(tuple(extension_filter)):
+                if file_.lower().endswith(tuple(self._listener.extension_filter)):
                     if not self._listener.seed or self._listener.newDir:
                         await aioremove(self._up_path)
                     continue

@@ -47,8 +47,8 @@ from bot.helper.common import TaskConfig
 
 
 class TaskListener(TaskConfig):
-    def __init__(self, message):
-        super().__init__(message)
+    def __init__(self):
+        super().__init__()
 
     async def clean(self):
         try:

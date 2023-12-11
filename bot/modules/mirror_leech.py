@@ -56,14 +56,15 @@ class Mirror(TaskListener):
             sameDir = {}
         if bulk is None:
             bulk = []
-        super().__init__(message)
+        self.message = message
         self.client = client
-        self.isQbit = isQbit
-        self.isLeech = isLeech
         self.multiTag = multiTag
         self.options = options
         self.sameDir = sameDir
         self.bulk = bulk
+        super().__init__()
+        self.isQbit = isQbit
+        self.isLeech = isLeech
 
     @new_task
     async def newEvent(self):

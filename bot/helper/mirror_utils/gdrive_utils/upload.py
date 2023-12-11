@@ -10,7 +10,7 @@ from tenacity import (
     RetryError,
 )
 
-from bot import config_dict, GLOBAL_EXTENSION_FILTER
+from bot import config_dict
 from bot.helper.ext_utils.files_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import async_to_sync, setInterval
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -20,10 +20,11 @@ LOGGER = getLogger(__name__)
 
 class gdUpload(GoogleDriveHelper):
     def __init__(self, listener, path):
-        super().__init__(listener)
+        self.listener = listener
         self._updater = None
         self._path = path
         self._is_errored = False
+        super().__init__()
         self.is_uploading = True
 
     def user_setting(self):
@@ -44,14 +45,8 @@ class gdUpload(GoogleDriveHelper):
         LOGGER.info(f"Uploading: {self._path}")
         self._updater = setInterval(self.update_interval, self.progress)
         try:
-            if self.listener.user_dict.get("excluded_extensions", False):
-                extension_filter = self.listener.user_dict["excluded_extensions"]
-            elif "excluded_extensions" not in self.listener.user_dict:
-                extension_filter = GLOBAL_EXTENSION_FILTER
-            else:
-                extension_filter = ["aria2", "!qB"]
             if ospath.isfile(self._path):
-                if self._path.lower().endswith(tuple(extension_filter)):
+                if self._path.lower().endswith(tuple(self.listener.extension_filter)):
                     raise Exception(
                         "This file extension is excluded by extension filter!"
                     )
@@ -71,9 +66,10 @@ class gdUpload(GoogleDriveHelper):
             else:
                 mime_type = "Folder"
                 dir_id = self.create_directory(
-                    ospath.basename(ospath.abspath(self.listener.name)), self.listener.upDest
+                    ospath.basename(ospath.abspath(self.listener.name)),
+                    self.listener.upDest,
                 )
-                result = self._upload_dir(self._path, dir_id, extension_filter)
+                result = self._upload_dir(self._path, dir_id)
                 if result is None:
                     raise Exception("Upload has been manually cancelled!")
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
@@ -108,7 +104,7 @@ class gdUpload(GoogleDriveHelper):
                 dir_id=self.getIdFromUrl(link),
             )
 
-    def _upload_dir(self, input_directory, dest_id, extension_filter):
+    def _upload_dir(self, input_directory, dest_id):
         list_dirs = listdir(input_directory)
         if len(list_dirs) == 0:
             return dest_id
@@ -117,11 +113,9 @@ class gdUpload(GoogleDriveHelper):
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, dest_id)
-                new_id = self._upload_dir(
-                    current_file_name, current_dir_id, extension_filter
-                )
+                new_id = self._upload_dir(current_file_name, current_dir_id)
                 self.total_folders += 1
-            elif not item.lower().endswith(tuple(extension_filter)):
+            elif not item.lower().endswith(tuple(self.listener.extension_filter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 self._upload_file(current_file_name, file_name, mime_type, dest_id)

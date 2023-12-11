@@ -8,7 +8,7 @@ from configparser import ConfigParser
 from random import randrange
 from logging import getLogger
 
-from bot import config_dict, GLOBAL_EXTENSION_FILTER
+from bot import config_dict
 from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async
 from bot.helper.ext_utils.files_utils import get_mime_type, count_files_and_folders
 
@@ -31,8 +31,6 @@ class RcloneTransferHelper:
         self._sa_count = 1
         self._sa_index = 0
         self._sa_number = 0
-        self.extension_filter = ["aria2", "!qB"]
-        self.user_settings()
 
     @property
     def transferred_size(self):
@@ -53,14 +51,6 @@ class RcloneTransferHelper:
     @property
     def size(self):
         return self._size
-
-    def user_settings(self):
-        if self._listener.user_dict.get("excluded_extensions", False):
-            self.extension_filter = self._listener.user_dict["excluded_extensions"]
-        elif "excluded_extensions" not in self._listener.user_dict:
-            self.extension_filter = GLOBAL_EXTENSION_FILTER
-        else:
-            self.extension_filter = ["aria2", "!qB"]
 
     async def _progress(self):
         while not (self._proc is None or self._is_cancelled):
@@ -278,10 +268,12 @@ class RcloneTransferHelper:
 
         if await aiopath.isdir(path):
             mime_type = "Folder"
-            folders, files = await count_files_and_folders(path)
+            folders, files = await count_files_and_folders(
+                path, self._listener.extension_filter
+            )
             rc_path += f"/{self._listener.name}" if rc_path else self._listener.name
         else:
-            if path.lower().endswith(tuple(self.extension_filter)):
+            if path.lower().endswith(tuple(self._listener.extension_filter)):
                 await self._listener.onUploadError(
                     "This file extension is excluded by extension filter!"
                 )
@@ -427,7 +419,7 @@ class RcloneTransferHelper:
                     return None, None
 
     def _getUpdatedCommand(self, config_path, source, destination, method):
-        ext = "*.{" + ",".join(self.extension_filter) + "}"
+        ext = "*.{" + ",".join(self._listener.extension_filter) + "}"
         cmd = f'rclone {method} --fast-list --config {config_path} -P "{source}" "{destination}" --exclude "{ext}"'
         cmd += " --ignore-case --low-level-retries 1 -M --log-file rlog.txt --log-level DEBUG"
         if rcflags := self._listener.rcFlags or config_dict["RCLONE_FLAGS"]:

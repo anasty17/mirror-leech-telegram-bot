@@ -21,7 +21,7 @@ getLogger("googleapiclient.discovery").setLevel(ERROR)
 
 
 class GoogleDriveHelper:
-    def __init__(self, listener=None):
+    def __init__(self):
         self._OAUTH_SCOPE = ["https://www.googleapis.com/auth/drive"]
         self.token_path = "token.pickle"
         self.G_DRIVE_DIR_MIME_TYPE = "application/vnd.google-apps.folder"
@@ -37,7 +37,6 @@ class GoogleDriveHelper:
         self.sa_count = 1
         self.sa_number = 100
         self.alt_auth = False
-        self.listener = listener
         self.service = None
         self.total_files = 0
         self.total_folders = 0

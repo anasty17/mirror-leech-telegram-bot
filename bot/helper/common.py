@@ -56,32 +56,28 @@ from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 
 
 class TaskConfig:
-    def __init__(self, message):
-        self.message = message
+    def __init__(self):
         self.mid = self.message.id
         self.user = self.message.from_user or self.message.sender_chat
         self.user_id = self.user.id
         self.user_dict = user_data.get(self.user_id, {})
-        self.sameDir = {}
-        self.bulk = []
         self.dir = f"{DOWNLOAD_DIR}{self.mid}"
         self.link = ""
         self.upDest = ""
         self.rcFlags = ""
-        self.options = ""
         self.tag = ""
         self.name = ""
         self.session = ""
         self.newDir = ""
-        self.multiTag = 0
         self.splitSize = 0
         self.maxSplitSize = 0
         self.multi = 0
+        self.isLeech = False
+        self.isQbit = False
+        self.isClone = False
+        self.isYtDlp = False
         self.equalSplits = False
         self.userTransmission = False
-        self.isClone = False
-        self.isQbit = False
-        self.isLeech = False
         self.extract = False
         self.compress = False
         self.select = False
@@ -89,15 +85,14 @@ class TaskConfig:
         self.compress = False
         self.extract = False
         self.join = False
-        self.isYtDlp = False
         self.privateLink = False
         self.stopDuplicate = False
         self.sampleVideo = False
         self.screenShots = False
         self.as_doc = False
         self.suproc = None
-        self.client = None
         self.thumb = None
+        self.extension_filter = []
         self.isSuperChat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
 
     def getTokenPath(self, dest):
@@ -137,6 +132,11 @@ class TaskConfig:
                 raise ValueError(f"SAccounts or token.pickle: {token_path} not Exists!")
 
     async def beforeStart(self):
+        self.extension_filter = (
+            self.user_dict.get("excluded_extensions") or GLOBAL_EXTENSION_FILTER
+            if "excluded_extensions" not in self.user_dict
+            else ["aria2", "!qB"]
+        )
         if not self.isYtDlp:
             if self.link not in ["rcl", "gdl"]:
                 await self.isTokenExists(self.link, "dl")

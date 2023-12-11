@@ -10,7 +10,6 @@ from tenacity import (
     RetryError,
 )
 
-from bot import GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import async_to_sync
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
 
@@ -19,8 +18,9 @@ LOGGER = getLogger(__name__)
 
 class gdClone(GoogleDriveHelper):
     def __init__(self, listener):
-        super().__init__(listener)
+        self.listener = listener
         self._start_time = time()
+        super().__init__()
         self.is_cloning = True
         self.user_setting()
 
@@ -109,19 +109,17 @@ class gdClone(GoogleDriveHelper):
         files = self.getFilesByFolderId(folder_id)
         if len(files) == 0:
             return dest_id
-        if self.listener.user_dict.get("excluded_extensions", False):
-            extension_filter = self.listener.user_dict["excluded_extensions"]
-        elif "excluded_extensions" not in self.listener.user_dict:
-            extension_filter = GLOBAL_EXTENSION_FILTER
-        else:
-            extension_filter = ["aria2", "!qB"]
         for file in files:
             if file.get("mimeType") == self.G_DRIVE_DIR_MIME_TYPE:
                 self.total_folders += 1
                 file_path = ospath.join(folder_name, file.get("name"))
                 current_dir_id = self.create_directory(file.get("name"), dest_id)
                 self._cloneFolder(file_path, file.get("id"), current_dir_id)
-            elif not file.get("name").lower().endswith(tuple(extension_filter)):
+            elif (
+                not file.get("name")
+                .lower()
+                .endswith(tuple(self.listener.extension_filter))
+            ):
                 self.total_files += 1
                 self._copyFile(file.get("id"), dest_id)
                 self.proc_bytes += int(file.get("size", 0))

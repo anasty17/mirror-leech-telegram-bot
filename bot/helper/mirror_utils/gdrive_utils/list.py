@@ -113,7 +113,7 @@ async def id_updates(_, query, obj):
 
 class gdriveList(GoogleDriveHelper):
     def __init__(self, listener):
-        super().__init__(listener)
+        self.listener = listener
         self._token_user = False
         self._token_owner = False
         self._sa_owner = False
@@ -121,7 +121,6 @@ class gdriveList(GoogleDriveHelper):
         self._time = time()
         self._timeout = 240
         self.drives = []
-        self.is_cancelled = False
         self.query_proc = False
         self.item_type = "folders"
         self.event = Event()
@@ -132,6 +131,7 @@ class gdriveList(GoogleDriveHelper):
         self.items_list = []
         self.iter_start = 0
         self.page_step = 1
+        super().__init__()
 
     @new_thread
     async def _event_handler(self):

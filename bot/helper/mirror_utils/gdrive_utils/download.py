@@ -11,7 +11,6 @@ from tenacity import (
     RetryError,
 )
 
-from bot import GLOBAL_EXTENSION_FILTER
 from bot.helper.ext_utils.bot_utils import setInterval
 from bot.helper.ext_utils.bot_utils import async_to_sync
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -21,9 +20,10 @@ LOGGER = getLogger(__name__)
 
 class gdDownload(GoogleDriveHelper):
     def __init__(self, listener, path):
-        super().__init__(listener)
+        self.listener = listener
         self._updater = None
         self._path = path
+        super().__init__()
         self.is_downloading = True
 
     def download(self):
@@ -70,12 +70,6 @@ class gdDownload(GoogleDriveHelper):
         result = self.getFilesByFolderId(folder_id)
         if len(result) == 0:
             return
-        if self.listener.user_dict.get("excluded_extensions", False):
-            extension_filter = self.listener.user_dict["excluded_extensions"]
-        elif "excluded_extensions" not in self.listener.user_dict:
-            extension_filter = GLOBAL_EXTENSION_FILTER
-        else:
-            extension_filter = ["aria2", "!qB"]
         result = sorted(result, key=lambda k: k["name"])
         for item in result:
             file_id = item["id"]
@@ -90,7 +84,7 @@ class gdDownload(GoogleDriveHelper):
                 self._download_folder(file_id, path, filename)
             elif not ospath.isfile(
                 f"{path}{filename}"
-            ) and not filename.lower().endswith(tuple(extension_filter)):
+            ) and not filename.lower().endswith(tuple(self.listener.extension_filter)):
                 self._download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
                 break
