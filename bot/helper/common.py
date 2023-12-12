@@ -1,5 +1,6 @@
 from aiofiles.os import path as aiopath, remove as aioremove
 from asyncio import sleep, create_subprocess_exec
+from asyncio.subprocess import PIPE
 from secrets import token_urlsafe
 from os import walk, path as ospath
 
@@ -150,10 +151,10 @@ class TaskConfig:
                     raise ValueError(self.link)
 
         self.userTransmission = IS_PREMIUM_USER and (
-                self.user_dict.get("user_transmission")
-                or config_dict["USER_TRANSMISSION"]
-                and "user_transmission" not in self.user_dict
-            )
+            self.user_dict.get("user_transmission")
+            or config_dict["USER_TRANSMISSION"]
+            and "user_transmission" not in self.user_dict
+        )
 
         if not self.isLeech:
             self.stopDuplicate = (
@@ -437,7 +438,9 @@ class TaskConfig:
                             async with subprocess_lock:
                                 if self.suproc == "cancelled":
                                     return False
-                                self.suproc = await create_subprocess_exec(*cmd)
+                                self.suproc = await create_subprocess_exec(
+                                    *cmd, stderr=PIPE
+                                )
                             _, stderr = await self.suproc.communicate()
                             code = self.suproc.returncode
                             if code == -9:
@@ -479,7 +482,7 @@ class TaskConfig:
                 async with subprocess_lock:
                     if self.suproc == "cancelled":
                         return False
-                    self.suproc = await create_subprocess_exec(*cmd)
+                    self.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
                 _, stderr = await self.suproc.communicate()
                 code = self.suproc.returncode
                 if code == -9:
@@ -545,7 +548,7 @@ class TaskConfig:
         async with subprocess_lock:
             if self.suproc == "cancelled":
                 return False
-            self.suproc = await create_subprocess_exec(*cmd)
+            self.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
         _, stderr = await self.suproc.communicate()
         code = self.suproc.returncode
         if code == -9:
