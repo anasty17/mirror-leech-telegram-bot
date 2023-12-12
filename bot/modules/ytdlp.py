@@ -275,13 +275,13 @@ class YtDlp(TaskListener):
             bulk = []
         self.message = message
         self.client = client
-        self.isLeech = isLeech
         self.multiTag = multiTag
         self.options = options
         self.sameDir = sameDir
         self.bulk = bulk
         super().__init__()
         self.isYtDlp = True
+        self.isLeech = isLeech
 
     @new_task
     async def newEvent(self):
