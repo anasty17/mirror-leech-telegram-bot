@@ -133,10 +133,11 @@ class RcloneTransferHelper:
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
-                    cmd.replace(spath, f"{remote}:{cmd[6].split(':', 1)[1]}")
+                    npath = f"{remote}:{spath.split(':', 1)[1]}"
+                    cmd.replace(spath, npath)
                     if self._is_cancelled:
                         return
-                    return await self._start_download(cmd, remote_type)
+                    return await self._start_download(cmd, remote_type, npath)
                 else:
                     LOGGER.info(
                         f"Reached maximum number of service accounts switching, which is {self._sa_count}"
@@ -240,11 +241,12 @@ class RcloneTransferHelper:
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
-                    cmd.replace(spath, f"{remote}:{cmd[7].split(':', 1)[1]}")
+                    npath = f"{remote}:{spath.split(':', 1)[1]}"
+                    cmd.replace(spath, npath)
                     return (
                         False
                         if self._is_cancelled
-                        else await self._start_upload(cmd, remote_type)
+                        else await self._start_upload(cmd, remote_type, npath)
                     )
                 else:
                     LOGGER.info(
