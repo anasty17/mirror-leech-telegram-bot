@@ -149,6 +149,12 @@ class TaskConfig:
                 if not is_gdrive_id(self.link):
                     raise ValueError(self.link)
 
+        self.userTransmission = IS_PREMIUM_USER and (
+                self.user_dict.get("user_transmission")
+                or config_dict["USER_TRANSMISSION"]
+                and "user_transmission" not in self.user_dict
+            )
+
         if not self.isLeech:
             self.stopDuplicate = (
                 self.user_dict.get("stop_duplicate")
@@ -256,11 +262,6 @@ class TaskConfig:
                 self.user_dict.get("equal_splits")
                 or config_dict["EQUAL_SPLITS"]
                 and "equal_splits" not in self.user_dict
-            )
-            self.userTransmission = IS_PREMIUM_USER and (
-                self.user_dict.get("user_transmission")
-                or config_dict["USER_TRANSMISSION"]
-                and "user_transmission" not in self.user_dict
             )
             self.maxSplitSize = MAX_SPLIT_SIZE if self.userTransmission else 2097152000
             self.splitSize = min(self.splitSize, self.maxSplitSize)
