@@ -1,7 +1,6 @@
 from asyncio import gather
 from json import loads
 from secrets import token_urlsafe
-from html import escape
 
 from bot import task_dict, task_dict_lock, queue_dict_lock, non_queued_dl, LOGGER
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -20,7 +19,7 @@ async def add_rclone_download(listener, path):
         config_path = "rclone.conf"
 
     remote, listener.link = listener.link.split(":", 1)
-    listener.link = escape(listener.link.strip("/"))
+    listener.link = listener.link.strip("/")
 
     cmd1 = f'rclone lsjson --fast-list --stat --no-mimetype --no-modtime --config {config_path} "{remote}:{listener.link}"'
     cmd2 = f'rclone size --fast-list --json --config {config_path} "{remote}:{listener.link}"'
