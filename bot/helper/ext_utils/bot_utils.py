@@ -3,7 +3,6 @@ from asyncio import (
     create_subprocess_shell,
     run_coroutine_threadsafe,
     sleep,
-    gather,
 )
 from asyncio.subprocess import PIPE
 from functools import partial, wraps
@@ -11,13 +10,9 @@ from concurrent.futures import ThreadPoolExecutor
 from aiohttp import ClientSession
 
 from bot import user_data, config_dict, bot_loop
+from bot.helper.ext_utils.help_messages import YT_HELP_DICT, MIRROR_HELP_DICT
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.ext_utils.help_messages import (
-    MIRROR_HELP_MESSAGE,
-    YT_HELP_MESSAGE,
-    CLONE_HELP_MESSAGE,
-)
 
 THREADPOOL = ThreadPoolExecutor(max_workers=1000)
 
@@ -39,6 +34,19 @@ class setInterval:
         self.task.cancel()
 
 
+def create_help_buttons():
+    buttons = ButtonMaker()
+    for name in list(MIRROR_HELP_DICT.keys())[1:]:
+        buttons.ibutton(name, f"help m {name}")
+    buttons.ibutton("Close", f"help close")
+    COMMAND_USAGE["mirror"] = [MIRROR_HELP_DICT["main"], buttons.build_menu(3)]
+    buttons.reset()
+    for name in list(YT_HELP_DICT.keys())[1:]:
+        buttons.ibutton(name, f"help yt {name}")
+    buttons.ibutton("Close", f"help close")
+    COMMAND_USAGE["yt"] = [YT_HELP_DICT["main"], buttons.build_menu(3)]
+
+
 def bt_selection_buttons(id_):
     gid = id_[:12] if len(id_) > 20 else id_
     pincode = "".join([n for n in id_ if n.isdigit()][:4])
@@ -54,25 +62,6 @@ def bt_selection_buttons(id_):
     buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
     buttons.ibutton("Cancel", f"btsel cancel {gid}")
     return buttons.build_menu(2)
-
-
-async def initiate_help_messages():
-    mirror, yt, clone = await gather(
-        telegraph.create_page(
-            title="Mirror-Leech Command Usage", content=MIRROR_HELP_MESSAGE
-        ),
-        telegraph.create_page(title="YTDLP Command Usage", content=YT_HELP_MESSAGE),
-        telegraph.create_page(title="Clone Command Usage", content=CLONE_HELP_MESSAGE),
-    )
-    buttons = ButtonMaker()
-    buttons.ubutton("Usage Guide", f"https://telegra.ph/{mirror['path']}")
-    COMMAND_USAGE["main"] = buttons.build_menu(1)
-    buttons.reset()
-    buttons.ubutton("Usage Guide", f"https://telegra.ph/{yt['path']}")
-    COMMAND_USAGE["yt"] = buttons.build_menu(1)
-    buttons.reset()
-    buttons.ubutton("Usage Guide", f"https://telegra.ph/{clone['path']}")
-    COMMAND_USAGE["clone"] = buttons.build_menu(1)
 
 
 async def get_telegraph_list(telegraph_content):

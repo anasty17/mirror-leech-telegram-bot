@@ -243,7 +243,7 @@ class Mirror(TaskListener):
             and not is_gdrive_id(self.link)
         ):
             await sendMessage(
-                self.message, "Open this link for usage help!", COMMAND_USAGE["main"]
+                self.message, COMMAND_USAGE["mirror"][0], COMMAND_USAGE["mirror"][1]
             )
             self.removeFromSameDir()
             return

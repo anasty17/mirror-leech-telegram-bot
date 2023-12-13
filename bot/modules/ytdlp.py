@@ -369,7 +369,7 @@ class YtDlp(TaskListener):
 
         if not is_url(self.link):
             await sendMessage(
-                self.message, "Open this link for usage help!", COMMAND_USAGE["yt"]
+                self.message, COMMAND_USAGE["yt"][0], COMMAND_USAGE["yt"][1]
             )
             self.removeFromSameDir()
             return

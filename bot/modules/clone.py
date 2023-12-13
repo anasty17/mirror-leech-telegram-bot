@@ -7,6 +7,7 @@ from json import loads
 from bot import LOGGER, task_dict, task_dict_lock, bot
 from bot.helper.mirror_utils.gdrive_utils.clone import gdClone
 from bot.helper.mirror_utils.gdrive_utils.count import gdCount
+from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,
     deleteMessage,
@@ -21,8 +22,8 @@ from bot.helper.ext_utils.bot_utils import (
     new_task,
     cmd_exec,
     arg_parser,
-    COMMAND_USAGE,
 )
+
 from bot.helper.ext_utils.links_utils import (
     is_gdrive_link,
     is_share_link,
@@ -105,9 +106,7 @@ class Clone(TaskListener):
         self.run_multi(input_list, "", Clone)
 
         if len(self.link) == 0:
-            await sendMessage(
-                self.message, "Open this link for usage help!", COMMAND_USAGE["clone"]
-            )
+            await sendMessage(self.message, CLONE_HELP_MESSAGE)
             return
         try:
             await self.beforeStart()
@@ -210,9 +209,13 @@ class Clone(TaskListener):
             LOGGER.info(f"Cloning Done: {self.name}")
             cmd1 = f'rclone lsf --fast-list -R --files-only --config {config_path} "{destination}"'
             cmd2 = f'rclone lsf --fast-list -R --dirs-only --config {config_path} "{destination}"'
-            cmd3 = f'rclone size --fast-list --json --config {config_path} "{destination}"'
+            cmd3 = (
+                f'rclone size --fast-list --json --config {config_path} "{destination}"'
+            )
             res1, res2, res3 = await gather(
-                cmd_exec(cmd1, shell=True), cmd_exec(cmd2, shell=True), cmd_exec(cmd3, shell=True)
+                cmd_exec(cmd1, shell=True),
+                cmd_exec(cmd2, shell=True),
+                cmd_exec(cmd3, shell=True),
             )
             if res1[2] != res2[2] != res3[2] != 0:
                 if res1[2] == -9:
