@@ -1,5 +1,6 @@
 from asyncio import sleep, gather
 from time import time
+from aiofiles.os import path as aiopath, remove as aioremove
 
 from bot import (
     task_dict,
@@ -78,6 +79,14 @@ async def _onDownloadComplete(tor):
         await sync_to_async(task.client.torrents_pause, torrent_hashes=ext_hash)
     if task.listener.select:
         await clean_unwanted(task.listener.dir)
+        path = tor.content_path.rsplit("/", 1)[0]
+        res = await sync_to_async(task.client.torrents_files, torrent_hash=ext_hash)
+        for f in res:
+            if f.priority == 0 and await aiopath.exists(f"{path}/{f.name}"):
+                try:
+                    await aioremove(f"{path}/{f.name}")
+                except:
+                    pass
     await task.listener.onDownloadComplete()
     client = await sync_to_async(get_client)
     if task.listener.seed:
