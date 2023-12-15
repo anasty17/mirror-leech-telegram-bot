@@ -647,8 +647,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
             await DbManger().update_user_data(user_id)
     elif data[2] == "reset":
         await query.answer()
-        if user_data.get(user_id, {}):
-            user_data[user_id].clear()
+        if ud := user_data.get(user_id, {}):
+            if ud and ('is_sudo' in ud or 'is_auth' in ud):
+                for k in list(ud.keys()):
+                    if k not in ['is_sudo', 'is_auth']:
+                        del user_data[user_id][k]
+            else:
+                user_data[user_id].clear()
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
@@ -664,12 +669,12 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await deleteMessage(message)
 
 
-async def send_users_settings(client, message):
+async def send_users_settings(_, message):
     if user_data:
         msg = ""
         for u, d in user_data.items():
             kmsg = f"\n<b>{u}:</b>\n"
-            if vmsg := "".join(f"{k}: <code>{v}</code>\n" for k, v in d.items() if v):
+            if vmsg := "".join(f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"):
                 msg += kmsg + vmsg
 
         msg_ecd = msg.encode()

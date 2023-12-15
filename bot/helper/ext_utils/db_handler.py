@@ -148,7 +148,7 @@ class DbManger:
     async def update_user_data(self, user_id):
         if self._err:
             return
-        data = user_data[user_id]
+        data = user_data.get(user_id, {})
         if data.get("thumb"):
             del data["thumb"]
         if data.get("rclone_config"):
