@@ -122,8 +122,7 @@ def direct_link_generator(link):
     elif any(
         x in domain
         for x in [
-            "vidhide.com",
-            "vidhidepro.com",
+            "filelions.co",
             "filelions.site",
             "filelions.live",
             "filelions.to",
@@ -1322,8 +1321,7 @@ def filelions_and_streamwish(url):
     if any(
         x in hostname
         for x in [
-            "vidhide.com",
-            "vidhidepro.com",
+            "filelions.co",
             "filelions.live",
             "filelions.to",
             "filelions.site",
@@ -1332,7 +1330,7 @@ def filelions_and_streamwish(url):
         ]
     ):
         apiKey = config_dict["FILELION_API"]
-        apiUrl = "https://vidhideapi.com"
+        apiUrl = "https://api.filelions.co"
     elif any(
         x in hostname
         for x in [

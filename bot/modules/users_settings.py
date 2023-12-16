@@ -302,7 +302,7 @@ async def edit_user_settings(client, query):
         "user_transmission",
         "stop_duplicate",
     ]:
-        update_user_ldata(user_id, data[2], not user_dict.get(data[2], False))
+        update_user_ldata(user_id, data[2], data[3] == "true")
         await query.answer()
         await update_user_settings(query)
         if DATABASE_URL:
@@ -370,29 +370,31 @@ async def edit_user_settings(client, query):
             and config_dict["AS_DOCUMENT"]
         ):
             ltype = "DOCUMENT"
-            buttons.ibutton("Send As Media", f"userset {user_id} as_doc")
+            buttons.ibutton("Send As Media", f"userset {user_id} as_doc false")
         else:
             ltype = "MEDIA"
-            buttons.ibutton("Send As Document", f"userset {user_id} as_doc")
+            buttons.ibutton("Send As Document", f"userset {user_id} as_doc true")
         if (
             user_dict.get("equal_splits", False)
             or "equal_splits" not in user_dict
             and config_dict["EQUAL_SPLITS"]
         ):
-            buttons.ibutton("Disable Equal Splits", f"userset {user_id} equal_splits")
+            buttons.ibutton(
+                "Disable Equal Splits", f"userset {user_id} equal_splits false"
+            )
             equal_splits = "Enabled"
         else:
-            buttons.ibutton("Enable Equal Splits", f"userset {user_id} equal_splits")
+            buttons.ibutton("Enable Equal Splits", f"userset {user_id} equal_splits true")
             equal_splits = "Disabled"
         if (
             user_dict.get("media_group", False)
             or "media_group" not in user_dict
             and config_dict["MEDIA_GROUP"]
         ):
-            buttons.ibutton("Disable Media Group", f"userset {user_id} media_group")
+            buttons.ibutton("Disable Media Group", f"userset {user_id} media_group false")
             media_group = "Enabled"
         else:
-            buttons.ibutton("Enable Media Group", f"userset {user_id} media_group")
+            buttons.ibutton("Enable Media Group", f"userset {user_id} media_group true")
             media_group = "Disabled"
         if (
             IS_PREMIUM_USER
@@ -400,11 +402,15 @@ async def edit_user_settings(client, query):
             or "user_transmission" not in user_dict
             and config_dict["USER_TRANSMISSION"]
         ):
-            buttons.ibutton("Leech by Bot", f"userset {user_id} user_transmission")
+            buttons.ibutton(
+                "Leech by Bot", f"userset {user_id} user_transmission false"
+            )
             leech_method = "user"
         elif IS_PREMIUM_USER:
             leech_method = "bot"
-            buttons.ibutton("Leech by User", f"userset {user_id} user_transmission")
+            buttons.ibutton(
+                "Leech by User", f"userset {user_id} user_transmission true"
+            )
         else:
             leech_method = "bot"
         buttons.ibutton("Back", f"userset {user_id} back")
@@ -450,12 +456,12 @@ Rclone Path is <code>{rccpath}</code>"""
             and config_dict["STOP_DUPLICATE"]
         ):
             buttons.ibutton(
-                "Disable Stop Duplicate", f"userset {user_id} stop_duplicate"
+                "Disable Stop Duplicate", f"userset {user_id} stop_duplicate false"
             )
             sd_msg = "Enabled"
         else:
             buttons.ibutton(
-                "Enable Stop Duplicate", f"userset {user_id} stop_duplicate"
+                "Enable Stop Duplicate", f"userset {user_id} stop_duplicate true"
             )
             sd_msg = "Disabled"
         buttons.ibutton("Back", f"userset {user_id} back")
@@ -648,9 +654,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "reset":
         await query.answer()
         if ud := user_data.get(user_id, {}):
-            if ud and ('is_sudo' in ud or 'is_auth' in ud):
+            if ud and ("is_sudo" in ud or "is_auth" in ud):
                 for k in list(ud.keys()):
-                    if k not in ['is_sudo', 'is_auth']:
+                    if k not in ["is_sudo", "is_auth"]:
                         del user_data[user_id][k]
             else:
                 user_data[user_id].clear()
@@ -674,7 +680,9 @@ async def send_users_settings(_, message):
         msg = ""
         for u, d in user_data.items():
             kmsg = f"\n<b>{u}:</b>\n"
-            if vmsg := "".join(f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"):
+            if vmsg := "".join(
+                f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"
+            ):
                 msg += kmsg + vmsg
 
         msg_ecd = msg.encode()
