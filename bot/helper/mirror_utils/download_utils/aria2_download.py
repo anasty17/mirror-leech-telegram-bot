@@ -87,7 +87,7 @@ async def add_aria2c_download(listener, path, header, ratio, seed_time):
                 return
             task = task_dict[listener.mid]
             task.queued = False
-            new_gid = download.gid()
+            new_gid = task.gid()
 
         await sync_to_async(aria2.client.unpause, new_gid)
         LOGGER.info(f"Start Queued Download from Aria2c: {name}. Gid: {gid}")
