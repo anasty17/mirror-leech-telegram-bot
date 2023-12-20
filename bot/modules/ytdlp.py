@@ -377,6 +377,13 @@ class YtDlp(TaskListener):
         if "mdisk.me" in self.link:
             name, self.link = await _mdisk(self.link, name)
 
+        try:
+            await self.beforeStart()
+        except Exception as e:
+            await sendMessage(self.message, e)
+            self.removeFromSameDir()
+            return
+
         options = {"usenetrc": True, "cookiefile": "cookies.txt"}
         if opt:
             yt_opt = opt.split("|")
@@ -423,13 +430,6 @@ class YtDlp(TaskListener):
             if qual is None:
                 self.removeFromSameDir()
                 return
-
-        try:
-            await self.beforeStart()
-        except Exception as e:
-            await sendMessage(self.message, e)
-            self.removeFromSameDir()
-            return
 
         LOGGER.info(f"Downloading with YT-DLP: {self.link}")
         playlist = "entries" in result
