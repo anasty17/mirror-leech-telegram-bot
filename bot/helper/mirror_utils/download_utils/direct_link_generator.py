@@ -55,6 +55,8 @@ def direct_link_generator(link):
         return gofile(link)
     elif "send.cm" in domain:
         return send_cm(link)
+    elif "tmpsend.com" in domain:
+        return tmpsend(link)
     elif "easyupload.io" in domain:
         return easyupload(link)
     elif "streamvid.net" in domain:
@@ -1472,3 +1474,18 @@ def pcloud(url):
     if link := findall(r".downloadlink.:..(https:.*)..", res.text):
         return link[0].replace("\/", "/")
     raise DirectDownloadLinkException("ERROR: Direct link not found")
+
+
+def tmpsend(url):
+    pattern = r"https://tmpsend.com/(\w+)$"
+    match = search(pattern, url)
+    
+    if match:
+        file_id = match.group(1)
+        referer_url = f"https://tmpsend.com/thank-you?d={file_id}"
+        header = f"Referer: {referer_url}"
+        download_link = f"https://tmpsend.com/download?d={file_id}"
+        return download_link, header
+    else:
+        raise DirectDownloadLinkException("ERROR: Invalid URL format")
+       
