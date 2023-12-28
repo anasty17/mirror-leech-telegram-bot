@@ -87,19 +87,21 @@ async def add_jd_download(listener, path):
             await listener.onDownloadError(jdownloader.error)
             return
 
-        if not jd_downloads and (
-            odl := await retry_function(
-                sync_to_async, jdownloader.device.downloads.query_packages, [{}]
-            )
-        ):
-            odl_list = []
-            for od in odl:
-                odl_list.append(od["uuid"])
+        if not jd_downloads:
             await retry_function(
-                sync_to_async,
-                jdownloader.device.downloads.remove_links,
-                package_ids=odl_list,
+                sync_to_async, jdownloader.device.linkgrabber.clear_list
             )
+            if odl := await retry_function(
+                sync_to_async, jdownloader.device.downloads.query_packages, [{}]
+            ):
+                odl_list = []
+                for od in odl:
+                    odl_list.append(od["uuid"])
+                await retry_function(
+                    sync_to_async,
+                    jdownloader.device.downloads.remove_links,
+                    package_ids=odl_list,
+                )
 
         await retry_function(
             sync_to_async,

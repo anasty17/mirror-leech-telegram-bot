@@ -91,7 +91,7 @@ class JDownloader:
                 break
             self.device = self.myjd.get_device(f"{self._device_name}")
             self.device.enable_direct_connection()
-            self.device.linkgrabber.clear_list()
+            self.device.action("/device/ping")
             LOGGER.info(f"JDownloader is Connected!")
         except (
             MYJDAuthFailedException,
