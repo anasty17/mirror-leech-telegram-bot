@@ -176,7 +176,7 @@ class gdUpload(GoogleDriveHelper):
             try:
                 self.status, response = drive_file.next_chunk()
             except HttpError as err:
-                if err.resp.status in [500, 502, 503, 504] and retries < 10:
+                if err.resp.status in [500, 502, 503, 504, 429] and retries < 10:
                     retries += 1
                     continue
                 if err.resp.get("content-type", "").startswith("application/json"):
