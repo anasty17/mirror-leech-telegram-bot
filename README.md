@@ -364,11 +364,11 @@ sudo docker-compose up
 ```
 mirror - or /m Mirror
 qbmirror - or /qm Mirror torrent using qBittorrent
-jdmirror - or /jd Mirror torrent using jdownloader
+jdmirror - or /jm Mirror torrent using jdownloader
 ytdl - or /y Mirror yt-dlp supported link
 leech - or /l Leech
 qbleech - or /ql Leech torrent using qBittorrent
-jdleech - or /jd Leech torrent using jdownloader
+jdleech - or /jl Leech torrent using jdownloader
 ytdlleech - or /yl Leech through yt-dlp supported link
 clone - Copy file/folder to Drive
 count - Count file/folder from Drive
