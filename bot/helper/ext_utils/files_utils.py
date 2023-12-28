@@ -2,7 +2,7 @@ from os import walk, path as ospath, makedirs
 from aiofiles.os import remove, path as aiopath, listdir, rmdir
 from aioshutil import rmtree as aiormtree
 from magic import Magic
-from re import split as re_split, I, search as re_search
+from re import split as re_split, I, search as re_search, escape
 from subprocess import run as srun
 from sys import exit as sexit
 from shutil import rmtree
@@ -191,5 +191,5 @@ async def join_files(path):
         LOGGER.info("Join Completed!")
         for res in results:
             for file_ in files:
-                if re_search(rf"{res}\.0[0-9]+$", file_):
+                if re_search(rf"{escape(res)}\.0[0-9]+$", file_):
                     await remove(f"{path}/{file_}")

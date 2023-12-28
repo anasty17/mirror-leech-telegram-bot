@@ -234,13 +234,13 @@ async def restart_notification():
 
 
 async def main():
+    jdownloader.initiate()
     await gather(
         sync_to_async(clean_all),
         torrent_search.initiate_search_tools(),
         restart_notification(),
         telegraph.create_account(),
         rclone_serve_booter(),
-        jdownloader.intiate(),
         sync_to_async(start_aria2_listener, wait=False),
     )
     create_help_buttons()

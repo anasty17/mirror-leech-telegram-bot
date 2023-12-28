@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 from time import time
 from io import BytesIO
 from aioshutil import rmtree
-from myjdapi.exception import MYJDException
 
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.bot_commands import BotCommands
@@ -311,23 +310,15 @@ async def edit_qbit(_, message, pre_message, key):
 
 async def sync_jdownloader():
     if DATABASE_URL:
-        if jdownloader.device is None:
-            try:
-                await sync_to_async(jdownloader.connect)
-            except (Exception, MYJDException) as e:
-                await sendMessage(f"{e}".strip())
-                return
+        if jdownloader.device is not None:
             await sync_to_async(jdownloader.device.system.exit_jd)
-        if await aiopath.exists("cfg.zip"):
-            await remove("cfg.zip")
-        await (
-            await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
-        ).wait()
-        await DbManger().update_private_file("cfg.zip")
-        try:
-            await sync_to_async(jdownloader.connect)
-        except (Exception, MYJDException) as e:
-            await sendMessage(f"{e}".strip())
+            if await aiopath.exists("cfg.zip"):
+                await remove("cfg.zip")
+            await (
+                await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
+            ).wait()
+            await DbManger().update_private_file("cfg.zip")
+            await jdownloader.start()
 
 
 async def update_private_file(_, message, pre_message):
@@ -516,7 +507,8 @@ async def edit_bot_settings(client, query):
         elif data[2] == "INCOMPLETE_TASK_NOTIFIER" and DATABASE_URL:
             await DbManger().trunc_table("tasks")
         elif data[2] in ["JD_EMAIL", "JD_PASS"]:
-            jdownloader.device = None
+            await sleep(3)
+            await jdownloader.start()
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:

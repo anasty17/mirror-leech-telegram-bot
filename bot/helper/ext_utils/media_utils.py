@@ -17,10 +17,10 @@ def getSplitSizeBytes(size):
     size = size.lower()
     if size.endswith("mb"):
         size = size.split("mb")[0]
-        size = float(size) * 1048576
+        size = int(float(size) * 1048576)
     elif size.endswith("gb"):
         size = size.split("gb")[0]
-        size = float(size) * 1073741824
+        size = int(float(size) * 1073741824)
     else:
         size = 0
     return size

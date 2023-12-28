@@ -36,7 +36,7 @@ thumb = """<b>Thumbnail for current task</b>: -t
 
 /cmd link -t tg-message-link(doc or photo)"""
 
-split_size = """<b>Split size for current task</b>: -t
+split_size = """<b>Split size for current task</b>: -sp
 
 /cmd link -sp (500mb or 2gb or 4000000000)
 Note: Only mb and gb are supported or write in bytes without unit!"""
