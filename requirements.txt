@@ -17,6 +17,7 @@ gunicorn
 httpx
 lxml
 motor
+myjdapi
 natsort
 pillow
 psutil

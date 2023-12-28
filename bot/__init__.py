@@ -5,8 +5,8 @@ from pymongo import MongoClient
 from asyncio import Lock
 from dotenv import load_dotenv, dotenv_values
 from time import time
-from subprocess import Popen, run as srun
-from os import remove as osremove, path as ospath, environ, getcwd
+from subprocess import Popen, run
+from os import remove, path as ospath, environ, getcwd
 from aria2p import API as ariaAPI, Client as ariaClient
 from qbittorrentapi import Client as qbClient
 from socket import setdefaulttimeout
@@ -49,9 +49,9 @@ aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 
 load_dotenv("config.env", override=True)
 
-Interval = {}
-QbInterval = []
+Intervals = {"status": {}, "qb": "", "jd": ""}
 QbTorrents = {}
+jd_downloads = {}
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
@@ -75,6 +75,7 @@ except:
 task_dict_lock = Lock()
 queue_dict_lock = Lock()
 qb_listener_lock = Lock()
+jd_lock = Lock()
 cpu_eater_lock = Lock()
 subprocess_lock = Lock()
 status_dict = {}
@@ -119,6 +120,10 @@ if DATABASE_URL:
                     file_ = key.replace("__", ".")
                     with open(file_, "wb+") as f:
                         f.write(value)
+                    if file_ == "cfg.zip":
+                        run(["rm", "-rf", "/JDownloader/cfg"])
+                        run(["7z", "x", "cfg.zip", "-o/JDownloader"])
+                        remove("cfg.zip")
         if a2c_options := db.settings.aria2c.find_one({"_id": bot_id}):
             del a2c_options["_id"]
             aria2_options = a2c_options
@@ -210,13 +215,11 @@ else:
     IS_PREMIUM_USER = False
     user = ""
 
-MEGA_EMAIL = environ.get("MEGA_EMAIL", "")
-MEGA_PASSWORD = environ.get("MEGA_PASSWORD", "")
-if len(MEGA_EMAIL) == 0 or len(MEGA_PASSWORD) == 0:
-    log_warning("MEGA Credentials not provided!")
-    MEGA_EMAIL = ""
-    MEGA_PASSWORD = ""
-
+JD_EMAIL = environ.get("JD_EMAIL", "")
+JD_PASS = environ.get("JD_PASS", "")
+if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
+    JD_EMAIL = ""
+    JD_PASS = ""
 
 FILELION_API = environ.get("FILELION_API", "")
 if len(FILELION_API) == 0:
@@ -379,12 +382,12 @@ config_dict = {
     "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,
     "INDEX_URL": INDEX_URL,
     "IS_TEAM_DRIVE": IS_TEAM_DRIVE,
+    "JD_EMAIL": JD_EMAIL,
+    "JD_PASS": JD_PASS,
     "LEECH_DUMP_CHAT": LEECH_DUMP_CHAT,
     "LEECH_FILENAME_PREFIX": LEECH_FILENAME_PREFIX,
     "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
     "MEDIA_GROUP": MEDIA_GROUP,
-    "MEGA_EMAIL": MEGA_EMAIL,
-    "MEGA_PASSWORD": MEGA_PASSWORD,
     "OWNER_ID": OWNER_ID,
     "QUEUE_ALL": QUEUE_ALL,
     "QUEUE_DOWNLOAD": QUEUE_DOWNLOAD,
@@ -440,26 +443,31 @@ if BASE_URL:
         shell=True,
     )
 
-srun(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
+run(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
 if not ospath.exists(".netrc"):
     with open(".netrc", "w"):
         pass
-srun(
+run(
     "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria.sh && ./aria.sh",
     shell=True,
 )
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
-        srun(["rm", "-rf", "accounts"])
-    srun(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
-    srun(["chmod", "-R", "777", "accounts"])
-    osremove("accounts.zip")
+        run(["rm", "-rf", "accounts"])
+    run(["7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"])
+    run(["chmod", "-R", "777", "accounts"])
+    remove("accounts.zip")
 if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
 
 
 def get_client():
-    return qbClient(host="localhost", port=8090, REQUESTS_ARGS={"timeout": (30, 60)})
+    return qbClient(
+        host="localhost",
+        port=8090,
+        VERIFY_WEBUI_CERTIFICATE=False,
+        REQUESTS_ARGS={"timeout": (30, 60)},
+    )
 
 
 aria2c_global = [

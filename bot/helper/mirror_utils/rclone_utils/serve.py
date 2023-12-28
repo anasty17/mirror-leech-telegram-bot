@@ -3,7 +3,7 @@ from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from configparser import ConfigParser
 
-from bot import config_dict, bot_loop
+from bot import config_dict
 
 RcloneServe = []
 
@@ -42,6 +42,3 @@ async def rclone_serve_booter():
         cmd += f' --user "{user}" --pass "{pswd}"'
     rcs = await create_subprocess_shell(cmd)
     RcloneServe.append(rcs)
-
-
-bot_loop.run_until_complete(rclone_serve_booter())

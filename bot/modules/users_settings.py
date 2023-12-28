@@ -1,6 +1,6 @@
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex, create
-from aiofiles.os import remove as aioremove, path as aiopath, makedirs
+from aiofiles.os import remove, path as aiopath, makedirs
 from os import getcwd
 from time import time
 from functools import partial
@@ -203,9 +203,9 @@ async def set_thumb(_, message, pre_event):
 async def add_rclone(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
-    path = f"{getcwd()}/rclone/"
-    await makedirs(path, exist_ok=True)
-    des_dir = f"{path}{user_id}.conf"
+    rpath = f"{getcwd()}/rclone/"
+    await makedirs(rpath, exist_ok=True)
+    des_dir = f"{rpath}{user_id}.conf"
     await message.download(file_name=des_dir)
     update_user_ldata(user_id, "rclone_config", f"rclone/{user_id}.conf")
     await deleteMessage(message)
@@ -217,9 +217,9 @@ async def add_rclone(_, message, pre_event):
 async def add_token_pickle(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
-    path = f"{getcwd()}/tokens/"
-    await makedirs(path, exist_ok=True)
-    des_dir = f"{path}{user_id}.pickle"
+    tpath = f"{getcwd()}/tokens/"
+    await makedirs(tpath, exist_ok=True)
+    des_dir = f"{tpath}{user_id}.pickle"
     await message.download(file_name=des_dir)
     update_user_ldata(user_id, "token_pickle", f"tokens/{user_id}.pickle")
     await deleteMessage(message)
@@ -309,14 +309,14 @@ async def edit_user_settings(client, query):
             await DbManger().update_user_data(user_id)
     elif data[2] in ["thumb", "rclone_config", "token_pickle"]:
         if data[2] == "thumb":
-            path = thumb_path
+            fpath = thumb_path
         elif data[2] == "rclone_config":
-            path = rclone_conf
+            fpath = rclone_conf
         else:
-            path = token_pickle
-        if await aiopath.exists(path):
+            fpath = token_pickle
+        if await aiopath.exists(fpath):
             await query.answer()
-            await aioremove(path)
+            await remove(fpath)
             update_user_ldata(user_id, data[2], "")
             await update_user_settings(query)
             if DATABASE_URL:
@@ -384,14 +384,18 @@ async def edit_user_settings(client, query):
             )
             equal_splits = "Enabled"
         else:
-            buttons.ibutton("Enable Equal Splits", f"userset {user_id} equal_splits true")
+            buttons.ibutton(
+                "Enable Equal Splits", f"userset {user_id} equal_splits true"
+            )
             equal_splits = "Disabled"
         if (
             user_dict.get("media_group", False)
             or "media_group" not in user_dict
             and config_dict["MEDIA_GROUP"]
         ):
-            buttons.ibutton("Disable Media Group", f"userset {user_id} media_group false")
+            buttons.ibutton(
+                "Disable Media Group", f"userset {user_id} media_group false"
+            )
             media_group = "Enabled"
         else:
             buttons.ibutton("Enable Media Group", f"userset {user_id} media_group true")
@@ -663,9 +667,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManger().update_user_data(user_id)
-        for path in [thumb_path, rclone_conf, token_pickle]:
-            if await aiopath.exists(path):
-                await aioremove(path)
+        for fpath in [thumb_path, rclone_conf, token_pickle]:
+            if await aiopath.exists(fpath):
+                await remove(fpath)
     elif data[2] == "back":
         await query.answer()
         await update_user_settings(query)

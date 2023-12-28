@@ -195,7 +195,7 @@ class RcloneTransferHelper:
             epath = f"{remote}:{rc_path}{self._listener.name}"
             destination = epath
 
-        cmd = f'rclone lsjson --fast-list --no-mimetype --no-modtime --config {config_path} "{epath}"'
+        cmd = f"rclone lsjson --fast-list --no-mimetype --no-modtime --config {config_path} '{epath}'"
         res, err, code = await cmd_exec(cmd, shell=True)
 
         if code == 0:
@@ -422,7 +422,7 @@ class RcloneTransferHelper:
 
     def _getUpdatedCommand(self, config_path, source, destination, method):
         ext = "*.{" + ",".join(self._listener.extension_filter) + "}"
-        cmd = f'rclone {method} --fast-list --config {config_path} -P "{source}" "{destination}" --exclude "{ext}"'
+        cmd = f"rclone {method} --fast-list --config {config_path} -P '{source}' '{destination}' --exclude '{ext}'"
         cmd += " --ignore-case --low-level-retries 1 -M --log-file rlog.txt --log-level DEBUG"
         if rcflags := self._listener.rcFlags or config_dict["RCLONE_FLAGS"]:
             rcflags = rcflags.split("|")

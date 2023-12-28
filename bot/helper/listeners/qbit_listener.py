@@ -1,24 +1,24 @@
 from asyncio import sleep, gather
 from time import time
-from aiofiles.os import path as aiopath, remove as aioremove
+from aiofiles.os import remove, path as aiopath
 
-from bot import (
-    task_dict,
-    task_dict_lock,
-    get_client,
-    QbInterval,
-    config_dict,
-    QbTorrents,
-    qb_listener_lock,
-    LOGGER,
-    bot_loop,
-)
 from bot.helper.mirror_utils.status_utils.qbit_status import QbittorrentStatus
 from bot.helper.telegram_helper.message_utils import update_status_message
 from bot.helper.ext_utils.bot_utils import new_task, sync_to_async
 from bot.helper.ext_utils.status_utils import get_readable_time, getTaskByGid
 from bot.helper.ext_utils.files_utils import clean_unwanted
 from bot.helper.ext_utils.task_manager import stop_duplicate_check
+from bot import (
+    task_dict,
+    task_dict_lock,
+    Intervals,
+    get_client,
+    config_dict,
+    QbTorrents,
+    qb_listener_lock,
+    LOGGER,
+    bot_loop,
+)
 
 
 async def _remove_torrent(client, hash_, tag):
@@ -84,7 +84,7 @@ async def _onDownloadComplete(tor):
         for f in res:
             if f.priority == 0 and await aiopath.exists(f"{path}/{f.name}"):
                 try:
-                    await aioremove(f"{path}/{f.name}")
+                    await remove(f"{path}/{f.name}")
                 except:
                     pass
     await task.listener.onDownloadComplete()
@@ -117,7 +117,7 @@ async def _qb_listener():
         async with qb_listener_lock:
             try:
                 if len(await sync_to_async(client.torrents_info)) == 0:
-                    QbInterval.clear()
+                    Intervals["qb"] = ""
                     await sync_to_async(client.auth_log_out)
                     break
                 for tor_info in await sync_to_async(client.torrents_info):
@@ -206,6 +206,5 @@ async def onDownloadStart(tag):
             "uploaded": False,
             "seeding": False,
         }
-        if not QbInterval:
-            periodic = bot_loop.create_task(_qb_listener())
-            QbInterval.append(periodic)
+        if not Intervals["qb"]:
+            Intervals["qb"] = bot_loop.create_task(_qb_listener())

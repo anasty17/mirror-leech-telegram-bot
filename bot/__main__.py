@@ -1,12 +1,12 @@
 from signal import signal, SIGINT
-from aiofiles.os import path as aiopath, remove as aioremove
+from aiofiles.os import path as aiopath, remove
 from aiofiles import open as aiopen
 from os import execl as osexecl
 from time import time
 from sys import executable
 from pyrogram.handlers import MessageHandler
 from pyrogram.filters import command
-from asyncio import create_subprocess_exec, gather
+from asyncio import gather, create_subprocess_exec
 from psutil import (
     disk_usage,
     cpu_percent,
@@ -17,6 +17,9 @@ from psutil import (
     boot_time,
 )
 
+from .helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
+from .helper.ext_utils.jdownloader_booter import jdownloader
+from .helper.ext_utils.telegraph_helper import telegraph
 from .helper.ext_utils.files_utils import clean_all, exit_clean_up
 from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
 from .helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
@@ -25,14 +28,13 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.listeners.aria2_listener import start_aria2_listener
+from .helper.listeners.aria2_listener import start_aria2_listener
 from bot import (
     bot,
     botStartTime,
     LOGGER,
-    Interval,
+    Intervals,
     DATABASE_URL,
-    QbInterval,
     INCOMPLETE_TASK_NOTIFIER,
     scheduler,
 )
@@ -112,14 +114,16 @@ async def restart(_, message):
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
-    if QbInterval:
-        QbInterval[0].cancel()
-    if Interval:
-        for intvl in list(Interval.values()):
+    if qb := Intervals["qb"]:
+        qb.cancel()
+    if jd := Intervals["jd"]:
+        jd.cancel()
+    if st := Intervals["status"]:
+        for intvl in list(st.values()):
             intvl.cancel()
-    await clean_all()
+    await sync_to_async(clean_all)
     proc1 = await create_subprocess_exec(
-        "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone"
+        "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java"
     )
     proc2 = await create_subprocess_exec("python3", "update.py")
     await gather(proc1.wait(), proc2.wait())
@@ -143,9 +147,11 @@ help_string = f"""
 NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.MirrorCommand[0]} or /{BotCommands.MirrorCommand[1]}: Start mirroring to Google Drive.
 /{BotCommands.QbMirrorCommand[0]} or /{BotCommands.QbMirrorCommand[1]}: Start Mirroring to Google Drive using qBittorrent.
+/{BotCommands.JdMirrorCommand[0]} or /{BotCommands.JdMirrorCommand[1]}: Start Mirroring to Google Drive using JDownloader.
 /{BotCommands.YtdlCommand[0]} or /{BotCommands.YtdlCommand[1]}: Mirror yt-dlp supported link.
 /{BotCommands.LeechCommand[0]} or /{BotCommands.LeechCommand[1]}: Start leeching to Telegram.
 /{BotCommands.QbLeechCommand[0]} or /{BotCommands.QbLeechCommand[1]}: Start leeching using qBittorrent.
+/{BotCommands.JdLeechCommand[0]} or /{BotCommands.JdLeechCommand[1]}: Start leeching using qBittorrent.
 /{BotCommands.YtdlLeechCommand[0]} or /{BotCommands.YtdlLeechCommand[1]}: Leech yt-dlp supported link.
 /{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
@@ -192,7 +198,7 @@ async def restart_notification():
                 await bot.edit_message_text(
                     chat_id=chat_id, message_id=msg_id, text=msg
                 )
-                await aioremove(".restartmsg")
+                await remove(".restartmsg")
             else:
                 await bot.send_message(
                     chat_id=cid,
@@ -224,17 +230,20 @@ async def restart_notification():
             )
         except:
             pass
-        await aioremove(".restartmsg")
+        await remove(".restartmsg")
 
 
 async def main():
     await gather(
-        clean_all(),
+        sync_to_async(clean_all),
         torrent_search.initiate_search_tools(),
         restart_notification(),
+        telegraph.create_account(),
+        rclone_serve_booter(),
+        jdownloader.intiate(),
+        sync_to_async(start_aria2_listener, wait=False),
     )
     create_help_buttons()
-    await sync_to_async(start_aria2_listener, wait=False)
 
     bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
     bot.add_handler(

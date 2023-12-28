@@ -23,7 +23,7 @@ class QbittorrentStatus:
         self.queued = queued
         self.seeding = seeding
         self.listener = listener
-        self._info = get_download(self.client, f"{self.listener.mid}")
+        self._info = None
 
     def _update(self):
         self._info = get_download(self.client, f"{self.listener.mid}", self._info)
@@ -94,7 +94,7 @@ class QbittorrentStatus:
         return self._info.hash
 
     async def cancel_task(self):
-        self._update()
+        await sync_to_async(self._update)
         await sync_to_async(self.client.torrents_pause, torrent_hashes=self._info.hash)
         if not self.seeding:
             if self.queued:

@@ -4,7 +4,7 @@ from secrets import token_urlsafe
 
 from bot import task_dict, task_dict_lock, queue_dict_lock, non_queued_dl, LOGGER
 from bot.helper.ext_utils.bot_utils import cmd_exec
-from bot.helper.telegram_helper.message_utils import sendMessage, sendStatusMessage
+from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
@@ -21,20 +21,20 @@ async def add_rclone_download(listener, path):
     remote, listener.link = listener.link.split(":", 1)
     listener.link = listener.link.strip("/")
 
-    cmd1 = f'rclone lsjson --fast-list --stat --no-mimetype --no-modtime --config {config_path} "{remote}:{listener.link}"'
-    cmd2 = f'rclone size --fast-list --json --config {config_path} "{remote}:{listener.link}"'
+    cmd1 = f"rclone lsjson --fast-list --stat --no-mimetype --no-modtime --config {config_path} '{remote}:{listener.link}'"
+    cmd2 = f"rclone size --fast-list --json --config {config_path} '{remote}:{listener.link}'"
     res1, res2 = await gather(cmd_exec(cmd1, shell=True), cmd_exec(cmd2, shell=True))
     if res1[2] != res2[2] != 0:
         if res1[2] != -9:
             err = res1[1] or res2[1]
             msg = f"Error: While getting rclone stat/size. Path: {remote}:{listener.link}. Stderr: {err[:4000]}"
-            await sendMessage(listener.message, msg)
+            await listener.onDownloadError(msg)
         return
     try:
         rstat = loads(res1[0])
         rsize = loads(res2[0])
     except Exception as err:
-        await sendMessage(listener.message, f"RcloneDownload JsonLoad: {err}")
+        await listener.onDownloadError(f"RcloneDownload JsonLoad: {err}")
         return
     if rstat["IsDir"]:
         if not listener.name:
@@ -49,7 +49,7 @@ async def add_rclone_download(listener, path):
 
     msg, button = await stop_duplicate_check(listener)
     if msg:
-        await sendMessage(listener.message, msg, button)
+        await listener.onDownloadError(msg, button)
         return
 
     add_to_queue, event = await is_queued(listener.mid)

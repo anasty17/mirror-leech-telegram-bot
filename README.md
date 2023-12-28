@@ -1,162 +1,118 @@
-This is a Telegram Bot written in Python for mirroring files on the Internet to your Google Drive, Telegram or to any rclone supported cloud. Based on [python-aria-mirror-bot](https://github.com/lzzy12/python-aria-mirror-bot)
+This Telegram Bot, based on [python-aria-mirror-bot](https://github.com/lzzy12/python-aria-mirror-bot), has undergone substantial modifications and is designed for efficiently mirroring or leeching files from the Internet to various destinations, including Google Drive, Telegram, or any rclone-supported cloud. It is built using asynchronous programming in Python.
 
 # Features
 
-## By [anasty17](https://github.com/anasty17)
+## qBittorrent
+- Select files from a Torrent before and during downloading (Requires Base URL) (task option)
+- Seed torrents to a specific ratio and time (task option)
+- Edit Global Options while the bot is running from bot settings (global option)
 
-In each single file there is a major change from base code, it's almost totally different. Here some of features and fixes that I remember.
+## Aria2c
+- Select files from a Torrent before and during downloading (Requires Base URL) (task option)
+- Seed torrents to a specific ratio and time (task option)
+- Netrc support (global option)
+- Direct link authentication for a specific link while using the bot (it will work even if only the username or password is provided) (task option)
+- Edit Global Options while the bot is running from bot settings (global option)
 
-### qBittorrent
+## TG Upload/Download
+- Split size (global, user, and task option)
+- Thumbnail (user and task option)
+- Leech filename prefix (user option)
+- Set upload as a document or as media (global and user option)
+- Upload all files to a specific superGroup/channel (global, user, and task option)
+- Equal split size settings (global and user option)
+- Ability to leech split file parts in a media group (global and user option)
+- Download restricted messages (document or link) by tg private/public/super links (task option)
+- Choose transfer by bot or user session in case you have a premium plan (global and user option)
 
-- Qbittorrent support
-- Select files from Torrent before and while downloading
-- Seed torrents to specific ratio and time
-- Edit Global Options while bot running from bot settings
-
-### Aria2c
-
-- Select files from Torrent before and while downloading
-- Seed torrents to specific ratio and time
-- Netrc support
-- Direct link authentication for specific link while using the bot (it will work even if only username or password)
-- Improve aria.sh
-- Fix all download listener functions and status
-- Edit Global Options while bot running from bot settings
-
-### TG Upload/Download
-
-- Leech support
-- Split size for each user or task
-- Thumbnail for each user or task
-- Leech filename prefix for each user. Stolen from [Juned KH](https://github.com/junedkh)
-- Set upload as document or as media for each user
-- 4GB file upload with premium account
-- Upload all files to specific superGroup/channel.
-- Leech Split size and equal split size settings for each user
-- Ability to leech splitted file parts in media group. Setting for each user
-- Download using premium account if available
-- Download restricted messages (document or link) by tg private/public/super links
-- Custom upload destination for each task or user
-- Choose leech by bot or user session incase you have premium plan
-
-### Google
-
-- Stop duplicates for all tasks and setting for each user
-- Download from Google Drive
-- Counting Google Drive files/folders
+## Google Drive
+- Download/Upload/Clone/Delete/Count from/to Google Drive
+- Count Google Drive files/folders
 - Search in multiple Drive folder/TeamDrive
-- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot.
-- Use Token.pickle if file not found with Service Account, for all Gdrive functions
+- Use Token.pickle if the file is not found with a Service Account, for all Gdrive functions
 - Random Service Account for each task
-- Custom upload destination for each user
-- Ability to choose token, drive and id from list with buttons
-- Token.pickle for each user
-- Default upload destination for each user
-- Index link for each user
+- Recursive Search (only with `root` or TeamDrive ID, folder ids will be listed with a non-recursive method). Based on [Sreeraj](https://github.com/SVR666) searchX-bot. (task option)
+- Stop Duplicates (global and user option)
+- Custom upload destination (global, user, and task option)
+- Index link support only for [Bhadoo](https://gitlab.com/GoogleDriveIndex/Google-Drive-Index/-/blob/master/src/worker.js)
 
-### Status
+## Status
+- Download/Upload/Extract/Archive/Seed/Clone Status
+- Status Pages for an unlimited number of tasks, view a specific number of tasks in a message (global option)
+- Interval message update (global option)
+- Next/Previous buttons to get different pages (global and user option)
+- Status buttons to get specific tasks for the chosen status regarding transfer type if the number of tasks is more than 30 (global and user option)
+- Steps buttons for how much next/previous buttons should step backward/forward (global and user option)
 
-- Clone Status
-- Extract Status
-- Archive Status
-- Seed Status
-- Status Pages for unlimited tasks
-- Ability to cancel upload/clone/archive/extract/split
-- Cancel all buttons for choosing specific tasks status to cancel
-- Fix flooding issues
-- Fix overall upload and download speed
-
-### Yt-dlp
-
-- Switch from youtube-dl to yt-dlp and fix all conflicts
-- Yt-dlp quality buttons
-- Ability to use specific yt-dlp option for each task
-- Custom default yt-dlp options for each user
-- Fix download progress
-- Embed original thumbnail and add it for leech
+## Yt-dlp
+- Yt-dlp quality buttons (task option)
+- Ability to use a specific yt-dlp option (global, user, and task option)
+- Netrc support (global option)
+- Cookies support (global option)
+- Embed the original thumbnail and add it for leech
 - All supported audio formats
 
-### Database
+## JDownloader
+- Synchronize Settings (global option)
+- Wating to select (enable/disable files or change variants) before download start
+- All settings can be edited from the remote access to your JDownloader with Web Interface, Android App, iPhone App or Browser Extensions.
 
-- Mongo Database support
+## Mongo Database
 - Store bot settings
-- Store user settings including thumbnails, rclone config and token.pickle in database
-- Store private files
+- Store user settings including thumbnails and all private files
 - Store RSS data
 - Store incompleted task messages
+- Store JDownloader settings
+- Store config.env file on first build and incase any change occured to it, then next build it will define variables from config.env instead of database
 
-### Torrents Search
-
-- Torrent search support
+## Torrents Search
 - Search on torrents with Torrent Search API
 - Search on torrents with variable plugins using qBittorrent search engine
 
-### Archives
-
-- Zip instead of tar
-- Using 7-zip tool to extract all supported types
-- Extract rar, zip and 7z within folder or splits with or without password
+## Archives
+- Extract splits with or without password
 - Zip file/folder with or without password
+- Using 7-zip tool to extract with or without password all supported types:
+> ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2,MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
 
-### RSS
-
-- Rss feed. Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
-- Filters added
-- Edit any feed while running: pause, resume, edit command and edit filters
-- Rss for each user with tag
+## RSS
+- Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
+- Rss feed (user option)
+- Title Filters (feed option)
+- Edit any feed while running: pause, resume, edit command and edit filters (feed option)
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
 
-### Rclone
+## Rclone
+- Rclone transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
+- Ability to choose config, remote and path from list with buttons (global, user and task option)
+- Ability to set rclone flags for each task or globally from config (global, user and task option)
+- Rclone.conf (global and user option)
+- Rclone serve for combine remote to use it as index from all remotes (global option)
+- Upload destination (global, user and task option)
 
-- Download and Upload using rclone with and without random service accounts
-- Ability to choose config, remote and path from list with buttons
-- Ability to set rclone flags for each task or globally from config
-- Rclone.conf for each user
-- Clone server-side
-- Rclone serve for combine remote to use it as index from all remotes
-- Default upload destination for each user
-
-### Overall
-
+## Overall
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
-- Switch from sync to async
-- SWitch from python-telegram-bot to pyrogram
-- Edit variables and overwrite the private files while bot running
+- Edit variables and overwrite the private files while bot running (bot, user settings)
 - Update bot at startup and with restart command using `UPSTREAM_REPO`
-- Improve Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot
+- Telegraph. Based on [Sreeraj](https://github.com/SVR666) loaderX-bot
 - Mirror/Leech/Watch/Clone/Count/Del by reply
 - Mirror/Leech/Clone multi links/files with one command
-- Custom name for all links except torrents. For files you should add extension except yt-dlp links
-- Extensions Filter for the files to be uploaded/cloned for each user
+- Custom name for all links except torrents. For files you should add extension except yt-dlp links (global and user option)
+- Extensions Filter for the files to be uploaded/cloned (global and user option)
 - View Link button. Extra button to open index link in broswer instead of direct download for file
-- Queueing System for all tasks
-- Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts
-- Bulk download from telegram txt file or text message contains links seperated by new line
-- Join splitted files that have splitted before by split(linux pkg)
-- Sample video Generator
-- Almost all repository functions have been improved and many other details can't mention all of them
-- Many bugs have been fixed
-
-## From Base and other Repositories
-
-- Mirror direct download links, Torrent, Mega.nz and Telegram files to Google Drive
-- Copy files from someone's Drive to your Drive
-- Download/Upload progress, Speeds and ETAs
-- Mirror all youtube-dl supported links
-- Docker support
-- Uploading to Team Drive
-- Index Link support
-- Service Account support
-- Delete files from Drive
-- Multiple Trackers support
+- Queueing System for all tasks (global option)
+- Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts (task option)
+- Bulk download from telegram txt file or text message contains links seperated by new line (task option)
+- Join splitted files that have splitted before by split(linux pkg) (task option)
+- Sample video Generator (task option)
+- Ability to cancel upload/clone/archive/extract/split/queue (task option)
+- Cancel all buttons for choosing specific tasks status to cancel (global option)
 - Shell and Executor
 - Add sudo users
-- Extract password protected files
-- Extract these filetypes
-  > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2, MBR, MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ
-- Direct links Supported:
-  > mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, streamhub.ink, streamvid.net, doodstream.com, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders), shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, pcloud.link, gofile.io (file/folders), easyupload.io, mdisk.me (with ytdl), tmpsend.com, terabox.com (file/folders) (you need to add cookies txt with name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
+- Supported Direct links Generators:
+> mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, streamhub.ink, streamvid.net, doodstream.com, feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders), shrdsk.me (sharedisk.io), akmfiles.com, wetransfer.com, pcloud.link, gofile.io (file/folders), easyupload.io, mdisk.me (with ytdl), tmpsend.com, terabox.com (file/folders) (you need to add cookies txt with name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
+
 
 # How to deploy?
 
@@ -278,16 +234,16 @@ Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: 
 - `WEB_PINCODE`: Whether to ask for pincode before selecting files from torrent in web or not. Default is `False`. `Bool`.
   - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`, decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit` from qbittorrent.conf or bsetting command.
 
+### JDownloader
+
+- `JD_EMAIL`: jdownlaoder email sign up on [JDownloader](https://my.jdownloader.org/)
+- `JD_PASS`: jdownlaoder password
+
 ### RSS
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in sec. `Int`
 - `RSS_CHAT`: Chat ID/USERNAME where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`|`Str`
   - **RSS NOTES**: `RSS_CHAT` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR-- *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT` is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise with `USER_STRING_SESSION` add group id for `RSS_CHAT`. If `DATABASE_URL` not added you will miss the feeds while bot offline.
-
-### MEGA
-
-- `MEGA_EMAIL`: E-Mail used to sign-in on [mega.io](https://mega.io) for using premium account. `Str`
-- `MEGA_PASSWORD`: Password for [mega.io](https://mega.io) account. `Str`
 
 ### Queue System
 
@@ -393,25 +349,11 @@ sudo docker-compose up
 
 ------
 
-#### Docker Notes
-
 **IMPORTANT NOTES**:
 
 1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080` respectively.
-2. You should stop the running image before deleting the container and you should delete the container before the image.
-3. To delete the container (this will not affect on the image):
 
-```
-sudo docker container prune
-```
-
-4. To delete the images:
-
-```
-sudo docker image prune -a
-```
-
-5. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
+2. Check the number of processing units of your machine with `nproc` cmd and times it by 4, then edit `AsyncIOThreadsCount` in qBittorrent.conf.
 
 ------
 
@@ -422,14 +364,16 @@ sudo docker image prune -a
 ```
 mirror - or /m Mirror
 qbmirror - or /qm Mirror torrent using qBittorrent
+jdmirror - or /jd Mirror torrent using jdownloader
+ytdl - or /y Mirror yt-dlp supported link
 leech - or /l Leech
 qbleech - or /ql Leech torrent using qBittorrent
-ytdl - or /y Mirror yt-dlp supported link
+jdleech - or /jd Leech torrent using jdownloader
 ytdlleech - or /yl Leech through yt-dlp supported link
 clone - Copy file/folder to Drive
 count - Count file/folder from Drive
-usetting - User settings
-bsetting - Bot settings
+usetting - or /us User settings
+bsetting - or /bs Bot settings
 status - Get Mirror Status message
 btsel - Select files from torrent
 rss - Rss menu
@@ -440,6 +384,8 @@ cancelall - Cancel all tasks
 del - Delete file/folder from Drive
 log - Get the Bot Log
 shell - Run commands in Shell
+eval - Execute function
+exec - Execute function
 restart - Restart the Bot
 stats - Bot Usage Stats
 ping - Ping the Bot

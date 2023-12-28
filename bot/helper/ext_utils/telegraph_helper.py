@@ -3,7 +3,7 @@ from asyncio import sleep
 from telegraph.aio import Telegraph
 from telegraph.exceptions import RetryAfterError
 
-from bot import LOGGER, bot_loop
+from bot import LOGGER
 
 
 class TelegraphHelper:
@@ -79,5 +79,3 @@ class TelegraphHelper:
 telegraph = TelegraphHelper(
     "Mirror-Leech-Telegram-Bot", "https://github.com/anasty17/mirror-leech-telegram-bot"
 )
-
-bot_loop.run_until_complete(telegraph.create_account())

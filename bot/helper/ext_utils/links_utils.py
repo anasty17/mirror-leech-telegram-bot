@@ -31,10 +31,6 @@ def is_share_link(url: str):
     )
 
 
-def is_mega_link(url: str):
-    return "mega.nz" in url or "mega.co.nz" in url
-
-
 def is_rclone_path(path: str):
     return bool(
         re_match(

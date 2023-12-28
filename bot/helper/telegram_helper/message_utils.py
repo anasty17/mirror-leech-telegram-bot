@@ -3,7 +3,7 @@ from pyrogram.errors import FloodWait
 from time import time
 from re import match as re_match
 
-from bot import config_dict, LOGGER, status_dict, task_dict_lock, Interval, bot, user
+from bot import config_dict, LOGGER, status_dict, task_dict_lock, Intervals, bot, user
 from bot.helper.ext_utils.bot_utils import setInterval, sync_to_async
 from bot.helper.ext_utils.status_utils import get_readable_message
 from bot.helper.ext_utils.exceptions import TgLinkException
@@ -179,9 +179,9 @@ async def get_tg_link_message(link):
 async def update_status_message(sid, force=False):
     async with task_dict_lock:
         if not status_dict.get(sid):
-            if obj := Interval.get(sid):
+            if obj := Intervals["status"].get(sid):
                 obj.cancel()
-                del Interval[sid]
+                del Intervals["status"][sid]
             return
         if not force and time() - status_dict[sid]["time"] < 3:
             return
@@ -195,9 +195,9 @@ async def update_status_message(sid, force=False):
         )
         if text is None:
             del status_dict[sid]
-            if obj := Interval.get(sid):
+            if obj := Intervals["status"].get(sid):
                 obj.cancel()
-                del Interval[sid]
+                del Intervals["status"][sid]
             return
         if text != status_dict[sid]["message"].text:
             message = await editMessage(
@@ -206,9 +206,9 @@ async def update_status_message(sid, force=False):
             if isinstance(message, str):
                 if message.startswith("Telegram says: [400"):
                     del status_dict[sid]
-                    if obj := Interval.get(sid):
+                    if obj := Intervals["status"].get(sid):
                         obj.cancel()
-                        del Interval[sid]
+                        del Intervals["status"][sid]
                 else:
                     LOGGER.error(
                         f"Status with id: {sid} haven't been updated. Error: {message}"
@@ -231,9 +231,9 @@ async def sendStatusMessage(msg, user_id=0):
             )
             if text is None:
                 del status_dict[sid]
-                if obj := Interval.get(sid):
+                if obj := Intervals["status"].get(sid):
                     obj.cancel()
-                    del Interval[sid]
+                    del Intervals["status"][sid]
                 return
             message = status_dict[sid]["message"]
             await deleteMessage(message)
@@ -264,7 +264,7 @@ async def sendStatusMessage(msg, user_id=0):
                 "status": "All",
                 "is_user": is_user,
             }
-    if not Interval.get(sid) and not is_user:
-        Interval[sid] = setInterval(
+    if not Intervals["status"].get(sid) and not is_user:
+        Intervals["status"][sid] = setInterval(
             config_dict["STATUS_UPDATE_INTERVAL"], update_status_message, sid
         )

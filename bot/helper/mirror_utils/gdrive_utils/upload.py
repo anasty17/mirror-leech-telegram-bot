@@ -1,5 +1,5 @@
 from logging import getLogger
-from os import path as ospath, listdir, remove as osremove
+from os import path as ospath, listdir, remove
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 from tenacity import (
@@ -123,7 +123,7 @@ class gdUpload(GoogleDriveHelper):
                 new_id = dest_id
             else:
                 if not self.listener.seed or self.listener.newDir:
-                    osremove(current_file_name)
+                    remove(current_file_name)
                 new_id = "filter"
             if self.is_cancelled:
                 break
@@ -209,7 +209,7 @@ class gdUpload(GoogleDriveHelper):
             return
         if not self.listener.seed or self.listener.newDir:
             try:
-                osremove(file_path)
+                remove(file_path)
             except:
                 pass
         self.file_processed_bytes = 0

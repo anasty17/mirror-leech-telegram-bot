@@ -228,10 +228,10 @@ class YoutubeDLHelper:
             else:
                 self._ext = f".{audio_format}"
 
-        self.opts["format"] = qual
-
         if options:
             self._set_options(options)
+
+        self.opts["format"] = qual
 
         await sync_to_async(self.extractMetaData)
         if self._is_cancelled:
@@ -343,8 +343,6 @@ class YoutubeDLHelper:
         options = options.split("|")
         for opt in options:
             key, value = map(str.strip, opt.split(":", 1))
-            if key == "format" and value.startswith("ba/b-"):
-                continue
             if value.startswith("^"):
                 if "." in value or value == "^inf":
                     value = float(value.split("^", 1)[1])

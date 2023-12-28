@@ -11,6 +11,7 @@ from time import time
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.db_handler import DbManger
 from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,
     editMessage,
@@ -22,7 +23,6 @@ from bot.helper.ext_utils.bot_utils import (
     new_task,
     update_user_ldata,
 )
-from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 
 LIST_LIMIT = 6
 
@@ -217,7 +217,7 @@ class RcloneList:
             self.item_type == itype
         elif self.list_status == "rcu":
             self.item_type == "--dirs-only"
-        cmd = f'rclone lsjson {self.item_type} --fast-list --no-mimetype --no-modtime --config {self.config_path} "{self.remote}{self.path}"'
+        cmd = f"rclone lsjson {self.item_type} --fast-list --no-mimetype --no-modtime --config {self.config_path} '{self.remote}{self.path}'"
         if self.is_cancelled:
             return
         res, err, code = await cmd_exec(cmd, shell=True)

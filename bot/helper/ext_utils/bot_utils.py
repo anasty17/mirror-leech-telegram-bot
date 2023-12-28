@@ -1,13 +1,13 @@
+from asyncio.subprocess import PIPE
+from functools import partial, wraps
+from concurrent.futures import ThreadPoolExecutor
+from aiohttp import ClientSession
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
     run_coroutine_threadsafe,
     sleep,
 )
-from asyncio.subprocess import PIPE
-from functools import partial, wraps
-from concurrent.futures import ThreadPoolExecutor
-from aiohttp import ClientSession
 
 from bot import user_data, config_dict, bot_loop
 from bot.helper.ext_utils.help_messages import YT_HELP_DICT, MIRROR_HELP_DICT
@@ -131,6 +131,14 @@ async def get_content_type(url):
 def update_user_ldata(id_, key, value):
     user_data.setdefault(id_, {})
     user_data[id_][key] = value
+
+
+async def retry_function(func, *args, **kwargs):
+    try:
+        return await func(*args, **kwargs)
+    except:
+        await sleep(2)
+        return await retry_function(func, *args, **kwargs)
 
 
 async def cmd_exec(cmd, shell=False):

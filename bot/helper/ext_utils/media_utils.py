@@ -1,5 +1,5 @@
 from os import path as ospath, cpu_count
-from aiofiles.os import remove as aioremove, path as aiopath, makedirs
+from aiofiles.os import remove, path as aiopath, makedirs
 from time import time
 from re import search as re_search
 from asyncio import create_subprocess_exec, gather
@@ -34,7 +34,7 @@ async def createThumb(msg, _id=""):
     photo_dir = await msg.download()
     des_dir = f"{path}{_id}.jpg"
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, des_dir, "JPEG")
-    await aioremove(photo_dir)
+    await remove(photo_dir)
     return des_dir
 
 
@@ -297,7 +297,7 @@ async def split_file(
             elif code != 0:
                 stderr = stderr.decode().strip()
                 try:
-                    await aioremove(out_path)
+                    await remove(out_path)
                 except:
                     pass
                 if multi_streams:
@@ -324,7 +324,7 @@ async def split_file(
             if out_size > listener.maxSplitSize:
                 dif = out_size - listener.maxSplitSize
                 split_size -= dif + 5000000
-                await aioremove(out_path)
+                await remove(out_path)
                 return await split_file(
                     path,
                     size,
@@ -348,7 +348,7 @@ async def split_file(
                 )
                 break
             elif lpd <= 3:
-                await aioremove(out_path)
+                await remove(out_path)
                 break
             start_time += lpd - 3
             i += 1
