@@ -79,11 +79,7 @@ class JDownloaderStatus:
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Download: {self.name()}")
         await sync_to_async(
-            jdownloader.device.downloads.cleanup,
-            "DELETE_ALL",
-            "REMOVE_LINKS_AND_DELETE_FILES",
-            "ALL",
-            package_ids=[int(self._gid)],
+            jdownloader.device.downloads.remove_links, package_ids=[int(self._gid)]
         )
         async with jd_lock:
             del jd_downloads[int(self._gid)]

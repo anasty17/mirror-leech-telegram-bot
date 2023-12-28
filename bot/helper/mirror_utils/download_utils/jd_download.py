@@ -1,7 +1,7 @@
 from pyrogram.handlers import CallbackQueryHandler
 from pyrogram.filters import regex, user
 from functools import partial
-from asyncio import wait_for, Event, wrap_future
+from asyncio import wait_for, Event, wrap_future, sleep
 
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.mirror_utils.status_utils.jdownloader_status import JDownloaderStatus
@@ -183,6 +183,8 @@ async def add_jd_download(listener, path):
         [],
         [gid],
     )
+
+    await sleep(1)
 
     download_packages = await retry_function(
         sync_to_async,

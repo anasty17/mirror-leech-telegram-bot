@@ -318,6 +318,10 @@ async def sync_jdownloader():
                 await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
             ).wait()
             await DbManger().update_private_file("cfg.zip")
+            while True:
+                isCollecting = await sync_to_async(jdownloader.device.linkgrabber.is_collecting)
+                if not isCollecting:
+                    break
             await jdownloader.start()
 
 
@@ -508,7 +512,7 @@ async def edit_bot_settings(client, query):
             await DbManger().trunc_table("tasks")
         elif data[2] in ["JD_EMAIL", "JD_PASS"]:
             await sleep(3)
-            await jdownloader.start()
+            jdownloader.initiate()
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:
