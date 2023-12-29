@@ -70,8 +70,8 @@ class JDownloaderHelper:
         future = self._event_handler()
         buttons = ButtonMaker()
         buttons.ubutton("Select", "https://my.jdownloader.org")
-        buttons.ibutton("Done Selecting", f"jdq sdone")
-        buttons.ibutton("Cancel", f"jdq cancel")
+        buttons.ibutton("Done Selecting", "jdq sdone")
+        buttons.ibutton("Cancel", "jdq cancel")
         button = buttons.build_menu(2)
         msg = f"Disable the unwanted files or change variants from myJdownloader site for <b>{self._listener.name}</b> but don't start it manually!\n\nAfter finish press Done Selecting!\nTimeout: 180s"
         self._reply_to = await sendMessage(self._listener.message, msg, button)
