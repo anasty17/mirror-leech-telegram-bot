@@ -74,7 +74,7 @@ class JDownloader:
                 self.boot()
 
     def connect(self):
-        LOGGER.info(f"Connecting to JDownloader...")
+        LOGGER.info("Connecting to JDownloader...")
         try:
             self.myjd.connect(config_dict["JD_EMAIL"], config_dict["JD_PASS"])
             while True:
@@ -92,7 +92,7 @@ class JDownloader:
             self.device = self.myjd.get_device(f"{self._device_name}")
             self.device.enable_direct_connection()
             self.device.action("/device/ping")
-            LOGGER.info(f"JDownloader is Connected!")
+            LOGGER.info("JDownloader is Connected!")
         except (
             MYJDAuthFailedException,
             MYJDEmailForbiddenException,
