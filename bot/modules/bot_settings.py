@@ -258,7 +258,7 @@ async def edit_variable(_, message, pre_message, key):
     ]:
         await rclone_serve_booter()
     elif key in ["JD_EMAIL", "JD_PASS"]:
-        jdownloader.device = None
+        jdownloader.initiate()
 
 
 async def edit_aria(_, message, pre_message, key):
@@ -318,7 +318,7 @@ async def sync_jdownloader():
                 await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
             ).wait()
             await DbManger().update_private_file("cfg.zip")
-            await jdownloader.start()
+            await sync_to_async(jdownloader.connectToDevice)
 
 
 async def update_private_file(_, message, pre_message):
@@ -507,8 +507,7 @@ async def edit_bot_settings(client, query):
         elif data[2] == "INCOMPLETE_TASK_NOTIFIER" and DATABASE_URL:
             await DbManger().trunc_table("tasks")
         elif data[2] in ["JD_EMAIL", "JD_PASS"]:
-            await sleep(3)
-            jdownloader.initiate()
+            jdownloader.device = None
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:

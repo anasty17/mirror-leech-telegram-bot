@@ -135,9 +135,9 @@ def update_user_ldata(id_, key, value):
 
 async def retry_function(func, *args, **kwargs):
     try:
-        return await func(*args, **kwargs)
+        return await sync_to_async(func, *args, **kwargs)
     except:
-        await sleep(2)
+        await sleep(0.5)
         return await retry_function(func, *args, **kwargs)
 
 

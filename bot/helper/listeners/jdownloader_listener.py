@@ -13,7 +13,6 @@ async def _onDownloadComplete(gid):
         return
     if task.listener.select:
         await retry_function(
-            sync_to_async,
             jdownloader.device.downloads.cleanup,
             "DELETE_DISABLED",
             "REMOVE_LINKS_AND_DELETE_FILES",
@@ -22,7 +21,6 @@ async def _onDownloadComplete(gid):
         )
     await task.listener.onDownloadComplete()
     await retry_function(
-        sync_to_async,
         jdownloader.device.downloads.remove_links,
         package_ids=[gid],
     )

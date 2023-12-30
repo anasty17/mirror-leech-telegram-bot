@@ -236,9 +236,7 @@ class Clone(TaskListener):
                     flink, size, files, folders, mime_type, destination
                 )
         else:
-            await sendMessage(
-                self.message, "Open this link for usage help!", COMMAND_USAGE["clone"]
-            )
+            await sendMessage(self.message, CLONE_HELP_MESSAGE)
 
 
 async def clone(client, message):
