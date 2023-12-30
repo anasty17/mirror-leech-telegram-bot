@@ -114,7 +114,7 @@ class JDownloader(Myjdapi):
                 continue
             break
         self.device.enable_direct_connection()
-        LOGGER.info("JDownloader Device is Connected!")
+        LOGGER.info("JDownloader Device have been Connected!")
 
     @new_task
     async def keepJdAlive(self):
@@ -122,7 +122,9 @@ class JDownloader(Myjdapi):
             await aiosleep(180)
             if self.device is None:
                 break
-            await sync_to_async(self.reconnect)
-
+            try:
+                await sync_to_async(self.reconnect)
+            except:
+                pass
 
 jdownloader = JDownloader()

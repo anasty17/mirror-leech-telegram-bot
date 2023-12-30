@@ -1,6 +1,6 @@
 from bot import LOGGER, jd_lock, jd_downloads
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
-from bot.helper.ext_utils.bot_utils import sync_to_async
+from bot.helper.ext_utils.bot_utils import retry_function
 from bot.helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -78,7 +78,7 @@ class JDownloaderStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Download: {self.name()}")
-        await sync_to_async(
+        await retry_function(
             jdownloader.device.downloads.remove_links, package_ids=[int(self._gid)]
         )
         async with jd_lock:

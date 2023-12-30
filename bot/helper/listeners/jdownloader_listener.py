@@ -16,7 +16,7 @@ async def _onDownloadComplete(gid):
             jdownloader.device.downloads.cleanup,
             "DELETE_DISABLED",
             "REMOVE_LINKS_AND_DELETE_FILES",
-            "ALL",
+            "SELECTED",
             package_ids=[gid],
         )
     await task.listener.onDownloadComplete()

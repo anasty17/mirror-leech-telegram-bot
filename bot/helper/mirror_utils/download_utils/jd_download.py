@@ -125,29 +125,26 @@ async def add_jd_download(listener, path):
                 ],
             )
             packages = []
-            size = 0
-            exists = False
             for pack in queued_downloads:
                 if pack["saveTo"] == path:
                     if len(packages) == 0:
                         name = pack["name"]
                         gid = pack["uuid"]
+                        size = pack.get("bytesTotal", 0)
                         jd_downloads[gid] = "collect"
-                        if pack["onlineCount"] == 0:
+                        if pack.get("onlineCount", 1) == 0:
                             await listener.onDownloadError(name)
                             return
                     packages.append(pack["uuid"])
-                    size += pack.get("bytesTotal", 0)
-                    exists = True
 
             if len(packages) > 1:
                 await retry_function(
                     jdownloader.device.action,
-                    "/linkgrabberv2/movePackages",
-                    [packages[1:], packages[0]],
+                    "/linkgrabberv2/movetoNewPackage",
+                    [[], packages, name, path],
                 )
 
-            if exists:
+            if len(packages) == 1:
                 break
 
     listener.name = listener.name or name
@@ -188,7 +185,7 @@ async def add_jd_download(listener, path):
         [gid],
     )
 
-    await sleep(1)
+    await sleep(0.5)
 
     download_packages = await retry_function(
         jdownloader.device.downloads.query_packages,
