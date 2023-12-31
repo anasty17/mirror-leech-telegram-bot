@@ -5,6 +5,7 @@ from traceback import format_exc
 from textwrap import indent
 from io import StringIO, BytesIO
 from contextlib import redirect_stdout
+from aiofiles import open as aiopen
 
 from bot import LOGGER, bot
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -45,13 +46,13 @@ async def send(msg, message):
 
 
 @new_task
-async def evaluate(_, message):
-    await send(await sync_to_async(do, eval, message), message)
+async def aioexecute(_, message):
+    await send(await do("aexec", message), message)
 
 
 @new_task
 async def execute(_, message):
-    await send(await sync_to_async(do, exec, message), message)
+    await send(await do("exec", message), message)
 
 
 def cleanup_code(code):
@@ -60,30 +61,34 @@ def cleanup_code(code):
     return code.strip("` \n")
 
 
-def do(func, message):
+async def do(func, message):
     log_input(message)
     content = message.text.split(maxsplit=1)[-1]
     body = cleanup_code(content)
     env = namespace_of(message)
 
     chdir(getcwd())
-    with open(ospath.join(getcwd(), "bot/modules/temp.txt"), "w") as temp:
-        temp.write(body)
+    async with aiopen(ospath.join(getcwd(), "bot/modules/temp.txt"), "w") as temp:
+        await temp.write(body)
 
     stdout = StringIO()
 
-    to_compile = f'def func():\n{indent(body, "  ")}'
-
     try:
-        exec(to_compile, env)
+        if func == "exec":
+            exec(f"def func():\n{indent(body, '  ')}", env)
+        else:
+            exec(f"async def func():\n{indent(body, '  ')}", env)
     except Exception as e:
         return f"{e.__class__.__name__}: {e}"
 
-    func = env["func"]
+    rfunc = env["func"]
 
     try:
         with redirect_stdout(stdout):
-            func_return = func()
+            if func == "exec":
+                func_return = await sync_to_async(rfunc)
+            else:
+                func_return = await rfunc()
     except Exception as e:
         value = stdout.getvalue()
         return f"{value}{format_exc()}"
@@ -95,7 +100,7 @@ def do(func, message):
                 result = f"{value}"
             else:
                 try:
-                    result = f"{repr(eval(body, env))}"
+                    result = f"{repr(await sync_to_async(eval, body, env))}"
                 except:
                     pass
         else:
@@ -104,7 +109,7 @@ def do(func, message):
             return result
 
 
-async def clear(client, message):
+async def clear(_, message):
     log_input(message)
     global namespaces
     if message.chat.id in namespaces:
@@ -114,7 +119,7 @@ async def clear(client, message):
 
 bot.add_handler(
     MessageHandler(
-        evaluate, filters=command(BotCommands.EvalCommand) & CustomFilters.owner
+        aioexecute, filters=command(BotCommands.AExecCommand) & CustomFilters.owner
     )
 )
 bot.add_handler(

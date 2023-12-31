@@ -42,6 +42,7 @@ from .modules import (
     authorize,
     cancel_task,
     clone,
+    exec,
     gd_count,
     gd_delete,
     gd_search,
@@ -52,7 +53,6 @@ from .modules import (
     ytdlp,
     rss,
     shell,
-    eval,
     users_settings,
     bot_settings,
     help,
@@ -174,9 +174,9 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.RestartCommand}: Restart and update the bot (Only Owner & Sudo).
 /{BotCommands.LogCommand}: Get a log file of the bot. Handy for getting crash reports (Only Owner & Sudo).
 /{BotCommands.ShellCommand}: Run shell commands (Only Owner).
-/{BotCommands.EvalCommand}: Run Python Code Line | Lines (Only Owner).
-/{BotCommands.ExecCommand}: Run Commands In Exec (Only Owner).
-/{BotCommands.ClearLocalsCommand}: Clear {BotCommands.EvalCommand} or {BotCommands.ExecCommand} locals (Only Owner).
+/{BotCommands.AExecCommand}: Exec async functions (Only Owner).
+/{BotCommands.ExecCommand}: Exec sync functions (Only Owner).
+/{BotCommands.ClearLocalsCommand}: Clear {BotCommands.AExecCommand} or {BotCommands.ExecCommand} locals (Only Owner).
 /{BotCommands.RssCommand}: RSS Menu.
 """
 

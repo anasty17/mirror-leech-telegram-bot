@@ -103,8 +103,9 @@ async def add_jd_download(listener, path):
             jdownloader.device.linkgrabber.add_links,
             [
                 {
-                    "links": listener.link,
+                    "autoExtract": False,
                     "destinationFolder": path,
+                    "links": listener.link,
                     "overwritePackagizerRules": True,
                     "packageName": listener.name or None,
                 }
@@ -125,14 +126,17 @@ async def add_jd_download(listener, path):
                 ],
             )
             packages = []
+            online = 0
             for pack in queued_downloads:
-                if pack["saveTo"] == path:
+                save_to = pack["saveTo"]
+                if save_to.startswith(path):
                     if len(packages) == 0:
                         name = pack["name"]
                         gid = pack["uuid"]
                         size = pack.get("bytesTotal", 0)
                         jd_downloads[gid] = "collect"
-                        if pack.get("onlineCount", 1) == 0:
+                        online += pack.get("onlineCount", 1)
+                        if online == 0:
                             await listener.onDownloadError(name)
                             return
                     packages.append(pack["uuid"])
@@ -141,7 +145,13 @@ async def add_jd_download(listener, path):
                 await retry_function(
                     jdownloader.device.action,
                     "/linkgrabberv2/movetoNewPackage",
-                    [[], packages, name, path],
+                    [[], packages, name, f"{path}/{name}"],
+                )
+            elif online > 1 and save_to == path:
+                await retry_function(
+                    jdownloader.device.action,
+                    "/linkgrabberv2/setDownloadDirectory",
+                    [f"{path}/{name}", packages],
                 )
 
             if len(packages) == 1:
@@ -193,7 +203,7 @@ async def add_jd_download(listener, path):
     )
     exists = False
     for pack in download_packages:
-        if pack["saveTo"] == path:
+        if pack["saveTo"].startswith(path):
             async with jd_lock:
                 del jd_downloads[gid]
                 gid = pack["uuid"]

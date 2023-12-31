@@ -384,8 +384,8 @@ cancelall - Cancel all tasks
 del - Delete file/folder from Drive
 log - Get the Bot Log
 shell - Run commands in Shell
-eval - Execute function
-exec - Execute function
+aexec - Execute async function
+exec - Execute sync function
 restart - Restart the Bot
 stats - Bot Usage Stats
 ping - Ping the Bot

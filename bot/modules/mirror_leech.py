@@ -295,7 +295,7 @@ class Mirror(TaskListener):
             try:
                 await add_jd_download(self, path)
             except (Exception, MYJDException) as e:
-                await sendMessage(f"{e}".strip())
+                await sendMessage(self.message, f"{e}".strip())
                 self.removeFromSameDir()
                 return
         elif is_rclone_path(self.link):
