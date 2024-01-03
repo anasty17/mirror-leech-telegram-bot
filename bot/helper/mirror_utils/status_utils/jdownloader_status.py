@@ -56,19 +56,12 @@ class JDownloaderStatus:
         return get_readable_file_size(self._info.get("bytesTotal", 0))
 
     def eta(self):
-        eta = self._info.get("eta", False)
-        if eta:
-            return get_readable_time(eta)
-        else:
-            return "-"
+        return get_readable_time(eta) if (eta := self._info.get("eta", False)) else "-"
 
     def status(self):
         self._update()
         state = self._info.get("status", "paused")
-        if state == "paused":
-            return MirrorStatus.STATUS_PAUSED
-        else:
-            return state
+        return MirrorStatus.STATUS_PAUSED if state == "paused" else state
 
     def task(self):
         return self

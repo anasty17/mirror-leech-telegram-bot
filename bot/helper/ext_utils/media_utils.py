@@ -146,8 +146,7 @@ async def get_document_type(path):
 
 
 async def take_ss(video_file, ss_nb) -> list:
-    if ss_nb > 10:
-        ss_nb = 10
+    ss_nb = min(ss_nb, 10)
     duration = (await get_media_info(video_file))[0]
     if duration != 0:
         dirpath, name = video_file.rsplit("/", 1)
@@ -432,13 +431,7 @@ async def createSampleVideo(
     code = listener.suproc.returncode
     if code == -9:
         return False
-    elif code != 0:
-        stderr = stderr.decode().strip()
-        LOGGER.error(
-            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
-        )
-        return video_file
-    else:
+    elif code == 0:
         if oneFile:
             newDir, _ = ospath.splitext(video_file)
             await makedirs(newDir, exist_ok=True)
@@ -448,3 +441,9 @@ async def createSampleVideo(
             )
             return newDir
         return True
+    else:
+        stderr = stderr.decode().strip()
+        LOGGER.error(
+            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
+        )
+        return video_file

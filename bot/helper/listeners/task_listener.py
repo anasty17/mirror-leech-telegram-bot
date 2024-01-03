@@ -129,10 +129,11 @@ class TaskListener(TaskConfig):
 
         up_path = f"{self.dir}/{self.name}"
         size = await get_path_size(up_path)
-        async with queue_dict_lock:
-            if self.mid in non_queued_dl:
-                non_queued_dl.remove(self.mid)
-        await start_from_queued()
+        if not config_dict["QUEUE_ALL"]:
+            async with queue_dict_lock:
+                if self.mid in non_queued_dl:
+                    non_queued_dl.remove(self.mid)
+            await start_from_queued()
 
         if self.join and await aiopath.isdir(up_path):
             await join_files(up_path)
@@ -171,6 +172,8 @@ class TaskListener(TaskConfig):
         all_limit = config_dict["QUEUE_ALL"]
         add_to_queue = False
         async with queue_dict_lock:
+            if self.mid in non_queued_dl:
+                non_queued_dl.remove(self.mid)
             dl = len(non_queued_dl)
             up = len(non_queued_up)
             if (

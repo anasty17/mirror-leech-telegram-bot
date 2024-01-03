@@ -618,10 +618,9 @@ class TaskConfig:
                     if not checked:
                         checked = True
                         LOGGER.info(f"Creating Sample video: {self.name}")
-                    res = await createSampleVideo(
+                    return await createSampleVideo(
                         self, dl_path, sample_duration, part_duration, True
                     )
-                    return res
             else:
                 for dirpath, _, files in await sync_to_async(
                     walk, dl_path, topdown=False

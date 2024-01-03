@@ -104,66 +104,66 @@ async def get_buttons(key=None, edit_type=None):
                 buttons.ibutton("Default", f"botset resetaria {key}")
                 buttons.ibutton("Empty String", f"botset emptyaria {key}")
             buttons.ibutton("Close", "botset close")
-            if key == "newkey":
-                msg = "Send a key with value. Example: https-proxy-user:value"
-            else:
-                msg = f"Send a valid value for {key}. Current value is '{aria2_options[key]}'. Timeout: 60 sec"
+            msg = (
+                "Send a key with value. Example: https-proxy-user:value"
+                if key == "newkey"
+                else f"Send a valid value for {key}. Current value is '{aria2_options[key]}'. Timeout: 60 sec"
+            )
         elif edit_type == "qbitvar":
             buttons.ibutton("Back", "botset qbit")
             buttons.ibutton("Empty String", f"botset emptyqbit {key}")
             buttons.ibutton("Close", "botset close")
             msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
-    elif key is not None:
-        if key == "var":
-            for k in list(config_dict.keys())[START : 10 + START]:
-                buttons.ibutton(k, f"botset botvar {k}")
-            if STATE == "view":
-                buttons.ibutton("Edit", "botset edit var")
-            else:
-                buttons.ibutton("View", "botset view var")
-            buttons.ibutton("Back", "botset back")
-            buttons.ibutton("Close", "botset close")
-            for x in range(0, len(config_dict), 10):
-                buttons.ibutton(
-                    f"{int(x/10)}", f"botset start var {x}", position="footer"
-                )
-            msg = f"Config Variables | Page: {int(START/10)} | State: {STATE}"
-        elif key == "private":
-            buttons.ibutton("Back", "botset back")
-            buttons.ibutton("Close", "botset close")
-            msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
+    elif key == "var":
+        for k in list(config_dict.keys())[START : 10 + START]:
+            buttons.ibutton(k, f"botset botvar {k}")
+        if STATE == "view":
+            buttons.ibutton("Edit", "botset edit var")
+        else:
+            buttons.ibutton("View", "botset view var")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        for x in range(0, len(config_dict), 10):
+            buttons.ibutton(
+                f"{int(x/10)}", f"botset start var {x}", position="footer"
+            )
+        msg = f"Config Variables | Page: {int(START/10)} | State: {STATE}"
+    elif key == "private":
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        msg = """Send private file: config.env, token.pickle, rclone.conf, accounts.zip, list_drives.txt, cookies.txt, terabox.txt, .netrc or any other private file!
 To delete private file send only the file name as text message.
 Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
-        elif key == "aria":
-            for k in list(aria2_options.keys())[START : 10 + START]:
-                buttons.ibutton(k, f"botset ariavar {k}")
-            if STATE == "view":
-                buttons.ibutton("Edit", "botset edit aria")
-            else:
-                buttons.ibutton("View", "botset view aria")
-            buttons.ibutton("Add new key", "botset ariavar newkey")
-            buttons.ibutton("Back", "botset back")
-            buttons.ibutton("Close", "botset close")
-            for x in range(0, len(aria2_options), 10):
-                buttons.ibutton(
-                    f"{int(x/10)}", f"botset start aria {x}", position="footer"
-                )
-            msg = f"Aria2c Options | Page: {int(START/10)} | State: {STATE}"
-        elif key == "qbit":
-            for k in list(qbit_options.keys())[START : 10 + START]:
-                buttons.ibutton(k, f"botset qbitvar {k}")
-            if STATE == "view":
-                buttons.ibutton("Edit", "botset edit qbit")
-            else:
-                buttons.ibutton("View", "botset view qbit")
-            buttons.ibutton("Back", "botset back")
-            buttons.ibutton("Close", "botset close")
-            for x in range(0, len(qbit_options), 10):
-                buttons.ibutton(
-                    f"{int(x/10)}", f"botset start qbit {x}", position="footer"
-                )
-            msg = f"Qbittorrent Options | Page: {int(START/10)} | State: {STATE}"
+    elif key == "aria":
+        for k in list(aria2_options.keys())[START : 10 + START]:
+            buttons.ibutton(k, f"botset ariavar {k}")
+        if STATE == "view":
+            buttons.ibutton("Edit", "botset edit aria")
+        else:
+            buttons.ibutton("View", "botset view aria")
+        buttons.ibutton("Add new key", "botset ariavar newkey")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        for x in range(0, len(aria2_options), 10):
+            buttons.ibutton(
+                f"{int(x/10)}", f"botset start aria {x}", position="footer"
+            )
+        msg = f"Aria2c Options | Page: {int(START/10)} | State: {STATE}"
+    elif key == "qbit":
+        for k in list(qbit_options.keys())[START : 10 + START]:
+            buttons.ibutton(k, f"botset qbitvar {k}")
+        if STATE == "view":
+            buttons.ibutton("Edit", "botset edit qbit")
+        else:
+            buttons.ibutton("View", "botset view qbit")
+        buttons.ibutton("Back", "botset back")
+        buttons.ibutton("Close", "botset close")
+        for x in range(0, len(qbit_options), 10):
+            buttons.ibutton(
+                f"{int(x/10)}", f"botset start qbit {x}", position="footer"
+            )
+        msg = f"Qbittorrent Options | Page: {int(START/10)} | State: {STATE}"
     button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
@@ -309,16 +309,15 @@ async def edit_qbit(_, message, pre_message, key):
 
 
 async def sync_jdownloader():
-    if DATABASE_URL:
-        if jdownloader.device is not None:
-            await sync_to_async(jdownloader.device.system.exit_jd)
-            if await aiopath.exists("cfg.zip"):
-                await remove("cfg.zip")
-            await (
-                await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
-            ).wait()
-            await DbManger().update_private_file("cfg.zip")
-            await sync_to_async(jdownloader.connectToDevice)
+    if DATABASE_URL and jdownloader.device is not None:
+        await sync_to_async(jdownloader.device.system.exit_jd)
+        if await aiopath.exists("cfg.zip"):
+            await remove("cfg.zip")
+        await (
+            await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
+        ).wait()
+        await DbManger().update_private_file("cfg.zip")
+        await sync_to_async(jdownloader.connectToDevice)
 
 
 async def update_private_file(_, message, pre_message):

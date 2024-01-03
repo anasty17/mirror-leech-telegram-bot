@@ -100,14 +100,12 @@ class JDownloader(Myjdapi):
                 return
             try:
                 self.update_devices()
-                devices = self.list_devices()
-                if devices:
-                    for device in devices:
-                        if self._device_name == device["name"]:
-                            self.device = self.get_device(f"{self._device_name}")
-                            break
-                    else:
-                        continue
+                if not (devices := self.list_devices()):
+                    continue
+                for device in devices:
+                    if self._device_name == device["name"]:
+                        self.device = self.get_device(f"{self._device_name}")
+                        break
                 else:
                     continue
             except:

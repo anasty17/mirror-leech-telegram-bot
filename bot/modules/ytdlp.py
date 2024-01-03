@@ -392,13 +392,12 @@ class YtDlp(TaskListener):
                 key, value = map(str.strip, ytopt.split(":", 1))
                 if key == "postprocessors":
                     continue
-                if key == "format":
-                    if not self.select:
-                        if value.startswith("ba/b-"):
-                            qual = value
-                            continue
-                        else:
-                            qual = value
+                if key == "format" and not self.select:
+                    if value.startswith("ba/b-"):
+                        qual = value
+                        continue
+                    else:
+                        qual = value
                 if value.startswith("^"):
                     if "." in value or value == "^inf":
                         value = float(value.split("^")[1])

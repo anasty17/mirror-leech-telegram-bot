@@ -85,10 +85,7 @@ async def do(func, message):
 
     try:
         with redirect_stdout(stdout):
-            if func == "exec":
-                func_return = await sync_to_async(rfunc)
-            else:
-                func_return = await rfunc()
+            func_return = await sync_to_async(rfunc) if func == "exec" else await rfunc()
     except Exception as e:
         value = stdout.getvalue()
         return f"{value}{format_exc()}"
