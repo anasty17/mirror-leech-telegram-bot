@@ -217,10 +217,10 @@ class RcloneList:
             self.item_type == itype
         elif self.list_status == "rcu":
             self.item_type == "--dirs-only"
-        cmd = f"rclone lsjson {self.item_type} --fast-list --no-mimetype --no-modtime --config {self.config_path} '{self.remote}{self.path}'"
+        cmd = ["rclone",  "lsjson", self.item_type, "--fast-list", "--no-mimetype", "--no-modtime", "--config", self.config_path, f"{self.remote}{self.path}"]
         if self.is_cancelled:
             return
-        res, err, code = await cmd_exec(cmd, shell=True)
+        res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
             LOGGER.error(
                 f"While rclone listing. Path: {self.remote}{self.path}. Stderr: {err}"
