@@ -101,34 +101,34 @@ async def status_pages(_, query):
         seed_speed = 0
         async with task_dict_lock:
             for download in task_dict.values():
-                tstatus = download.status()
-                if tstatus == MirrorStatus.STATUS_DOWNLOADING:
-                    tasks["Download"] += 1
-                    dl_speed += speed_string_to_bytes(download.speed())
-                elif tstatus == MirrorStatus.STATUS_UPLOADING:
-                    tasks["Upload"] += 1
-                    up_speed += speed_string_to_bytes(download.speed())
-                elif tstatus == MirrorStatus.STATUS_SEEDING:
-                    tasks["Seed"] += 1
-                    seed_speed += speed_string_to_bytes(download.seed_speed())
-                elif tstatus == MirrorStatus.STATUS_ARCHIVING:
-                    tasks["Archive"] += 1
-                elif tstatus == MirrorStatus.STATUS_EXTRACTING:
-                    tasks["Extract"] += 1
-                elif tstatus == MirrorStatus.STATUS_SPLITTING:
-                    tasks["Split"] += 1
-                elif tstatus == MirrorStatus.STATUS_QUEUEDL:
-                    tasks["QueueDl"] += 1
-                elif tstatus == MirrorStatus.STATUS_QUEUEUP:
-                    tasks["QueueUp"] += 1
-                elif tstatus == MirrorStatus.STATUS_CLONING:
-                    tasks["Clone"] += 1
-                elif tstatus == MirrorStatus.STATUS_CHECKING:
-                    tasks["CheckUp"] += 1
-                elif tstatus == MirrorStatus.STATUS_PAUSED:
-                    tasks["Pause"] += 1
-                elif tstatus == MirrorStatus.STATUS_SAMVID:
-                    tasks["SamVid"] += 1
+                match download.status():
+                    case MirrorStatus.STATUS_DOWNLOADING:
+                        tasks["Download"] += 1
+                        dl_speed += speed_string_to_bytes(download.speed())
+                    case MirrorStatus.STATUS_UPLOADING:
+                        tasks["Upload"] += 1
+                        up_speed += speed_string_to_bytes(download.speed())
+                    case MirrorStatus.STATUS_SEEDING:
+                        tasks["Seed"] += 1
+                        seed_speed += speed_string_to_bytes(download.seed_speed())
+                    case MirrorStatus.STATUS_ARCHIVING:
+                        tasks["Archive"] += 1
+                    case MirrorStatus.STATUS_EXTRACTING:
+                        tasks["Extract"] += 1
+                    case MirrorStatus.STATUS_SPLITTING:
+                        tasks["Split"] += 1
+                    case MirrorStatus.STATUS_QUEUEDL:
+                        tasks["QueueDl"] += 1
+                    case MirrorStatus.STATUS_QUEUEUP:
+                        tasks["QueueUp"] += 1
+                    case MirrorStatus.STATUS_CLONING:
+                        tasks["Clone"] += 1
+                    case MirrorStatus.STATUS_CHECKING:
+                        tasks["CheckUp"] += 1
+                    case MirrorStatus.STATUS_PAUSED:
+                        tasks["Pause"] += 1
+                    case MirrorStatus.STATUS_SAMVID:
+                        tasks["SamVid"] += 1
 
         msg = f"""DL: {tasks['Download']} | UP: {tasks['Upload']} | SD: {tasks['Seed']} | AR: {tasks['Archive']}
 EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}
