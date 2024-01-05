@@ -164,8 +164,8 @@ class Clone(TaskListener):
             LOGGER.info(f"Cloning Done: {self.name}")
         elif is_rclone_path(self.link):
             if self.link.startswith("mrcc:"):
-                self.link = self.link.lstrip("mrcc:")
-                self.upDest = self.upDest.lstrip("mrcc:")
+                self.link = self.link.replace("mrcc:", "", 1)
+                self.upDest = self.upDest.replace("mrcc:", "", 1)
                 config_path = f"rclone/{self.user_id}.conf"
             else:
                 config_path = "rclone.conf"
@@ -192,7 +192,9 @@ class Clone(TaskListener):
             rstat = loads(res[0])
             if rstat["IsDir"]:
                 self.name = src_path.rsplit("/", 1)[-1] if src_path else remote
-                self.upDest += self.name if self.upDest.endswith(":") else f"/{self.name}"
+                self.upDest += (
+                    self.name if self.upDest.endswith(":") else f"/{self.name}"
+                )
 
                 mime_type = "Folder"
             else:

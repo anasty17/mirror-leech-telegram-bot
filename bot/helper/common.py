@@ -274,10 +274,10 @@ class TaskConfig:
             )
             if not isinstance(self.upDest, int):
                 if self.upDest.startswith("b:"):
-                    self.upDest = self.upDest.lstrip("b:")
+                    self.upDest = self.upDest.replace("b:", "", 1)
                     self.userTransmission = False
                 elif self.upDest.startswith("u:"):
-                    self.upDest = self.upDest.lstrip("u:")
+                    self.upDest = self.upDest.replace("u:", "", 1)
                     self.userTransmission = IS_PREMIUM_USER
                 if self.upDest.isdigit() or self.upDest.startswith("-"):
                     self.upDest = int(self.upDest)

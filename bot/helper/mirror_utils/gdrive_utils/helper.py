@@ -99,11 +99,13 @@ class GoogleDriveHelper:
         if user_id and link.startswith("mtp:"):
             self.use_sa = False
             self.token_path = f"tokens/{user_id}.pickle"
+            link = link.replace("mtp:", "", 1)
         elif link.startswith("sa:"):
             self.use_sa = True
+            link = link.replace("sa:", "", 1)
         elif link.startswith("tp:"):
             self.use_sa = False
-        link = link.lstrip("mtp:").lstrip("sa:").lstrip("tp:")
+            link = link.replace("tp:", "", 1)
         if is_gdrive_id(link):
             return link
         if "folders" in link or "file" in link:

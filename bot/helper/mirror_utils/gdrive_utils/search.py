@@ -105,7 +105,7 @@ class gdSearch(GoogleDriveHelper):
             drives = [
                 (
                     "From Owner",
-                    target_id.lstrip("tp:"),
+                    target_id.replace("tp:", "", 1),
                     INDEX_URLS[0] if INDEX_URLS else "",
                 )
             ]
@@ -174,7 +174,7 @@ class gdSearch(GoogleDriveHelper):
         return telegraph_content, contents_no
 
     def get_user_drive(self, target_id, user_id):
-        dest_id = target_id.lstrip("mtp:")
+        dest_id = target_id.replace("mtp:", "", 1)
         self.token_path = f"tokens/{user_id}.pickle"
         self.use_sa = False
         user_dict = user_data.get(user_id, {})

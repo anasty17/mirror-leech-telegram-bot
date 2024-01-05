@@ -29,15 +29,15 @@ class gdClone(GoogleDriveHelper):
             "mtp:"
         ):
             self.token_path = f"tokens/{self.listener.user_id}.pickle"
-            self.listener.upDest = self.listener.upDest.lstrip("mtp:")
+            self.listener.upDest = self.listener.upDest.replace("mtp:", "", 1)
             self.use_sa = False
         elif self.listener.upDest.startswith("tp:"):
-            self.listener.upDest = self.listener.upDest.lstrip("tp:")
+            self.listener.upDest = self.listener.upDest.replave("tp:", "", 1)
             self.use_sa = False
         elif self.listener.upDest.startswith("sa:") or self.listener.link.startswith(
             "sa:"
         ):
-            self.listener.upDest = self.listener.upDest.lstrip("sa:")
+            self.listener.upDest = self.listener.upDest.replace("sa:", "", 1)
             self.use_sa = True
 
     def clone(self):
