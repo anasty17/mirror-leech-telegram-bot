@@ -325,9 +325,7 @@ class RcloneTransferHelper:
             and not config_dict["RCLONE_FLAGS"]
             and not self._listener.rcFlags
         ):
-            cmd += " --drive-chunk-size 64M --drive-upload-cutoff 32M"
-        elif remote_type != "drive":
-            cmd += " --retries-sleep 3s"
+            cmd.extend(("--drive-chunk-size", "128M", "--drive-upload-cutoff", "128M"))
 
         result = await self._start_upload(cmd, remote_type)
         if not result:
@@ -384,10 +382,6 @@ class RcloneTransferHelper:
         if not self._listener.rcFlags and not config_dict["RCLONE_FLAGS"]:
             if src_remote_type == "drive" and dst_remote_type != "drive":
                 cmd.append("--drive-acknowledge-abuse")
-            elif dst_remote_type == "drive" and src_remote_type != "drive":
-                cmd.extend(
-                    ("--drive-chunk-size", "64M", "--drive-upload-cutoff", "32M")
-                )
             elif src_remote_type == "drive":
                 cmd.extend(("--tpslimit", "3", "--transfers", "3"))
 
@@ -443,6 +437,8 @@ class RcloneTransferHelper:
             destination,
             "--exclude",
             ext,
+            "--retries-sleep",
+            "3s",
             "--ignore-case",
             "--low-level-retries",
             "1",

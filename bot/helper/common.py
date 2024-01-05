@@ -163,28 +163,15 @@ class TaskConfig:
                 or "stop_duplicate" not in self.user_dict
                 and config_dict["STOP_DUPLICATE"]
             )
-            default_upload = self.user_dict.get("default_upload", "")
-            if (
-                not self.upDest
-                and (
-                    default_upload == "rc"
-                    or not default_upload
-                    and config_dict["DEFAULT_UPLOAD"] == "rc"
-                )
-                or self.upDest == "rc"
-            ):
+            default_upload = (
+                self.user_dict.get("default_upload", "")
+                or config_dict["DEFAULT_UPLOAD"]
+            )
+            if (not self.upDest and default_upload == "rc") or self.upDest == "rc":
                 self.upDest = (
                     self.user_dict.get("rclone_path") or config_dict["RCLONE_PATH"]
                 )
-            if (
-                not self.upDest
-                and (
-                    default_upload == "gd"
-                    or not default_upload
-                    and config_dict["DEFAULT_UPLOAD"] == "gd"
-                )
-                or self.upDest == "gd"
-            ):
+            elif (not self.upDest and default_upload == "gd") or self.upDest == "gd":
                 self.upDest = (
                     self.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
                 )
