@@ -139,7 +139,7 @@ class TgUploader:
                 self._up_path = new_path
         else:
             cap_mono = f"<code>{file_}</code>"
-        if len(file_) > 60:
+        if len(file_) > 54:
             if is_archive(file_):
                 name = get_base_name(file_)
                 ext = file_.split(name, 1)[1]
@@ -153,7 +153,7 @@ class TgUploader:
                 name = file_
                 ext = ""
             extn = len(ext)
-            remain = 60 - extn
+            remain = 54 - extn
             name = name[:remain]
             if (
                 self._listener.seed
