@@ -111,11 +111,11 @@ class TgUploader:
             )
             if self._sent_msg is None:
                 self._sent_msg = await user.send_message(
-                        chat_id=self._listener.message.chat.id,
-                        text="Deleted Cmd Message! Don't delete the cmd message again!",
-                        disable_web_page_preview=True,
-                        disable_notification=True,
-                    )
+                    chat_id=self._listener.message.chat.id,
+                    text="Deleted Cmd Message! Don't delete the cmd message again!",
+                    disable_web_page_preview=True,
+                    disable_notification=True,
+                )
         else:
             self._sent_msg = self._listener.message
         return True
@@ -139,7 +139,7 @@ class TgUploader:
                 self._up_path = new_path
         else:
             cap_mono = f"<code>{file_}</code>"
-        if len(file_) > 54:
+        if len(file_) > 60:
             if is_archive(file_):
                 name = get_base_name(file_)
                 ext = file_.split(name, 1)[1]
@@ -153,7 +153,7 @@ class TgUploader:
                 name = file_
                 ext = ""
             extn = len(ext)
-            remain = 54 - extn
+            remain = 60 - extn
             name = name[:remain]
             if (
                 self._listener.seed
@@ -198,16 +198,16 @@ class TgUploader:
                     inputs.append(InputMediaPhoto(m, cap))
                 else:
                     outputs.remove(m)
-            if outputs:
-                self._sent_msg = (
-                    await self._sent_msg.reply_media_group(
-                        media=inputs,
-                        quote=True,
-                        disable_notification=True,
-                    )
-                )[-1]
-                for m in outputs:
-                    await remove(m)
+        if outputs:
+            self._sent_msg = (
+                await self._sent_msg.reply_media_group(
+                    media=inputs,
+                    quote=True,
+                    disable_notification=True,
+                )
+            )[-1]
+            for m in outputs:
+                await remove(m)
 
     async def _send_media_group(self, subkey, key, msgs):
         msgs_list = await msgs[0].reply_to_message.reply_media_group(

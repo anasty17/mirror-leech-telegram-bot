@@ -138,7 +138,7 @@ ODLS: {get_readable_file_size(dl_speed)}/s
 OULS: {get_readable_file_size(up_speed)}/s
 OSDS: {get_readable_file_size(seed_speed)}/s
 """
-        await query.answer(msg, show_alert=True, cache_time=30)
+        await query.answer(msg, show_alert=True)
 
 
 bot.add_handler(

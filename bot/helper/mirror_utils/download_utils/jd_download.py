@@ -171,7 +171,9 @@ async def add_jd_download(listener, path):
                         for link in links
                         if link["availability"].lower() != "online"
                     ]:
-                        await retry_function(jdownloader.device.linkgrabber.remove_links, to_remove)
+                        await retry_function(
+                            jdownloader.device.linkgrabber.remove_links, to_remove
+                        )
                 break
 
     listener.name = listener.name or name

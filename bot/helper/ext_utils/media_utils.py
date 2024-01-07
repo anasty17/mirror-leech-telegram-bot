@@ -2,7 +2,7 @@ from os import path as ospath, cpu_count
 from aiofiles.os import remove, path as aiopath, makedirs
 from time import time
 from re import search as re_search
-from asyncio import create_subprocess_exec, gather
+from asyncio import create_subprocess_exec, gather, wait_for
 from asyncio.subprocess import PIPE
 from PIL import Image
 from aioshutil import move
@@ -153,21 +153,40 @@ async def take_ss(video_file, ss_nb) -> list:
         name, _ = ospath.splitext(name)
         dirpath = f"{dirpath}/screenshots/"
         await makedirs(dirpath, exist_ok=True)
-        interval = duration // ss_nb + 1
+        interval = duration // (ss_nb + 1)
         cap_time = interval
         outputs = []
-        cmd = ""
+        cmds = []
         for i in range(ss_nb):
             output = f"{dirpath}SS.{name}_{i:02}.png"
             outputs.append(output)
-            cmd += f'ffmpeg -hide_banner -loglevel error -ss {cap_time} -i "{video_file}" -q:v 1 -frames:v 1 "{output}"'
+            cmd = [
+                "ffmpeg",
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-ss",
+                f"{cap_time}",
+                "-i",
+                video_file,
+                "-q:v",
+                "1",
+                "-frames:v",
+                "1",
+                output,
+            ]
             cap_time += interval
-            if i + 1 != ss_nb:
-                cmd += " && "
-        _, err, code = await cmd_exec(cmd, True)
-        if code != 0:
+            cmds.append(cmd_exec(cmd))
+        try:
+            resutls = await wait_for(gather(*cmds), timeout=15)
+            if resutls[0][2] != 0:
+                LOGGER.error(
+                    f"Error while creating sreenshots from video. Path: {video_file}. stderr: {resutls[0][1]}"
+                )
+                return []
+        except:
             LOGGER.error(
-                f"Error while creating sreenshots from video. Path: {video_file} stderr: {err}"
+                f"Error while creating sreenshots from video. Path: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
             )
             return []
         return outputs
@@ -216,7 +235,7 @@ async def create_thumbnail(video_file, duration):
         "-loglevel",
         "error",
         "-ss",
-        str(duration),
+        f"{duration}",
         "-i",
         video_file,
         "-vf",
@@ -225,10 +244,16 @@ async def create_thumbnail(video_file, duration):
         "1",
         des_dir,
     ]
-    _, err, code = await cmd_exec(cmd)
-    if code != 0 or not await aiopath.exists(des_dir):
+    try:
+        _, err, code = await wait_for(cmd_exec(cmd), timeout=15)
+        if code != 0 or not await aiopath.exists(des_dir):
+            LOGGER.error(
+                f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
+            )
+            return None
+    except:
         LOGGER.error(
-            f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
+            f"Error while extracting thumbnail from video. Name: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
         )
         return None
     return des_dir
