@@ -1,3 +1,5 @@
+from time import time
+
 from bot import LOGGER, jd_lock, jd_downloads
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
 from bot.helper.ext_utils.bot_utils import retry_function
@@ -8,22 +10,51 @@ from bot.helper.ext_utils.status_utils import (
 )
 
 
-def get_download(gid, old_info={}):
+def _get_combined_info(result, start_time):
+    name = result[0].get("name")
+    hosts = result[0].get("hosts")
+    bytesLoaded = 0
+    bytesTotal = 0
+    for res in result:
+        st = res.get("status", "").lower()
+        if st and st != "finished":
+            status = st
+        bytesLoaded += res.get("bytesLoaded", 0)
+        bytesTotal += res.get("bytesTotal", 0)
     try:
-        return jdownloader.device.downloads.query_packages(
+        speed = bytesLoaded / (time() - start_time)
+        eta = (bytesTotal - bytesLoaded) / speed
+    except:
+        speed = 0
+        eta = 0
+    return {
+        "name": name,
+        "status": status,
+        "speed": speed,
+        "eta": eta,
+        "hosts": hosts,
+        "bytesLoaded": bytesLoaded,
+        "bytesTotal": bytesTotal,
+    }
+
+
+def get_download(gid, old_info, start_time):
+    try:
+        result = jdownloader.device.downloads.query_packages(
             [
                 {
                     "bytesLoaded": True,
                     "bytesTotal": True,
                     "enabled": True,
-                    "packageUUIDs": [gid],
+                    "packageUUIDs": jd_downloads[gid]["ids"],
                     "speed": True,
                     "eta": True,
                     "status": True,
                     "hosts": True,
                 }
             ]
-        )[0]
+        )
+        return _get_combined_info(result, start_time) if len(result) > 1 else result[0]
     except:
         return old_info
 
@@ -33,9 +64,10 @@ class JDownloaderStatus:
         self.listener = listener
         self._gid = gid
         self._info = {}
+        self._start_time = time()
 
     def _update(self):
-        self._info = get_download(int(self._gid), self._info)
+        self._info = get_download(int(self._gid), self._info, self._start_time)
 
     def progress(self):
         try:
@@ -50,7 +82,7 @@ class JDownloaderStatus:
         return f"{get_readable_file_size(self._info.get('speed', 0))}/s"
 
     def name(self):
-        return self._info.get("name", self.listener.name)
+        return self._info.get("name") or self.listener.name
 
     def size(self):
         return get_readable_file_size(self._info.get("bytesTotal", 0))
@@ -72,7 +104,8 @@ class JDownloaderStatus:
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Download: {self.name()}")
         await retry_function(
-            jdownloader.device.downloads.remove_links, package_ids=[int(self._gid)]
+            jdownloader.device.downloads.remove_links,
+            package_ids=jd_downloads[int(self._gid)]["ids"],
         )
         async with jd_lock:
             del jd_downloads[int(self._gid)]

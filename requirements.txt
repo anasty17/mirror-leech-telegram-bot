@@ -17,10 +17,10 @@ gunicorn
 httpx
 lxml
 motor
-myjdapi
 natsort
 pillow
 psutil
+pycryptodome
 pymongo
 pyrogram
 python-dotenv

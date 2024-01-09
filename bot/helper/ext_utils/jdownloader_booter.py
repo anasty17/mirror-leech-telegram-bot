@@ -1,9 +1,9 @@
-from myjdapi import Myjdapi
+from myjd import Myjdapi
 from json import dump
 from asyncio import sleep as aiosleep
 from random import randint
 from aiofiles.os import listdir
-from myjdapi.exception import (
+from myjd.exception import (
     MYJDException,
     MYJDAuthFailedException,
     MYJDEmailForbiddenException,
@@ -117,7 +117,7 @@ class JDownloader(Myjdapi):
     @new_task
     async def keepJdAlive(self):
         while True:
-            await aiosleep(100)
+            await aiosleep(300)
             if self.device is None:
                 break
             async with jd_lock:

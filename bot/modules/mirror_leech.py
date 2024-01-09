@@ -3,7 +3,7 @@ from pyrogram.filters import command
 from base64 import b64encode
 from re import match as re_match
 from aiofiles.os import path as aiopath
-from myjdapi.exception import MYJDException
+from myjd.exception import MYJDException
 
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_download

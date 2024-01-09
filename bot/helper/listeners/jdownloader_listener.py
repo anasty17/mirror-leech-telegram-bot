@@ -17,12 +17,12 @@ async def _onDownloadComplete(gid):
             "DELETE_DISABLED",
             "REMOVE_LINKS_AND_DELETE_FILES",
             "SELECTED",
-            package_ids=[gid],
+            package_ids=jd_downloads[gid]["ids"],
         )
     await task.listener.onDownloadComplete()
     await retry_function(
         jdownloader.device.downloads.remove_links,
-        package_ids=[gid],
+        package_ids=jd_downloads[gid]["ids"],
     )
     del jd_downloads[gid]
 
@@ -41,15 +41,19 @@ async def _jd_listener():
                 )
             except:
                 continue
+            finished = []
             for pack in packages:
-                gid = pack["uuid"]
-                if (
-                    gid in jd_downloads
-                    and jd_downloads[gid] != "done"
-                    and pack.get("finished", False)
-                ):
-                    jd_downloads[gid] = "done"
-                    _onDownloadComplete(gid)
+                if pack.get("finished", False):
+                    finished.append(pack["uuid"])
+            for gid in finished:
+                if gid in jd_downloads and jd_downloads[gid]["status"] != "done":
+                    is_finished = True
+                    for did in jd_downloads[gid]["ids"]:
+                        if did not in finished:
+                            is_finished = False
+                    if is_finished:
+                        jd_downloads[gid]["status"] = "done"
+                        _onDownloadComplete(gid)
 
 
 async def onDownloadStart():
