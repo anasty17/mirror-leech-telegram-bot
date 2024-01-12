@@ -9,6 +9,7 @@ from bot.helper.telegram_helper.message_utils import (
     sendMessage,
     auto_delete_message,
     deleteMessage,
+    editMessage,
 )
 from bot.helper.ext_utils.status_utils import getTaskByGid, getAllTasks, MirrorStatus
 from bot.helper.ext_utils.bot_utils import new_task
@@ -79,26 +80,30 @@ async def cancel_all(status):
     return True
 
 
+def create_cancel_buttons():
+    buttons = button_build.ButtonMaker()
+    buttons.ibutton("Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING}")
+    buttons.ibutton("Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING}")
+    buttons.ibutton("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING}")
+    buttons.ibutton("Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING}")
+    buttons.ibutton("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING}")
+    buttons.ibutton("Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING}")
+    buttons.ibutton("Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING}")
+    buttons.ibutton("QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL}")
+    buttons.ibutton("QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP}")
+    buttons.ibutton("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED}")
+    buttons.ibutton("All", "canall ms all")
+    buttons.ibutton("Close", "canall close")
+    return buttons.build_menu(2)
+
+
 async def cancell_all_buttons(_, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
         await sendMessage(message, "No active tasks!")
         return
-    buttons = button_build.ButtonMaker()
-    buttons.ibutton("Downloading", f"canall {MirrorStatus.STATUS_DOWNLOADING}")
-    buttons.ibutton("Uploading", f"canall {MirrorStatus.STATUS_UPLOADING}")
-    buttons.ibutton("Seeding", f"canall {MirrorStatus.STATUS_SEEDING}")
-    buttons.ibutton("Spltting", f"canall {MirrorStatus.STATUS_SPLITTING}")
-    buttons.ibutton("Cloning", f"canall {MirrorStatus.STATUS_CLONING}")
-    buttons.ibutton("Extracting", f"canall {MirrorStatus.STATUS_EXTRACTING}")
-    buttons.ibutton("Archiving", f"canall {MirrorStatus.STATUS_ARCHIVING}")
-    buttons.ibutton("QueuedDl", f"canall {MirrorStatus.STATUS_QUEUEDL}")
-    buttons.ibutton("QueuedUp", f"canall {MirrorStatus.STATUS_QUEUEUP}")
-    buttons.ibutton("Paused", f"canall {MirrorStatus.STATUS_PAUSED}")
-    buttons.ibutton("All", "canall all")
-    buttons.ibutton("Close", "canall close")
-    button = buttons.build_menu(2)
+    button = create_cancel_buttons()
     can_msg = await sendMessage(message, "Choose tasks to cancel.", button)
     await auto_delete_message(message, can_msg)
 
@@ -112,6 +117,18 @@ async def cancel_all_update(_, query):
     if data[1] == "close":
         await deleteMessage(reply_to)
         await deleteMessage(message)
+    elif data[1] == "back":
+        button = create_cancel_buttons()
+        await editMessage(message, "Choose tasks to cancel.", button)
+    elif data[1] == "ms":
+        buttons = button_build.ButtonMaker()
+        buttons.ibutton("Yes!", f"canall {data[2]}")
+        buttons.ibutton("Back", "canall back all")
+        buttons.ibutton("Close", "canall close")
+        button = buttons.build_menu(2)
+        await editMessage(
+            message, f"Are you sure you want to cancel all {data[2]} tasks", button
+        )
     else:
         res = await cancel_all(data[1])
         if not res:

@@ -182,7 +182,7 @@ async def rssSub(_, message, pre_event):
     if scheduler.state == 2:
         scheduler.resume()
     elif is_sudo and not scheduler.running:
-        addJob(config_dict["RSS_DELAY"])
+        addJob()
         scheduler.start()
 
 
@@ -229,7 +229,7 @@ async def rssUpdate(_, message, pre_event, state):
             if scheduler.state == 2:
                 scheduler.resume()
             elif is_sudo and not scheduler.running:
-                addJob(config_dict["RSS_DELAY"])
+                addJob()
                 scheduler.start()
         if is_sudo and DATABASE_URL and user_id != message.from_user.id:
             await DbManger().rss_update(user_id)
@@ -578,7 +578,7 @@ Timeout: 60 sec. Argument -c for command and options
             if scheduler.state == 2:
                 scheduler.resume()
             elif not scheduler.running:
-                addJob(config_dict["RSS_DELAY"])
+                addJob()
                 scheduler.start()
             if DATABASE_URL:
                 await DbManger().rss_update_all()
@@ -613,7 +613,7 @@ Timeout: 60 sec. Argument -c for command and options
     elif data[1] == "start":
         if not scheduler.running:
             await query.answer()
-            addJob(config_dict["RSS_DELAY"])
+            addJob()
             scheduler.start()
             await updateRssMenu(query)
         else:
@@ -712,10 +712,10 @@ async def rssMonitor():
         scheduler.pause()
 
 
-def addJob(delay):
+def addJob():
     scheduler.add_job(
         rssMonitor,
-        trigger=IntervalTrigger(seconds=delay),
+        trigger=IntervalTrigger(seconds=config_dict["RSS_DELAY"]),
         id="0",
         name="RSS",
         misfire_grace_time=15,
@@ -725,7 +725,7 @@ def addJob(delay):
     )
 
 
-addJob(config_dict["RSS_DELAY"])
+addJob()
 scheduler.start()
 bot.add_handler(
     MessageHandler(

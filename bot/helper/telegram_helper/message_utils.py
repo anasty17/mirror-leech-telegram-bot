@@ -92,12 +92,11 @@ async def deleteMessage(message):
 
 
 async def auto_delete_message(cmd_message=None, bot_message=None):
-    if config_dict["AUTO_DELETE_MESSAGE_DURATION"] != -1:
-        await sleep(config_dict["AUTO_DELETE_MESSAGE_DURATION"])
-        if cmd_message is not None:
-            await deleteMessage(cmd_message)
-        if bot_message is not None:
-            await deleteMessage(bot_message)
+    await sleep(60)
+    if cmd_message is not None:
+        await deleteMessage(cmd_message)
+    if bot_message is not None:
+        await deleteMessage(bot_message)
 
 
 async def delete_status():

@@ -1,11 +1,12 @@
 # -*- encoding: utf-8 -*-
-import hashlib
-import hmac
-import json
-import time
+from hashlib import sha256
+from hmac import new
+from json import dumps, loads, JSONDecodeError
+from time import time
 from urllib.parse import quote
-import base64
-import requests
+from base64 import b64encode, b64decode
+from requests import get, post
+from requests.exceptions import RequestException
 from Crypto.Cipher import AES
 
 from .exception import (
@@ -850,7 +851,7 @@ class Jddevice:
         if (
             self.__direct_connection_enabled
             and self.__direct_connection_info is not None
-            and time.time() >= self.__direct_connection_cooldown
+            and time() >= self.__direct_connection_cooldown
         ):
             return self.__direct_connect(path, http_action, params, action_url)
         response = self.myjd.request_api(path, http_action, params, action_url)
@@ -858,14 +859,14 @@ class Jddevice:
             raise (MYJDConnectionException("No connection established\n"))
         if (
             self.__direct_connection_enabled
-            and time.time() >= self.__direct_connection_cooldown
+            and time() >= self.__direct_connection_cooldown
         ):
             self.__refresh_direct_connections()
         return response["data"]
 
     def __direct_connect(self, path, http_action, params, action_url):
         for conn in self.__direct_connection_info:
-            if time.time() > conn["cooldown"]:
+            if time() > conn["cooldown"]:
                 connection = conn["conn"]
                 api = "http://" + connection["ip"] + ":" + str(connection["port"])
                 response = self.myjd.request_api(
@@ -877,9 +878,9 @@ class Jddevice:
                     self.__direct_connection_consecutive_failures = 0
                     return response["data"]
                 else:
-                    conn["cooldown"] = time.time() + 60
+                    conn["cooldown"] = time() + 60
         self.__direct_connection_consecutive_failures += 1
-        self.__direct_connection_cooldown = time.time() + (
+        self.__direct_connection_cooldown = time() + (
             60 * self.__direct_connection_consecutive_failures
         )
         response = self.myjd.request_api(path, http_action, params, action_url)
@@ -903,7 +904,7 @@ class Myjdapi:
         This functions initializates the myjdapi object.
 
         """
-        self.__request_id = int(time.time() * 1000)
+        self.__request_id = int(time() * 1000)
         self.__api_url = "https://api.jdownloader.org"
         self.__app_key = "http://git.io/vmcsk"
         self.__api_version = 1
@@ -941,7 +942,7 @@ class Myjdapi:
         :return: secret hash
 
         """
-        secret_hash = hashlib.sha256()
+        secret_hash = sha256()
         secret_hash.update(
             email.lower().encode("utf-8")
             + password.encode("utf-8")
@@ -958,10 +959,10 @@ class Myjdapi:
             old_token = self.__login_secret
         else:
             old_token = self.__server_encryption_token
-        new_token = hashlib.sha256()
+        new_token = sha256()
         new_token.update(old_token + bytearray.fromhex(self.__session_token))
         self.__server_encryption_token = new_token.digest()
-        new_token = hashlib.sha256()
+        new_token = sha256()
         new_token.update(self.__device_secret + bytearray.fromhex(self.__session_token))
         self.__device_encryption_token = new_token.digest()
 
@@ -972,7 +973,7 @@ class Myjdapi:
         :param key:
         :param data:
         """
-        signature = hmac.new(key, data.encode("utf-8"), hashlib.sha256)
+        signature = new(key, data.encode("utf-8"), sha256)
         return signature.hexdigest()
 
     def __decrypt(self, secret_token, data):
@@ -985,7 +986,7 @@ class Myjdapi:
         init_vector = secret_token[: len(secret_token) // 2]
         key = secret_token[len(secret_token) // 2 :]
         decryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        return UNPAD(decryptor.decrypt(base64.b64decode(data)))
+        return UNPAD(decryptor.decrypt(b64decode(data)))
 
     def __encrypt(self, secret_token, data):
         """
@@ -998,14 +999,14 @@ class Myjdapi:
         init_vector = secret_token[: len(secret_token) // 2]
         key = secret_token[len(secret_token) // 2 :]
         encryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        encrypted_data = base64.b64encode(encryptor.encrypt(data))
+        encrypted_data = b64encode(encryptor.encrypt(data))
         return encrypted_data.decode("utf-8")
 
     def update_request_id(self):
         """
         Updates Request_Id
         """
-        self.__request_id = int(time.time())
+        self.__request_id = int(time())
 
     def connect(self, email, password):
         """Establish connection to api
@@ -1163,7 +1164,7 @@ class Myjdapi:
                     )
                 ]
             query = query[0] + "&".join(query[1:])
-            encrypted_response = requests.get(api + query, timeout=3, verify=False)
+            encrypted_response = get(api + query, timeout=3, verify=False)
         else:
             params_request = []
             if params is not None:
@@ -1171,7 +1172,7 @@ class Myjdapi:
                     if isinstance(param, (str, list)):
                         params_request += [param]
                     elif isinstance(param, (dict, bool)):
-                        params_request += [json.dumps(param)]
+                        params_request += [dumps(param)]
                     else:
                         params_request += [str(param)]
             params_request = {
@@ -1180,33 +1181,33 @@ class Myjdapi:
                 "params": params_request,
                 "rid": self.__request_id,
             }
-            data = json.dumps(params_request)
+            data = dumps(params_request)
             # Removing quotes around null elements.
             data = data.replace('"null"', "null")
             data = data.replace("'null'", "null")
             encrypted_data = self.__encrypt(self.__device_encryption_token, data)
             request_url = api + action + path if action is not None else api + path
             try:
-                encrypted_response = requests.post(
+                encrypted_response = post(
                     request_url,
                     headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
                     data=encrypted_data,
                     timeout=3,
                     verify=False,
                 )
-            except requests.exceptions.RequestException as e:
+            except RequestException as e:
                 return None
         if encrypted_response.status_code != 200:
             try:
-                error_msg = json.loads(encrypted_response.text)
-            except json.JSONDecodeError:
+                error_msg = loads(encrypted_response.text)
+            except JSONDecodeError:
                 try:
-                    error_msg = json.loads(
+                    error_msg = loads(
                         self.__decrypt(
                             self.__device_encryption_token, encrypted_response.text
                         )
                     )
-                except json.JSONDecodeError as exc:
+                except JSONDecodeError as exc:
                     raise MYJDDecodeException(
                         "Failed to decode response: {}", encrypted_response.text
                     ) from exc
@@ -1238,7 +1239,7 @@ class Myjdapi:
             response = self.__decrypt(
                 self.__device_encryption_token, encrypted_response.text
             )
-        jsondata = json.loads(response.decode("utf-8"))
+        jsondata = loads(response.decode("utf-8"))
         if jsondata["rid"] != self.__request_id:
             self.update_request_id()
             return None
