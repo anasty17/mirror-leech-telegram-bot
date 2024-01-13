@@ -1,3 +1,4 @@
+from dotenv import load_dotenv, dotenv_values
 from logging import (
     FileHandler,
     StreamHandler,
@@ -7,9 +8,8 @@ from logging import (
     info as log_info,
 )
 from os import path, environ, remove
-from subprocess import run as srun
-from dotenv import load_dotenv, dotenv_values
 from pymongo import MongoClient
+from subprocess import run as srun
 
 if path.exists("log.txt"):
     with open("log.txt", "r+") as f:
@@ -53,9 +53,9 @@ if DATABASE_URL is not None:
         if old_config is not None:
             del old_config["_id"]
         if (
-            old_config is not None
-            and old_config == dict(dotenv_values("config.env"))
-            or old_config is None
+                old_config is not None
+                and old_config == dict(dotenv_values("config.env"))
+                or old_config is None
         ) and config_dict is not None:
             environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
             environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]

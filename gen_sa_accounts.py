@@ -5,14 +5,13 @@ import sys
 from argparse import ArgumentParser
 from base64 import b64decode
 from glob import glob
-from json import loads
-from random import choice
-from time import sleep
-
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from json import loads
+from random import choice
+from time import sleep
 
 SCOPES = ['https://www.googleapis.com/auth/drive', 'https://www.googleapis.com/auth/cloud-platform',
           'https://www.googleapis.com/auth/iam']

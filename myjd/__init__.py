@@ -1,4 +1,3 @@
-from .myjdapi import Myjdapi
 from .exception import (
     MYJDException,
     MYJDConnectionException,
@@ -33,5 +32,6 @@ from .exception import (
     MYJDTooManyRequestsException,
     MYJDUnknownException,
 )
+from .myjdapi import Myjdapi
 
 __version__ = "1.1.7"

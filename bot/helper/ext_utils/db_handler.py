@@ -1,8 +1,8 @@
-from aiofiles.os import path as aiopath, makedirs
 from aiofiles import open as aiopen
+from aiofiles.os import path as aiopath, makedirs
+from dotenv import dotenv_values
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import PyMongoError
-from dotenv import dotenv_values
 
 from bot import (
     DATABASE_URL,
@@ -17,7 +17,7 @@ from bot import (
 )
 
 
-class DbManger:
+class DbManager:
     def __init__(self):
         self._err = False
         self._db = None
@@ -233,4 +233,4 @@ class DbManger:
 
 
 if DATABASE_URL:
-    bot_loop.run_until_complete(DbManger().db_load())
+    bot_loop.run_until_complete(DbManager().db_load())

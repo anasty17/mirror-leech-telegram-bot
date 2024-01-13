@@ -1,21 +1,8 @@
-from pyrogram.handlers import CallbackQueryHandler
-from pyrogram.filters import regex, user
-from functools import partial
 from asyncio import wait_for, Event, wrap_future, sleep
+from functools import partial
+from pyrogram.filters import regex, user
+from pyrogram.handlers import CallbackQueryHandler
 
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.mirror_utils.status_utils.jdownloader_status import JDownloaderStatus
-from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.bot_utils import new_thread, retry_function
-from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
-from bot.helper.ext_utils.jdownloader_booter import jdownloader
-from bot.helper.listeners.jdownloader_listener import onDownloadStart
-from bot.helper.telegram_helper.message_utils import (
-    sendMessage,
-    sendStatusMessage,
-    editMessage,
-    deleteMessage,
-)
 from bot import (
     task_dict,
     task_dict_lock,
@@ -24,6 +11,19 @@ from bot import (
     queue_dict_lock,
     jd_lock,
     jd_downloads,
+)
+from bot.helper.ext_utils.bot_utils import new_thread, retry_function
+from bot.helper.ext_utils.jdownloader_booter import jdownloader
+from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
+from bot.helper.listeners.jdownloader_listener import onDownloadStart
+from bot.helper.mirror_utils.status_utils.jdownloader_status import JDownloaderStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.telegram_helper.button_build import ButtonMaker
+from bot.helper.telegram_helper.message_utils import (
+    sendMessage,
+    sendStatusMessage,
+    editMessage,
+    deleteMessage,
 )
 
 
@@ -89,7 +89,7 @@ async def add_jd_download(listener, path):
         if not jd_downloads:
             await retry_function(jdownloader.device.linkgrabber.clear_list)
             if odl := await retry_function(
-                jdownloader.device.downloads.query_packages, [{}]
+                    jdownloader.device.downloads.query_packages, [{}]
             ):
                 odl_list = [od["uuid"] for od in odl]
                 await retry_function(
@@ -157,7 +157,7 @@ async def add_jd_download(listener, path):
 
         if not online_packages:
             error = (
-                name or "Download Not Added! Maybe some issues in jdownloader or site!"
+                    name or "Download Not Added! Maybe some issues in jdownloader or site!"
             )
             await listener.onDownloadError(error)
             return

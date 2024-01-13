@@ -1,23 +1,23 @@
+from cloudscraper import create_scraper
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from json import loads
+from lxml.etree import HTML
 from os import path as ospath
 from re import findall, match, search
-from time import sleep
-from urllib.parse import parse_qs, urlparse
-from uuid import uuid4
-from cloudscraper import create_scraper
-from lxml.etree import HTML
 from requests import Session, post
 from requests import session as req_session
 from requests.adapters import HTTPAdapter
+from time import sleep
+from urllib.parse import parse_qs, urlparse
 from urllib3.util.retry import Retry
+from uuid import uuid4
 
 from bot import config_dict
-from bot.helper.ext_utils.status_utils import speed_string_to_bytes
-from bot.helper.ext_utils.links_utils import is_share_link
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
+from bot.helper.ext_utils.links_utils import is_share_link
+from bot.helper.ext_utils.status_utils import speed_string_to_bytes
 
 _caches = {}
 
@@ -68,74 +68,74 @@ def direct_link_generator(link):
     elif any(x in domain for x in ["akmfiles.com", "akmfls.xyz"]):
         return akmfiles(link)
     elif any(
-        x in domain
-        for x in [
-            "dood.watch",
-            "doodstream.com",
-            "dood.to",
-            "dood.so",
-            "dood.cx",
-            "dood.la",
-            "dood.ws",
-            "dood.sh",
-            "doodstream.co",
-            "dood.pm",
-            "dood.wf",
-            "dood.re",
-            "dood.video",
-            "dooood.com",
-            "dood.yt",
-            "doods.yt",
-            "dood.stream",
-            "doods.pro",
-            "ds2play.com",
-        ]
+            x in domain
+            for x in [
+                "dood.watch",
+                "doodstream.com",
+                "dood.to",
+                "dood.so",
+                "dood.cx",
+                "dood.la",
+                "dood.ws",
+                "dood.sh",
+                "doodstream.co",
+                "dood.pm",
+                "dood.wf",
+                "dood.re",
+                "dood.video",
+                "dooood.com",
+                "dood.yt",
+                "doods.yt",
+                "dood.stream",
+                "doods.pro",
+                "ds2play.com",
+            ]
     ):
         return doods(link)
     elif any(
-        x in domain
-        for x in [
-            "streamtape.com",
-            "streamtape.co",
-            "streamtape.cc",
-            "streamtape.to",
-            "streamtape.net",
-            "streamta.pe",
-            "streamtape.xyz",
-        ]
+            x in domain
+            for x in [
+                "streamtape.com",
+                "streamtape.co",
+                "streamtape.cc",
+                "streamtape.to",
+                "streamtape.net",
+                "streamta.pe",
+                "streamtape.xyz",
+            ]
     ):
         return streamtape(link)
     elif any(x in domain for x in ["wetransfer.com", "we.tl"]):
         return wetransfer(link)
     elif any(
-        x in domain
-        for x in [
-            "terabox.com",
-            "nephobox.com",
-            "4funbox.com",
-            "mirrobox.com",
-            "momerybox.com",
-            "teraboxapp.com",
-            "1024tera.com",
-            "terabox.app",
-        ]
+            x in domain
+            for x in [
+                "terabox.com",
+                "nephobox.com",
+                "4funbox.com",
+                "mirrobox.com",
+                "momerybox.com",
+                "teraboxapp.com",
+                "1024tera.com",
+                "terabox.app",
+            ]
     ):
         return terabox(link)
     elif any(
-        x in domain
-        for x in [
-            "filelions.co",
-            "filelions.site",
-            "filelions.live",
-            "filelions.to",
-            "cabecabean.lol",
-            "filelions.online",
-            "embedwish.com",
-            "streamwish.com",
-            "kitabmarkaz.xyz",
-            "wishfast.top",
-            "streamwish.to",
-        ]
+            x in domain
+            for x in [
+                "filelions.co",
+                "filelions.site",
+                "filelions.live",
+                "filelions.to",
+                "cabecabean.lol",
+                "filelions.online",
+                "embedwish.com",
+                "streamwish.com",
+                "kitabmarkaz.xyz",
+                "wishfast.top",
+                "streamwish.to",
+            ]
     ):
         return filelions_and_streamwish(link)
     elif any(x in domain for x in ["streamhub.ink", "streamhub.to"]):
@@ -150,26 +150,26 @@ def direct_link_generator(link):
         else:
             return sharer_scraper(link)
     elif any(
-        x in domain
-        for x in [
-            "anonfiles.com",
-            "zippyshare.com",
-            "letsupload.io",
-            "hotfile.io",
-            "bayfiles.com",
-            "megaupload.nz",
-            "letsupload.cc",
-            "filechan.org",
-            "myfile.is",
-            "vshare.is",
-            "rapidshare.nu",
-            "lolabits.se",
-            "openload.cc",
-            "share-online.is",
-            "upvid.cc",
-            "uptobox.com",
-            "uptobox.fr",
-        ]
+            x in domain
+            for x in [
+                "anonfiles.com",
+                "zippyshare.com",
+                "letsupload.io",
+                "hotfile.io",
+                "bayfiles.com",
+                "megaupload.nz",
+                "letsupload.cc",
+                "filechan.org",
+                "myfile.is",
+                "vshare.is",
+                "rapidshare.nu",
+                "lolabits.se",
+                "openload.cc",
+                "share-online.is",
+                "upvid.cc",
+                "uptobox.com",
+                "uptobox.fr",
+            ]
     ):
         raise DirectDownloadLinkException(f"ERROR: R.I.P {domain}")
     else:
@@ -193,7 +193,7 @@ def mediafire(url, session=None):
     if "/folder/" in url:
         return mediafireFolder(url)
     if final_link := findall(
-        r"https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+", url
+            r"https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+", url
     ):
         return final_link[0]
     if session is None:
@@ -614,7 +614,7 @@ def gdtot(url):
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
         if (
-            drive_link := findall(r"myDl\('(.*?)'\)", res.text)
+                drive_link := findall(r"myDl\('(.*?)'\)", res.text)
         ) and "drive.google.com" in drive_link[0]:
             return drive_link[0]
         else:
@@ -684,7 +684,7 @@ def sharer_scraper(url):
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     if (
-        drive_link := HTML(res.text).xpath("//a[contains(@class,'btn')]/@href")
+            drive_link := HTML(res.text).xpath("//a[contains(@class,'btn')]/@href")
     ) and "drive.google.com" in drive_link[0]:
         return drive_link[0]
     else:
@@ -833,7 +833,7 @@ def linkBox(url: str):
                     folderPath = details["title"]
                 filename = content["name"]
                 if (sub_type := content.get("sub_type")) and not filename.endswith(
-                    sub_type
+                        sub_type
                 ):
                     filename += f".{sub_type}"
                 item = {
@@ -1269,16 +1269,16 @@ def easyupload(url):
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
         first_page_html = HTML(_res.text)
         if (
-            first_page_html.xpath("//h6[contains(text(),'Password Protected')]")
-            and not _password
+                first_page_html.xpath("//h6[contains(text(),'Password Protected')]")
+                and not _password
         ):
             raise DirectDownloadLinkException(
                 f"ERROR:\n{PASSWORD_ERROR_MESSAGE.format(url)}"
             )
         if not (
-            match := search(
-                r"https://eu(?:[1-9][0-9]?|100)\.easyupload\.io/action\.php", _res.text
-            )
+                match := search(
+                    r"https://eu(?:[1-9][0-9]?|100)\.easyupload\.io/action\.php", _res.text
+                )
         ):
             raise DirectDownloadLinkException(
                 "ERROR: Failed to get server for EasyUpload Link"
@@ -1323,27 +1323,27 @@ def filelions_and_streamwish(url):
     hostname = parsed_url.hostname
     scheme = parsed_url.scheme
     if any(
-        x in hostname
-        for x in [
-            "filelions.co",
-            "filelions.live",
-            "filelions.to",
-            "filelions.site",
-            "cabecabean.lol",
-            "filelions.online",
-        ]
+            x in hostname
+            for x in [
+                "filelions.co",
+                "filelions.live",
+                "filelions.to",
+                "filelions.site",
+                "cabecabean.lol",
+                "filelions.online",
+            ]
     ):
         apiKey = config_dict["FILELION_API"]
         apiUrl = "https://api.filelions.co"
     elif any(
-        x in hostname
-        for x in [
-            "embedwish.com",
-            "streamwish.com",
-            "kitabmarkaz.xyz",
-            "wishfast.top",
-            "streamwish.to",
-        ]
+            x in hostname
+            for x in [
+                "embedwish.com",
+                "streamwish.com",
+                "kitabmarkaz.xyz",
+                "wishfast.top",
+                "streamwish.to",
+            ]
     ):
         apiKey = config_dict["STREAMWISH_API"]
         apiUrl = "https://api.streamwish.com"
@@ -1411,12 +1411,12 @@ def streamvid(url: str):
                     f"ERROR: {e.__class__.__name__}"
                 ) from e
             if not (
-                script := html.xpath(
-                    '//script[contains(text(),"document.location.href")]/text()'
-                )
+                    script := html.xpath(
+                        '//script[contains(text(),"document.location.href")]/text()'
+                    )
             ):
                 if error := html.xpath(
-                    '//div[@class="alert alert-danger"][1]/text()[2]'
+                        '//div[@class="alert alert-danger"][1]/text()[2]'
                 ):
                     raise DirectDownloadLinkException(f"ERROR: {error[0]}")
                 raise DirectDownloadLinkException(
@@ -1428,7 +1428,7 @@ def streamvid(url: str):
                 "ERROR: direct link not found! in the script"
             )
         elif (qualities_urls := html.xpath('//div[@id="dl_versions"]/a/@href')) and (
-            qualities := html.xpath('//div[@id="dl_versions"]/a/text()[2]')
+                qualities := html.xpath('//div[@id="dl_versions"]/a/text()[2]')
         ):
             error = "\nProvide a quality to download the video\nAvailable Quality:"
             for quality_url, quality in zip(qualities_urls, qualities):
@@ -1461,7 +1461,7 @@ def streamhub(url):
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
         if directLink := html.xpath(
-            '//a[@class="btn btn-primary btn-go downloadbtn"]/@href'
+                '//a[@class="btn btn-primary btn-go downloadbtn"]/@href'
         ):
             return directLink[0]
         if error := html.xpath('//div[@class="alert alert-danger"]/text()[2]'):
@@ -1482,7 +1482,7 @@ def pcloud(url):
 
 def tmpsend(url):
     parsed_url = urlparse(url)
-    if any(x in parsed_url.path for x in ['thank-you','download']):
+    if any(x in parsed_url.path for x in ['thank-you', 'download']):
         query_params = parse_qs(parsed_url.query)
         if file_id := query_params.get('d'):
             file_id = file_id[0]

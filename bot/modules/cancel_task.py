@@ -1,8 +1,11 @@
 from asyncio import sleep
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.filters import command, regex
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from bot import task_dict, bot, task_dict_lock, OWNER_ID, user_data, multi_tags
+from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.status_utils import getTaskByGid, getAllTasks, MirrorStatus
+from bot.helper.telegram_helper import button_build
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (
@@ -11,9 +14,6 @@ from bot.helper.telegram_helper.message_utils import (
     deleteMessage,
     editMessage,
 )
-from bot.helper.ext_utils.status_utils import getTaskByGid, getAllTasks, MirrorStatus
-from bot.helper.ext_utils.bot_utils import new_task
-from bot.helper.telegram_helper import button_build
 
 
 async def cancel_task(_, message):
@@ -43,9 +43,9 @@ async def cancel_task(_, message):
         await sendMessage(message, msg)
         return
     if (
-        OWNER_ID != user_id
-        and task.listener.user_id != user_id
-        and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
+            OWNER_ID != user_id
+            and task.listener.user_id != user_id
+            and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
         await sendMessage(message, "This task is not for you!")
         return

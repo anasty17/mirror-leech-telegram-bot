@@ -1,17 +1,17 @@
-from logging import getLogger, ERROR
-from pickle import load as pload
-from os import path as ospath, listdir
-from re import search as re_search
-from urllib.parse import parse_qs, urlparse
-from random import randrange
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from logging import getLogger, ERROR
+from os import path as ospath, listdir
+from pickle import load as pload
+from random import randrange
+from re import search as re_search
 from tenacity import (
     retry,
     wait_exponential,
     stop_after_attempt,
     retry_if_exception_type,
 )
+from urllib.parse import parse_qs, urlparse
 
 from bot import config_dict
 from bot.helper.ext_utils.links_utils import is_gdrive_id
@@ -61,8 +61,8 @@ class GoogleDriveHelper:
     async def progress(self):
         if self.status is not None:
             chunk_size = (
-                self.status.total_size * self.status.progress()
-                - self.file_processed_bytes
+                    self.status.total_size * self.status.progress()
+                    - self.file_processed_bytes
             )
             self.file_processed_bytes = self.status.total_size * self.status.progress()
             self.proc_bytes += chunk_size

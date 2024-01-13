@@ -1,10 +1,6 @@
-from time import time
 from asyncio import Lock
+from time import time
 
-from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.telegram_helper.message_utils import sendStatusMessage
-from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
 from bot import (
     LOGGER,
     task_dict,
@@ -14,6 +10,10 @@ from bot import (
     bot,
     user,
 )
+from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
+from bot.helper.telegram_helper.message_utils import sendStatusMessage
 
 global_lock = Lock()
 GLOBAL_GID = set()
@@ -93,8 +93,8 @@ class TelegramDownloadHelper:
 
     async def add_download(self, message, path):
         if (
-            self._listener.session not in ["user", "bot"]
-            and self._listener.userTransmission
+                self._listener.session not in ["user", "bot"]
+                and self._listener.userTransmission
         ):
             self._listener.session = "user"
             message = await user.get_messages(
@@ -104,15 +104,15 @@ class TelegramDownloadHelper:
             self._listener.session = "bot"
 
         media = (
-            message.document
-            or message.photo
-            or message.video
-            or message.audio
-            or message.voice
-            or message.video_note
-            or message.sticker
-            or message.animation
-            or None
+                message.document
+                or message.photo
+                or message.video
+                or message.audio
+                or message.voice
+                or message.video_note
+                or message.sticker
+                or message.animation
+                or None
         )
 
         if media is not None:

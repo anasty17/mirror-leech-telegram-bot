@@ -1,5 +1,5 @@
-from logging import getLogger
 from googleapiclient.errors import HttpError
+from logging import getLogger
 
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
 
@@ -25,7 +25,7 @@ class gdDelete(GoogleDriveHelper):
             LOGGER.info(f"Delete Result: {msg}")
         except HttpError as err:
             if "File not found" in str(err) or "insufficientFilePermissions" in str(
-                err
+                    err
             ):
                 if not self.alt_auth and self.use_sa:
                     self.alt_auth = True

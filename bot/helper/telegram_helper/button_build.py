@@ -29,13 +29,13 @@ class ButtonMaker:
 
     def build_menu(self, b_cols=1, h_cols=8, f_cols=8):
         menu = [
-            self._button[i : i + b_cols] for i in range(0, len(self._button), b_cols)
+            self._button[i: i + b_cols] for i in range(0, len(self._button), b_cols)
         ]
         if self._header_button:
             h_cnt = len(self._header_button)
             if h_cnt > h_cols:
                 header_buttons = [
-                    self._header_button[i : i + h_cols]
+                    self._header_button[i: i + h_cols]
                     for i in range(0, len(self._header_button), h_cols)
                 ]
                 menu = header_buttons + menu
@@ -44,7 +44,7 @@ class ButtonMaker:
         if self._footer_button:
             if len(self._footer_button) > f_cols:
                 [
-                    menu.append(self._footer_button[i : i + f_cols])
+                    menu.append(self._footer_button[i: i + f_cols])
                     for i in range(0, len(self._footer_button), f_cols)
                 ]
             else:

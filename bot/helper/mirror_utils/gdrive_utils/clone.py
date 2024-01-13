@@ -1,7 +1,6 @@
-from logging import getLogger
-from time import time
-from os import path as ospath
 from googleapiclient.errors import HttpError
+from logging import getLogger
+from os import path as ospath
 from tenacity import (
     retry,
     wait_exponential,
@@ -9,6 +8,7 @@ from tenacity import (
     retry_if_exception_type,
     RetryError,
 )
+from time import time
 
 from bot.helper.ext_utils.bot_utils import async_to_sync
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -26,7 +26,7 @@ class gdClone(GoogleDriveHelper):
 
     def user_setting(self):
         if self.listener.upDest.startswith("mtp:") or self.listener.link.startswith(
-            "mtp:"
+                "mtp:"
         ):
             self.token_path = f"tokens/{self.listener.user_id}.pickle"
             self.listener.upDest = self.listener.upDest.replace("mtp:", "", 1)
@@ -35,7 +35,7 @@ class gdClone(GoogleDriveHelper):
             self.listener.upDest = self.listener.upDest.replave("tp:", "", 1)
             self.use_sa = False
         elif self.listener.upDest.startswith("sa:") or self.listener.link.startswith(
-            "sa:"
+                "sa:"
         ):
             self.listener.upDest = self.listener.upDest.replace("sa:", "", 1)
             self.use_sa = True
@@ -116,9 +116,9 @@ class gdClone(GoogleDriveHelper):
                 current_dir_id = self.create_directory(file.get("name"), dest_id)
                 self._cloneFolder(file_path, file.get("id"), current_dir_id)
             elif (
-                not file.get("name")
-                .lower()
-                .endswith(tuple(self.listener.extension_filter))
+                    not file.get("name")
+                            .lower()
+                            .endswith(tuple(self.listener.extension_filter))
             ):
                 self.total_files += 1
                 self._copyFile(file.get("id"), dest_id)
