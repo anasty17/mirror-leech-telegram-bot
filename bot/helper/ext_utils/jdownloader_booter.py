@@ -1,21 +1,21 @@
-from myjd import Myjdapi
-from json import dump
-from asyncio import sleep as aiosleep
-from random import randint
 from aiofiles.os import listdir
-from myjd.exception import (
-    MYJDException,
-    MYJDAuthFailedException,
-    MYJDEmailForbiddenException,
-    MYJDEmailInvalidException,
-    MYJDErrorEmailNotConfirmedException,
-)
+from asyncio import sleep as aiosleep
+from json import dump
+from random import randint
 
 from bot import config_dict, LOGGER, jd_lock
 from bot.helper.ext_utils.bot_utils import (
     cmd_exec,
     new_task,
     sync_to_async,
+)
+from myjd import Myjdapi
+from myjd.exception import (
+    MYJDException,
+    MYJDAuthFailedException,
+    MYJDEmailForbiddenException,
+    MYJDEmailInvalidException,
+    MYJDErrorEmailNotConfirmedException,
 )
 
 
@@ -59,8 +59,8 @@ class JDownloader(Myjdapi):
             "email": config_dict["JD_EMAIL"],
         }
         with open(
-            "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
-            "w",
+                "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
+                "w",
         ) as sf:
             sf.truncate(0)
             dump(jdata, sf)
@@ -77,10 +77,10 @@ class JDownloader(Myjdapi):
             LOGGER.info("JDownloader is connected!")
             return True
         except (
-            MYJDAuthFailedException,
-            MYJDEmailForbiddenException,
-            MYJDEmailInvalidException,
-            MYJDErrorEmailNotConfirmedException,
+                MYJDAuthFailedException,
+                MYJDEmailForbiddenException,
+                MYJDEmailInvalidException,
+                MYJDErrorEmailNotConfirmedException,
         ) as err:
             self.error = f"{err}".strip()
             LOGGER.info(f"Failed to connect with jdownloader! ERROR: {self.error}")

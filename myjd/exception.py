@@ -60,7 +60,7 @@ class MYJDApiException(MYJDException):
 
     @classmethod
     def get_exception(
-        cls, exception_source, exception_type=EXCEPTION_UNKNOWN, *args, **kwargs
+            cls, exception_source, exception_type=EXCEPTION_UNKNOWN, *args, **kwargs
     ):
         """Get exception object from MyJDownloader exception type."""
         return EXCEPTION_CLASSES.get(exception_type.upper(), MYJDUnknownException)(

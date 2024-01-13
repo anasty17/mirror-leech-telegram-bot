@@ -1,13 +1,13 @@
 # -*- encoding: utf-8 -*-
+from Crypto.Cipher import AES
+from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import new
 from json import dumps, loads, JSONDecodeError
-from time import time
-from urllib.parse import quote
-from base64 import b64encode, b64decode
 from requests import get, post
 from requests.exceptions import RequestException
-from Crypto.Cipher import AES
+from time import time
+from urllib.parse import quote
 
 from .exception import (
     MYJDException,
@@ -812,10 +812,10 @@ class Jddevice:
             "/device/getDirectConnectionInfos", "POST", None, self.__action_url()
         )
         if (
-            response is not None
-            and "data" in response
-            and "infos" in response["data"]
-            and len(response["data"]["infos"]) != 0
+                response is not None
+                and "data" in response
+                and "infos" in response["data"]
+                and len(response["data"]["infos"]) != 0
         ):
             self.__update_direct_connections(response["data"]["infos"])
 
@@ -849,17 +849,17 @@ class Jddevice:
     def action(self, path, params=(), http_action="POST"):
         action_url = self.__action_url()
         if (
-            self.__direct_connection_enabled
-            and self.__direct_connection_info is not None
-            and time() >= self.__direct_connection_cooldown
+                self.__direct_connection_enabled
+                and self.__direct_connection_info is not None
+                and time() >= self.__direct_connection_cooldown
         ):
             return self.__direct_connect(path, http_action, params, action_url)
         response = self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
             raise (MYJDConnectionException("No connection established\n"))
         if (
-            self.__direct_connection_enabled
-            and time() >= self.__direct_connection_cooldown
+                self.__direct_connection_enabled
+                and time() >= self.__direct_connection_cooldown
         ):
             self.__refresh_direct_connections()
         return response["data"]
@@ -881,7 +881,7 @@ class Jddevice:
                     conn["cooldown"] = time() + 60
         self.__direct_connection_consecutive_failures += 1
         self.__direct_connection_cooldown = time() + (
-            60 * self.__direct_connection_consecutive_failures
+                60 * self.__direct_connection_consecutive_failures
         )
         response = self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
@@ -984,7 +984,7 @@ class Myjdapi:
         :param data:
         """
         init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2 :]
+        key = secret_token[len(secret_token) // 2:]
         decryptor = AES.new(key, AES.MODE_CBC, init_vector)
         return UNPAD(decryptor.decrypt(b64decode(data)))
 
@@ -997,7 +997,7 @@ class Myjdapi:
         """
         data = PAD(data.encode("utf-8"))
         init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2 :]
+        key = secret_token[len(secret_token) // 2:]
         encryptor = AES.new(key, AES.MODE_CBC, init_vector)
         encrypted_data = b64encode(encryptor.encrypt(data))
         return encrypted_data.decode("utf-8")
@@ -1212,13 +1212,13 @@ class Myjdapi:
                         "Failed to decode response: {}", encrypted_response.text
                     ) from exc
             msg = (
-                "\n\tSOURCE: "
-                + error_msg["src"]
-                + "\n\tTYPE: "
-                + error_msg["type"]
-                + "\n------\nREQUEST_URL: "
-                + api
-                + path
+                    "\n\tSOURCE: "
+                    + error_msg["src"]
+                    + "\n\tTYPE: "
+                    + error_msg["type"]
+                    + "\n------\nREQUEST_URL: "
+                    + api
+                    + path
             )
             if http_method == "GET":
                 msg += query

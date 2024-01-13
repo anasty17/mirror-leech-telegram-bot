@@ -1,21 +1,10 @@
-from pyrogram.handlers import MessageHandler
-from pyrogram.filters import command
-from secrets import token_urlsafe
 from asyncio import gather
 from json import loads
+from pyrogram.filters import command
+from pyrogram.handlers import MessageHandler
+from secrets import token_urlsafe
 
 from bot import LOGGER, task_dict, task_dict_lock, bot
-from bot.helper.mirror_utils.gdrive_utils.clone import gdClone
-from bot.helper.mirror_utils.gdrive_utils.count import gdCount
-from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
-from bot.helper.telegram_helper.message_utils import (
-    sendMessage,
-    deleteMessage,
-    sendStatusMessage,
-)
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
 from bot.helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
@@ -23,35 +12,45 @@ from bot.helper.ext_utils.bot_utils import (
     cmd_exec,
     arg_parser,
 )
-
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
 from bot.helper.ext_utils.links_utils import (
     is_gdrive_link,
     is_share_link,
     is_rclone_path,
     is_gdrive_id,
 )
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
+from bot.helper.ext_utils.task_manager import stop_duplicate_check
+from bot.helper.listeners.task_listener import TaskListener
 from bot.helper.mirror_utils.download_utils.direct_link_generator import (
     direct_link_generator,
 )
+from bot.helper.mirror_utils.gdrive_utils.clone import gdClone
+from bot.helper.mirror_utils.gdrive_utils.count import gdCount
 from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
+from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
 from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.ext_utils.task_manager import stop_duplicate_check
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import (
+    sendMessage,
+    deleteMessage,
+    sendStatusMessage,
+)
 
 
 class Clone(TaskListener):
     def __init__(
-        self,
-        client,
-        message,
-        _=None,
-        __=None,
-        ___=None,
-        ____=None,
-        bulk=None,
-        multiTag=None,
-        options="",
+            self,
+            client,
+            message,
+            _=None,
+            __=None,
+            ___=None,
+            ____=None,
+            bulk=None,
+            multiTag=None,
+            options="",
     ):
         if bulk is None:
             bulk = []

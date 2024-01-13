@@ -1,18 +1,12 @@
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from pyrogram.filters import command, regex, user
-from asyncio import wait_for, Event, wrap_future
 from aiohttp import ClientSession
-from yt_dlp import YoutubeDL
+from asyncio import wait_for, Event, wrap_future
 from functools import partial
+from pyrogram.filters import command, regex, user
+from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
+from yt_dlp import YoutubeDL
 
 from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER
-from bot.helper.telegram_helper.message_utils import (
-    sendMessage,
-    editMessage,
-    deleteMessage,
-)
-from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
@@ -20,12 +14,18 @@ from bot.helper.ext_utils.bot_utils import (
     arg_parser,
     COMMAND_USAGE,
 )
+from bot.helper.ext_utils.links_utils import is_url
+from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
+from bot.helper.listeners.task_listener import TaskListener
 from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
-from bot.helper.ext_utils.links_utils import is_url
+from bot.helper.telegram_helper.message_utils import (
+    sendMessage,
+    editMessage,
+    deleteMessage,
+)
 
 
 @new_task
@@ -116,7 +116,7 @@ class YtSelection:
             buttons.ibutton("Best Audios", "ytq ba/b")
             buttons.ibutton("Cancel", "ytq cancel", "footer")
             self._main_buttons = buttons.build_menu(3)
-            msg = f"Choose Playlist Videos Quality:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+            msg = f"Choose Playlist Videos Quality:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         else:
             format_dict = result.get("formats")
             if format_dict is not None:
@@ -132,8 +132,8 @@ class YtSelection:
                             size = 0
 
                         if item.get("video_ext") == "none" and (
-                            item.get("resolution") == "audio only"
-                            or item.get("acodec") != "none"
+                                item.get("resolution") == "audio only"
+                                or item.get("acodec") != "none"
                         ):
                             if item.get("audio_ext") == "m4a":
                                 self._is_m4a = True
@@ -169,7 +169,7 @@ class YtSelection:
             buttons.ibutton("Best Audio", "ytq ba/b")
             buttons.ibutton("Cancel", "ytq cancel", "footer")
             self._main_buttons = buttons.build_menu(2)
-            msg = f"Choose Video Quality:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+            msg = f"Choose Video Quality:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         self._reply_to = await sendMessage(
             self._listener.message, msg, self._main_buttons
         )
@@ -180,9 +180,9 @@ class YtSelection:
 
     async def back_to_main(self):
         if self._is_playlist:
-            msg = f"Choose Playlist Videos Quality:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+            msg = f"Choose Playlist Videos Quality:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         else:
-            msg = f"Choose Video Quality:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+            msg = f"Choose Video Quality:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         await editMessage(self._reply_to, msg, self._main_buttons)
 
     async def qual_subbuttons(self, b_name):
@@ -194,7 +194,7 @@ class YtSelection:
         buttons.ibutton("Back", "ytq back", "footer")
         buttons.ibutton("Cancel", "ytq cancel", "footer")
         subbuttons = buttons.build_menu(2)
-        msg = f"Choose Bit rate for <b>{b_name}</b>:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+        msg = f"Choose Bit rate for <b>{b_name}</b>:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         await editMessage(self._reply_to, msg, subbuttons)
 
     async def mp3_subbuttons(self):
@@ -207,7 +207,7 @@ class YtSelection:
         buttons.ibutton("Back", "ytq back")
         buttons.ibutton("Cancel", "ytq cancel")
         subbuttons = buttons.build_menu(3)
-        msg = f"Choose mp3 Audio{i} Bitrate:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+        msg = f"Choose mp3 Audio{i} Bitrate:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         await editMessage(self._reply_to, msg, subbuttons)
 
     async def audio_format(self):
@@ -219,7 +219,7 @@ class YtSelection:
         buttons.ibutton("Back", "ytq back", "footer")
         buttons.ibutton("Cancel", "ytq cancel", "footer")
         subbuttons = buttons.build_menu(3)
-        msg = f"Choose Audio{i} Format:\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+        msg = f"Choose Audio{i} Format:\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         await editMessage(self._reply_to, msg, subbuttons)
 
     async def audio_quality(self, format):
@@ -231,7 +231,7 @@ class YtSelection:
         buttons.ibutton("Back", "ytq aq back")
         buttons.ibutton("Cancel", "ytq aq cancel")
         subbuttons = buttons.build_menu(5)
-        msg = f"Choose Audio{i} Qaulity:\n0 is best and 10 is worst\nTimeout: {get_readable_time(self._timeout-(time()-self._time))}"
+        msg = f"Choose Audio{i} Qaulity:\n0 is best and 10 is worst\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
         await editMessage(self._reply_to, msg, subbuttons)
 
 
@@ -247,7 +247,7 @@ async def _mdisk(link, name):
     key = link.split("/")[-1]
     async with ClientSession() as session:
         async with session.get(
-            f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
+                f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
         ) as resp:
             if resp.status == 200:
                 resp_json = await resp.json()
@@ -259,16 +259,16 @@ async def _mdisk(link, name):
 
 class YtDlp(TaskListener):
     def __init__(
-        self,
-        client,
-        message,
-        _=None,
-        isLeech=False,
-        __=None,
-        sameDir=None,
-        bulk=None,
-        multiTag=None,
-        options="",
+            self,
+            client,
+            message,
+            _=None,
+            isLeech=False,
+            __=None,
+            sameDir=None,
+            bulk=None,
+            multiTag=None,
+            options="",
     ):
         if sameDir is None:
             sameDir = {}
@@ -408,7 +408,7 @@ class YtDlp(TaskListener):
                 elif value.lower() == "false":
                     value = False
                 elif value.startswith(("{", "[", "(")) and value.endswith(
-                    ("}", "]", ")")
+                        ("}", "]", ")")
                 ):
                     value = eval(value)
                 options[key] = value

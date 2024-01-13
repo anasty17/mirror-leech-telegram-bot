@@ -1,12 +1,7 @@
-from signal import signal, SIGINT
-from aiofiles.os import path as aiopath, remove
 from aiofiles import open as aiopen
-from os import execl as osexecl
-from time import time
-from sys import executable
-from pyrogram.handlers import MessageHandler
-from pyrogram.filters import command
+from aiofiles.os import path as aiopath, remove
 from asyncio import gather, create_subprocess_exec
+from os import execl as osexecl
 from psutil import (
     disk_usage,
     cpu_percent,
@@ -16,19 +11,12 @@ from psutil import (
     net_io_counters,
     boot_time,
 )
+from pyrogram.filters import command
+from pyrogram.handlers import MessageHandler
+from signal import signal, SIGINT
+from sys import executable
+from time import time
 
-from .helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
-from .helper.ext_utils.jdownloader_booter import jdownloader
-from .helper.ext_utils.telegraph_helper import telegraph
-from .helper.ext_utils.files_utils import clean_all, exit_clean_up
-from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
-from .helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
-from .helper.ext_utils.db_handler import DbManger
-from .helper.telegram_helper.bot_commands import BotCommands
-from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
-from .helper.telegram_helper.filters import CustomFilters
-from .helper.telegram_helper.button_build import ButtonMaker
-from .helper.listeners.aria2_listener import start_aria2_listener
 from bot import (
     bot,
     botStartTime,
@@ -38,6 +26,18 @@ from bot import (
     INCOMPLETE_TASK_NOTIFIER,
     scheduler,
 )
+from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
+from .helper.ext_utils.db_handler import DbManager
+from .helper.ext_utils.files_utils import clean_all, exit_clean_up
+from .helper.ext_utils.jdownloader_booter import jdownloader
+from .helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
+from .helper.ext_utils.telegraph_helper import telegraph
+from .helper.listeners.aria2_listener import start_aria2_listener
+from .helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
+from .helper.telegram_helper.bot_commands import BotCommands
+from .helper.telegram_helper.button_build import ButtonMaker
+from .helper.telegram_helper.filters import CustomFilters
+from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
 from .modules import (
     authorize,
     cancel_task,
@@ -210,7 +210,7 @@ async def restart_notification():
             LOGGER.error(e)
 
     if INCOMPLETE_TASK_NOTIFIER and DATABASE_URL:
-        if notifier_dict := await DbManger().get_incomplete_tasks():
+        if notifier_dict := await DbManager().get_incomplete_tasks():
             for cid, data in notifier_dict.items():
                 msg = "Restarted Successfully!" if cid == chat_id else "Bot Restarted!"
                 for tag, links in data.items():

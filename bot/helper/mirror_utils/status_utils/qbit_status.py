@@ -29,7 +29,7 @@ class QbittorrentStatus:
         self._info = get_download(self.client, f"{self.listener.mid}", self._info)
 
     def progress(self):
-        return f"{round(self._info.progress*100, 2)}%"
+        return f"{round(self._info.progress * 100, 2)}%"
 
     def processed_bytes(self):
         return get_readable_file_size(self._info.downloaded)

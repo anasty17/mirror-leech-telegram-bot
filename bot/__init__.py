@@ -1,16 +1,7 @@
-from tzlocal import get_localzone
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from pyrogram import Client as tgClient, enums
-from pymongo import MongoClient
+from aria2p import API as ariaAPI, Client as ariaClient
 from asyncio import Lock
 from dotenv import load_dotenv, dotenv_values
-from time import time
-from subprocess import Popen, run
-from os import remove, path as ospath, environ, getcwd
-from aria2p import API as ariaAPI, Client as ariaClient
-from qbittorrentapi import Client as qbClient
-from socket import setdefaulttimeout
-from uvloop import install
 from logging import (
     getLogger,
     FileHandler,
@@ -22,6 +13,15 @@ from logging import (
     warning as log_warning,
     ERROR,
 )
+from os import remove, path as ospath, environ, getcwd
+from pymongo import MongoClient
+from pyrogram import Client as tgClient, enums
+from qbittorrentapi import Client as qbClient
+from socket import setdefaulttimeout
+from subprocess import Popen, run
+from time import time
+from tzlocal import get_localzone
+from uvloop import install
 
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
@@ -249,9 +249,9 @@ MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
 LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
 if (
-    len(LEECH_SPLIT_SIZE) == 0
-    or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE
-    or LEECH_SPLIT_SIZE == "2097152000"
+        len(LEECH_SPLIT_SIZE) == 0
+        or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE
+        or LEECH_SPLIT_SIZE == "2097152000"
 ):
     LEECH_SPLIT_SIZE = MAX_SPLIT_SIZE
 else:

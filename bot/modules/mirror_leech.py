@@ -1,28 +1,18 @@
-from pyrogram.handlers import MessageHandler
-from pyrogram.filters import command
-from base64 import b64encode
-from re import match as re_match
 from aiofiles.os import path as aiopath
-from myjd.exception import MYJDException
+from base64 import b64encode
+from pyrogram.filters import command
+from pyrogram.handlers import MessageHandler
+from re import match as re_match
 
-from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
-from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_download
-from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
-from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
-from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
-from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
-from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendMessage, get_tg_link_message
-from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.mirror_utils.download_utils.telegram_download import (
-    TelegramDownloadHelper,
-)
-from bot.helper.mirror_utils.download_utils.direct_link_generator import (
-    direct_link_generator,
-)
 from bot import bot, DOWNLOAD_DIR, LOGGER
+from bot.helper.ext_utils.bot_utils import (
+    get_content_type,
+    new_task,
+    sync_to_async,
+    arg_parser,
+    COMMAND_USAGE,
+)
+from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.links_utils import (
     is_url,
     is_magnet,
@@ -31,27 +21,37 @@ from bot.helper.ext_utils.links_utils import (
     is_telegram_link,
     is_gdrive_id,
 )
-from bot.helper.ext_utils.bot_utils import (
-    get_content_type,
-    new_task,
-    sync_to_async,
-    arg_parser,
-    COMMAND_USAGE,
+from bot.helper.listeners.task_listener import TaskListener
+from bot.helper.mirror_utils.download_utils.aria2_download import add_aria2c_download
+from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_download
+from bot.helper.mirror_utils.download_utils.direct_link_generator import (
+    direct_link_generator,
 )
+from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
+from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
+from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
+from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
+from bot.helper.mirror_utils.download_utils.telegram_download import (
+    TelegramDownloadHelper,
+)
+from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.telegram_helper.filters import CustomFilters
+from bot.helper.telegram_helper.message_utils import sendMessage, get_tg_link_message
+from myjd.exception import MYJDException
 
 
 class Mirror(TaskListener):
     def __init__(
-        self,
-        client,
-        message,
-        isQbit=False,
-        isLeech=False,
-        isJd=False,
-        sameDir=None,
-        bulk=None,
-        multiTag=None,
-        options="",
+            self,
+            client,
+            message,
+            isQbit=False,
+            isLeech=False,
+            isJd=False,
+            sameDir=None,
+            bulk=None,
+            multiTag=None,
+            options="",
     ):
         if sameDir is None:
             sameDir = {}
@@ -210,15 +210,15 @@ class Mirror(TaskListener):
 
         if reply_to:
             file_ = (
-                reply_to.document
-                or reply_to.photo
-                or reply_to.video
-                or reply_to.audio
-                or reply_to.voice
-                or reply_to.video_note
-                or reply_to.sticker
-                or reply_to.animation
-                or None
+                    reply_to.document
+                    or reply_to.photo
+                    or reply_to.video
+                    or reply_to.audio
+                    or reply_to.voice
+                    or reply_to.video_note
+                    or reply_to.sticker
+                    or reply_to.animation
+                    or None
             )
 
             if file_ is None:
@@ -227,23 +227,23 @@ class Mirror(TaskListener):
                 else:
                     reply_to = None
             elif reply_to.document and (
-                file_.mime_type == "application/x-bittorrent"
-                or file_.file_name.endswith(".torrent")
+                    file_.mime_type == "application/x-bittorrent"
+                    or file_.file_name.endswith(".torrent")
             ):
                 self.link = await reply_to.download()
                 file_ = None
 
         if (
-            not self.link
-            and file_ is None
-            or is_telegram_link(self.link)
-            and reply_to is None
-            or file_ is None
-            and not is_url(self.link)
-            and not is_magnet(self.link)
-            and not await aiopath.exists(self.link)
-            and not is_rclone_path(self.link)
-            and not is_gdrive_id(self.link)
+                not self.link
+                and file_ is None
+                or is_telegram_link(self.link)
+                and reply_to is None
+                or file_ is None
+                and not is_url(self.link)
+                and not is_magnet(self.link)
+                and not await aiopath.exists(self.link)
+                and not is_rclone_path(self.link)
+                and not is_gdrive_id(self.link)
         ):
             await sendMessage(
                 self.message, COMMAND_USAGE["mirror"][0], COMMAND_USAGE["mirror"][1]
@@ -262,14 +262,14 @@ class Mirror(TaskListener):
             return
 
         if (
-            not self.isJd
-            and not self.isQbit
-            and not is_magnet(self.link)
-            and not is_rclone_path(self.link)
-            and not is_gdrive_link(self.link)
-            and not self.link.endswith(".torrent")
-            and file_ is None
-            and not is_gdrive_id(self.link)
+                not self.isJd
+                and not self.isQbit
+                and not is_magnet(self.link)
+                and not is_rclone_path(self.link)
+                and not is_gdrive_link(self.link)
+                and not self.link.endswith(".torrent")
+                and file_ is None
+                and not is_gdrive_id(self.link)
         ):
             content_type = await get_content_type(self.link)
             if content_type is None or re_match(r"text/html|text/plain", content_type):

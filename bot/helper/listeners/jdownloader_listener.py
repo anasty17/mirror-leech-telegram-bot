@@ -2,8 +2,8 @@ from asyncio import sleep
 
 from bot import Intervals, jd_lock, jd_downloads
 from bot.helper.ext_utils.bot_utils import new_task, sync_to_async, retry_function
-from bot.helper.ext_utils.status_utils import getTaskByGid
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
+from bot.helper.ext_utils.status_utils import getTaskByGid
 
 
 @new_task
@@ -41,16 +41,10 @@ async def _jd_listener():
                 )
             except:
                 continue
-            finished = []
-            for pack in packages:
-                if pack.get("finished", False):
-                    finished.append(pack["uuid"])
+            finished = [pack["uuid"] for pack in packages if pack.get("finished", False)]
             for gid in finished:
                 if gid in jd_downloads and jd_downloads[gid]["status"] != "done":
-                    is_finished = True
-                    for did in jd_downloads[gid]["ids"]:
-                        if did not in finished:
-                            is_finished = False
+                    is_finished = all(did in finished for did in jd_downloads[gid]["ids"])
                     if is_finished:
                         jd_downloads[gid]["status"] = "done"
                         _onDownloadComplete(gid)

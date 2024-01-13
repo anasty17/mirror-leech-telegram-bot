@@ -1,7 +1,7 @@
-from logging import getLogger
-from os import path as ospath, listdir, remove
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
+from logging import getLogger
+from os import path as ospath, listdir, remove
 from tenacity import (
     retry,
     wait_exponential,
@@ -11,8 +11,8 @@ from tenacity import (
 )
 
 from bot import config_dict
-from bot.helper.ext_utils.files_utils import get_mime_type
 from bot.helper.ext_utils.bot_utils import async_to_sync, setInterval
+from bot.helper.ext_utils.files_utils import get_mime_type
 from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)

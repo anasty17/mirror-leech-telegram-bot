@@ -1,15 +1,16 @@
 from __future__ import print_function
+
+import argparse
+import glob
 import googleapiclient.discovery
 import json
-import progress.bar
-import glob
-import sys
-import argparse
-import time
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
 import os
 import pickle
+import progress.bar
+import sys
+import time
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 stt = time.time()
 
@@ -65,7 +66,7 @@ if not creds or not creds.valid:
 drive = googleapiclient.discovery.build("drive", "v3", credentials=creds)
 batch = drive.new_batch_http_request()
 
-aa = glob.glob('%s/*.json' % acc_dir)
+aa = glob.glob(f'{acc_dir}/*.json')
 pbar = progress.bar.Bar("Readying accounts", max=len(aa))
 for i in aa:
     ce = json.loads(open(i, 'r').read())['client_email']
