@@ -2,6 +2,7 @@ from asyncio import wait_for, Event, wrap_future, sleep
 from functools import partial
 from pyrogram.filters import regex, user
 from pyrogram.handlers import CallbackQueryHandler
+from time import time
 
 from bot import (
     task_dict,
@@ -89,7 +90,7 @@ async def add_jd_download(listener, path):
         if not jd_downloads:
             await retry_function(jdownloader.device.linkgrabber.clear_list)
             if odl := await retry_function(
-                    jdownloader.device.downloads.query_packages, [{}]
+                jdownloader.device.downloads.query_packages, [{}]
             ):
                 odl_list = [od["uuid"] for od in odl]
                 await retry_function(
@@ -112,52 +113,59 @@ async def add_jd_download(listener, path):
         while await retry_function(jdownloader.device.linkgrabber.is_collecting):
             pass
 
-        queued_downloads = await retry_function(
-            jdownloader.device.linkgrabber.query_packages,
-            [
-                {
-                    "bytesTotal": True,
-                    "saveTo": True,
-                    "availableOnlineCount": True,
-                    "availableTempUnknownCount": True,
-                    "availableUnknownCount": True,
-                }
-            ],
-        )
+        start_time = time()
+        while (time() - start_time) < 60:
+            queued_downloads = await retry_function(
+                jdownloader.device.linkgrabber.query_packages,
+                [
+                    {
+                        "bytesTotal": True,
+                        "saveTo": True,
+                        "availableOnlineCount": True,
+                        "availableTempUnknownCount": True,
+                        "availableUnknownCount": True,
+                    }
+                ],
+            )
 
-        online_packages = []
-        size = 0
-        corrupted_packages = []
-        gid = 0
-        remove_unknown = False
-        name = ""
-        for pack in queued_downloads:
-            online = pack.get("onlineCount", 1)
-            if online == 0:
-                LOGGER.error(f"{pack.get('name', '')}. link: {listener.link}")
-                corrupted_packages.append(pack["uuid"])
-                continue
-            save_to = pack["saveTo"]
-            if gid == 0:
-                gid = pack["uuid"]
-                jd_downloads[gid] = {"status": "collect"}
-                name = save_to.replace("/root/Downloads/", "", 1).split("/", 1)[0]
+            online_packages = []
+            size = 0
+            corrupted_packages = []
+            gid = 0
+            remove_unknown = False
+            name = ""
+            for pack in queued_downloads:
+                online = pack.get("onlineCount", 1)
+                if online == 0:
+                    LOGGER.error(f"{pack.get('name', '')}. link: {listener.link}")
+                    corrupted_packages.append(pack["uuid"])
+                    continue
+                save_to = pack["saveTo"]
+                if gid == 0:
+                    gid = pack["uuid"]
+                    jd_downloads[gid] = {"status": "collect"}
+                    name = save_to.replace("/root/Downloads/", "", 1).split("/", 1)[0]
 
-            if pack.get("tempUnknownCount", 0) > 0 or pack.get("unknownCount", 0) > 0:
-                remove_unknown = True
+                if (
+                    pack.get("tempUnknownCount", 0) > 0
+                    or pack.get("unknownCount", 0) > 0
+                ):
+                    remove_unknown = True
 
-            size += pack.get("bytesTotal", 0)
-            online_packages.append(pack["uuid"])
-            if save_to.startswith("/root/Downloads/"):
-                await retry_function(
-                    jdownloader.device.linkgrabber.set_download_directory,
-                    save_to.replace("/root/Downloads", path, 1),
-                    [pack["uuid"]],
-                )
+                size += pack.get("bytesTotal", 0)
+                online_packages.append(pack["uuid"])
+                if save_to.startswith("/root/Downloads/"):
+                    await retry_function(
+                        jdownloader.device.linkgrabber.set_download_directory,
+                        save_to.replace("/root/Downloads", path, 1),
+                        [pack["uuid"]],
+                    )
 
-        if not online_packages:
+            if online_packages:
+                break
+        else:
             error = (
-                    name or "Download Not Added! Maybe some issues in jdownloader or site!"
+                name or "Download Not Added! Maybe some issues in jdownloader or site!"
             )
             await listener.onDownloadError(error)
             return
