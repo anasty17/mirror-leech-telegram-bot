@@ -60,8 +60,8 @@ class RcloneTransferHelper:
             if not data:
                 break
             if data := re_findall(
-                    r"Transferred:\s+([\d.]+\s*\w+)\s+/\s+([\d.]+\s*\w+),\s+([\d.]+%)\s*,\s+([\d.]+\s*\w+/s),\s+ETA\s+([\dwdhms]+)",
-                    data,
+                r"Transferred:\s+([\d.]+\s*\w+)\s+/\s+([\d.]+\s*\w+),\s+([\d.]+%)\s*,\s+([\d.]+\s*\w+/s),\s+ETA\s+([\dwdhms]+)",
+                data,
             ):
                 (
                     self._transferred_size,
@@ -117,18 +117,18 @@ class RcloneTransferHelper:
         elif return_code != -9:
             error = (await self._proc.stderr.read()).decode().strip()
             if (
-                    not error
-                    and remote_type == "drive"
-                    and config_dict["USE_SERVICE_ACCOUNTS"]
+                not error
+                and remote_type == "drive"
+                and config_dict["USE_SERVICE_ACCOUNTS"]
             ):
                 error = "Mostly your service accounts don't have access to this drive!"
             LOGGER.error(error)
 
             if (
-                    self._sa_number != 0
-                    and remote_type == "drive"
-                    and "RATE_LIMIT_EXCEEDED" in error
-                    and config_dict["USE_SERVICE_ACCOUNTS"]
+                self._sa_number != 0
+                and remote_type == "drive"
+                and "RATE_LIMIT_EXCEEDED" in error
+                and config_dict["USE_SERVICE_ACCOUNTS"]
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
@@ -153,11 +153,11 @@ class RcloneTransferHelper:
         remote_type = remote_opts["type"]
 
         if (
-                remote_type == "drive"
-                and config_dict["USE_SERVICE_ACCOUNTS"]
-                and config_path == "rclone.conf"
-                and await aiopath.isdir("accounts")
-                and not remote_opts.get("service_account_file")
+            remote_type == "drive"
+            and config_dict["USE_SERVICE_ACCOUNTS"]
+            and config_path == "rclone.conf"
+            and await aiopath.isdir("accounts")
+            and not remote_opts.get("service_account_file")
         ):
             config_path = await self._create_rc_sa(remote, remote_opts)
             if config_path != "rclone.conf":
@@ -172,9 +172,9 @@ class RcloneTransferHelper:
         )
 
         if (
-                remote_type == "drive"
-                and not config_dict["RCLONE_FLAGS"]
-                and not self._listener.rcFlags
+            remote_type == "drive"
+            and not config_dict["RCLONE_FLAGS"]
+            and not self._listener.rcFlags
         ):
             cmd.append("--drive-acknowledge-abuse")
         elif remote_type != "drive":
@@ -235,17 +235,17 @@ class RcloneTransferHelper:
         elif return_code != 0:
             error = (await self._proc.stderr.read()).decode().strip()
             if (
-                    not error
-                    and remote_type == "drive"
-                    and config_dict["USE_SERVICE_ACCOUNTS"]
+                not error
+                and remote_type == "drive"
+                and config_dict["USE_SERVICE_ACCOUNTS"]
             ):
                 error = "Mostly your service accounts don't have access to this drive!"
             LOGGER.error(error)
             if (
-                    self._sa_number != 0
-                    and remote_type == "drive"
-                    and "RATE_LIMIT_EXCEEDED" in error
-                    and config_dict["USE_SERVICE_ACCOUNTS"]
+                self._sa_number != 0
+                and remote_type == "drive"
+                and "RATE_LIMIT_EXCEEDED" in error
+                and config_dict["USE_SERVICE_ACCOUNTS"]
             ):
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
@@ -301,11 +301,11 @@ class RcloneTransferHelper:
         fremote = oremote
         fconfig_path = oconfig_path
         if (
-                remote_type == "drive"
-                and config_dict["USE_SERVICE_ACCOUNTS"]
-                and fconfig_path == "rclone.conf"
-                and await aiopath.isdir("accounts")
-                and not remote_opts.get("service_account_file")
+            remote_type == "drive"
+            and config_dict["USE_SERVICE_ACCOUNTS"]
+            and fconfig_path == "rclone.conf"
+            and await aiopath.isdir("accounts")
+            and not remote_opts.get("service_account_file")
         ):
             fconfig_path = await self._create_rc_sa(oremote, remote_opts)
             if fconfig_path != "rclone.conf":
@@ -320,9 +320,9 @@ class RcloneTransferHelper:
             fconfig_path, path, f"{fremote}:{rc_path}", method
         )
         if (
-                remote_type == "drive"
-                and not config_dict["RCLONE_FLAGS"]
-                and not self._listener.rcFlags
+            remote_type == "drive"
+            and not config_dict["RCLONE_FLAGS"]
+            and not self._listener.rcFlags
         ):
             cmd.extend(("--drive-chunk-size", "128M", "--drive-upload-cutoff", "128M"))
 

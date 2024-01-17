@@ -52,7 +52,7 @@ async def rclone_serve_booter():
         "64M",
     ]
     if (user := config_dict["RCLONE_SERVE_USER"]) and (
-            pswd := config_dict["RCLONE_SERVE_PASS"]
+        pswd := config_dict["RCLONE_SERVE_PASS"]
     ):
         cmd.extend(("--user", user, "--pass", pswd))
     rcs = await create_subprocess_exec(*cmd)

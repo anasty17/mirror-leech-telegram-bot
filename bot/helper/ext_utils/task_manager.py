@@ -9,7 +9,10 @@ from bot import (
     queue_dict_lock,
     LOGGER,
 )
-from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list
+from bot.helper.ext_utils.bot_utils import (
+    sync_to_async,
+    get_telegraph_list,
+)
 from bot.helper.ext_utils.files_utils import get_base_name
 from bot.helper.ext_utils.links_utils import is_gdrive_id
 from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
@@ -17,18 +20,19 @@ from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
 
 async def stop_duplicate_check(listener):
     if (
-            isinstance(listener.upDest, int)
-            or listener.isLeech
-            or listener.select
-            or not is_gdrive_id(listener.upDest)
-            or listener.upDest.startswith("mtp:")
-            and listener.stopDuplicate
-            or not listener.stopDuplicate
-            or listener.sameDir
+        isinstance(listener.upDest, int)
+        or listener.isLeech
+        or listener.select
+        or not is_gdrive_id(listener.upDest)
+        or (listener.upDest.startswith("mtp:") and listener.stopDuplicate)
+        or not listener.stopDuplicate
+        or listener.sameDir
     ):
         return False, None
+
     name = listener.name
     LOGGER.info(f"Checking File/Folder if already in Drive: {name}")
+
     if listener.compress:
         name = f"{name}.zip"
     elif listener.extract:
@@ -36,6 +40,7 @@ async def stop_duplicate_check(listener):
             name = get_base_name(name)
         except:
             name = None
+
     if name is not None:
         telegraph_content, contents_no = await sync_to_async(
             gdSearch(stopDup=True, noMulti=listener.isClone).drive_list,
@@ -47,34 +52,45 @@ async def stop_duplicate_check(listener):
             msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
             button = await get_telegraph_list(telegraph_content)
             return msg, button
+
     return False, None
 
 
-async def is_queued(mid):
+async def check_running_tasks(mid: int, state="dl"):
     all_limit = config_dict["QUEUE_ALL"]
-    dl_limit = config_dict["QUEUE_DOWNLOAD"]
+    state_limit = (
+        config_dict["QUEUE_DOWNLOAD"] if state == "dl" else config_dict["QUEUE_UPLOAD"]
+    )
     event = None
-    add_to_queue = False
-    if all_limit or dl_limit:
+    is_over_limit = False
+    if all_limit or state_limit:
         async with queue_dict_lock:
-            dl = len(non_queued_dl)
-            up = len(non_queued_up)
-            if (
-                    all_limit and dl + up >= all_limit and (not dl_limit or dl >= dl_limit)
-            ) or (dl_limit and dl >= dl_limit):
-                add_to_queue = True
+            if state == "up" and mid in non_queued_dl:
+                non_queued_dl.remove(mid)
+            dl_count = len(non_queued_dl)
+            up_count = len(non_queued_up)
+            is_over_limit = (
+                all_limit
+                and dl_count + up_count >= all_limit
+                and (not state_limit or dl_count >= state_limit)
+            ) or (state_limit and dl_count >= state_limit)
+            if is_over_limit:
                 event = Event()
-                queued_dl[mid] = event
-    return add_to_queue, event
+                if state == "dl":
+                    queued_dl[mid] = event
+                else:
+                    queued_up[mid] = event
+
+    return is_over_limit, event
 
 
-async def start_dl_from_queued(mid):
+async def start_dl_from_queued(mid: int):
     queued_dl[mid].set()
     del queued_dl[mid]
     await sleep(0.7)
 
 
-async def start_up_from_queued(mid):
+async def start_up_from_queued(mid: int):
     queued_up[mid].set()
     del queued_up[mid]
     await sleep(0.7)

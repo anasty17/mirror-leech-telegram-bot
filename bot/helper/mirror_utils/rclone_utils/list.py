@@ -166,7 +166,7 @@ class RcloneList:
         page = (self.iter_start / LIST_LIMIT) + 1 if self.iter_start != 0 else 1
         buttons = ButtonMaker()
         for index, idict in enumerate(
-                self.path_list[self.iter_start: LIST_LIMIT + self.iter_start]
+            self.path_list[self.iter_start : LIST_LIMIT + self.iter_start]
         ):
             orig_index = index + self.iter_start
             if idict["IsDir"]:
@@ -268,7 +268,9 @@ class RcloneList:
                 else "\nTransfer Type: <i>Upload</i>"
             )
             msg += f"\nConfig Path: {self.config_path}"
-            msg += f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            msg += (
+                f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            )
             buttons = ButtonMaker()
             for remote in self._sections:
                 buttons.ibutton(remote, f"rcq re {remote}:")
@@ -285,7 +287,9 @@ class RcloneList:
                 if self.list_status == "rcd"
                 else "\nTransfer Type: Upload"
             )
-            msg += f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            msg += (
+                f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            )
             buttons = ButtonMaker()
             buttons.ibutton("Owner Config", "rcq owner")
             buttons.ibutton("My Config", "rcq user")

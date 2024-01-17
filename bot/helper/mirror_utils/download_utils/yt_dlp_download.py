@@ -6,7 +6,7 @@ from yt_dlp import YoutubeDL, DownloadError
 
 from bot import task_dict_lock, task_dict, non_queued_dl, queue_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async, async_to_sync
-from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
+from bot.helper.ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from ..status_utils.yt_dlp_download_status import YtDlpDownloadStatus
@@ -23,7 +23,7 @@ class MyLogger:
         # Hack to fix changing extension
         if not self._obj.is_playlist:
             if match := re_search(
-                    r".Merger..Merging formats into..(.*?).$", msg
+                r".Merger..Merging formats into..(.*?).$", msg
             ) or re_search(r".ExtractAudio..Destination..(.*?)$", msg):
                 LOGGER.info(msg)
                 newname = match.group(1)
@@ -179,7 +179,7 @@ class YoutubeDLHelper:
                         self._onDownloadError(str(e))
                     return
             if self.is_playlist and (
-                    not ospath.exists(path) or len(listdir(path)) == 0
+                not ospath.exists(path) or len(listdir(path)) == 0
             ):
                 self._onDownloadError(
                     "No video available to download from this playlist. Check logs for more details"
@@ -253,17 +253,17 @@ class YoutubeDLHelper:
                 "thumbnail": f"{path}/yt-dlp-thumb/%(title,fulltitle,alt_title)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d%(episode_number&E|)s%(episode_number|)02d%(height& |)s%(height|)s%(height&p|)s%(fps|)s%(fps&fps|)s%(tbr& |)s%(tbr|)d.%(ext)s",
             }
         elif any(
-                key in options
-                for key in [
-                    "writedescription",
-                    "writeinfojson",
-                    "writeannotations",
-                    "writedesktoplink",
-                    "writewebloclink",
-                    "writeurllink",
-                    "writesubtitles",
-                    "writeautomaticsub",
-                ]
+            key in options
+            for key in [
+                "writedescription",
+                "writeinfojson",
+                "writeannotations",
+                "writedesktoplink",
+                "writewebloclink",
+                "writeurllink",
+                "writesubtitles",
+                "writeautomaticsub",
+            ]
         ):
             self.opts["outtmpl"] = {
                 "default": f"{path}/{base_name}/{self._listener.name}",
@@ -312,7 +312,7 @@ class YoutubeDLHelper:
             await self._listener.onDownloadError(msg, button)
             return
 
-        add_to_queue, event = await is_queued(self._listener.mid)
+        add_to_queue, event = await check_running_tasks(self._listener.mid)
         if add_to_queue:
             LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
             async with task_dict_lock:

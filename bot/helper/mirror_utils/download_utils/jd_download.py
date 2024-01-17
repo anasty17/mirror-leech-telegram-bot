@@ -13,9 +13,12 @@ from bot import (
     jd_lock,
     jd_downloads,
 )
-from bot.helper.ext_utils.bot_utils import new_thread, retry_function
+from bot.helper.ext_utils.bot_utils import new_thread, retry_function, sync_to_async
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
-from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
+from bot.helper.ext_utils.task_manager import (
+    check_running_tasks,
+    stop_duplicate_check,
+)
 from bot.helper.listeners.jdownloader_listener import onDownloadStart
 from bot.helper.mirror_utils.status_utils.jdownloader_status import JDownloaderStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
@@ -73,7 +76,7 @@ class JDownloaderHelper:
         buttons.ibutton("Done Selecting", "jdq sdone")
         buttons.ibutton("Cancel", "jdq cancel")
         button = buttons.build_menu(2)
-        msg = f"Disable the unwanted files or change variants from myJdownloader site for <b>{self._listener.name}</b> but don't start it manually!\n\nAfter finish press Done Selecting!\nTimeout: 300s"
+        msg = f"Disable/Remove the unwanted files or change variants or edit files names from myJdownloader site for <b>{self._listener.name}</b> but don't start it manually!\n\nAfter finish press Done Selecting!\nTimeout: 300s"
         self._reply_to = await sendMessage(self._listener.message, msg, button)
         await wrap_future(future)
         if not self.is_cancelled:
@@ -86,6 +89,17 @@ async def add_jd_download(listener, path):
         if jdownloader.device is None:
             await listener.onDownloadError(jdownloader.error)
             return
+
+        try:
+            await wait_for(
+                retry_function(jdownloader.device.jd.version), timeout=5
+            )
+        except:
+            is_connected = await sync_to_async(jdownloader.jdconnect)
+            if not is_connected:
+                await listener.onDownloadError(jdownloader.error)
+                return
+            await sync_to_async(jdownloader.connectToDevice)
 
         if not jd_downloads:
             await retry_function(jdownloader.device.linkgrabber.clear_list)
@@ -114,7 +128,14 @@ async def add_jd_download(listener, path):
             pass
 
         start_time = time()
-        while (time() - start_time) < 60:
+        online_packages = []
+        size = 0
+        corrupted_packages = []
+        gid = 0
+        remove_unknown = False
+        name = ""
+        error = ""
+        while (time() - start_time) < 20:
             queued_downloads = await retry_function(
                 jdownloader.device.linkgrabber.query_packages,
                 [
@@ -128,23 +149,27 @@ async def add_jd_download(listener, path):
                 ],
             )
 
-            online_packages = []
-            size = 0
-            corrupted_packages = []
-            gid = 0
-            remove_unknown = False
-            name = ""
+            if not online_packages and corrupted_packages and error:
+                await listener.onDownloadError(error)
+                return
+
             for pack in queued_downloads:
                 online = pack.get("onlineCount", 1)
                 if online == 0:
-                    LOGGER.error(f"{pack.get('name', '')}. link: {listener.link}")
+                    error = f"{pack.get('name', '')}. link: {listener.link}"
+                    LOGGER.error(error)
                     corrupted_packages.append(pack["uuid"])
                     continue
                 save_to = pack["saveTo"]
                 if gid == 0:
                     gid = pack["uuid"]
                     jd_downloads[gid] = {"status": "collect"}
-                    name = save_to.replace("/root/Downloads/", "", 1).split("/", 1)[0]
+                    if save_to.startswith("/root/Downloads/"):
+                        name = save_to.replace("/root/Downloads/", "", 1).split("/", 1)[
+                            0
+                        ]
+                    else:
+                        name = save_to.replace(f"{path}/", "", 1).split("/", 1)[0]
 
                 if (
                     pack.get("tempUnknownCount", 0) > 0
@@ -162,6 +187,15 @@ async def add_jd_download(listener, path):
                     )
 
             if online_packages:
+                if listener.join and len(online_packages) > 1:
+                    listener.name = listener.sameDir["name"]
+                    await retry_function(
+                        jdownloader.device.linkgrabber.move_to_new_package,
+                        listener.name,
+                        f"{path}/{listener.name}",
+                        package_ids=online_packages,
+                    )
+                    continue
                 break
         else:
             error = (
@@ -205,7 +239,7 @@ async def add_jd_download(listener, path):
         listener.removeFromSameDir()
         return
 
-    add_to_queue, event = await is_queued(listener.mid)
+    add_to_queue, event = await check_running_tasks(listener.mid)
     if add_to_queue:
         LOGGER.info(f"Added to Queue/Download: {listener.name}")
         async with task_dict_lock:

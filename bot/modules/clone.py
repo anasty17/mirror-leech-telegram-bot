@@ -41,16 +41,16 @@ from bot.helper.telegram_helper.message_utils import (
 
 class Clone(TaskListener):
     def __init__(
-            self,
-            client,
-            message,
-            _=None,
-            __=None,
-            ___=None,
-            ____=None,
-            bulk=None,
-            multiTag=None,
-            options="",
+        self,
+        client,
+        message,
+        _=None,
+        __=None,
+        ___=None,
+        ____=None,
+        bulk=None,
+        multiTag=None,
+        options="",
     ):
         if bulk is None:
             bulk = []

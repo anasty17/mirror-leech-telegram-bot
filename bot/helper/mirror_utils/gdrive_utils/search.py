@@ -112,9 +112,9 @@ class gdSearch(GoogleDriveHelper):
         else:
             drives = zip(DRIVES_NAMES, DRIVES_IDS, INDEX_URLS)
         if (
-                not target_id.startswith("mtp:")
-                and len(DRIVES_IDS) > 1
-                or target_id.startswith("tp:")
+            not target_id.startswith("mtp:")
+            and len(DRIVES_IDS) > 1
+            or target_id.startswith("tp:")
         ):
             self.use_sa = False
 

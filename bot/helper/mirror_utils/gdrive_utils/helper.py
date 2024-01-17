@@ -61,8 +61,8 @@ class GoogleDriveHelper:
     async def progress(self):
         if self.status is not None:
             chunk_size = (
-                    self.status.total_size * self.status.progress()
-                    - self.file_processed_bytes
+                self.status.total_size * self.status.progress()
+                - self.file_processed_bytes
             )
             self.file_processed_bytes = self.status.total_size * self.status.progress()
             self.proc_bytes += chunk_size

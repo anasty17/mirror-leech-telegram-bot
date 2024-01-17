@@ -17,9 +17,9 @@ from bot import (
     MAX_SPLIT_SIZE,
     GLOBAL_EXTENSION_FILTER,
 )
-from bot.helper.ext_utils.bot_utils import update_user_ldata, new_thread
+from bot.helper.ext_utils.bot_utils import update_user_ldata, new_thread, getSizeBytes
 from bot.helper.ext_utils.db_handler import DbManager
-from bot.helper.ext_utils.media_utils import createThumb, getSplitSizeBytes
+from bot.helper.ext_utils.media_utils import createThumb
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -234,7 +234,7 @@ async def set_option(_, message, pre_event, option):
     value = message.text
     if option == "split_size":
         if not value.isdigit():
-            value = getSplitSizeBytes(value)
+            value = getSizeBytes(value)
         value = min(int(value), MAX_SPLIT_SIZE)
     elif option == "leech_dest":
         if value.startswith("-") or value.isdigit():

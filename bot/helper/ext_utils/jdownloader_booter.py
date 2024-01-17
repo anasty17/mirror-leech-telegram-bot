@@ -1,5 +1,4 @@
 from aiofiles.os import listdir
-from asyncio import sleep as aiosleep
 from json import dump
 from random import randint
 
@@ -37,7 +36,6 @@ class JDownloader(Myjdapi):
             if is_connected:
                 self.boot()
                 await sync_to_async(self.connectToDevice)
-                self.keepJdAlive()
 
     @new_task
     async def boot(self):
@@ -59,8 +57,8 @@ class JDownloader(Myjdapi):
             "email": config_dict["JD_EMAIL"],
         }
         with open(
-                "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
-                "w",
+            "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
+            "w",
         ) as sf:
             sf.truncate(0)
             dump(jdata, sf)
@@ -77,10 +75,10 @@ class JDownloader(Myjdapi):
             LOGGER.info("JDownloader is connected!")
             return True
         except (
-                MYJDAuthFailedException,
-                MYJDEmailForbiddenException,
-                MYJDEmailInvalidException,
-                MYJDErrorEmailNotConfirmedException,
+            MYJDAuthFailedException,
+            MYJDEmailForbiddenException,
+            MYJDEmailInvalidException,
+            MYJDErrorEmailNotConfirmedException,
         ) as err:
             self.error = f"{err}".strip()
             LOGGER.info(f"Failed to connect with jdownloader! ERROR: {self.error}")
@@ -94,6 +92,7 @@ class JDownloader(Myjdapi):
             return self.jdconnect()
 
     def connectToDevice(self):
+        self.error = "Connecting to device..."
         while True:
             self.device = None
             if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
@@ -112,22 +111,8 @@ class JDownloader(Myjdapi):
                 continue
             break
         self.device.enable_direct_connection()
+        self.error = ""
         LOGGER.info("JDownloader Device have been Connected!")
-
-    @new_task
-    async def keepJdAlive(self):
-        while True:
-            await aiosleep(300)
-            if self.device is None:
-                break
-            async with jd_lock:
-                try:
-                    if not await sync_to_async(self.reconnect):
-                        LOGGER.error("Failed to reconnect!")
-                        continue
-                    await sync_to_async(self.device.enable_direct_connection)
-                except:
-                    pass
 
 
 jdownloader = JDownloader()

@@ -19,7 +19,7 @@ from bot import (
     cpu_eater_lock,
     subprocess_lock,
 )
-from bot.helper.ext_utils.bot_utils import new_task, sync_to_async
+from bot.helper.ext_utils.bot_utils import new_task, sync_to_async, getSizeBytes
 from bot.helper.ext_utils.bulk_links import extractBulkLinks
 from bot.helper.ext_utils.exceptions import NotSupportedExtractionArchive
 from bot.helper.ext_utils.files_utils import (
@@ -38,7 +38,6 @@ from bot.helper.ext_utils.links_utils import (
 )
 from bot.helper.ext_utils.media_utils import (
     createThumb,
-    getSplitSizeBytes,
     createSampleVideo,
 )
 from bot.helper.ext_utils.media_utils import split_file, get_document_type
@@ -101,9 +100,9 @@ class TaskConfig:
         if dest.startswith("mtp:"):
             return f"tokens/{self.user_id}.pickle"
         elif (
-                dest.startswith("sa:")
-                or config_dict["USE_SERVICE_ACCOUNTS"]
-                and not dest.startswith("tp:")
+            dest.startswith("sa:")
+            or config_dict["USE_SERVICE_ACCOUNTS"]
+            and not dest.startswith("tp:")
         ):
             return "accounts"
         else:
@@ -122,10 +121,10 @@ class TaskConfig:
             if not await aiopath.exists(config_path):
                 raise ValueError(f"Rclone Config: {config_path} not Exists!")
         elif (
-                status == "dl"
-                and is_gdrive_link(path)
-                or status == "up"
-                and is_gdrive_id(path)
+            status == "dl"
+            and is_gdrive_link(path)
+            or status == "up"
+            and is_gdrive_id(path)
         ):
             token_path = self.getTokenPath(path)
             if token_path.startswith("tokens/") and status == "up":
@@ -152,28 +151,28 @@ class TaskConfig:
                     raise ValueError(self.link)
 
         self.userTransmission = IS_PREMIUM_USER and (
-                self.user_dict.get("user_transmission")
-                or config_dict["USER_TRANSMISSION"]
-                and "user_transmission" not in self.user_dict
+            self.user_dict.get("user_transmission")
+            or config_dict["USER_TRANSMISSION"]
+            and "user_transmission" not in self.user_dict
         )
 
         if not self.isLeech:
             self.stopDuplicate = (
-                    self.user_dict.get("stop_duplicate")
-                    or "stop_duplicate" not in self.user_dict
-                    and config_dict["STOP_DUPLICATE"]
+                self.user_dict.get("stop_duplicate")
+                or "stop_duplicate" not in self.user_dict
+                and config_dict["STOP_DUPLICATE"]
             )
             default_upload = (
-                    self.user_dict.get("default_upload", "")
-                    or config_dict["DEFAULT_UPLOAD"]
+                self.user_dict.get("default_upload", "")
+                or config_dict["DEFAULT_UPLOAD"]
             )
             if (not self.upDest and default_upload == "rc") or self.upDest == "rc":
                 self.upDest = (
-                        self.user_dict.get("rclone_path") or config_dict["RCLONE_PATH"]
+                    self.user_dict.get("rclone_path") or config_dict["RCLONE_PATH"]
                 )
             elif (not self.upDest and default_upload == "gd") or self.upDest == "gd":
                 self.upDest = (
-                        self.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
+                    self.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
                 )
             if not self.upDest:
                 raise ValueError("No Upload Destination!")
@@ -208,11 +207,11 @@ class TaskConfig:
                     raise ValueError(self.upDest)
             elif self.isClone:
                 if is_gdrive_link(self.link) and self.getTokenPath(
-                        self.link
+                    self.link
                 ) != self.getTokenPath(self.upDest):
                     raise ValueError("You must use the same token to clone!")
                 elif is_rclone_path(self.link) and self.getConfigPath(
-                        self.link
+                    self.link
                 ) != self.getConfigPath(self.upDest):
                     raise ValueError("You must use the same config to clone!")
         else:
@@ -229,8 +228,8 @@ class TaskConfig:
                     )
                 member = await chat.get_member(uploader_id)
                 if (
-                        not member.privileges.can_manage_chat
-                        or not member.privileges.can_delete_messages
+                    not member.privileges.can_manage_chat
+                    or not member.privileges.can_delete_messages
                 ):
                     raise ValueError("You don't have enough privileges in this chat!")
             elif self.userTransmission and not self.isSuperChat:
@@ -241,23 +240,23 @@ class TaskConfig:
                 if self.splitSize.isdigit():
                     self.splitSize = int(self.splitSize)
                 else:
-                    self.splitSize = getSplitSizeBytes(self.splitSize)
+                    self.splitSize = getSizeBytes(self.splitSize)
             self.splitSize = (
-                    self.splitSize
-                    or self.user_dict.get("split_size")
-                    or config_dict["LEECH_SPLIT_SIZE"]
+                self.splitSize
+                or self.user_dict.get("split_size")
+                or config_dict["LEECH_SPLIT_SIZE"]
             )
             self.equalSplits = (
-                    self.user_dict.get("equal_splits")
-                    or config_dict["EQUAL_SPLITS"]
-                    and "equal_splits" not in self.user_dict
+                self.user_dict.get("equal_splits")
+                or config_dict["EQUAL_SPLITS"]
+                and "equal_splits" not in self.user_dict
             )
             self.maxSplitSize = MAX_SPLIT_SIZE if self.userTransmission else 2097152000
             self.splitSize = min(self.splitSize, self.maxSplitSize)
             self.upDest = (
-                    self.upDest
-                    or self.user_dict.get("leech_dest")
-                    or config_dict["LEECH_DUMP_CHAT"]
+                self.upDest
+                or self.user_dict.get("leech_dest")
+                or config_dict["LEECH_DUMP_CHAT"]
             )
             if not isinstance(self.upDest, int):
                 if self.upDest.startswith("b:"):
@@ -270,9 +269,9 @@ class TaskConfig:
                     self.upDest = int(self.upDest)
 
             self.as_doc = (
-                    self.user_dict.get("as_doc", False)
-                    or config_dict["AS_DOCUMENT"]
-                    and "as_doc" not in self.user_dict
+                self.user_dict.get("as_doc", False)
+                or config_dict["AS_DOCUMENT"]
+                and "as_doc" not in self.user_dict
             )
 
             if is_telegram_link(self.thumb):
@@ -400,13 +399,13 @@ class TaskConfig:
                 else:
                     up_path = dl_path
                 for dirpath, _, files in await sync_to_async(
-                        walk, dl_path, topdown=False
+                    walk, dl_path, topdown=False
                 ):
                     for file_ in files:
                         if (
-                                is_first_archive_split(file_)
-                                or is_archive(file_)
-                                and not file_.endswith(".rar")
+                            is_first_archive_split(file_)
+                            or is_archive(file_)
+                            and not file_.endswith(".rar")
                         ):
                             f_path = ospath.join(dirpath, file_)
                             t_path = (
@@ -441,9 +440,9 @@ class TaskConfig:
                                     f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
                                 )
                     if (
-                            not self.seed
-                            and self.suproc is not None
-                            and self.suproc.returncode == 0
+                        not self.seed
+                        and self.suproc is not None
+                        and self.suproc.returncode == 0
                     ):
                         for file_ in files:
                             if is_archive_split(file_) or is_archive(file_):
@@ -610,7 +609,7 @@ class TaskConfig:
                     )
             else:
                 for dirpath, _, files in await sync_to_async(
-                        walk, dl_path, topdown=False
+                    walk, dl_path, topdown=False
                 ):
                     for file_ in files:
                         f_path = ospath.join(dirpath, file_)

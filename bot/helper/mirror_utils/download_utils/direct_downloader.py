@@ -10,7 +10,7 @@ from bot import (
     queue_dict_lock,
 )
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.task_manager import is_queued, stop_duplicate_check
+from bot.helper.ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from bot.helper.listeners.direct_listener import DirectListener
 from bot.helper.mirror_utils.status_utils.direct_status import DirectStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
@@ -34,7 +34,7 @@ async def add_direct_download(listener, path):
         return
 
     gid = token_urlsafe(10)
-    add_to_queue, event = await is_queued(listener.mid)
+    add_to_queue, event = await check_running_tasks(listener.mid)
     if add_to_queue:
         LOGGER.info(f"Added to Queue/Download: {listener.name}")
         async with task_dict_lock:

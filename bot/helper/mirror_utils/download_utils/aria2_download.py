@@ -12,7 +12,7 @@ from bot import (
     queue_dict_lock,
 )
 from bot.helper.ext_utils.bot_utils import bt_selection_buttons, sync_to_async
-from bot.helper.ext_utils.task_manager import is_queued
+from bot.helper.ext_utils.task_manager import check_running_tasks
 from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage
 
@@ -31,7 +31,7 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
         a2c_opt["seed-time"] = seed_time
     if TORRENT_TIMEOUT := config_dict["TORRENT_TIMEOUT"]:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
-    add_to_queue, event = await is_queued(listener.mid)
+    add_to_queue, event = await check_running_tasks(listener.mid)
     if add_to_queue:
         if listener.link.startswith("magnet:"):
             a2c_opt["pause-metadata"] = "true"
@@ -67,9 +67,9 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
     await listener.onDownloadStart()
 
     if (
-            not add_to_queue
-            and (not listener.select or not config_dict["BASE_URL"])
-            and listener.multi <= 1
+        not add_to_queue
+        and (not listener.select or not config_dict["BASE_URL"])
+        and listener.multi <= 1
     ):
         await sendStatusMessage(listener.message)
     elif listener.select and download.is_torrent and not download.is_metadata:

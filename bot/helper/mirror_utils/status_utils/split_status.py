@@ -39,8 +39,8 @@ class SplitStatus:
         LOGGER.info(f"Cancelling Split: {self.listener.name}")
         async with subprocess_lock:
             if (
-                    self.listener.suproc is not None
-                    and self.listener.suproc.returncode is None
+                self.listener.suproc is not None
+                and self.listener.suproc.returncode is None
             ):
                 self.listener.suproc.kill()
             else:

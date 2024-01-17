@@ -41,10 +41,14 @@ async def _jd_listener():
                 )
             except:
                 continue
-            finished = [pack["uuid"] for pack in packages if pack.get("finished", False)]
+            finished = [
+                pack["uuid"] for pack in packages if pack.get("finished", False)
+            ]
             for gid in finished:
                 if gid in jd_downloads and jd_downloads[gid]["status"] != "done":
-                    is_finished = all(did in finished for did in jd_downloads[gid]["ids"])
+                    is_finished = all(
+                        did in finished for did in jd_downloads[gid]["ids"]
+                    )
                     if is_finished:
                         jd_downloads[gid]["status"] = "done"
                         _onDownloadComplete(gid)

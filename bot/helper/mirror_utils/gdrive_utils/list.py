@@ -166,7 +166,7 @@ class gdriveList(GoogleDriveHelper):
         page = (self.iter_start / LIST_LIMIT) + 1 if self.iter_start != 0 else 1
         buttons = ButtonMaker()
         for index, item in enumerate(
-                self.items_list[self.iter_start: LIST_LIMIT + self.iter_start]
+            self.items_list[self.iter_start : LIST_LIMIT + self.iter_start]
         ):
             orig_index = index + self.iter_start
             if item["mimeType"] == self.G_DRIVE_DIR_MIME_TYPE:
@@ -191,10 +191,10 @@ class gdriveList(GoogleDriveHelper):
         if self.list_status == "gdu":
             buttons.ibutton("Set as Default Path", "gdq def", position="footer")
         if (
-                len(self.parents) > 1
-                and len(self.drives) > 1
-                or self._token_user
-                and self._token_owner
+            len(self.parents) > 1
+            and len(self.drives) > 1
+            or self._token_user
+            and self._token_owner
         ):
             buttons.ibutton("Back", "gdq back pa", position="footer")
         if len(self.parents) > 1:
@@ -208,7 +208,7 @@ class gdriveList(GoogleDriveHelper):
         )
         if self.list_status == "gdu":
             default_id = (
-                    self.listener.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
+                self.listener.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
             )
             msg += f"\nDefault Gdrive ID: {default_id}" if default_id else ""
         msg += f"\n\nItems: {items_no}"
@@ -277,7 +277,9 @@ class gdriveList(GoogleDriveHelper):
                 else "\nTransfer Type: <i>Upload</i>"
             )
             msg += f"\nToken Path: {self.token_path}"
-            msg += f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            msg += (
+                f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            )
             buttons = ButtonMaker()
             self.drives.clear()
             self.parents.clear()
@@ -295,19 +297,21 @@ class gdriveList(GoogleDriveHelper):
 
     async def choose_token(self):
         if (
-                self._token_user
-                and self._token_owner
-                or self._sa_owner
-                and self._token_owner
-                or self._sa_owner
-                and self._token_user
+            self._token_user
+            and self._token_owner
+            or self._sa_owner
+            and self._token_owner
+            or self._sa_owner
+            and self._token_user
         ):
             msg = "Choose Token:" + (
                 "\nTransfer Type: Download"
                 if self.list_status == "gdd"
                 else "\nTransfer Type: Upload"
             )
-            msg += f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            msg += (
+                f"\nTimeout: {get_readable_time(self._timeout - (time() - self._time))}"
+            )
             buttons = ButtonMaker()
             if self._token_owner:
                 buttons.ibutton("Owner Token", "gdq owner")

@@ -80,11 +80,10 @@ class Jd:
         self.url = "/jd"
 
     def get_core_revision(self):
-        """
-
-        :return:
-        """
         return self.device.action(f"{self.url}/getCoreRevision")
+    
+    def version(self):
+        return self.device.action(f"{self.url}/version")
 
 
 class Update:
@@ -537,6 +536,17 @@ class Linkgrabber:
         params = [dir, package_ids]
         return self.device.action(f"{self.url}/setDownloadDirectory", params)
 
+    def move_to_new_package(
+        self, name: str, path: str, link_ids: list = None, package_ids: list = None
+    ):
+        # Requires at least a link_ids or package_ids list, or both.
+        if link_ids is None:
+            link_ids = []
+        if package_ids is None:
+            package_ids = []
+        params = [link_ids, package_ids, name, path]
+        return self.device.action(f"{self.url}/movetoNewPackage", params)
+
     def remove_links(self, link_ids=None, package_ids=None):
         """
         Remove packages and/or links of the linkgrabber list.
@@ -560,10 +570,6 @@ class Linkgrabber:
         """
         params = [link_id, new_name]
         return self.device.action(f"{self.url}/renameLink", params)
-
-    def move_to_new_package(self, link_ids, package_ids, new_pkg_name, download_path):
-        params = link_ids, package_ids, new_pkg_name, download_path
-        return self.device.action(f"{self.url}/movetoNewPackage", params)
 
     def get_package_count(self):
         return self.device.action(f"{self.url}/getPackageCount")
@@ -812,10 +818,10 @@ class Jddevice:
             "/device/getDirectConnectionInfos", "POST", None, self.__action_url()
         )
         if (
-                response is not None
-                and "data" in response
-                and "infos" in response["data"]
-                and len(response["data"]["infos"]) != 0
+            response is not None
+            and "data" in response
+            and "infos" in response["data"]
+            and len(response["data"]["infos"]) != 0
         ):
             self.__update_direct_connections(response["data"]["infos"])
 
@@ -849,17 +855,17 @@ class Jddevice:
     def action(self, path, params=(), http_action="POST"):
         action_url = self.__action_url()
         if (
-                self.__direct_connection_enabled
-                and self.__direct_connection_info is not None
-                and time() >= self.__direct_connection_cooldown
+            self.__direct_connection_enabled
+            and self.__direct_connection_info is not None
+            and time() >= self.__direct_connection_cooldown
         ):
             return self.__direct_connect(path, http_action, params, action_url)
         response = self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
             raise (MYJDConnectionException("No connection established\n"))
         if (
-                self.__direct_connection_enabled
-                and time() >= self.__direct_connection_cooldown
+            self.__direct_connection_enabled
+            and time() >= self.__direct_connection_cooldown
         ):
             self.__refresh_direct_connections()
         return response["data"]
@@ -881,7 +887,7 @@ class Jddevice:
                     conn["cooldown"] = time() + 60
         self.__direct_connection_consecutive_failures += 1
         self.__direct_connection_cooldown = time() + (
-                60 * self.__direct_connection_consecutive_failures
+            60 * self.__direct_connection_consecutive_failures
         )
         response = self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
@@ -984,7 +990,7 @@ class Myjdapi:
         :param data:
         """
         init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2:]
+        key = secret_token[len(secret_token) // 2 :]
         decryptor = AES.new(key, AES.MODE_CBC, init_vector)
         return UNPAD(decryptor.decrypt(b64decode(data)))
 
@@ -997,7 +1003,7 @@ class Myjdapi:
         """
         data = PAD(data.encode("utf-8"))
         init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2:]
+        key = secret_token[len(secret_token) // 2 :]
         encryptor = AES.new(key, AES.MODE_CBC, init_vector)
         encrypted_data = b64encode(encryptor.encrypt(data))
         return encrypted_data.decode("utf-8")
@@ -1212,13 +1218,13 @@ class Myjdapi:
                         "Failed to decode response: {}", encrypted_response.text
                     ) from exc
             msg = (
-                    "\n\tSOURCE: "
-                    + error_msg["src"]
-                    + "\n\tTYPE: "
-                    + error_msg["type"]
-                    + "\n------\nREQUEST_URL: "
-                    + api
-                    + path
+                "\n\tSOURCE: "
+                + error_msg["src"]
+                + "\n\tTYPE: "
+                + error_msg["type"]
+                + "\n------\nREQUEST_URL: "
+                + api
+                + path
             )
             if http_method == "GET":
                 msg += query

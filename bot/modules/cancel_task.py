@@ -43,9 +43,9 @@ async def cancel_task(_, message):
         await sendMessage(message, msg)
         return
     if (
-            OWNER_ID != user_id
-            and task.listener.user_id != user_id
-            and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
+        OWNER_ID != user_id
+        and task.listener.user_id != user_id
+        and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
         await sendMessage(message, "This task is not for you!")
         return

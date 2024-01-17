@@ -147,7 +147,7 @@ async def _onBtDownloadComplete(api, gid):
 
 @new_thread
 async def _onDownloadStopped(api, gid):
-    await sleep(6)
+    await sleep(4)
     if task := await getTaskByGid(gid):
         await task.listener.onDownloadError("Dead torrent!")
 

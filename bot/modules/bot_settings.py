@@ -59,7 +59,7 @@ default_values = {
     "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "LEECH_SPLIT_SIZE": MAX_SPLIT_SIZE,
     "RSS_DELAY": 600,
-    "STATUS_UPDATE_INTERVAL": 10,
+    "STATUS_UPDATE_INTERVAL": 15,
     "SEARCH_LIMIT": 0,
     "UPSTREAM_BRANCH": "master",
     "DEFAULT_UPLOAD": "gd",
@@ -305,6 +305,7 @@ async def sync_jdownloader():
         await sync_to_async(jdownloader.device.system.exit_jd)
         if await aiopath.exists("cfg.zip"):
             await remove("cfg.zip")
+        await sleep(2)
         await (
             await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
         ).wait()
@@ -762,7 +763,7 @@ async def load_config():
 
     STATUS_UPDATE_INTERVAL = environ.get("STATUS_UPDATE_INTERVAL", "")
     if len(STATUS_UPDATE_INTERVAL) == 0:
-        STATUS_UPDATE_INTERVAL = 10
+        STATUS_UPDATE_INTERVAL = 15
     else:
         STATUS_UPDATE_INTERVAL = int(STATUS_UPDATE_INTERVAL)
     if len(task_dict) != 0 and (st := Intervals["status"]):

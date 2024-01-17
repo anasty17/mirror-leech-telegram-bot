@@ -115,9 +115,9 @@ async def clean_unwanted(path):
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         for filee in files:
             if (
-                    filee.endswith(".!qB")
-                    or filee.endswith(".parts")
-                    and filee.startswith(".")
+                filee.endswith(".!qB")
+                or filee.endswith(".parts")
+                and filee.startswith(".")
             ):
                 await remove(ospath.join(dirpath, filee))
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
@@ -171,7 +171,7 @@ async def join_files(path):
     exists = False
     for file_ in files:
         if re_search(r"\.0+2$", file_) and await sync_to_async(
-                get_mime_type, f"{path}/{file_}"
+            get_mime_type, f"{path}/{file_}"
         ) not in ["application/x-7z-compressed", "application/zip"]:
             exists = True
             final_name = file_.rsplit(".", 1)[0]

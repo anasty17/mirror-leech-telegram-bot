@@ -514,11 +514,11 @@ async def rssListener(client, query):
             button = buttons.build_menu(2)
             msg = """Send one or more rss titles with new filters or command separated by new line.
 Examples:
-Title1 -c mirror -up remote:path/subdir -exf none -inf 1080 or 720 opt: up: remote:path/subdir
-Title2 -c none -inf none -opt none
+Title1 -c mirror -up remote:path/subdir -exf none -inf 1080 or 720
+Title2 -c none -inf none
 Title3 -c mirror -rcf xxx -up xxx -z pswd
 Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
-Timeout: 60 sec. Argument -c for command and options
+Timeout: 60 sec. Argument -c for command and arguments
             """
             await editMessage(message, msg, button)
             pfunc = partial(rssEdit, pre_event=query)

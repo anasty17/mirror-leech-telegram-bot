@@ -13,19 +13,6 @@ from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.files_utils import ARCH_EXT, get_mime_type
 
 
-def getSplitSizeBytes(size):
-    size = size.lower()
-    if size.endswith("mb"):
-        size = size.split("mb")[0]
-        size = int(float(size) * 1048576)
-    elif size.endswith("gb"):
-        size = size.split("gb")[0]
-        size = int(float(size) * 1073741824)
-    else:
-        size = 0
-    return size
-
-
 async def createThumb(msg, _id=""):
     if not _id:
         _id = msg.id
@@ -104,7 +91,7 @@ async def get_media_info(path):
 async def get_document_type(path):
     is_video, is_audio, is_image = False, False, False
     if path.endswith(tuple(ARCH_EXT)) or re_search(
-            r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
+        r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
     ):
         return is_video, is_audio, is_image
     mime_type = await sync_to_async(get_mime_type, path)
@@ -260,15 +247,15 @@ async def create_thumbnail(video_file, duration):
 
 
 async def split_file(
-        path,
-        size,
-        dirpath,
-        split_size,
-        listener,
-        start_time=0,
-        i=1,
-        inLoop=False,
-        multi_streams=True,
+    path,
+    size,
+    dirpath,
+    split_size,
+    listener,
+    start_time=0,
+    i=1,
+    inLoop=False,
+    multi_streams=True,
 ):
     if listener.seed and not listener.newDir:
         dirpath = f"{dirpath}/splited_files_mltb"
@@ -401,7 +388,7 @@ async def split_file(
 
 
 async def createSampleVideo(
-        listener, video_file, sample_duration, part_duration, oneFile=False
+    listener, video_file, sample_duration, part_duration, oneFile=False
 ):
     filter_complex = ""
     dir, name = video_file.rsplit("/", 1)

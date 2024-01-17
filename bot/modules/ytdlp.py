@@ -132,8 +132,8 @@ class YtSelection:
                             size = 0
 
                         if item.get("video_ext") == "none" and (
-                                item.get("resolution") == "audio only"
-                                or item.get("acodec") != "none"
+                            item.get("resolution") == "audio only"
+                            or item.get("acodec") != "none"
                         ):
                             if item.get("audio_ext") == "m4a":
                                 self._is_m4a = True
@@ -247,7 +247,7 @@ async def _mdisk(link, name):
     key = link.split("/")[-1]
     async with ClientSession() as session:
         async with session.get(
-                f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
+            f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
         ) as resp:
             if resp.status == 200:
                 resp_json = await resp.json()
@@ -259,16 +259,16 @@ async def _mdisk(link, name):
 
 class YtDlp(TaskListener):
     def __init__(
-            self,
-            client,
-            message,
-            _=None,
-            isLeech=False,
-            __=None,
-            sameDir=None,
-            bulk=None,
-            multiTag=None,
-            options="",
+        self,
+        client,
+        message,
+        _=None,
+        isLeech=False,
+        __=None,
+        sameDir=None,
+        bulk=None,
+        multiTag=None,
+        options="",
     ):
         if sameDir is None:
             sameDir = {}
@@ -408,7 +408,7 @@ class YtDlp(TaskListener):
                 elif value.lower() == "false":
                     value = False
                 elif value.startswith(("{", "[", "(")) and value.endswith(
-                        ("}", "]", ")")
+                    ("}", "]", ")")
                 ):
                     value = eval(value)
                 options[key] = value

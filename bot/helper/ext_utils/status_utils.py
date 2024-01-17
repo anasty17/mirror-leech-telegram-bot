@@ -127,7 +127,7 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
     start_position = (page_no - 1) * STATUS_LIMIT
 
     for index, task in enumerate(
-            tasks[start_position: STATUS_LIMIT + start_position], start=1
+        tasks[start_position : STATUS_LIMIT + start_position], start=1
     ):
         tstatus = task.status()
         if task.listener.isSuperChat:

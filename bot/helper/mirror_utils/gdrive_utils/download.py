@@ -83,7 +83,7 @@ class gdDownload(GoogleDriveHelper):
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
                 self._download_folder(file_id, path, filename)
             elif not ospath.isfile(
-                    f"{path}{filename}"
+                f"{path}{filename}"
             ) and not filename.lower().endswith(tuple(self.listener.extension_filter)):
                 self._download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
