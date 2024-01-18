@@ -37,7 +37,7 @@ async def initiate_search_tools():
     if SEARCH_API_LINK := config_dict["SEARCH_API_LINK"]:
         global SITES
         try:
-            async with ClientSession(trust_env=True) as c:
+            async with ClientSession() as c:
                 async with c.get(f"{SEARCH_API_LINK}/api/v1/sites") as res:
                     data = await res.json()
             SITES = {
@@ -76,7 +76,7 @@ async def _search(key, site, message, method):
                     f"{SEARCH_API_LINK}/api/v1/recent?site={site}&limit={SEARCH_LIMIT}"
                 )
         try:
-            async with ClientSession(trust_env=True) as c:
+            async with ClientSession() as c:
                 async with c.get(api) as res:
                     search_results = await res.json()
             if "error" in search_results or search_results["total"] == 0:

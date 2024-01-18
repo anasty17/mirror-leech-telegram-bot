@@ -91,9 +91,7 @@ async def add_jd_download(listener, path):
             return
 
         try:
-            await wait_for(
-                retry_function(jdownloader.device.jd.version), timeout=5
-            )
+            await wait_for(retry_function(jdownloader.device.jd.version), timeout=5)
         except:
             is_connected = await sync_to_async(jdownloader.jdconnect)
             if not is_connected:
@@ -151,12 +149,16 @@ async def add_jd_download(listener, path):
 
             if not online_packages and corrupted_packages and error:
                 await listener.onDownloadError(error)
+                await retry_function(
+                    jdownloader.device.linkgrabber.remove_links,
+                    package_ids=corrupted_packages,
+                )
                 return
 
             for pack in queued_downloads:
                 online = pack.get("onlineCount", 1)
                 if online == 0:
-                    error = f"{pack.get('name', '')}. link: {listener.link}"
+                    error = f"{pack.get('name', '')}"
                     LOGGER.error(error)
                     corrupted_packages.append(pack["uuid"])
                     continue
@@ -202,6 +204,12 @@ async def add_jd_download(listener, path):
                 name or "Download Not Added! Maybe some issues in jdownloader or site!"
             )
             await listener.onDownloadError(error)
+            if corrupted_packages or online_packages:
+                packages_to_remove = corrupted_packages + online_packages
+                await retry_function(
+                    jdownloader.device.linkgrabber.remove_links,
+                    package_ids=packages_to_remove,
+                )
             return
 
         jd_downloads[gid]["ids"] = online_packages

@@ -134,8 +134,8 @@ def getSizeBytes(size):
 
 async def get_content_type(url):
     try:
-        async with ClientSession(trust_env=True) as session:
-            async with session.get(url, verify_ssl=False) as response:
+        async with ClientSession() as session:
+            async with session.get(url, allow_redirects=True, ssl=False) as response:
                 return response.headers.get("Content-Type")
     except:
         return None

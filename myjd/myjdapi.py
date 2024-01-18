@@ -1170,7 +1170,7 @@ class Myjdapi:
                     )
                 ]
             query = query[0] + "&".join(query[1:])
-            encrypted_response = get(api + query, timeout=3, verify=False)
+            encrypted_response = get(api + query, timeout=2, verify=False)
         else:
             params_request = []
             if params is not None:
@@ -1198,7 +1198,7 @@ class Myjdapi:
                     request_url,
                     headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
                     data=encrypted_data,
-                    timeout=3,
+                    timeout=2,
                     verify=False,
                 )
             except RequestException as e:
