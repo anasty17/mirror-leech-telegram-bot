@@ -129,6 +129,9 @@ async def status_pages(_, query):
                         tasks["Pause"] += 1
                     case MirrorStatus.STATUS_SAMVID:
                         tasks["SamVid"] += 1
+                    case _:
+                        tasks["Download"] += 1
+                        dl_speed += speed_string_to_bytes(download.speed())
 
         msg = f"""DL: {tasks['Download']} | UP: {tasks['Upload']} | SD: {tasks['Seed']} | AR: {tasks['Archive']}
 EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}

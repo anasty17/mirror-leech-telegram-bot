@@ -27,7 +27,7 @@ class gdDownload(GoogleDriveHelper):
         self.is_downloading = True
 
     def download(self):
-        file_id = self.getIdFromUrl(self.listener.link, self.listener.user_id)
+        file_id = self.getIdFromUrl(self.listener.link, self.listener.userId)
         self.service = self.authorize()
         self._updater = setInterval(self.update_interval, self.progress)
         try:
@@ -84,7 +84,7 @@ class gdDownload(GoogleDriveHelper):
                 self._download_folder(file_id, path, filename)
             elif not ospath.isfile(
                 f"{path}{filename}"
-            ) and not filename.lower().endswith(tuple(self.listener.extension_filter)):
+            ) and not filename.lower().endswith(tuple(self.listener.extensionFilter)):
                 self._download_file(file_id, path, filename, mime_type)
             if self.is_cancelled:
                 break

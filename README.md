@@ -133,6 +133,8 @@ programming in Python.
 - Sample video Generator (task option)
 - Ability to cancel upload/clone/archive/extract/split/queue (task option)
 - Cancel all buttons for choosing specific tasks status to cancel (global option)
+- Convert videos and audios to specific format with filter (task option)
+- Force start to upload or download or both from queue using cmds or args once you add the download (task option)
 - Shell and Executor
 - Add sudo users
 - Supported Direct links Generators:
@@ -465,8 +467,9 @@ btsel - Select files from torrent
 rss - Rss menu
 list - Search files in Drive
 search - Search for torrents with API
-cancel - Cancel a task
+cancel - or /c Cancel a task
 cancelall - Cancel all tasks
+forcestart - or /fs to start task from queue
 del - Delete file/folder from Drive
 log - Get the Bot Log
 shell - Run commands in Shell

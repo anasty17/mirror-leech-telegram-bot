@@ -56,7 +56,7 @@ class JDownloaderHelper:
         pfunc = partial(configureDownload, obj=self)
         handler = self._listener.client.add_handler(
             CallbackQueryHandler(
-                pfunc, filters=regex("^jdq") & user(self._listener.user_id)
+                pfunc, filters=regex("^jdq") & user(self._listener.userId)
             ),
             group=-1,
         )
@@ -247,21 +247,21 @@ async def add_jd_download(listener, path):
         listener.removeFromSameDir()
         return
 
-    add_to_queue, event = await check_running_tasks(listener.mid)
-    if add_to_queue:
-        LOGGER.info(f"Added to Queue/Download: {listener.name}")
-        async with task_dict_lock:
-            task_dict[listener.mid] = QueueStatus(listener, size, f"{gid}", "dl")
-        await listener.onDownloadStart()
-        if listener.multi <= 1:
-            await sendStatusMessage(listener.message)
-        await event.wait()
-        async with task_dict_lock:
-            if listener.mid not in task_dict:
-                return
-        from_queue = True
+    if not (listener.forceRun or listener.forceDownload):
+        add_to_queue, event = await check_running_tasks(listener.mid)
+        if add_to_queue:
+            LOGGER.info(f"Added to Queue/Download: {listener.name}")
+            async with task_dict_lock:
+                task_dict[listener.mid] = QueueStatus(listener, size, f"{gid}", "dl")
+            await listener.onDownloadStart()
+            if listener.multi <= 1:
+                await sendStatusMessage(listener.message)
+            await event.wait()
+            async with task_dict_lock:
+                if listener.mid not in task_dict:
+                    return
     else:
-        from_queue = False
+        add_to_queue = False
 
     await retry_function(
         jdownloader.device.linkgrabber.move_to_downloadlist,
@@ -303,7 +303,7 @@ async def add_jd_download(listener, path):
 
     await onDownloadStart()
 
-    if from_queue:
+    if add_to_queue:
         LOGGER.info(f"Start Queued Download from JDownloader: {listener.name}")
     else:
         LOGGER.info(f"Download with JDownloader: {listener.name}")

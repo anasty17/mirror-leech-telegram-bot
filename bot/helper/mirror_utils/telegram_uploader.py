@@ -46,7 +46,7 @@ class TgUploader:
         self._start_time = time()
         self._total_files = 0
         self._is_cancelled = False
-        self._thumb = self._listener.thumb or f"Thumbnails/{listener.user_id}.jpg"
+        self._thumb = self._listener.thumb or f"Thumbnails/{listener.userId}.jpg"
         self._msgs_dict = {}
         self._corrupted = 0
         self._is_corrupted = False
@@ -67,14 +67,14 @@ class TgUploader:
         self._processed_bytes += chunk_size
 
     async def _user_settings(self):
-        self._media_group = self._listener.user_dict.get("media_group") or (
+        self._media_group = self._listener.userDict.get("media_group") or (
             config_dict["MEDIA_GROUP"]
-            if "media_group" not in self._listener.user_dict
+            if "media_group" not in self._listener.userDict
             else False
         )
-        self._lprefix = self._listener.user_dict.get("lprefix") or (
+        self._lprefix = self._listener.userDict.get("lprefix") or (
             config_dict["LEECH_FILENAME_PREFIX"]
-            if "lprefix" not in self._listener.user_dict
+            if "lprefix" not in self._listener.userDict
             else ""
         )
         if not await aiopath.exists(self._thumb):
@@ -235,7 +235,7 @@ class TgUploader:
                 continue
             for file_ in natsorted(files):
                 self._up_path = ospath.join(dirpath, file_)
-                if file_.lower().endswith(tuple(self._listener.extension_filter)):
+                if file_.lower().endswith(tuple(self._listener.extensionFilter)):
                     if not self._listener.seed or self._listener.newDir:
                         await remove(self._up_path)
                     continue
@@ -348,7 +348,7 @@ class TgUploader:
                     thumb = await get_audio_thumb(self._up_path)
 
             if (
-                self._listener.as_doc
+                self._listener.asDoc
                 or force_document
                 or (not is_video and not is_audio and not is_image)
             ):

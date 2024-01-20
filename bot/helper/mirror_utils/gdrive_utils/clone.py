@@ -28,7 +28,7 @@ class gdClone(GoogleDriveHelper):
         if self.listener.upDest.startswith("mtp:") or self.listener.link.startswith(
             "mtp:"
         ):
-            self.token_path = f"tokens/{self.listener.user_id}.pickle"
+            self.token_path = f"tokens/{self.listener.userId}.pickle"
             self.listener.upDest = self.listener.upDest.replace("mtp:", "", 1)
             self.use_sa = False
         elif self.listener.upDest.startswith("tp:"):
@@ -118,7 +118,7 @@ class gdClone(GoogleDriveHelper):
             elif (
                 not file.get("name")
                 .lower()
-                .endswith(tuple(self.listener.extension_filter))
+                .endswith(tuple(self.listener.extensionFilter))
             ):
                 self.total_files += 1
                 self._copyFile(file.get("id"), dest_id)

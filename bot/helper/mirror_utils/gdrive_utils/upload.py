@@ -29,7 +29,7 @@ class gdUpload(GoogleDriveHelper):
 
     def user_setting(self):
         if self.listener.upDest.startswith("mtp:"):
-            self.token_path = f"tokens/{self.listener.user_id}.pickle"
+            self.token_path = f"tokens/{self.listener.userId}.pickle"
             self.listener.upDest = self.listener.upDest.replace("mtp:", "", 1)
             self.use_sa = False
         elif self.listener.upDest.startswith("tp:"):
@@ -46,7 +46,7 @@ class gdUpload(GoogleDriveHelper):
         self._updater = setInterval(self.update_interval, self.progress)
         try:
             if ospath.isfile(self._path):
-                if self._path.lower().endswith(tuple(self.listener.extension_filter)):
+                if self._path.lower().endswith(tuple(self.listener.extensionFilter)):
                     raise Exception(
                         "This file extension is excluded by extension filter!"
                     )
@@ -115,7 +115,7 @@ class gdUpload(GoogleDriveHelper):
                 current_dir_id = self.create_directory(item, dest_id)
                 new_id = self._upload_dir(current_file_name, current_dir_id)
                 self.total_folders += 1
-            elif not item.lower().endswith(tuple(self.listener.extension_filter)):
+            elif not item.lower().endswith(tuple(self.listener.extensionFilter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 self._upload_file(current_file_name, file_name, mime_type, dest_id)

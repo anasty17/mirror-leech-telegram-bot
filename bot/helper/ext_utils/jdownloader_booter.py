@@ -39,7 +39,7 @@ class JDownloader(Myjdapi):
 
     @new_task
     async def boot(self):
-        await cmd_exec(["pkill", "-9", "java"])
+        await cmd_exec(["pkill", "-9", "-f", "java"])
         self.device = None
         self.error = "Connecting... Try agin after couple of seconds"
         self._device_name = f"{randint(0, 1000)}"

@@ -38,13 +38,13 @@ async def cancel_task(_, message):
     elif len(msg) == 1:
         msg = (
             "Reply to an active Command message which was used to start the download"
-            f" or send <code>/{BotCommands.CancelTaskCommand} GID</code> to cancel it!"
+            f" or send <code>/{BotCommands.CancelTaskCommand[0]} GID</code> to cancel it!"
         )
         await sendMessage(message, msg)
         return
     if (
         OWNER_ID != user_id
-        and task.listener.user_id != user_id
+        and task.listener.userId != user_id
         and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
         await sendMessage(message, "This task is not for you!")

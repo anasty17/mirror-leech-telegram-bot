@@ -269,7 +269,7 @@ class RcloneTransferHelper:
         rc_path = self._listener.upDest.strip("/")
         if rc_path.startswith("mrcc:"):
             rc_path = rc_path.split("mrcc:", 1)[1]
-            oconfig_path = f"rclone/{self._listener.user_id}.conf"
+            oconfig_path = f"rclone/{self._listener.userId}.conf"
         else:
             oconfig_path = "rclone.conf"
 
@@ -278,11 +278,11 @@ class RcloneTransferHelper:
         if await aiopath.isdir(path):
             mime_type = "Folder"
             folders, files = await count_files_and_folders(
-                path, self._listener.extension_filter
+                path, self._listener.extensionFilter
             )
             rc_path += f"/{self._listener.name}" if rc_path else self._listener.name
         else:
-            if path.lower().endswith(tuple(self._listener.extension_filter)):
+            if path.lower().endswith(tuple(self._listener.extensionFilter)):
                 await self._listener.onUploadError(
                     "This file extension is excluded by extension filter!"
                 )
@@ -424,7 +424,7 @@ class RcloneTransferHelper:
                     return None, destination
 
     def _getUpdatedCommand(self, config_path, source, destination, method):
-        ext = "*.{" + ",".join(self._listener.extension_filter) + "}"
+        ext = "*.{" + ",".join(self._listener.extensionFilter) + "}"
         cmd = [
             "rclone",
             method,

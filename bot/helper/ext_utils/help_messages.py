@@ -125,7 +125,7 @@ seed = """<b>Bittorrent seed</b>: -d
 To specify ratio and seed time add -d ratio:time.
 Example: -d 0.7:10 (ratio and time) or -d 0.7 (only ratio) or -d :10 (only time) where time in minutes"""
 
-zip = """<b>Zip</b>: -z password
+zip_arg = """<b>Zip</b>: -z password
 
 /cmd link -z (zip)
 /cmd link -z password (zip password protected)"""
@@ -142,10 +142,22 @@ Note: Add `^` before integer or float, some values must be numeric and some stri
 Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
 You can add tuple and dict also. Use double quotes inside dict."""
 
+convert_media = """<b>Convert Media</b>: -ca -cv
+/cmd link -ca mp3 -cv mp4  (convert all audios to mp3 and videos to mp4)
+/cmd link -ca mp3 (convert all audios to mp3)
+/cmd link -cv mp4 (convert all videos to mp4)
+/cmd link -ca mp3 + flac ogg (convert only flac and ogg audios to mp3)
+/cmd link -cv mkv - webm flv (convert all videos to mp4 except webm and flv)"""
+
+force_start = """<b>Force Start</b>: -f -fd -fu
+/cmd link -f (force downlaod and upload)
+/cmd link -fd (force download only)
+/cmd link -fu (force upload directly after download finish)"""
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
-    "Zip": zip,
+    "Zip": zip_arg,
     "Quality": qual,
     "Options": yt_opt,
     "Multi-Link": multi_link,
@@ -157,6 +169,8 @@ YT_HELP_DICT = {
     "Bulk": bulk,
     "Sample-Video": sample_video,
     "Screenshot": screenshot,
+    "Convert-Media": convert_media,
+    "Force-Start": force_start,
 }
 
 MIRROR_HELP_DICT = {
@@ -179,6 +193,8 @@ MIRROR_HELP_DICT = {
     "Tg-Links": tg_links,
     "Sample-Video": sample_video,
     "Screenshot": screenshot,
+    "Convert-Media": convert_media,
+    "Force-Start": force_start,
 }
 
 RSS_HELP_MESSAGE = """

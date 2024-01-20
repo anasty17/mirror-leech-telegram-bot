@@ -65,12 +65,11 @@ class ExtractStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Extract: {self.listener.name}")
+        self.listener.cancelled = True
         async with subprocess_lock:
             if (
                 self.listener.suproc is not None
                 and self.listener.suproc.returncode is None
             ):
                 self.listener.suproc.kill()
-            else:
-                self.listener.suproc = "cancelled"
         await self.listener.onUploadError("extracting stopped by user!")

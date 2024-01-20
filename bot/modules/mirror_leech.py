@@ -42,16 +42,16 @@ from myjd.exception import MYJDException
 
 class Mirror(TaskListener):
     def __init__(
-            self,
-            client,
-            message,
-            isQbit=False,
-            isLeech=False,
-            isJd=False,
-            sameDir=None,
-            bulk=None,
-            multiTag=None,
-            options="",
+        self,
+        client,
+        message,
+        isQbit=False,
+        isLeech=False,
+        isJd=False,
+        sameDir=None,
+        bulk=None,
+        multiTag=None,
+        options="",
     ):
         if sameDir is None:
             sameDir = {}
@@ -82,6 +82,9 @@ class Mirror(TaskListener):
             "-z": False,
             "-sv": False,
             "-ss": False,
+            "-f": False,
+            "-fd": False,
+            "-fu": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -93,6 +96,8 @@ class Mirror(TaskListener):
             "-ap": "",
             "-h": "",
             "-t": "",
+            "-ca": "",
+            "-cv": "",
         }
 
         args = arg_parser(input_list[1:], arg_base)
@@ -110,6 +115,11 @@ class Mirror(TaskListener):
         self.splitSize = args["-sp"]
         self.sampleVideo = args["-sv"]
         self.screenShots = args["-ss"]
+        self.forceRun = args["-f"]
+        self.forceDownload = args["-fd"]
+        self.forceUpload = args["-fu"]
+        self.convertAudio = args["-ca"]
+        self.convertVideo = args["-cv"]
 
         headers = args["-h"]
         isBulk = args["-b"]
@@ -210,15 +220,15 @@ class Mirror(TaskListener):
 
         if reply_to:
             file_ = (
-                    reply_to.document
-                    or reply_to.photo
-                    or reply_to.video
-                    or reply_to.audio
-                    or reply_to.voice
-                    or reply_to.video_note
-                    or reply_to.sticker
-                    or reply_to.animation
-                    or None
+                reply_to.document
+                or reply_to.photo
+                or reply_to.video
+                or reply_to.audio
+                or reply_to.voice
+                or reply_to.video_note
+                or reply_to.sticker
+                or reply_to.animation
+                or None
             )
 
             if file_ is None:
@@ -227,23 +237,23 @@ class Mirror(TaskListener):
                 else:
                     reply_to = None
             elif reply_to.document and (
-                    file_.mime_type == "application/x-bittorrent"
-                    or file_.file_name.endswith(".torrent")
+                file_.mime_type == "application/x-bittorrent"
+                or file_.file_name.endswith(".torrent")
             ):
                 self.link = await reply_to.download()
                 file_ = None
 
         if (
-                not self.link
-                and file_ is None
-                or is_telegram_link(self.link)
-                and reply_to is None
-                or file_ is None
-                and not is_url(self.link)
-                and not is_magnet(self.link)
-                and not await aiopath.exists(self.link)
-                and not is_rclone_path(self.link)
-                and not is_gdrive_id(self.link)
+            not self.link
+            and file_ is None
+            or is_telegram_link(self.link)
+            and reply_to is None
+            or file_ is None
+            and not is_url(self.link)
+            and not is_magnet(self.link)
+            and not await aiopath.exists(self.link)
+            and not is_rclone_path(self.link)
+            and not is_gdrive_id(self.link)
         ):
             await sendMessage(
                 self.message, COMMAND_USAGE["mirror"][0], COMMAND_USAGE["mirror"][1]
@@ -262,14 +272,14 @@ class Mirror(TaskListener):
             return
 
         if (
-                not self.isJd
-                and not self.isQbit
-                and not is_magnet(self.link)
-                and not is_rclone_path(self.link)
-                and not is_gdrive_link(self.link)
-                and not self.link.endswith(".torrent")
-                and file_ is None
-                and not is_gdrive_id(self.link)
+            not self.isJd
+            and not self.isQbit
+            and not is_magnet(self.link)
+            and not is_rclone_path(self.link)
+            and not is_gdrive_link(self.link)
+            and not self.link.endswith(".torrent")
+            and file_ is None
+            and not is_gdrive_id(self.link)
         ):
             content_type = await get_content_type(self.link)
             if content_type is None or re_match(r"text/html|text/plain", content_type):
