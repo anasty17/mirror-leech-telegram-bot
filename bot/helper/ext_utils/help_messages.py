@@ -247,6 +247,7 @@ Incase you want to specify whether using token or service accounts you can add t
 
 <b>Rclone:</b>
 /cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
+Use -sync to use sync method in rclone. Example: /cmd rcl/rclone_path -up rcl/rclone_path/rc -sync
 """
 
 PASSWORD_ERROR_MESSAGE = """

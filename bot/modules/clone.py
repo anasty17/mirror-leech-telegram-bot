@@ -68,7 +68,14 @@ class Clone(TaskListener):
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
 
-        arg_base = {"link": "", "-i": 0, "-b": False, "-up": "", "-rcf": ""}
+        arg_base = {
+            "link": "",
+            "-i": 0,
+            "-b": False,
+            "-up": "",
+            "-rcf": "",
+            "-sync": False,
+        }
 
         args = arg_parser(input_list[1:], arg_base)
 
@@ -82,6 +89,7 @@ class Clone(TaskListener):
         self.link = args["link"]
 
         isBulk = args["-b"]
+        sync = args["-sync"]
         bulk_start = 0
         bulk_end = 0
 
@@ -113,9 +121,9 @@ class Clone(TaskListener):
         except Exception as e:
             await sendMessage(self.message, e)
             return
-        await self._proceedToClone()
+        await self._proceedToClone(sync)
 
-    async def _proceedToClone(self):
+    async def _proceedToClone(self, sync):
         if is_share_link(self.link):
             try:
                 self.link = await sync_to_async(direct_link_generator, self.link)
@@ -150,16 +158,12 @@ class Clone(TaskListener):
                     task_dict[self.mid] = GdriveStatus(self, drive, gid, "cl")
                 if self.multi <= 1:
                     await sendStatusMessage(self.message)
-            flink, mime_type, files, folders, dir_id = await sync_to_async(
-                drive.clone
-            )
+            flink, mime_type, files, folders, dir_id = await sync_to_async(drive.clone)
             if msg:
                 await deleteMessage(msg)
             if not flink:
                 return
-            await self.onUploadComplete(
-                flink, files, folders, mime_type, dir_id=dir_id
-            )
+            await self.onUploadComplete(flink, files, folders, mime_type, dir_id=dir_id)
             LOGGER.info(f"Cloning Done: {self.name}")
         elif is_rclone_path(self.link):
             if self.link.startswith("mrcc:"):
@@ -211,8 +215,13 @@ class Clone(TaskListener):
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "cl")
             if self.multi <= 1:
                 await sendStatusMessage(self.message)
+            method = "sync" if sync else "copy"
             flink, destination = await RCTransfer.clone(
-                config_path, remote, src_path, mime_type
+                config_path,
+                remote,
+                src_path,
+                mime_type,
+                method,
             )
             if not destination:
                 return

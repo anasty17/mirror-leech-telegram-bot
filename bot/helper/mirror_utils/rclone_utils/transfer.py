@@ -357,7 +357,7 @@ class RcloneTransferHelper:
             link, files, folders, mime_type, destination
         )
 
-    async def clone(self, config_path, src_remote, src_path, mime_type):
+    async def clone(self, config_path, src_remote, src_path, mime_type, method):
         destination = self._listener.upDest
         dst_remote, dst_path = destination.split(":", 1)
 
@@ -376,7 +376,7 @@ class RcloneTransferHelper:
         )
 
         cmd = self._getUpdatedCommand(
-            config_path, f"{src_remote}:{src_path}", destination, "copy"
+            config_path, f"{src_remote}:{src_path}", destination, method
         )
         if not self._listener.rcFlags and not config_dict["RCLONE_FLAGS"]:
             if src_remote_type == "drive" and dst_remote_type != "drive":
