@@ -264,7 +264,7 @@ class RcloneTransferHelper:
         else:
             return True
 
-    async def upload(self, path, size):
+    async def upload(self, path, unwanted_files):
         self._is_upload = True
         rc_path = self._listener.upDest.strip("/")
         if rc_path.startswith("mrcc:"):
@@ -317,7 +317,7 @@ class RcloneTransferHelper:
 
         method = "move" if not self._listener.seed or self._listener.newDir else "copy"
         cmd = self._getUpdatedCommand(
-            fconfig_path, path, f"{fremote}:{rc_path}", method
+            fconfig_path, path, f"{fremote}:{rc_path}", method, unwanted_files
         )
         if (
             remote_type == "drive"
@@ -354,7 +354,7 @@ class RcloneTransferHelper:
             return
         LOGGER.info(f"Upload Done. Path: {destination}")
         await self._listener.onUploadComplete(
-            link, size, files, folders, mime_type, destination
+            link, files, folders, mime_type, destination
         )
 
     async def clone(self, config_path, src_remote, src_path, mime_type):
@@ -423,7 +423,9 @@ class RcloneTransferHelper:
                     )
                     return None, destination
 
-    def _getUpdatedCommand(self, config_path, source, destination, method):
+    def _getUpdatedCommand(
+        self, config_path, source, destination, method, unwanted_files=[]
+    ):
         ext = "*.{" + ",".join(self._listener.extensionFilter) + "}"
         cmd = [
             "rclone",
@@ -455,6 +457,9 @@ class RcloneTransferHelper:
                     cmd.extend((key, value))
                 elif len(flag) > 0:
                     cmd.append(flag.strip())
+        if unwanted_files:
+            for f in unwanted_files:
+                cmd.extend(("--exclude", f))
         return cmd
 
     @staticmethod

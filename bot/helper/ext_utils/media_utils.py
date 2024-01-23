@@ -1,6 +1,5 @@
 from PIL import Image
 from aiofiles.os import remove, path as aiopath, makedirs
-from aioshutil import move
 from asyncio import create_subprocess_exec, gather, wait_for
 from asyncio.subprocess import PIPE
 from os import path as ospath, cpu_count
@@ -18,20 +17,23 @@ async def convert_video(listener, video_file, ext):
     output = f"{base_name}.{ext}"
     cmd = ["ffmpeg", "-i", video_file, "-c", "copy", output]
     if listener.cancelled:
-        return
+        return False
     async with subprocess_lock:
         listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.cancelled:
-        return
+        return False
     code = listener.suproc.returncode
     if code == 0:
-        await remove(video_file)
-    elif code != -9:
+        return output
+    elif code == -9:
+        return False
+    else:
         stderr = stderr.decode().strip()
         LOGGER.error(
             f"{stderr}. Something went wrong while converting video, mostly file is corrupted. Path: {video_file}"
         )
+    return False
 
 
 async def convert_audio(listener, audio_file, ext):
@@ -39,20 +41,23 @@ async def convert_audio(listener, audio_file, ext):
     output = f"{base_name}.{ext}"
     cmd = ["ffmpeg", "-i", audio_file, output]
     if listener.cancelled:
-        return
+        return False
     async with subprocess_lock:
         listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.cancelled:
-        return
+        return False
     code = listener.suproc.returncode
     if code == 0:
-        await remove(audio_file)
-    elif code != -9:
+        return output
+    elif code == -9:
+        return False
+    else:
         stderr = stderr.decode().strip()
         LOGGER.error(
             f"{stderr}. Something went wrong while converting audio, mostly file is corrupted. Path: {audio_file}"
         )
+    return False
 
 
 async def createThumb(msg, _id=""):
@@ -356,7 +361,9 @@ async def split_file(
             if listener.cancelled:
                 return False
             code = listener.suproc.returncode
-            if code != 0:
+            if code == -9:
+                return False
+            elif code != 0:
                 stderr = stderr.decode().strip()
                 try:
                     await remove(out_path)
@@ -432,15 +439,15 @@ async def split_file(
         if listener.cancelled:
             return False
         code = listener.suproc.returncode
-        if code != 0:
+        if code == -9:
+            return False
+        elif code != 0:
             stderr = stderr.decode().strip()
             LOGGER.error(f"{stderr}. Split Document: {path}")
     return True
 
 
-async def createSampleVideo(
-    listener, video_file, sample_duration, part_duration, oneFile=False
-):
+async def createSampleVideo(listener, video_file, sample_duration, part_duration):
     filter_complex = ""
     dir, name = video_file.rsplit("/", 1)
     output_file = f"{dir}/SAMPLE.{name}"
@@ -491,19 +498,13 @@ async def createSampleVideo(
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
+    if listener.cancelled:
+        return False
     code = listener.suproc.returncode
     if code == -9:
         return False
     elif code == 0:
-        if oneFile:
-            newDir, _ = ospath.splitext(video_file)
-            await makedirs(newDir, exist_ok=True)
-            await gather(
-                move(video_file, f"{newDir}/{name}"),
-                move(output_file, f"{newDir}/SAMPLE.{name}"),
-            )
-            return newDir
-        return True
+        return output_file
     else:
         stderr = stderr.decode().strip()
         LOGGER.error(

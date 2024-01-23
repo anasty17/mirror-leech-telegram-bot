@@ -225,7 +225,7 @@ class TgUploader:
                 self._msgs_dict[m.link] = m.caption
         self._sent_msg = msgs_list[-1]
 
-    async def upload(self, o_files, m_size, size):
+    async def upload(self, o_files):
         await self._user_settings()
         res = await self._msg_to_reply()
         if not res:
@@ -241,7 +241,10 @@ class TgUploader:
                     continue
                 try:
                     f_size = await aiopath.getsize(self._up_path)
-                    if self._listener.seed and file_ in o_files and f_size in m_size:
+                    if (
+                        self._listener.seed
+                        and self._up_path in o_files
+                    ):
                         continue
                     self._total_files += 1
                     if f_size == 0:
@@ -323,7 +326,7 @@ class TgUploader:
             return
         LOGGER.info(f"Leech Completed: {self._listener.name}")
         await self._listener.onUploadComplete(
-            None, size, self._msgs_dict, self._total_files, self._corrupted
+            None, self._msgs_dict, self._total_files, self._corrupted
         )
 
     @retry(
@@ -383,23 +386,6 @@ class TgUploader:
                 else:
                     width = 480
                     height = 320
-                if not self._up_path.upper().endswith(("MP4", "MKV")):
-                    dirpath, file_ = self._up_path.rsplit("/", 1)
-                    if (
-                        self._listener.seed
-                        and not self._listener.newDir
-                        and not dirpath.endswith("/splited_files_mltb")
-                    ):
-                        dirpath = f"{dirpath}/copied_mltb"
-                        await makedirs(dirpath, exist_ok=True)
-                        new_path = ospath.join(
-                            dirpath, f"{ospath.splitext(file_)[0]}.mp4"
-                        )
-                        self._up_path = await copy(self._up_path, new_path)
-                    else:
-                        new_path = f"{ospath.splitext(self._up_path)[0]}.mp4"
-                        await rename(self._up_path, new_path)
-                        self._up_path = new_path
                 if self._is_cancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_video(

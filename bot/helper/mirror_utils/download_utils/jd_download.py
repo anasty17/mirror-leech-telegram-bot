@@ -127,7 +127,7 @@ async def add_jd_download(listener, path):
 
         start_time = time()
         online_packages = []
-        size = 0
+        listener.size = 0
         corrupted_packages = []
         gid = 0
         remove_unknown = False
@@ -179,7 +179,7 @@ async def add_jd_download(listener, path):
                 ):
                     remove_unknown = True
 
-                size += pack.get("bytesTotal", 0)
+                listener.size += pack.get("bytesTotal", 0)
                 online_packages.append(pack["uuid"])
                 if save_to.startswith("/root/Downloads/"):
                     await retry_function(
@@ -252,7 +252,7 @@ async def add_jd_download(listener, path):
         if add_to_queue:
             LOGGER.info(f"Added to Queue/Download: {listener.name}")
             async with task_dict_lock:
-                task_dict[listener.mid] = QueueStatus(listener, size, f"{gid}", "dl")
+                task_dict[listener.mid] = QueueStatus(listener, f"{gid}", "dl")
             await listener.onDownloadStart()
             if listener.multi <= 1:
                 await sendStatusMessage(listener.message)

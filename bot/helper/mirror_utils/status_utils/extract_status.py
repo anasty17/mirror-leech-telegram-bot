@@ -11,11 +11,11 @@ from bot.helper.ext_utils.status_utils import (
 
 
 class ExtractStatus:
-    def __init__(self, listener, size, gid):
-        self._size = size
+    def __init__(self, listener, gid):
+        self.listener = listener
+        self._size = self.listener.size
         self._gid = gid
         self._start_time = time()
-        self.listener = listener
 
     def gid(self):
         return self._gid

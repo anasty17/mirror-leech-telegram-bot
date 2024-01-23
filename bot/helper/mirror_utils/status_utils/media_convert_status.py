@@ -3,10 +3,10 @@ from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStat
 
 
 class MediaConvertStatus:
-    def __init__(self, listener, size, gid):
-        self._gid = gid
-        self._size = size
+    def __init__(self, listener, gid):
         self.listener = listener
+        self._gid = gid
+        self._size = self.listener.size
 
     def gid(self):
         return self._gid

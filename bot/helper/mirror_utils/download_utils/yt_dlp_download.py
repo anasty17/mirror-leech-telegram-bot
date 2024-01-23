@@ -43,7 +43,6 @@ class MyLogger:
 class YoutubeDLHelper:
     def __init__(self, listener):
         self._last_downloaded = 0
-        self._size = 0
         self._progress = 0
         self._downloaded_bytes = 0
         self._download_speed = 0
@@ -84,7 +83,7 @@ class YoutubeDLHelper:
 
     @property
     def size(self):
-        return self._size
+        return self._listener.size
 
     @property
     def progress(self):
@@ -110,13 +109,13 @@ class YoutubeDLHelper:
                 self._downloaded_bytes += chunk_size
             else:
                 if d.get("total_bytes"):
-                    self._size = d["total_bytes"]
+                    self._listener.size = d["total_bytes"]
                 elif d.get("total_bytes_estimate"):
-                    self._size = d["total_bytes_estimate"]
+                    self._listener.size = d["total_bytes_estimate"]
                 self._downloaded_bytes = d["downloaded_bytes"]
                 self._eta = d.get("eta", "-") or "-"
             try:
-                self._progress = (self._downloaded_bytes / self._size) * 100
+                self._progress = (self._downloaded_bytes / self._listener.size) * 100
             except:
                 pass
 
@@ -149,9 +148,9 @@ class YoutubeDLHelper:
                     if not entry:
                         continue
                     elif "filesize_approx" in entry:
-                        self._size += entry["filesize_approx"]
+                        self._listener.size += entry["filesize_approx"]
                     elif "filesize" in entry:
-                        self._size += entry["filesize"]
+                        self._listener.size += entry["filesize"]
                     if not self._listener.name:
                         outtmpl_ = "%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d.%(ext)s"
                         self._listener.name, ext = ospath.splitext(
@@ -318,7 +317,7 @@ class YoutubeDLHelper:
                 LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
                 async with task_dict_lock:
                     task_dict[self._listener.mid] = QueueStatus(
-                        self._listener, self._size, self._gid, "dl"
+                        self._listener, self._gid, "dl"
                     )
                 await event.wait()
                 async with task_dict_lock:

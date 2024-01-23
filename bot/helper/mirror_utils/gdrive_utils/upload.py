@@ -39,7 +39,7 @@ class gdUpload(GoogleDriveHelper):
             self.listener.upDest = self.listener.upDest.replace("sa:", "", 1)
             self.use_sa = True
 
-    def upload(self, size):
+    def upload(self, unwanted_files):
         self.user_setting()
         self.service = self.authorize()
         LOGGER.info(f"Uploading: {self._path}")
@@ -69,7 +69,7 @@ class gdUpload(GoogleDriveHelper):
                     ospath.basename(ospath.abspath(self.listener.name)),
                     self.listener.upDest,
                 )
-                result = self._upload_dir(self._path, dir_id)
+                result = self._upload_dir(self._path, dir_id, unwanted_files)
                 if result is None:
                     raise Exception("Upload has been manually cancelled!")
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
@@ -97,14 +97,13 @@ class gdUpload(GoogleDriveHelper):
             async_to_sync(
                 self.listener.onUploadComplete,
                 link,
-                size,
                 self.total_files,
                 self.total_folders,
                 mime_type,
                 dir_id=self.getIdFromUrl(link),
             )
 
-    def _upload_dir(self, input_directory, dest_id):
+    def _upload_dir(self, input_directory, dest_id, unwanted_files):
         list_dirs = listdir(input_directory)
         if len(list_dirs) == 0:
             return dest_id
@@ -113,9 +112,13 @@ class gdUpload(GoogleDriveHelper):
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, dest_id)
-                new_id = self._upload_dir(current_file_name, current_dir_id)
+                new_id = self._upload_dir(
+                    current_file_name, current_dir_id, unwanted_files
+                )
                 self.total_folders += 1
-            elif not item.lower().endswith(tuple(self.listener.extensionFilter)):
+            elif current_file_name not in unwanted_files and not item.lower().endswith(
+                tuple(self.listener.extensionFilter)
+            ):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
                 self._upload_file(current_file_name, file_name, mime_type, dest_id)

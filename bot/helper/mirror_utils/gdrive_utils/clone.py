@@ -50,7 +50,6 @@ class gdClone(GoogleDriveHelper):
                 None,
                 None,
                 None,
-                None,
             )
         self.service = self.authorize()
         msg = ""
@@ -67,19 +66,18 @@ class gdClone(GoogleDriveHelper):
                     self.service.files().delete(
                         fileId=dir_id, supportsAllDrives=True
                     ).execute()
-                    return None, None, None, None, None, None
+                    return None, None, None, None, None
                 mime_type = "Folder"
-                size = self.proc_bytes
+                self.listener.size = self.proc_bytes
             else:
                 file = self._copyFile(meta.get("id"), self.listener.upDest)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 if mime_type is None:
                     mime_type = "File"
-                size = int(meta.get("size", 0))
+                self.listener.size = int(meta.get("size", 0))
             return (
                 durl,
-                size,
                 mime_type,
                 self.total_files,
                 self.total_folders,

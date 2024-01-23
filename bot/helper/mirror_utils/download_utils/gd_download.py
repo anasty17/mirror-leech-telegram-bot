@@ -12,7 +12,7 @@ from bot.helper.telegram_helper.message_utils import sendStatusMessage
 
 async def add_gd_download(listener, path):
     drive = gdCount()
-    name, mime_type, size, _, _ = await sync_to_async(
+    name, mime_type, listener.size, _, _ = await sync_to_async(
         drive.count, listener.link, listener.userId
     )
     if mime_type is None:
@@ -32,7 +32,7 @@ async def add_gd_download(listener, path):
         if add_to_queue:
             LOGGER.info(f"Added to Queue/Download: {listener.name}")
             async with task_dict_lock:
-                task_dict[listener.mid] = QueueStatus(listener, size, gid, "dl")
+                task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
             await listener.onDownloadStart()
             if listener.multi <= 1:
                 await sendStatusMessage(listener.message)
@@ -45,7 +45,7 @@ async def add_gd_download(listener, path):
 
     drive = gdDownload(listener, path)
     async with task_dict_lock:
-        task_dict[listener.mid] = GdriveStatus(listener, drive, size, gid, "dl")
+        task_dict[listener.mid] = GdriveStatus(listener, drive, gid, "dl")
 
     async with queue_dict_lock:
         non_queued_dl.add(listener.mid)

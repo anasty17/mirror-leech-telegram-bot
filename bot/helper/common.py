@@ -1,8 +1,9 @@
-from aiofiles.os import path as aiopath, remove
+from aiofiles.os import path as aiopath, remove, makedirs
 from asyncio import sleep, create_subprocess_exec
 from asyncio.subprocess import PIPE
 from os import walk, path as ospath
 from secrets import token_urlsafe
+from aioshutil import move, copy2
 
 from bot import (
     DOWNLOAD_DIR,
@@ -78,6 +79,7 @@ class TaskConfig:
         self.splitSize = 0
         self.maxSplitSize = 0
         self.multi = 0
+        self.size = 0
         self.isLeech = False
         self.isQbit = False
         self.isJd = False
@@ -103,6 +105,7 @@ class TaskConfig:
         self.forceRun = False
         self.forceDownload = False
         self.forceUpload = False
+        self.isTorrent = False
         self.suproc = None
         self.thumb = None
         self.extensionFilter = []
@@ -150,7 +153,7 @@ class TaskConfig:
             if "excluded_extensions" not in self.userDict
             else ["aria2", "!qB"]
         )
-        if not self.isYtDlp:
+        if not self.isYtDlp and not self.isJd:
             if self.link not in ["rcl", "gdl"]:
                 await self.isTokenExists(self.link, "dl")
             elif self.link == "rcl":
@@ -395,12 +398,12 @@ class TaskConfig:
                 "Reply to text file or to telegram message that have links seperated by new line!",
             )
 
-    async def proceedExtract(self, dl_path, size, gid):
+    async def proceedExtract(self, dl_path, gid):
         pswd = self.extract if isinstance(self.extract, str) else ""
         try:
             LOGGER.info(f"Extracting: {self.name}")
             async with task_dict_lock:
-                task_dict[self.mid] = ExtractStatus(self, size, gid)
+                task_dict[self.mid] = ExtractStatus(self, gid)
             if await aiopath.isdir(dl_path):
                 if self.seed:
                     self.newDir = f"{self.dir}10000"
@@ -507,15 +510,15 @@ class TaskConfig:
             self.newDir = ""
             return dl_path
 
-    async def proceedCompress(self, dl_path, size, gid):
+    async def proceedCompress(self, dl_path, gid):
         pswd = self.compress if isinstance(self.compress, str) else ""
-        if self.seed and self.isLeech:
+        if self.seed and self.isLeech and not self.newDir:
             self.newDir = f"{self.dir}10000"
             up_path = f"{self.newDir}/{self.name}.zip"
         else:
             up_path = f"{dl_path}.zip"
         async with task_dict_lock:
-            task_dict[self.mid] = ZipStatus(self, size, gid)
+            task_dict[self.mid] = ZipStatus(self, gid)
         if self.equalSplits:
             size = await get_path_size(dl_path)
             parts = -(-size // self.splitSize)
@@ -560,7 +563,7 @@ class TaskConfig:
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
             return dl_path
 
-    async def proceedSplit(self, up_dir, m_size, o_files, size, gid):
+    async def proceedSplit(self, up_dir, m_size, o_files, gid):
         checked = False
         for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
             for file_ in files:
@@ -570,7 +573,7 @@ class TaskConfig:
                     if not checked:
                         checked = True
                         async with task_dict_lock:
-                            task_dict[self.mid] = SplitStatus(self, size, gid)
+                            task_dict[self.mid] = SplitStatus(self, gid)
                         LOGGER.info(f"Splitting: {self.name}")
                     res = await split_file(
                         f_path, f_size, dirpath, self.splitSize, self
@@ -593,7 +596,7 @@ class TaskConfig:
                         m_size.append(f_size)
                         o_files.append(file_)
 
-    async def generateSampleVideo(self, dl_path, size, gid):
+    async def generateSampleVideo(self, dl_path, gid, unwanted_files):
         data = self.sampleVideo.split(":") if isinstance(self.sampleVideo, str) else ""
         if data:
             sample_duration = int(data[0]) if data[0] else 60
@@ -603,7 +606,7 @@ class TaskConfig:
             part_duration = 4
 
         async with task_dict_lock:
-            task_dict[self.mid] = SampleVideoStatus(self, size, gid)
+            task_dict[self.mid] = SampleVideoStatus(self, gid)
 
         async with cpu_eater_lock:
             checked = False
@@ -612,15 +615,30 @@ class TaskConfig:
                     if not checked:
                         checked = True
                         LOGGER.info(f"Creating Sample video: {self.name}")
-                    return await createSampleVideo(
+                    res = await createSampleVideo(
                         self, dl_path, sample_duration, part_duration, True
                     )
+                    if res:
+                        newfolder = ospath.splitext(dl_path)[0]
+                        name = dl_path.rsplit("/", 1)[1]
+                        if self.seed:
+                            self.newDir = f"{self.dir}10000"
+                            newfolder = newfolder.replace(self.dir, self.newDir)
+                        await makedirs(newfolder, exist_ok=True)
+                        if self.seed:
+                            await copy2(dl_path, f"{newfolder}/{name}")
+                        else:
+                            await move(dl_path, f"{newfolder}/{name}")
+                        await move(res, f"{newfolder}/SAMPLE.{name}")
+                        return self.newDir
             else:
                 for dirpath, _, files in await sync_to_async(
                     walk, dl_path, topdown=False
                 ):
                     for file_ in files:
                         f_path = ospath.join(dirpath, file_)
+                        if f_path in unwanted_files:
+                            continue
                         if (await get_document_type(f_path))[0]:
                             if not checked:
                                 checked = True
@@ -632,9 +650,9 @@ class TaskConfig:
                                 return res
                 return dl_path
 
-    async def convertMedia(self, up_dir, size, gid):
+    async def convertMedia(self, dl_path, gid, o_files, m_size):
         async with task_dict_lock:
-            task_dict[self.mid] = MediaConvertStatus(self, size, gid)
+            task_dict[self.mid] = MediaConvertStatus(self, gid)
 
         fvext = []
         if self.convertVideo:
@@ -673,46 +691,79 @@ class TaskConfig:
             astatus = ""
 
         checked = False
-        for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
-            for file_ in files:
-                if self.cancelled:
-                    return False
-                f_path = ospath.join(dirpath, file_)
-                is_video, is_audio, _ = await get_document_type(f_path)
-                if (
-                    is_video
-                    and vext
-                    and not f_path.endswith(f".{vext}")
-                    and (
-                        vstatus == "+"
-                        and f_path.endswith(tuple(fvext))
-                        or vstatus == "-"
-                        and not f_path.endswith(tuple(fvext))
-                        or not vstatus
-                    )
-                ):
-                    if not checked:
-                        checked = True
-                        LOGGER.info(f"Converting: {self.name}")
-                    await convert_video(self, f_path, vext)
+
+        async def proceedConvert(m_path):
+            nonlocal checked
+            is_video, is_audio, _ = await get_document_type(m_path)
+            if (
+                is_video
+                and vext
+                and not m_path.endswith(f".{vext}")
+                and (
+                    vstatus == "+"
+                    and m_path.endswith(tuple(fvext))
+                    or vstatus == "-"
+                    and not m_path.endswith(tuple(fvext))
+                    or not vstatus
+                )
+            ):
+                if not checked:
+                    checked = True
+                    LOGGER.info(f"Converting: {self.name}")
+                res = await convert_video(self, m_path, vext)
+                return False if self.cancelled else res
+            elif (
+                is_audio
+                and not is_video
+                and not m_path.endswith(f".{aext}")
+                and (
+                    astatus == "+"
+                    and m_path.endswith(tuple(faext))
+                    or astatus == "-"
+                    and not m_path.endswith(tuple(faext))
+                    or not astatus
+                )
+            ):
+                if not checked:
+                    checked = True
+                    LOGGER.info(f"Converting: {self.name}")
+                res = await convert_audio(self, m_path, aext)
+                return False if self.cancelled else res
+            else:
+                return False
+
+        if await aiopath.isfile(dl_path):
+            output_file = await proceedConvert(dl_path)
+            if output_file:
+                if self.seed:
+                    self.newDir = f"{self.dir}10000"
+                    new_output_file = output_file.replace(self.dir, self.newDir)
+                    await makedirs(self.newDir, exist_ok=True)
+                    await move(output_file, new_output_file)
+                    return new_output_file
+                else:
+                    try:
+                        await remove(dl_path)
+                    except:
+                        return False
+                    return output_file
+            return dl_path
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
                     if self.cancelled:
                         return False
-                elif (
-                    is_audio
-                    and not is_video
-                    and not f_path.endswith(f".{aext}")
-                    and (
-                        astatus == "+"
-                        and f_path.endswith(tuple(faext))
-                        or astatus == "-"
-                        and not f_path.endswith(tuple(faext))
-                        or not astatus
-                    )
-                ):
-                    if not checked:
-                        checked = True
-                        LOGGER.info(f"Converting: {self.name}")
-                    await convert_audio(self, f_path, aext)
-                    if self.cancelled:
-                        return False
-        return True
+                    f_path = ospath.join(dirpath, file_)
+                    res = await proceedConvert(f_path)
+                    if res:
+                        if self.seed and not self.newDir:
+                            o_files.append(f_path)
+                            fsize = await aiopath.getsize(f_path)
+                            m_size.append(fsize)
+                        else:
+                            try:
+                                await remove(f_path)
+                            except:
+                                return False
+
+            return dl_path

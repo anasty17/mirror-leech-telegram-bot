@@ -28,6 +28,7 @@ async def _onDownloadStarted(api, gid):
         LOGGER.info(f"onDownloadStarted: {gid} METADATA")
         await sleep(1)
         if task := await getTaskByGid(gid):
+            task.listener.isTorrent = True
             if task.listener.select:
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await sendMessage(task.listener.message, metamsg)
@@ -66,6 +67,7 @@ async def _onDownloadComplete(api, gid):
         new_gid = download.followed_by_ids[0]
         LOGGER.info(f"Gid changed from {gid} to {new_gid}")
         if task := await getTaskByGid(new_gid):
+            task.listener.isTorrent = True
             if config_dict["BASE_URL"] and task.listener.select:
                 if not task.queued:
                     await sync_to_async(api.client.force_pause, new_gid)
@@ -74,6 +76,7 @@ async def _onDownloadComplete(api, gid):
                 await sendMessage(task.listener.message, msg, SBUTTONS)
     elif download.is_torrent:
         if task := await getTaskByGid(gid):
+            task.listener.isTorrent = True
             if hasattr(task, "seeding") and task.seeding:
                 LOGGER.info(f"Cancelling Seed: {download.name} onDownloadComplete")
                 await task.listener.onUploadError(
@@ -96,6 +99,7 @@ async def _onBtDownloadComplete(api, gid):
         return
     LOGGER.info(f"onBtDownloadComplete: {download.name} - Gid: {gid}")
     if task := await getTaskByGid(gid):
+        task.listener.isTorrent = True
         if task.listener.select:
             res = download.files
             for file_o in res:

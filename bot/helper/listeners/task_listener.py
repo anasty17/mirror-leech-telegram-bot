@@ -113,6 +113,12 @@ class TaskListener(TaskConfig):
             gid = download.gid()
         LOGGER.info(f"Download completed: {self.name}")
 
+        if not (self.isTorrent or self.isQbit):
+            self.seed = False
+
+        unwanted_files = []
+        unwanted_files_size = []
+
         if multi_links:
             await self.onUploadError("Downloaded! Waiting for other tasks...")
             return
@@ -128,7 +134,7 @@ class TaskListener(TaskConfig):
                 return
 
         up_path = f"{self.dir}/{self.name}"
-        size = await get_path_size(up_path)
+        self.size = await get_path_size(up_path)
         if not config_dict["QUEUE_ALL"]:
             async with queue_dict_lock:
                 if self.mid in non_queued_dl:
@@ -139,41 +145,42 @@ class TaskListener(TaskConfig):
             await join_files(up_path)
 
         if self.extract:
-            up_path = await self.proceedExtract(up_path, size, gid)
+            up_path = await self.proceedExtract(up_path, gid)
             if self.cancelled:
                 return
             up_dir, self.name = up_path.rsplit("/", 1)
-            size = await get_path_size(up_dir)
+            self.size = await get_path_size(up_dir)
 
         if self.convertAudio or self.convertVideo:
-            up_dir, self.name = up_path.rsplit("/", 1)
-            await self.convertMedia(up_dir, size, gid)
+            up_path = await self.convertMedia(
+                up_path, gid, unwanted_files, unwanted_files_size
+            )
             if self.cancelled:
                 return
-            size = await get_path_size(up_dir)
+            up_dir, self.name = up_path.rsplit("/", 1)
+            self.size = await get_path_size(up_dir)
 
         if self.sampleVideo:
-            up_path = await self.generateSampleVideo(up_path, size, gid)
+            up_path = await self.generateSampleVideo(up_path, gid, unwanted_files)
             if self.cancelled:
                 return
             up_dir, self.name = up_path.rsplit("/", 1)
-            size = await get_path_size(up_dir)
+            self.size = await get_path_size(up_dir)
 
         if self.compress:
-            up_path = await self.proceedCompress(up_path, size, gid)
+            up_path = await self.proceedCompress(up_path, gid)
             if self.cancelled:
                 return
 
         up_dir, self.name = up_path.rsplit("/", 1)
-        size = await get_path_size(up_dir)
+        self.size = await get_path_size(up_dir)
 
-        if self.isLeech:
-            m_size = []
-            o_files = []
-            if not self.compress:
-                await self.proceedSplit(up_dir, m_size, o_files, size, gid)
-                if self.cancelled:
-                    return
+        if self.isLeech and not self.compress:
+            await self.proceedSplit(
+                up_dir, unwanted_files_size, unwanted_files, gid
+            )
+            if self.cancelled:
+                return
 
         if not (self.forceRun or self.forceUpload):
             add_to_queue, event = await check_running_tasks(self.mid, "up")
@@ -181,7 +188,7 @@ class TaskListener(TaskConfig):
             if add_to_queue:
                 LOGGER.info(f"Added to Queue/Upload: {self.name}")
                 async with task_dict_lock:
-                    task_dict[self.mid] = QueueStatus(self, size, gid, "Up")
+                    task_dict[self.mid] = QueueStatus(self, gid, "Up")
                 await event.wait()
                 async with task_dict_lock:
                     if self.mid not in task_dict:
@@ -191,40 +198,44 @@ class TaskListener(TaskConfig):
             non_queued_up.add(self.mid)
 
         if self.isLeech:
-            size = await get_path_size(up_dir)
-            for s in m_size:
-                size -= s
+            self.size = await get_path_size(up_dir)
+            for s in unwanted_files_size:
+                self.size -= s
             LOGGER.info(f"Leech Name: {self.name}")
             tg = TgUploader(self, up_dir)
             async with task_dict_lock:
-                task_dict[self.mid] = TelegramStatus(self, tg, size, gid, "up")
+                task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                tg.upload(o_files, m_size, size),
+                tg.upload(unwanted_files),
             )
         elif is_gdrive_id(self.upDest):
-            size = await get_path_size(up_path)
+            self.size = await get_path_size(up_path)
+            for s in unwanted_files_size:
+                self.size -= s
             LOGGER.info(f"Gdrive Upload Name: {self.name}")
             drive = gdUpload(self, up_path)
             async with task_dict_lock:
-                task_dict[self.mid] = GdriveStatus(self, drive, size, gid, "up")
+                task_dict[self.mid] = GdriveStatus(self, drive, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                sync_to_async(drive.upload, size),
+                sync_to_async(drive.upload, unwanted_files),
             )
         else:
-            size = await get_path_size(up_path)
+            self.size = await get_path_size(up_path)
+            for s in unwanted_files_size:
+                self.size -= s
             LOGGER.info(f"Rclone Upload Name: {self.name}")
             RCTransfer = RcloneTransferHelper(self)
             async with task_dict_lock:
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                RCTransfer.upload(up_path, size),
+                RCTransfer.upload(up_path, unwanted_files),
             )
 
     async def onUploadComplete(
-        self, link, size, files, folders, mime_type, rclonePath="", dir_id=""
+        self, link, files, folders, mime_type, rclonePath="", dir_id=""
     ):
         if (
             self.isSuperChat
@@ -232,7 +243,7 @@ class TaskListener(TaskConfig):
             and DATABASE_URL
         ):
             await DbManager().rm_complete_task(self.message.link)
-        msg = f"<b>Name: </b><code>{escape(self.name)}</code>\n\n<b>Size: </b>{get_readable_file_size(size)}"
+        msg = f"<b>Name: </b><code>{escape(self.name)}</code>\n\n<b>Size: </b>{get_readable_file_size(self.size)}"
         LOGGER.info(f"Task Done: {self.name}")
         if self.isLeech:
             msg += f"\n<b>Total Files: </b>{folders}"
