@@ -26,7 +26,7 @@ class YtDlpDownloadStatus:
             return async_to_sync(get_path_size, self.listener.dir)
 
     def size(self):
-        return get_readable_file_size(self.listener.size)
+        return get_readable_file_size(self._obj.size)
 
     def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
@@ -44,7 +44,7 @@ class YtDlpDownloadStatus:
         if self._obj.eta != "-":
             return get_readable_time(self._obj.eta)
         try:
-            seconds = (self.listener.size - self.processed_raw()) / self._obj.download_speed
+            seconds = (self._obj.size - self.processed_raw()) / self._obj.download_speed
             return get_readable_time(seconds)
         except:
             return "-"
