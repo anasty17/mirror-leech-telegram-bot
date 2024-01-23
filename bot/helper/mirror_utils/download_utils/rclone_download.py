@@ -45,6 +45,8 @@ async def add_rclone_download(listener, path):
     if res1[2] != res2[2] != 0:
         if res1[2] != -9:
             err = res1[1] or res2[1]
+            if not err:
+                err = "Use '/shell cat rlog.txt' to see more information"
             msg = f"Error: While getting rclone stat/size. Path: {remote}:{listener.link}. Stderr: {err[:4000]}"
             await listener.onDownloadError(msg)
         return
@@ -52,6 +54,8 @@ async def add_rclone_download(listener, path):
         rstat = loads(res1[0])
         rsize = loads(res2[0])
     except Exception as err:
+        if not str(err):
+            err = "Use '/shell cat rlog.txt' to see more information"
         await listener.onDownloadError(f"RcloneDownload JsonLoad: {err}")
         return
     if rstat["IsDir"]:

@@ -133,21 +133,25 @@ async def get_path_size(path):
     if await aiopath.isfile(path):
         return await aiopath.getsize(path)
     total_size = 0
-    for root, dirs, files in await sync_to_async(walk, path):
+    for root, _, files in await sync_to_async(walk, path):
         for f in files:
             abs_path = ospath.join(root, f)
             total_size += await aiopath.getsize(abs_path)
     return total_size
 
 
-async def count_files_and_folders(path, extension_filter):
+async def count_files_and_folders(path, extension_filter, unwanted_files=[]):
     total_files = 0
     total_folders = 0
-    for _, dirs, files in await sync_to_async(walk, path):
+    for dirpath, dirs, files in await sync_to_async(walk, path):
         total_files += len(files)
         for f in files:
             if f.endswith(tuple(extension_filter)):
                 total_files -= 1
+            elif unwanted_files:
+                f_path = ospath.join(dirpath, f)
+                if f_path in unwanted_files:
+                    total_files -= 1
         total_folders += len(dirs)
     return total_folders, total_files
 

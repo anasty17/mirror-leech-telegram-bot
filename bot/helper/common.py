@@ -510,7 +510,7 @@ class TaskConfig:
             self.newDir = ""
             return dl_path
 
-    async def proceedCompress(self, dl_path, gid, ft_delete):
+    async def proceedCompress(self, dl_path, gid, o_files, ft_delete):
         pswd = self.compress if isinstance(self.compress, str) else ""
         if self.seed and not self.newDir:
             self.newDir = f"{self.dir}10000"
@@ -536,9 +536,16 @@ class TaskConfig:
             up_path,
             dl_path,
         ]
-        for ext in GLOBAL_EXTENSION_FILTER:
-            ex_ext = f"-xr!*.{ext}"
-            cmd.append(ex_ext)
+        if await aiopath.isdir(dl_path):
+            for ext in GLOBAL_EXTENSION_FILTER:
+                cmd.append(f"-xr!*.{ext}")
+            if o_files:
+                for f in o_files:
+                    if self.newDir and self.newDir in f:
+                        fte = f.replace(f"{self.newDir}/", "")
+                    else:
+                        fte = f.replace(f"{self.dir}/", "")
+                    cmd.append(f"-xr!{fte}")
         if self.isLeech and int(size) > self.splitSize:
             if not pswd:
                 del cmd[4]

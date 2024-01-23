@@ -171,7 +171,7 @@ class TaskListener(TaskConfig):
             self.size = await get_path_size(up_dir)
 
         if self.compress:
-            up_path = await self.proceedCompress(up_path, gid, files_to_delete)
+            up_path = await self.proceedCompress(up_path, gid, unwanted_files, files_to_delete)
             if self.cancelled:
                 return
 
