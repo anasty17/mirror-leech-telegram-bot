@@ -110,16 +110,18 @@ def exit_clean_up(signal, frame):
         sexit(1)
 
 
-async def clean_unwanted(path):
+async def clean_unwanted(path, custom_list=[]):
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         for filee in files:
+            f_path = ospath.join(dirpath, filee)
             if (
                 filee.endswith(".!qB")
+                or f_path in custom_list
                 or filee.endswith(".parts")
                 and filee.startswith(".")
             ):
-                await remove(ospath.join(dirpath, filee))
+                await remove(f_path)
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
             await aiormtree(dirpath)
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):

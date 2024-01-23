@@ -654,6 +654,7 @@ async def rssMonitor():
                         if tries > 3:
                             raise
                         continue
+                LOGGER.info(html)
                 rss_d = feedparse(html)
                 try:
                     last_link = rss_d.entries[0]["links"][1]["href"]

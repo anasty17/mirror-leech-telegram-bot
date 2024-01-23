@@ -120,7 +120,7 @@ class TgUploader:
             self._sent_msg = self._listener.message
         return True
 
-    async def _prepare_file(self, file_, dirpath):
+    async def _prepare_file(self, file_, dirpath, delete_file):
         if self._lprefix:
             cap_mono = f"{self._lprefix} <code>{file_}</code>"
             self._lprefix = re_sub("<.*?>", "", self._lprefix)
@@ -128,6 +128,7 @@ class TgUploader:
                 self._listener.seed
                 and not self._listener.newDir
                 and not dirpath.endswith("/splited_files_mltb")
+                and not delete_file
             ):
                 dirpath = f"{dirpath}/copied_mltb"
                 await makedirs(dirpath, exist_ok=True)
@@ -159,6 +160,7 @@ class TgUploader:
                 self._listener.seed
                 and not self._listener.newDir
                 and not dirpath.endswith("/splited_files_mltb")
+                and not delete_file
             ):
                 dirpath = f"{dirpath}/copied_mltb"
                 await makedirs(dirpath, exist_ok=True)
@@ -225,27 +227,27 @@ class TgUploader:
                 self._msgs_dict[m.link] = m.caption
         self._sent_msg = msgs_list[-1]
 
-    async def upload(self, o_files):
+    async def upload(self, o_files, ft_delete):
         await self._user_settings()
         res = await self._msg_to_reply()
         if not res:
             return
         for dirpath, _, files in sorted(await sync_to_async(walk, self._path)):
+            delete_file = False
             if dirpath.endswith("/yt-dlp-thumb"):
                 continue
             for file_ in natsorted(files):
                 self._up_path = ospath.join(dirpath, file_)
+                if self._up_path in ft_delete:
+                    delete_file = True
+                if self._up_path in o_files:
+                    continue
                 if file_.lower().endswith(tuple(self._listener.extensionFilter)):
                     if not self._listener.seed or self._listener.newDir:
                         await remove(self._up_path)
                     continue
                 try:
                     f_size = await aiopath.getsize(self._up_path)
-                    if (
-                        self._listener.seed
-                        and self._up_path in o_files
-                    ):
-                        continue
                     self._total_files += 1
                     if f_size == 0:
                         LOGGER.error(
@@ -255,7 +257,7 @@ class TgUploader:
                         continue
                     if self._is_cancelled:
                         return
-                    cap_mono = await self._prepare_file(file_, dirpath)
+                    cap_mono = await self._prepare_file(file_, dirpath, delete_file)
                     if self._last_msg_in_group:
                         group_lists = [
                             x for v in self._media_dict.values() for x in v.keys()
@@ -298,6 +300,7 @@ class TgUploader:
                             or self._listener.newDir
                             or dirpath.endswith("/splited_files_mltb")
                             or "/copied_mltb/" in self._up_path
+                            or delete_file
                         )
                     ):
                         await remove(self._up_path)
@@ -357,7 +360,7 @@ class TgUploader:
             ):
                 key = "documents"
                 if is_video:
-                    if self._listener.screenShots:
+                    if self._listener.screenShots and "SAMPLE." not in file:
                         await self._send_screenshots()
                     if thumb is None:
                         thumb = await create_thumbnail(self._up_path, None)
@@ -374,7 +377,7 @@ class TgUploader:
                     progress=self._upload_progress,
                 )
             elif is_video:
-                if self._listener.screenShots:
+                if self._listener.screenShots and "SAMPLE." not in file:
                     await self._send_screenshots()
                 key = "videos"
                 duration = (await get_media_info(self._up_path))[0]

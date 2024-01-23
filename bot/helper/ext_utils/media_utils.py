@@ -510,4 +510,4 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         LOGGER.error(
             f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
         )
-        return video_file
+        return False

@@ -10,7 +10,7 @@ from re import findall as re_findall
 
 from bot import config_dict
 from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async
-from bot.helper.ext_utils.files_utils import get_mime_type, count_files_and_folders
+from bot.helper.ext_utils.files_utils import get_mime_type, count_files_and_folders, clean_unwanted
 
 LOGGER = getLogger(__name__)
 
@@ -264,7 +264,7 @@ class RcloneTransferHelper:
         else:
             return True
 
-    async def upload(self, path, unwanted_files):
+    async def upload(self, path, unwanted_files, ft_delete):
         self._is_upload = True
         rc_path = self._listener.upDest.strip("/")
         if rc_path.startswith("mrcc:"):
@@ -353,6 +353,8 @@ class RcloneTransferHelper:
         if self._is_cancelled:
             return
         LOGGER.info(f"Upload Done. Path: {destination}")
+        if self._listener.seed and not self._listener.newDir:
+            await clean_unwanted(self._path, ft_delete)
         await self._listener.onUploadComplete(
             link, files, folders, mime_type, destination
         )

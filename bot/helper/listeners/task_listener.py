@@ -118,6 +118,7 @@ class TaskListener(TaskConfig):
 
         unwanted_files = []
         unwanted_files_size = []
+        files_to_delete = []
 
         if multi_links:
             await self.onUploadError("Downloaded! Waiting for other tasks...")
@@ -153,7 +154,7 @@ class TaskListener(TaskConfig):
 
         if self.convertAudio or self.convertVideo:
             up_path = await self.convertMedia(
-                up_path, gid, unwanted_files, unwanted_files_size
+                up_path, gid, unwanted_files, unwanted_files_size, files_to_delete
             )
             if self.cancelled:
                 return
@@ -161,14 +162,16 @@ class TaskListener(TaskConfig):
             self.size = await get_path_size(up_dir)
 
         if self.sampleVideo:
-            up_path = await self.generateSampleVideo(up_path, gid, unwanted_files)
+            up_path = await self.generateSampleVideo(
+                up_path, gid, unwanted_files, files_to_delete
+            )
             if self.cancelled:
                 return
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
 
         if self.compress:
-            up_path = await self.proceedCompress(up_path, gid)
+            up_path = await self.proceedCompress(up_path, gid, files_to_delete)
             if self.cancelled:
                 return
 
@@ -176,9 +179,7 @@ class TaskListener(TaskConfig):
         self.size = await get_path_size(up_dir)
 
         if self.isLeech and not self.compress:
-            await self.proceedSplit(
-                up_dir, unwanted_files_size, unwanted_files, gid
-            )
+            await self.proceedSplit(up_dir, unwanted_files_size, unwanted_files, gid)
             if self.cancelled:
                 return
 
@@ -207,7 +208,7 @@ class TaskListener(TaskConfig):
                 task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                tg.upload(unwanted_files),
+                tg.upload(unwanted_files, files_to_delete),
             )
         elif is_gdrive_id(self.upDest):
             self.size = await get_path_size(up_path)
@@ -219,7 +220,7 @@ class TaskListener(TaskConfig):
                 task_dict[self.mid] = GdriveStatus(self, drive, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                sync_to_async(drive.upload, unwanted_files),
+                sync_to_async(drive.upload, unwanted_files, files_to_delete),
             )
         else:
             self.size = await get_path_size(up_path)
@@ -231,7 +232,7 @@ class TaskListener(TaskConfig):
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "up")
             await gather(
                 update_status_message(self.message.chat.id),
-                RCTransfer.upload(up_path, unwanted_files),
+                RCTransfer.upload(up_path, unwanted_files, files_to_delete),
             )
 
     async def onUploadComplete(
@@ -318,8 +319,6 @@ class TaskListener(TaskConfig):
             if self.seed:
                 if self.newDir:
                     await clean_target(self.newDir)
-                elif self.compress:
-                    await clean_target(f"{self.dir}/{self.name}")
                 async with queue_dict_lock:
                     if self.mid in non_queued_up:
                         non_queued_up.remove(self.mid)
