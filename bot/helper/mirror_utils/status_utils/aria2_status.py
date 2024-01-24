@@ -73,7 +73,6 @@ class Aria2Status:
         return self._download.upload_length_string()
 
     def seed_speed(self):
-        self._update()
         return self._download.upload_speed_string()
 
     def ratio(self):

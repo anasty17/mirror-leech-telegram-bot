@@ -70,7 +70,7 @@ class gdUpload(GoogleDriveHelper):
                     ospath.basename(ospath.abspath(self.listener.name)),
                     self.listener.upDest,
                 )
-                result = self._upload_dir(self._path, dir_id, unwanted_files)
+                result = self._upload_dir(self._path, dir_id, unwanted_files, ft_delete)
                 if result is None:
                     raise Exception("Upload has been manually cancelled!")
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
@@ -140,7 +140,9 @@ class gdUpload(GoogleDriveHelper):
         stop=stop_after_attempt(3),
         retry=(retry_if_exception_type(Exception)),
     )
-    def _upload_file(self, file_path, file_name, mime_type, dest_id, ft_delete, in_dir=True):
+    def _upload_file(
+        self, file_path, file_name, mime_type, dest_id, ft_delete, in_dir=True
+    ):
         # File body description
         file_metadata = {
             "name": file_name,
@@ -206,7 +208,12 @@ class gdUpload(GoogleDriveHelper):
                             self.switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again.")
                             return self._upload_file(
-                                file_path, file_name, mime_type, dest_id
+                                file_path,
+                                file_name,
+                                mime_type,
+                                dest_id,
+                                ft_delete,
+                                in_dir,
                             )
                     else:
                         LOGGER.error(f"Got: {reason}")

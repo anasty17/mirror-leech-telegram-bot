@@ -12,7 +12,7 @@ from bot import (
     Intervals,
     bot,
 )
-from bot.helper.ext_utils.bot_utils import new_task
+from bot.helper.ext_utils.bot_utils import new_task, sync_to_async
 from bot.helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -101,7 +101,7 @@ async def status_pages(_, query):
         seed_speed = 0
         async with task_dict_lock:
             for download in task_dict.values():
-                match download.status():
+                match await sync_to_async(download.status):
                     case MirrorStatus.STATUS_DOWNLOADING:
                         tasks["Download"] += 1
                         dl_speed += speed_string_to_bytes(download.speed())

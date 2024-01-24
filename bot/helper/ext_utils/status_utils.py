@@ -3,7 +3,7 @@ from psutil import virtual_memory, cpu_percent, disk_usage
 from time import time
 
 from bot import DOWNLOAD_DIR, task_dict, task_dict_lock, botStartTime, config_dict
-from bot.helper.telegram_helper.bot_commands import BotCommands
+from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
 SIZE_UNITS = ["B", "KB", "MB", "GB", "TB", "PB"]
@@ -50,9 +50,9 @@ async def getAllTasks(req_status: str):
         return [
             tk
             for tk in task_dict.values()
-            if tk.status() == req_status
+            if (st:= await sync_to_async(tk.status) == req_status)
             or req_status == MirrorStatus.STATUS_DOWNLOADING
-            and tk.status() not in STATUS_DICT.values()
+            and st not in STATUS_DICT.values()
         ]
 
 
