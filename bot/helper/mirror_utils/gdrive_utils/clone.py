@@ -100,7 +100,7 @@ class gdClone(GoogleDriveHelper):
             else:
                 msg = f"Error.\n{err}"
             async_to_sync(self.listener.onUploadError, msg)
-            return None, None, None, None, None, None
+            return None, None, None, None, None
 
     def _cloneFolder(self, folder_name, folder_id, dest_id):
         LOGGER.info(f"Syncing: {folder_name}")
