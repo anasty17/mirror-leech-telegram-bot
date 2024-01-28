@@ -12,14 +12,31 @@ from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.files_utils import ARCH_EXT, get_mime_type
 
 
-async def convert_video(listener, video_file, ext):
+async def convert_video(listener, video_file, ext, retry=False):
     base_name = ospath.splitext(video_file)[0]
     output = f"{base_name}.{ext}"
-    cmd = ["ffmpeg", "-i", video_file, "-c", "copy", output]
+    if retry:
+        cmd = [
+            "ffmpeg",
+            "-i",
+            video_file,
+            "-preset",
+            "ultrafast",
+            "-c:v",
+            "libx264",
+            "-c:a",
+            "aac",
+            "-map",
+            "0",
+            "-threads",
+            f"{cpu_count() // 2}",
+            output,
+        ]
+    else:
+        cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
     if listener.cancelled:
         return False
-    async with subprocess_lock:
-        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.cancelled:
         return False
@@ -27,23 +44,36 @@ async def convert_video(listener, video_file, ext):
     if code == 0:
         return output
     elif code == -9:
+        listener.cancelled = True
         return False
     else:
         stderr = stderr.decode().strip()
         LOGGER.error(
             f"{stderr}. Something went wrong while converting video, mostly file is corrupted. Path: {video_file}"
         )
+        if not retry:
+            return await convert_video(listener, video_file, ext, True)
     return False
 
 
 async def convert_audio(listener, audio_file, ext):
     base_name = ospath.splitext(audio_file)[0]
     output = f"{base_name}.{ext}"
-    cmd = ["ffmpeg", "-i", audio_file, output]
+    cmd = [
+        "ffmpeg",
+        "-i",
+        audio_file,
+        "-preset",
+        "ultrafast",
+        "-map",
+        "0",
+        "-threads",
+        f"{cpu_count() // 2}",
+        output,
+    ]
     if listener.cancelled:
         return False
-    async with subprocess_lock:
-        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.cancelled:
         return False
@@ -51,6 +81,7 @@ async def convert_audio(listener, audio_file, ext):
     if code == 0:
         return output
     elif code == -9:
+        listener.cancelled = True
         return False
     else:
         stderr = stderr.decode().strip()
@@ -362,6 +393,7 @@ async def split_file(
                 return False
             code = listener.suproc.returncode
             if code == -9:
+                listener.cancelled = True
                 return False
             elif code != 0:
                 stderr = stderr.decode().strip()
@@ -440,6 +472,7 @@ async def split_file(
             return False
         code = listener.suproc.returncode
         if code == -9:
+            listener.cancelled = True
             return False
         elif code != 0:
             stderr = stderr.decode().strip()
@@ -479,6 +512,8 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         "ffmpeg",
         "-i",
         video_file,
+        "-preset",
+        "ultrafast",
         "-filter_complex",
         filter_complex,
         "-map",
@@ -502,6 +537,7 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         return False
     code = listener.suproc.returncode
     if code == -9:
+        listener.cancelled = True
         return False
     elif code == 0:
         return output_file

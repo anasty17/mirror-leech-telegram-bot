@@ -678,9 +678,6 @@ class TaskConfig:
                 return dl_path
 
     async def convertMedia(self, dl_path, gid, o_files, m_size, ft_delete):
-        async with task_dict_lock:
-            task_dict[self.mid] = MediaConvertStatus(self, gid)
-
         fvext = []
         if self.convertVideo:
             vdata = self.convertVideo.split()
@@ -759,39 +756,45 @@ class TaskConfig:
             else:
                 return False
 
-        if await aiopath.isfile(dl_path):
-            output_file = await proceedConvert(dl_path)
-            if output_file:
-                if self.seed:
-                    self.newDir = f"{self.dir}10000"
-                    new_output_file = output_file.replace(self.dir, self.newDir)
-                    await makedirs(self.newDir, exist_ok=True)
-                    await move(output_file, new_output_file)
-                    return new_output_file
-                else:
-                    try:
-                        await remove(dl_path)
-                    except:
-                        return False
-                    return output_file
-            return dl_path
-        else:
-            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
-                for file_ in files:
-                    if self.cancelled:
-                        return False
-                    f_path = ospath.join(dirpath, file_)
-                    res = await proceedConvert(f_path)
-                    if res:
-                        if self.seed and not self.newDir:
-                            o_files.append(f_path)
-                            fsize = await aiopath.getsize(f_path)
-                            m_size.append(fsize)
-                            ft_delete.append(res)
-                        else:
-                            try:
-                                await remove(f_path)
-                            except:
-                                return False
+        async with task_dict_lock:
+            task_dict[self.mid] = MediaConvertStatus(self, gid)
 
-            return dl_path
+        async with cpu_eater_lock:
+            if await aiopath.isfile(dl_path):
+                output_file = await proceedConvert(dl_path)
+                if output_file:
+                    if self.seed:
+                        self.newDir = f"{self.dir}10000"
+                        new_output_file = output_file.replace(self.dir, self.newDir)
+                        await makedirs(self.newDir, exist_ok=True)
+                        await move(output_file, new_output_file)
+                        return new_output_file
+                    else:
+                        try:
+                            await remove(dl_path)
+                        except:
+                            return False
+                        return output_file
+                return dl_path
+            else:
+                for dirpath, _, files in await sync_to_async(
+                    walk, dl_path, topdown=False
+                ):
+                    for file_ in files:
+                        if self.cancelled:
+                            return False
+                        f_path = ospath.join(dirpath, file_)
+                        res = await proceedConvert(f_path)
+                        if res:
+                            if self.seed and not self.newDir:
+                                o_files.append(f_path)
+                                fsize = await aiopath.getsize(f_path)
+                                m_size.append(fsize)
+                                ft_delete.append(res)
+                            else:
+                                try:
+                                    await remove(f_path)
+                                except:
+                                    return False
+
+                return dl_path
