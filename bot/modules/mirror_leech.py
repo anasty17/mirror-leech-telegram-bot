@@ -131,6 +131,7 @@ class Mirror(TaskListener):
         seed_time = None
         reply_to = None
         file_ = None
+        session = ""
 
         try:
             self.multi = int(args["-i"])
@@ -185,7 +186,7 @@ class Mirror(TaskListener):
                 self.link = reply_to.text.split("\n", 1)[0].strip()
         if is_telegram_link(self.link):
             try:
-                reply_to, self.session = await get_tg_link_message(self.link)
+                reply_to, session = await get_tg_link_message(self.link)
             except Exception as e:
                 await sendMessage(self.message, f"ERROR: {e}")
                 self.removeFromSameDir()
@@ -299,7 +300,7 @@ class Mirror(TaskListener):
                         return
 
         if file_ is not None:
-            await TelegramDownloadHelper(self).add_download(reply_to, f"{path}/")
+            await TelegramDownloadHelper(self).add_download(reply_to, f"{path}/", session)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
         elif self.isJd:

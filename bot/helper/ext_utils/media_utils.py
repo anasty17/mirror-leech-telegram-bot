@@ -24,8 +24,6 @@ async def convert_video(listener, video_file, ext, retry=False):
             "libx264",
             "-c:a",
             "aac",
-            "-map",
-            "0",
             "-threads",
             f"{cpu_count() // 2}",
             output,
@@ -34,6 +32,8 @@ async def convert_video(listener, video_file, ext, retry=False):
             cmd[7:7] = ["-c:s", "mov_text"]
         elif ext == "mkv":
             cmd[7:7] = ["-c:s", "ass"]
+        else:
+            cmd[7:7] = ["-c:s", "copy"]
     else:
         cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
     if listener.cancelled:
@@ -67,8 +67,6 @@ async def convert_audio(listener, audio_file, ext):
         "ffmpeg",
         "-i",
         audio_file,
-        "-map",
-        "0",
         "-threads",
         f"{cpu_count() // 2}",
         output,

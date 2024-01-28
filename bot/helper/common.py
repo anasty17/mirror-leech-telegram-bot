@@ -74,7 +74,6 @@ class TaskConfig:
         self.rcFlags = ""
         self.tag = ""
         self.name = ""
-        self.session = ""
         self.newDir = ""
         self.splitSize = 0
         self.maxSplitSize = 0

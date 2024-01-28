@@ -171,7 +171,9 @@ class TaskListener(TaskConfig):
             self.size = await get_path_size(up_dir)
 
         if self.compress:
-            up_path = await self.proceedCompress(up_path, gid, unwanted_files, files_to_delete)
+            up_path = await self.proceedCompress(
+                up_path, gid, unwanted_files, files_to_delete
+            )
             if self.cancelled:
                 return
 
@@ -196,6 +198,8 @@ class TaskListener(TaskConfig):
                         return
                 LOGGER.info(f"Start from Queued/Upload: {self.name}")
         async with queue_dict_lock:
+            if self.mid in non_queued_dl:
+                non_queued_dl.remove(self.mid)
             non_queued_up.add(self.mid)
 
         if self.isLeech:

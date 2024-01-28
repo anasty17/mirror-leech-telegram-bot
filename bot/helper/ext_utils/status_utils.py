@@ -147,6 +147,7 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
             MirrorStatus.STATUS_SEEDING,
             MirrorStatus.STATUS_SAMVID,
             MirrorStatus.STATUS_CONVERTING,
+            MirrorStatus.STATUS_QUEUEUP,
         ]:
             msg += f"\n{get_progress_bar_string(task.progress())} {task.progress()}"
             msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {task.size()}"
