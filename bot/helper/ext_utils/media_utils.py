@@ -20,8 +20,6 @@ async def convert_video(listener, video_file, ext, retry=False):
             "ffmpeg",
             "-i",
             video_file,
-            "-preset",
-            "ultrafast",
             "-c:v",
             "libx264",
             "-c:a",
@@ -32,6 +30,10 @@ async def convert_video(listener, video_file, ext, retry=False):
             f"{cpu_count() // 2}",
             output,
         ]
+        if ext == "mp4":
+            cmd[7:7] = ["-c:s", "mov_text"]
+        elif ext == "mkv":
+            cmd[7:7] = ["-c:s", "ass"]
     else:
         cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
     if listener.cancelled:
@@ -52,6 +54,8 @@ async def convert_video(listener, video_file, ext, retry=False):
             f"{stderr}. Something went wrong while converting video, mostly file is corrupted. Path: {video_file}"
         )
         if not retry:
+            if await aiopath.exists(output):
+                await remove(output)
             return await convert_video(listener, video_file, ext, True)
     return False
 
@@ -63,8 +67,6 @@ async def convert_audio(listener, audio_file, ext):
         "ffmpeg",
         "-i",
         audio_file,
-        "-preset",
-        "ultrafast",
         "-map",
         "0",
         "-threads",
@@ -88,6 +90,8 @@ async def convert_audio(listener, audio_file, ext):
         LOGGER.error(
             f"{stderr}. Something went wrong while converting audio, mostly file is corrupted. Path: {audio_file}"
         )
+        if await aiopath.exists(output):
+            await remove(output)
     return False
 
 
@@ -512,8 +516,6 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         "ffmpeg",
         "-i",
         video_file,
-        "-preset",
-        "ultrafast",
         "-filter_complex",
         filter_complex,
         "-map",
@@ -546,4 +548,6 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         LOGGER.error(
             f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
         )
+        if await aiopath.exists(output_file):
+            await remove(output_file)
         return False
