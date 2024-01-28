@@ -612,7 +612,7 @@ class TaskConfig:
                             return
                     else:
                         m_size.append(f_size)
-                        o_files.append(file_)
+                        o_files.append(f_path)
 
     async def generateSampleVideo(self, dl_path, gid, unwanted_files, ft_delete):
         data = self.sampleVideo.split(":") if isinstance(self.sampleVideo, str) else ""
