@@ -4,7 +4,7 @@ from time import time
 from bot import (
     task_dict,
     task_dict_lock,
-    get_client,
+    get_qb_client,
     LOGGER,
     config_dict,
     non_queued_dl,
@@ -40,7 +40,7 @@ def _get_hash_file(fpath):
 
 
 async def add_qb_torrent(listener, path, ratio, seed_time):
-    client = await sync_to_async(get_client)
+    client = await sync_to_async(get_qb_client)
     ADD_TIME = time()
     try:
         url = listener.link

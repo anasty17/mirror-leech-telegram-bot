@@ -26,7 +26,7 @@ from bot import (
     IS_PREMIUM_USER,
     task_dict,
     qbit_options,
-    get_client,
+    get_qb_client,
     LOGGER,
     bot,
 )
@@ -298,7 +298,7 @@ async def edit_qbit(_, message, pre_message, key):
         value = float(value)
     elif value.isdigit():
         value = int(value)
-    await sync_to_async(get_client().app_set_preferences, {key: value})
+    await sync_to_async(get_qb_client().app_set_preferences, {key: value})
     qbit_options[key] = value
     await update_buttons(pre_message, "qbit")
     await deleteMessage(message)
@@ -558,7 +558,7 @@ async def edit_bot_settings(client, query):
             await DbManager().update_aria2(data[2], "")
     elif data[1] == "emptyqbit":
         await query.answer()
-        await sync_to_async(get_client().app_set_preferences, {data[2]: value})
+        await sync_to_async(get_qb_client().app_set_preferences, {data[2]: value})
         qbit_options[data[2]] = ""
         await update_buttons(message, "qbit")
         if DATABASE_URL:

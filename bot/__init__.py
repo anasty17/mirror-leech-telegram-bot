@@ -45,8 +45,6 @@ basicConfig(
 
 LOGGER = getLogger(__name__)
 
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
-
 load_dotenv("config.env", override=True)
 
 Intervals = {"status": {}, "qb": "", "jd": ""}
@@ -138,6 +136,14 @@ if DATABASE_URL:
         LOGGER.error(f"Database ERROR: {e}")
 else:
     config_dict = {}
+
+if not ospath.exists(".netrc"):
+    with open(".netrc", "w"):
+        pass
+run(
+    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox.sh && ./aria-nox.sh",
+    shell=True,
+)
 
 OWNER_ID = environ.get("OWNER_ID", "")
 if len(OWNER_ID) == 0:
@@ -436,14 +442,6 @@ if BASE_URL:
         shell=True,
     )
 
-run(["qbittorrent-nox", "-d", f"--profile={getcwd()}"])
-if not ospath.exists(".netrc"):
-    with open(".netrc", "w"):
-        pass
-run(
-    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria.sh && ./aria.sh",
-    shell=True,
-)
 if ospath.exists("accounts.zip"):
     if ospath.exists("accounts"):
         run(["rm", "-rf", "accounts"])
@@ -454,7 +452,7 @@ if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
 
 
-def get_client():
+def get_qb_client():
     return qbClient(
         host="localhost",
         port=8090,
@@ -479,20 +477,6 @@ aria2c_global = [
     "server-stat-of",
 ]
 
-qb_client = get_client()
-if not qbit_options:
-    qbit_options = dict(qb_client.app_preferences())
-    del qbit_options["listen_port"]
-    for k in list(qbit_options.keys()):
-        if k.startswith("rss"):
-            del qbit_options[k]
-else:
-    qb_opt = {**qbit_options}
-    for k, v in list(qb_opt.items()):
-        if v in ["", "*"]:
-            del qb_opt[k]
-    qb_client.app_set_preferences(qb_opt)
-
 log_info("Creating client from BOT_TOKEN")
 bot = tgClient(
     "bot",
@@ -507,6 +491,20 @@ bot_loop = bot.loop
 
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 
+if not qbit_options:
+    qbit_options = dict(get_qb_client().app_preferences())
+    del qbit_options["listen_port"]
+    for k in list(qbit_options.keys()):
+        if k.startswith("rss"):
+            del qbit_options[k]
+else:
+    qb_opt = {**qbit_options}
+    for k, v in list(qb_opt.items()):
+        if v in ["", "*"]:
+            del qb_opt[k]
+    get_qb_client().app_set_preferences(qb_opt)
+
+aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 if not aria2_options:
     aria2_options = aria2.client.get_global_option()
 else:
