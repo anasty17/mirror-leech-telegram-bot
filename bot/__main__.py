@@ -1,6 +1,6 @@
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath, remove
-from asyncio import gather, create_subprocess_exec
+from asyncio import gather, create_subprocess_exec, sleep
 from os import execl as osexecl
 from psutil import (
     disk_usage,
@@ -112,6 +112,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
 
 
 async def restart(_, message):
+    Intervals["stopAll"] = True
     restart_message = await sendMessage(message, "Restarting...")
     if scheduler.running:
         scheduler.shutdown(wait=False)
@@ -122,7 +123,9 @@ async def restart(_, message):
     if st := Intervals["status"]:
         for intvl in list(st.values()):
             intvl.cancel()
+    await sleep(1)
     await sync_to_async(clean_all)
+    await sleep(1)
     proc1 = await create_subprocess_exec(
         "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java"
     )

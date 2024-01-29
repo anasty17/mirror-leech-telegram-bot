@@ -11,7 +11,8 @@ from bot.helper.ext_utils.status_utils import (
 
 def get_download(client, tag, old_info=None):
     try:
-        return client.torrents_info(tag=tag)[0]
+        res = client.torrents_info(tag=tag)[0]
+        return res if res else old_info
     except Exception as e:
         LOGGER.error(f"{e}: Qbittorrent, while getting torrent info. Tag: {tag}")
         return old_info

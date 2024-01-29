@@ -88,6 +88,8 @@ async def _onDownloadComplete(tor):
                 except:
                     pass
     await task.listener.onDownloadComplete()
+    if Intervals["stopAll"]:
+        return
     client = await sync_to_async(get_qb_client)
     if task.listener.seed:
         async with task_dict_lock:

@@ -396,37 +396,37 @@ also.
 - Install docker-compose
 
 ```
-sudo apt install docker-compose
+sudo apt install docker-compose-plugin
 ```
 
 - Build and run Docker image or to view current running image:
 
 ```
-sudo docker-compose up
+sudo docker compose up
 ```
 
-- After editing files with nano for example (nano start.sh):
+- After editing files with nano for example (nano start.sh) or git pull:
 
 ```
-sudo docker-compose up --build
+sudo docker compose up --build
 ```
 
 - To stop the running image:
 
 ```
-sudo docker-compose stop
+sudo docker compose stop
 ```
 
 - To run the image:
 
 ```
-sudo docker-compose start
+sudo docker compose start
 ```
 
-- To get latest log from already running image (after mounting the folder):
+- To get log from already running image (after mounting the folder):
 
 ```
-sudo docker-compose up
+sudo docker compose logs --follow
 ```
 
 - Tutorial video from Tortoolkit repo for docker-compose and checking ports

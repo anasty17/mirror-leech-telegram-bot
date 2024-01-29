@@ -47,7 +47,7 @@ LOGGER = getLogger(__name__)
 
 load_dotenv("config.env", override=True)
 
-Intervals = {"status": {}, "qb": "", "jd": ""}
+Intervals = {"status": {}, "qb": "", "jd": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
 DRIVES_NAMES = []

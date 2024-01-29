@@ -2,7 +2,7 @@ from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
 from time import time
 
-from bot import aria2, task_dict_lock, task_dict, LOGGER, config_dict
+from bot import aria2, task_dict_lock, task_dict, LOGGER, config_dict, Intervals
 from bot.helper.ext_utils.bot_utils import (
     new_thread,
     bt_selection_buttons,
@@ -87,6 +87,8 @@ async def _onDownloadComplete(api, gid):
         LOGGER.info(f"onDownloadComplete: {download.name} - Gid: {gid}")
         if task := await getTaskByGid(gid):
             await task.listener.onDownloadComplete()
+            if Intervals["stopAll"]:
+                return
             await sync_to_async(api.remove, [download], force=True, files=True)
 
 
@@ -125,6 +127,8 @@ async def _onBtDownloadComplete(api, gid):
             except Exception as e:
                 LOGGER.error(f"{e} GID: {gid}")
         await task.listener.onDownloadComplete()
+        if Intervals["stopAll"]:
+            return
         download = download.live
         if task.listener.seed:
             if download.is_complete:

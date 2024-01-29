@@ -450,6 +450,9 @@ class TaskConfig:
                                 LOGGER.error(
                                     f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
                                 )
+                            elif code == -9:
+                                self.cancelled = True
+                                return ""
                     if (
                         not self.seed
                         and self.suproc is not None
@@ -502,6 +505,9 @@ class TaskConfig:
                     )
                     self.newDir = ""
                     return dl_path
+                else:
+                    self.cancelled = True
+                    return ""
         except NotSupportedExtractionArchive:
             LOGGER.info(
                 f"Not any valid archive, uploading file as it is. Path: {dl_path}"
@@ -580,6 +586,9 @@ class TaskConfig:
             stderr = stderr.decode().strip()
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
             return dl_path
+        else:
+            self.cancelled = True
+            return ""
 
     async def proceedSplit(self, up_dir, m_size, o_files, gid):
         checked = False
@@ -626,55 +635,57 @@ class TaskConfig:
         async with task_dict_lock:
             task_dict[self.mid] = SampleVideoStatus(self, gid)
 
-        async with cpu_eater_lock:
-            checked = False
-            if await aiopath.isfile(dl_path):
-                if (await get_document_type(dl_path))[0]:
-                    if not checked:
-                        checked = True
-                        LOGGER.info(f"Creating Sample video: {self.name}")
-                    res = await createSampleVideo(
-                        self, dl_path, sample_duration, part_duration, True
-                    )
-                    if res:
-                        newfolder = ospath.splitext(dl_path)[0]
-                        name = dl_path.rsplit("/", 1)[1]
-                        if self.seed and not self.newDir:
-                            self.newDir = f"{self.dir}10000"
-                            newfolder = newfolder.replace(self.dir, self.newDir)
-                            await makedirs(newfolder, exist_ok=True)
-                            await gather(
-                                copy2(dl_path, f"{newfolder}/{name}"),
-                                move(res, f"{newfolder}/SAMPLE.{name}"),
-                            )
-                        else:
-                            await makedirs(newfolder, exist_ok=True)
-                            await gather(
-                                move(dl_path, f"{newfolder}/{name}"),
-                                move(res, f"{newfolder}/SAMPLE.{name}"),
-                            )
-                        return newfolder
-                return dl_path
-            else:
-                for dirpath, _, files in await sync_to_async(
-                    walk, dl_path, topdown=False
-                ):
-                    for file_ in files:
-                        f_path = ospath.join(dirpath, file_)
-                        if f_path in unwanted_files:
-                            continue
-                        if (await get_document_type(f_path))[0]:
-                            if not checked:
-                                checked = True
-                                LOGGER.info(f"Creating Sample videos: {self.name}")
-                            if self.cancelled:
-                                return False
-                            res = await createSampleVideo(
-                                self, f_path, sample_duration, part_duration
-                            )
-                            if res:
-                                ft_delete.append(res)
-                return dl_path
+        checked = False
+        if await aiopath.isfile(dl_path):
+            if (await get_document_type(dl_path))[0]:
+                checked = True
+                await cpu_eater_lock.acquire()
+                LOGGER.info(f"Creating Sample video: {self.name}")
+                res = await createSampleVideo(
+                    self, dl_path, sample_duration, part_duration, True
+                )
+                cpu_eater_lock.release()
+                if res:
+                    newfolder = ospath.splitext(dl_path)[0]
+                    name = dl_path.rsplit("/", 1)[1]
+                    if self.seed and not self.newDir:
+                        self.newDir = f"{self.dir}10000"
+                        newfolder = newfolder.replace(self.dir, self.newDir)
+                        await makedirs(newfolder, exist_ok=True)
+                        await gather(
+                            copy2(dl_path, f"{newfolder}/{name}"),
+                            move(res, f"{newfolder}/SAMPLE.{name}"),
+                        )
+                    else:
+                        await makedirs(newfolder, exist_ok=True)
+                        await gather(
+                            move(dl_path, f"{newfolder}/{name}"),
+                            move(res, f"{newfolder}/SAMPLE.{name}"),
+                        )
+                    return newfolder
+            return dl_path
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    if f_path in unwanted_files:
+                        continue
+                    if (await get_document_type(f_path))[0]:
+                        if not checked:
+                            checked = True
+                            await cpu_eater_lock.acquire()
+                            LOGGER.info(f"Creating Sample videos: {self.name}")
+                        if self.cancelled:
+                            cpu_eater_lock.release()
+                            return False
+                        res = await createSampleVideo(
+                            self, f_path, sample_duration, part_duration
+                        )
+                        if res:
+                            ft_delete.append(res)
+            if checked:
+                cpu_eater_lock.release()
+            return dl_path
 
     async def convertMedia(self, dl_path, gid, o_files, m_size, ft_delete):
         fvext = []
@@ -732,6 +743,7 @@ class TaskConfig:
             ):
                 if not checked:
                     checked = True
+                    await cpu_eater_lock.acquire()
                     LOGGER.info(f"Converting: {self.name}")
                 res = await convert_video(self, m_path, vext)
                 return False if self.cancelled else res
@@ -749,6 +761,7 @@ class TaskConfig:
             ):
                 if not checked:
                     checked = True
+                    await cpu_eater_lock.acquire()
                     LOGGER.info(f"Converting: {self.name}")
                 res = await convert_audio(self, m_path, aext)
                 return False if self.cancelled else res
@@ -758,42 +771,44 @@ class TaskConfig:
         async with task_dict_lock:
             task_dict[self.mid] = MediaConvertStatus(self, gid)
 
-        async with cpu_eater_lock:
-            if await aiopath.isfile(dl_path):
-                output_file = await proceedConvert(dl_path)
-                if output_file:
-                    if self.seed:
-                        self.newDir = f"{self.dir}10000"
-                        new_output_file = output_file.replace(self.dir, self.newDir)
-                        await makedirs(self.newDir, exist_ok=True)
-                        await move(output_file, new_output_file)
-                        return new_output_file
-                    else:
-                        try:
-                            await remove(dl_path)
-                        except:
-                            return False
-                        return output_file
-                return dl_path
-            else:
-                for dirpath, _, files in await sync_to_async(
-                    walk, dl_path, topdown=False
-                ):
-                    for file_ in files:
-                        if self.cancelled:
-                            return False
-                        f_path = ospath.join(dirpath, file_)
-                        res = await proceedConvert(f_path)
-                        if res:
-                            if self.seed and not self.newDir:
-                                o_files.append(f_path)
-                                fsize = await aiopath.getsize(f_path)
-                                m_size.append(fsize)
-                                ft_delete.append(res)
-                            else:
-                                try:
-                                    await remove(f_path)
-                                except:
-                                    return False
-
-                return dl_path
+        if await aiopath.isfile(dl_path):
+            output_file = await proceedConvert(dl_path)
+            if checked:
+                cpu_eater_lock.release()
+            if output_file:
+                if self.seed:
+                    self.newDir = f"{self.dir}10000"
+                    new_output_file = output_file.replace(self.dir, self.newDir)
+                    await makedirs(self.newDir, exist_ok=True)
+                    await move(output_file, new_output_file)
+                    return new_output_file
+                else:
+                    try:
+                        await remove(dl_path)
+                    except:
+                        return False
+                    return output_file
+            return dl_path
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    if self.cancelled:
+                        cpu_eater_lock.release()
+                        return False
+                    f_path = ospath.join(dirpath, file_)
+                    res = await proceedConvert(f_path)
+                    if res:
+                        if self.seed and not self.newDir:
+                            o_files.append(f_path)
+                            fsize = await aiopath.getsize(f_path)
+                            m_size.append(fsize)
+                            ft_delete.append(res)
+                        else:
+                            try:
+                                await remove(f_path)
+                            except:
+                                cpu_eater_lock.release()
+                                return False
+            if checked:
+                cpu_eater_lock.release()
+            return dl_path

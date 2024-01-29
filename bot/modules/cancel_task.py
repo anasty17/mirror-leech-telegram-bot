@@ -91,6 +91,8 @@ def create_cancel_buttons():
     buttons.ibutton("Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING}")
     buttons.ibutton("QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL}")
     buttons.ibutton("QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP}")
+    buttons.ibutton("SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID}")
+    buttons.ibutton("ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING}")
     buttons.ibutton("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED}")
     buttons.ibutton("All", "canall ms all")
     buttons.ibutton("Close", "canall close")
@@ -130,6 +132,8 @@ async def cancel_all_update(_, query):
             message, f"Are you sure you want to cancel all {data[2]} tasks", button
         )
     else:
+        button = create_cancel_buttons()
+        await editMessage(message, "Choose tasks to cancel.", button)
         res = await cancel_all(data[1])
         if not res:
             await sendMessage(reply_to, f"No matching tasks for {data[1]}!")

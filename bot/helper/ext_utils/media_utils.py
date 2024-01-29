@@ -51,7 +51,7 @@ async def convert_video(listener, video_file, ext, retry=False):
     else:
         stderr = stderr.decode().strip()
         LOGGER.error(
-            f"{stderr}. Something went wrong while converting video, mostly file is corrupted. Path: {video_file}"
+            f"{f'{stderr}. ' if retry else ''}Something went wrong while converting video, mostly file need specific codec. {'Retrying with specific codec' if not retry else ''}. Path: {video_file}"
         )
         if not retry:
             if await aiopath.exists(output):
@@ -86,7 +86,7 @@ async def convert_audio(listener, audio_file, ext):
     else:
         stderr = stderr.decode().strip()
         LOGGER.error(
-            f"{stderr}. Something went wrong while converting audio, mostly file is corrupted. Path: {audio_file}"
+            f"{stderr}. Something went wrong while converting audio, mostly file need specific codec. Path: {audio_file}"
         )
         if await aiopath.exists(output):
             await remove(output)
