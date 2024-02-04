@@ -749,6 +749,7 @@ class TaskConfig:
                 return False if self.cancelled else res
             elif (
                 is_audio
+                and aext
                 and not is_video
                 and not m_path.endswith(f".{aext}")
                 and (
