@@ -1,4 +1,4 @@
-from asyncio import sleep
+from asyncio import sleep, wait_for
 
 from bot import Intervals, jd_lock, jd_downloads
 from bot.helper.ext_utils.bot_utils import new_task, sync_to_async, retry_function
@@ -33,6 +33,11 @@ async def _onDownloadComplete(gid):
 async def _jd_listener():
     while True:
         await sleep(3)
+        try:
+            await wait_for(sync_to_async(jdownloader.update_devices), timeout=5)
+        except:
+            await sync_to_async(jdownloader.jdconnect)
+            continue
         async with jd_lock:
             if len(jd_downloads) == 0:
                 Intervals["jd"] = ""

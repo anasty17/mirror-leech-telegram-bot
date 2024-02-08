@@ -844,6 +844,9 @@ class Jddevice:
         tmp.extend({"conn": conn, "cooldown": 0} for conn in direct_info)
         self.__direct_connection_info = tmp
 
+    def ping(self):
+        return self.action(f"/device/ping")
+
     def enable_direct_connection(self):
         self.__direct_connection_enabled = True
         self.__refresh_direct_connections()

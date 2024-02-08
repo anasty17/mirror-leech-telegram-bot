@@ -1,7 +1,7 @@
 from aiofiles import open as aiopen
 from aiofiles.os import remove, rename, path as aiopath
 from aioshutil import rmtree
-from asyncio import create_subprocess_exec, create_subprocess_shell, sleep, gather
+from asyncio import create_subprocess_exec, create_subprocess_shell, sleep, gather, wait_for
 from dotenv import load_dotenv
 from functools import partial
 from io import BytesIO
@@ -29,6 +29,7 @@ from bot import (
     get_qb_client,
     LOGGER,
     bot,
+    jd_downloads,
 )
 from bot.helper.ext_utils.bot_utils import (
     setInterval,
@@ -311,11 +312,18 @@ async def sync_jdownloader():
         await sync_to_async(jdownloader.device.system.exit_jd)
         if await aiopath.exists("cfg.zip"):
             await remove("cfg.zip")
-        await sleep(5)
+        await sleep(6)
         await (
             await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
         ).wait()
         await DbManager().update_private_file("cfg.zip")
+        try:
+            await wait_for(sync_to_async(jdownloader.update_devices), timeout=5)
+        except:
+            is_connected = await sync_to_async(jdownloader.jdconnect)
+            if not is_connected:
+                LOGGER.error(jdownloader.error)
+                return
         await sync_to_async(jdownloader.connectToDevice)
 
 
@@ -441,6 +449,12 @@ async def edit_bot_settings(client, query):
                 "No Email or Password provided!",
                 show_alert=True,
             )
+            return
+        if jd_downloads:
+            await query.answer(
+            "You can't sync settings while using jdownloader!",
+            show_alert=True,
+        )
             return
         await query.answer(
             "Syncronization Started. JDownloader will get restarted. It takes up to 5 sec!",
