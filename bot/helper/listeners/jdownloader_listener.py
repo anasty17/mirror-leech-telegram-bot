@@ -33,20 +33,21 @@ async def _onDownloadComplete(gid):
 async def _jd_listener():
     while True:
         await sleep(3)
-        try:
-            await wait_for(sync_to_async(jdownloader.update_devices), timeout=5)
-        except:
-            await sync_to_async(jdownloader.jdconnect)
-            continue
         async with jd_lock:
             if len(jd_downloads) == 0:
                 Intervals["jd"] = ""
                 break
             try:
-                packages = await sync_to_async(
-                    jdownloader.device.downloads.query_packages, [{"finished": True}]
+                packages = await wait_for(
+                    sync_to_async(
+                        jdownloader.device.downloads.query_packages,
+                        [{"finished": True}],
+                    ), timeout=10
                 )
             except:
+                await sync_to_async(jdownloader.reconnect) or await sync_to_async(
+                    jdownloader.jdconnect
+                )
                 continue
             finished = [
                 pack["uuid"] for pack in packages if pack.get("finished", False)

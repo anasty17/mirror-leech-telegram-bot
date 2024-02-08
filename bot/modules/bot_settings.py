@@ -318,9 +318,9 @@ async def sync_jdownloader():
         ).wait()
         await DbManager().update_private_file("cfg.zip")
         try:
-            await wait_for(sync_to_async(jdownloader.update_devices), timeout=5)
+            await wait_for(sync_to_async(jdownloader.update_devices), timeout=10)
         except:
-            is_connected = await sync_to_async(jdownloader.jdconnect)
+            is_connected = await sync_to_async(jdownloader.reconnect) or await sync_to_async(jdownloader.jdconnect)
             if not is_connected:
                 LOGGER.error(jdownloader.error)
                 return
