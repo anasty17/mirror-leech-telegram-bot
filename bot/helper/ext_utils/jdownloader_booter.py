@@ -2,7 +2,7 @@ from aiofiles.os import listdir
 from json import dump
 from random import randint
 
-from bot import config_dict, LOGGER, jd_lock
+from bot import config_dict, LOGGER, jd_lock, bot_name
 from bot.helper.ext_utils.bot_utils import (
     cmd_exec,
     new_task,
@@ -42,7 +42,7 @@ class JDownloader(Myjdapi):
         await cmd_exec(["pkill", "-9", "-f", "java"])
         self.device = None
         self.error = "Connecting... Try agin after couple of seconds"
-        self._device_name = f"{randint(0, 1000)}"
+        self._device_name = f"{randint(0, 1000)}@{bot_name}"
         logs = await listdir("/JDownloader/logs")
         if len(logs) > 2:
             LOGGER.info("Starting JDownloader... This might take up to 5 sec")

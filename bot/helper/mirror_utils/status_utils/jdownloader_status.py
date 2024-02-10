@@ -1,5 +1,3 @@
-from time import time
-
 from bot import LOGGER, jd_lock, jd_downloads
 from bot.helper.ext_utils.bot_utils import retry_function
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
@@ -10,11 +8,12 @@ from bot.helper.ext_utils.status_utils import (
 )
 
 
-def _get_combined_info(result, start_time):
+def _get_combined_info(result):
     name = result[0].get("name")
     hosts = result[0].get("hosts")
     bytesLoaded = 0
     bytesTotal = 0
+    speed = 0
     status = ""
     for res in result:
         st = res.get("status", "").lower()
@@ -22,13 +21,12 @@ def _get_combined_info(result, start_time):
             status = st
         bytesLoaded += res.get("bytesLoaded", 0)
         bytesTotal += res.get("bytesTotal", 0)
+        speed += res.get("speed", 0)
     if not status:
         status = "UnknownError"
     try:
-        speed = bytesLoaded / (time() - start_time)
         eta = (bytesTotal - bytesLoaded) / speed
     except:
-        speed = 0
         eta = 0
     return {
         "name": name,
@@ -41,7 +39,7 @@ def _get_combined_info(result, start_time):
     }
 
 
-def get_download(gid, old_info, start_time):
+def get_download(gid, old_info):
     try:
         result = jdownloader.device.downloads.query_packages(
             [
@@ -57,7 +55,7 @@ def get_download(gid, old_info, start_time):
                 }
             ]
         )
-        return _get_combined_info(result, start_time) if len(result) > 1 else result[0]
+        return _get_combined_info(result) if len(result) > 1 else result[0]
     except:
         return old_info
 
@@ -67,10 +65,9 @@ class JDownloaderStatus:
         self.listener = listener
         self._gid = gid
         self._info = {}
-        self._start_time = time()
 
     def _update(self):
-        self._info = get_download(int(self._gid), self._info, self._start_time)
+        self._info = get_download(int(self._gid), self._info)
 
     def progress(self):
         try:

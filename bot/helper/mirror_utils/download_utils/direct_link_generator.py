@@ -121,7 +121,7 @@ def direct_link_generator(link):
             "teraboxapp.com",
             "1024tera.com",
             "terabox.app",
-            "gibibox.com"
+            "gibibox.com",
         ]
     ):
         return terabox(link)
@@ -145,11 +145,11 @@ def direct_link_generator(link):
     elif any(x in domain for x in ["streamhub.ink", "streamhub.to"]):
         return streamhub(link)
     elif any(
-        x in domain 
+        x in domain
         for x in [
-            "linkbox.to", 
-            "lbx.to", 
-            "teltobx.net", 
+            "linkbox.to",
+            "lbx.to",
+            "teltobx.net",
             "telbx.net",
         ]
     ):
@@ -827,7 +827,7 @@ def linkBox(url: str):
         try:
             if data["shareType"] == "singleItem":
                 return __singleItem(session, data["itemId"])
-        except Exception:
+        except:
             pass
         if not details["title"]:
             details["title"] = data["dirName"]

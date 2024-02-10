@@ -51,7 +51,7 @@ async def convert_video(listener, video_file, ext, retry=False):
     else:
         stderr = stderr.decode().strip()
         LOGGER.error(
-            f"{f'{stderr}. ' if retry else ''}Something went wrong while converting video, mostly file need specific codec. {'Retrying with specific codec' if not retry else ''}. Path: {video_file}"
+            f"{f'{stderr}. ' if retry else ''}Something went wrong while converting video, mostly file need specific codec. {'' if retry else 'Retrying with specific codec'}. Path: {video_file}"
         )
         if not retry:
             if await aiopath.exists(output):

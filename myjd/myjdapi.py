@@ -845,7 +845,7 @@ class Jddevice:
         self.__direct_connection_info = tmp
 
     def ping(self):
-        return self.action(f"/device/ping")
+        return self.action("/device/ping")
 
     def enable_direct_connection(self):
         self.__direct_connection_enabled = True
