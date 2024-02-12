@@ -145,7 +145,7 @@ programming in Python.
 > shrdsk.me (
 > sharedisk.io), akmfiles.com, wetransfer.com, pcloud.link, gofile.io (file/folders), easyupload.io, mdisk.me (with
 > ytdl),
-> tmpsend.com, terabox.com (file/folders) (you need to add cookies txt with
+> tmpsend.com, qiwi.gg, terabox.com (file/folders) (you need to add cookies txt with
 > name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
 
 # How to deploy?
