@@ -233,10 +233,10 @@ class TgUploader:
         if not res:
             return
         for dirpath, _, files in sorted(await sync_to_async(walk, self._path)):
-            delete_file = False
             if dirpath.endswith("/yt-dlp-thumb"):
                 continue
             for file_ in natsorted(files):
+                delete_file = False
                 self._up_path = ospath.join(dirpath, file_)
                 if self._up_path in ft_delete:
                     delete_file = True

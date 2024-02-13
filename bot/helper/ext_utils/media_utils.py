@@ -339,6 +339,7 @@ async def split_file(
     path,
     size,
     dirpath,
+    file_,
     split_size,
     listener,
     start_time=0,
@@ -356,10 +357,10 @@ async def split_file(
         if multi_streams:
             multi_streams = await is_multi_streams(path)
         duration = (await get_media_info(path))[0]
-        base_name, extension = ospath.splitext(path)
+        base_name, extension = ospath.splitext(file_)
         split_size -= 5000000
         while i <= parts or start_time < duration - 4:
-            out_path = f"{base_name}.part{i:03}{extension}"
+            out_path = f"{dirpath}/{base_name}.part{i:03}{extension}"
             cmd = [
                 "ffmpeg",
                 "-hide_banner",
@@ -411,6 +412,7 @@ async def split_file(
                         path,
                         size,
                         dirpath,
+                        file_,
                         split_size,
                         listener,
                         start_time,
@@ -432,6 +434,7 @@ async def split_file(
                     path,
                     size,
                     dirpath,
+                    file_,
                     split_size,
                     listener,
                     start_time,
@@ -456,7 +459,7 @@ async def split_file(
             start_time += lpd - 3
             i += 1
     else:
-        out_path = f"{path}."
+        out_path = f"{dirpath}/{file_}."
         async with subprocess_lock:
             if listener.cancelled:
                 return False

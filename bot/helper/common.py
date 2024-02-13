@@ -605,17 +605,21 @@ class TaskConfig:
                             task_dict[self.mid] = SplitStatus(self, gid)
                         LOGGER.info(f"Splitting: {self.name}")
                     res = await split_file(
-                        f_path, f_size, dirpath, self.splitSize, self
+                        f_path, f_size, dirpath, file_, self.splitSize, self
                     )
                     if self.cancelled:
                         return
                     if not res:
-                        if f_size <= self.maxSplitSize:
-                            continue
-                        try:
-                            await remove(f_path)
-                        except:
-                            return
+                        if f_size >= self.maxSplitSize:
+                            if self.seed and not self.newDir:
+                                m_size.append(f_size)
+                                o_files.append(f_path)
+                            else:
+                                try:
+                                    await remove(f_path)
+                                except:
+                                    return
+                        continue
                     elif not self.seed or self.newDir:
                         try:
                             await remove(f_path)
