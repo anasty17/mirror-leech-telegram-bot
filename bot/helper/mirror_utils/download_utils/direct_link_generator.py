@@ -280,7 +280,7 @@ def onedrive(link):
             parsed_link = urlparse(link)
             link_data = parse_qs(parsed_link.query)
         except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
         if not link_data:
             raise DirectDownloadLinkException("ERROR: Unable to find link_data")
         folder_id = link_data.get("resid")
@@ -1514,18 +1514,14 @@ def qiwi(url):
     """qiwi.gg link generator
     based on https://github.com/aenulrofik"""
     with Session() as session:
-        id = url.split("/")[-1]
+        file_id = url.split("/")[-1]
         try:
             res = session.get(url).text
         except Exception as e:
-            session.close()
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
         tree = HTML(res)
-        name = tree.xpath('//h1[@class="page_TextHeading__VsM7r"]/text()')
-        if name:
+        if name := tree.xpath('//h1[@class="page_TextHeading__VsM7r"]/text()'):
             ext = name[0].split('.')[-1]
-            session.close()
-            return f"https://qiwi.lol/{id}.{ext}"
+            return f"https://qiwi.lol/{file_id}.{ext}"
         else:
-            session.close()
             raise DirectDownloadLinkException("ERROR: File not found")
