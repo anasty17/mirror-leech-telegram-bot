@@ -177,8 +177,14 @@ async def cmd_exec(cmd, shell=False):
     else:
         proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
     stdout, stderr = await proc.communicate()
-    stdout = stdout.decode().strip()
-    stderr = stderr.decode().strip()
+    try:
+        stdout = stdout.decode().strip()
+    except:
+        stdout = "Unable to decode the response!"
+    try:
+        stderr = stderr.decode().strip()
+    except:
+        stderr = "Unable to decode the error!"
     return stdout, stderr, proc.returncode
 
 
