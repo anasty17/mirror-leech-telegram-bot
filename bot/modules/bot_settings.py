@@ -198,10 +198,10 @@ async def edit_variable(_, message, pre_message, key):
     elif key == "STATUS_UPDATE_INTERVAL":
         value = int(value)
         if len(task_dict) != 0 and (st := Intervals["status"]):
-            for key, intvl in list(st.items()):
+            for cid, intvl in list(st.items()):
                 intvl.cancel()
-                Intervals["status"][key] = setInterval(
-                    value, update_status_message, key
+                Intervals["status"][cid] = setInterval(
+                    value, update_status_message, cid
                 )
     elif key == "TORRENT_TIMEOUT":
         value = int(value)
