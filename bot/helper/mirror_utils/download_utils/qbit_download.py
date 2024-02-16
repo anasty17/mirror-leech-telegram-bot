@@ -133,7 +133,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
 
         if add_to_queue:
             await event.wait()
-            if listener.is_cancelled:
+            if listener.isCancelled:
                 return
             async with task_dict_lock:
                 task_dict[listener.mid].queued = False

@@ -32,7 +32,7 @@ async def id_updates(_, query, obj):
     data = query.data.split()
     if data[1] == "cancel":
         obj.id = "Task has been cancelled!"
-        obj.is_cancelled = True
+        obj.listener.isCancelled = True
         obj.event.set()
         await deleteMessage(message)
         return
@@ -144,13 +144,13 @@ class gdriveList(GoogleDriveHelper):
             await wait_for(self.event.wait(), timeout=self._timeout)
         except:
             self.id = "Timed Out. Task has been cancelled!"
-            self.is_cancelled = True
+            self.listener.isCancelled = True
             self.event.set()
         finally:
             self.listener.client.remove_handler(*handler)
 
     async def _send_list_message(self, msg, button):
-        if not self.is_cancelled:
+        if not self.listener.isCancelled:
             if self._reply_to is None:
                 self._reply_to = await sendMessage(self.listener.message, msg, button)
             else:
@@ -227,7 +227,7 @@ class gdriveList(GoogleDriveHelper):
             self.item_type == "folders"
         try:
             files = self.getFilesByFolderId(self.id, self.item_type)
-            if self.is_cancelled:
+            if self.listener.isCancelled:
                 return
         except Exception as err:
             if isinstance(err, RetryError):
@@ -365,7 +365,7 @@ class gdriveList(GoogleDriveHelper):
         await wrap_future(future)
         if self._reply_to:
             await deleteMessage(self._reply_to)
-        if not self.is_cancelled:
+        if not self.listener.isCancelled:
             if self.token_path == self.user_token_path:
                 return f"mtp:{self.id}"
             else:

@@ -59,7 +59,7 @@ class gdUpload(GoogleDriveHelper):
                     ft_delete,
                     in_dir=False,
                 )
-                if self.listener.is_cancelled:
+                if self.listener.isCancelled:
                     return
                 if link is None:
                     raise Exception("Upload has been manually cancelled")
@@ -74,7 +74,7 @@ class gdUpload(GoogleDriveHelper):
                 if result is None:
                     raise Exception("Upload has been manually cancelled!")
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
-                if self.listener.is_cancelled:
+                if self.listener.isCancelled:
                     return
                 LOGGER.info(f"Uploaded To G-Drive: {self.listener.name}")
         except Exception as err:
@@ -86,7 +86,7 @@ class gdUpload(GoogleDriveHelper):
             self._is_errored = True
         finally:
             self._updater.cancel()
-            if self.listener.is_cancelled and not self._is_errored:
+            if self.listener.isCancelled and not self._is_errored:
                 if mime_type == "Folder":
                     LOGGER.info("Deleting uploaded data from Drive...")
                     self.service.files().delete(
@@ -131,7 +131,7 @@ class gdUpload(GoogleDriveHelper):
                 if not self.listener.seed or self.listener.newDir:
                     remove(current_file_name)
                 new_id = "filter"
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 break
         return new_id
 
@@ -180,7 +180,7 @@ class gdUpload(GoogleDriveHelper):
         )
         response = None
         retries = 0
-        while response is None and not self.listener.is_cancelled:
+        while response is None and not self.listener.isCancelled:
             try:
                 self.status, response = drive_file.next_chunk()
             except HttpError as err:
@@ -203,7 +203,7 @@ class gdUpload(GoogleDriveHelper):
                             )
                             raise err
                         else:
-                            if self.listener.is_cancelled:
+                            if self.listener.isCancelled:
                                 return
                             self.switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again.")
@@ -218,7 +218,7 @@ class gdUpload(GoogleDriveHelper):
                     else:
                         LOGGER.error(f"Got: {reason}")
                         raise err
-        if self.listener.is_cancelled:
+        if self.listener.isCancelled:
             return
         if not self.listener.seed or self.listener.newDir or file_path in ft_delete:
             try:

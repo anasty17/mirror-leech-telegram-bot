@@ -37,7 +37,7 @@ async def add_gd_download(listener, path):
             if listener.multi <= 1:
                 await sendStatusMessage(listener.message)
             await event.wait()
-            if listener.is_cancelled:
+            if listener.isCancelled:
                 return
     else:
         add_to_queue = False

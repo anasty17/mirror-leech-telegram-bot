@@ -35,7 +35,7 @@ async def path_updates(_, query, obj):
     if data[1] == "cancel":
         obj.remote = "Task has been cancelled!"
         obj.path = ""
-        obj.is_cancelled = True
+        obj.listener.isCancelled = True
         obj.event.set()
         await deleteMessage(message)
         return
@@ -118,7 +118,6 @@ class RcloneList:
         self._timeout = 240
         self.listener = listener
         self.remote = ""
-        self.is_cancelled = False
         self.query_proc = False
         self.item_type = "--dirs-only"
         self.event = Event()
@@ -144,13 +143,13 @@ class RcloneList:
         except:
             self.path = ""
             self.remote = "Timed Out. Task has been cancelled!"
-            self.is_cancelled = True
+            self.listener.isCancelled = True
             self.event.set()
         finally:
             self.listener.client.remove_handler(*handler)
 
     async def _send_list_message(self, msg, button):
-        if not self.is_cancelled:
+        if not self.listener.isCancelled:
             if self._reply_to is None:
                 self._reply_to = await sendMessage(self.listener.message, msg, button)
             else:
@@ -228,7 +227,7 @@ class RcloneList:
             self.config_path,
             f"{self.remote}{self.path}",
         ]
-        if self.is_cancelled:
+        if self.listener.isCancelled:
             return
         res, err, code = await cmd_exec(cmd)
         if code not in [0, -9]:
@@ -328,6 +327,6 @@ class RcloneList:
             await self.list_remotes()
         await wrap_future(future)
         await deleteMessage(self._reply_to)
-        if self.config_path != "rclone.conf" and not self.is_cancelled:
+        if self.config_path != "rclone.conf" and not self.listener.isCancelled:
             return f"mrcc:{self.remote}{self.path}"
         return f"{self.remote}{self.path}"

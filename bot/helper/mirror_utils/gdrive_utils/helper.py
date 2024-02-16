@@ -236,7 +236,7 @@ class GoogleDriveHelper:
     """
 
     async def cancel_task(self):
-        self.listener.is_cancelled = True
+        self.listener.isCancelled = True
         if self.is_downloading:
             LOGGER.info(f"Cancelling Download: {self.listener.name}")
             await self.listener.onDownloadError("Download stopped by user!")

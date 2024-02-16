@@ -27,7 +27,7 @@ class DirectListener:
     def download(self, contents):
         self.is_downloading = True
         for content in contents:
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 break
             if content["path"]:
                 self._a2c_opt["dir"] = f"{self._path}/{content['path']}"
@@ -36,14 +36,16 @@ class DirectListener:
             filename = content["filename"]
             self._a2c_opt["out"] = filename
             try:
-                self.download_task = aria2.add_uris([content["url"]], self._a2c_opt, position=0)
+                self.download_task = aria2.add_uris(
+                    [content["url"]], self._a2c_opt, position=0
+                )
             except Exception as e:
                 self._failed += 1
                 LOGGER.error(f"Unable to download {filename} due to: {e}")
                 continue
             self.download_task = self.download_task.live
             while True:
-                if self.listener.is_cancelled:
+                if self.listener.isCancelled:
                     if self.download_task:
                         self.download_task.remove(True, True)
                     break
@@ -61,7 +63,7 @@ class DirectListener:
                     break
                 sleep(1)
             self.download_task = None
-        if self.listener.is_cancelled:
+        if self.listener.isCancelled:
             return
         if self._failed == len(contents):
             async_to_sync(
@@ -71,7 +73,7 @@ class DirectListener:
         async_to_sync(self.listener.onDownloadComplete)
 
     async def cancel_task(self):
-        self.listener.is_cancelled = True
+        self.listener.isCancelled = True
         LOGGER.info(f"Cancelling Download: {self.listener.name}")
         await self.listener.onDownloadError("Download Cancelled by User!")
         if self.download_task:

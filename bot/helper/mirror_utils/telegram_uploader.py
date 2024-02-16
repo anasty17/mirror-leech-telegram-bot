@@ -56,7 +56,7 @@ class TgUploader:
         self._media_group = False
 
     async def _upload_progress(self, current, total):
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             if self._listener.userTransmission:
                 user.stop_transmission()
             else:
@@ -254,7 +254,7 @@ class TgUploader:
                         )
                         self._corrupted += 1
                         continue
-                    if self._listener.is_cancelled:
+                    if self._listener.isCancelled:
                         return
                     cap_mono = await self._prepare_file(file_, dirpath, delete_file)
                     if self._last_msg_in_group:
@@ -272,7 +272,7 @@ class TgUploader:
                     self._last_msg_in_group = False
                     self._last_uploaded = 0
                     await self._upload_file(cap_mono, file_)
-                    if self._listener.is_cancelled:
+                    if self._listener.isCancelled:
                         return
                     if not self._is_corrupted and (
                         self._listener.isSuperChat or self._listener.upDest
@@ -287,12 +287,12 @@ class TgUploader:
                         err = err.last_attempt.exception()
                     LOGGER.error(f"{err}. Path: {self._up_path}")
                     self._corrupted += 1
-                    if self._listener.is_cancelled:
+                    if self._listener.isCancelled:
                         return
                     continue
                 finally:
                     if (
-                        not self._listener.is_cancelled
+                        not self._listener.isCancelled
                         and await aiopath.exists(self._up_path)
                         and (
                             not self._listener.seed
@@ -312,7 +312,7 @@ class TgUploader:
                         LOGGER.info(
                             f"While sending media group at the end of task. Error: {e}"
                         )
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             return
         if self._listener.seed and not self._listener.newDir:
             await clean_unwanted(self._path)
@@ -364,7 +364,7 @@ class TgUploader:
                     if thumb is None:
                         thumb = await create_thumbnail(self._up_path, None)
 
-                if self._listener.is_cancelled:
+                if self._listener.isCancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_document(
                     document=self._up_path,
@@ -388,7 +388,7 @@ class TgUploader:
                 else:
                     width = 480
                     height = 320
-                if self._listener.is_cancelled:
+                if self._listener.isCancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_video(
                     video=self._up_path,
@@ -405,7 +405,7 @@ class TgUploader:
             elif is_audio:
                 key = "audios"
                 duration, artist, title = await get_media_info(self._up_path)
-                if self._listener.is_cancelled:
+                if self._listener.isCancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_audio(
                     audio=self._up_path,
@@ -420,7 +420,7 @@ class TgUploader:
                 )
             else:
                 key = "photos"
-                if self._listener.is_cancelled:
+                if self._listener.isCancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_photo(
                     photo=self._up_path,
@@ -431,7 +431,7 @@ class TgUploader:
                 )
 
             if (
-                not self._listener.is_cancelled
+                not self._listener.isCancelled
                 and self._media_group
                 and (self._sent_msg.video or self._sent_msg.document)
             ):
@@ -485,6 +485,6 @@ class TgUploader:
         return self._processed_bytes
 
     async def cancel_task(self):
-        self._listener.is_cancelled = True
+        self._listener.isCancelled = True
         LOGGER.info(f"Cancelling Upload: {self._listener.name}")
         await self._listener.onUploadError("your upload has been stopped!")

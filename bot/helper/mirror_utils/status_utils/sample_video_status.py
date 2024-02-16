@@ -37,7 +37,7 @@ class SampleVideoStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Sample Video: {self.listener.name}")
-        self.listener.cancelled = True
+        self.listener.isCancelled = True
         if self.listener.suproc is not None and self.listener.suproc.returncode is None:
             self.listener.suproc.kill()
         await self.listener.onUploadError("Creating sample video stopped by user!")

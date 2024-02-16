@@ -56,7 +56,7 @@ class RcloneTransferHelper:
         return self._size
 
     async def _progress(self):
-        while not (self._proc is None or self._listener.is_cancelled):
+        while not (self._proc is None or self._listener.isCancelled):
             try:
                 data = (await self._proc.stdout.readline()).decode()
             except:
@@ -114,7 +114,7 @@ class RcloneTransferHelper:
         self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             return
 
         if return_code == 0:
@@ -136,7 +136,7 @@ class RcloneTransferHelper:
                 if self._sa_count < self._sa_number:
                     remote = self._switchServiceAccount()
                     cmd[6] = f"{remote}:{cmd[6].split(':', 1)[1]}"
-                    if self._listener.is_cancelled:
+                    if self._listener.isCancelled:
                         return
                     return await self._start_download(cmd, remote_type)
                 else:
@@ -232,7 +232,7 @@ class RcloneTransferHelper:
         self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             return False
 
         if return_code == -9:
@@ -255,7 +255,7 @@ class RcloneTransferHelper:
                     cmd[7] = f"{remote}:{cmd[7].split(':', 1)[1]}"
                     return (
                         False
-                        if self._listener.is_cancelled
+                        if self._listener.isCancelled
                         else await self._start_upload(cmd, remote_type)
                     )
                 else:
@@ -355,7 +355,7 @@ class RcloneTransferHelper:
                     err = "Use '/shell cat rlog.txt' to see more information"
                 LOGGER.error(f"while getting link. Path: {destination} | Stderr: {err}")
                 link = ""
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             return
         LOGGER.info(f"Upload Done. Path: {destination}")
         if self._listener.seed and not self._listener.newDir:
@@ -394,7 +394,7 @@ class RcloneTransferHelper:
         self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
         _, return_code = await gather(self._progress(), self._proc.wait())
 
-        if self._listener.is_cancelled:
+        if self._listener.isCancelled:
             return None, None
 
         if return_code == -9:
@@ -411,7 +411,9 @@ class RcloneTransferHelper:
                 link, destination = await self._get_gdrive_link(
                     config_path, dst_remote, dst_path, mime_type
                 )
-                return (None, None) if self._listener.is_cancelled else (link, destination)
+                return (
+                    (None, None) if self._listener.isCancelled else (link, destination)
+                )
             else:
                 if mime_type != "Folder":
                     destination += (
@@ -421,7 +423,7 @@ class RcloneTransferHelper:
                 cmd = ["rclone", "link", "--config", config_path, destination]
                 res, err, code = await cmd_exec(cmd)
 
-                if self._listener.is_cancelled:
+                if self._listener.isCancelled:
                     return None, None
 
                 if code == 0:
@@ -483,7 +485,7 @@ class RcloneTransferHelper:
         return {opt: config.get(remote, opt) for opt in options}
 
     async def cancel_task(self):
-        self._listener.is_cancelled = True
+        self._listener.isCancelled = True
         if self._proc is not None:
             try:
                 self._proc.kill()

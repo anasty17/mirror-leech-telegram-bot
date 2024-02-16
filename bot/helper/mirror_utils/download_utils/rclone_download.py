@@ -44,7 +44,11 @@ async def add_rclone_download(listener, path):
     res1, res2 = await gather(cmd_exec(cmd1), cmd_exec(cmd2))
     if res1[2] != res2[2] != 0:
         if res1[2] != -9:
-            err = res1[1] or res2[1] or "Use '/shell cat rlog.txt' to see more information"
+            err = (
+                res1[1]
+                or res2[1]
+                or "Use '/shell cat rlog.txt' to see more information"
+            )
             msg = f"Error: While getting rclone stat/size. Path: {remote}:{listener.link}. Stderr: {err[:4000]}"
             await listener.onDownloadError(msg)
         return
@@ -82,7 +86,7 @@ async def add_rclone_download(listener, path):
             if listener.multi <= 1:
                 await sendStatusMessage(listener.message)
             await event.wait()
-            if listener.is_cancelled:
+            if listener.isCancelled:
                 return
     else:
         add_to_queue = False

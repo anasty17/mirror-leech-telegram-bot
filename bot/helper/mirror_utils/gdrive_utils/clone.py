@@ -61,7 +61,7 @@ class gdClone(GoogleDriveHelper):
                 dir_id = self.create_directory(meta.get("name"), self.listener.upDest)
                 self._cloneFolder(meta.get("name"), meta.get("id"), dir_id)
                 durl = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
-                if self.listener.is_cancelled:
+                if self.listener.isCancelled:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.service.files().delete(
                         fileId=dir_id, supportsAllDrives=True
@@ -122,7 +122,7 @@ class gdClone(GoogleDriveHelper):
                 self._copyFile(file.get("id"), dest_id)
                 self.proc_bytes += int(file.get("size", 0))
                 self.total_time = int(time() - self._start_time)
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 break
 
     @retry(
@@ -156,7 +156,7 @@ class gdClone(GoogleDriveHelper):
                         )
                         raise err
                     else:
-                        if self.listener.is_cancelled:
+                        if self.listener.isCancelled:
                             return
                         self.switchServiceAccount()
                         return self._copyFile(file_id, dest_id)

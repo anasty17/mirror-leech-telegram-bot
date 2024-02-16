@@ -55,10 +55,10 @@ class gdDownload(GoogleDriveHelper):
                     return self.download()
                 err = "File not found!"
             async_to_sync(self.listener.onDownloadError, err)
-            self.listener.is_cancelled = True
+            self.listener.isCancelled = True
         finally:
             self._updater.cancel()
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 return
             async_to_sync(self.listener.onDownloadComplete)
 
@@ -86,7 +86,7 @@ class gdDownload(GoogleDriveHelper):
                 f"{path}{filename}"
             ) and not filename.lower().endswith(tuple(self.listener.extensionFilter)):
                 self._download_file(file_id, path, filename, mime_type)
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 break
 
     @retry(
@@ -102,14 +102,14 @@ class gdDownload(GoogleDriveHelper):
             filename = f"{filename[:245]}{ext}"
             if self.listener.name.endswith(ext):
                 self.listener.name = filename
-        if self.listener.is_cancelled:
+        if self.listener.isCancelled:
             return
         fh = FileIO(f"{path}/{filename}", "wb")
         downloader = MediaIoBaseDownload(fh, request, chunksize=50 * 1024 * 1024)
         done = False
         retries = 0
         while not done:
-            if self.listener.is_cancelled:
+            if self.listener.isCancelled:
                 fh.close()
                 break
             try:
@@ -134,7 +134,7 @@ class gdDownload(GoogleDriveHelper):
                             )
                             raise err
                         else:
-                            if self.listener.is_cancelled:
+                            if self.listener.isCancelled:
                                 return
                             self.switchServiceAccount()
                             LOGGER.info(f"Got: {reason}, Trying Again...")

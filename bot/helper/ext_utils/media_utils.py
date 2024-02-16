@@ -36,17 +36,17 @@ async def convert_video(listener, video_file, ext, retry=False):
             cmd[7:7] = ["-c:s", "copy"]
     else:
         cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     code = listener.suproc.returncode
     if code == 0:
         return output
     elif code == -9:
-        listener.cancelled = True
+        listener.isCancelled = True
         return False
     else:
         if not retry:
@@ -74,17 +74,17 @@ async def convert_audio(listener, audio_file, ext):
         f"{cpu_count() // 2}",
         output,
     ]
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     code = listener.suproc.returncode
     if code == 0:
         return output
     elif code == -9:
-        listener.cancelled = True
+        listener.isCancelled = True
         return False
     else:
         try:
@@ -388,16 +388,16 @@ async def split_file(
             if not multi_streams:
                 del cmd[10]
                 del cmd[10]
-            if listener.cancelled:
+            if listener.isCancelled:
                 return False
             async with subprocess_lock:
                 listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
             _, stderr = await listener.suproc.communicate()
-            if listener.cancelled:
+            if listener.isCancelled:
                 return False
             code = listener.suproc.returncode
             if code == -9:
-                listener.cancelled = True
+                listener.isCancelled = True
                 return False
             elif code != 0:
                 try:
@@ -465,7 +465,7 @@ async def split_file(
     else:
         out_path = f"{dirpath}/{file_}."
         async with subprocess_lock:
-            if listener.cancelled:
+            if listener.isCancelled:
                 return False
             listener.suproc = await create_subprocess_exec(
                 "split",
@@ -477,11 +477,11 @@ async def split_file(
                 stderr=PIPE,
             )
         _, stderr = await listener.suproc.communicate()
-        if listener.cancelled:
+        if listener.isCancelled:
             return False
         code = listener.suproc.returncode
         if code == -9:
-            listener.cancelled = True
+            listener.isCancelled = True
             return False
         elif code != 0:
             try:
@@ -539,15 +539,15 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         output_file,
     ]
 
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.cancelled:
+    if listener.isCancelled:
         return False
     code = listener.suproc.returncode
     if code == -9:
-        listener.cancelled = True
+        listener.isCancelled = True
         return False
     elif code == 0:
         return output_file
