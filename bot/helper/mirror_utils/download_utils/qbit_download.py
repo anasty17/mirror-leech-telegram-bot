@@ -133,10 +133,9 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
 
         if add_to_queue:
             await event.wait()
-
+            if listener.is_cancelled:
+                return
             async with task_dict_lock:
-                if listener.mid not in task_dict:
-                    return
                 task_dict[listener.mid].queued = False
 
             await sync_to_async(client.torrents_resume, torrent_hashes=ext_hash)

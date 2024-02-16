@@ -73,7 +73,7 @@ async def clean_target(path):
         LOGGER.info(f"Cleaning Target: {path}")
         try:
             if await aiopath.isdir(path):
-                await aiormtree(path)
+                await aiormtree(path, ignore_errors=True)
             else:
                 await remove(path)
         except Exception as e:
@@ -84,7 +84,7 @@ async def clean_download(path):
     if await aiopath.exists(path):
         LOGGER.info(f"Cleaning Download: {path}")
         try:
-            await aiormtree(path)
+            await aiormtree(path, ignore_errors=True)
         except Exception as e:
             LOGGER.error(str(e))
 
@@ -93,7 +93,7 @@ def clean_all():
     aria2.remove_all(True)
     get_qb_client().torrents_delete(torrent_hashes="all")
     try:
-        rmtree(DOWNLOAD_DIR)
+        rmtree(DOWNLOAD_DIR, ignore_errors=True)
     except:
         pass
     makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -123,7 +123,7 @@ async def clean_unwanted(path, custom_list=[]):
             ):
                 await remove(f_path)
         if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
-            await aiormtree(dirpath)
+            await aiormtree(dirpath, ignore_errors=True)
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         if not await listdir(dirpath):
             await rmdir(dirpath)

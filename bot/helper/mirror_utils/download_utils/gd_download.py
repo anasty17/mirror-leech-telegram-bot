@@ -37,9 +37,8 @@ async def add_gd_download(listener, path):
             if listener.multi <= 1:
                 await sendStatusMessage(listener.message)
             await event.wait()
-            async with task_dict_lock:
-                if listener.mid not in task_dict:
-                    return
+            if listener.is_cancelled:
+                return
     else:
         add_to_queue = False
 

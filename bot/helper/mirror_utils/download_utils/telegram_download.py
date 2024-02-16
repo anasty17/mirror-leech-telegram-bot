@@ -26,7 +26,6 @@ class TelegramDownloadHelper:
         self._listener = listener
         self._id = ""
         self.session = ""
-        self._is_cancelled = False
 
     @property
     def speed(self):
@@ -55,7 +54,7 @@ class TelegramDownloadHelper:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
     async def _onDownloadProgress(self, current, total):
-        if self._is_cancelled:
+        if self._listener.is_cancelled:
             if self.session == "user":
                 user.stop_transmission()
             else:
@@ -80,7 +79,7 @@ class TelegramDownloadHelper:
             download = await message.download(
                 file_name=path, progress=self._onDownloadProgress
             )
-            if self._is_cancelled:
+            if self._listener.is_cancelled:
                 await self._onDownloadError("Cancelled by user!")
                 return
         except Exception as e:
@@ -89,7 +88,7 @@ class TelegramDownloadHelper:
             return
         if download is not None:
             await self._onDownloadComplete()
-        elif not self._is_cancelled:
+        elif not self._listener.is_cancelled:
             await self._onDownloadError("Internal error occurred")
 
     async def add_download(self, message, path, session):
@@ -145,9 +144,8 @@ class TelegramDownloadHelper:
                         if self._listener.multi <= 1:
                             await sendStatusMessage(self._listener.message)
                         await event.wait()
-                        async with task_dict_lock:
-                            if self._listener.mid not in task_dict:
-                                return
+                        if self._listener.is_cancelled:
+                            return
                 else:
                     add_to_queue = False
                 await self._onDownloadStart(gid, add_to_queue)
@@ -160,7 +158,7 @@ class TelegramDownloadHelper:
             )
 
     async def cancel_task(self):
-        self._is_cancelled = True
+        self._listener.is_cancelled = True
         LOGGER.info(
             f"Cancelling download on user request: name: {self._listener.name} id: {self._id}"
         )

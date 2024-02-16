@@ -193,9 +193,8 @@ class TaskListener(TaskConfig):
                 async with task_dict_lock:
                     task_dict[self.mid] = QueueStatus(self, gid, "Up")
                 await event.wait()
-                async with task_dict_lock:
-                    if self.mid not in task_dict:
-                        return
+                if self.is_cancelled:
+                    return
                 LOGGER.info(f"Start from Queued/Upload: {self.name}")
         async with queue_dict_lock:
             if self.mid in non_queued_dl:

@@ -90,6 +90,7 @@ class Aria2Status:
         return self._gid
 
     async def cancel_task(self):
+        self.listener.is_cancelled = True
         await sync_to_async(self._update)
         if self._download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")

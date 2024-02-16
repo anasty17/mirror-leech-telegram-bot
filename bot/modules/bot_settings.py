@@ -342,9 +342,9 @@ async def update_private_file(_, message, pre_message):
             await remove(fn)
         if fn == "accounts":
             if await aiopath.exists("accounts"):
-                await rmtree("accounts")
+                await rmtree("accounts", ignore_errors=True)
             if await aiopath.exists("rclone_sa"):
-                await rmtree("rclone_sa")
+                await rmtree("rclone_sa", ignore_errors=True)
             config_dict["USE_SERVICE_ACCOUNTS"] = False
             if DATABASE_URL:
                 await DbManager().update_config({"USE_SERVICE_ACCOUNTS": False})
@@ -358,9 +358,9 @@ async def update_private_file(_, message, pre_message):
         await message.download(file_name=f"{getcwd()}/{file_name}")
         if file_name == "accounts.zip":
             if await aiopath.exists("accounts"):
-                await rmtree("accounts")
+                await rmtree("accounts", ignore_errors=True)
             if await aiopath.exists("rclone_sa"):
-                await rmtree("rclone_sa")
+                await rmtree("rclone_sa", ignore_errors=True)
             await (
                 await create_subprocess_exec(
                     "7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"

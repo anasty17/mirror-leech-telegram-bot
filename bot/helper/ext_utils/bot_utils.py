@@ -163,12 +163,14 @@ def update_user_ldata(id_, key, value):
     user_data[id_][key] = value
 
 
-async def retry_function(func, *args, **kwargs):
+async def retry_function(func, *args, retry=10, **kwargs):
     try:
         return await sync_to_async(func, *args, **kwargs)
     except:
+        if retry == 0:
+            return "Unable to connect to jdserver!"
         await sleep(0.3)
-        return await retry_function(func, *args, **kwargs)
+        return await retry_function(func, *args, retry=retry-1, **kwargs)
 
 
 async def cmd_exec(cmd, shell=False):

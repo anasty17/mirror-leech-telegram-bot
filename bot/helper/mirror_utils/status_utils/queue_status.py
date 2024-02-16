@@ -39,6 +39,7 @@ class QueueStatus:
         return self
 
     async def cancel_task(self):
+        self.listener.is_cancelled = True
         LOGGER.info(f"Cancelling Queue{self._status}: {self.listener.name}")
         if self._status == "dl":
             await self.listener.onDownloadError(

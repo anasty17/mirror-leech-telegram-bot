@@ -95,6 +95,7 @@ class QbittorrentStatus:
         return self._info.hash
 
     async def cancel_task(self):
+        self.listener.is_cancelled = True
         await sync_to_async(self._update)
         await sync_to_async(self.client.torrents_pause, torrent_hashes=self._info.hash)
         if not self.seeding:
