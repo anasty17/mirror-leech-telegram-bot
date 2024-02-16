@@ -47,11 +47,22 @@ upload = """<b>Upload Destination</b>: -up
 You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
+
 If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
 /cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)
-Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id. This for links and upload destination.
+
+Incase you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
 DEFAULT_UPLOAD doesn't effect on leech cmds.
 """
+
+user_download = """<b>User Download</b>: link
+
+/cmd tp:link to download using owner token.pickle incase service account enabled.
+/cmd sa:link to download using service account incase service account disabled.
+/cmd tp:gdrive_id to download using token.pickle and file_id incase service account enabled.
+/cmd sa:gdrive_id to download using service account and file_id incase service account disabled.
+/cmd mtp:gdrive_id or mtp:link to download using user token.pickle uploaded from usetting
+/cmd mrcc:remote:path to download using user rclone config uploaded from usetting"""
 
 rcf = """<b>Rclone Flags</b>: -rcf
 
@@ -195,6 +206,7 @@ MIRROR_HELP_DICT = {
     "Screenshot": screenshot,
     "Convert-Media": convert_media,
     "Force-Start": force_start,
+    "User-Download": user_download,
 }
 
 RSS_HELP_MESSAGE = """
