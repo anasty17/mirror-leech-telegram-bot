@@ -45,10 +45,10 @@ async def configureDownload(_, query, obj):
 
 class JDownloaderHelper:
     def __init__(self, listener):
-        self._listener = listener
+        self.listener = listener
+        self.event = Event()
         self._timeout = 300
         self._reply_to = ""
-        self.event = Event()
 
     @new_thread
     async def _event_handler(self):
