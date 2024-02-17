@@ -657,7 +657,7 @@ class TaskConfig:
                 await cpu_eater_lock.acquire()
                 LOGGER.info(f"Creating Sample video: {self.name}")
                 res = await createSampleVideo(
-                    self, dl_path, sample_duration, part_duration, True
+                    self, dl_path, sample_duration, part_duration
                 )
                 cpu_eater_lock.release()
                 if res:
