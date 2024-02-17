@@ -91,7 +91,7 @@ async def _onDownloadComplete(tor):
     if Intervals["stopAll"]:
         return
     client = await sync_to_async(get_qb_client)
-    if task.listener.seed and not task.isCancelled:
+    if task.listener.seed and not task.listener.isCancelled:
         async with task_dict_lock:
             if task.listener.mid in task_dict:
                 removed = False

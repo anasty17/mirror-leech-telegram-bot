@@ -136,7 +136,7 @@ async def _onBtDownloadComplete(api, gid):
                         f"Seeding stopped with Ratio: {task.ratio()} and Time: {task.seeding_time()}"
                     )
                     await sync_to_async(api.remove, [download], force=True, files=True)
-            elif not task.isCancelled:
+            elif not task.listener.isCancelled:
                 async with task_dict_lock:
                     if task.listener.mid not in task_dict:
                         await sync_to_async(
