@@ -45,10 +45,10 @@ async def configureDownload(_, query, obj):
 
 class JDownloaderHelper:
     def __init__(self, listener):
-        self.listener = listener
-        self.event = Event()
         self._timeout = 300
         self._reply_to = ""
+        self.listener = listener
+        self.event = Event()
 
     @new_thread
     async def _event_handler(self):
@@ -92,7 +92,7 @@ async def add_jd_download(listener, path):
         try:
             await wait_for(retry_function(jdownloader.device.jd.version), timeout=5)
         except:
-            is_connected = await sync_to_async(jdownloader.jdconnect)
+            is_connected = await jdownloader.jdconnect()
             if not is_connected:
                 await listener.onDownloadError(jdownloader.error)
                 return

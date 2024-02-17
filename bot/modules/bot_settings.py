@@ -327,11 +327,11 @@ async def sync_jdownloader():
         try:
             await wait_for(retry_function(jdownloader.update_devices), timeout=5)
         except:
-            is_connected = await sync_to_async(jdownloader.jdconnect)
+            is_connected = await jdownloader.jdconnect()
             if not is_connected:
                 LOGGER.error(jdownloader.error)
                 return
-        await sync_to_async(jdownloader.connectToDevice)
+        await jdownloader.connectToDevice()
 
 
 async def update_private_file(_, message, pre_message):

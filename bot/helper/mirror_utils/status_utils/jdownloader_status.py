@@ -39,9 +39,9 @@ def _get_combined_info(result):
     }
 
 
-def get_download(gid, old_info):
+async def get_download(gid, old_info):
     try:
-        result = jdownloader.device.downloads.query_packages(
+        result = await jdownloader.device.downloads.query_packages(
             [
                 {
                     "bytesLoaded": True,
@@ -66,8 +66,8 @@ class JDownloaderStatus:
         self._gid = gid
         self._info = {}
 
-    def _update(self):
-        self._info = get_download(int(self._gid), self._info)
+    async def _update(self):
+        self._info = await get_download(int(self._gid), self._info)
 
     def progress(self):
         try:
@@ -90,8 +90,8 @@ class JDownloaderStatus:
     def eta(self):
         return get_readable_time(eta) if (eta := self._info.get("eta", False)) else "-"
 
-    def status(self):
-        self._update()
+    async def status(self):
+        await self._update()
         state = self._info.get("status", "paused")
         return MirrorStatus.STATUS_PAUSED if state == "paused" else state
 

@@ -26,7 +26,7 @@ class SampleVideoStatus:
     def eta(self):
         return "0s"
 
-    def status(self):
+    async def status(self):
         return MirrorStatus.STATUS_SAMVID
 
     def processed_bytes(self):

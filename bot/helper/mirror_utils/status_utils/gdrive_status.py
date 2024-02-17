@@ -19,7 +19,7 @@ class GdriveStatus:
     def size(self):
         return get_readable_file_size(self._size)
 
-    def status(self):
+    async def status(self):
         if self._status == "up":
             return MirrorStatus.STATUS_UPLOADING
         elif self._status == "dl":

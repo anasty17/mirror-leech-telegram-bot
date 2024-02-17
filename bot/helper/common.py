@@ -812,6 +812,7 @@ class TaskConfig:
                         cpu_eater_lock.release()
                         return False
                     f_path = ospath.join(dirpath, file_)
+                    LOGGER.info(f"Converting: {f_path}")
                     res = await proceedConvert(f_path)
                     if res:
                         if self.seed and not self.newDir:

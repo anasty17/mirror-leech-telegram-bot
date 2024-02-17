@@ -28,7 +28,7 @@ class YtDlpDownloadStatus:
     def size(self):
         return get_readable_file_size(self._obj.size)
 
-    def status(self):
+    async def status(self):
         return MirrorStatus.STATUS_DOWNLOADING
 
     def name(self):

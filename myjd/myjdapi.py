@@ -4,18 +4,17 @@ from base64 import b64encode, b64decode
 from hashlib import sha256
 from hmac import new
 from json import dumps, loads, JSONDecodeError
-from requests import get, post
-from requests.exceptions import RequestException
+from httpx import AsyncClient, RequestError
 from time import time
 from urllib.parse import quote
 
 from .exception import (
-    MYJDException,
     MYJDApiException,
     MYJDConnectionException,
     MYJDDecodeException,
     MYJDDeviceNotFoundException,
 )
+
 
 BS = 16
 
@@ -29,115 +28,64 @@ def UNPAD(s):
 
 
 class System:
-    """
-    Class that represents the system-functionality of a Device
-    """
-
     def __init__(self, device):
         self.device = device
         self.url = "/system"
 
-    def exit_jd(self):
-        return self.device.action(f"{self.url}/exitJD")
+    async def exit_jd(self):
+        return await self.device.action(f"{self.url}/exitJD")
 
-    def restart_jd(self):
-        return self.device.action(f"{self.url}/restartJD")
+    async def restart_jd(self):
+        return await self.device.action(f"{self.url}/restartJD")
 
-    def hibernate_os(self):
-        return self.device.action(f"{self.url}/hibernateOS")
+    async def hibernate_os(self):
+        return await self.device.action(f"{self.url}/hibernateOS")
 
-    def shutdown_os(self, force):
-        """
-
-        :param force:  Force Shutdown of OS
-        :return:
-        """
+    async def shutdown_os(self, force):
         params = force
-        return self.device.action(f"{self.url}/shutdownOS", params)
+        return await self.device.action(f"{self.url}/shutdownOS", params)
 
-    def standby_os(self):
-        """
+    async def standby_os(self):
+        return await self.device.action(f"{self.url}/standbyOS")
 
-        :return:
-        """
-        return self.device.action(f"{self.url}/standbyOS")
-
-    def get_storage_info(self):
-        """
-
-        :return:
-        """
-        return self.device.action(f"{self.url}/getStorageInfos?path")
+    async def get_storage_info(self):
+        return await self.device.action(f"{self.url}/getStorageInfos?path")
 
 
 class Jd:
-    """
-    Class that represents the jd-functionality of a Device
-    """
-
     def __init__(self, device):
         self.device = device
         self.url = "/jd"
 
-    def get_core_revision(self):
-        return self.device.action(f"{self.url}/getCoreRevision")
-    
-    def version(self):
-        return self.device.action(f"{self.url}/version")
+    async def get_core_revision(self):
+        return await self.device.action(f"{self.url}/getCoreRevision")
 
-
-class Update:
-    """
-    Class that represents the update-functionality of a Device
-    """
-
-    def __init__(self, device):
-        self.device = device
-        self.url = "/update"
-
-    def restart_and_update(self):
-        """
-
-        :return:
-        """
-        return self.device.action(f"{self.url}/restartAndUpdate")
-
-    def run_update_check(self):
-        return self.device.action(f"{self.url}/runUpdateCheck")
-
-    def is_update_available(self):
-        return self.device.action(f"{self.url}/isUpdateAvailable")
-
-    def update_available(self):
-        self.run_update_check()
-        return self.is_update_available()
+    async def version(self):
+        return await self.device.action(f"{self.url}/version")
 
 
 class Config:
-    """
-    Class that represents the Config of a Device
-    """
 
     def __init__(self, device):
         self.device = device
         self.url = "/config"
 
-    def list(self, params=None):
+    async def list(self, params=None):
         """
         :return:  List<AdvancedConfigAPIEntry>
         """
         if params is None:
-            return self.device.action(f"{self.url}/list", params)
+            return await self.device.action(f"{self.url}/list", params)
         else:
-            return self.device.action(f"{self.url}/list")
+            return await self.device.action(f"{self.url}/list")
 
-    def listEnum(self, type):
+    async def listEnum(self, type):
         """
         :return:  List<EnumOption>
         """
-        return self.device.action(f"{self.url}/listEnum", params=[type])
+        return await self.device.action(f"{self.url}/listEnum", params=[type])
 
-    def get(self, interface_name, storage, key):
+    async def get(self, interface_name, storage, key):
         """
         :param interfaceName: a valid interface name from List<AdvancedConfigAPIEntry>
         :type: str:
@@ -147,9 +95,9 @@ class Config:
         :type: str:
         """
         params = [interface_name, storage, key]
-        return self.device.action(f"{self.url}/get", params)
+        return await self.device.action(f"{self.url}/get", params)
 
-    def getDefault(self, interfaceName, storage, key):
+    async def getDefault(self, interfaceName, storage, key):
         """
         :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
         :type: str:
@@ -159,9 +107,9 @@ class Config:
         :type: str:
         """
         params = [interfaceName, storage, key]
-        return self.device.action(f"{self.url}/getDefault", params)
+        return await self.device.action(f"{self.url}/getDefault", params)
 
-    def query(self, params=None):
+    async def query(self, params=None):
         """
         :param params: A dictionary with options. The default dictionary is
         configured so it returns you all config API entries with all details, but you
@@ -191,9 +139,9 @@ class Config:
                     "values": True,
                 }
             ]
-        return self.device.action(f"{self.url}/query", params)
+        return await self.device.action(f"{self.url}/query", params)
 
-    def reset(self, interfaceName, storage, key):
+    async def reset(self, interfaceName, storage, key):
         """
         :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
         :type: str:
@@ -203,9 +151,9 @@ class Config:
         :type: str:
         """
         params = [interfaceName, storage, key]
-        return self.device.action(f"{self.url}/reset", params)
+        return await self.device.action(f"{self.url}/reset", params)
 
-    def set(self, interface_name, storage, key, value):
+    async def set(self, interface_name, storage, key, value):
         """
         :param interfaceName:  a valid interface name from List<AdvancedConfigAPIEntry>
         :type: str:
@@ -217,47 +165,34 @@ class Config:
         :type: Object:
         """
         params = [interface_name, storage, key, value]
-        return self.device.action(f"{self.url}/set", params)
+        return await self.device.action(f"{self.url}/set", params)
 
 
 class DownloadController:
-    """
-    Class that represents the download-controller of a Device
-    """
 
     def __init__(self, device):
         self.device = device
         self.url = "/downloadcontroller"
 
-    def start_downloads(self):
-        return self.device.action(f"{self.url}/start")
+    async def start_downloads(self):
+        return await self.device.action(f"{self.url}/start")
 
-    def stop_downloads(self):
-        return self.device.action(f"{self.url}/stop")
+    async def stop_downloads(self):
+        return await self.device.action(f"{self.url}/stop")
 
-    def pause_downloads(self, value):
-        """
-
-        :param value:
-        :return:
-        """
+    async def pause_downloads(self, value):
         params = [value]
-        return self.device.action(f"{self.url}/pause", params)
+        return await self.device.action(f"{self.url}/pause", params)
 
-    def get_speed_in_bytes(self):
-        return self.device.action(f"{self.url}/getSpeedInBps")
+    async def get_speed_in_bytes(self):
+        return await self.device.action(f"{self.url}/getSpeedInBps")
 
-    def force_download(self, link_ids, package_ids):
-        """
-        :param link_ids:
-        :param package_ids:
-        :return:
-        """
+    async def force_download(self, link_ids, package_ids):
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/forceDownload", params)
+        return await self.device.action(f"{self.url}/forceDownload", params)
 
-    def get_current_state(self):
-        return self.device.action(f"{self.url}/getCurrentState")
+    async def get_current_state(self):
+        return await self.device.action(f"{self.url}/getCurrentState")
 
 
 class Extension:
@@ -265,7 +200,7 @@ class Extension:
         self.device = device
         self.url = "/extensions"
 
-    def list(self, params=None):
+    async def list(self, params=None):
         """
         :param params: A dictionary with options. The default dictionary is
         configured so it returns you all available extensions, but you
@@ -295,37 +230,31 @@ class Extension:
                     "installed": True,
                 }
             ]
-        return self.device.action(f"{self.url}/list", params=params)
+        return await self.device.action(f"{self.url}/list", params=params)
 
-    def install(self, id):
-        return self.device.action(f"{self.url}/install", params=[id])
+    async def install(self, id):
+        return await self.device.action(f"{self.url}/install", params=[id])
 
-    def isInstalled(self, id):
-        return self.device.action(f"{self.url}/isInstalled", params=[id])
+    async def isInstalled(self, id):
+        return await self.device.action(f"{self.url}/isInstalled", params=[id])
 
-    def isEnabled(self, id):
-        return self.device.action(f"{self.url}/isEnabled", params=[id])
+    async def isEnabled(self, id):
+        return await self.device.action(f"{self.url}/isEnabled", params=[id])
 
-    def setEnabled(self, id, enabled):
-        return self.device.action(f"{self.url}/setEnabled", params=[id, enabled])
+    async def setEnabled(self, id, enabled):
+        return await self.device.action(f"{self.url}/setEnabled", params=[id, enabled])
 
 
 class Linkgrabber:
-    """
-    Class that represents the linkgrabber of a Device
-    """
 
     def __init__(self, device):
         self.device = device
         self.url = "/linkgrabberv2"
 
-    def clear_list(self):
-        """
-        Clears Linkgrabbers list
-        """
-        return self.device.action(f"{self.url}/clearList", http_action="POST")
+    async def clear_list(self):
+        return await self.device.action(f"{self.url}/clearList", http_action="POST")
 
-    def move_to_downloadlist(self, link_ids=None, package_ids=None):
+    async def move_to_downloadlist(self, link_ids=None, package_ids=None):
         """
         Moves packages and/or links to download list.
 
@@ -338,9 +267,9 @@ class Linkgrabber:
         if package_ids is None:
             package_ids = []
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/moveToDownloadlist", params)
+        return await self.device.action(f"{self.url}/moveToDownloadlist", params)
 
-    def query_links(self, params=None):
+    async def query_links(self, params=None):
         """
 
         Get the links in the linkcollector/linkgrabber
@@ -401,9 +330,11 @@ class Linkgrabber:
                     "priority": True,
                 }
             ]
-        return self.device.action(f"{self.url}/queryLinks", params)
+        return await self.device.action(f"{self.url}/queryLinks", params)
 
-    def cleanup(self, action, mode, selection_type, link_ids=None, package_ids=None):
+    async def cleanup(
+        self, action, mode, selection_type, link_ids=None, package_ids=None
+    ):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a package_ids or link_ids list, or both.
@@ -425,9 +356,9 @@ class Linkgrabber:
             package_ids = []
         params = [link_ids, package_ids]
         params += [action, mode, selection_type]
-        return self.device.action(f"{self.url}/cleanup", params)
+        return await self.device.action(f"{self.url}/cleanup", params)
 
-    def add_container(self, type_, content):
+    async def add_container(self, type_, content):
         """
         Adds a container to Linkgrabber.
 
@@ -438,9 +369,9 @@ class Linkgrabber:
 
         """
         params = [type_, content]
-        return self.device.action(f"{self.url}/addContainer", params)
+        return await self.device.action(f"{self.url}/addContainer", params)
 
-    def get_download_urls(self, link_ids, package_ids, url_display_type):
+    async def get_download_urls(self, link_ids, package_ids, url_display_type):
         """
         Gets download urls from Linkgrabber.
 
@@ -452,9 +383,9 @@ class Linkgrabber:
         :type: Dictionary
         """
         params = [package_ids, link_ids, url_display_type]
-        return self.device.action(f"{self.url}/getDownloadUrls", params)
+        return await self.device.action(f"{self.url}/getDownloadUrls", params)
 
-    def set_priority(self, priority, link_ids, package_ids):
+    async def set_priority(self, priority, link_ids, package_ids):
         """
         Sets the priority of links or packages.
 
@@ -466,9 +397,9 @@ class Linkgrabber:
         :type: str:
         """
         params = [priority, link_ids, package_ids]
-        return self.device.action(f"{self.url}/setPriority", params)
+        return await self.device.action(f"{self.url}/setPriority", params)
 
-    def set_enabled(self, enable, link_ids, package_ids):
+    async def set_enabled(self, enable, link_ids, package_ids):
         """
         Enable or disable packages.
 
@@ -480,9 +411,9 @@ class Linkgrabber:
         :type: list of strings.
         """
         params = [enable, link_ids, package_ids]
-        return self.device.action(f"{self.url}/setEnabled", params)
+        return await self.device.action(f"{self.url}/setEnabled", params)
 
-    def get_variants(self, params):
+    async def get_variants(self, params):
         """
         Gets the variants of a url/download (not package), for example a youtube
         link gives you a package with three downloads, the audio, the video and
@@ -495,9 +426,9 @@ class Linkgrabber:
         'M4A_256', 'name': '256kbit/s M4A-Audio'}, {'id': 'AAC_256', 'name':
         '256kbit/s AAC-Audio'},.......]
         """
-        return self.device.action(f"{self.url}/getVariants", params)
+        return await self.device.action(f"{self.url}/getVariants", params)
 
-    def add_links(self, params=None):
+    async def add_links(self, params=None):
         """
         Add links to the linkcollector
 
@@ -524,19 +455,19 @@ class Linkgrabber:
                     "overwritePackagizerRules": False,
                 }
             ]
-        return self.device.action(f"{self.url}/addLinks", params)
+        return await self.device.action(f"{self.url}/addLinks", params)
 
-    def is_collecting(self):
+    async def is_collecting(self):
         """
         Boolean status query about the collecting process
         """
-        return self.device.action(f"{self.url}/isCollecting")
+        return await self.device.action(f"{self.url}/isCollecting")
 
-    def set_download_directory(self, dir: str, package_ids: list):
+    async def set_download_directory(self, dir: str, package_ids: list):
         params = [dir, package_ids]
-        return self.device.action(f"{self.url}/setDownloadDirectory", params)
+        return await self.device.action(f"{self.url}/setDownloadDirectory", params)
 
-    def move_to_new_package(
+    async def move_to_new_package(
         self, name: str, path: str, link_ids: list = None, package_ids: list = None
     ):
         # Requires at least a link_ids or package_ids list, or both.
@@ -545,9 +476,9 @@ class Linkgrabber:
         if package_ids is None:
             package_ids = []
         params = [link_ids, package_ids, name, path]
-        return self.device.action(f"{self.url}/movetoNewPackage", params)
+        return await self.device.action(f"{self.url}/movetoNewPackage", params)
 
-    def remove_links(self, link_ids=None, package_ids=None):
+    async def remove_links(self, link_ids=None, package_ids=None):
         """
         Remove packages and/or links of the linkgrabber list.
         Requires at least a link_ids or package_ids list, or both.
@@ -562,26 +493,26 @@ class Linkgrabber:
         if package_ids is None:
             package_ids = []
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/removeLinks", params)
+        return await self.device.action(f"{self.url}/removeLinks", params)
 
-    def rename_link(self, link_id, new_name):
+    async def rename_link(self, link_id, new_name):
         """
         Renames files related with link_id
         """
         params = [link_id, new_name]
-        return self.device.action(f"{self.url}/renameLink", params)
+        return await self.device.action(f"{self.url}/renameLink", params)
 
-    def get_package_count(self):
-        return self.device.action(f"{self.url}/getPackageCount")
+    async def get_package_count(self):
+        return await self.device.action(f"{self.url}/getPackageCount")
 
-    def rename_package(self, package_id, new_name):
+    async def rename_package(self, package_id, new_name):
         """
         Rename package name with package_id
         """
         params = [package_id, new_name]
-        return self.device.action(f"{self.url}/renamePackage", params)
+        return await self.device.action(f"{self.url}/renamePackage", params)
 
-    def query_packages(self, params=None):
+    async def query_packages(self, params=None):
         if params is None:
             params = [
                 {
@@ -602,19 +533,16 @@ class Linkgrabber:
                     "status": True,
                 }
             ]
-        return self.device.action(f"{self.url}/queryPackages", params)
+        return await self.device.action(f"{self.url}/queryPackages", params)
 
 
 class Downloads:
-    """
-    Class that represents the downloads list of a Device
-    """
 
     def __init__(self, device):
         self.device = device
         self.url = "/downloadsV2"
 
-    def query_links(self, params=None):
+    async def query_links(self, params=None):
         """
         Get the links in the download list
         """
@@ -644,12 +572,9 @@ class Downloads:
                     "url": True,
                 }
             ]
-        return self.device.action(f"{self.url}/queryLinks", params)
+        return await self.device.action(f"{self.url}/queryLinks", params)
 
-    def query_packages(self, params=None):
-        """
-        Get the packages in the download list
-        """
+    async def query_packages(self, params=None):
         if params is None:
             params = [
                 {
@@ -671,9 +596,11 @@ class Downloads:
                     "status": True,
                 }
             ]
-        return self.device.action(f"{self.url}/queryPackages", params)
+        return await self.device.action(f"{self.url}/queryPackages", params)
 
-    def cleanup(self, action, mode, selection_type, link_ids=None, package_ids=None):
+    async def cleanup(
+        self, action, mode, selection_type, link_ids=None, package_ids=None
+    ):
         """
         Clean packages and/or links of the linkgrabber list.
         Requires at least a package_ids or link_ids list, or both.
@@ -695,9 +622,9 @@ class Downloads:
             package_ids = []
         params = [link_ids, package_ids]
         params += [action, mode, selection_type]
-        return self.device.action(f"{self.url}/cleanup", params)
+        return await self.device.action(f"{self.url}/cleanup", params)
 
-    def set_enabled(self, enable, link_ids, package_ids):
+    async def set_enabled(self, enable, link_ids, package_ids):
         """
         Enable or disable packages.
 
@@ -709,23 +636,23 @@ class Downloads:
         :type: list of strings.
         """
         params = [enable, link_ids, package_ids]
-        return self.device.action(f"{self.url}/setEnabled", params)
+        return await self.device.action(f"{self.url}/setEnabled", params)
 
-    def force_download(self, link_ids=None, package_ids=None):
+    async def force_download(self, link_ids=None, package_ids=None):
         if link_ids is None:
             link_ids = []
         if package_ids is None:
             package_ids = []
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/forceDownload", params)
+        return await self.device.action(f"{self.url}/forceDownload", params)
 
-    def set_dl_location(self, directory, package_ids=None):
+    async def set_dl_location(self, directory, package_ids=None):
         if package_ids is None:
             package_ids = []
         params = [directory, package_ids]
-        return self.device.action(f"{self.url}/setDownloadDirectory", params)
+        return await self.device.action(f"{self.url}/setDownloadDirectory", params)
 
-    def remove_links(self, link_ids=None, package_ids=None):
+    async def remove_links(self, link_ids=None, package_ids=None):
         """
         Remove packages and/or links of the downloads list.
         NOTE: For more specific removal, like deleting the files etc, use the /cleanup api.
@@ -741,52 +668,36 @@ class Downloads:
         if package_ids is None:
             package_ids = []
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/removeLinks", params)
+        return await self.device.action(f"{self.url}/removeLinks", params)
 
-    def reset_links(self, link_ids, package_ids):
+    async def reset_links(self, link_ids, package_ids):
         params = [link_ids, package_ids]
-        return self.device.action(f"{self.url}/resetLinks", params)
+        return await self.device.action(f"{self.url}/resetLinks", params)
 
-    def move_to_new_package(self, link_ids, package_ids, new_pkg_name, download_path):
+    async def move_to_new_package(
+        self, link_ids, package_ids, new_pkg_name, download_path
+    ):
         params = link_ids, package_ids, new_pkg_name, download_path
-        return self.device.action(f"{self.url}/movetoNewPackage", params)
+        return await self.device.action(f"{self.url}/movetoNewPackage", params)
 
 
 class Captcha:
-    """
-    Class that represents the captcha interface of a Device
-    """
 
     def __init__(self, device):
         self.device = device
         self.url = "/captcha"
 
-    """
-    Get the waiting captchas
-    """
+    async def list(self):
+        return await self.device.action(f"{self.url}/list", [])
 
-    def list(self):
-        return self.device.action(f"{self.url}/list", [])
+    async def get(self, captcha_id):
+        return await self.device.action(f"{self.url}/get", (captcha_id,))
 
-    """
-    Get the base64 captcha image
-    """
-
-    def get(self, captcha_id):
-        return self.device.action(f"{self.url}/get", (captcha_id,))
-
-    """
-    Solve a captcha
-    """
-
-    def solve(self, captcha_id, solution):
-        return self.device.action(f"{self.url}/solve", (captcha_id, solution))
+    async def solve(self, captcha_id, solution):
+        return await self.device.action(f"{self.url}/solve", (captcha_id, solution))
 
 
 class Jddevice:
-    """
-    Class that represents a JDownloader device and it's functions
-    """
 
     def __init__(self, jd, device_dict):
         """This functions initializates the device instance.
@@ -804,17 +715,15 @@ class Jddevice:
         self.downloads = Downloads(self)
         self.downloadcontroller = DownloadController(self)
         self.extensions = Extension(self)
-        self.update = Update(self)
         self.jd = Jd(self)
         self.system = System(self)
         self.__direct_connection_info = None
-        self.__refresh_direct_connections()
-        self.__direct_connection_enabled = True
+        self.__direct_connection_enabled = False
         self.__direct_connection_cooldown = 0
         self.__direct_connection_consecutive_failures = 0
 
-    def __refresh_direct_connections(self):
-        response = self.myjd.request_api(
+    async def __refresh_direct_connections(self):
+        response = await self.myjd.request_api(
             "/device/getDirectConnectionInfos", "POST", None, self.__action_url()
         )
         if (
@@ -844,41 +753,41 @@ class Jddevice:
         tmp.extend({"conn": conn, "cooldown": 0} for conn in direct_info)
         self.__direct_connection_info = tmp
 
-    def ping(self):
-        return self.action("/device/ping")
+    async def ping(self):
+        return await self.action("/device/ping")
 
-    def enable_direct_connection(self):
+    async def enable_direct_connection(self):
         self.__direct_connection_enabled = True
-        self.__refresh_direct_connections()
+        await self.__refresh_direct_connections()
 
     def disable_direct_connection(self):
         self.__direct_connection_enabled = False
         self.__direct_connection_info = None
 
-    def action(self, path, params=(), http_action="POST"):
+    async def action(self, path, params=(), http_action="POST"):
         action_url = self.__action_url()
         if (
             self.__direct_connection_enabled
             and self.__direct_connection_info is not None
             and time() >= self.__direct_connection_cooldown
         ):
-            return self.__direct_connect(path, http_action, params, action_url)
-        response = self.myjd.request_api(path, http_action, params, action_url)
+            return await self.__direct_connect(path, http_action, params, action_url)
+        response = await self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
             raise (MYJDConnectionException("No connection established\n"))
         if (
             self.__direct_connection_enabled
             and time() >= self.__direct_connection_cooldown
         ):
-            self.__refresh_direct_connections()
+            await self.__refresh_direct_connections()
         return response["data"]
 
-    def __direct_connect(self, path, http_action, params, action_url):
+    async def __direct_connect(self, path, http_action, params, action_url):
         for conn in self.__direct_connection_info:
             if time() > conn["cooldown"]:
                 connection = conn["conn"]
                 api = "http://" + connection["ip"] + ":" + str(connection["port"])
-                response = self.myjd.request_api(
+                response = await self.myjd.request_api(
                     path, http_action, params, action_url, api
                 )
                 if response is not None:
@@ -892,10 +801,10 @@ class Jddevice:
         self.__direct_connection_cooldown = time() + (
             60 * self.__direct_connection_consecutive_failures
         )
-        response = self.myjd.request_api(path, http_action, params, action_url)
+        response = await self.myjd.request_api(path, http_action, params, action_url)
         if response is None:
             raise (MYJDConnectionException("No connection established\n"))
-        self.__refresh_direct_connections()
+        await self.__refresh_direct_connections()
         return response["data"]
 
     def __action_url(self):
@@ -903,16 +812,8 @@ class Jddevice:
 
 
 class Myjdapi:
-    """
-    Main class for connecting to JD API.
-
-    """
 
     def __init__(self):
-        """
-        This functions initializates the myjdapi object.
-
-        """
         self.__request_id = int(time() * 1000)
         self.__api_url = "https://api.jdownloader.org"
         self.__app_key = "http://git.io/vmcsk"
@@ -1017,7 +918,7 @@ class Myjdapi:
         """
         self.__request_id = int(time())
 
-    def connect(self, email, password):
+    async def connect(self, email, password):
         """Establish connection to api
 
         :param email: My.Jdownloader User email
@@ -1028,7 +929,7 @@ class Myjdapi:
         self.__clean_resources()
         self.__login_secret = self.__secret_create(email, password, "server")
         self.__device_secret = self.__secret_create(email, password, "device")
-        response = self.request_api(
+        response = await self.request_api(
             "/my/connect", "GET", [("email", email), ("appkey", self.__app_key)]
         )
         self.__connected = True
@@ -1036,17 +937,16 @@ class Myjdapi:
         self.__session_token = response["sessiontoken"]
         self.__regain_token = response["regaintoken"]
         self.__update_encryption_tokens()
-        self.update_devices()
         return response
 
-    def reconnect(self):
+    async def reconnect(self):
         """
         Reestablish connection to API.
 
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        response = self.request_api(
+        response = await self.request_api(
             "/my/reconnect",
             "GET",
             [
@@ -1060,14 +960,14 @@ class Myjdapi:
         self.__update_encryption_tokens()
         return response
 
-    def disconnect(self):
+    async def disconnect(self):
         """
         Disconnects from  API
 
         :returns: boolean -- True if successful, False if there was any error.
 
         """
-        response = self.request_api(
+        response = await self.request_api(
             "/my/disconnect", "GET", [("sessiontoken", self.__session_token)]
         )
         self.__clean_resources()
@@ -1084,13 +984,13 @@ class Myjdapi:
         self.__devices = None
         self.__connected = False
 
-    def update_devices(self):
+    async def update_devices(self):
         """
         Updates available devices. Use list_devices() to get the devices list.
 
         :returns: boolean -- True if successful, False if there was any error.
         """
-        response = self.request_api(
+        response = await self.request_api(
             "/my/listdevices", "GET", [("sessiontoken", self.__session_token)]
         )
         self.update_request_id()
@@ -1129,7 +1029,9 @@ class Myjdapi:
                     return Jddevice(self, device)
         raise (MYJDDeviceNotFoundException("Device not found\n"))
 
-    def request_api(self, path, http_method="GET", params=None, action=None, api=None):
+    async def request_api(
+        self, path, http_method="GET", params=None, action=None, api=None
+    ):
         """
         Makes a request to the API to the 'path' using the 'http_method' with parameters,'params'.
         Ex:
@@ -1144,81 +1046,85 @@ class Myjdapi:
         data = None
         if not self.is_connected() and path != "/my/connect":
             raise (MYJDConnectionException("No connection established\n"))
-        if http_method == "GET":
-            query = [f"{path}?"]
-            if params is not None:
-                for param in params:
-                    if param[0] != "encryptedLoginSecret":
-                        query += [f"{param[0]}={quote(param[1])}"]
-                    else:
-                        query += [f"&{param[0]}={param[1]}"]
-            query += [f"rid={str(self.__request_id)}"]
-            if self.__server_encryption_token is None:
-                query += [
-                    "signature="
-                    + str(
-                        self.__signature_create(
-                            self.__login_secret, query[0] + "&".join(query[1:])
+        async with AsyncClient(verify=False) as client:
+            if http_method == "GET":
+                query = [f"{path}?"]
+                if params is not None:
+                    for param in params:
+                        if param[0] != "encryptedLoginSecret":
+                            query += [f"{param[0]}={quote(param[1])}"]
+                        else:
+                            query += [f"&{param[0]}={param[1]}"]
+                query += [f"rid={str(self.__request_id)}"]
+                if self.__server_encryption_token is None:
+                    query += [
+                        "signature="
+                        + str(
+                            self.__signature_create(
+                                self.__login_secret, query[0] + "&".join(query[1:])
+                            )
                         )
-                    )
-                ]
+                    ]
+                else:
+                    query += [
+                        "signature="
+                        + str(
+                            self.__signature_create(
+                                self.__server_encryption_token,
+                                query[0] + "&".join(query[1:]),
+                            )
+                        )
+                    ]
+                query = query[0] + "&".join(query[1:])
+                res = await client.get(api + query, timeout=2)
+                encrypted_response = res.text
             else:
-                query += [
-                    "signature="
-                    + str(
-                        self.__signature_create(
-                            self.__server_encryption_token,
-                            query[0] + "&".join(query[1:]),
-                        )
+                params_request = []
+                if params is not None:
+                    for param in params:
+                        if isinstance(param, (str, list)):
+                            params_request += [param]
+                        elif isinstance(param, (dict, bool)):
+                            params_request += [dumps(param)]
+                        else:
+                            params_request += [str(param)]
+                params_request = {
+                    "apiVer": self.__api_version,
+                    "url": path,
+                    "params": params_request,
+                    "rid": self.__request_id,
+                }
+                data = dumps(params_request)
+                # Removing quotes around null elements.
+                data = data.replace('"null"', "null")
+                data = data.replace("'null'", "null")
+                encrypted_data = self.__encrypt(self.__device_encryption_token, data)
+                request_url = api + action + path if action is not None else api + path
+                try:
+                    res = await client.post(
+                        request_url,
+                        headers={
+                            "Content-Type": "application/aesjson-jd; charset=utf-8"
+                        },
+                        content=encrypted_data,
+                        timeout=2,
                     )
-                ]
-            query = query[0] + "&".join(query[1:])
-            encrypted_response = get(api + query, timeout=2, verify=False)
-        else:
-            params_request = []
-            if params is not None:
-                for param in params:
-                    if isinstance(param, (str, list)):
-                        params_request += [param]
-                    elif isinstance(param, (dict, bool)):
-                        params_request += [dumps(param)]
-                    else:
-                        params_request += [str(param)]
-            params_request = {
-                "apiVer": self.__api_version,
-                "url": path,
-                "params": params_request,
-                "rid": self.__request_id,
-            }
-            data = dumps(params_request)
-            # Removing quotes around null elements.
-            data = data.replace('"null"', "null")
-            data = data.replace("'null'", "null")
-            encrypted_data = self.__encrypt(self.__device_encryption_token, data)
-            request_url = api + action + path if action is not None else api + path
+                    encrypted_response = res.text
+                except RequestError:
+                    return None
+        if res.status_code != 200:
             try:
-                encrypted_response = post(
-                    request_url,
-                    headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
-                    data=encrypted_data,
-                    timeout=2,
-                    verify=False,
-                )
-            except RequestException as e:
-                return None
-        if encrypted_response.status_code != 200:
-            try:
-                error_msg = loads(encrypted_response.text)
+                error_msg = loads(encrypted_response)
             except JSONDecodeError:
                 try:
                     error_msg = loads(
                         self.__decrypt(
-                            self.__device_encryption_token, encrypted_response.text
+                            self.__device_encryption_token, encrypted_response
                         )
                     )
                 except JSONDecodeError as exc:
                     raise MYJDDecodeException(
-                        "Failed to decode response: {}", encrypted_response.text
+                        "Failed to decode response: {}", encrypted_response
                     ) from exc
             msg = (
                 "\n\tSOURCE: "
@@ -1227,7 +1133,7 @@ class Myjdapi:
                 + error_msg["type"]
                 + "\n------\nREQUEST_URL: "
                 + api
-                + path
+                + (path if http_method != "GET" else "")
             )
             if http_method == "GET":
                 msg += query
@@ -1239,14 +1145,14 @@ class Myjdapi:
             )
         if action is None:
             if not self.__server_encryption_token:
-                response = self.__decrypt(self.__login_secret, encrypted_response.text)
+                response = self.__decrypt(self.__login_secret, encrypted_response)
             else:
                 response = self.__decrypt(
-                    self.__server_encryption_token, encrypted_response.text
+                    self.__server_encryption_token, encrypted_response
                 )
         else:
             response = self.__decrypt(
-                self.__device_encryption_token, encrypted_response.text
+                self.__device_encryption_token, encrypted_response
             )
         jsondata = loads(response.decode("utf-8"))
         if jsondata["rid"] != self.__request_id:

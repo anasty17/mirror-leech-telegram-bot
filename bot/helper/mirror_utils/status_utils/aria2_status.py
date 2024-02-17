@@ -8,7 +8,7 @@ from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_time
 def get_download(gid, old_info=None):
     try:
         res = aria2.get_download(gid)
-        return res if res else old_info
+        return res or old_info
     except Exception as e:
         LOGGER.error(f"{e}: Aria2c, Error while getting torrent info")
         return old_info
@@ -23,7 +23,7 @@ class Aria2Status:
         self.start_time = 0
         self.seeding = seeding
 
-    def _update(self):
+    def update(self):
         if self._download is None:
             self._download = get_download(self._gid, self._download)
         else:
@@ -50,8 +50,8 @@ class Aria2Status:
     def eta(self):
         return self._download.eta_string()
 
-    def status(self):
-        self._update()
+    async def status(self):
+        await sync_to_async(self.update)
         if self._download.is_waiting or self.queued:
             if self.seeding:
                 return MirrorStatus.STATUS_QUEUEUP
@@ -86,12 +86,11 @@ class Aria2Status:
         return self
 
     def gid(self):
-        self._update()
         return self._gid
 
     async def cancel_task(self):
         self.listener.isCancelled = True
-        await sync_to_async(self._update)
+        await sync_to_async(self.update)
         if self._download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             await self.listener.onUploadError(

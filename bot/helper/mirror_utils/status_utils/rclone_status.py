@@ -26,7 +26,7 @@ class RcloneStatus:
     def eta(self):
         return self._obj.eta
 
-    def status(self):
+    async def status(self):
         if self._status == "dl":
             return MirrorStatus.STATUS_DOWNLOADING
         elif self._status == "up":

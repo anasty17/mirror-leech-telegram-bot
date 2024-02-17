@@ -91,6 +91,7 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
         async with task_dict_lock:
             task = task_dict[listener.mid]
             task.queued = False
+            await sync_to_async(task.update)
             new_gid = task.gid()
 
         await sync_to_async(aria2.client.unpause, new_gid)

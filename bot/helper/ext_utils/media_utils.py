@@ -55,7 +55,7 @@ async def convert_video(listener, video_file, ext, retry=False):
             except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
-                f"{stderr}Something went wrong while converting video, mostly file need specific codec. Path: {video_file}"
+                f"{stderr}. Something went wrong while converting video, mostly file need specific codec. Path: {video_file}"
             )
             if await aiopath.exists(output):
                 await remove(output)

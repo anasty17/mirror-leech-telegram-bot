@@ -26,7 +26,7 @@ class SplitStatus:
     def eta(self):
         return "0s"
 
-    def status(self):
+    async def status(self):
         return MirrorStatus.STATUS_SPLITTING
 
     def processed_bytes(self):

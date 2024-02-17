@@ -12,7 +12,7 @@ from bot.helper.ext_utils.status_utils import (
 def get_download(client, tag, old_info=None):
     try:
         res = client.torrents_info(tag=tag)[0]
-        return res if res else old_info
+        return res or old_info
     except Exception as e:
         LOGGER.error(f"{e}: Qbittorrent, while getting torrent info. Tag: {tag}")
         return old_info
@@ -26,7 +26,7 @@ class QbittorrentStatus:
         self.listener = listener
         self._info = None
 
-    def _update(self):
+    def update(self):
         self._info = get_download(self.client, f"{self.listener.mid}", self._info)
 
     def progress(self):
@@ -50,8 +50,8 @@ class QbittorrentStatus:
     def eta(self):
         return get_readable_time(self._info.eta)
 
-    def status(self):
-        self._update()
+    async def status(self):
+        await sync_to_async(self.update)
         state = self._info.state
         if state == "queuedDL" or self.queued:
             return MirrorStatus.STATUS_QUEUEDL
@@ -91,12 +91,11 @@ class QbittorrentStatus:
         return self.hash()[:12]
 
     def hash(self):
-        self._update()
         return self._info.hash
 
     async def cancel_task(self):
         self.listener.isCancelled = True
-        await sync_to_async(self._update)
+        await sync_to_async(self.update)
         await sync_to_async(self.client.torrents_pause, torrent_hashes=self._info.hash)
         if not self.seeding:
             if self.queued:

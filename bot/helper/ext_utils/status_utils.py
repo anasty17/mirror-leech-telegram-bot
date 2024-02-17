@@ -1,6 +1,7 @@
 from html import escape
 from psutil import virtual_memory, cpu_percent, disk_usage
 from time import time
+from asyncio import gather
 
 from bot import DOWNLOAD_DIR, task_dict, task_dict_lock, botStartTime, config_dict
 from bot.helper.ext_utils.bot_utils import sync_to_async
@@ -33,24 +34,35 @@ STATUS_DICT = {
     "QU": MirrorStatus.STATUS_QUEUEUP,
     "AR": MirrorStatus.STATUS_ARCHIVING,
     "EX": MirrorStatus.STATUS_EXTRACTING,
-    "CL": MirrorStatus.STATUS_CLONING,
     "SD": MirrorStatus.STATUS_SEEDING,
+    "CM": MirrorStatus.STATUS_CONVERTING,
+    "CL": MirrorStatus.STATUS_CLONING,
+    "SP": MirrorStatus.STATUS_SPLITTING,
+    "CK": MirrorStatus.STATUS_CHECKING,
+    "SV": MirrorStatus.STATUS_SAMVID,
+    "PA": MirrorStatus.STATUS_PAUSED,
 }
 
 
 async def getTaskByGid(gid: str):
     async with task_dict_lock:
-        return next((tk for tk in task_dict.values() if tk.gid() == gid), None)
+        for tk in task_dict.values():
+            if hasattr(tk, "seeding"):
+                await sync_to_async(tk.update)
+            if tk.gid() == gid:
+                return tk
+        return None
 
 
 async def getAllTasks(req_status: str):
     async with task_dict_lock:
         if req_status == "all":
             return list(task_dict.values())
+        statuses = await gather(*[tk.status() for tk in task_dict.values()])
         return [
             tk
-            for tk in task_dict.values()
-            if (st:= await sync_to_async(tk.status) == req_status)
+            for tk, st in zip(task_dict.values(), statuses)
+            if st == req_status
             or req_status == MirrorStatus.STATUS_DOWNLOADING
             and st not in STATUS_DICT.values()
         ]
@@ -105,7 +117,7 @@ def get_progress_bar_string(pct):
     return f"[{p_str}]"
 
 
-def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
+async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
     msg = ""
     button = None
 
@@ -116,13 +128,26 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
             else list(task_dict.values())
         )
     elif is_user:
+        statuses = await gather(*[tk.status() for tk in task_dict.values()])
         tasks = [
             tk
-            for tk in task_dict.values()
-            if tk.status() == status and tk.listener.userId == sid
+            for tk, st in zip(task_dict.values(), statuses)
+            if (
+                st == status
+                or status == MirrorStatus.STATUS_DOWNLOADING
+                and st not in STATUS_DICT.values()
+            )
+            and tk.listener.userId == sid
         ]
     else:
-        tasks = [tk for tk in task_dict.values() if tk.status() == status]
+        statuses = await gather(*[tk.status() for tk in task_dict.values()])
+        tasks = [
+            tk
+            for tk, st in zip(task_dict.values(), statuses)
+            if st == status
+            or status == MirrorStatus.STATUS_DOWNLOADING
+            and st not in STATUS_DICT.values()
+        ]
 
     STATUS_LIMIT = config_dict["STATUS_LIMIT"]
     tasks_no = len(tasks)
@@ -136,7 +161,7 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
     for index, task in enumerate(
         tasks[start_position : STATUS_LIMIT + start_position], start=1
     ):
-        tstatus = task.status()
+        tstatus = await task.status() if status == "All" else status
         if task.listener.isSuperChat:
             msg += f"<b>{index + start_position}.<a href='{task.listener.message.link}'>{tstatus}</a>: </b>"
         else:
@@ -167,10 +192,11 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
             msg += f"\n<b>Size: </b>{task.size()}"
         msg += f"\n<b>Gid: </b><code>{task.gid()}</code>\n\n"
 
-    if len(msg) == 0 and status == "All":
-        return None, None
-    elif len(msg) == 0:
-        msg = f"No Active {status} Tasks!\n\n"
+    if len(msg) == 0:
+        if status == "All":
+            return None, None
+        else:
+            msg = f"No Active {status} Tasks!\n\n"
     buttons = ButtonMaker()
     if not is_user:
         buttons.ibutton("📜", "status 0 ov", position="header")
@@ -179,10 +205,10 @@ def get_readable_message(sid, is_user, page_no=1, status="All", page_step=1):
         buttons.ibutton("<<", f"status {sid} pre", position="header")
         buttons.ibutton(">>", f"status {sid} nex", position="header")
         if tasks_no > 30:
-            for i in [1, 2, 4, 6, 8, 10, 15, 20]:
+            for i in [1, 2, 4, 6, 8, 10, 15]:
                 buttons.ibutton(i, f"status {sid} ps {i}", position="footer")
     if status != "All" or tasks_no > 20:
-        for label, status_value in STATUS_DICT.items():
+        for label, status_value in list(STATUS_DICT.items())[:9]:
             if status_value != status:
                 buttons.ibutton(label, f"status {sid} st {status_value}")
     buttons.ibutton("♻️", f"status {sid} ref", position="header")

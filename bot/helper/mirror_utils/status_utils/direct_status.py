@@ -39,7 +39,7 @@ class DirectStatus:
         except:
             return "-"
 
-    def status(self):
+    async def status(self):
         if self._obj.download_task and self._obj.download_task.is_waiting:
             return MirrorStatus.STATUS_QUEUEDL
         return MirrorStatus.STATUS_DOWNLOADING

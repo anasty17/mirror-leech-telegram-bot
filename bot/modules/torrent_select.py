@@ -72,6 +72,7 @@ async def select(_, message):
         return
 
     try:
+        await sync_to_async(task.update)
         if task.listener.isQbit:
             id_ = task.hash()
             if not task.queued:
