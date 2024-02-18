@@ -1,7 +1,7 @@
 from asyncio import sleep, wait_for
 
 from bot import Intervals, jd_lock, jd_downloads, LOGGER
-from bot.helper.ext_utils.bot_utils import new_task, sync_to_async, retry_function
+from bot.helper.ext_utils.bot_utils import new_task, retry_function
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
 from bot.helper.ext_utils.status_utils import getTaskByGid
 

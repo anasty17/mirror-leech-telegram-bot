@@ -13,7 +13,7 @@ from bot import (
     jd_lock,
     jd_downloads,
 )
-from bot.helper.ext_utils.bot_utils import new_thread, retry_function, sync_to_async
+from bot.helper.ext_utils.bot_utils import new_thread, retry_function
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
 from bot.helper.ext_utils.task_manager import (
     check_running_tasks,
@@ -96,7 +96,7 @@ async def add_jd_download(listener, path):
             if not is_connected:
                 await listener.onDownloadError(jdownloader.error)
                 return
-            await sync_to_async(jdownloader.connectToDevice)
+            await jdownloader.connectToDevice()
 
         if not jd_downloads:
             await retry_function(jdownloader.device.linkgrabber.clear_list)

@@ -316,7 +316,7 @@ async def edit_qbit(_, message, pre_message, key):
 
 async def sync_jdownloader():
     if DATABASE_URL and jdownloader.device is not None:
-        await sync_to_async(jdownloader.device.system.exit_jd)
+        await jdownloader.device.system.exit_jd()
         if await aiopath.exists("cfg.zip"):
             await remove("cfg.zip")
         await sleep(6)
