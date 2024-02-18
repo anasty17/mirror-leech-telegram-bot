@@ -11,9 +11,9 @@ from bot.helper.ext_utils.bot_utils import (
     new_task,
     cmd_exec,
     arg_parser,
+    COMMAND_USAGE,
 )
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
-from bot.helper.ext_utils.help_messages import CLONE_HELP_MESSAGE
 from bot.helper.ext_utils.links_utils import (
     is_gdrive_link,
     is_share_link,
@@ -109,13 +109,12 @@ class Clone(TaskListener):
         if not self.link and (reply_to := self.message.reply_to_message):
             self.link = reply_to.text.split("\n", 1)[0].strip()
 
-        LOGGER.info(self.link)
-
         self.run_multi(input_list, "", Clone)
 
         if len(self.link) == 0:
-            await sendMessage(self.message, CLONE_HELP_MESSAGE)
+            await sendMessage(self.message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1])
             return
+        LOGGER.info(self.link)
         try:
             await self.beforeStart()
         except Exception as e:
@@ -278,7 +277,9 @@ class Clone(TaskListener):
                     flink, files, folders, mime_type, destination
                 )
         else:
-            await sendMessage(self.message, CLONE_HELP_MESSAGE)
+            await sendMessage(
+                self.message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1]
+            )
 
 
 async def clone(client, message):

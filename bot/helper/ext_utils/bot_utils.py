@@ -10,7 +10,11 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial, wraps
 
 from bot import user_data, config_dict, bot_loop
-from bot.helper.ext_utils.help_messages import YT_HELP_DICT, MIRROR_HELP_DICT
+from bot.helper.ext_utils.help_messages import (
+    YT_HELP_DICT,
+    MIRROR_HELP_DICT,
+    CLONE_HELP_DICT,
+)
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.telegram_helper.button_build import ButtonMaker
 
@@ -37,7 +41,7 @@ class setInterval:
 def create_help_buttons():
     buttons = ButtonMaker()
     for name in list(MIRROR_HELP_DICT.keys())[1:]:
-        buttons.ibutton(name, f"help m {name}")
+        buttons.ibutton(name, f"help mirror {name}")
     buttons.ibutton("Close", "help close")
     COMMAND_USAGE["mirror"] = [MIRROR_HELP_DICT["main"], buttons.build_menu(3)]
     buttons.reset()
@@ -45,6 +49,11 @@ def create_help_buttons():
         buttons.ibutton(name, f"help yt {name}")
     buttons.ibutton("Close", "help close")
     COMMAND_USAGE["yt"] = [YT_HELP_DICT["main"], buttons.build_menu(3)]
+    buttons.reset()
+    for name in list(CLONE_HELP_DICT.keys())[1:]:
+        buttons.ibutton(name, f"help clone {name}")
+    buttons.ibutton("Close", "help close")
+    COMMAND_USAGE["clone"] = [CLONE_HELP_DICT["main"], buttons.build_menu(3)]
 
 
 def bt_selection_buttons(id_):
@@ -163,7 +172,7 @@ def update_user_ldata(id_, key, value):
     user_data[id_][key] = value
 
 
-async def retry_function(func, *args, retry=10, **kwargs):
+async def retry_function(func, *args, retry=30, **kwargs):
     try:
         return await func(*args, **kwargs)
     except:

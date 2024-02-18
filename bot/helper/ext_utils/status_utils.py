@@ -1,7 +1,7 @@
 from html import escape
 from psutil import virtual_memory, cpu_percent, disk_usage
 from time import time
-from asyncio import gather
+from asyncio import gather, iscoroutinefunction
 
 from bot import DOWNLOAD_DIR, task_dict, task_dict_lock, botStartTime, config_dict
 from bot.helper.ext_utils.bot_utils import sync_to_async
@@ -174,7 +174,12 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             MirrorStatus.STATUS_CONVERTING,
             MirrorStatus.STATUS_QUEUEUP,
         ]:
-            msg += f"\n{get_progress_bar_string(task.progress())} {task.progress()}"
+            progress = (
+                await task.progress()
+                if iscoroutinefunction(task.progress)
+                else task.progress()
+            )
+            msg += f"\n{get_progress_bar_string(progress)} {progress}"
             msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {task.size()}"
             msg += f"\n<b>Speed:</b> {task.speed()} | <b>ETA:</b> {task.eta()}"
             if hasattr(task, "seeders_num"):

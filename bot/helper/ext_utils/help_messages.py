@@ -18,6 +18,9 @@ yt = """<b>Send link along with command line</b>:
 Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a>
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options."""
 
+clone = """Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
+Use -sync to use sync method in rclone. Example: /cmd rcl/rclone_path -up rcl/rclone_path/rc -sync"""
+
 new_name = """<b>New Name</b>: -n
 
 /cmd link -n new name
@@ -154,7 +157,7 @@ Like playlist_items:10 works with string, so no need to add `^` before the numbe
 You can add tuple and dict also. Use double quotes inside dict."""
 
 convert_media = """<b>Convert Media</b>: -ca -cv
-/cmd link -ca mp3 -cv mp4  (convert all audios to mp3 and videos to mp4)
+/cmd link -ca mp3 -cv mp4 (convert all audios to mp3 and all videos to mp4)
 /cmd link -ca mp3 (convert all audios to mp3)
 /cmd link -cv mp4 (convert all videos to mp4)
 /cmd link -ca mp3 + flac ogg (convert only flac and ogg audios to mp3)
@@ -164,6 +167,19 @@ force_start = """<b>Force Start</b>: -f -fd -fu
 /cmd link -f (force downlaod and upload)
 /cmd link -fd (force download only)
 /cmd link -fu (force upload directly after download finish)"""
+
+gdrive = """<b>Gdrive</b>: link
+If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
+/cmd gdriveLink or gdl or gdriveId -up gdl or gdriveId or gd
+/cmd tp:gdriveLink or tp:gdriveId -up tp:gdriveId or gdl or gd (to use token.pickle if service account enabled)
+/cmd sa:gdriveLink or sa:gdriveId -p sa:gdriveId or gdl or gd (to use service account if service account disabled)
+/cmd mtp:gdriveLink or mtp:gdriveId -up mtp:gdriveId or gdl or gd(if you have added upload gdriveId from usetting) (to use user token.pickle that uploaded by usetting)"""
+
+rclone_cl = """<b>Rclone</b>: path
+If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
+/cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
+/cmd rcl or rclonePath -up rclonePath or rc or rcl
+/cmd mrcc:rclonePath -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
 
 YT_HELP_DICT = {
     "main": yt,
@@ -209,6 +225,14 @@ MIRROR_HELP_DICT = {
     "User-Download": user_download,
 }
 
+CLONE_HELP_DICT = {
+    "main": clone,
+    "Multi-Link": multi_link,
+    "Bulk": bulk,
+    "Gdrive": gdrive,
+    "Rclone": rclone_cl,
+}
+
 RSS_HELP_MESSAGE = """
 Use this format to add feed url:
 Title1 link (required)
@@ -230,36 +254,6 @@ Filter Notes:
 3. You can add `or` and `|` as much as you want."
 4. Take look on title if it has static special character after or before the qualities or extensions or whatever and use them in filter to avoid wrong match.
 Timeout: 60 sec.
-"""
-
-CLONE_HELP_MESSAGE = """
-Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
-
-<b>Multi links only by replying to first gdlink or rclone_path:</b> -i
-/cmd -i 10(number of links/paths)
-
-<b>Bulk Clone</b>: -b
-Bulk can be used by text message and by replying to text file contains links seperated by new line.
-You can use it only by reply to message(text/file).
-Example:
-link1 -up remote1:path1 -rcf |key:value|key:value
-link2 -up remote2:path2
-link3 -up remote2:path2
-Reply to this example by this cmd /cmd -b(bulk)
-You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start. The default start is from zero(first link) to inf.
-
-<b>Clone Destination</b>: -up
-If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
-If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
-If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
-Incase you want to specify whether using token or service accounts you can add tp:link or tp:gdrive_id or sa:link or sa:gdrive_id. This for links and upload destination.
-
-<b>Gdrive:</b>
-/cmd gdrivelink/gdl/gdrive_id -up gdl/gdrive_id/gd
-
-<b>Rclone:</b>
-/cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
-Use -sync to use sync method in rclone. Example: /cmd rcl/rclone_path -up rcl/rclone_path/rc -sync
 """
 
 PASSWORD_ERROR_MESSAGE = """

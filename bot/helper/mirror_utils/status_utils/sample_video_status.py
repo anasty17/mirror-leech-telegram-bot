@@ -11,26 +11,14 @@ class SampleVideoStatus:
     def gid(self):
         return self._gid
 
-    def progress(self):
-        return "0"
-
-    def speed(self):
-        return "0"
-
     def name(self):
         return self.listener.name
 
     def size(self):
         return get_readable_file_size(self._size)
 
-    def eta(self):
-        return "0s"
-
     async def status(self):
         return MirrorStatus.STATUS_SAMVID
-
-    def processed_bytes(self):
-        return 0
 
     def task(self):
         return self
