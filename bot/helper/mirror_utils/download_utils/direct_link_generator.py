@@ -271,7 +271,7 @@ def hxfile(url):
         jar = MozillaCookieJar()
         jar.load("hxfile.txt")
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     cookies = {}
     for cookie in jar:
         cookies[cookie.name] = cookie.value
@@ -280,7 +280,7 @@ def hxfile(url):
             file_code = url.split("/")[-1]
             html = HTML(session.post(url, data={"op": "download2", "id": file_code}, cookies=cookies).text)
         except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     direct_link = html.xpath("//a[@class='btn btn-dow']/@href")
     if direct_link:
         return direct_link[0]
