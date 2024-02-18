@@ -139,13 +139,14 @@ programming in Python.
 - Add sudo users
 - Supported Direct links Generators:
 
-> mediafire (file/folders), hxfile.co, streamtape.com, streamsb.net, streamhub.ink, streamvid.net, doodstream.com,
+> mediafire (file/folders), hxfile.co (need cookies txt with name) [hxfile.txt], streamtape.com, streamsb.net, streamhub.ink,
+> streamvid.net, doodstream.com,
 > feurl.com, upload.ee, pixeldrain.com, racaty.net, 1fichier.com, 1drv.ms (Only works for file not folder or business
 > account), filelions.com, streamwish.com, send.cm (file/folders), solidfiles.com, linkbox.to (file/folders),
 > shrdsk.me (
 > sharedisk.io), akmfiles.com, wetransfer.com, pcloud.link, gofile.io (file/folders), easyupload.io, mdisk.me (with
 > ytdl),
-> tmpsend.com, qiwi.gg, terabox.com (file/folders) (you need to add cookies txt with
+> tmpsend.com, qiwi.gg, berkasdrive.com, mp4upload.com, terabox.com (file/folders) (you need to add cookies txt with
 > name) [terabox.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl).
 
 # How to deploy?
