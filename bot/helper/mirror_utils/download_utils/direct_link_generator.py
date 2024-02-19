@@ -1,3 +1,6 @@
+import base64
+import urllib3
+
 from cloudscraper import create_scraper
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
@@ -20,7 +23,7 @@ from bot.helper.ext_utils.links_utils import is_share_link
 from bot.helper.ext_utils.status_utils import speed_string_to_bytes
 
 _caches = {}
-
+user_agent  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 
 def direct_link_generator(link):
     """direct links generator"""
@@ -67,6 +70,10 @@ def direct_link_generator(link):
         return pcloud(link)
     elif "qiwi.gg" in domain:
         return qiwi(link)
+    elif "mp4upload.com" in domain:
+        return mp4upload(link)
+    elif "berkasdrive.com" in domain:
+        return berkasdrive(link)
     elif any(x in domain for x in ["akmfiles.com", "akmfls.xyz"]):
         return akmfiles(link)
     elif any(
@@ -258,15 +265,24 @@ def github(url):
 
 
 def hxfile(url):
-    with create_scraper() as session:
+    if not ospath.isfile("hxfile.txt"):
+        raise DirectDownloadLinkException("ERROR: hxfile.txt (cookies) Not Found!")
+    try:
+        jar = MozillaCookieJar()
+        jar.load("hxfile.txt")
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+    cookies = {}
+    for cookie in jar:
+        cookies[cookie.name] = cookie.value
+    with Session() as session:
         try:
             file_code = url.split("/")[-1]
-            html = HTML(
-                session.post(url, data={"op": "download2", "id": file_code}).text
-            )
+            html = HTML(session.post(url, data={"op": "download2", "id": file_code}, cookies=cookies).text)
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
-    if direct_link := html.xpath('//a[@class="btn btn-dow"]/@href'):
+    direct_link = html.xpath("//a[@class='btn btn-dow']/@href")
+    if direct_link:
         return direct_link[0]
     raise DirectDownloadLinkException("ERROR: Direct download link not found")
 
@@ -1525,3 +1541,57 @@ def qiwi(url):
             return f"https://qiwi.lol/{file_id}.{ext}"
         else:
             raise DirectDownloadLinkException("ERROR: File not found")
+
+def mp4upload(url):
+    with Session() as session:
+        try:
+            url = url.replace("embed-", "")
+            req = session.get(url).text
+            tree = HTML(req)
+            inputs = tree.xpath('//input')
+            header = {"Referer": "https://www.mp4upload.com/"}
+            data = {input.get("name"): input.get("value") for input in inputs}
+            if not data:
+                session.close()
+                raise DirectDownloadLinkException("ERROR: File Not Found!")
+            post = session.post(
+                url, 
+                data=data, 
+                headers={
+                    "User-Agent": user_agent, 
+                    "Referer": "https://www.mp4upload.com/"
+                }).text
+            tree = HTML(post)
+            inputs = tree.xpath('//form[@name="F1"]//input')
+            data = {input.get("name"): input.get("value").replace(" ", "") for input in inputs}
+            if not data:
+                session.close()
+                raise DirectDownloadLinkException("ERROR: File Not Found!")
+            data["referer"] = url
+            urllib3.disable_warnings()
+            direct_link = session.post(
+                url, 
+                data=data, 
+                verify=False
+            ).url
+            return direct_link, header
+        except:
+            session.close()
+            raise DirectDownloadLinkException("ERROR: File Not Found!")
+        
+def berkasdrive(url):
+    """berkasdrive.com link generator
+    by https://github.com/aenulrofik"""
+    with Session() as session:
+        try:
+            sesi = session.get(url).text
+        except Exception as e:
+            session.close()
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+    html = HTML(sesi)
+    if link := html.xpath('//script')[0].text.split('"')[1]:
+        session.close()
+        return base64.b64decode(link).decode('utf-8')
+    else:
+        session.close()
+        raise DirectDownloadLinkException(f"ERROR: File Not Found!")
