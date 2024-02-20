@@ -15,7 +15,7 @@ from bot.helper.ext_utils.bot_utils import (
 )
 from bot.helper.ext_utils.files_utils import get_base_name
 from bot.helper.ext_utils.links_utils import is_gdrive_id
-from bot.helper.mirror_utils.gdrive_utils.search import gdSearch
+from bot.helper.mirror_leech_utils.gdrive_utils.search import gdSearch
 
 
 async def stop_duplicate_check(listener):

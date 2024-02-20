@@ -12,8 +12,8 @@ from bot import (
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from bot.helper.listeners.direct_listener import DirectListener
-from bot.helper.mirror_utils.status_utils.direct_status import DirectStatus
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.mirror_leech_utils.status_utils.direct_status import DirectStatus
+from bot.helper.mirror_leech_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 
 

@@ -20,8 +20,8 @@ from bot.helper.ext_utils.task_manager import (
     stop_duplicate_check,
 )
 from bot.helper.listeners.jdownloader_listener import onDownloadStart
-from bot.helper.mirror_utils.status_utils.jdownloader_status import JDownloaderStatus
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.mirror_leech_utils.status_utils.jdownloader_status import JDownloaderStatus
+from bot.helper.mirror_leech_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,

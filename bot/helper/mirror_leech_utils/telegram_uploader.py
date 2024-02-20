@@ -5,7 +5,7 @@ from aiofiles.os import (
     rename,
     makedirs,
 )
-from aioshutil import copy
+from aioshutil import copy, rmtree
 from asyncio import sleep
 from logging import getLogger
 from natsort import natsorted
@@ -55,7 +55,7 @@ class TgUploader:
         self._lprefix = ""
         self._media_group = False
 
-    async def _upload_progress(self, current, total):
+    async def _upload_progress(self, current, _):
         if self._listener.isCancelled:
             if self._listener.userTransmission:
                 user.stop_transmission()
@@ -185,30 +185,15 @@ class TgUploader:
             rlist.append(input_media)
         return rlist
 
-    async def _send_screenshots(self):
-        if isinstance(self._listener.screenShots, str):
-            ss_nb = int(self._listener.screenShots)
-        else:
-            ss_nb = 10
-        outputs = await take_ss(self._up_path, ss_nb)
-        inputs = []
-        if outputs:
-            for m in outputs:
-                if await aiopath.exists(m):
-                    cap = m.rsplit("/", 1)[-1]
-                    inputs.append(InputMediaPhoto(m, cap))
-                else:
-                    outputs.remove(m)
-        if outputs:
-            self._sent_msg = (
-                await self._sent_msg.reply_media_group(
-                    media=inputs,
-                    quote=True,
-                    disable_notification=True,
-                )
-            )[-1]
-            for m in outputs:
-                await remove(m)
+    async def _send_screenshots(self, dirpath, outputs):
+        inputs = [InputMediaPhoto(ospath.join(dirpath, p), p.rsplit("/", 1)[-1]) for p in outputs]
+        self._sent_msg = (
+            await self._sent_msg.reply_media_group(
+                media=inputs,
+                quote=True,
+                disable_notification=True,
+            )
+        )[-1]
 
     async def _send_media_group(self, subkey, key, msgs):
         msgs_list = await msgs[0].reply_to_message.reply_media_group(
@@ -231,12 +216,16 @@ class TgUploader:
         res = await self._msg_to_reply()
         if not res:
             return
-        for dirpath, _, files in sorted(await sync_to_async(walk, self._path)):
+        for dirpath, _, files in natsorted(await sync_to_async(walk, self._path)):
             if dirpath.endswith("/yt-dlp-thumb"):
+                continue
+            if dirpath.endswith("_mltbss"):
+                await self._send_screenshots(dirpath, files)
+                await rmtree(dirpath, ignore_errors=True)
                 continue
             for file_ in natsorted(files):
                 delete_file = False
-                self._up_path = ospath.join(dirpath, file_)
+                self._up_path = f_path = ospath.join(dirpath, file_)
                 if self._up_path in ft_delete:
                     delete_file = True
                 if self._up_path in o_files:
@@ -261,9 +250,7 @@ class TgUploader:
                         group_lists = [
                             x for v in self._media_dict.values() for x in v.keys()
                         ]
-                        match = re_match(
-                            r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", self._up_path
-                        )
+                        match = re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", f_path)
                         if not match or match and match.group(0) not in group_lists:
                             for key, value in list(self._media_dict.items()):
                                 for subkey, msgs in list(value.items()):
@@ -271,7 +258,7 @@ class TgUploader:
                                         await self._send_media_group(subkey, key, msgs)
                     self._last_msg_in_group = False
                     self._last_uploaded = 0
-                    await self._upload_file(cap_mono, file_)
+                    await self._upload_file(cap_mono, file_, f_path)
                     if self._listener.isCancelled:
                         return
                     if not self._is_corrupted and (
@@ -336,7 +323,7 @@ class TgUploader:
         stop=stop_after_attempt(3),
         retry=retry_if_exception_type(Exception),
     )
-    async def _upload_file(self, cap_mono, file, force_document=False):
+    async def _upload_file(self, cap_mono, file, o_path, force_document=False):
         if self._thumb is not None and not await aiopath.exists(self._thumb):
             self._thumb = None
         thumb = self._thumb
@@ -358,11 +345,8 @@ class TgUploader:
                 or (not is_video and not is_audio and not is_image)
             ):
                 key = "documents"
-                if is_video:
-                    if self._listener.screenShots and "SAMPLE." not in file:
-                        await self._send_screenshots()
-                    if thumb is None:
-                        thumb = await create_thumbnail(self._up_path, None)
+                if is_video and thumb is None:
+                    thumb = await create_thumbnail(self._up_path, None)
 
                 if self._listener.isCancelled:
                     return
@@ -376,8 +360,6 @@ class TgUploader:
                     progress=self._upload_progress,
                 )
             elif is_video:
-                if self._listener.screenShots and "SAMPLE." not in file:
-                    await self._send_screenshots()
                 key = "videos"
                 duration = (await get_media_info(self._up_path))[0]
                 if thumb is None:
@@ -436,9 +418,7 @@ class TgUploader:
                 and (self._sent_msg.video or self._sent_msg.document)
             ):
                 key = "documents" if self._sent_msg.document else "videos"
-                if match := re_match(
-                    r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", self._up_path
-                ):
+                if match := re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", o_path):
                     pname = match.group(0)
                     if pname in self._media_dict[key].keys():
                         self._media_dict[key][pname].append(self._sent_msg)
@@ -470,7 +450,7 @@ class TgUploader:
             LOGGER.error(f"{err_type}{err}. Path: {self._up_path}")
             if "Telegram says: [400" in str(err) and key != "documents":
                 LOGGER.error(f"Retrying As Document. Path: {self._up_path}")
-                return await self._upload_file(cap_mono, file, True)
+                return await self._upload_file(cap_mono, file, o_path, True)
             raise err
 
     @property

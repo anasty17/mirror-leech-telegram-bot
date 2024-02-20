@@ -17,7 +17,7 @@ from bot.helper.ext_utils.bot_utils import (
 from bot.helper.ext_utils.links_utils import is_url
 from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.mirror_utils.download_utils.yt_dlp_download import YoutubeDLHelper
+from bot.helper.mirror_leech_utils.download_utils.yt_dlp_download import YoutubeDLHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters

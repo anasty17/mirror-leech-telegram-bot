@@ -7,7 +7,7 @@ from yt_dlp import YoutubeDL, DownloadError
 from bot import task_dict_lock, task_dict, non_queued_dl, queue_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async, async_to_sync
 from bot.helper.ext_utils.task_manager import check_running_tasks, stop_duplicate_check
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.mirror_leech_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from ..status_utils.yt_dlp_download_status import YtDlpDownloadStatus
 

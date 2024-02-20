@@ -1,7 +1,7 @@
 from logging import getLogger
 from tenacity import RetryError
 
-from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
+from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 

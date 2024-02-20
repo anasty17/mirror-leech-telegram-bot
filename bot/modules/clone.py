@@ -22,14 +22,14 @@ from bot.helper.ext_utils.links_utils import (
 )
 from bot.helper.ext_utils.task_manager import stop_duplicate_check
 from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.mirror_utils.download_utils.direct_link_generator import (
+from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
     direct_link_generator,
 )
-from bot.helper.mirror_utils.gdrive_utils.clone import gdClone
-from bot.helper.mirror_utils.gdrive_utils.count import gdCount
-from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
-from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
-from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
+from bot.helper.mirror_leech_utils.gdrive_utils.clone import gdClone
+from bot.helper.mirror_leech_utils.gdrive_utils.count import gdCount
+from bot.helper.mirror_leech_utils.rclone_utils.transfer import RcloneTransferHelper
+from bot.helper.mirror_leech_utils.status_utils.gdrive_status import GdriveStatus
+from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import (

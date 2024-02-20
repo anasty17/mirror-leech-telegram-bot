@@ -11,7 +11,7 @@ from tenacity import (
 from time import time
 
 from bot.helper.ext_utils.bot_utils import async_to_sync
-from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
+from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 

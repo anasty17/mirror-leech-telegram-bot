@@ -13,7 +13,7 @@ from bot import (
 )
 from bot.helper.ext_utils.bot_utils import bt_selection_buttons, sync_to_async
 from bot.helper.ext_utils.task_manager import check_running_tasks
-from bot.helper.mirror_utils.status_utils.aria2_status import Aria2Status
+from bot.helper.mirror_leech_utils.status_utils.aria2_status import Aria2Status
 from bot.helper.telegram_helper.message_utils import sendStatusMessage, sendMessage
 
 

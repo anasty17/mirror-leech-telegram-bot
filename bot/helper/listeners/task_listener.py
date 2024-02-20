@@ -31,13 +31,13 @@ from bot.helper.ext_utils.files_utils import (
 from bot.helper.ext_utils.links_utils import is_gdrive_id
 from bot.helper.ext_utils.status_utils import get_readable_file_size
 from bot.helper.ext_utils.task_manager import start_from_queued, check_running_tasks
-from bot.helper.mirror_utils.gdrive_utils.upload import gdUpload
-from bot.helper.mirror_utils.rclone_utils.transfer import RcloneTransferHelper
-from bot.helper.mirror_utils.status_utils.gdrive_status import GdriveStatus
-from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
-from bot.helper.mirror_utils.status_utils.rclone_status import RcloneStatus
-from bot.helper.mirror_utils.status_utils.telegram_status import TelegramStatus
-from bot.helper.mirror_utils.telegram_uploader import TgUploader
+from bot.helper.mirror_leech_utils.gdrive_utils.upload import gdUpload
+from bot.helper.mirror_leech_utils.rclone_utils.transfer import RcloneTransferHelper
+from bot.helper.mirror_leech_utils.status_utils.gdrive_status import GdriveStatus
+from bot.helper.mirror_leech_utils.status_utils.queue_status import QueueStatus
+from bot.helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
+from bot.helper.mirror_leech_utils.status_utils.telegram_status import TelegramStatus
+from bot.helper.mirror_leech_utils.telegram_uploader import TgUploader
 from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.message_utils import (
     sendMessage,
@@ -147,6 +147,13 @@ class TaskListener(TaskConfig):
 
         if self.extract:
             up_path = await self.proceedExtract(up_path, gid)
+            if self.isCancelled:
+                return
+            up_dir, self.name = up_path.rsplit("/", 1)
+            self.size = await get_path_size(up_dir)
+
+        if self.screenShots:
+            up_path = await self.generateScreenshots(up_path)
             if self.isCancelled:
                 return
             up_dir, self.name = up_path.rsplit("/", 1)

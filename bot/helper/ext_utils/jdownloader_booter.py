@@ -1,4 +1,4 @@
-from aiofiles.os import listdir
+from aiofiles.os import path, makedirs
 from json import dump
 from random import randint
 
@@ -42,12 +42,11 @@ class JDownloader(Myjdapi):
         self.device = None
         self.error = "Connecting... Try agin after couple of seconds"
         self._device_name = f"{randint(0, 1000)}@{bot_name}"
-        logs = await listdir("/JDownloader/logs")
-        if len(logs) > 2:
-            LOGGER.info("Starting JDownloader... This might take up to 5 sec")
+        if await path.exists("/JDownloader/logs"):
+            LOGGER.info("Starting JDownloader... This might take up to 10 sec")
         else:
             LOGGER.info(
-                "Starting JDownloader... This might take up to 15 sec and might restart once after build!"
+                "Starting JDownloader... This might take up to 10 sec and might restart once after build!"
             )
         jdata = {
             "autoconnectenabledv2": True,
@@ -55,6 +54,7 @@ class JDownloader(Myjdapi):
             "devicename": f"{self._device_name}",
             "email": config_dict["JD_EMAIL"],
         }
+        await makedirs("/JDownloader/cfg", exist_ok=True)
         with open(
             "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
             "w",

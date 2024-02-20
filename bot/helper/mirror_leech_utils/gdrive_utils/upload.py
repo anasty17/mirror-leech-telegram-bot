@@ -13,7 +13,7 @@ from tenacity import (
 from bot import config_dict
 from bot.helper.ext_utils.bot_utils import async_to_sync, setInterval
 from bot.helper.ext_utils.files_utils import get_mime_type
-from bot.helper.mirror_utils.gdrive_utils.helper import GoogleDriveHelper
+from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 

@@ -5,6 +5,7 @@ from asyncio.subprocess import PIPE
 from os import path as ospath, cpu_count
 from re import search as re_search
 from time import time
+from aioshutil import rmtree
 
 from bot import LOGGER, subprocess_lock
 from bot.helper.ext_utils.bot_utils import cmd_exec
@@ -222,21 +223,19 @@ async def get_document_type(path):
     return is_video, is_audio, is_image
 
 
-async def take_ss(video_file, ss_nb) -> list:
+async def take_ss(video_file, ss_nb) -> bool:
     ss_nb = min(ss_nb, 10)
     duration = (await get_media_info(video_file))[0]
     if duration != 0:
         dirpath, name = video_file.rsplit("/", 1)
         name, _ = ospath.splitext(name)
-        dirpath = f"{dirpath}/screenshots/"
+        dirpath = f"{dirpath}/{name}_mltbss/"
         await makedirs(dirpath, exist_ok=True)
         interval = duration // (ss_nb + 1)
         cap_time = interval
-        outputs = []
         cmds = []
         for i in range(ss_nb):
             output = f"{dirpath}SS.{name}_{i:02}.png"
-            outputs.append(output)
             cmd = [
                 "ffmpeg",
                 "-hide_banner",
@@ -260,16 +259,19 @@ async def take_ss(video_file, ss_nb) -> list:
                 LOGGER.error(
                     f"Error while creating sreenshots from video. Path: {video_file}. stderr: {resutls[0][1]}"
                 )
-                return []
+                await rmtree(dirpath, ignore_errors=True)
+                return False
         except:
             LOGGER.error(
                 f"Error while creating sreenshots from video. Path: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
             )
-            return []
-        return outputs
+            await rmtree(dirpath, ignore_errors=True)
+            return False
+        return dirpath
     else:
         LOGGER.error("take_ss: Can't get the duration of video")
-        return []
+        await rmtree(dirpath, ignore_errors=True)
+        return False
 
 
 async def get_audio_thumb(audio_file):
