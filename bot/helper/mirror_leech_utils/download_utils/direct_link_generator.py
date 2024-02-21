@@ -5,7 +5,7 @@ from json import loads
 from lxml.etree import HTML
 from os import path as ospath
 from re import findall, match, search
-from requests import Session, post
+from requests import Session, post, get
 from requests.adapters import HTTPAdapter
 from time import sleep
 from urllib.parse import parse_qs, urlparse
@@ -32,6 +32,8 @@ def direct_link_generator(link):
         raise DirectDownloadLinkException("ERROR: Invalid URL")
     if "youtube.com" in domain or "youtu.be" in domain:
         raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
+    elif "yadi.sk" in link or "disk.yandex." in link:
+        return yandex_disk(link)
     elif "mediafire.com" in domain:
         return mediafire(link)
     elif "osdn.net" in domain:
@@ -251,6 +253,22 @@ def osdn(url):
         return f"https://osdn.net{direct_link[0]}"
 
 
+def yandex_disk(url: str) -> str:
+    """Yandex.Disk direct link generator
+    Based on https://github.com/wldhx/yadisk-direct"""
+    try:
+        link = findall(r"\b(https?://(yadi.sk|disk.yandex.com)\S+)", url)[0][0]
+    except IndexError:
+        return "No Yandex.Disk links found\n"
+    api = "https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key={}"
+    try:
+        return get(api.format(link), verify=False).json()["href"]
+    except KeyError as e:
+        raise DirectDownloadLinkException(
+            "ERROR: File not found/Download limit reached"
+        ) from e
+
+
 def github(url):
     """GitHub direct links generator"""
     try:
@@ -340,7 +358,7 @@ def pixeldrain(url):
         dl_link = f"https://pixeldrain.com/api/file/{file_id}?download"
     with create_scraper() as session:
         try:
-            resp = session.get(info_link, verify=False).json()
+            resp = session.get(info_link).json()
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     if resp["success"]:
