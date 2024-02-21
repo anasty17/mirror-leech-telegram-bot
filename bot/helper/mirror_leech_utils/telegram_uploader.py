@@ -30,7 +30,6 @@ from bot.helper.ext_utils.media_utils import (
     get_document_type,
     create_thumbnail,
     get_audio_thumb,
-    take_ss,
 )
 from bot.helper.telegram_helper.message_utils import deleteMessage
 
@@ -54,6 +53,7 @@ class TgUploader:
         self._up_path = ""
         self._lprefix = ""
         self._media_group = False
+        self._is_private = False
 
     async def _upload_progress(self, current, _):
         if self._listener.isCancelled:
@@ -101,6 +101,7 @@ class TgUploader:
                         disable_web_page_preview=True,
                         disable_notification=True,
                     )
+                    self._is_private = self._sent_msg.chat.type.name == "PRIVATE"
             except Exception as e:
                 await self._listener.onUploadError(str(e))
                 return False
@@ -186,7 +187,10 @@ class TgUploader:
         return rlist
 
     async def _send_screenshots(self, dirpath, outputs):
-        inputs = [InputMediaPhoto(ospath.join(dirpath, p), p.rsplit("/", 1)[-1]) for p in outputs]
+        inputs = [
+            InputMediaPhoto(ospath.join(dirpath, p), p.rsplit("/", 1)[-1])
+            for p in outputs
+        ]
         self._sent_msg = (
             await self._sent_msg.reply_media_group(
                 media=inputs,
@@ -261,8 +265,10 @@ class TgUploader:
                     await self._upload_file(cap_mono, file_, f_path)
                     if self._listener.isCancelled:
                         return
-                    if not self._is_corrupted and (
-                        self._listener.isSuperChat or self._listener.upDest
+                    if (
+                        not self._is_corrupted
+                        and (self._listener.isSuperChat or self._listener.upDest)
+                        and not self._is_private
                     ):
                         self._msgs_dict[self._sent_msg.link] = file_
                     await sleep(1)
@@ -431,7 +437,7 @@ class TgUploader:
                         self._last_msg_in_group = True
 
             if (
-                self._thumb is None
+                (self._thumb is None or self._listener.thumb is not None)
                 and thumb is not None
                 and await aiopath.exists(thumb)
             ):
@@ -441,7 +447,7 @@ class TgUploader:
             await sleep(f.value)
         except Exception as err:
             if (
-                self._thumb is None
+                (self._thumb is None or self._listener.thumb is not None)
                 and thumb is not None
                 and await aiopath.exists(thumb)
             ):

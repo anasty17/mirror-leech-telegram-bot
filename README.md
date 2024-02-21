@@ -289,8 +289,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `MEDIA_GROUP`: View Uploaded splitted file parts in media group. Default is `False`. `Bool`.
 - `USER_TRANSMISSION`: Upload/Download by user session. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `LEECH_DUMP_CHAT`: Chat ID or USERNAME to where files would be uploaded. `Int`|`Str`. **NOTE**: Only available for
-  superGroup/channel. Add `-100` before channel/superGroup id. In short don't add bot or account id!
+- `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
 
 ### qBittorrent/Aria2c
 

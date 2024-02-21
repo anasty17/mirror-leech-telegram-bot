@@ -4,6 +4,7 @@ from asyncio.subprocess import PIPE
 from os import walk, path as ospath
 from secrets import token_urlsafe
 from aioshutil import move, copy2
+from pyrogram.enums import ChatAction
 
 from bot import (
     DOWNLOAD_DIR,
@@ -157,14 +158,16 @@ class TaskConfig:
             if "excluded_extensions" not in self.userDict
             else ["aria2", "!qB"]
         )
-        if not self.isYtDlp and not self.isJd:
-            if self.link not in ["rcl", "gdl"]:
+        if self.link not in ["rcl", "gdl"]:
+            if not self.isYtDlp and not self.isJd:
                 await self.isTokenExists(self.link, "dl")
-            elif self.link == "rcl":
+        elif self.link == "rcl":
+            if not self.isYtDlp and not self.isJd:
                 self.link = await RcloneList(self).get_rclone_path("rcd")
                 if not is_rclone_path(self.link):
                     raise ValueError(self.link)
-            elif self.link == "gdl":
+        elif self.link == "gdl":
+            if not self.isYtDlp and not self.isJd:
                 self.link = await gdriveList(self).get_target_id("gdd")
                 if not is_gdrive_id(self.link):
                     raise ValueError(self.link)
@@ -231,23 +234,51 @@ class TaskConfig:
                 ) != self.getConfigPath(self.upDest):
                     raise ValueError("You must use the same config to clone!")
         else:
+            self.upDest = (
+                self.upDest
+                or self.userDict.get("leech_dest")
+                or config_dict["LEECH_DUMP_CHAT"]
+            )
             if self.upDest:
+                if not isinstance(self.upDest, int):
+                    if self.upDest.startswith("b:"):
+                        self.upDest = self.upDest.replace("b:", "", 1)
+                        self.userTransmission = False
+                    elif self.upDest.startswith("u:"):
+                        self.upDest = self.upDest.replace("u:", "", 1)
+                        self.userTransmission = IS_PREMIUM_USER
+                    if self.upDest.isdigit() or self.upDest.startswith("-"):
+                        self.upDest = int(self.upDest)
+                    elif self.upDest.lower() == "pm":
+                        self.upDest = self.userId
+
                 if self.userTransmission:
                     chat = await user.get_chat(self.upDest)
                     uploader_id = user.me.id
                 else:
                     chat = await self.client.get_chat(self.upDest)
                     uploader_id = self.client.me.id
-                if chat.type.name not in ["SUPERGROUP", "CHANNEL"]:
+
+                if chat.type.name in ["SUPERGROUP", "CHANNEL"]:
+                    member = await chat.get_member(uploader_id)
+                    if (
+                        not member.privileges.can_manage_chat
+                        or not member.privileges.can_delete_messages
+                    ):
+                        raise ValueError(
+                            "You don't have enough privileges in this chat!"
+                        )
+                elif self.userTransmission:
                     raise ValueError(
-                        "Custom Leech Destination only allowed for super-group or channel!"
+                        "Custom Leech Destination only allowed for super-group or channel when UserTransmission enalbed!\nDisable UserTransmission so bot can send files to user!"
                     )
-                member = await chat.get_member(uploader_id)
-                if (
-                    not member.privileges.can_manage_chat
-                    or not member.privileges.can_delete_messages
-                ):
-                    raise ValueError("You don't have enough privileges in this chat!")
+                else:
+                    try:
+                        await self.client.send_chat_action(
+                            self.upDest, ChatAction.TYPING
+                        )
+                    except:
+                        raise ValueError("Start the bot and try again!")
             elif self.userTransmission and not self.isSuperChat:
                 raise ValueError(
                     "Use SuperGroup incase you want to upload using User session!"
@@ -269,20 +300,6 @@ class TaskConfig:
             )
             self.maxSplitSize = MAX_SPLIT_SIZE if self.userTransmission else 2097152000
             self.splitSize = min(self.splitSize, self.maxSplitSize)
-            self.upDest = (
-                self.upDest
-                or self.userDict.get("leech_dest")
-                or config_dict["LEECH_DUMP_CHAT"]
-            )
-            if not isinstance(self.upDest, int):
-                if self.upDest.startswith("b:"):
-                    self.upDest = self.upDest.replace("b:", "", 1)
-                    self.userTransmission = False
-                elif self.upDest.startswith("u:"):
-                    self.upDest = self.upDest.replace("u:", "", 1)
-                    self.userTransmission = IS_PREMIUM_USER
-                if self.upDest.isdigit() or self.upDest.startswith("-"):
-                    self.upDest = int(self.upDest)
 
             self.asDoc = (
                 self.userDict.get("as_doc", False)

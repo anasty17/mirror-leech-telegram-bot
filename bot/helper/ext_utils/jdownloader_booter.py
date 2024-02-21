@@ -46,7 +46,7 @@ class JDownloader(Myjdapi):
             LOGGER.info("Starting JDownloader... This might take up to 10 sec")
         else:
             LOGGER.info(
-                "Starting JDownloader... This might take up to 10 sec and might restart once after build!"
+                "Starting JDownloader... This might take up to 8 sec and might restart once after build!"
             )
         jdata = {
             "autoconnectenabledv2": True,

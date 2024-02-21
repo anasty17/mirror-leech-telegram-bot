@@ -52,7 +52,7 @@ If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tool
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 
 If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
-/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/username(leech by bot) or -up u:id/username(leech by user)
+/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/@username/pm(leech by bot) or -up u:id/@username(leech by user)
 
 Incase you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
 DEFAULT_UPLOAD doesn't effect on leech cmds.

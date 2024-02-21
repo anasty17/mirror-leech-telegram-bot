@@ -623,7 +623,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
-            "Send leech destination ID/USERNAME. Timeout: 60 sec",
+            "Send leech destination ID/USERNAME/PM. Timeout: 60 sec",
             buttons.build_menu(1),
         )
         pfunc = partial(set_option, pre_event=query, option="leech_dest")
