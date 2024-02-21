@@ -873,12 +873,13 @@ class TaskConfig:
                             move(dl_path, f"{newfolder}/{name}"),
                             move(res, newfolder),
                         )
-                return newfolder
+                    return newfolder
         else:
             LOGGER.info(f"Creating Screenshot for: {dl_path}")
             for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
                 for file_ in files:
                     f_path = ospath.join(dirpath, file_)
                     if (await get_document_type(f_path))[0]:
-                        await take_ss(self._up_path, ss_nb)
-            return dl_path
+                        await take_ss(f_path, ss_nb)
+
+        return dl_path
