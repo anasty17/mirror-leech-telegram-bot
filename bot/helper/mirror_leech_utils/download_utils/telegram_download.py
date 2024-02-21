@@ -93,7 +93,11 @@ class TelegramDownloadHelper:
 
     async def add_download(self, message, path, session):
         self.session = session
-        if self.session not in ["user", "bot"] and self._listener.userTransmission:
+        if (
+            self.session not in ["user", "bot"]
+            and self._listener.userTransmission
+            and self._listener.isSuperChat
+        ):
             self.session = "user"
             message = await user.get_messages(
                 chat_id=message.chat.id, message_ids=message.id

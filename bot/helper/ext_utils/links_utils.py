@@ -43,7 +43,7 @@ def is_rclone_path(path: str):
 def is_gdrive_id(id_: str):
     return bool(
         re_match(
-            r"^(tp:|sa:|mtp:)?(?:[a-zA-Z0-9-_]{33}|[a-zA-Z0-9_-]{19})$|^gdl$|^root$",
+            r"^(tp:|sa:|mtp:)?(?:[a-zA-Z0-9-_]{33}|[a-zA-Z0-9_-]{19})$|^gdl$|^(tp:|mtp:)?root$",
             id_,
         )
     )

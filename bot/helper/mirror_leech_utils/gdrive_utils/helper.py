@@ -1,5 +1,6 @@
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+from google_auth_httplib2 import AuthorizedHttp
 from logging import getLogger, ERROR
 from os import path as ospath, listdir
 from pickle import load as pload
@@ -83,7 +84,9 @@ class GoogleDriveHelper:
                 credentials = pload(f)
         else:
             LOGGER.error("token.pickle not found!")
-        return build("drive", "v3", credentials=credentials, cache_discovery=False)
+        authorized_http = AuthorizedHttp(credentials)
+        authorized_http.http.disable_ssl_certificate_validation = True
+        return build("drive", "v3", http=authorized_http, cache_discovery=False)
 
     def switchServiceAccount(self):
         if self.sa_index == self.sa_number - 1:
