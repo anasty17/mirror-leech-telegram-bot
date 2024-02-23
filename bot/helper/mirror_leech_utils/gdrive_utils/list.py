@@ -82,7 +82,10 @@ async def id_updates(_, query, obj):
         await deleteMessage(message)
         obj.event.set()
     elif data[1] == "def":
-        id_ = obj.id if obj.token_path != obj.user_token_path else f"mtp:{obj.id}"
+        if obj.token_path != obj.user_token_path:
+            id_ = f"sa:{obj.id}" if obj.use_sa else f"tp:{obj.id}"
+        else:
+            id_ = f"mtp:{obj.id}"
         if id_ != obj.listener.userDict.get("gdrive_id"):
             update_user_ldata(obj.listener.userId, "gdrive_id", id_)
             await obj.get_items_buttons()
