@@ -257,7 +257,7 @@ def yandex_disk(url: str) -> str:
     """Yandex.Disk direct link generator
     Based on https://github.com/wldhx/yadisk-direct"""
     try:
-        link = findall(r"\b(https?://(yadi.sk|disk.yandex.com)\S+)", url)[0][0]
+        link = findall(r"\b(https?://(yadi\.sk|disk\.yandex\.(com|ru))\S+)", url)[0][0]
     except IndexError:
         return "No Yandex.Disk links found\n"
     api = "https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key={}"
@@ -1057,7 +1057,6 @@ def mediafireFolder(url):
                     "folder_key": folderkey,
                     "response_format": "json",
                 },
-                verify=False,
             ).json()
         except Exception as e:
             raise DirectDownloadLinkException(
