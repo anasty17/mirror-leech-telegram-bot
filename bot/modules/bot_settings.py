@@ -527,6 +527,8 @@ async def edit_bot_settings(client, query):
             await DbManager().trunc_table("tasks")
         elif data[2] in ["JD_EMAIL", "JD_PASS"]:
             jdownloader.device = None
+            jdownloader.error = "JDownloader Credentials not provided!"
+            await create_subprocess_exec(["pkill", "-9", "-f", "java"])
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:

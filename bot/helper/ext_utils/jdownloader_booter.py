@@ -97,6 +97,7 @@ class JDownloader(Myjdapi):
         while True:
             self.device = None
             if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
+                self.error = "JDownloader Credentials not provided!"
                 await cmd_exec(["pkill", "-9", "-f", "java"])
                 return
             try:
