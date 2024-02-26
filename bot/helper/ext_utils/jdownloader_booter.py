@@ -73,7 +73,7 @@ class JDownloader(Myjdapi):
             return False
         try:
             await self.connect(config_dict["JD_EMAIL"], config_dict["JD_PASS"])
-            LOGGER.info("JDownloader is connected!")
+            LOGGER.info("MYJDownloader is connected!")
             return True
         except (
             MYJDAuthFailedException,
@@ -97,6 +97,7 @@ class JDownloader(Myjdapi):
         while True:
             self.device = None
             if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
+                await cmd_exec(["pkill", "-9", "-f", "java"])
                 return
             try:
                 await self.update_devices()
