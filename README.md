@@ -69,6 +69,7 @@ programming in Python.
 
 - Synchronize Settings (global option)
 - Wating to select (enable/disable files or change variants) before download start
+- DLC file support
 - All settings can be edited from the remote access to your JDownloader with Web Interface, Android App, iPhone App or
   Browser Extensions.
 
