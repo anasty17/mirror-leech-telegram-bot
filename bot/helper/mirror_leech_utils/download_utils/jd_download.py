@@ -93,7 +93,7 @@ async def add_jd_download(listener, path):
             return
 
         try:
-            await wait_for(retry_function(jdownloader.device.jd.version), timeout=5)
+            await wait_for(retry_function(jdownloader.device.jd.version), timeout=10)
         except:
             is_connected = await jdownloader.jdconnect()
             if not is_connected:

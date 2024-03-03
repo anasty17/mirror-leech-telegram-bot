@@ -254,7 +254,7 @@ async def take_ss(video_file, ss_nb) -> bool:
             cap_time += interval
             cmds.append(cmd_exec(cmd))
         try:
-            resutls = await wait_for(gather(*cmds), timeout=15)
+            resutls = await wait_for(gather(*cmds), timeout=60)
             if resutls[0][2] != 0:
                 LOGGER.error(
                     f"Error while creating sreenshots from video. Path: {video_file}. stderr: {resutls[0][1]}"
@@ -324,7 +324,7 @@ async def create_thumbnail(video_file, duration):
         des_dir,
     ]
     try:
-        _, err, code = await wait_for(cmd_exec(cmd), timeout=15)
+        _, err, code = await wait_for(cmd_exec(cmd), timeout=60)
         if code != 0 or not await aiopath.exists(des_dir):
             LOGGER.error(
                 f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
