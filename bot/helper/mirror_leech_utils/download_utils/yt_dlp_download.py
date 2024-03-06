@@ -321,6 +321,8 @@ class YoutubeDLHelper:
                 await event.wait()
                 if self._listener.isCancelled:
                     return
+                async with queue_dict_lock:
+                    non_queued_dl.add(self._listener.mid)
                 LOGGER.info(f"Start Queued Download from YT_DLP: {self._listener.name}")
                 await self._onDownloadStart(True)
         else:
@@ -328,9 +330,6 @@ class YoutubeDLHelper:
 
         if not add_to_queue:
             LOGGER.info(f"Download with YT_DLP: {self._listener.name}")
-
-        async with queue_dict_lock:
-            non_queued_dl.add(self._listener.mid)
 
         await sync_to_async(self._download, path)
 

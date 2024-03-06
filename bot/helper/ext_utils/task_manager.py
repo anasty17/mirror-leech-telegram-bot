@@ -81,6 +81,8 @@ async def check_running_tasks(mid: int, state="dl"):
                     queued_dl[mid] = event
                 else:
                     queued_up[mid] = event
+            else:
+                non_queued_dl.add(mid) if state == "dl" else non_queued_up.add(mid)
 
     return is_over_limit, event
 

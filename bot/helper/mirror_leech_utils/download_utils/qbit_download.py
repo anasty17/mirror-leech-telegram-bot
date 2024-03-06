@@ -92,8 +92,6 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
         if add_to_queue:
             LOGGER.info(f"Added to Queue/Download: {tor_info.name} - Hash: {ext_hash}")
         else:
-            async with queue_dict_lock:
-                non_queued_dl.add(listener.mid)
             LOGGER.info(f"QbitDownload started: {tor_info.name} - Hash: {ext_hash}")
 
         await listener.onDownloadStart()
@@ -135,6 +133,8 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             await event.wait()
             if listener.isCancelled:
                 return
+            async with queue_dict_lock:
+                non_queued_dl.add(listener.mid)
             async with task_dict_lock:
                 task_dict[listener.mid].queued = False
 
@@ -142,9 +142,6 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             LOGGER.info(
                 f"Start Queued Download from Qbittorrent: {tor_info.name} - Hash: {ext_hash}"
             )
-
-            async with queue_dict_lock:
-                non_queued_dl.add(listener.mid)
     except Exception as e:
         await listener.onDownloadError(f"{e}")
     finally:

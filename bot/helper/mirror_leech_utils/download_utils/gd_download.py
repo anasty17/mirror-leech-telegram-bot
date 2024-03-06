@@ -39,15 +39,14 @@ async def add_gd_download(listener, path):
             await event.wait()
             if listener.isCancelled:
                 return
+            async with queue_dict_lock:
+                non_queued_dl.add(listener.mid)
     else:
         add_to_queue = False
 
     drive = gdDownload(listener, path)
     async with task_dict_lock:
         task_dict[listener.mid] = GdriveStatus(listener, drive, gid, "dl")
-
-    async with queue_dict_lock:
-        non_queued_dl.add(listener.mid)
 
     if add_to_queue:
         LOGGER.info(f"Start Queued Download from GDrive: {listener.name}")

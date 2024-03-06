@@ -1,5 +1,6 @@
-from asyncio import Lock
+from asyncio import Lock, sleep
 from time import time
+from pyrogram.errors import FloodWait
 
 from bot import (
     LOGGER,
@@ -43,8 +44,6 @@ class TelegramDownloadHelper:
             task_dict[self._listener.mid] = TelegramStatus(
                 self._listener, self, file_id[:12], "dl"
             )
-        async with queue_dict_lock:
-            non_queued_dl.add(self._listener.mid)
         if not from_queue:
             await self._listener.onDownloadStart()
             if self._listener.multi <= 1:
@@ -82,6 +81,9 @@ class TelegramDownloadHelper:
             if self._listener.isCancelled:
                 await self._onDownloadError("Cancelled by user!")
                 return
+        except FloodWait as f:
+            LOGGER.warning(str(f))
+            await sleep(f.value)
         except Exception as e:
             LOGGER.error(str(e))
             await self._onDownloadError(str(e))
@@ -150,6 +152,8 @@ class TelegramDownloadHelper:
                         await event.wait()
                         if self._listener.isCancelled:
                             return
+                        async with queue_dict_lock:
+                            non_queued_dl.add(self._listener.mid)
                 else:
                     add_to_queue = False
                 await self._onDownloadStart(gid, add_to_queue)

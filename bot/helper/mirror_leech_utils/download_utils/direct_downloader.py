@@ -46,6 +46,8 @@ async def add_direct_download(listener, path):
             await event.wait()
             if listener.isCancelled:
                 return
+            async with queue_dict_lock:
+                non_queued_dl.add(listener.mid)
     else:
         add_to_queue = False
 
@@ -56,11 +58,9 @@ async def add_direct_download(listener, path):
     a2c_opt["follow-torrent"] = "false"
     a2c_opt["follow-metalink"] = "false"
     directListener = DirectListener(path, listener, a2c_opt)
+
     async with task_dict_lock:
         task_dict[listener.mid] = DirectStatus(listener, directListener, gid)
-
-    async with queue_dict_lock:
-        non_queued_dl.add(listener.mid)
 
     if add_to_queue:
         LOGGER.info(f"Start Queued Download from Direct Download: {listener.name}")
