@@ -310,23 +310,20 @@ class YoutubeDLHelper:
             await self._listener.onDownloadError(msg, button)
             return
 
-        if not (self._listener.forceRun or self._listener.forceDownload):
-            add_to_queue, event = await check_running_tasks(self._listener.mid)
-            if add_to_queue:
-                LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
-                async with task_dict_lock:
-                    task_dict[self._listener.mid] = QueueStatus(
-                        self._listener, self._gid, "dl"
-                    )
-                await event.wait()
-                if self._listener.isCancelled:
-                    return
-                async with queue_dict_lock:
-                    non_queued_dl.add(self._listener.mid)
-                LOGGER.info(f"Start Queued Download from YT_DLP: {self._listener.name}")
-                await self._onDownloadStart(True)
-        else:
-            add_to_queue = False
+        add_to_queue, event = await check_running_tasks(self._listener)
+        if add_to_queue:
+            LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
+            async with task_dict_lock:
+                task_dict[self._listener.mid] = QueueStatus(
+                    self._listener, self._gid, "dl"
+                )
+            await event.wait()
+            if self._listener.isCancelled:
+                return
+            async with queue_dict_lock:
+                non_queued_dl.add(self._listener.mid)
+            LOGGER.info(f"Start Queued Download from YT_DLP: {self._listener.name}")
+            await self._onDownloadStart(True)
 
         if not add_to_queue:
             LOGGER.info(f"Download with YT_DLP: {self._listener.name}")

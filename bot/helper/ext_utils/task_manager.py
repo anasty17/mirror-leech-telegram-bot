@@ -56,17 +56,22 @@ async def stop_duplicate_check(listener):
     return False, None
 
 
-async def check_running_tasks(mid: int, state="dl"):
+async def check_running_tasks(listener, state="dl"):
     all_limit = config_dict["QUEUE_ALL"]
     state_limit = (
         config_dict["QUEUE_DOWNLOAD"] if state == "dl" else config_dict["QUEUE_UPLOAD"]
     )
     event = None
     is_over_limit = False
-    if all_limit or state_limit:
-        async with queue_dict_lock:
-            if state == "up" and mid in non_queued_dl:
-                non_queued_dl.remove(mid)
+    async with queue_dict_lock:
+        if state == "up" and listener.mid in non_queued_dl:
+            non_queued_dl.remove(listener.mid)
+        if (
+            (all_limit or state_limit)
+            and not listener.forceRun
+            and not (listener.forceUpload and state == "up")
+            and not (listener.forceDownload and state == "dl")
+        ):
             dl_count = len(non_queued_dl)
             up_count = len(non_queued_up)
             t_count = dl_count if state == "dl" else up_count
@@ -78,11 +83,14 @@ async def check_running_tasks(mid: int, state="dl"):
             if is_over_limit:
                 event = Event()
                 if state == "dl":
-                    queued_dl[mid] = event
+                    queued_dl[listener.mid] = event
                 else:
-                    queued_up[mid] = event
+                    queued_up[listener.mid] = event
+        if not is_over_limit:
+            if state == "up":
+                non_queued_up.add(listener.mid)
             else:
-                non_queued_dl.add(mid) if state == "dl" else non_queued_up.add(mid)
+                non_queued_dl.add(listener.mid)
 
     return is_over_limit, event
 

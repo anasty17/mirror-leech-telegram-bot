@@ -27,22 +27,19 @@ async def add_gd_download(listener, path):
         await listener.onDownloadError(msg, button)
         return
 
-    if not (listener.forceRun or listener.forceDownload):
-        add_to_queue, event = await check_running_tasks(listener.mid)
-        if add_to_queue:
-            LOGGER.info(f"Added to Queue/Download: {listener.name}")
-            async with task_dict_lock:
-                task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
-            await listener.onDownloadStart()
-            if listener.multi <= 1:
-                await sendStatusMessage(listener.message)
-            await event.wait()
-            if listener.isCancelled:
-                return
-            async with queue_dict_lock:
-                non_queued_dl.add(listener.mid)
-    else:
-        add_to_queue = False
+    add_to_queue, event = await check_running_tasks(listener)
+    if add_to_queue:
+        LOGGER.info(f"Added to Queue/Download: {listener.name}")
+        async with task_dict_lock:
+            task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
+        await listener.onDownloadStart()
+        if listener.multi <= 1:
+            await sendStatusMessage(listener.message)
+        await event.wait()
+        if listener.isCancelled:
+            return
+        async with queue_dict_lock:
+            non_queued_dl.add(listener.mid)
 
     drive = gdDownload(listener, path)
     async with task_dict_lock:

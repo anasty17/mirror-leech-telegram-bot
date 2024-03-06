@@ -34,22 +34,19 @@ async def add_direct_download(listener, path):
         return
 
     gid = token_urlsafe(10)
-    if not (listener.forceRun or listener.forceDownload):
-        add_to_queue, event = await check_running_tasks(listener.mid)
-        if add_to_queue:
-            LOGGER.info(f"Added to Queue/Download: {listener.name}")
-            async with task_dict_lock:
-                task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
-            await listener.onDownloadStart()
-            if listener.multi <= 1:
-                await sendStatusMessage(listener.message)
-            await event.wait()
-            if listener.isCancelled:
-                return
-            async with queue_dict_lock:
-                non_queued_dl.add(listener.mid)
-    else:
-        add_to_queue = False
+    add_to_queue, event = await check_running_tasks(listener)
+    if add_to_queue:
+        LOGGER.info(f"Added to Queue/Download: {listener.name}")
+        async with task_dict_lock:
+            task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
+        await listener.onDownloadStart()
+        if listener.multi <= 1:
+            await sendStatusMessage(listener.message)
+        await event.wait()
+        if listener.isCancelled:
+            return
+        async with queue_dict_lock:
+            non_queued_dl.add(listener.mid)
 
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]

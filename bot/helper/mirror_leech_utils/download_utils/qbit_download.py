@@ -48,10 +48,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
         if await aiopath.exists(listener.link):
             url = None
             tpath = listener.link
-        if not (listener.forceRun or listener.forceDownload):
-            add_to_queue, event = await check_running_tasks(listener.mid)
-        else:
-            add_to_queue = False
+        add_to_queue, event = await check_running_tasks(listener)
         op = await sync_to_async(
             client.torrents_add,
             url,

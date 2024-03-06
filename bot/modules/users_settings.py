@@ -43,9 +43,9 @@ async def get_user_settings(from_user):
     user_dict = user_data.get(user_id, {})
 
     if (
-            user_dict.get("as_doc", False)
-            or "as_doc" not in user_dict
-            and config_dict["AS_DOCUMENT"]
+        user_dict.get("as_doc", False)
+        or "as_doc" not in user_dict
+        and config_dict["AS_DOCUMENT"]
     ):
         ltype = "DOCUMENT"
     else:
@@ -59,18 +59,18 @@ async def get_user_settings(from_user):
         split_size = config_dict["LEECH_SPLIT_SIZE"]
 
     if (
-            user_dict.get("equal_splits", False)
-            or "equal_splits" not in user_dict
-            and config_dict["EQUAL_SPLITS"]
+        user_dict.get("equal_splits", False)
+        or "equal_splits" not in user_dict
+        and config_dict["EQUAL_SPLITS"]
     ):
         equal_splits = "Enabled"
     else:
         equal_splits = "Disabled"
 
     if (
-            user_dict.get("media_group", False)
-            or "media_group" not in user_dict
-            and config_dict["MEDIA_GROUP"]
+        user_dict.get("media_group", False)
+        or "media_group" not in user_dict
+        and config_dict["MEDIA_GROUP"]
     ):
         media_group = "Enabled"
     else:
@@ -91,10 +91,10 @@ async def get_user_settings(from_user):
         leech_dest = "None"
 
     if (
-            IS_PREMIUM_USER
-            and user_dict.get("user_transmission", False)
-            or "user_transmission" not in user_dict
-            and config_dict["USER_TRANSMISSION"]
+        IS_PREMIUM_USER
+        and user_dict.get("user_transmission", False)
+        or "user_transmission" not in user_dict
+        and config_dict["USER_TRANSMISSION"]
     ):
         leech_method = "user"
     else:
@@ -121,19 +121,19 @@ async def get_user_settings(from_user):
         gdrive_id = "None"
     index = user_dict["index_url"] if user_dict.get("index_url", False) else "None"
     if (
-            user_dict.get("stop_duplicate", False)
-            or "stop_duplicate" not in user_dict
-            and config_dict["STOP_DUPLICATE"]
+        user_dict.get("stop_duplicate", False)
+        or "stop_duplicate" not in user_dict
+        and config_dict["STOP_DUPLICATE"]
     ):
         sd_msg = "Enabled"
     else:
         sd_msg = "Disabled"
 
-    upload_pathes = "Exists" if user_dict.get("upload_pathes", False) else "Not Exists"
-    buttons.ibutton("Upload Pathes", f"userset {user_id} upload_pathes")
+    upload_paths = "Exists" if user_dict.get("upload_paths", False) else "Not Exists"
+    buttons.ibutton("Upload Paths", f"userset {user_id} upload_paths")
 
     default_upload = (
-            user_dict.get("default_upload", "") or config_dict["DEFAULT_UPLOAD"]
+        user_dict.get("default_upload", "") or config_dict["DEFAULT_UPLOAD"]
     )
     du = "Gdrive API" if default_upload == "gd" else "Rclone"
     dub = "Gdrive API" if default_upload != "gd" else "Rclone"
@@ -170,7 +170,7 @@ Leech by <b>{leech_method}</b> session
 Rclone Config <b>{rccmsg}</b>
 Rclone Path is <code>{rccpath}</code>
 Gdrive Token <b>{tokenmsg}</b>
-Upload Pathes is <b>{upload_pathes}</b>
+Upload Paths is <b>{upload_paths}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index Link is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>
@@ -235,16 +235,17 @@ async def add_token_pickle(_, message, pre_event):
 async def delete_path(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
-    name = message.text
     user_dict = user_data.get(user_id, {})
-    if name in user_dict["upload_pathes"]:
-        del user_dict["upload_pathes"][name]
-        new_value = user_dict["upload_pathes"]
-        update_user_ldata(user_id, "upload_pathes", new_value)
+    names = message.text.split()
+    for name in names:
+        if name in user_dict["upload_paths"]:
+            del user_dict["upload_paths"][name]
+    new_value = user_dict["upload_paths"]
+    update_user_ldata(user_id, "upload_paths", new_value)
     await deleteMessage(message)
     await update_user_settings(pre_event)
     if DATABASE_URL:
-        await DbManager().update_user_doc(user_id, "upload_pathes", new_value)
+        await DbManager().update_user_doc(user_id, "upload_paths", new_value)
 
 
 async def set_option(_, message, pre_event, option):
@@ -264,12 +265,14 @@ async def set_option(_, message, pre_event, option):
         for x in fx:
             x = x.lstrip(".")
             value.append(x.strip().lower())
-    elif option == "upload_pathes":
-        name, path = value.split(maxsplit=1)
+    elif option == "upload_paths":
         user_dict = user_data.get(user_id, {})
-        user_dict.setdefault("upload_pathes", {})
-        user_dict["upload_pathes"][name] = path
-        value = user_dict["upload_pathes"]
+        user_dict.setdefault("upload_paths", {})
+        lines = value.split("/n")
+        for line in lines:
+            name, path = line.split(maxsplit=1)
+            user_dict["upload_paths"][name] = path
+        value = user_dict["upload_paths"]
     update_user_ldata(user_id, option, value)
     await deleteMessage(message)
     await update_user_settings(pre_event)
@@ -384,15 +387,15 @@ async def edit_user_settings(client, query):
         if user_dict.get("lprefix", False):
             lprefix = user_dict["lprefix"]
         elif "lprefix" not in user_dict and (
-                LP := config_dict["LEECH_FILENAME_PREFIX"]
+            LP := config_dict["LEECH_FILENAME_PREFIX"]
         ):
             lprefix = LP
         else:
             lprefix = "None"
         if (
-                user_dict.get("as_doc", False)
-                or "as_doc" not in user_dict
-                and config_dict["AS_DOCUMENT"]
+            user_dict.get("as_doc", False)
+            or "as_doc" not in user_dict
+            and config_dict["AS_DOCUMENT"]
         ):
             ltype = "DOCUMENT"
             buttons.ibutton("Send As Media", f"userset {user_id} as_doc false")
@@ -400,9 +403,9 @@ async def edit_user_settings(client, query):
             ltype = "MEDIA"
             buttons.ibutton("Send As Document", f"userset {user_id} as_doc true")
         if (
-                user_dict.get("equal_splits", False)
-                or "equal_splits" not in user_dict
-                and config_dict["EQUAL_SPLITS"]
+            user_dict.get("equal_splits", False)
+            or "equal_splits" not in user_dict
+            and config_dict["EQUAL_SPLITS"]
         ):
             buttons.ibutton(
                 "Disable Equal Splits", f"userset {user_id} equal_splits false"
@@ -414,9 +417,9 @@ async def edit_user_settings(client, query):
             )
             equal_splits = "Disabled"
         if (
-                user_dict.get("media_group", False)
-                or "media_group" not in user_dict
-                and config_dict["MEDIA_GROUP"]
+            user_dict.get("media_group", False)
+            or "media_group" not in user_dict
+            and config_dict["MEDIA_GROUP"]
         ):
             buttons.ibutton(
                 "Disable Media Group", f"userset {user_id} media_group false"
@@ -426,10 +429,10 @@ async def edit_user_settings(client, query):
             buttons.ibutton("Enable Media Group", f"userset {user_id} media_group true")
             media_group = "Disabled"
         if (
-                IS_PREMIUM_USER
-                and user_dict.get("user_transmission", False)
-                or "user_transmission" not in user_dict
-                and config_dict["USER_TRANSMISSION"]
+            IS_PREMIUM_USER
+            and user_dict.get("user_transmission", False)
+            or "user_transmission" not in user_dict
+            and config_dict["USER_TRANSMISSION"]
         ):
             buttons.ibutton(
                 "Leech by Bot", f"userset {user_id} user_transmission false"
@@ -480,9 +483,9 @@ Rclone Path is <code>{rccpath}</code>"""
         buttons.ibutton("Default Gdrive ID", f"userset {user_id} gdid")
         buttons.ibutton("Index URL", f"userset {user_id} index")
         if (
-                user_dict.get("stop_duplicate", False)
-                or "stop_duplicate" not in user_dict
-                and config_dict["STOP_DUPLICATE"]
+            user_dict.get("stop_duplicate", False)
+            or "stop_duplicate" not in user_dict
+            and config_dict["STOP_DUPLICATE"]
         ):
             buttons.ibutton(
                 "Disable Stop Duplicate", f"userset {user_id} stop_duplicate false"
@@ -621,9 +624,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if (
-                user_dict.get("lprefix", False)
-                or "lprefix" not in user_dict
-                and config_dict["LEECH_FILENAME_PREFIX"]
+            user_dict.get("lprefix", False)
+            or "lprefix" not in user_dict
+            and config_dict["LEECH_FILENAME_PREFIX"]
         ):
             buttons.ibutton("Remove Leech Prefix", f"userset {user_id} lprefix")
         buttons.ibutton("Back", f"userset {user_id} leech")
@@ -639,9 +642,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if (
-                user_dict.get("leech_dest", False)
-                or "leech_dest" not in user_dict
-                and config_dict["LEECH_DUMP_CHAT"]
+            user_dict.get("leech_dest", False)
+            or "leech_dest" not in user_dict
+            and config_dict["LEECH_DUMP_CHAT"]
         ):
             buttons.ibutton("Reset Leech Destination", f"userset {user_id} leech_dest")
         buttons.ibutton("Back", f"userset {user_id} leech")
@@ -657,9 +660,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await query.answer()
         buttons = ButtonMaker()
         if (
-                user_dict.get("excluded_extensions", False)
-                or "excluded_extensions" not in user_dict
-                and GLOBAL_EXTENSION_FILTER
+            user_dict.get("excluded_extensions", False)
+            or "excluded_extensions" not in user_dict
+            and GLOBAL_EXTENSION_FILTER
         ):
             buttons.ibutton(
                 "Remove Excluded Extensions", f"userset {user_id} excluded_extensions"
@@ -680,15 +683,13 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await update_user_settings(query)
         if DATABASE_URL:
             await DbManager().update_user_data(user_id)
-    elif data[2] == "upload_pathes":
+    elif data[2] == "upload_paths":
         await query.answer()
         buttons = ButtonMaker()
         buttons.ibutton("New Path", f"userset {user_id} new_path")
         if user_dict.get(data[2], False):
-            buttons.ibutton("Show All Pathes", f"userset {user_id} show_path")
-            buttons.ibutton(
-                "Remove Path", f"userset {user_id} rm_path"
-            )
+            buttons.ibutton("Show All Paths", f"userset {user_id} show_path")
+            buttons.ibutton("Remove Path", f"userset {user_id} rm_path")
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
@@ -699,23 +700,23 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "new_path":
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Back", f"userset {user_id} upload_pathes")
+        buttons.ibutton("Back", f"userset {user_id} upload_paths")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
-            "Send path name which you will use it as a shortcut and the path/id seperated by space. Timeout: 60 sec. Timeout: 60 sec",
+            "Send path name(no space in name) which you will use it as a shortcut and the path/id seperated by space. You can add multiple names and paths separated by new line. Timeout: 60 sec",
             buttons.build_menu(1),
         )
-        pfunc = partial(set_option, pre_event=query, option="upload_pathes")
+        pfunc = partial(set_option, pre_event=query, option="upload_paths")
         await event_handler(client, query, pfunc)
     elif data[2] == "rm_path":
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Back", f"userset {user_id} upload_pathes")
+        buttons.ibutton("Back", f"userset {user_id} upload_paths")
         buttons.ibutton("Close", f"userset {user_id} close")
         await editMessage(
             message,
-            "Send path name which you want to delete. Timeout: 60 sec",
+            "Send paths names which you want to delete, separated by space. Timeout: 60 sec",
             buttons.build_menu(1),
         )
         pfunc = partial(delete_path, pre_event=query)
@@ -723,11 +724,12 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "show_path":
         await query.answer()
         buttons = ButtonMaker()
-        buttons.ibutton("Back", f"userset {user_id} upload_pathes")
+        buttons.ibutton("Back", f"userset {user_id} upload_paths")
         buttons.ibutton("Close", f"userset {user_id} close")
         user_dict = user_data.get(user_id, {})
         msg = "".join(
-            f"<b>{key}</b>: <code>{value}</code>\n" for key, value in user_dict["upload_pathes"].items()
+            f"<b>{key}</b>: <code>{value}</code>\n"
+            for key, value in user_dict["upload_paths"].items()
         )
         await editMessage(
             message,
@@ -764,7 +766,7 @@ async def send_users_settings(_, message):
         for u, d in user_data.items():
             kmsg = f"\n<b>{u}:</b>\n"
             if vmsg := "".join(
-                    f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"
+                f"{k}: <code>{v}</code>\n" for k, v in d.items() if f"{v}"
             ):
                 msg += kmsg + vmsg
 

@@ -441,7 +441,7 @@ class TgUploader:
                 and await aiopath.exists(thumb)
             ):
                 await remove(thumb)
-        except FloodWait as f:
+        except FloodWait as f: # for later
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as err:

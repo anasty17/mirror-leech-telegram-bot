@@ -32,15 +32,12 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
     if TORRENT_TIMEOUT := config_dict["TORRENT_TIMEOUT"]:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
 
-    if not (listener.forceRun or listener.forceDownload):
-        add_to_queue, event = await check_running_tasks(listener.mid)
-        if add_to_queue:
-            if listener.link.startswith("magnet:"):
-                a2c_opt["pause-metadata"] = "true"
-            else:
-                a2c_opt["pause"] = "true"
-    else:
-        add_to_queue = False
+    add_to_queue, event = await check_running_tasks(listener)
+    if add_to_queue:
+        if listener.link.startswith("magnet:"):
+            a2c_opt["pause-metadata"] = "true"
+        else:
+            a2c_opt["pause"] = "true"
 
     try:
         download = (await sync_to_async(aria2.add, listener.link, a2c_opt))[0]
