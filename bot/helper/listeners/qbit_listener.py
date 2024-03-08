@@ -27,6 +27,7 @@ async def _remove_torrent(client, hash_, tag):
         if tag in QbTorrents:
             del QbTorrents[tag]
     await sync_to_async(client.torrents_delete_tags, tags=tag)
+    await sync_to_async(client.auth_log_out)
 
 
 @new_task
@@ -75,12 +76,13 @@ async def _onDownloadComplete(tor):
     task = await getTaskByGid(ext_hash[:12])
     if not hasattr(task, "client"):
         return
+    client = task.qbclient()
     if not task.listener.seed:
-        await sync_to_async(task.client.torrents_pause, torrent_hashes=ext_hash)
+        await sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
     if task.listener.select:
         await clean_unwanted(task.listener.dir)
         path = tor.content_path.rsplit("/", 1)[0]
-        res = await sync_to_async(task.client.torrents_files, torrent_hash=ext_hash)
+        res = await sync_to_async(client.torrents_files, torrent_hash=ext_hash)
         for f in res:
             if f.priority == 0 and await aiopath.exists(f"{path}/{f.name}"):
                 try:
@@ -90,7 +92,6 @@ async def _onDownloadComplete(tor):
     await task.listener.onDownloadComplete()
     if Intervals["stopAll"]:
         return
-    client = await sync_to_async(get_qb_client)
     if task.listener.seed and not task.listener.isCancelled:
         async with task_dict_lock:
             if task.listener.mid in task_dict:
@@ -108,7 +109,6 @@ async def _onDownloadComplete(tor):
                 return
         await update_status_message(task.listener.message.chat.id)
         LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
-        await sync_to_async(client.auth_log_out)
     else:
         await _remove_torrent(client, ext_hash, tag)
 
@@ -116,13 +116,14 @@ async def _onDownloadComplete(tor):
 async def _qb_listener():
     client = await sync_to_async(get_qb_client)
     while True:
-        async with qb_listener_lock:
+        async with qb_listener_lock: 
             try:
-                if len(await sync_to_async(client.torrents_info)) == 0:
+                torrents = await sync_to_async(client.torrents_info)
+                if len(torrents) == 0:
                     Intervals["qb"] = ""
                     await sync_to_async(client.auth_log_out)
                     break
-                for tor_info in await sync_to_async(client.torrents_info):
+                for tor_info in torrents:
                     tag = tor_info.tags
                     if tag not in QbTorrents:
                         continue
@@ -195,7 +196,6 @@ async def _qb_listener():
                         await sleep(0.5)
             except Exception as e:
                 LOGGER.error(str(e))
-                client = await sync_to_async(get_qb_client)
         await sleep(3)
 
 

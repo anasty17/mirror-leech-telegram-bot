@@ -51,6 +51,10 @@ async def convert_video(listener, video_file, ext, retry=False):
         return False
     else:
         if not retry:
+            if await aiopath.exists(output):
+                await remove(output)
+            return await convert_video(listener, video_file, ext, True)
+        else:
             try:
                 stderr = stderr.decode().strip()
             except:
@@ -58,9 +62,6 @@ async def convert_video(listener, video_file, ext, retry=False):
             LOGGER.error(
                 f"{stderr}. Something went wrong while converting video, mostly file need specific codec. Path: {video_file}"
             )
-            if await aiopath.exists(output):
-                await remove(output)
-            return await convert_video(listener, video_file, ext, True)
     return False
 
 
