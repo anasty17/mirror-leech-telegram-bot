@@ -3,6 +3,80 @@ substantial modifications and is designed for efficiently mirroring or leeching 
 destinations, including Google Drive, Telegram, or any rclone-supported cloud. It is built using asynchronous
 programming in Python.
 
+### 1. Installing requirements
+
+- Clone this repo:
+
+```
+git clone https://github.com/startfix/mirror mirrorbot/ && cd mirrorbot
+```
+
+- For Debian based distros
+
+```
+sudo apt install python3 python3-pip
+```
+
+Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
+
+- For Arch and it's derivatives:
+
+```
+sudo pacman -S docker python
+```
+
+- Install dependencies for running setup scripts:
+
+```
+pip3 install -r requirements-cli.txt
+```
+
+------
+
+#### Build And Run The Docker Image Using Official Docker Commands
+
+- Start Docker daemon (SKIP if already running, mostly you don't need to do this):
+
+```
+sudo dockerd
+```
+
+- Build Docker image:
+
+```
+sudo docker build . -t mltb
+```
+
+- Run the image:
+
+```
+sudo docker run -p 80:80 -p 8080:8080 mltb
+```
+
+- To stop the running image:
+
+```
+sudo docker ps
+```
+
+```
+sudo docker stop id
+```
+
+----
+
+### 2. Setting up config file
+
+```
+cp config_sample.env config.env
+```
+
+- Remove the first line saying:
+
+```
+_____REMOVE_THIS_LINE_____=True
+```
+
 # Features
 
 ## qBittorrent
@@ -159,48 +233,6 @@ programming in Python.
 
  <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
 
-### 1. Installing requirements
-
-- Clone this repo:
-
-```
-git clone https://github.com/anasty17/mirror-leech-telegram-bot mirrorbot/ && cd mirrorbot
-```
-
-- For Debian based distros
-
-```
-sudo apt install python3 python3-pip
-```
-
-Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
-
-- For Arch and it's derivatives:
-
-```
-sudo pacman -S docker python
-```
-
-- Install dependencies for running setup scripts:
-
-```
-pip3 install -r requirements-cli.txt
-```
-
-------
-
-### 2. Setting up config file
-
-```
-cp config_sample.env config.env
-```
-
-- Remove the first line saying:
-
-```
-_____REMOVE_THIS_LINE_____=True
-```
-
 Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between
 quotes, even if it's `Int`, `Bool` or `List`.
 
@@ -355,38 +387,6 @@ Make sure you still mount the app folder and installed the docker from official 
     2. Using docker-compose. (Recommended)
 
 ------
-
-#### Build And Run The Docker Image Using Official Docker Commands
-
-- Start Docker daemon (SKIP if already running, mostly you don't need to do this):
-
-```
-sudo dockerd
-```
-
-- Build Docker image:
-
-```
-sudo docker build . -t mltb
-```
-
-- Run the image:
-
-```
-sudo docker run -p 80:80 -p 8080:8080 mltb
-```
-
-- To stop the running image:
-
-```
-sudo docker ps
-```
-
-```
-sudo docker stop id
-```
-
-----
 
 #### Build And Run The Docker Image Using docker-compose
 
