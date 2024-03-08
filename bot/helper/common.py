@@ -178,6 +178,9 @@ class TaskConfig:
             and "user_transmission" not in self.userDict
         )
 
+        if "upload_paths" in self.userDict and self.upDest and self.upDest in self.userDict["upload_paths"]:
+            self.upDest = self.userDict["upload_paths"][self.upDest]
+
         if not self.isLeech:
             self.stopDuplicate = (
                 self.userDict.get("stop_duplicate")

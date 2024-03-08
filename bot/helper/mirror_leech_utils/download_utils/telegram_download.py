@@ -1,5 +1,6 @@
-from asyncio import Lock
+from asyncio import Lock, sleep
 from time import time
+from pyrogram.errors import FloodWait
 
 from bot import (
     LOGGER,
@@ -43,8 +44,6 @@ class TelegramDownloadHelper:
             task_dict[self._listener.mid] = TelegramStatus(
                 self._listener, self, file_id[:12], "dl"
             )
-        async with queue_dict_lock:
-            non_queued_dl.add(self._listener.mid)
         if not from_queue:
             await self._listener.onDownloadStart()
             if self._listener.multi <= 1:
@@ -82,6 +81,9 @@ class TelegramDownloadHelper:
             if self._listener.isCancelled:
                 await self._onDownloadError("Cancelled by user!")
                 return
+        except FloodWait as f:
+            LOGGER.warning(str(f))
+            await sleep(f.value)
         except Exception as e:
             LOGGER.error(str(e))
             await self._onDownloadError(str(e))
@@ -136,22 +138,22 @@ class TelegramDownloadHelper:
                     await self._listener.onDownloadError(msg, button)
                     return
 
-                if not (self._listener.forceRun or self._listener.forceDownload):
-                    add_to_queue, event = await check_running_tasks(self._listener.mid)
-                    if add_to_queue:
-                        LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
-                        async with task_dict_lock:
-                            task_dict[self._listener.mid] = QueueStatus(
-                                self._listener, gid, "dl"
-                            )
-                        await self._listener.onDownloadStart()
-                        if self._listener.multi <= 1:
-                            await sendStatusMessage(self._listener.message)
-                        await event.wait()
-                        if self._listener.isCancelled:
-                            return
-                else:
-                    add_to_queue = False
+                add_to_queue, event = await check_running_tasks(self._listener)
+                if add_to_queue:
+                    LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
+                    async with task_dict_lock:
+                        task_dict[self._listener.mid] = QueueStatus(
+                            self._listener, gid, "dl"
+                        )
+                    await self._listener.onDownloadStart()
+                    if self._listener.multi <= 1:
+                        await sendStatusMessage(self._listener.message)
+                    await event.wait()
+                    if self._listener.isCancelled:
+                        return
+                    async with queue_dict_lock:
+                        non_queued_dl.add(self._listener.mid)
+
                 await self._onDownloadStart(gid, add_to_queue)
                 await self._download(message, path)
             else:

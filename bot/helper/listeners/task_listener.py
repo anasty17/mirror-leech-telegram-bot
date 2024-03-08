@@ -192,21 +192,18 @@ class TaskListener(TaskConfig):
             if self.isCancelled:
                 return
 
-        if not (self.forceRun or self.forceUpload):
-            add_to_queue, event = await check_running_tasks(self.mid, "up")
-            await start_from_queued()
-            if add_to_queue:
-                LOGGER.info(f"Added to Queue/Upload: {self.name}")
-                async with task_dict_lock:
-                    task_dict[self.mid] = QueueStatus(self, gid, "Up")
-                await event.wait()
-                if self.isCancelled:
-                    return
-                LOGGER.info(f"Start from Queued/Upload: {self.name}")
-        async with queue_dict_lock:
-            if self.mid in non_queued_dl:
-                non_queued_dl.remove(self.mid)
-            non_queued_up.add(self.mid)
+        add_to_queue, event = await check_running_tasks(self, "up")
+        await start_from_queued()
+        if add_to_queue:
+            LOGGER.info(f"Added to Queue/Upload: {self.name}")
+            async with task_dict_lock:
+                task_dict[self.mid] = QueueStatus(self, gid, "Up")
+            await event.wait()
+            if self.isCancelled:
+                return
+            async with queue_dict_lock:
+                non_queued_up.add(self.mid)
+            LOGGER.info(f"Start from Queued/Upload: {self.name}")
 
         self.size = await get_path_size(up_dir)
         for s in unwanted_files_size:

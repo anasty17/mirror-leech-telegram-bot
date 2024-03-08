@@ -8,50 +8,49 @@ from bot.helper.ext_utils.status_utils import getTaskByGid
 
 @new_task
 async def update_download(gid, value):
-    del value["ids"][0]
-    new_gid = value["ids"][0]
-    jd_downloads[new_gid] = value
-    task = await getTaskByGid(f"{gid}")
-    task._gid = new_gid
-    del jd_downloads[gid]
+    try:
+        del value["ids"][0]
+        new_gid = value["ids"][0]
+        jd_downloads[new_gid] = value
+        if task := await getTaskByGid(f"{gid}"):
+            task._gid = new_gid
+        del jd_downloads[gid]
+    except:
+        pass
 
 
 @new_task
 async def remove_download(gid):
-    task = await getTaskByGid(f"{gid}")
-    if not task:
-        return
     if Intervals["stopAll"]:
         return
     await retry_function(
         jdownloader.device.downloads.remove_links,
         package_ids=[gid],
     )
-    await task.listener.onDownloadError("Download removed manually!")
-    del jd_downloads[gid]
+    if task := await getTaskByGid(f"{gid}"):
+        await task.listener.onDownloadError("Download removed manually!")
+        del jd_downloads[gid]
 
 
 @new_task
 async def _onDownloadComplete(gid):
-    task = await getTaskByGid(f"{gid}")
-    if not task:
-        return
-    if task.listener.select:
+    if task := await getTaskByGid(f"{gid}"):
+        if task.listener.select:
+            await retry_function(
+                jdownloader.device.downloads.cleanup,
+                "DELETE_DISABLED",
+                "REMOVE_LINKS_AND_DELETE_FILES",
+                "SELECTED",
+                package_ids=jd_downloads[gid]["ids"],
+            )
+        await task.listener.onDownloadComplete()
+        if Intervals["stopAll"]:
+            return
         await retry_function(
-            jdownloader.device.downloads.cleanup,
-            "DELETE_DISABLED",
-            "REMOVE_LINKS_AND_DELETE_FILES",
-            "SELECTED",
+            jdownloader.device.downloads.remove_links,
             package_ids=jd_downloads[gid]["ids"],
         )
-    await task.listener.onDownloadComplete()
-    if Intervals["stopAll"]:
-        return
-    await retry_function(
-        jdownloader.device.downloads.remove_links,
-        package_ids=jd_downloads[gid]["ids"],
-    )
-    del jd_downloads[gid]
+        del jd_downloads[gid]
 
 
 @new_task
@@ -63,7 +62,9 @@ async def _jd_listener():
                 Intervals["jd"] = ""
                 break
             try:
-                await wait_for(retry_function(jdownloader.device.jd.version), timeout=5)
+                await wait_for(
+                    retry_function(jdownloader.device.jd.version), timeout=10
+                )
             except:
                 is_connected = await jdownloader.jdconnect()
                 if not is_connected:
@@ -71,7 +72,9 @@ async def _jd_listener():
                     continue
                 await jdownloader.connectToDevice()
             try:
-                packages = await jdownloader.device.downloads.query_packages([{"finished": True}])
+                packages = await jdownloader.device.downloads.query_packages(
+                    [{"finished": True}]
+                )
             except:
                 continue
             finished = [

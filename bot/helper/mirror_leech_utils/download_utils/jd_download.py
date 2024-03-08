@@ -93,7 +93,7 @@ async def add_jd_download(listener, path):
             return
 
         try:
-            await wait_for(retry_function(jdownloader.device.jd.version), timeout=5)
+            await wait_for(retry_function(jdownloader.device.jd.version), timeout=10)
         except:
             is_connected = await jdownloader.jdconnect()
             if not is_connected:
@@ -155,7 +155,7 @@ async def add_jd_download(listener, path):
         remove_unknown = False
         name = ""
         error = ""
-        while (time() - start_time) < 20:
+        while (time() - start_time) < 60:
             queued_downloads = await retry_function(
                 jdownloader.device.linkgrabber.query_packages,
                 [
@@ -232,6 +232,8 @@ async def add_jd_download(listener, path):
                     jdownloader.device.linkgrabber.remove_links,
                     package_ids=packages_to_remove,
                 )
+            async with jd_lock:
+                del jd_downloads[gid]
             return
 
         jd_downloads[gid]["ids"] = online_packages
@@ -269,20 +271,19 @@ async def add_jd_download(listener, path):
         listener.removeFromSameDir()
         return
 
-    if not (listener.forceRun or listener.forceDownload):
-        add_to_queue, event = await check_running_tasks(listener.mid)
-        if add_to_queue:
-            LOGGER.info(f"Added to Queue/Download: {listener.name}")
-            async with task_dict_lock:
-                task_dict[listener.mid] = QueueStatus(listener, f"{gid}", "dl")
-            await listener.onDownloadStart()
-            if listener.multi <= 1:
-                await sendStatusMessage(listener.message)
-            await event.wait()
-            if listener.isCancelled:
-                return
-    else:
-        add_to_queue = False
+    add_to_queue, event = await check_running_tasks(listener)
+    if add_to_queue:
+        LOGGER.info(f"Added to Queue/Download: {listener.name}")
+        async with task_dict_lock:
+            task_dict[listener.mid] = QueueStatus(listener, f"{gid}", "dl")
+        await listener.onDownloadStart()
+        if listener.multi <= 1:
+            await sendStatusMessage(listener.message)
+        await event.wait()
+        if listener.isCancelled:
+            return
+        async with queue_dict_lock:
+            non_queued_dl.add(listener.mid)
 
     await retry_function(
         jdownloader.device.linkgrabber.move_to_downloadlist,
@@ -309,6 +310,8 @@ async def add_jd_download(listener, path):
 
     if not packages:
         await listener.onDownloadError("This Download have been removed manually!")
+        async with jd_lock:
+            del jd_downloads[gid]
         return
 
     await retry_function(
@@ -318,9 +321,6 @@ async def add_jd_download(listener, path):
 
     async with task_dict_lock:
         task_dict[listener.mid] = JDownloaderStatus(listener, f"{gid}")
-
-    async with queue_dict_lock:
-        non_queued_dl.add(listener.mid)
 
     await onDownloadStart()
 
