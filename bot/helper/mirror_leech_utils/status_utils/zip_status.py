@@ -49,7 +49,7 @@ class ZipStatus:
         except:
             return "-"
 
-    async def status(self):
+    def status(self):
         return MirrorStatus.STATUS_ARCHIVING
 
     async def processed_raw(self):

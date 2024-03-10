@@ -315,22 +315,23 @@ async def edit_qbit(_, message, pre_message, key):
 
 
 async def sync_jdownloader():
-    if DATABASE_URL and jdownloader.device is not None:
-        await jdownloader.device.system.exit_jd()
-        if await aiopath.exists("cfg.zip"):
-            await remove("cfg.zip")
-        try:
-            await wait_for(retry_function(jdownloader.update_devices), timeout=10)
-        except:
-            is_connected = await jdownloader.jdconnect()
-            if not is_connected:
-                LOGGER.error(jdownloader.error)
-                return
-        await jdownloader.connectToDevice()
-        await (
-            await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
-        ).wait()
-        await DbManager().update_private_file("cfg.zip")
+    if not DATABASE_URL or jdownloader.device is None:
+        return
+    await jdownloader.device.system.exit_jd()
+    if await aiopath.exists("cfg.zip"):
+        await remove("cfg.zip")
+    try:
+        await wait_for(retry_function(jdownloader.update_devices), timeout=10)
+    except:
+        is_connected = await jdownloader.jdconnect()
+        if not is_connected:
+            LOGGER.error(jdownloader.error)
+            return
+    await jdownloader.connectToDevice()
+    await (
+        await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")
+    ).wait()
+    await DbManager().update_private_file("cfg.zip")
 
 
 async def update_private_file(_, message, pre_message):
@@ -917,6 +918,9 @@ async def load_config():
     if len(RCLONE_SERVE_PASS) == 0:
         RCLONE_SERVE_PASS = ""
 
+    NAME_SUBSTITUTE = environ.get("NAME_SUBSTITUTE", "")
+    NAME_SUBSTITUTE = "" if len(NAME_SUBSTITUTE) == 0 else NAME_SUBSTITUTE
+
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -979,6 +983,7 @@ async def load_config():
             "LEECH_FILENAME_PREFIX": LEECH_FILENAME_PREFIX,
             "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
             "MEDIA_GROUP": MEDIA_GROUP,
+            "NAME_SUBSTITUTE": NAME_SUBSTITUTE,
             "OWNER_ID": OWNER_ID,
             "QUEUE_ALL": QUEUE_ALL,
             "QUEUE_DOWNLOAD": QUEUE_DOWNLOAD,

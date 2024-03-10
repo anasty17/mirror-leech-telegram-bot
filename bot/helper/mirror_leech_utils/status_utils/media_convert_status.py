@@ -17,7 +17,7 @@ class MediaConvertStatus:
     def size(self):
         return get_readable_file_size(self._size)
 
-    async def status(self):
+    def status(self):
         return MirrorStatus.STATUS_CONVERTING
 
     def task(self):

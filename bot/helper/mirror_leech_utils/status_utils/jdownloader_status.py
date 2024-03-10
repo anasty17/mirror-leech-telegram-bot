@@ -1,5 +1,5 @@
 from bot import LOGGER, jd_lock, jd_downloads
-from bot.helper.ext_utils.bot_utils import retry_function
+from bot.helper.ext_utils.bot_utils import retry_function, async_to_sync
 from bot.helper.ext_utils.jdownloader_booter import jdownloader
 from bot.helper.ext_utils.status_utils import (
     MirrorStatus,
@@ -90,8 +90,8 @@ class JDownloaderStatus:
     def eta(self):
         return get_readable_time(eta) if (eta := self._info.get("eta", False)) else "-"
 
-    async def status(self):
-        await self._update()
+    def status(self):
+        async_to_sync(self._update)
         state = self._info.get("status", "paused")
         return MirrorStatus.STATUS_PAUSED if state == "paused" else state
 

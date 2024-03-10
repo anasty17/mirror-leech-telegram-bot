@@ -69,8 +69,8 @@ async def cancel_multi(_, query):
     await deleteMessage(query.message)
 
 
-async def cancel_all(status):
-    matches = await getAllTasks(status)
+async def cancel_all(status, userId):
+    matches = await getAllTasks(status.strip(), userId)
     if not matches:
         return False
     for task in matches:
@@ -80,22 +80,33 @@ async def cancel_all(status):
     return True
 
 
-def create_cancel_buttons():
+def create_cancel_buttons(isSudo, userId=""):
     buttons = button_build.ButtonMaker()
-    buttons.ibutton("Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING}")
-    buttons.ibutton("Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING}")
-    buttons.ibutton("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING}")
-    buttons.ibutton("Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING}")
-    buttons.ibutton("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING}")
-    buttons.ibutton("Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING}")
-    buttons.ibutton("Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING}")
-    buttons.ibutton("QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL}")
-    buttons.ibutton("QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP}")
-    buttons.ibutton("SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID}")
-    buttons.ibutton("ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING}")
-    buttons.ibutton("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED}")
-    buttons.ibutton("All", "canall ms all")
-    buttons.ibutton("Close", "canall close")
+    buttons.ibutton(
+        "Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING} {userId}"
+    )
+    buttons.ibutton("Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING} {userId}")
+    buttons.ibutton("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING} {userId}")
+    buttons.ibutton("Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING} {userId}")
+    buttons.ibutton("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING} {userId}")
+    buttons.ibutton(
+        "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING} {userId}"
+    )
+    buttons.ibutton("Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING} {userId}")
+    buttons.ibutton("QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL} {userId}")
+    buttons.ibutton("QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP} {userId}")
+    buttons.ibutton("SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID} {userId}")
+    buttons.ibutton(
+        "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING} {userId}"
+    )
+    buttons.ibutton("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {userId}")
+    buttons.ibutton("All", f"canall ms All {userId}")
+    if isSudo:
+        if userId:
+            buttons.ibutton("All Added Tasks", f"canall bot ms {userId}")
+        else:
+            buttons.ibutton("My Tasks", f"canall user ms {userId}")
+    buttons.ibutton("Close", f"canall close ms {userId}")
     return buttons.build_menu(2)
 
 
@@ -105,8 +116,9 @@ async def cancell_all_buttons(_, message):
     if count == 0:
         await sendMessage(message, "No active tasks!")
         return
-    button = create_cancel_buttons()
-    can_msg = await sendMessage(message, "Choose tasks to cancel.", button)
+    isSudo = await CustomFilters.sudo("", message)
+    button = create_cancel_buttons(isSudo, message.from_user.id)
+    can_msg = await sendMessage(message, "Choose tasks to cancel!", button)
     await auto_delete_message(message, can_msg)
 
 
@@ -115,26 +127,37 @@ async def cancel_all_update(_, query):
     data = query.data.split()
     message = query.message
     reply_to = message.reply_to_message
-    await query.answer()
+    userId = int(data[3]) if len(data) > 3 else ""
+    isSudo = await CustomFilters.sudo("", query)
+    if not isSudo and userId and userId != query.from_user.id:
+        await query.answer("Not Yours!", show_alert=True)
+    else:
+        await query.answer()
     if data[1] == "close":
         await deleteMessage(reply_to)
         await deleteMessage(message)
     elif data[1] == "back":
-        button = create_cancel_buttons()
-        await editMessage(message, "Choose tasks to cancel.", button)
+        button = create_cancel_buttons(isSudo, userId)
+        await editMessage(message, "Choose tasks to cancel!", button)
+    elif data[1] == "bot":
+        button = create_cancel_buttons(isSudo, "")
+        await editMessage(message, "Choose tasks to cancel!", button)
+    elif data[1] == "user":
+        button = create_cancel_buttons(isSudo, query.from_user.id)
+        await editMessage(message, "Choose tasks to cancel!", button)
     elif data[1] == "ms":
         buttons = button_build.ButtonMaker()
-        buttons.ibutton("Yes!", f"canall {data[2]}")
-        buttons.ibutton("Back", "canall back all")
-        buttons.ibutton("Close", "canall close")
+        buttons.ibutton("Yes!", f"canall {data[2]} confirm {userId}")
+        buttons.ibutton("Back", f"canall back confirm {userId}")
+        buttons.ibutton("Close", f"canall close confirm {userId}")
         button = buttons.build_menu(2)
         await editMessage(
             message, f"Are you sure you want to cancel all {data[2]} tasks", button
         )
     else:
-        button = create_cancel_buttons()
+        button = create_cancel_buttons(isSudo, userId)
         await editMessage(message, "Choose tasks to cancel.", button)
-        res = await cancel_all(data[1])
+        res = await cancel_all(data[1], userId)
         if not res:
             await sendMessage(reply_to, f"No matching tasks for {data[1]}!")
 
@@ -148,12 +171,8 @@ bot.add_handler(
 bot.add_handler(
     MessageHandler(
         cancell_all_buttons,
-        filters=command(BotCommands.CancelAllCommand) & CustomFilters.sudo,
+        filters=command(BotCommands.CancelAllCommand) & CustomFilters.authorized,
     )
 )
-bot.add_handler(
-    CallbackQueryHandler(
-        cancel_all_update, filters=regex("^canall") & CustomFilters.sudo
-    )
-)
+bot.add_handler(CallbackQueryHandler(cancel_all_update, filters=regex("^canall")))
 bot.add_handler(CallbackQueryHandler(cancel_multi, filters=regex("^stopm")))

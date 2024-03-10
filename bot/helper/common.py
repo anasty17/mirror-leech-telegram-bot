@@ -5,6 +5,7 @@ from os import walk, path as ospath
 from secrets import token_urlsafe
 from aioshutil import move, copy2
 from pyrogram.enums import ChatAction
+from re import sub, I
 
 from bot import (
     DOWNLOAD_DIR,
@@ -81,6 +82,7 @@ class TaskConfig:
         self.tag = ""
         self.name = ""
         self.newDir = ""
+        self.nameSub = ""
         self.splitSize = 0
         self.maxSplitSize = 0
         self.multi = 0
@@ -153,6 +155,14 @@ class TaskConfig:
                 raise ValueError(f"NO TOKEN! {token_path} not Exists!")
 
     async def beforeStart(self):
+        self.nameSub = (
+            self.userDict.get("name_sub", False) or config_dict["NAME_SUBSTITUTE"]
+            if "name_sub" not in self.userDict
+            else ""
+        )
+        if self.nameSub:
+            self.nameSub = [x.split(" : ") for x in self.nameSub.split("|")]
+            self.seed = False
         self.extensionFilter = (
             self.userDict.get("excluded_extensions") or GLOBAL_EXTENSION_FILTER
             if "excluded_extensions" not in self.userDict
@@ -178,7 +188,11 @@ class TaskConfig:
             and "user_transmission" not in self.userDict
         )
 
-        if "upload_paths" in self.userDict and self.upDest and self.upDest in self.userDict["upload_paths"]:
+        if (
+            "upload_paths" in self.userDict
+            and self.upDest
+            and self.upDest in self.userDict["upload_paths"]
+        ):
             self.upDest = self.userDict["upload_paths"][self.upDest]
 
         if not self.isLeech:
@@ -886,3 +900,26 @@ class TaskConfig:
                     if (await get_document_type(f_path))[0]:
                         await take_ss(f_path, ss_nb)
         return dl_path
+
+    async def substitute(self, dl_path):
+        if await aiopath.isfile(dl_path):
+            up_dir, name = dl_path.rsplit("/", 1)
+            for l in self.nameSub:
+                pattern = l[0]
+                res = l[1] if len(l) > 1  and l[1] else ""
+                sen = len(l) > 2 and l[2] == "s"
+                new_name = sub(fr"{pattern}", res, name, flags= I if sen else 0)
+            new_path = ospath.join(up_dir, new_name)
+            await move(dl_path, new_path)
+            return new_path
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    for l in self.nameSub:
+                        pattern = l[0]
+                        res = l[1] if len(l) > 1  and l[1] else ""
+                        sen = len(l) > 2 and l[2] == "s"
+                        new_name = sub(fr"{pattern}", res, name, flags= I if sen else 0)
+                    await move(f_path, ospath.join(dirpath, new_name))
+            return dl_path

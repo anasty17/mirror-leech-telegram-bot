@@ -50,8 +50,8 @@ class QbittorrentStatus:
     def eta(self):
         return get_readable_time(self._info.eta)
 
-    async def status(self):
-        await sync_to_async(self.update)
+    def status(self):
+        self.update()
         state = self._info.state
         if state == "queuedDL" or self.queued:
             return MirrorStatus.STATUS_QUEUEDL

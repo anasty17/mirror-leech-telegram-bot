@@ -50,8 +50,8 @@ class Aria2Status:
     def eta(self):
         return self._download.eta_string()
 
-    async def status(self):
-        await sync_to_async(self.update)
+    def status(self):
+        self.update()
         if self._download.is_waiting or self.queued:
             if self.seeding:
                 return MirrorStatus.STATUS_QUEUEUP

@@ -152,6 +152,12 @@ class TaskListener(TaskConfig):
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
 
+        if self.nameSub:
+            up_path = await self.substitute(up_path)
+            if self.isCancelled:
+                return
+            self.name = up_path.rsplit("/", 1)[1]
+
         if self.screenShots:
             up_path = await self.generateScreenshots(up_path)
             if self.isCancelled:
