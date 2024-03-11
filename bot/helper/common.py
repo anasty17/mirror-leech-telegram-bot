@@ -582,7 +582,7 @@ class TaskConfig:
             dl_path,
         ]
         if await aiopath.isdir(dl_path):
-            cmd.extend(f"-xr!*.{ext}" for ext in GLOBAL_EXTENSION_FILTER)
+            cmd.extend(f"-xr!*.{ext}" for ext in self.extensionFilter)
             if o_files:
                 for f in o_files:
                     if self.newDir and self.newDir in f:
