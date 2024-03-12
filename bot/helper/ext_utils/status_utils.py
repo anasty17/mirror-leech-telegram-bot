@@ -33,7 +33,7 @@ class MirrorStatus:
     STATUS_CONVERTING = "Convert"
 
 
-STATUS_DICT = {
+STATUSES = {
     "ALL": "All",
     "DL": MirrorStatus.STATUS_DOWNLOADING,
     "UP": MirrorStatus.STATUS_UPLOADING,
@@ -74,7 +74,7 @@ def getSpecificTasks(status, userId):
             if tk.listener.userId == userId
             and (st := tk.status() == status)
             or status == MirrorStatus.STATUS_DOWNLOADING
-            and st not in STATUS_DICT.values()
+            and st not in STATUSES.values()
         ]
     else:
         return [
@@ -82,7 +82,7 @@ def getSpecificTasks(status, userId):
             for tk in task_dict.values()
             if (st := tk.status() == status)
             or status == MirrorStatus.STATUS_DOWNLOADING
-            and st not in STATUS_DICT.values()
+            and st not in STATUSES.values()
         ]
 
 
@@ -212,7 +212,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             for i in [1, 2, 4, 6, 8, 10, 15]:
                 buttons.ibutton(i, f"status {sid} ps {i}", position="footer")
     if status != "All" or tasks_no > 20:
-        for label, status_value in list(STATUS_DICT.items())[:9]:
+        for label, status_value in list(STATUSES.items())[:9]:
             if status_value != status:
                 buttons.ibutton(label, f"status {sid} st {status_value}")
     buttons.ibutton("♻️", f"status {sid} ref", position="header")
