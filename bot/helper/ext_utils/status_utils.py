@@ -203,7 +203,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             msg = f"No Active {status} Tasks!\n\n"
     buttons = ButtonMaker()
     if not is_user:
-        buttons.ibutton("📜", "status 0 ov", position="header")
+        buttons.ibutton("📜", f"status {sid} ov", position="header")
     if len(tasks) > STATUS_LIMIT:
         msg += f"<b>Page:</b> {page_no}/{pages} | <b>Tasks:</b> {tasks_no} | <b>Step:</b> {page_step}\n"
         buttons.ibutton("<<", f"status {sid} pre", position="header")

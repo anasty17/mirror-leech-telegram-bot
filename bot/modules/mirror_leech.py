@@ -73,7 +73,7 @@ class Mirror(TaskListener):
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
 
-        arg_base = {
+        args = {
             "-d": False,
             "-j": False,
             "-s": False,
@@ -101,7 +101,7 @@ class Mirror(TaskListener):
             "-ns": "",
         }
 
-        args = arg_parser(input_list[1:], arg_base)
+        arg_parser(input_list[1:], args)
 
         self.select = args["-s"]
         self.seed = args["-d"]

@@ -289,7 +289,7 @@ class YtDlp(TaskListener):
         input_list = text[0].split(" ")
         qual = ""
 
-        arg_base = {
+        args = {
             "-s": False,
             "-b": False,
             "-z": False,
@@ -312,7 +312,7 @@ class YtDlp(TaskListener):
             "-ns": "",
         }
 
-        args = arg_parser(input_list[1:], arg_base)
+        arg_parser(input_list[1:], args)
 
         try:
             self.multi = int(args["-i"])

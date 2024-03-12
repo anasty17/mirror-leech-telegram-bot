@@ -68,7 +68,7 @@ class Clone(TaskListener):
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
 
-        arg_base = {
+        args = {
             "link": "",
             "-i": 0,
             "-b": False,
@@ -77,7 +77,7 @@ class Clone(TaskListener):
             "-sync": False,
         }
 
-        args = arg_parser(input_list[1:], arg_base)
+        arg_parser(input_list[1:], args)
 
         try:
             self.multi = int(args["-i"])
@@ -112,7 +112,9 @@ class Clone(TaskListener):
         self.run_multi(input_list, "", Clone)
 
         if len(self.link) == 0:
-            await sendMessage(self.message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1])
+            await sendMessage(
+                self.message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1]
+            )
             return
         LOGGER.info(self.link)
         try:

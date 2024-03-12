@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+from httpx import AsyncClient
 from apscheduler.triggers.interval import IntervalTrigger
 from asyncio import Lock, sleep
 from datetime import datetime, timedelta
@@ -11,7 +11,7 @@ from re import split as re_split
 from time import time
 
 from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot
-from bot.helper.ext_utils.bot_utils import new_thread
+from bot.helper.ext_utils.bot_utils import new_thread, arg_parser
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.exceptions import RssShutdownException
 from bot.helper.ext_utils.help_messages import RSS_HELP_MESSAGE
@@ -99,12 +99,14 @@ async def rssSub(_, message, pre_event):
         inf_lists = []
         exf_lists = []
         if len(args) > 2:
-            arg = item.split(" -c ", 1)
-            cmd = re_split(" -inf | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-            arg = item.split(" -inf ", 1)
-            inf = re_split(" -c | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-            arg = item.split(" -exf ", 1)
-            exf = re_split(" -c | -inf ", arg[1])[0].strip() if len(arg) > 1 else None
+            arg_base = {"-c": None, "-inf": None, "-exf": None, "-stv": None}
+            arg_parser(args[2:], arg_base)
+            cmd = arg_base["-c"]
+            inf = arg_base["-inf"]
+            exf = arg_base["-exf"]
+            stv = arg_base["-stv"]
+            if stv is not None:
+                stv = stv.lower() == "true"
             if inf is not None:
                 filters_list = inf.split("|")
                 for x in filters_list:
@@ -119,10 +121,11 @@ async def rssSub(_, message, pre_event):
             inf = None
             exf = None
             cmd = None
+            stv = False
         try:
-            async with ClientSession() as session:
-                async with session.get(feed_link, ssl=False) as res:
-                    html = await res.text()
+            async with AsyncClient(verify=False) as client:
+                res = await client.get(feed_link)
+            html = res.text
             rss_d = feedparse(html)
             last_title = rss_d.entries[0]["title"]
             msg += "<b>Subscribed!</b>"
@@ -138,7 +141,7 @@ async def rssSub(_, message, pre_event):
             msg += f"\nLink: <code>{last_link}</code>"
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
             msg += (
-                f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>"
+                f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
             )
             async with rss_dict_lock:
                 if rss_dict.get(user_id, False):
@@ -150,6 +153,7 @@ async def rssSub(_, message, pre_event):
                         "exf": exf_lists,
                         "paused": False,
                         "command": cmd,
+                        "sensitive": stv,
                         "tag": tag,
                     }
                 else:
@@ -162,11 +166,12 @@ async def rssSub(_, message, pre_event):
                             "exf": exf_lists,
                             "paused": False,
                             "command": cmd,
+                            "sensitive": stv,
                             "tag": tag,
                         }
                     }
             LOGGER.info(
-                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf}"
+                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv {stv}"
             )
         except (IndexError, AttributeError) as e:
             emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
@@ -268,6 +273,7 @@ async def rssList(query, start, all_users=False):
                     list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
                     list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
                     list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
+                    list_feed += f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
                     list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
                     list_feed += f"<b>User:</b> {data['tag'].replace('@', '', 1)}"
                     index += 1
@@ -282,6 +288,7 @@ async def rssList(query, start, all_users=False):
                 list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
                 list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
                 list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
+                list_feed += f"<b>Sensitive:</b> <code>{data['sensitive']}</code>\n"
                 list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
     buttons.ibutton("Back", f"rss back {user_id}")
     buttons.ibutton("Close", f"rss close {user_id}")
@@ -316,9 +323,9 @@ async def rssGet(_, message, pre_event):
                 msg = await sendMessage(
                     message, f"Getting the last <b>{count}</b> item(s) from {title}"
                 )
-                async with ClientSession() as session:
-                    async with session.get(data["link"], ssl=False) as res:
-                        html = await res.text()
+                async with AsyncClient(verify=False) as client:
+                    res = await client.get(data["link"])
+                html = res.text
                 rss_d = feedparse(html)
                 item_info = ""
                 for item_num in range(count):
@@ -372,13 +379,16 @@ async def rssEdit(_, message, pre_event):
         updated = True
         inf_lists = []
         exf_lists = []
-        arg = item.split(" -c ", 1)
-        cmd = re_split(" -inf | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-        arg = item.split(" -inf ", 1)
-        inf = re_split(" -c | -exf ", arg[1])[0].strip() if len(arg) > 1 else None
-        arg = item.split(" -exf ", 1)
-        exf = re_split(" -c | -inf ", arg[1])[0].strip() if len(arg) > 1 else None
+        arg_base = {"-c": None, "-inf": None, "-exf": None, "-stv": None}
+        arg_parser(args[1:], arg_base)
+        cmd = arg_base["-c"]
+        inf = arg_base["-inf"]
+        exf = arg_base["-exf"]
+        stv = arg_base["-stv"]
         async with rss_dict_lock:
+            if stv is not None:
+                stv = stv.lower() == "true"
+                rss_dict[user_id][title]["sensitive"] = stv
             if cmd is not None:
                 if cmd.lower() == "none":
                     cmd = None
@@ -522,9 +532,9 @@ async def rssListener(client, query):
             button = buttons.build_menu(2)
             msg = """Send one or more rss titles with new filters or command separated by new line.
 Examples:
-Title1 -c mirror -up remote:path/subdir -exf none -inf 1080 or 720
-Title2 -c none -inf none
-Title3 -c mirror -rcf xxx -up xxx -z pswd
+Title1 -c mirror -up remote:path/subdir -exf none -inf 1080 or 720 -stv true
+Title2 -c none -inf none -stv false
+Title3 -c mirror -rcf xxx -up xxx -z pswd -stv false
 Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
 Timeout: 60 sec. Argument -c for command and arguments
             """
@@ -645,9 +655,9 @@ async def rssMonitor():
                 tries = 0
                 while True:
                     try:
-                        async with ClientSession() as session:
-                            async with session.get(data["link"], ssl=False) as res:
-                                html = await res.text()
+                        async with AsyncClient(verify=False) as client:
+                            res = await client.get(data["link"])
+                        html = res.text
                         break
                     except:
                         tries += 1
@@ -685,14 +695,26 @@ async def rssMonitor():
                         break
                     parse = True
                     for flist in data["inf"]:
-                        if all(x not in item_title for x in flist):
+                        if (
+                            data.get("sensitive", False)
+                            and all(x.lower() not in item_title.lower() for x in flist)
+                        ) or (
+                            not data.get("sensitive", False)
+                            and all(x not in item_title for x in flist)
+                        ):
                             parse = False
                             feed_count += 1
                             break
                     if not parse:
                         continue
                     for flist in data["exf"]:
-                        if any(x in item_title for x in flist):
+                        if (
+                            data.get("sensitive", False)
+                            and any(x.lower() in item_title.lower() for x in flist)
+                        ) or (
+                            data.get("sensitive", False)
+                            and any(x in item_title for x in flist)
+                        ):
                             parse = False
                             feed_count += 1
                             break

@@ -27,7 +27,9 @@ from bot.helper.telegram_helper.message_utils import (
     auto_delete_message,
     sendStatusMessage,
     update_status_message,
+    editMessage,
 )
+from bot.helper.telegram_helper.button_build import ButtonMaker
 
 
 @new_task
@@ -82,6 +84,7 @@ async def status_pages(_, query):
             status_dict[key]["status"] = data[3]
         await update_status_message(key, force=True)
     elif data[2] == "ov":
+        message = query.message
         tasks = {
             "Download": 0,
             "Upload": 0,
@@ -95,7 +98,7 @@ async def status_pages(_, query):
             "CheckUp": 0,
             "Pause": 0,
             "SamVid": 0,
-            "ConvertMedia": 0
+            "ConvertMedia": 0,
         }
         dl_speed = 0
         up_speed = 0
@@ -136,16 +139,18 @@ async def status_pages(_, query):
                         tasks["Download"] += 1
                         dl_speed += speed_string_to_bytes(download.speed())
 
-        msg = f"""DL: {tasks['Download']} | UP: {tasks['Upload']} | SD: {tasks['Seed']} | AR: {tasks['Archive']}
-EX: {tasks['Extract']} | SP: {tasks['Split']} | QD: {tasks['QueueDl']} | QU: {tasks['QueueUp']}
-CL: {tasks['Clone']} | CK: {tasks['CheckUp']} | PA: {tasks['Pause']} | SV: {tasks['SamVid']}
-CM: {tasks['ConvertMedia']}
+        msg = f"""<b>DL:</b> {tasks['Download']} | <b>UP:</b> {tasks['Upload']} | <b>SD:</b> {tasks['Seed']} | <b>AR:</b> {tasks['Archive']}
+<b>EX:</b> {tasks['Extract']} | <b>SP:</b> {tasks['Split']} | <b>QD:</b> {tasks['QueueDl']} | <b>QU:</b> {tasks['QueueUp']}
+<b>CL:</b> {tasks['Clone']} | <b>CK:</b> {tasks['CheckUp']} | <b>PA:</b> {tasks['Pause']} | <b>SV:</b> {tasks['SamVid']}
+<b>CM:</b> {tasks['ConvertMedia']}
 
-ODLS: {get_readable_file_size(dl_speed)}/s
-OULS: {get_readable_file_size(up_speed)}/s
-OSDS: {get_readable_file_size(seed_speed)}/s
+<b>ODLS:</b> {get_readable_file_size(dl_speed)}/s
+<b>OULS:</b> {get_readable_file_size(up_speed)}/s
+<b>OSDS:</b> {get_readable_file_size(seed_speed)}/s
 """
-        await query.answer(msg, show_alert=True)
+        button = ButtonMaker()
+        button.ibutton("Back", f"status {data[1]} ref")
+        await editMessage(message, msg, button.build_menu())
 
 
 bot.add_handler(

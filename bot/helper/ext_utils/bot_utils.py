@@ -91,7 +91,7 @@ async def get_telegraph_list(telegraph_content):
 
 def arg_parser(items, arg_base):
     if not items:
-        return arg_base
+        return
     bool_arg_set = {
         "-b",
         "-e",
@@ -134,15 +134,14 @@ def arg_parser(items, arg_base):
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
         i += 1
-    link = []
-    if items[0] not in arg_base:
+    if "link" in arg_base and items[0] not in arg_base:
+        link = []
         if arg_start == -1:
             link.extend(iter(items))
         else:
             link.extend(items[r] for r in range(arg_start))
         if link:
             arg_base["link"] = " ".join(link)
-    return arg_base
 
 
 def getSizeBytes(size):

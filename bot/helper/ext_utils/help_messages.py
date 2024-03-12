@@ -252,6 +252,7 @@ Title3 link -c cmd -d ratio:time -z password
 -c command -up mrcc:remote:path/subdir -rcf --buffer-size:8M|key|key:value
 -inf For included words filter.
 -exf For excluded words filter.
+-stv true or false (sensitive filter)
 
 Example: Title https://www.rss-url.com -inf 1080 or 720 or 144p|mkv or mp4|hevc -exf flv or web|xxx
 This filter will parse links that it's titles contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't conyain (flv or web) and xxx` words. You can add whatever you want.
