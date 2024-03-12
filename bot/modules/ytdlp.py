@@ -309,6 +309,7 @@ class YtDlp(TaskListener):
             "-t": "",
             "-ca": "",
             "-cv": "",
+            "-ns": "",
         }
 
         args = arg_parser(input_list[1:], arg_base)
@@ -333,6 +334,7 @@ class YtDlp(TaskListener):
         self.forceUpload = args["-fu"]
         self.convertAudio = args["-ca"]
         self.convertVideo = args["-cv"]
+        self.nameSub = args["-ns"]
 
         isBulk = args["-b"]
         folder_name = args["-m"]

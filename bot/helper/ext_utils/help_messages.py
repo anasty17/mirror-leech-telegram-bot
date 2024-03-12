@@ -181,6 +181,14 @@ If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 /cmd rcl or rclonePath -up rclonePath or rc or rcl
 /cmd mrcc:rclonePath -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
 
+name_sub = """<b>Name Substitution</b>: -ns
+/cmd link -ns tea : coffee : s|ACC :  : s|mP4
+This will effect on all files. Formate: wordToReplace : wordToReplaceWith : sensitiveCase
+1. tea will get replaced by coffee with sensitive case because I have added `s` last of the option.
+2. ACC will get removed because I have added nothing between to replace with sensitive case because I have added `s` last of the option.
+3. mP4 will get removed because I have added nothing to replace with
+"""
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
@@ -198,6 +206,7 @@ YT_HELP_DICT = {
     "Screenshot": screenshot,
     "Convert-Media": convert_media,
     "Force-Start": force_start,
+    "Name-Substitute": name_sub,
 }
 
 MIRROR_HELP_DICT = {
@@ -223,6 +232,7 @@ MIRROR_HELP_DICT = {
     "Convert-Media": convert_media,
     "Force-Start": force_start,
     "User-Download": user_download,
+    "Name-Substitute": name_sub,
 }
 
 CLONE_HELP_DICT = {

@@ -98,6 +98,7 @@ class Mirror(TaskListener):
             "-t": "",
             "-ca": "",
             "-cv": "",
+            "-ns": "",
         }
 
         args = arg_parser(input_list[1:], arg_base)
@@ -120,6 +121,7 @@ class Mirror(TaskListener):
         self.forceUpload = args["-fu"]
         self.convertAudio = args["-ca"]
         self.convertVideo = args["-cv"]
+        self.nameSub = args["-ns"]
 
         headers = args["-h"]
         isBulk = args["-b"]
