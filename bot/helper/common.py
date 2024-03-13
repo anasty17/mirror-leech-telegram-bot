@@ -908,7 +908,7 @@ class TaskConfig:
                 pattern = l[0]
                 res = l[1] if len(l) > 1  and l[1] else ""
                 sen = len(l) > 2 and l[2] == "s"
-                new_name = sub(fr"{pattern}", res, name, flags= I if sen else 0)
+                new_name = sub(fr"{pattern}", res, name, flags=I if sen else 0)
             new_path = ospath.join(up_dir, new_name)
             await move(dl_path, new_path)
             return new_path

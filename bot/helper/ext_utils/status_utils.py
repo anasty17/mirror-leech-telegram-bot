@@ -53,7 +53,7 @@ STATUSES = {
 
 async def getTaskByGid(gid: str):
     async with task_dict_lock:
-        for tk in task_dict.values():
+        for tk in list(task_dict.values()):
             if hasattr(tk, "seeding"):
                 await sync_to_async(tk.update)
             if tk.gid() == gid:
@@ -64,25 +64,29 @@ async def getTaskByGid(gid: str):
 def getSpecificTasks(status, userId):
     if status == "All":
         if userId:
-            return [tk for tk in task_dict.values() if tk.listener.userId == userId]
+            return [
+                tk for tk in list(task_dict.values()) if tk.listener.userId == userId
+            ]
         else:
             return list(task_dict.values())
     elif userId:
         return [
             tk
-            for tk in task_dict.values()
+            for tk in list(task_dict.values())
             if tk.listener.userId == userId
-            and (st := tk.status() == status)
-            or status == MirrorStatus.STATUS_DOWNLOADING
-            and st not in STATUSES.values()
+            and (
+                (st := tk.status() == status)
+                or status == MirrorStatus.STATUS_DOWNLOADING
+                and st not in list(STATUSES.values())
+            )
         ]
     else:
         return [
             tk
-            for tk in task_dict.values()
+            for tk in list(task_dict.values())
             if (st := tk.status() == status)
             or status == MirrorStatus.STATUS_DOWNLOADING
-            and st not in STATUSES.values()
+            and st not in list(STATUSES.values())
         ]
 
 
