@@ -156,7 +156,8 @@ class TaskConfig:
 
     async def beforeStart(self):
         self.nameSub = (
-            self.userDict.get("name_sub", False) or config_dict["NAME_SUBSTITUTE"]
+            self.nameSub
+            or self.userDict.get("name_sub", False) or config_dict["NAME_SUBSTITUTE"]
             if "name_sub" not in self.userDict
             else ""
         )
