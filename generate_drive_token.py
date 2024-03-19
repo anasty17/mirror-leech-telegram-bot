@@ -10,10 +10,10 @@ if os.path.exists(__G_DRIVE_TOKEN_FILE):
     with open(__G_DRIVE_TOKEN_FILE, "rb") as f:
         credentials = pickle.load(f)
         if (
-                (credentials is None or not credentials.valid)
-                and credentials
-                and credentials.expired
-                and credentials.refresh_token
+            (credentials is None or not credentials.valid)
+            and credentials
+            and credentials.expired
+            and credentials.refresh_token
         ):
             credentials.refresh(Request())
 else:

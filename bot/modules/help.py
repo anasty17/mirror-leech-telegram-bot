@@ -25,7 +25,9 @@ async def argUsage(_, query):
         elif data[2] == "y":
             await editMessage(message, COMMAND_USAGE["yt"][0], COMMAND_USAGE["yt"][1])
         elif data[2] == "c":
-            await editMessage(message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1])
+            await editMessage(
+                message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1]
+            )
     elif data[1] == "mirror":
         buttons = ButtonMaker()
         buttons.ibutton("Back", "help back m")

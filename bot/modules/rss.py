@@ -7,7 +7,6 @@ from functools import partial
 from io import BytesIO
 from pyrogram.filters import command, regex, create
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from re import split as re_split
 from time import time
 
 from bot import scheduler, rss_dict, LOGGER, DATABASE_URL, config_dict, bot

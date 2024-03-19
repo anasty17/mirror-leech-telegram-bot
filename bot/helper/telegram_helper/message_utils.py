@@ -61,7 +61,7 @@ async def sendFile(message, file, caption=None):
 
 async def sendRss(text):
     try:
-        app = user if user else bot
+        app = user or bot
         return await app.send_message(
             chat_id=config_dict["RSS_CHAT"],
             text=text,

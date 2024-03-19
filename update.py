@@ -53,9 +53,9 @@ if DATABASE_URL is not None:
         if old_config is not None:
             del old_config["_id"]
         if (
-                old_config is not None
-                and old_config == dict(dotenv_values("config.env"))
-                or old_config is None
+            old_config is not None
+            and old_config == dict(dotenv_values("config.env"))
+            or old_config is None
         ) and config_dict is not None:
             environ["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
             environ["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]

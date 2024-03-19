@@ -116,7 +116,7 @@ async def _onDownloadComplete(tor):
 async def _qb_listener():
     client = await sync_to_async(get_qb_client)
     while True:
-        async with qb_listener_lock: 
+        async with qb_listener_lock:
             try:
                 torrents = await sync_to_async(client.torrents_info)
                 if len(torrents) == 0:

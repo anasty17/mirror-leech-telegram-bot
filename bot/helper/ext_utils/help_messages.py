@@ -52,7 +52,7 @@ If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tool
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 
 If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
-/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/@username/pm(leech by bot) or -up u:id/@username(leech by user)
+/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/@username/pm(leech by bot) or -up u:id/@username(leech by user) or -up m:id/@username(mixed leech)
 
 Incase you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
 DEFAULT_UPLOAD doesn't effect on leech cmds.
@@ -189,6 +189,9 @@ This will effect on all files. Formate: wordToReplace : wordToReplaceWith : sens
 3. mP4 will get removed because I have added nothing to replace with
 """
 
+mixed_leech = """Mixed leech: -ml
+/cmd link -ml (leech by user and bot sessionwith respect to size)"""
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
@@ -207,6 +210,7 @@ YT_HELP_DICT = {
     "Convert-Media": convert_media,
     "Force-Start": force_start,
     "Name-Substitute": name_sub,
+    "Mixed-Leech": mixed_leech,
 }
 
 MIRROR_HELP_DICT = {
@@ -233,6 +237,7 @@ MIRROR_HELP_DICT = {
     "Force-Start": force_start,
     "User-Download": user_download,
     "Name-Substitute": name_sub,
+    "Mixed-Leech": mixed_leech,
 }
 
 CLONE_HELP_DICT = {

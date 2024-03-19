@@ -298,6 +298,7 @@ class YtDlp(TaskListener):
             "-f": False,
             "-fd": False,
             "-fu": False,
+            "-mu": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -335,6 +336,7 @@ class YtDlp(TaskListener):
         self.convertAudio = args["-ca"]
         self.convertVideo = args["-cv"]
         self.nameSub = args["-ns"]
+        self.mixedLeech = args["-ml"]
 
         isBulk = args["-b"]
         folder_name = args["-m"]

@@ -64,9 +64,7 @@ async def getTaskByGid(gid: str):
 def getSpecificTasks(status, userId):
     if status == "All":
         if userId:
-            return [
-                tk for tk in task_dict.values() if tk.listener.userId == userId
-            ]
+            return [tk for tk in task_dict.values() if tk.listener.userId == userId]
         else:
             return list(task_dict.values())
     elif userId:
@@ -75,7 +73,8 @@ def getSpecificTasks(status, userId):
             for tk in task_dict.values()
             if tk.listener.userId == userId
             and (
-                (st := tk.status()) and st == status
+                (st := tk.status())
+                and st == status
                 or status == MirrorStatus.STATUS_DOWNLOADING
                 and st not in STATUSES.values()
             )
@@ -84,7 +83,8 @@ def getSpecificTasks(status, userId):
         return [
             tk
             for tk in task_dict.values()
-            if (st := tk.status()) and st == status
+            if (st := tk.status())
+            and st == status
             or status == MirrorStatus.STATUS_DOWNLOADING
             and st not in STATUSES.values()
         ]
