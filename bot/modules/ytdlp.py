@@ -298,7 +298,7 @@ class YtDlp(TaskListener):
             "-f": False,
             "-fd": False,
             "-fu": False,
-            "-mu": False,
+            "-ml": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
