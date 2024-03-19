@@ -58,10 +58,8 @@ class TgUploader:
 
     async def _upload_progress(self, current, _):
         if self._listener.isCancelled:
-            if self._user_session:
-                user.stop_transmission()
-            else:
-                self._listener.client.stop_transmission()
+            app = user if self._user_session else self._listener.client
+            app.stop_transmission()
         chunk_size = current - self._last_uploaded
         self._last_uploaded = current
         self._processed_bytes += chunk_size
@@ -88,20 +86,14 @@ class TgUploader:
                 else self._listener.message.text.lstrip("/")
             )
             try:
-                if self._user_session:
-                    self._sent_msg = await user.send_message(
-                        chat_id=self._listener.upDest,
-                        text=msg,
-                        disable_web_page_preview=True,
-                        disable_notification=True,
-                    )
-                else:
-                    self._sent_msg = await self._listener.client.send_message(
-                        chat_id=self._listener.upDest,
-                        text=msg,
-                        disable_web_page_preview=True,
-                        disable_notification=True,
-                    )
+                app = user if self._user_session else self._listener.client
+                self._sent_msg = await app.send_message(
+                    chat_id=self._listener.upDest,
+                    text=msg,
+                    disable_web_page_preview=True,
+                    disable_notification=True,
+                )
+                if not self._user_session:
                     self._is_private = self._sent_msg.chat.type.name == "PRIVATE"
             except Exception as e:
                 await self._listener.onUploadError(str(e))
@@ -202,14 +194,12 @@ class TgUploader:
 
     async def _send_media_group(self, subkey, key, msgs):
         for index, msg in enumerate(msgs):
-            if self._listener.mixedLeech or not self.self._user_session:
-                msgs[index] = await self._listener.client.get_messages(
-                    chat_id=msg[0], message_ids=msg[1]
-                )
-            else:
-                msgs[index] = await user.get_messages(
-                    chat_id=msg[0], message_ids=msg[1]
-                )
+            app = (
+                self._listener.client
+                if self._listener.mixedLeech or not self.self._user_session
+                else user
+            )
+            msgs[index] = await app.get_messages(chat_id=msg[0], message_ids=msg[1])
         msgs_list = await msgs[0].reply_to_message.reply_media_group(
             media=self._get_input_media(subkey, key),
             quote=True,
@@ -252,16 +242,11 @@ class TgUploader:
                     f_size = await aiopath.getsize(self._up_path)
                     if self._listener.mixedLeech:
                         self._user_session = f_size > 2097152000
-                        if self._user_session:
-                            self._sent_msg = await user.get_messages(
-                                chat_id=self._sent_msg.chat.id,
-                                message_ids=self._sent_msg.id,
-                            )
-                        else:
-                            self._sent_msg = await self._listener.client.get_messages(
-                                chat_id=self._sent_msg.chat.id,
-                                message_ids=self._sent_msg.id,
-                            )
+                        app = user if self._user_session else self._listener.client
+                        self._sent_msg = await app.get_messages(
+                            chat_id=self._sent_msg.chat.id,
+                            message_ids=self._sent_msg.id,
+                        )
                     self._total_files += 1
                     if f_size == 0:
                         LOGGER.error(
