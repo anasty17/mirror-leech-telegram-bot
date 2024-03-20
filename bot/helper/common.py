@@ -349,10 +349,13 @@ class TaskConfig:
                 await self.message.unpin()
             except:
                 pass
-        if username := self.user.username:
-            self.tag = f"@{username}"
-        else:
-            self.tag = self.message.from_user.mention
+        if self.user:
+            if username := self.user.username:
+                self.tag = f"@{username}"
+            elif hasattr(self.user, "mention"):
+                self.tag = self.user.mention
+            else:
+                self.tag = self.user.title
 
     @new_task
     async def run_multi(self, input_list, folder_name, obj):
