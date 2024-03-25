@@ -93,6 +93,7 @@ def clean_all():
     aria2.remove_all(True)
     get_qb_client().torrents_delete(torrent_hashes="all")
     try:
+        LOGGER.info("Cleaning Download Directory...")
         rmtree(DOWNLOAD_DIR, ignore_errors=True)
     except:
         pass

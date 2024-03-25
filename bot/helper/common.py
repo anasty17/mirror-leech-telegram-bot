@@ -809,6 +809,8 @@ class TaskConfig:
             ):
                 if not checked:
                     checked = True
+                    async with task_dict_lock:
+                        task_dict[self.mid] = MediaConvertStatus(self, gid)
                     await cpu_eater_lock.acquire()
                     LOGGER.info(f"Converting: {self.name}")
                 else:
@@ -830,6 +832,8 @@ class TaskConfig:
             ):
                 if not checked:
                     checked = True
+                    async with task_dict_lock:
+                        task_dict[self.mid] = MediaConvertStatus(self, gid)
                     await cpu_eater_lock.acquire()
                     LOGGER.info(f"Converting: {self.name}")
                 else:
@@ -838,9 +842,6 @@ class TaskConfig:
                 return "" if self.isCancelled else res
             else:
                 return ""
-
-        async with task_dict_lock:
-            task_dict[self.mid] = MediaConvertStatus(self, gid)
 
         if await aiopath.isfile(dl_path):
             output_file = await proceedConvert(dl_path)
