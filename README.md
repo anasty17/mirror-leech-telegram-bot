@@ -259,7 +259,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
     - tea will get removed with sensitive case
     - clone will get removed
 
-### GDrive Tools
+**3. GDrive Tools**
 
 - `GDRIVE_ID`: This is the Folder/TeamDrive ID of the Google Drive OR `root` to which you want to upload all the mirrors
   using google-api-python-client. `Str`
@@ -269,7 +269,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
   then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature
   is not perfect yet). Default is `False`. `Bool`
 
-### Rclone
+**4. Rclone**
 
 - `RCLONE_PATH`: Default rclone path to which you want to upload all the files/folders using rclone. `Str`
 - `RCLONE_FLAGS`: key:value|key|key|key:value . Check here all [RcloneFlags](https://rclone.org/flags/). `Str`
@@ -280,7 +280,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `RCLONE_SERVE_USER`: Username for rclone serve authentication. `Str`
 - `RCLONE_SERVE_PASS`: Password for rclone serve authentication. `Str`
 
-### Update
+**5. Update**
 
 - `UPSTREAM_REPO`: Your github repository link, if your repo is private
   add `https://username:{githubtoken}@github.com/{username}/{reponame}` format. Get token
@@ -291,7 +291,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
       read [THIS](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upstream-repo-recommended).
 - `UPSTREAM_BRANCH`: Upstream branch for update. Default is `master`. `Str`
 
-### Leech
+**6. Leech**
 
 - `LEECH_SPLIT_SIZE`: Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium. `Int`
 - `AS_DOCUMENT`: Default type of Telegram file upload. Default is `False` mean as media. `Bool`
@@ -303,7 +303,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
 
-### qBittorrent/Aria2c
+**7. qBittorrent/Aria2c**
 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Int`
 - `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should
@@ -316,12 +316,12 @@ quotes, even if it's `Int`, `Bool` or `List`.
       decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit`
       from qbittorrent.conf or bsetting command.
 
-### JDownloader
+**8. JDownloader**
 
 - `JD_EMAIL`: jdownlaoder email sign up on [JDownloader](https://my.jdownloader.org/)
 - `JD_PASS`: jdownlaoder password
 
-### RSS
+**9. RSS**
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in
   sec. `Int`
@@ -333,7 +333,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
       with `USER_STRING_SESSION` add group id for `RSS_CHAT`. If `DATABASE_URL` not added you will miss the feeds while
       bot offline.
 
-### Queue System
+**10. Queue System**
 
 - `QUEUE_ALL`: Number of parallel tasks of downloads and uploads. For example if 20 task added and `QUEUE_ALL` is `8`,
   then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to
@@ -342,7 +342,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `QUEUE_DOWNLOAD`: Number of all parallel downloading tasks. `Int`
 - `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
 
-### Torrent Search
+**11. Torrent Search**
 
 - `SEARCH_API_LINK`: Search api app link. Get your api from deploying
   this [repository](https://github.com/Ryuk-me/Torrent-Api-py). `Str`
@@ -464,14 +464,14 @@ sudo docker compose logs --follow
 ```
 mirror - or /m Mirror
 qbmirror - or /qm Mirror torrent using qBittorrent
-jdmirror - or /jm Mirror torrent using jdownloader
-ytdl - or /y Mirror yt-dlp supported link
-leech - or /l Leech
+jdmirror - or /jm Mirror using jdownloader
+ytdl - or /y Mirror yt-dlp supported links
+leech - or /l Upload to telegram
 qbleech - or /ql Leech torrent using qBittorrent
-jdleech - or /jl Leech torrent using jdownloader
-ytdlleech - or /yl Leech through yt-dlp supported link
+jdleech - or /jl Leech using jdownloader
+ytdlleech - or /yl Leech yt-dlp supported links
 clone - Copy file/folder to Drive
-count - Count file/folder from Drive
+count - Count file/folder from GDrive
 usetting - or /us User settings
 bsetting - or /bs Bot settings
 status - Get Mirror Status message
@@ -482,7 +482,7 @@ search - Search for torrents with API
 cancel - or /c Cancel a task
 cancelall - Cancel all tasks
 forcestart - or /fs to start task from queue
-del - Delete file/folder from Drive
+del - Delete file/folder from GDrive
 log - Get the Bot Log
 shell - Run commands in Shell
 aexec - Execute async function
