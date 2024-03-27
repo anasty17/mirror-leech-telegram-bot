@@ -929,27 +929,34 @@ def gofile(url):
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
 
     def __get_token(session):
-        if "gofile_token" in _caches:
-            __url = f"https://api.gofile.io/getAccountDetails?token={_caches['gofile_token']}"
-        else:
-            __url = "https://api.gofile.io/createAccount"
+        headers = {
+            "User-Agent": user_agent,
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "*/*",
+            "Connection": "keep-alive",
+        }
+        __url = f"https://api.gofile.io/accounts"
         try:
-            __res = session.get(__url).json()
+            __res = session.post(__url, headers=headers).json()
             if __res["status"] != "ok":
-                if "gofile_token" in _caches:
-                    del _caches["gofile_token"]
-                return __get_token(session)
-            _caches["gofile_token"] = __res["data"]["token"]
-            return _caches["gofile_token"]
+                raise DirectDownloadLinkException(f"ERROR: Failed to get token.")
+            return __res["data"]["token"]
         except Exception as e:
             raise e
 
     def __fetch_links(session, _id, folderPath=""):
-        _url = f"https://api.gofile.io/getContent?contentId={_id}&token={token}&wt=4fd6sg89d7s6&cache=true"
+        _url = f"https://api.gofile.io/contents/{_id}?wt=4fd6sg89d7s6&cache=true"
+        headers = {
+            "User-Agent": user_agent,
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept": "*/*",
+            "Connection": "keep-alive",
+            "Authorization": "Bearer" + " " + token,
+        }
         if _password:
             _url += f"&password={_password}"
         try:
-            _json = session.get(_url).json()
+            _json = session.get(_url, headers=headers).json()
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
         if _json["status"] in "error-passwordRequired":
@@ -970,7 +977,7 @@ def gofile(url):
         if not details["title"]:
             details["title"] = data["name"] if data["type"] == "folder" else _id
 
-        contents = data["contents"]
+        contents = data["children"]
         for content in contents.values():
             if content["type"] == "folder":
                 if not content["public"]:
@@ -1566,7 +1573,7 @@ def qiwi(url):
         tree = HTML(res)
         if name := tree.xpath('//h1[@class="page_TextHeading__VsM7r"]/text()'):
             ext = name[0].split(".")[-1]
-            return f"https://qiwi.lol/{file_id}.{ext}"
+            return f"https://spyderrock.com/{file_id}.{ext}"
         else:
             raise DirectDownloadLinkException("ERROR: File not found")
 
