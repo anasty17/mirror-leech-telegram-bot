@@ -103,6 +103,7 @@ def direct_link_generator(link):
             "d0o0d.com",
             "ds2video.com",
             "do0od.com",
+            "d000d.com",
         ]
     ):
         return doods(link)
@@ -305,7 +306,8 @@ def hxfile(url):
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     if direct_link := html.xpath("//a[@class='btn btn-dow']/@href"):
-        return direct_link[0]
+        header = f"Referer: {url}"
+        return direct_link[0], header
     raise DirectDownloadLinkException("ERROR: Direct download link not found")
 
 
