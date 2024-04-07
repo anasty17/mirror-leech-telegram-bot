@@ -471,7 +471,7 @@ class TgUploader:
                 await remove(thumb)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            await sleep(f.value)
+            await sleep(f.value*1.3)
         except Exception as err:
             if (
                 self._thumb is None

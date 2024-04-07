@@ -101,6 +101,7 @@ async def add_jd_download(listener, path):
             if not is_connected:
                 await listener.onDownloadError(jdownloader.error)
                 return
+            jdownloader.boot()
             await jdownloader.connectToDevice()
 
         if not jd_downloads:

@@ -70,6 +70,7 @@ async def _jd_listener():
                 if not is_connected:
                     LOGGER.error(jdownloader.error)
                     continue
+                jdownloader.boot()
                 await jdownloader.connectToDevice()
             try:
                 packages = await jdownloader.device.downloads.query_packages(
