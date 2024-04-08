@@ -127,8 +127,8 @@ class YtSelection:
                             size = item["filesize"]
                         elif item.get("filesize_approx"):
                             size = item["filesize_approx"]
-                        else:
-                            size = 0
+                        # else:
+                        #     size = 0
 
                         if item.get("video_ext") == "none" and (
                             item.get("resolution") == "audio only"
