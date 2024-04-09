@@ -96,8 +96,8 @@ async def delete_status():
     async with task_dict_lock:
         for key, data in list(status_dict.items()):
             try:
-                del status_dict[key]
                 await deleteMessage(data["message"])
+                del status_dict[key]
             except Exception as e:
                 LOGGER.error(str(e))
 

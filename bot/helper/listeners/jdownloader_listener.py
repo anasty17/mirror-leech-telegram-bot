@@ -9,12 +9,14 @@ from bot.helper.ext_utils.status_utils import getTaskByGid
 @new_task
 async def update_download(gid, value):
     try:
-        del value["ids"][0]
-        new_gid = value["ids"][0]
-        jd_downloads[new_gid] = value
+        async with jd_lock:
+            del value["ids"][0]
+            new_gid = value["ids"][0]
+            jd_downloads[new_gid] = value
         if task := await getTaskByGid(f"{gid}"):
             task._gid = new_gid
-        del jd_downloads[gid]
+        async with jd_lock:
+            del jd_downloads[gid]
     except:
         pass
 
@@ -29,28 +31,32 @@ async def remove_download(gid):
     )
     if task := await getTaskByGid(f"{gid}"):
         await task.listener.onDownloadError("Download removed manually!")
-        del jd_downloads[gid]
+        async with jd_lock:
+            del jd_downloads[gid]
 
 
 @new_task
 async def _onDownloadComplete(gid):
     if task := await getTaskByGid(f"{gid}"):
         if task.listener.select:
-            await retry_function(
-                jdownloader.device.downloads.cleanup,
-                "DELETE_DISABLED",
-                "REMOVE_LINKS_AND_DELETE_FILES",
-                "SELECTED",
-                package_ids=jd_downloads[gid]["ids"],
-            )
+            async with jd_lock:
+                await retry_function(
+                    jdownloader.device.downloads.cleanup,
+                    "DELETE_DISABLED",
+                    "REMOVE_LINKS_AND_DELETE_FILES",
+                    "SELECTED",
+                    package_ids=jd_downloads[gid]["ids"],
+                )
         await task.listener.onDownloadComplete()
         if Intervals["stopAll"]:
             return
-        await retry_function(
-            jdownloader.device.downloads.remove_links,
-            package_ids=jd_downloads[gid]["ids"],
-        )
-        del jd_downloads[gid]
+        async with jd_lock:
+            if gid in jd_downloads:
+                await retry_function(
+                    jdownloader.device.downloads.remove_links,
+                    package_ids=jd_downloads[gid]["ids"],
+                )
+                del jd_downloads[gid]
 
 
 @new_task
@@ -83,7 +89,7 @@ async def _jd_listener():
             ]
             all_packages = [pack["uuid"] for pack in packages]
             for k, v in list(jd_downloads.items()):
-                if k not in all_packages:
+                if v["status"] == "down" and k not in all_packages:
                     cdi = jd_downloads[k]["ids"]
                     if len(cdi) > 1:
                         update_download(k, v)
@@ -95,7 +101,7 @@ async def _jd_listener():
                             del jd_downloads[k]["ids"][index]
 
             for gid in finished:
-                if gid in jd_downloads and jd_downloads[gid]["status"] != "done":
+                if gid in jd_downloads and jd_downloads[gid]["status"] == "down":
                     is_finished = all(
                         did in finished for did in jd_downloads[gid]["ids"]
                     )
