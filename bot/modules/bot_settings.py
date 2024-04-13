@@ -317,9 +317,6 @@ async def edit_qbit(_, message, pre_message, key):
 async def sync_jdownloader():
     if not DATABASE_URL or jdownloader.device is None:
         return
-    await jdownloader.device.system.exit_jd()
-    if await aiopath.exists("cfg.zip"):
-        await remove("cfg.zip")
     try:
         await wait_for(retry_function(jdownloader.update_devices), timeout=10)
     except:
@@ -327,7 +324,14 @@ async def sync_jdownloader():
         if not is_connected:
             LOGGER.error(jdownloader.error)
             return
-    jdownloader.boot()
+        await jdownloader.connectToDevice()
+    await jdownloader.device.system.exit_jd()
+    if await aiopath.exists("cfg.zip"):
+        await remove("cfg.zip")
+    is_connected = await jdownloader.jdconnect()
+    if not is_connected:
+        LOGGER.error(jdownloader.error)
+        return
     await jdownloader.connectToDevice()
     await (
         await create_subprocess_exec("7z", "a", "cfg.zip", "/JDownloader/cfg")

@@ -293,7 +293,7 @@ async def add_jd_download(listener, path):
         package_ids=online_packages,
     )
 
-    await sleep(0.5)
+    await sleep(1)
 
     download_packages = await retry_function(
         jdownloader.device.downloads.query_packages,
