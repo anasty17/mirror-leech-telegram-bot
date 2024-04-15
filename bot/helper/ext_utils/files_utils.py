@@ -111,7 +111,9 @@ def exit_clean_up(signal, frame):
         sexit(1)
 
 
-async def clean_unwanted(path, custom_list=[]):
+async def clean_unwanted(path, custom_list=None):
+    if custom_list is None:
+        custom_list = []
     LOGGER.info(f"Cleaning unwanted files/folders: {path}")
     for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
         for filee in files:
@@ -141,7 +143,9 @@ async def get_path_size(path):
     return total_size
 
 
-async def count_files_and_folders(path, extension_filter, unwanted_files=[]):
+async def count_files_and_folders(path, extension_filter, unwanted_files=None):
+    if unwanted_files is None:
+        unwanted_files = []
     total_files = 0
     total_folders = 0
     for dirpath, dirs, files in await sync_to_async(walk, path):

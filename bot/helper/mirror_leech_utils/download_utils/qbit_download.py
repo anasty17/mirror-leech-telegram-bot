@@ -1,5 +1,5 @@
 from aiofiles.os import remove, path as aiopath
-from time import time
+from asyncio import sleep
 
 from bot import (
     task_dict,
@@ -42,7 +42,6 @@ def _get_hash_file(fpath):
 
 
 async def add_qb_torrent(listener, path, ratio, seed_time):
-    ADD_TIME = time()
     try:
         url = listener.link
         tpath = None
@@ -70,10 +69,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                     )
                     if len(tor_info) > 0:
                         break
-                    elif time() - ADD_TIME >= 120:
-                        msg = "Not added! Check if the link is valid or not. If it's torrent file then report, this happens if torrent file size above 10mb."
-                        await listener.onDownloadError(msg)
-                        return
+                    await sleep(1)
             tor_info = tor_info[0]
             listener.name = tor_info.name
             ext_hash = tor_info.hash

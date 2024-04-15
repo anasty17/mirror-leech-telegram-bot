@@ -482,9 +482,7 @@ async def edit_user_settings(client, query):
             )
         elif IS_PREMIUM_USER:
             mixed_leech = "Disabled"
-            buttons.ibutton(
-                "Enable Mixed Leech", f"userset {user_id} mixed_leech true"
-            )
+            buttons.ibutton("Enable Mixed Leech", f"userset {user_id} mixed_leech true")
         else:
             mixed_leech = "Disabled"
 

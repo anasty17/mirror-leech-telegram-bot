@@ -22,15 +22,21 @@ from bot.helper.ext_utils.links_utils import (
     is_gdrive_id,
 )
 from bot.helper.listeners.task_listener import TaskListener
-from bot.helper.mirror_leech_utils.download_utils.aria2_download import add_aria2c_download
-from bot.helper.mirror_leech_utils.download_utils.direct_downloader import add_direct_download
+from bot.helper.mirror_leech_utils.download_utils.aria2_download import (
+    add_aria2c_download,
+)
+from bot.helper.mirror_leech_utils.download_utils.direct_downloader import (
+    add_direct_download,
+)
 from bot.helper.mirror_leech_utils.download_utils.direct_link_generator import (
     direct_link_generator,
 )
 from bot.helper.mirror_leech_utils.download_utils.gd_download import add_gd_download
 from bot.helper.mirror_leech_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_leech_utils.download_utils.qbit_download import add_qb_torrent
-from bot.helper.mirror_leech_utils.download_utils.rclone_download import add_rclone_download
+from bot.helper.mirror_leech_utils.download_utils.rclone_download import (
+    add_rclone_download,
+)
 from bot.helper.mirror_leech_utils.download_utils.telegram_download import (
     TelegramDownloadHelper,
 )
@@ -305,7 +311,9 @@ class Mirror(TaskListener):
                         return
 
         if file_ is not None:
-            await TelegramDownloadHelper(self).add_download(reply_to, f"{path}/", session)
+            await TelegramDownloadHelper(self).add_download(
+                reply_to, f"{path}/", session
+            )
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
         elif self.isJd:

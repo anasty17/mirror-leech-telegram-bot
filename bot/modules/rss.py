@@ -139,9 +139,7 @@ async def rssSub(_, message, pre_event):
                 last_link = rss_d.entries[0]["link"]
             msg += f"\nLink: <code>{last_link}</code>"
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
-            msg += (
-                f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
-            )
+            msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
             async with rss_dict_lock:
                 if rss_dict.get(user_id, False):
                     rss_dict[user_id][title] = {
@@ -287,7 +285,9 @@ async def rssList(query, start, all_users=False):
                 list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
                 list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
                 list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
-                list_feed += f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
+                list_feed += (
+                    f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
+                )
                 list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
     buttons.ibutton("Back", f"rss back {user_id}")
     buttons.ibutton("Close", f"rss close {user_id}")

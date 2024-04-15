@@ -471,7 +471,14 @@ class TgUploader:
                 await remove(thumb)
         except FloodWait as f:
             LOGGER.warning(str(f))
-            await sleep(f.value*1.3)
+            await sleep(f.value * 1.3)
+            if (
+                self._thumb is None
+                and thumb is not None
+                and await aiopath.exists(thumb)
+            ):
+                await remove(thumb)
+            return await self._upload_file(cap_mono, file, o_path)
         except Exception as err:
             if (
                 self._thumb is None
