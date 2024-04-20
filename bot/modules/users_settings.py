@@ -287,7 +287,12 @@ async def set_option(_, message, pre_event, option):
         user_dict.setdefault("upload_paths", {})
         lines = value.split("/n")
         for line in lines:
-            name, path = line.split(maxsplit=1)
+            data = line.split(maxsplit=1)
+            if len(data) != 2:
+                await sendMessage(message, "Wrong format! Add <name> <path>")
+                await update_user_settings(pre_event)
+                return
+            name, path = data
             user_dict["upload_paths"][name] = path
         value = user_dict["upload_paths"]
     update_user_ldata(user_id, option, value)
