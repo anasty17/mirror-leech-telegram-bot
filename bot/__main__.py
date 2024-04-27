@@ -105,7 +105,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
     else:
         await sendMessage(
             message,
-            "You Are not authorized user! Deploy your own mirror-leech bot",
+            "If you want use me contact my owner for buy. Low price. SriLanka 🇱🇰",
             reply_markup,
         )
 
