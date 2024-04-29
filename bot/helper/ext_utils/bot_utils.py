@@ -1,4 +1,4 @@
-from aiohttp import ClientSession
+from httpx import AsyncClient
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
@@ -160,9 +160,9 @@ def getSizeBytes(size):
 
 async def get_content_type(url):
     try:
-        async with ClientSession() as session:
-            async with session.get(url, allow_redirects=True, ssl=False) as response:
-                return response.headers.get("Content-Type")
+        async with AsyncClient() as client:
+            response = await client.get(url, allow_redirects=True, verify=False)
+            return response.headers.get("Content-Type")
     except:
         return None
 
