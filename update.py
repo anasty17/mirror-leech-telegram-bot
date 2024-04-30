@@ -8,7 +8,8 @@ from logging import (
     info as log_info,
 )
 from os import path, environ, remove
-from pymongo import MongoClient
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
 from subprocess import run as srun
 
 if path.exists("log.txt"):
@@ -46,7 +47,7 @@ if len(DATABASE_URL) == 0:
 
 if DATABASE_URL is not None:
     try:
-        conn = MongoClient(DATABASE_URL)
+        conn = MongoClient(DATABASE_URL, server_api=ServerApi("1"))
         db = conn.mltb
         old_config = db.settings.deployConfig.find_one({"_id": bot_id})
         config_dict = db.settings.config.find_one({"_id": bot_id})

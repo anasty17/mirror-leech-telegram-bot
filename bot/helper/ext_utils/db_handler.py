@@ -2,6 +2,7 @@ from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath, makedirs
 from dotenv import dotenv_values
 from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo.server_api import ServerApi
 from pymongo.errors import PyMongoError
 
 from bot import (
@@ -26,7 +27,7 @@ class DbManager:
 
     def _connect(self):
         try:
-            self._conn = AsyncIOMotorClient(DATABASE_URL)
+            self._conn = AsyncIOMotorClient(DATABASE_URL, server_api=ServerApi("1"))
             self._db = self._conn.mltb
         except PyMongoError as e:
             LOGGER.error(f"Error in DB connection: {e}")
