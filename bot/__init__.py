@@ -35,6 +35,7 @@ getLogger("requests").setLevel(INFO)
 getLogger("urllib3").setLevel(INFO)
 getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
+getLogger("pymongo").setLevel(ERROR)
 
 botStartTime = time()
 

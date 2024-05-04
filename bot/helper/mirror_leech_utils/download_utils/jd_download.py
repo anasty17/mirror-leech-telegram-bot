@@ -120,12 +120,11 @@ async def add_jd_download(listener, path):
         elif odl := await retry_function(
             jdownloader.device.linkgrabber.query_packages, [{}]
         ):
-            odl_list = [
+            if odl_list := [
                 od["uuid"]
                 for od in odl
                 if od.get("saveTo", "").startswith("/root/Downloads/")
-            ]
-            if odl_list:
+            ]:
                 await retry_function(
                     jdownloader.device.linkgrabber.remove_links,
                     package_ids=odl_list,
