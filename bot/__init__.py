@@ -210,15 +210,20 @@ if len(EXTENSION_FILTER) > 0:
 USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
 if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
-    user = tgClient(
-        "user",
-        TELEGRAM_API,
-        TELEGRAM_HASH,
-        session_string=USER_SESSION_STRING,
-        parse_mode=enums.ParseMode.HTML,
-        max_concurrent_transmissions=10,
-    ).start()
-    IS_PREMIUM_USER = user.me.is_premium
+    try:
+        user = tgClient(
+            "user",
+            TELEGRAM_API,
+            TELEGRAM_HASH,
+            session_string=USER_SESSION_STRING,
+            parse_mode=enums.ParseMode.HTML,
+            max_concurrent_transmissions=10,
+        ).start()
+        IS_PREMIUM_USER = user.me.is_premium
+    except:
+        log_error("Failed to create client from USER_SESSION_STRING")
+        IS_PREMIUM_USER = False
+        user = ""
 else:
     IS_PREMIUM_USER = False
     user = ""
