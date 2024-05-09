@@ -726,7 +726,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "name_subtitute":
         await query.answer()
         buttons = ButtonMaker()
-        if user_dict.get(data[2], False):
+        if user_dict.get("name_sub", False):
             buttons.ibutton("Remove Name Subtitute", f"userset {user_id} name_sub")
         buttons.ibutton("Back", f"userset {user_id} back")
         buttons.ibutton("Close", f"userset {user_id} close")
