@@ -1,6 +1,6 @@
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath, remove
-from asyncio import gather, create_subprocess_exec, sleep
+from asyncio import gather, create_subprocess_exec
 from os import execl as osexecl
 from psutil import (
     disk_usage,
@@ -25,6 +25,7 @@ from bot import (
     DATABASE_URL,
     INCOMPLETE_TASK_NOTIFIER,
     scheduler,
+    get_sabnzb_client,
 )
 from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
 from .helper.ext_utils.db_handler import DbManager
@@ -43,13 +44,13 @@ from .modules import (
     cancel_task,
     clone,
     exec,
+    file_selector,
     gd_count,
     gd_delete,
     gd_search,
     mirror_leech,
     status,
     torrent_search,
-    torrent_select,
     ytdlp,
     rss,
     shell,
@@ -123,11 +124,17 @@ async def restart(_, message):
     if st := Intervals["status"]:
         for intvl in list(st.values()):
             intvl.cancel()
-    await sleep(1)
+    nzb_client = get_sabnzb_client()
+    if nzb_client.LOGGED_IN:
+        await nzb_client.pause_all()
+        await nzb_client.purge_all(True)
+        await nzb_client.shutdown()
     await sync_to_async(clean_all)
-    await sleep(1)
     proc1 = await create_subprocess_exec(
-        "pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java"
+        "pkill",
+        "-9",
+        "-f",
+        "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java|sabnzbdplus",
     )
     proc2 = await create_subprocess_exec("python3", "update.py")
     await gather(proc1.wait(), proc2.wait())
@@ -149,20 +156,22 @@ async def log(_, message):
 
 help_string = f"""
 NOTE: Try each command without any argument to see more detalis.
-/{BotCommands.MirrorCommand[0]} or /{BotCommands.MirrorCommand[1]}: Start mirroring to Google Drive.
-/{BotCommands.QbMirrorCommand[0]} or /{BotCommands.QbMirrorCommand[1]}: Start Mirroring to Google Drive using qBittorrent.
-/{BotCommands.JdMirrorCommand[0]} or /{BotCommands.JdMirrorCommand[1]}: Start Mirroring to Google Drive using JDownloader.
+/{BotCommands.MirrorCommand[0]} or /{BotCommands.MirrorCommand[1]}: Start mirroring to cloud.
+/{BotCommands.QbMirrorCommand[0]} or /{BotCommands.QbMirrorCommand[1]}: Start Mirroring to cloud using qBittorrent.
+/{BotCommands.JdMirrorCommand[0]} or /{BotCommands.JdMirrorCommand[1]}: Start Mirroring to cloud using JDownloader.
+/{BotCommands.NzbMirrorCommand[0]} or /{BotCommands.NzbMirrorCommand[1]}: Start Mirroring to cloud using Sabnzbd.
 /{BotCommands.YtdlCommand[0]} or /{BotCommands.YtdlCommand[1]}: Mirror yt-dlp supported link.
 /{BotCommands.LeechCommand[0]} or /{BotCommands.LeechCommand[1]}: Start leeching to Telegram.
 /{BotCommands.QbLeechCommand[0]} or /{BotCommands.QbLeechCommand[1]}: Start leeching using qBittorrent.
 /{BotCommands.JdLeechCommand[0]} or /{BotCommands.JdLeechCommand[1]}: Start leeching using JDownloader.
+/{BotCommands.NzbLeechCommand[0]} or /{BotCommands.NzbLeechCommand[1]}: Start leeching using Sabnzbd.
 /{BotCommands.YtdlLeechCommand[0]} or /{BotCommands.YtdlLeechCommand[1]}: Leech yt-dlp supported link.
 /{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).
 /{BotCommands.UserSetCommand[0]} or /{BotCommands.UserSetCommand[1]} [query]: Users settings.
 /{BotCommands.BotSetCommand[0]} or /{BotCommands.BotSetCommand[1]} [query]: Bot settings.
-/{BotCommands.BtSelectCommand}: Select files from torrents by gid or reply.
+/{BotCommands.SelectCommand}: Select files from torrents or nzb by gid or reply.
 /{BotCommands.CancelTaskCommand[0]} or /{BotCommands.CancelTaskCommand[1]} [gid]: Cancel task by gid or reply.
 /{BotCommands.ForceStartCommand[0]} or /{BotCommands.ForceStartCommand[1]} [gid]: Force start task by gid or reply.
 /{BotCommands.CancelAllCommand} [query]: Cancel all [status] tasks.

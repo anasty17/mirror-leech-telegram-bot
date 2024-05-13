@@ -4,7 +4,7 @@ from re import findall as re_findall
 
 DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
 if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = "/usr/src/app/downloads/"
+    DOWNLOAD_DIR = "/usr/src/app/Downloads/"
 elif not DOWNLOAD_DIR.endswith("/"):
     DOWNLOAD_DIR += "/"
 
@@ -47,9 +47,9 @@ def get_folders(path):
     return fs.split("/")
 
 
-def make_tree(res, aria2=False):
-    parent = TorNode("Torrent")
-    if not aria2:
+def make_tree(res, tool=False):
+    if tool == "qbit":
+        parent = TorNode("Torrent")
         for i in res:
             folders = qb_get_folders(i.name)
             if len(folders) > 1:
@@ -84,7 +84,8 @@ def make_tree(res, aria2=False):
                     file_id=i.id,
                     progress=round(i.progress * 100, 5),
                 )
-    else:
+    elif tool == "aria":
+        parent = TorNode("Torrent")
         for i in res:
             folders = get_folders(i["path"])
             priority = 1
@@ -126,6 +127,24 @@ def make_tree(res, aria2=False):
                         (int(i["completedLength"]) / int(i["length"])) * 100, 5
                     ),
                 )
+
+    else:
+        parent = TorNode("Torrent")
+        priority = 1
+        for i in res["files"]:
+            TorNode(
+                i["filename"],
+                is_file=True,
+                parent=parent,
+                size=float(i["mb"]) * 1024,
+                priority=priority,
+                file_id=i["nzf_id"],
+                progress=round(
+                    ((float(i["mb"]) - float(i["mbleft"])) / float(i["mb"])) * 100,
+                    5,
+                ),
+            )
+
     return create_list(parent, ["", 0])
 
 

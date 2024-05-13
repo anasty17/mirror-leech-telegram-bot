@@ -145,7 +145,7 @@ class TaskListener(TaskConfig):
         if self.join and await aiopath.isdir(up_path):
             await join_files(up_path)
 
-        if self.extract:
+        if self.extract and not self.isNzb:
             up_path = await self.proceedExtract(up_path, gid)
             if self.isCancelled:
                 return

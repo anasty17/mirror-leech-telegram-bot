@@ -262,6 +262,7 @@ class YtDlp(TaskListener):
         _=None,
         isLeech=False,
         __=None,
+        ___=None,
         sameDir=None,
         bulk=None,
         multiTag=None,

@@ -62,27 +62,24 @@ async def _stop_duplicate(tor):
     task = await getTaskByGid(tor.hash[:12])
     if not hasattr(task, "listener"):
         return
-    task.listener.name = tor.content_path.rsplit("/", 1)[-1].rsplit(".!qB", 1)[0]
-    msg, button = await stop_duplicate_check(task.listener)
-    if msg:
-        _onDownloadError(msg, tor, button)
+    if task.listener.stopDuplicate:
+        task.listener.name = tor.content_path.rsplit("/", 1)[-1].rsplit(".!qB", 1)[0]
+        msg, button = await stop_duplicate_check(task.listener)
+        if msg:
+            _onDownloadError(msg, tor, button)
 
 
 @new_task
 async def _onDownloadComplete(tor):
     ext_hash = tor.hash
     tag = tor.tags
-    await sleep(2)
     task = await getTaskByGid(ext_hash[:12])
-    if not hasattr(task, "client"):
-        return
-    client = task.qbclient()
     if not task.listener.seed:
-        await sync_to_async(client.torrents_pause, torrent_hashes=ext_hash)
+        await sync_to_async(task.client.torrents_pause, torrent_hashes=ext_hash)
     if task.listener.select:
         await clean_unwanted(task.listener.dir)
         path = tor.content_path.rsplit("/", 1)[0]
-        res = await sync_to_async(client.torrents_files, torrent_hash=ext_hash)
+        res = await sync_to_async(task.client.torrents_files, torrent_hash=ext_hash)
         for f in res:
             if f.priority == 0 and await aiopath.exists(f"{path}/{f.name}"):
                 try:
@@ -100,7 +97,7 @@ async def _onDownloadComplete(tor):
             else:
                 removed = True
         if removed:
-            await _remove_torrent(client, ext_hash, tag)
+            await _remove_torrent(task.client, ext_hash, tag)
             return
         async with qb_listener_lock:
             if tag in QbTorrents:
@@ -110,11 +107,11 @@ async def _onDownloadComplete(tor):
         await update_status_message(task.listener.message.chat.id)
         LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
     else:
-        await _remove_torrent(client, ext_hash, tag)
+        await _remove_torrent(task.client, ext_hash, tag)
 
 
 async def _qb_listener():
-    client = await sync_to_async(get_qb_client)
+    client = get_qb_client()
     while True:
         async with qb_listener_lock:
             try:
@@ -142,10 +139,7 @@ async def _qb_listener():
                             )
                     elif state == "downloading":
                         QbTorrents[tag]["stalled_time"] = time()
-                        if (
-                            config_dict["STOP_DUPLICATE"]
-                            and not QbTorrents[tag]["stop_dup_check"]
-                        ):
+                        if  not QbTorrents[tag]["stop_dup_check"]:
                             QbTorrents[tag]["stop_dup_check"] = True
                             _stop_duplicate(tor_info)
                     elif state == "stalledDL":

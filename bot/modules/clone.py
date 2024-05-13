@@ -48,6 +48,7 @@ class Clone(TaskListener):
         __=None,
         ___=None,
         ____=None,
+        _____=None,
         bulk=None,
         multiTag=None,
         options="",

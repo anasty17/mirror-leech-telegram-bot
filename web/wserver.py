@@ -3,6 +3,8 @@ from flask import Flask, request
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from time import sleep
+from sabnzbdapi import sabnzbdClient
+from asyncio import run
 
 from web.nodes import make_tree
 
@@ -713,14 +715,19 @@ def list_torrent_contents(id_):
     if request.args["pin_code"] != pincode:
         return "<h1>Incorrect pin code</h1>"
 
-    if len(id_) > 20:
+    if id_.startswith("SABnzbd_nzo"):
+        client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
+        res = run(client.get_files(id_))
+        cont = make_tree(res, "nzb")
+        run(client.log_out())
+    elif len(id_) > 20:
         client = qbClient(host="localhost", port="8090")
         res = client.torrents_files(torrent_hash=id_)
-        cont = make_tree(res)
+        cont = make_tree(res, "qbit")
         client.auth_log_out()
     else:
         res = aria2.client.get_files(id_)
-        cont = make_tree(res, True)
+        cont = make_tree(res, "aria")
     return page.replace("{My_content}", cont[0]).replace(
         "{form_url}", f"/app/files/{id_}?pin_code={pincode}"
     )
@@ -730,10 +737,21 @@ def list_torrent_contents(id_):
 def set_priority(id_):
     data = dict(request.form)
 
-    resume = ""
-    if len(id_) > 20:
-        pause = ""
+    if id_.startswith("SABnzbd_nzo"):
+        client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
+        to_remove = []
+        for i, value in data.items():
+            if "filenode" in i and value != "on":
+                node_no = i.split("_")[-1]
+                to_remove.append(node_no)
 
+        run(client.remove_file(id_, to_remove))
+        LOGGER.info(f"Verified! nzo_id: {id_}")
+        run(client.log_out())
+
+    elif len(id_) > 20:
+        resume = ""
+        pause = ""
         for i, value in data.items():
             if "filenode" in i:
                 node_no = i.split("_")[-1]
@@ -765,6 +783,7 @@ def set_priority(id_):
             LOGGER.error(f"Verification Failed! Hash: {id_}")
         client.auth_log_out()
     else:
+        resume = ""
         for i, value in data.items():
             if "filenode" in i and value == "on":
                 node_no = i.split("_")[-1]

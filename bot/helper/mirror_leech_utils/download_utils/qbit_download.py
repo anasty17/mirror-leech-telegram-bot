@@ -40,7 +40,7 @@ def _get_hash_file(fpath):
 
 
 async def add_qb_torrent(listener, path, ratio, seed_time):
-    client = await sync_to_async(get_qb_client)
+    client = get_qb_client()
     try:
         url = listener.link
         tpath = None
@@ -138,6 +138,6 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
     except Exception as e:
         await listener.onDownloadError(f"{e}")
     finally:
-        if await aiopath.exists(listener.link):
+        if tpath and await aiopath.exists(listener.link):
             await remove(listener.link)
         await sync_to_async(client.auth_log_out)

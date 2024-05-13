@@ -48,8 +48,7 @@ async def remove_from_queue(_, message):
     ):
         await sendMessage(message, "This task is not for you!")
         return
-    obj = task.task()
-    listener = obj.listener
+    listener = task.listener
     msg = ""
     async with queue_dict_lock:
         if status == "fu":

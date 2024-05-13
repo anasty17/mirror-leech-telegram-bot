@@ -18,11 +18,13 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from pyrogram import Client as tgClient, enums
 from qbittorrentapi import Client as qbClient
+from sabnzbdapi import sabnzbdClient
 from socket import setdefaulttimeout
 from subprocess import Popen, run
 from time import time
 from tzlocal import get_localzone
 from uvloop import install
+from asyncio import run as aiorun
 
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
@@ -49,9 +51,10 @@ LOGGER = getLogger(__name__)
 
 load_dotenv("config.env", override=True)
 
-Intervals = {"status": {}, "qb": "", "jd": "", "stopAll": False}
+Intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
+nzb_jobs = {}
 DRIVES_NAMES = []
 DRIVES_IDS = []
 INDEX_URLS = []
@@ -59,6 +62,7 @@ GLOBAL_EXTENSION_FILTER = ["aria2", "!qB"]
 user_data = {}
 aria2_options = {}
 qbit_options = {}
+nzb_options = {}
 queued_dl = {}
 queued_up = {}
 non_queued_dl = set()
@@ -75,6 +79,7 @@ except:
 task_dict_lock = Lock()
 queue_dict_lock = Lock()
 qb_listener_lock = Lock()
+nzb_listener_lock = Lock()
 jd_lock = Lock()
 cpu_eater_lock = Lock()
 subprocess_lock = Lock()
@@ -130,6 +135,12 @@ if DATABASE_URL:
         if qbit_opt := db.settings.qbittorrent.find_one({"_id": bot_id}):
             del qbit_opt["_id"]
             qbit_options = qbit_opt
+        if nzb_opt := db.settings.nzb.find_one({"_id": bot_id}):
+            del nzb_opt["_id"]
+            (key, value), = nzb_opt.items()
+            file_ = key.replace("__", ".")
+            with open(f"sabnzbd/{file_}", "wb+") as f:
+                f.write(value)
         conn.close()
         BOT_TOKEN = environ.get("BOT_TOKEN", "")
         bot_id = BOT_TOKEN.split(":", 1)[0]
@@ -143,7 +154,7 @@ if not ospath.exists(".netrc"):
     with open(".netrc", "w"):
         pass
 run(
-    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox.sh && ./aria-nox.sh",
+    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
     shell=True,
 )
 
@@ -184,7 +195,7 @@ if DEFAULT_UPLOAD != "rc":
 
 DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
 if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = "/usr/src/app/downloads/"
+    DOWNLOAD_DIR = "/usr/src/app/Downloads/"
 elif not DOWNLOAD_DIR.endswith("/"):
     DOWNLOAD_DIR = f"{DOWNLOAD_DIR}/"
 
@@ -233,6 +244,14 @@ JD_PASS = environ.get("JD_PASS", "")
 if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
     JD_EMAIL = ""
     JD_PASS = ""
+
+USENET_HOST = environ.get("USENET_HOST", "")
+USENET_USERNAME = environ.get("USENET_USERNAME", "")
+USENET_PASSWORD = environ.get("USENET_PASSWORD", "")
+if len(USENET_HOST) == 0 or len(USENET_USERNAME) == 0 or len(USENET_PASSWORD) == 0:
+    USENET_HOST = ""
+    USENET_USERNAME = ""
+    USENET_PASSWORD = ""
 
 FILELION_API = environ.get("FILELION_API", "")
 if len(FILELION_API) == 0:
@@ -428,6 +447,9 @@ config_dict = {
     "USER_TRANSMISSION": USER_TRANSMISSION,
     "UPSTREAM_REPO": UPSTREAM_REPO,
     "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
+    "USENET_HOST": USENET_HOST,
+    "USENET_USERNAME": USENET_USERNAME,
+    "USENET_PASSWORD": USENET_PASSWORD,
     "USER_SESSION_STRING": USER_SESSION_STRING,
     "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
     "WEB_PINCODE": WEB_PINCODE,
@@ -473,6 +495,15 @@ def get_qb_client():
         port=8090,
         VERIFY_WEBUI_CERTIFICATE=False,
         REQUESTS_ARGS={"timeout": (30, 60)},
+    )
+
+
+def get_sabnzb_client():
+    return sabnzbdClient(
+        host="http://localhost",
+        api_key="mltb",
+        port="8070",
+        HTTPX_REQUETS_ARGS={"timeout": 10},
     )
 
 
@@ -526,3 +557,13 @@ if not aria2_options:
 else:
     a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
     aria2.set_global_options(a2c_glo)
+
+
+async def get_nzb_options():
+    global nzb_options
+    zclient = get_sabnzb_client()
+    nzb_options = (await zclient.get_config())["config"]["misc"]
+    await zclient.log_out()
+
+
+aiorun(get_nzb_options())

@@ -43,8 +43,8 @@ async def select(_, message):
             return
     elif len(msg) == 1:
         msg = (
-            "Reply to an active /cmd which was used to start the qb-download or add gid along with cmd\n\n"
-            + "This command mainly for selection incase you decided to select files from already added torrent. "
+            "Reply to an active /cmd which was used to start the download or add gid along with cmd\n\n"
+            + "This command mainly for selection incase you decided to select files from already added torrent/nzb. "
             + "But you can always use /cmd with arg `s` to select files before download start."
         )
         await sendMessage(message, msg)
@@ -64,7 +64,7 @@ async def select(_, message):
     ]:
         await sendMessage(
             message,
-            "Task should be in download or pause (incase message deleted by wrong) or queued (status incase you used torrent file)!",
+            "Task should be in download or pause (incase message deleted by wrong) or queued status (incase you have used torrent or nzb file)!",
         )
         return
     if task.name().startswith("[METADATA]"):
@@ -72,14 +72,16 @@ async def select(_, message):
         return
 
     try:
-        await sync_to_async(task.update)
-        if task.listener.isQbit:
-            id_ = task.hash()
-            if not task.queued:
+        id_ = task.gid()
+        if not task.queued:
+            if task.listener.isNzb:
+                await task.client.pause_job(id_)
+            elif task.listener.isQbit:
+                await sync_to_async(task.update)
+                id_ = task.hash()
                 await sync_to_async(task.client.torrents_pause, torrent_hashes=id_)
-        else:
-            id_ = task.gid()
-            if not task.queued:
+            else:
+                await sync_to_async(task.update)
                 try:
                     await sync_to_async(aria2.client.force_pause, id_)
                 except Exception as e:
@@ -88,7 +90,7 @@ async def select(_, message):
                     )
         task.listener.select = True
     except:
-        await sendMessage(message, "This is not a bittorrent task!")
+        await sendMessage(message, "This is not a bittorrent or sabnzbd task!")
         return
 
     SBUTTONS = bt_selection_buttons(id_)
@@ -111,9 +113,9 @@ async def get_confirm(_, query):
         await query.answer(data[3], show_alert=True)
     elif data[1] == "done":
         await query.answer()
+        id_ = data[3]
         if hasattr(task, "seeding"):
-            id_ = data[3]
-            if len(id_) > 20:
+            if task.listener.isQbit:
                 tor_info = (
                     await sync_to_async(task.client.torrents_info, torrent_hash=id_)
                 )[0]
@@ -145,17 +147,18 @@ async def get_confirm(_, query):
                         LOGGER.error(
                             f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!"
                         )
+        elif task.listener.isNzb:
+            await task.client.resume_job(id_)
         await sendStatusMessage(message)
         await deleteMessage(message)
     else:
         await deleteMessage(message)
-        obj = task.task()
-        await obj.cancel_task()
+        await task.cancel_task()
 
 
 bot.add_handler(
     MessageHandler(
-        select, filters=command(BotCommands.BtSelectCommand) & CustomFilters.authorized
+        select, filters=command(BotCommands.SelectCommand) & CustomFilters.authorized
     )
 )
-bot.add_handler(CallbackQueryHandler(get_confirm, filters=regex("^btsel")))
+bot.add_handler(CallbackQueryHandler(get_confirm, filters=regex("^sel")))

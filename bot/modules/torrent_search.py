@@ -19,7 +19,7 @@ TELEGRAPH_LIMIT = 300
 
 
 async def initiate_search_tools():
-    qbclient = await sync_to_async(get_qb_client)
+    qbclient = get_qb_client()
     qb_plugins = await sync_to_async(qbclient.search_plugins)
     if SEARCH_PLUGINS := config_dict["SEARCH_PLUGINS"]:
         globals()["PLUGINS"] = []
@@ -100,7 +100,7 @@ async def _search(key, site, message, method):
             return
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
-        client = await sync_to_async(get_qb_client)
+        client = get_qb_client()
         search = await sync_to_async(
             client.search_start, pattern=key, plugins=site, category="all"
         )
@@ -224,7 +224,7 @@ def _api_buttons(user_id, method):
 async def _plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
-        qbclient = await sync_to_async(get_qb_client)
+        qbclient = get_qb_client()
         pl = await sync_to_async(qbclient.search_plugins)
         for name in pl:
             PLUGINS.append(name["name"])

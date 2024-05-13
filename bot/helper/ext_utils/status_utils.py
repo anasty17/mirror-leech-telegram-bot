@@ -119,6 +119,11 @@ def get_readable_time(seconds: int):
     return result
 
 
+def time_to_seconds(time_duration):
+    hours, minutes, seconds = map(int, time_duration.split(":"))
+    return hours * 3600 + minutes * 60 + seconds
+
+
 def speed_string_to_bytes(size_text: str):
     size = 0
     size_text = size_text.lower()

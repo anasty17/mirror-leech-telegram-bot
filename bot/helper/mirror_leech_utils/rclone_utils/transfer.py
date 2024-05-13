@@ -124,7 +124,7 @@ class RcloneTransferHelper:
             if not error and remote_type == "drive" and self._use_service_accounts:
                 error = "Mostly your service accounts don't have access to this drive!"
             elif not error:
-                error = "Use '/shell cat rlog.txt' to see more information"
+                error = "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(error)
 
             if (
@@ -221,7 +221,7 @@ class RcloneTransferHelper:
             )
         elif code != -9:
             if not err:
-                err = "Use '/shell cat rlog.txt' to see more information"
+                err = "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(
                 f"while getting drive link. Path: {destination}. Stderr: {err}"
             )
@@ -242,7 +242,7 @@ class RcloneTransferHelper:
             if not error and remote_type == "drive" and self._use_service_accounts:
                 error = "Mostly your service accounts don't have access to this drive or RATE_LIMIT_EXCEEDED"
             elif not error:
-                error = "Use '/shell cat rlog.txt' to see more information"
+                error = "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(error)
             if (
                 self._sa_number != 0
@@ -352,7 +352,7 @@ class RcloneTransferHelper:
                 link = res
             elif code != -9:
                 if not err:
-                    err = "Use '/shell cat rlog.txt' to see more information"
+                    err = "Use <code>/shell cat rlog.txt</code> to see more information"
                 LOGGER.error(f"while getting link. Path: {destination} | Stderr: {err}")
                 link = ""
         if self._listener.isCancelled:
@@ -400,7 +400,9 @@ class RcloneTransferHelper:
         if return_code == -9:
             return None, None
         elif return_code != 0:
-            error = (await self._proc.stderr.read()).decode().strip() or "Use '/shell cat rlog.txt' to see more information"
+            error = (
+                await self._proc.stderr.read()
+            ).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(error)
             await self._listener.onUploadError(error[:4000])
             return None, None
@@ -428,7 +430,7 @@ class RcloneTransferHelper:
                     return res, destination
                 elif code != -9:
                     if not err:
-                        err = "Use '/shell cat rlog.txt' to see more information"
+                        err = "Use <code>/shell cat rlog.txt</code> to see more information"
                     LOGGER.error(
                         f"while getting link. Path: {destination} | Stderr: {err}"
                     )
