@@ -24,6 +24,7 @@ programming in Python.
 
 - Remove files from job before and during download (Requires Base URL) (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
+- Servers menu to edit/add/remove usenet servers
 
 ## TG Upload/Download
 
@@ -331,21 +332,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `USENET_SERVERS`: list of dictionaries, you can add as much as you want and there is a button for servers in sabnzbd settings to edit current servers and add new servers.
 
   ***[{'name': 'main', 'host': '', 'port': 5126, 'timeout': 60, 'username': '', 'password': '', 'connections': 8, 'ssl': 1, 'ssl_verify': 2, 'ssl_ciphers': '', 'enable': 1, 'required': 0, 'optional': 0, 'retention': 0, 'send_group': 0, 'priority': 0}]***
-
-  - `name` for server name, add whatever you want. `Str`
-  - `host` is usenet provider to grant access. `Str`
-  - `port` for host, add what is best for your server or leave it empty. `Int`
-  - `username` account username. `Str`
-  - `password` account password. `Str`
-  - `connections` number of connections by default is 8. `Int`
-  - `ssl` ssl verification, 0 (disabled) 1 (enabled) default. `Int`
-  - `ssl_verify` certificate verification, 0 (disabled) 1 (minimal) 2 (strict). `Int`
-  - `ssl_ciphers` increase performance by forcing a lower SSL encryption strength. Read the Wiki Help on [this](https://sabnzbd.org/wiki/advanced/ssl-ciphers). `Str`
-  - `enable` 0 (disabled) 1 (enabled). `Int`
-  - `required` in case of connection failures, the download queue will be paused for a few minutes instead of skipping this server, 0 (disabled) 1 (enabled). `Int`
-  - `optional` for unreliable servers, will be ignored longer in case of failures, 0 (disabled) 1 (enabled). `Int`
-  - `send_group` send group command before requesting articles, 0 (disabled) 1 (enabled). `Int`
-  - `priority` assign each server a priority, a number between 0 (highest) and 99 (lowest). `Int`
+  - [READ THIS FOR MORE INFORMATION](https://sabnzbd.org/wiki/configuration/4.2/servers)
 
 **10. RSS**
 
