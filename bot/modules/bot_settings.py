@@ -761,8 +761,8 @@ async def edit_bot_settings(client, query):
         rfunc = partial(update_buttons, message, "var")
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "botvar" and STATE == "view":
-        value = config_dict[data[2]]
-        if len(str(value)) > 200:
+        value = f"{config_dict[data[2]]}"
+        if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
@@ -778,8 +778,8 @@ async def edit_bot_settings(client, query):
         rfunc = partial(update_buttons, message, "aria")
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "ariavar" and STATE == "view":
-        value = aria2_options[data[2]]
-        if len(str(value)) > 200:
+        value = f"{aria2_options[data[2]]}"
+        if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
@@ -795,8 +795,8 @@ async def edit_bot_settings(client, query):
         rfunc = partial(update_buttons, message, "qbit")
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "qbitvar" and STATE == "view":
-        value = qbit_options[data[2]]
-        if len(str(value)) > 200:
+        value = f"{qbit_options[data[2]]}"
+        if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
@@ -812,8 +812,8 @@ async def edit_bot_settings(client, query):
         rfunc = partial(update_buttons, message, "nzb")
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "nzbvar" and STATE == "view":
-        value = nzb_options[data[2]]
-        if len(str(value)) > 200:
+        value = f"{nzb_options[data[2]]}"
+        if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
@@ -844,8 +844,8 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1].startswith("nzbsevar") and STATE == "view":
         index = int(data[1].replace("nzbsevar", ""))
-        value = config_dict["USENET_SERVERS"][index][data[2]]
-        if len(str(value)) > 200:
+        value = f"{config_dict["USENET_SERVERS"][index][data[2]]}"
+        if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
