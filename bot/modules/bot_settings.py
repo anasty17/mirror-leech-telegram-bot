@@ -410,10 +410,16 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
     nzb_client = get_sabnzb_client()
     if value.startswith("{") and value.endswith("}"):
         if key == "newser":
-            value = eval(value)
+            try:
+                value = eval(value)
+            except:
+                await sendMessage(message, "Invalid dict format!")
+                await update_buttons(pre_message, "nzbserver")
+                return
             res = await nzb_client.add_server(value)
             if not res["config"]["servers"][0]["host"]:
-                await sendMessage(message, "Invalid server")
+                await sendMessage(message, "Invalid server!")
+                await update_buttons(pre_message, "nzbserver")
                 return
             config_dict["USENET_SERVERS"].append(value)
             await update_buttons(pre_message, "nzbserver")
@@ -746,8 +752,8 @@ async def edit_bot_settings(client, query):
     elif data[1] == "remser":
         index = int(data[2])
         nz_client = get_sabnzb_client()
-        await nz_client.delete_config("servers", config_dict["USENET_SERVSERS"][index]["name"])
-        del config_dict["USENET_SERVSERS"][index]
+        await nz_client.delete_config("servers", config_dict["USENET_SERVERS"][index]["name"])
+        del config_dict["USENET_SERVERS"][index]
         await update_buttons(message, "nzbserver")
         if DATABASE_URL:
             await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
