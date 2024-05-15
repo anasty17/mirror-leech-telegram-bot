@@ -72,6 +72,7 @@ class sabnzbdClient(JobFunctions):
         params |= kwargs
         requests_kwargs = {**self._HTTPX_REQUETS_ARGS, **requests_args}
         retries = 5
+        response = None
         for retry_count in range(retries):
             try:
                 res = await session.request(
@@ -81,11 +82,14 @@ class sabnzbdClient(JobFunctions):
                     **requests_kwargs,
                 )
                 response = res.json()
+                break
             except DecodingError as e:
                 raise DecodingError(f"Failed to decode response!: {res.text}") from e
             except APIConnectionError as err:
                 if retry_count >= (retries - 1):
                     raise err
+        if response is None:
+            raise APIConnectionError("Failed to connect to API!")
         return response
 
     async def check_login(self):

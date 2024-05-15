@@ -8,4 +8,4 @@ aria2c --allow-overwrite=true --auto-file-renaming=true --bt-enable-lpd=true --b
        --content-disposition-default-utf8=true --user-agent=Wget/1.12 --peer-agent=qBittorrent/4.5.2 --quiet=true \
        --summary-interval=0 --max-upload-limit=1K
 qbittorrent-nox -d --profile="$(pwd)"
-sabnzbdplus -f sabnzbd/SABnzbd.ini -s 127.0.0.1:8070 -b 0 -d -c -l 0 --console
+sabnzbdplus -f sabnzbd/SABnzbd.ini -s :::8070 -b 0 -d -c -l 0 --console

@@ -17,7 +17,7 @@ async def get_download(client, nzo_id, old_info=None):
         if res["queue"]["slots"]:
             slot = res["queue"]["slots"][0]
             if msg := slot["labels"]:
-                LOGGER.warning(msg.join(" | "))
+                LOGGER.warning(" | ".join(msg))
             return slot
         return old_info
     except Exception as e:
