@@ -245,7 +245,9 @@ def extract_info(link, options):
 async def _mdisk(link, name):
     key = link.split("/")[-1]
     async with AsyncClient(verify=False) as client:
-        resp = await client.get(f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}")
+        resp = await client.get(
+            f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
+        )
     if resp.status_code == 200:
         resp_json = resp.json()
         link = resp_json["source"]

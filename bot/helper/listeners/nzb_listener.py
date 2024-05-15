@@ -65,9 +65,7 @@ async def _onDownloadComplete(nzo_id):
 
 async def _nzb_listener():
     client = get_sabnzb_client()
-    while True:
-        if Intervals["stopAll"]:
-            break
+    while not Intervals["stopAll"]:
         async with nzb_listener_lock:
             try:
                 jobs = (await client.get_history())["history"]["slots"]

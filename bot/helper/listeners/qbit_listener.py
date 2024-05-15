@@ -139,7 +139,7 @@ async def _qb_listener():
                             )
                     elif state == "downloading":
                         QbTorrents[tag]["stalled_time"] = time()
-                        if  not QbTorrents[tag]["stop_dup_check"]:
+                        if not QbTorrents[tag]["stop_dup_check"]:
                             QbTorrents[tag]["stop_dup_check"] = True
                             _stop_duplicate(tor_info)
                     elif state == "stalledDL":
