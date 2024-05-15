@@ -250,14 +250,14 @@ if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
 USENET_SERVERS = environ.get("USENET_SERVERS", "")
 try:
     if len(USENET_SERVERS) == 0:
-        USENET_SERVERS = ""
+        USENET_SERVERS = []
     elif not eval(USENET_SERVERS)[0]["host"]:
-        USENET_SERVERS = ""
+        USENET_SERVERS = []
     else:
         USENET_SERVERS = eval(USENET_SERVERS)
 except:
     log_error(f"Wrong USENET_SERVERS format: {USENET_SERVERS}")
-    USENET_SERVERS = ""
+    USENET_SERVERS = []
 
 FILELION_API = environ.get("FILELION_API", "")
 if len(FILELION_API) == 0:
