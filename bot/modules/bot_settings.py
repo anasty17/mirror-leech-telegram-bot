@@ -216,7 +216,7 @@ Timeout: 60 sec"""
                 buttons.ibutton("Edit", "botset edit nzbserver")
             else:
                 buttons.ibutton("View", "botset view nzbserver")
-            buttons.ibutton("Add New", "botset nzbsevar newser")
+        buttons.ibutton("Add New", "botset nzbsevar newser")
         buttons.ibutton("Back", "botset nzb")
         buttons.ibutton("Close", "botset close")
         if len(config_dict["USENET_SERVERS"]) > 10:
