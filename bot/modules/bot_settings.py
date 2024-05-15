@@ -970,12 +970,16 @@ async def load_config():
         JD_PASS = ""
 
     USENET_SERVERS = environ.get("USENET_SERVERS", "")
-    if len(USENET_SERVERS) == 0:
+    try:
+        if len(USENET_SERVERS) == 0:
+            USENET_SERVERS = ""
+        elif not eval(USENET_SERVERS)[0]["host"]:
+            USENET_SERVERS = ""
+        else:
+            USENET_SERVERS = eval(USENET_SERVERS)
+    except:
+        LOGGER.error(f"Wrong USENET_SERVERS format: {USENET_SERVERS}")
         USENET_SERVERS = ""
-    elif not eval(USENET_SERVERS)[0]["host"]:
-        USENET_SERVERS = ""
-    else:
-        USENET_SERVERS = eval(USENET_SERVERS)
 
     FILELION_API = environ.get("FILELION_API", "")
     if len(FILELION_API) == 0:
@@ -1001,7 +1005,11 @@ async def load_config():
     if len(SEARCH_PLUGINS) == 0:
         SEARCH_PLUGINS = ""
     else:
-        SEARCH_PLUGINS = eval(SEARCH_PLUGINS)
+        try:
+            SEARCH_PLUGINS = eval(SEARCH_PLUGINS)
+        except:
+            LOGGER.error(f"Wrong SEARCH_PLUGINS fornat {SEARCH_PLUGINS}")
+            SEARCH_PLUGINS = ""
 
     MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
