@@ -140,7 +140,7 @@ async def get_buttons(key=None, edit_type=None):
                 buttons.ibutton("Empty", f"botset emptyserkey {index} {key}")
             buttons.ibutton("Close", "botset close")
             if key == "newser":
-                msg = f"Send one server as dictionary, like in config.env. Timeout: 60 sec"
+                msg = "Send one server as dictionary {}, like in config.env without []. Timeout: 60 sec"
             else:
                 msg = f"Send a valid value for {key} in server {config_dict["USENET_SERVERS"][index]['name']}. Current value is '{config_dict["USENET_SERVERS"][index][key]}. Timeout: 60 sec"
     elif key == "var":
