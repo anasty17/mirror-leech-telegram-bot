@@ -68,8 +68,8 @@ def bt_selection_buttons(id_):
         buttons.ubutton(
             "Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}"
         )
-    buttons.ibutton("Done Selecting", f"btsel done {gid} {id_}")
-    buttons.ibutton("Cancel", f"btsel cancel {gid}")
+    buttons.ibutton("Done Selecting", f"sel done {gid} {id_}")
+    buttons.ibutton("Cancel", f"sel cancel {gid}")
     return buttons.build_menu(2)
 
 

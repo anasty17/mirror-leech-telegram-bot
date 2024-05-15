@@ -66,7 +66,7 @@ START = 0
 STATE = "view"
 handler_dict = {}
 default_values = {
-    "DOWNLOAD_DIR": "/usr/src/app/Downloads/",
+    "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "LEECH_SPLIT_SIZE": MAX_SPLIT_SIZE,
     "RSS_DELAY": 600,
     "STATUS_UPDATE_INTERVAL": 15,
@@ -126,14 +126,23 @@ async def get_buttons(key=None, edit_type=None):
             msg = f"Send a valid value for {key}. Current value is '{qbit_options[key]}'. Timeout: 60 sec"
         elif edit_type == "nzbvar":
             buttons.ibutton("Back", "botset nzb")
-            if key != "newserver":
-                buttons.ibutton("Default", f"botset resetnzb {key}")
-                buttons.ibutton("Empty String", f"botset emptynzb {key}")
+            buttons.ibutton("Default", f"botset resetnzb {key}")
+            buttons.ibutton("Empty String", f"botset emptynzb {key}")
             buttons.ibutton("Close", "botset close")
-            if key == "newserver":
-                msg = "Send host : user : password. Example: xxx.xxx.xxx : myuser : my password. Timeout: 60 sec"
+            msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}.\nIf the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
+        elif edit_type.startswith("nzbsevar"):
+            if key == "newser":
+                index = 0
             else:
-                msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}.\nIf the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
+                index = int(edit_type.replace("nzbsevar", ""))
+            buttons.ibutton("Back", f"botset nzbser{index}")
+            if key != "newser":
+                buttons.ibutton("Empty", f"botset emptyserkey {index} {key}")
+            buttons.ibutton("Close", "botset close")
+            if key == "newser":
+                msg = f"Send one server as dictionary, like in config.env. Timeout: 60 sec"
+            else:
+                msg = f"Send a valid value for {key} in server {config_dict["USENET_SERVERS"][index]['name']}. Current value is '{config_dict["USENET_SERVERS"][index][key]}. Timeout: 60 sec"
     elif key == "var":
         for k in list(config_dict.keys())[START : 10 + START]:
             buttons.ibutton(k, f"botset botvar {k}")
@@ -191,7 +200,7 @@ Timeout: 60 sec"""
             buttons.ibutton("Edit", "botset edit nzb")
         else:
             buttons.ibutton("View", "botset view nzb")
-        buttons.ibutton("Add Server", "botset nzbvar newserver")
+        buttons.ibutton("Servers", "botset nzbserver")
         buttons.ibutton("Back", "botset back")
         buttons.ibutton("Close", "botset close")
         for x in range(0, len(nzb_options), 10):
@@ -199,6 +208,40 @@ Timeout: 60 sec"""
                 f"{int(x / 10)}", f"botset start nzb {x}", position="footer"
             )
         msg = f"Sabnzbd Options | Page: {int(START / 10)} | State: {STATE}"
+    elif key == "nzbserver":
+        if len(config_dict["USENET_SERVERS"]) > 0:
+            for index, k in enumerate(config_dict["USENET_SERVERS"][START : 10 + START]):
+                buttons.ibutton(k["name"], f"botset nzbser{index}")
+            if STATE == "view":
+                buttons.ibutton("Edit", "botset edit nzbserver")
+            else:
+                buttons.ibutton("View", "botset view nzbserver")
+            buttons.ibutton("Add New", "botset nzbsevar newser")
+        buttons.ibutton("Back", "botset nzb")
+        buttons.ibutton("Close", "botset close")
+        if len(config_dict["USENET_SERVERS"]) > 10:
+            for x in range(0, len(config_dict["USENET_SERVERS"]), 10):
+                buttons.ibutton(
+                    f"{int(x / 10)}", f"botset start nzbser {x}", position="footer"
+                )
+        msg = f"Usenet Servers | Page: {int(START / 10)} | State: {STATE}"
+    elif key.startswith("nzbser"):
+        index = int(key.replace("nzbser", ""))
+        for k in list(config_dict["USENET_SERVERS"][index].keys())[START : 10 + START]:
+            buttons.ibutton(k, f"botset nzbsevar{index} {k}")
+        if STATE == "view":
+            buttons.ibutton("Edit", f"botset edit {key}")
+        else:
+            buttons.ibutton("View", f"botset view {key}")
+        buttons.ibutton("Back", "botset nzbserver")
+        buttons.ibutton("Close", "botset close")
+        if len(config_dict["USENET_SERVERS"][index].keys()) > 10:
+            for x in range(0, len(config_dict["USENET_SERVERS"][index]), 10):
+                buttons.ibutton(
+                    f"{int(x / 10)}", f"botset start {key} {x}", position="footer"
+                )
+        msg = f"Server Keys | Page: {int(START / 10)} | State: {STATE}"
+
     button = buttons.build_menu(1) if key is None else buttons.build_menu(2)
     return msg, button
 
@@ -273,6 +316,8 @@ async def edit_variable(_, message, pre_message, key):
             INDEX_URLS.insert(0, value)
     elif value.isdigit():
         value = int(value)
+    elif value.startswith("[") and value.endswith("]"):
+        value = eval(value)
     config_dict[key] = value
     await update_buttons(pre_message, "var")
     await deleteMessage(message)
@@ -293,20 +338,10 @@ async def edit_variable(_, message, pre_message, key):
         jdownloader.initiate()
     elif key == "RSS_DELAY":
         addJob()
-    elif key in ["USENET_HOST", "USENET_USERNAME", "USENET_PASSWORD"]:
+    elif key == "USET_SERVERS":
         nzb_client = get_sabnzb_client()
-        if key == "USENET_HOST":
-            items = {
-                "name": "main",
-                "displayname": value,
-                "host": value,
-                "connections": 8,
-            }
-        elif key == "USENET_USERNAME":
-            items = {"name": "main", "username": value}
-        elif key == "USENET_PASSWORD":
-            items = {"name": "main", "password": value}
-        await nzb_client.set_special_config("servers", items)
+        for s in value:
+            await nzb_client.set_special_config("servers", s)
         await nzb_client.log_out()
 
 
@@ -361,22 +396,47 @@ async def edit_nzb(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
     nzb_client = get_sabnzb_client()
-    if key == "newserver":
-        host, username, password = [x.strip() for x in value.split(" : ", 2)]
-        await nzb_client.login(host, host, username, password)
-    else:
-        if value.isdigit():
-            value = int(value)
-        elif value.startswith("[") and value.endswith("]"):
-            value = f"{eval(value).join(',')}"
-        res = await nzb_client.set_config("misc", key, value)
-        value = res["misc"][key]
-        nzb_options[key] = value
+    if value.isdigit():
+        value = int(value)
+    elif value.startswith("[") and value.endswith("]"):
+        value = f"{eval(value).join(',')}"
+    res = await nzb_client.set_config("misc", key, value)
+    value = res["misc"][key]
+    nzb_options[key] = value
     await nzb_client.log_out()
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
         await DbManager().update_nzb_config()
+
+
+async def edit_nzb_server(_, message, pre_message, key, index=0):
+    handler_dict[message.chat.id] = False
+    value = message.text
+    nzb_client = get_sabnzb_client()
+    if value.startswith("{") and value.endswith("}"):
+        if key == "newser":
+            value = eval(value)
+            res = await nzb_client.add_server(value)
+            if not res["config"]["servers"][0]["host"]:
+                await sendMessage(message, "Invalid server")
+                return
+            config_dict["USENET_SERVERS"].append(value)
+    else:
+        if value.isdigit():
+            value = int(value)
+        res = await nzb_client.add_server(
+            {"name": config_dict["USENET_SERVERS"][index]["name"], key: value}
+        )
+        if res["config"]["servers"][0][key] == "":
+            await sendMessage(message, "Invalid value")
+            return
+        config_dict["USENET_SERVERS"][index][key] = value
+    await nzb_client.log_out()
+    await update_buttons(pre_message, f"nzbser{index}")
+    await deleteMessage(message)
+    if DATABASE_URL:
+        await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
 
 
 async def sync_jdownloader():
@@ -543,7 +603,11 @@ async def edit_bot_settings(client, query):
             show_alert=True,
         )
         await sync_jdownloader()
-    elif data[1] in ["var", "aria", "qbit", "nzb"]:
+    elif data[1] in ["var", "aria", "qbit", "nzb", "nzbserver"] or data[1].startswith(
+        "nzbser"
+    ):
+        if data[1] == "nzbserver":
+            globals()["START"] = 0
         await query.answer()
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
@@ -604,6 +668,11 @@ async def edit_bot_settings(client, query):
             jdownloader.device = None
             jdownloader.error = "JDownloader Credentials not provided!"
             await create_subprocess_exec(["pkill", "-9", "-f", "java"])
+        elif data[2] == "USENET_SERVERS":
+            nzb_client = get_sabnzb_client()
+            for s in config_dict["USENET_SERVERS"]:
+                await nzb_client.delete_config("servers", s["name"])
+            await nzb_client.log_out()
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:
@@ -619,10 +688,6 @@ async def edit_bot_settings(client, query):
             "RCLONE_SERVE_PASS",
         ]:
             await rclone_serve_booter()
-        elif data[2] in ["USENET_HOST", "USENET_USERNAME", "USENET_PASSWORD"]:
-            nzb_client = get_sabnzb_client()
-            await nzb_client.delete_config("servers", "main")
-            await nzb_client.log_out()
     elif data[1] == "resetaria":
         aria2_defaults = await sync_to_async(aria2.client.get_global_option)
         if aria2_defaults[data[2]] == aria2_options[data[2]]:
@@ -740,7 +805,7 @@ async def edit_bot_settings(client, query):
         elif value == "":
             value = None
         await query.answer(f"{value}", show_alert=True)
-    elif data[1] == "nzbvar" and (STATE == "edit" or data[2] == "newserver"):
+    elif data[1] == "nzbvar" and STATE == "edit":
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_nzb, pre_message=message, key=data[2])
@@ -748,6 +813,38 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1] == "nzbvar" and STATE == "view":
         value = nzb_options[data[2]]
+        if len(str(value)) > 200:
+            await query.answer()
+            with BytesIO(str.encode(value)) as out_file:
+                out_file.name = f"{data[2]}.txt"
+                await sendFile(message, out_file)
+            return
+        elif value == "":
+            value = None
+        await query.answer(f"{value}", show_alert=True)
+    elif data[1] == "emptyserkey":
+        await query.answer()
+        await update_buttons(message, f"nzbser{data[2]}")
+        index = int(data[2])
+        nzb_client = get_sabnzb_client()
+        res = await nzb_client.add_server({"name": config_dict["USENET_SERVERS"][index]['name'], data[3]: ""})
+        config_dict["USENET_SERVERS"][index][data[3]] = res['config']['servers'][0][data[3]]
+        await nzb_client.log_out()
+        if DATABASE_URL:
+            await DbManager().update_config_dict["USENET_SERVERS"]()
+    elif data[1].startswith("nzbsevar") and (STATE == "edit" or data[2] == "newser"):
+        if data[2] == "newser":
+            index = 0
+        else:
+            index = int(data[1].replace("nzbsevar", ""))
+        await query.answer()
+        await update_buttons(message, data[2], data[1])
+        pfunc = partial(edit_nzb_server, pre_message=message, key=data[2], index=index)
+        rfunc = partial(update_buttons, message, data[1])
+        await event_handler(client, query, pfunc, rfunc)
+    elif data[1].startswith("nzbsevar") and STATE == "view":
+        index = int(data[1].replace("nzbsevar", ""))
+        value = config_dict["USENET_SERVERS"][index][data[2]]
         if len(str(value)) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
@@ -824,7 +921,7 @@ async def load_config():
 
     DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
     if len(DOWNLOAD_DIR) == 0:
-        DOWNLOAD_DIR = "/usr/src/app/Downloads/"
+        DOWNLOAD_DIR = "/usr/src/app/downloads/"
     elif not DOWNLOAD_DIR.endswith("/"):
         DOWNLOAD_DIR = f"{DOWNLOAD_DIR}/"
 
@@ -872,13 +969,13 @@ async def load_config():
         JD_EMAIL = ""
         JD_PASS = ""
 
-    USENET_HOST = environ.get("USENET_HOST", "")
-    USENET_USERNAME = environ.get("USENET_USERNAME", "")
-    USENET_PASSWORD = environ.get("USENET_PASSWORD", "")
-    if len(USENET_HOST) == 0 or len(USENET_USERNAME) == 0 or len(USENET_PASSWORD) == 0:
-        USENET_HOST = ""
-        USENET_USERNAME = ""
-        USENET_PASSWORD = ""
+    USENET_SERVERS = environ.get("USENET_SERVERS", "")
+    if len(USENET_SERVERS) == 0:
+        USENET_SERVERS = ""
+    elif not eval(USENET_SERVERS)[0]["host"]:
+        USENET_SERVERS = ""
+    else:
+        USENET_SERVERS = eval(USENET_SERVERS)
 
     FILELION_API = environ.get("FILELION_API", "")
     if len(FILELION_API) == 0:
@@ -903,6 +1000,8 @@ async def load_config():
     SEARCH_PLUGINS = environ.get("SEARCH_PLUGINS", "")
     if len(SEARCH_PLUGINS) == 0:
         SEARCH_PLUGINS = ""
+    else:
+        SEARCH_PLUGINS = eval(SEARCH_PLUGINS)
 
     MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
@@ -1136,9 +1235,7 @@ async def load_config():
             "USER_TRANSMISSION": USER_TRANSMISSION,
             "UPSTREAM_REPO": UPSTREAM_REPO,
             "UPSTREAM_BRANCH": UPSTREAM_BRANCH,
-            "USENET_HOST": USENET_HOST,
-            "USENET_USERNAME": USENET_USERNAME,
-            "USENET_PASSWORD": USENET_PASSWORD,
+            "USENET_SERVERS": USENET_SERVERS,
             "USER_SESSION_STRING": USER_SESSION_STRING,
             "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS,
             "WEB_PINCODE": WEB_PINCODE,

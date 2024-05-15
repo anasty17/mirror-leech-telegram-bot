@@ -124,12 +124,12 @@ async def restart(_, message):
     if st := Intervals["status"]:
         for intvl in list(st.values()):
             intvl.cancel()
+    await sync_to_async(clean_all)
     nzb_client = get_sabnzb_client()
     if nzb_client.LOGGED_IN:
         await nzb_client.pause_all()
         await nzb_client.purge_all(True)
         await nzb_client.shutdown()
-    await sync_to_async(clean_all)
     proc1 = await create_subprocess_exec(
         "pkill",
         "-9",

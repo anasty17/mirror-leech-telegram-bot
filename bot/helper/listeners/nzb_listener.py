@@ -72,7 +72,7 @@ async def _nzb_listener():
             try:
                 jobs = (await client.get_history())["history"]["slots"]
                 downloads = (await client.get_downloads())["queue"]["slots"]
-                if len(jobs) == 0 and len(downloads) == 0:
+                if len(nzb_jobs) == 0:
                     Intervals["nzb"] = ""
                     await client.log_out()
                     break
@@ -82,8 +82,8 @@ async def _nzb_listener():
                         continue
                     if job["status"] == "Completed":
                         if not nzb_jobs[nzo_id]["uploaded"]:
-                            _onDownloadComplete(nzo_id)
                             nzb_jobs[nzo_id]["uploaded"] = True
+                            _onDownloadComplete(nzo_id)
                             nzb_jobs[nzo_id]["status"] = "Completed"
                     elif job["status"] == "Failed":
                         _onDownloadError(job["fail_message"], nzo_id)

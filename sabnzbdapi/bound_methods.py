@@ -3,18 +3,27 @@ class SubFunctions:
     def __init__(self):
         pass
 
-    async def login(self, name: str, host: str, username: str, password: str):
-        return await self.set_special_config(
-            "servers",
-            {
-                "name": name,
-                "displayname": host,
-                "host": host,
-                "connections": 8,
-                "username": username,
-                "password": password,
-            },
-        )
+    async def add_server(self, server: dict):
+        """server = {
+            "name": "main",
+            "displayname": "main",
+            "host": "",
+            "port": 5126,
+            "timeout": 60,
+            "username": "",
+            "password": "",
+            "connections": 8,
+            "ssl": 1,
+            "ssl_verify": 2,
+            "ssl_ciphers": "",
+            "enable": 1,
+            "required": 0,
+            "optional": 0,
+            "retention": 0,
+            "send_group": 0,
+            "priority": 0,
+        }"""
+        return await self.set_special_config("servers", server)
 
     async def create_category(self, name: str, dir: str):
         return await self.set_special_config("categories", {"name": name, "dir": dir})

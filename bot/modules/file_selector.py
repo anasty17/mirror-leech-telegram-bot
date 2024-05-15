@@ -67,7 +67,7 @@ async def select(_, message):
             "Task should be in download or pause (incase message deleted by wrong) or queued status (incase you have used torrent or nzb file)!",
         )
         return
-    if task.name().startswith("[METADATA]"):
+    if task.name().startswith("[METADATA]") or task.name().startswith("Trying"):
         await sendMessage(message, "Try after downloading metadata finished!")
         return
 

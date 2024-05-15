@@ -1,4 +1,5 @@
 from asyncio import gather
+from time import time
 
 from bot import LOGGER, get_sabnzb_client, nzb_jobs, nzb_listener_lock
 from bot.helper.ext_utils.bot_utils import async_to_sync
@@ -13,10 +14,13 @@ from bot.helper.ext_utils.status_utils import (
 async def get_download(client, nzo_id, old_info=None):
     try:
         res = await client.get_downloads(nzo_ids=nzo_id)
-        slot = res["queue"]["slots"][0]
-        if msg := slot["labels"]:
-            LOGGER.warning(msg.join(" | "))
-        return slot or old_info
+        if res["queue"]["slots"]:
+            slot = res["queue"]["slots"][0]
+            if msg := slot["labels"]:
+                LOGGER.warning(msg.join(" | "))
+            LOGGER.info(slot)
+            return slot
+        return old_info
     except Exception as e:
         LOGGER.error(f"{e}: Sabnzbd, while getting job info. ID: {nzo_id}")
         return old_info
@@ -30,6 +34,7 @@ class SabnzbdStatus:
         self.cstatus = status
         self._gid = gid
         self._info = None
+        self._start_time = time()
 
     async def update(self):
         self._info = await get_download(self.client, self._gid, self._info)
@@ -45,7 +50,9 @@ class SabnzbdStatus:
 
     def speed_raw(self):
         try:
-            return int(float(self._info["mbleft"]) * 1048576) / self.eta_raw()
+            return (
+                int(float(self._info["mb"]) - float(self._info["mbleft"])) * 1048576
+            ) / (time() - self._start_time)
         except:
             return 0
 

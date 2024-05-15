@@ -716,10 +716,15 @@ def list_torrent_contents(id_):
         return "<h1>Incorrect pin code</h1>"
 
     if id_.startswith("SABnzbd_nzo"):
-        client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
-        res = run(client.get_files(id_))
+
+        async def get_files():
+            client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
+            res = await client.get_files(id_)
+            await client.log_out()
+            return res
+
+        res = run(get_files())
         cont = make_tree(res, "nzb")
-        run(client.log_out())
     elif len(id_) > 20:
         client = qbClient(host="localhost", port="8090")
         res = client.torrents_files(torrent_hash=id_)
@@ -738,16 +743,20 @@ def set_priority(id_):
     data = dict(request.form)
 
     if id_.startswith("SABnzbd_nzo"):
-        client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
+
         to_remove = []
         for i, value in data.items():
             if "filenode" in i and value != "on":
                 node_no = i.split("_")[-1]
                 to_remove.append(node_no)
 
-        run(client.remove_file(id_, to_remove))
+        async def remove_files():
+            client = sabnzbdClient(host="http://localhost", api_key="mltb", port="8070")
+            await client.remove_file(id_, to_remove)
+            await client.log_out()
+
+        run(remove_files())
         LOGGER.info(f"Verified! nzo_id: {id_}")
-        run(client.log_out())
 
     elif len(id_) > 20:
         resume = ""
@@ -807,7 +816,7 @@ def homepage():
 @app.errorhandler(Exception)
 def page_not_found(e):
     return (
-        f"<h1>404: Torrent not found! Mostly wrong input. <br><br>Error: {e}</h2>",
+        f"<h1>404: Task not found! Mostly wrong input. <br><br>Error: {e}</h2>",
         404,
     )
 
