@@ -32,7 +32,6 @@ async def add_servers(client):
         for server in list(config_dict["USENET_SERVERS"]):
             if server["host"] not in servers_hosts:
                 tasks.append(client.add_server(server))
-            else:
                 config_dict["USENET_SERVERS"].append(server)
         if DATABASE_URL:
             tasks.append(
