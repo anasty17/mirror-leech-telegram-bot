@@ -258,12 +258,18 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work
   see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account)
   section below. Default is `False`. `Bool`
-- `NAME_SUBSTITUTE`: Add word/letter/sentense/pattern to remove or replace with other words with sensitive case or without. **Note**: Seed will get disbaled while using this option
-  * Example: 'text : code : s|mirror : leech|tea :  : s|clone'
+- `NAME_SUBSTITUTE`: Add word/letter/sentense/pattern to remove or replace with other words with sensitive case or without.**Notes**: 
+  1. Seed will get disbaled while using this option
+  2. Before any character you must add \, those are the characters: `\^$.|?*+()[]{}-`
+  * Example-1: `text : code : s | mirror : leech | tea :  : s | clone`
     - text will get replaced by code with sensitive case
     - mirror will get replaced by leech
     - tea will get removed with sensitive case
     - clone will get removed
+  * Example-2: `\(text\) | \[test\] : test | \\text\\ : text : s`
+    - `(text)` will get removed
+    - `[test]` will get replaced by test
+    - `\text\` will get replaced by text with sensitive case
 
 **3. GDrive Tools**
 
@@ -321,6 +327,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
     - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`,
       decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit`
       from qbittorrent.conf or bsetting command.
+    - Open port 8090 in your vps to access webui from any device. username: mltb, password: mltbmltb
 
 **8. JDownloader**
 
@@ -336,6 +343,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
   - [READ THIS FOR MORE INFORMATION](https://sabnzbd.org/wiki/configuration/4.2/servers)
 
   - **NOTE**: Enable port 8070 in your vps to access sabnzbd full web interface
+  - Open port 8070 in your vps to access web interface from any device.
 
 **10. RSS**
 
