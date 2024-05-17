@@ -1,5 +1,4 @@
 from asyncio import gather
-from time import time
 
 from bot import LOGGER, get_sabnzb_client, nzb_jobs, nzb_listener_lock
 from bot.helper.ext_utils.bot_utils import async_to_sync
@@ -33,7 +32,6 @@ class SabnzbdStatus:
         self.cstatus = status
         self._gid = gid
         self._info = None
-        self._start_time = time()
 
     async def update(self):
         self._info = await get_download(self.client, self._gid, self._info)
@@ -49,9 +47,7 @@ class SabnzbdStatus:
 
     def speed_raw(self):
         try:
-            return (
-                int(float(self._info["mb"]) - float(self._info["mbleft"])) * 1048576
-            ) / (time() - self._start_time)
+            return int(float(self._info["mb"]) * 1048576) / self.eta_raw()
         except:
             return 0
 

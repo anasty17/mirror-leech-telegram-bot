@@ -343,7 +343,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
   - [READ THIS FOR MORE INFORMATION](https://sabnzbd.org/wiki/configuration/4.2/servers)
 
   - **NOTE**: Enable port 8070 in your vps to access sabnzbd full web interface
-  - Open port 8070 in your vps to access web interface from any device.
+  - Open port 8070 in your vps to access web interface from any device. Use it like http://ip:8070/sabnzbd/.
 
 **10. RSS**
 

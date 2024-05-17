@@ -401,15 +401,16 @@ class JobFunctions(SubFunctions):
         return await self.call({"mode": "retry_all"})
 
     async def delete_history(
-        self, nzo_ids: str | list[str], archive: int = 0, del_files: int = 0
+        self, nzo_ids: str | list[str], archive: int = 0, delete_files: int = 0
     ):
         """return {"status": True}"""
         return await self.call(
             {
                 "mode": "history",
+                "name": "delete",
                 "value": nzo_ids if isinstance(nzo_ids, str) else ",".join(nzo_ids),
                 "archive": archive,
-                "del_files": del_files,
+                "del_files": 1 if delete_files else 0,
             }
         )
 

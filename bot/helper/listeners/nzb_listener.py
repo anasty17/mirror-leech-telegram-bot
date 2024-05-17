@@ -16,7 +16,7 @@ from bot.helper.ext_utils.task_manager import stop_duplicate_check
 
 async def _remove_job(client, nzo_id, mid):
     res1, _ = await gather(
-        client.delete_history(nzo_id, del_files=True), client.delete_category(f"{mid}")
+        client.delete_history(nzo_id, delete_files=True), client.delete_category(f"{mid}")
     )
     if not res1:
         await client.delete_job(nzo_id, True)
