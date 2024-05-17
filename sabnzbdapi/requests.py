@@ -92,14 +92,6 @@ class sabnzbdClient(JobFunctions):
             raise APIConnectionError("Failed to connect to API!")
         return response
 
-    async def check_login(self):
-        res = await self.get_config("servers")
-        if res["config"]:
-            self.LOGGED_IN = True
-            return res["config"]
-        else:
-            return False
-
     async def log_out(self):
         if self._http_session is not None:
             await self._http_session.aclose()

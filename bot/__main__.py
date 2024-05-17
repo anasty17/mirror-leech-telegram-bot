@@ -127,8 +127,11 @@ async def restart(_, message):
     await sync_to_async(clean_all)
     nzb_client = get_sabnzb_client()
     if nzb_client.LOGGED_IN:
-        await nzb_client.pause_all()
-        await nzb_client.purge_all(True)
+        await gather(
+            nzb_client.pause_all(),
+            nzb_client.purge_all(True),
+            nzb_client.delete_history("all", delete_files=True),
+        )
         await nzb_client.shutdown()
     proc1 = await create_subprocess_exec(
         "pkill",
@@ -248,6 +251,8 @@ async def restart_notification():
 
 
 async def main():
+    if DATABASE_URL:
+        await DbManager().db_load()
     jdownloader.initiate()
     await gather(
         sync_to_async(clean_all),

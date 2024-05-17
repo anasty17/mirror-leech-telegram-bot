@@ -45,9 +45,13 @@ async def add_servers(client):
             except LoginFailed as e:
                 raise e
     elif not res and (
-        not config_dict["USENET_SERVERS"][0]["host"]
-        or not config_dict["USENET_SERVERS"][0]["username"]
-        or not config_dict["USENET_SERVERS"][0]["password"]
+        config_dict["USENET_SERVERS"]
+        and (
+            not config_dict["USENET_SERVERS"][0]["host"]
+            or not config_dict["USENET_SERVERS"][0]["username"]
+            or not config_dict["USENET_SERVERS"][0]["password"]
+        )
+        or not config_dict["USENET_SERVERS"]
     ):
         raise NotLoggedIn("Set USENET_SERVERS in bsetting or config!")
     else:

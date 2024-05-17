@@ -401,7 +401,7 @@ class JobFunctions(SubFunctions):
         return await self.call({"mode": "retry_all"})
 
     async def delete_history(
-        self, nzo_ids: str | list[str], archive: int = 0, delete_files: int = 0
+        self, nzo_ids: str | list[str], archive: int = 0, delete_files: bool = False
     ):
         """return {"status": True}"""
         return await self.call(
