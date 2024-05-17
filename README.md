@@ -7,6 +7,7 @@ programming in Python.
 
 ## qBittorrent
 
+- External access to webui, so you can remove files or edit settings
 - Select files from a Torrent before and during download (Requires Base URL) (task option)
 - Seed torrents to a specific ratio and time (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
@@ -22,6 +23,7 @@ programming in Python.
 
 ## Sabnzbd
 
+- External access to web interface, so you can remove files or edit settings
 - Remove files from job before and during download (Requires Base URL) (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
 - Servers menu to edit/add/remove usenet servers
@@ -728,7 +730,7 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 5. Press on connect, choose `Allow Access From Anywhere` and press on `Add IP Address` without editing the ip, then
    create user.
 6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` *
-   *python** and `version` **3.6 or later**.
+   *python** and `version` **3.12 or later**.
 7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
 
 ------
