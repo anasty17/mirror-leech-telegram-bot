@@ -121,6 +121,8 @@ async def restart(_, message):
         qb.cancel()
     if jd := Intervals["jd"]:
         jd.cancel()
+    if nzb := Intervals["nzb"]:
+        nzb.cancel()
     if st := Intervals["status"]:
         for intvl in list(st.values()):
             intvl.cancel()
