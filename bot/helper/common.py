@@ -167,11 +167,12 @@ class TaskConfig:
         if self.nameSub:
             self.nameSub = [x.split(" : ") for x in self.nameSub.split(" | ")]
             self.seed = False
-        self.extensionFilter = (
-            self.userDict.get("excluded_extensions") or GLOBAL_EXTENSION_FILTER
+        self.extensionFilter = self.userDict.get("excluded_extensions") or (
+            GLOBAL_EXTENSION_FILTER
             if "excluded_extensions" not in self.userDict
             else ["aria2", "!qB"]
         )
+        LOGGER.info(self.extensionFilter)
         if self.link not in ["rcl", "gdl"]:
             if not self.isYtDlp and not self.isJd:
                 await self.isTokenExists(self.link, "dl")
