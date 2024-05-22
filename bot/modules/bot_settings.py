@@ -141,7 +141,7 @@ async def get_buttons(key=None, edit_type=None):
             if key == "newser":
                 msg = "Send one server as dictionary {}, like in config.env without []. Timeout: 60 sec"
             else:
-                msg = f"Send a valid value for {key} in server {config_dict["USENET_SERVERS"][index]['name']}. Current value is '{config_dict["USENET_SERVERS"][index][key]}. Timeout: 60 sec"
+                msg = f"Send a valid value for {key} in server {config_dict['USENET_SERVERS'][index]['name']}. Current value is '{config_dict['USENET_SERVERS'][index][key]}. Timeout: 60 sec"
     elif key == "var":
         for k in list(config_dict.keys())[START : 10 + START]:
             buttons.ibutton(k, f"botset botvar {k}")
@@ -865,7 +865,7 @@ async def edit_bot_settings(client, query):
         await event_handler(client, query, pfunc, rfunc)
     elif data[1].startswith("nzbsevar") and STATE == "view":
         index = int(data[1].replace("nzbsevar", ""))
-        value = f"{config_dict["USENET_SERVERS"][index][data[2]]}"
+        value = f"{config_dict['USENET_SERVERS'][index][data[2]]}"
         if len(value) > 200:
             await query.answer()
             with BytesIO(str.encode(value)) as out_file:
