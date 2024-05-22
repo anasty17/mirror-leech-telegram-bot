@@ -131,7 +131,7 @@ async def get_buttons(key=None, edit_type=None):
             buttons.ibutton("Default", f"botset resetnzb {key}")
             buttons.ibutton("Empty String", f"botset emptynzb {key}")
             buttons.ibutton("Close", "botset close")
-            msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}.\nIf the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
+            msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}'.\nIf the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
         elif edit_type.startswith("nzbsevar"):
             index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
             buttons.ibutton("Back", f"botset nzbser{index}")
@@ -211,7 +211,9 @@ Timeout: 60 sec"""
         msg = f"Sabnzbd Options | Page: {int(START / 10)} | State: {STATE}"
     elif key == "nzbserver":
         if len(config_dict["USENET_SERVERS"]) > 0:
-            for index, k in enumerate(config_dict["USENET_SERVERS"][START : 10 + START]):
+            for index, k in enumerate(
+                config_dict["USENET_SERVERS"][START : 10 + START]
+            ):
                 buttons.ibutton(k["name"], f"botset nzbser{index}")
         buttons.ibutton("Add New", "botset nzbsevar newser")
         buttons.ibutton("Back", "botset nzb")
@@ -440,7 +442,9 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
         await update_buttons(pre_message, f"nzbser{index}")
     await deleteMessage(message)
     if DATABASE_URL:
-        await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
+        await DbManager().update_config(
+            {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
+        )
     await nzb_client.log_out()
 
 
@@ -723,12 +727,16 @@ async def edit_bot_settings(client, query):
         if DATABASE_URL:
             await DbManager().update_nzb_config()
     elif data[1] == "syncnzb":
-        await query.answer("Syncronization Started. It takes up to 2 sec!", show_alert=True)
+        await query.answer(
+            "Syncronization Started. It takes up to 2 sec!", show_alert=True
+        )
         await get_nzb_options()
         if DATABASE_URL:
             await DbManager().update_nzb_config()
     elif data[1] == "syncqbit":
-        await query.answer("Syncronization Started. It takes up to 2 sec!", show_alert=True)
+        await query.answer(
+            "Syncronization Started. It takes up to 2 sec!", show_alert=True
+        )
         await get_qb_options()
         if DATABASE_URL:
             await DbManager().save_qbit_settings()
@@ -766,12 +774,16 @@ async def edit_bot_settings(client, query):
     elif data[1] == "remser":
         index = int(data[2])
         nz_client = get_sabnzb_client()
-        await nz_client.delete_config("servers", config_dict["USENET_SERVERS"][index]["name"])
+        await nz_client.delete_config(
+            "servers", config_dict["USENET_SERVERS"][index]["name"]
+        )
         del config_dict["USENET_SERVERS"][index]
         await update_buttons(message, "nzbserver")
-        if DATABASE_URL:
-            await DbManager().update_config({"USENET_SERVERS": config_dict["USENET_SERVERS"]})
         await nz_client.log_out()
+        if DATABASE_URL:
+            await DbManager().update_config(
+                {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
+            )
     elif data[1] == "private":
         await query.answer()
         await update_buttons(message, data[1])
@@ -851,11 +863,17 @@ async def edit_bot_settings(client, query):
         await update_buttons(message, f"nzbser{data[2]}")
         index = int(data[2])
         nzb_client = get_sabnzb_client()
-        res = await nzb_client.add_server({"name": config_dict["USENET_SERVERS"][index]['name'], data[3]: ""})
-        config_dict["USENET_SERVERS"][index][data[3]] = res['config']['servers'][0][data[3]]
+        res = await nzb_client.add_server(
+            {"name": config_dict["USENET_SERVERS"][index]["name"], data[3]: ""}
+        )
+        config_dict["USENET_SERVERS"][index][data[3]] = res["config"]["servers"][0][
+            data[3]
+        ]
         await nzb_client.log_out()
         if DATABASE_URL:
-            await DbManager().update_config_dict["USENET_SERVERS"]()
+            await DbManager().update_config(
+                {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
+            )
     elif data[1].startswith("nzbsevar") and (STATE == "edit" or data[2] == "newser"):
         index = 0 if data[2] == "newser" else int(data[1].replace("nzbsevar", ""))
         await query.answer()
