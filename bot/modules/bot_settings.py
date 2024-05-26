@@ -401,8 +401,7 @@ async def edit_nzb(_, message, pre_message, key):
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
     res = await nzb_client.set_config("misc", key, value)
-    value = res["config"]["misc"][key]
-    nzb_options[key] = value
+    nzb_options[key] = res["config"]["misc"][key]
     await nzb_client.log_out()
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
@@ -1083,7 +1082,7 @@ async def load_config():
         LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
 
     STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
-    STATUS_LIMIT = 10 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
+    STATUS_LIMIT = 4 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
     RSS_CHAT = environ.get("RSS_CHAT", "")
     RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT

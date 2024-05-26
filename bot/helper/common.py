@@ -172,7 +172,6 @@ class TaskConfig:
             if "excluded_extensions" not in self.userDict
             else ["aria2", "!qB"]
         )
-        LOGGER.info(self.extensionFilter)
         if self.link not in ["rcl", "gdl"]:
             if not self.isYtDlp and not self.isJd:
                 await self.isTokenExists(self.link, "dl")
