@@ -160,9 +160,9 @@ class TaskConfig:
         self.nameSub = (
             self.nameSub
             or self.userDict.get("name_sub", False)
-            or config_dict["NAME_SUBSTITUTE"]
+            or (config_dict["NAME_SUBSTITUTE"]
             if "name_sub" not in self.userDict
-            else ""
+            else "")
         )
         if self.nameSub:
             self.nameSub = [x.split(" : ") for x in self.nameSub.split(" | ")]
