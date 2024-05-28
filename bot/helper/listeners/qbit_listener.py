@@ -99,6 +99,8 @@ async def _onDownloadComplete(tor):
         if removed:
             await _remove_torrent(task.client, ext_hash, tag)
             return
+        else:
+            await sync_to_async(task.client.auth_log_out)
         async with qb_listener_lock:
             if tag in QbTorrents:
                 QbTorrents[tag]["seeding"] = True

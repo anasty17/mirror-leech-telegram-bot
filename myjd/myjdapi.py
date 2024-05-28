@@ -5,8 +5,10 @@ from hashlib import sha256
 from hmac import new
 from json import dumps, loads, JSONDecodeError
 from httpx import AsyncClient, RequestError
+from httpx import AsyncHTTPTransport
 from time import time
 from urllib.parse import quote
+from functools import wraps
 
 from .exception import (
     MYJDApiException,
@@ -811,12 +813,21 @@ class Jddevice:
         return f"/t_{self.myjd.get_session_token()}_{self.device_id}"
 
 
+class clientSession(AsyncClient):
+
+    @wraps(AsyncClient.request)
+    async def request(self, method: str, url: str, **kwargs):
+        kwargs.setdefault("timeout", 1.5)
+        kwargs.setdefault("follow_redirects", True)
+        return await super().request(method, url, **kwargs)
+
+
 class Myjdapi:
 
     def __init__(self):
         self.__request_id = int(time() * 1000)
         self.__api_url = "https://api.jdownloader.org"
-        self.__app_key = "http://git.io/vmcsk"
+        self.__app_key = "mltb"
         self.__api_version = 1
         self.__devices = None
         self.__login_secret = None
@@ -826,6 +837,19 @@ class Myjdapi:
         self.__server_encryption_token = None
         self.__device_encryption_token = None
         self.__connected = False
+        self._http_session = None
+
+    def _session(self):
+        if self._http_session is not None:
+            return self._http_session
+
+        transport = AsyncHTTPTransport(retries=10, verify=False)
+
+        self._http_session = clientSession(transport=transport)
+
+        self._http_session.verify = False
+
+        return self._http_session
 
     def get_session_token(self):
         return self.__session_token
@@ -971,6 +995,9 @@ class Myjdapi:
             "/my/disconnect", "GET", [("sessiontoken", self.__session_token)]
         )
         self.__clean_resources()
+        if self._http_session is not None:
+            self._http_session = None
+            await self._http_session.aclose()
         return response
 
     def __clean_resources(self):
@@ -1041,77 +1068,75 @@ class Myjdapi:
         action=True
         This would make a request to "https://api.jdownloader.org"
         """
+        session = self._session()
         if not api:
             api = self.__api_url
         data = None
         if not self.is_connected() and path != "/my/connect":
             raise (MYJDConnectionException("No connection established\n"))
-        async with AsyncClient(verify=False) as client:
-            if http_method == "GET":
-                query = [f"{path}?"]
-                if params is not None:
-                    for param in params:
-                        if param[0] != "encryptedLoginSecret":
-                            query += [f"{param[0]}={quote(param[1])}"]
-                        else:
-                            query += [f"&{param[0]}={param[1]}"]
-                query += [f"rid={str(self.__request_id)}"]
-                if self.__server_encryption_token is None:
-                    query += [
-                        "signature="
-                        + str(
-                            self.__signature_create(
-                                self.__login_secret, query[0] + "&".join(query[1:])
-                            )
+        if http_method == "GET":
+            query = [f"{path}?"]
+            if params is not None:
+                for param in params:
+                    if param[0] != "encryptedLoginSecret":
+                        query += [f"{param[0]}={quote(param[1])}"]
+                    else:
+                        query += [f"&{param[0]}={param[1]}"]
+            query += [f"rid={str(self.__request_id)}"]
+            if self.__server_encryption_token is None:
+                query += [
+                    "signature="
+                    + str(
+                        self.__signature_create(
+                            self.__login_secret, query[0] + "&".join(query[1:])
                         )
-                    ]
-                else:
-                    query += [
-                        "signature="
-                        + str(
-                            self.__signature_create(
-                                self.__server_encryption_token,
-                                query[0] + "&".join(query[1:]),
-                            )
-                        )
-                    ]
-                query = query[0] + "&".join(query[1:])
-                res = await client.get(api + query, timeout=2)
-                encrypted_response = res.text
-            else:
-                params_request = []
-                if params is not None:
-                    for param in params:
-                        if isinstance(param, (str, list)):
-                            params_request += [param]
-                        elif isinstance(param, (dict, bool)):
-                            params_request += [dumps(param)]
-                        else:
-                            params_request += [str(param)]
-                params_request = {
-                    "apiVer": self.__api_version,
-                    "url": path,
-                    "params": params_request,
-                    "rid": self.__request_id,
-                }
-                data = dumps(params_request)
-                # Removing quotes around null elements.
-                data = data.replace('"null"', "null")
-                data = data.replace("'null'", "null")
-                encrypted_data = self.__encrypt(self.__device_encryption_token, data)
-                request_url = api + action + path if action is not None else api + path
-                try:
-                    res = await client.post(
-                        request_url,
-                        headers={
-                            "Content-Type": "application/aesjson-jd; charset=utf-8"
-                        },
-                        content=encrypted_data,
-                        timeout=2,
                     )
-                    encrypted_response = res.text
-                except RequestError:
-                    return None
+                ]
+            else:
+                query += [
+                    "signature="
+                    + str(
+                        self.__signature_create(
+                            self.__server_encryption_token,
+                            query[0] + "&".join(query[1:]),
+                        )
+                    )
+                ]
+            query = query[0] + "&".join(query[1:])
+            res = await session.request(http_method, api + query)
+            encrypted_response = res.text
+        else:
+            params_request = []
+            if params is not None:
+                for param in params:
+                    if isinstance(param, (str, list)):
+                        params_request += [param]
+                    elif isinstance(param, (dict, bool)):
+                        params_request += [dumps(param)]
+                    else:
+                        params_request += [str(param)]
+            params_request = {
+                "apiVer": self.__api_version,
+                "url": path,
+                "params": params_request,
+                "rid": self.__request_id,
+            }
+            data = dumps(params_request)
+            # Removing quotes around null elements.
+            data = data.replace('"null"', "null")
+            data = data.replace("'null'", "null")
+            encrypted_data = self.__encrypt(self.__device_encryption_token, data)
+            request_url = api + action + path if action is not None else api + path
+            try:
+                res = await session.request(
+                    http_method,
+                    request_url,
+                    headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
+                    content=encrypted_data,
+                )
+                encrypted_response = res.text
+            except RequestError:
+                return None
         if res.status_code != 200:
             try:
                 error_msg = loads(encrypted_response)

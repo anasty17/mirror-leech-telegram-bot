@@ -1011,7 +1011,7 @@ async def load_config():
     try:
         if len(USENET_SERVERS) == 0:
             USENET_SERVERS = []
-        elif not eval(USENET_SERVERS)[0]["host"]:
+        elif (us := eval(USENET_SERVERS)) and not us[0].get("host"):
             USENET_SERVERS = []
         else:
             USENET_SERVERS = eval(USENET_SERVERS)
