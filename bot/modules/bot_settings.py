@@ -33,7 +33,7 @@ from bot import (
     task_dict,
     qbit_options,
     get_qb_client,
-    get_sabnzb_client,
+    sabnzbd_client,
     LOGGER,
     bot,
     jd_downloads,
@@ -339,10 +339,8 @@ async def edit_variable(_, message, pre_message, key):
     elif key == "RSS_DELAY":
         addJob()
     elif key == "USET_SERVERS":
-        nzb_client = get_sabnzb_client()
         for s in value:
-            await nzb_client.set_special_config("servers", s)
-        await nzb_client.log_out()
+            await sabnzbd_client.set_special_config("servers", s)
 
 
 async def edit_aria(_, message, pre_message, key):
@@ -395,14 +393,12 @@ async def edit_qbit(_, message, pre_message, key):
 async def edit_nzb(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
-    nzb_client = get_sabnzb_client()
     if value.isdigit():
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
         value = ",".join(eval(value))
-    res = await nzb_client.set_config("misc", key, value)
+    res = await sabnzbd_client.set_config("misc", key, value)
     nzb_options[key] = res["config"]["misc"][key]
-    await nzb_client.log_out()
     await update_buttons(pre_message, "nzb")
     await deleteMessage(message)
     if DATABASE_URL:
@@ -412,7 +408,6 @@ async def edit_nzb(_, message, pre_message, key):
 async def edit_nzb_server(_, message, pre_message, key, index=0):
     handler_dict[message.chat.id] = False
     value = message.text
-    nzb_client = get_sabnzb_client()
     if value.startswith("{") and value.endswith("}"):
         if key == "newser":
             try:
@@ -421,7 +416,7 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
                 await sendMessage(message, "Invalid dict format!")
                 await update_buttons(pre_message, "nzbserver")
                 return
-            res = await nzb_client.add_server(value)
+            res = await sabnzbd_client.add_server(value)
             if not res["config"]["servers"][0]["host"]:
                 await sendMessage(message, "Invalid server!")
                 await update_buttons(pre_message, "nzbserver")
@@ -431,7 +426,7 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
     elif key != "newser":
         if value.isdigit():
             value = int(value)
-        res = await nzb_client.add_server(
+        res = await sabnzbd_client.add_server(
             {"name": config_dict["USENET_SERVERS"][index]["name"], key: value}
         )
         if res["config"]["servers"][0][key] == "":
@@ -444,7 +439,6 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
         await DbManager().update_config(
             {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
         )
-    await nzb_client.log_out()
 
 
 async def sync_jdownloader():
@@ -677,10 +671,8 @@ async def edit_bot_settings(client, query):
             jdownloader.error = "JDownloader Credentials not provided!"
             await create_subprocess_exec("pkill", "-9", "-f", "java")
         elif data[2] == "USENET_SERVERS":
-            nzb_client = get_sabnzb_client()
             for s in config_dict["USENET_SERVERS"]:
-                await nzb_client.delete_config("servers", s["name"])
-            await nzb_client.log_out()
+                await sabnzbd_client.delete_config("servers", s["name"])
         config_dict[data[2]] = value
         await update_buttons(message, "var")
         if DATABASE_URL:
@@ -718,10 +710,8 @@ async def edit_bot_settings(client, query):
             await DbManager().update_aria2(data[2], value)
     elif data[1] == "resetnzb":
         await query.answer()
-        nzb_client = get_sabnzb_client()
-        res = await nzb_client.set_config_default(data[2])
+        res = await sabnzbd_client.set_config_default(data[2])
         nzb_options[data[2]] = res["config"]["misc"][data[2]]
-        await nzb_client.log_out()
         await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
@@ -763,22 +753,18 @@ async def edit_bot_settings(client, query):
             await DbManager().update_qbittorrent(data[2], "")
     elif data[1] == "emptynzb":
         await query.answer()
-        nzb_client = get_sabnzb_client()
-        res = await nzb_client.set_config("misc", data[2], "")
+        res = await sabnzbd_client.set_config("misc", data[2], "")
         nzb_options[data[2]] = res["config"]["misc"][data[2]]
-        await nzb_client.log_out()
         await update_buttons(message, "nzb")
         if DATABASE_URL:
             await DbManager().update_nzb_config()
     elif data[1] == "remser":
         index = int(data[2])
-        nz_client = get_sabnzb_client()
-        await nz_client.delete_config(
+        await sabnzbd_client.delete_config(
             "servers", config_dict["USENET_SERVERS"][index]["name"]
         )
         del config_dict["USENET_SERVERS"][index]
         await update_buttons(message, "nzbserver")
-        await nz_client.log_out()
         if DATABASE_URL:
             await DbManager().update_config(
                 {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
@@ -861,14 +847,12 @@ async def edit_bot_settings(client, query):
         await query.answer()
         await update_buttons(message, f"nzbser{data[2]}")
         index = int(data[2])
-        nzb_client = get_sabnzb_client()
-        res = await nzb_client.add_server(
+        res = await sabnzbd_client.add_server(
             {"name": config_dict["USENET_SERVERS"][index]["name"], data[3]: ""}
         )
         config_dict["USENET_SERVERS"][index][data[3]] = res["config"]["servers"][0][
             data[3]
         ]
-        await nzb_client.log_out()
         if DATABASE_URL:
             await DbManager().update_config(
                 {"USENET_SERVERS": config_dict["USENET_SERVERS"]}

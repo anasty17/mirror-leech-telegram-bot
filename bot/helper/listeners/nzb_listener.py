@@ -2,7 +2,7 @@ from asyncio import sleep, gather
 
 from bot import (
     Intervals,
-    get_sabnzb_client,
+    sabnzbd_client,
     nzb_jobs,
     nzb_listener_lock,
     task_dict_lock,
@@ -14,16 +14,16 @@ from bot.helper.ext_utils.status_utils import getTaskByGid
 from bot.helper.ext_utils.task_manager import stop_duplicate_check
 
 
-async def _remove_job(client, nzo_id, mid):
+async def _remove_job(nzo_id, mid):
     res1, _ = await gather(
-        client.delete_history(nzo_id, delete_files=True), client.delete_category(f"{mid}")
+        sabnzbd_client.delete_history(nzo_id, delete_files=True),
+        sabnzbd_client.delete_category(f"{mid}"),
     )
     if not res1:
-        await client.delete_job(nzo_id, True)
+        await sabnzbd_client.delete_job(nzo_id, True)
     async with nzb_listener_lock:
         if nzo_id in nzb_jobs:
             del nzb_jobs[nzo_id]
-    await client.log_out()
 
 
 @new_task
@@ -32,7 +32,7 @@ async def _onDownloadError(err, nzo_id, button=None):
     LOGGER.info(f"Cancelling Download: {task.name()}")
     await gather(
         task.listener.onDownloadError(err, button),
-        _remove_job(task.client, nzo_id, task.listener.mid),
+        _remove_job(nzo_id, task.listener.mid),
     )
 
 
@@ -46,6 +46,7 @@ async def _change_status(nzo_id, status):
 @new_task
 async def _stop_duplicate(nzo_id):
     task = await getTaskByGid(nzo_id)
+    await task.update()
     task.listener.name = task.name()
     if not hasattr(task, "listener"):
         return
@@ -60,19 +61,17 @@ async def _onDownloadComplete(nzo_id):
     await task.listener.onDownloadComplete()
     if Intervals["stopAll"]:
         return
-    await _remove_job(task.client, nzo_id, task.listener.mid)
+    await _remove_job(nzo_id, task.listener.mid)
 
 
 async def _nzb_listener():
-    client = get_sabnzb_client()
     while not Intervals["stopAll"]:
         async with nzb_listener_lock:
             try:
-                jobs = (await client.get_history())["history"]["slots"]
-                downloads = (await client.get_downloads())["queue"]["slots"]
+                jobs = (await sabnzbd_client.get_history())["history"]["slots"]
+                downloads = (await sabnzbd_client.get_downloads())["queue"]["slots"]
                 if len(nzb_jobs) == 0:
                     Intervals["nzb"] = ""
-                    await client.log_out()
                     break
                 for job in jobs:
                     nzo_id = job["nzo_id"]

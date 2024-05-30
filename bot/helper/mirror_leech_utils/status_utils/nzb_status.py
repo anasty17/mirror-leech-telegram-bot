@@ -1,6 +1,6 @@
 from asyncio import gather
 
-from bot import LOGGER, get_sabnzb_client, nzb_jobs, nzb_listener_lock
+from bot import LOGGER, sabnzbd_client, nzb_jobs, nzb_listener_lock
 from bot.helper.ext_utils.bot_utils import async_to_sync
 from bot.helper.ext_utils.status_utils import (
     MirrorStatus,
@@ -10,9 +10,9 @@ from bot.helper.ext_utils.status_utils import (
 )
 
 
-async def get_download(client, nzo_id, old_info=None):
+async def get_download(nzo_id, old_info=None):
     try:
-        res = await client.get_downloads(nzo_ids=nzo_id)
+        res = await sabnzbd_client.get_downloads(nzo_ids=nzo_id)
         if res["queue"]["slots"]:
             slot = res["queue"]["slots"][0]
             if msg := slot["labels"]:
@@ -26,7 +26,6 @@ async def get_download(client, nzo_id, old_info=None):
 
 class SabnzbdStatus:
     def __init__(self, listener, gid, queued=False, status=None):
-        self.client = get_sabnzb_client()
         self.queued = queued
         self.listener = listener
         self.cstatus = status
@@ -34,7 +33,7 @@ class SabnzbdStatus:
         self._info = None
 
     async def update(self):
-        self._info = await get_download(self.client, self._gid, self._info)
+        self._info = await get_download(self._gid, self._info)
 
     def progress(self):
         return f"{self._info['percentage']}%"
@@ -90,10 +89,9 @@ class SabnzbdStatus:
         LOGGER.info(f"Cancelling Download: {self.name()}")
         await gather(
             self.listener.onDownloadError("Download stopped by user!"),
-            self.client.delete_job(self._gid, delete_files=True),
-            self.client.delete_category(f"{self.listener.mid}"),
+            sabnzbd_client.delete_job(self._gid, delete_files=True),
+            sabnzbd_client.delete_category(f"{self.listener.mid}"),
         )
-        await self.client.log_out()
         async with nzb_listener_lock:
             if self._gid in nzb_jobs:
                 del nzb_jobs[self._gid]

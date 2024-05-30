@@ -25,7 +25,7 @@ from bot import (
     DATABASE_URL,
     INCOMPLETE_TASK_NOTIFIER,
     scheduler,
-    get_sabnzb_client,
+    sabnzbd_client,
 )
 from .helper.ext_utils.bot_utils import cmd_exec, sync_to_async, create_help_buttons
 from .helper.ext_utils.db_handler import DbManager
@@ -127,14 +127,12 @@ async def restart(_, message):
         for intvl in list(st.values()):
             intvl.cancel()
     await sync_to_async(clean_all)
-    nzb_client = get_sabnzb_client()
-    if nzb_client.LOGGED_IN:
+    if sabnzbd_client.LOGGED_IN:
         await gather(
-            nzb_client.pause_all(),
-            nzb_client.purge_all(True),
-            nzb_client.delete_history("all", delete_files=True),
+            sabnzbd_client.pause_all(),
+            sabnzbd_client.purge_all(True),
+            sabnzbd_client.delete_history("all", delete_files=True),
         )
-        await nzb_client.shutdown()
     proc1 = await create_subprocess_exec(
         "pkill",
         "-9",

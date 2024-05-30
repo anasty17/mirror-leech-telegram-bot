@@ -4,11 +4,13 @@ from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from time import sleep
 from sabnzbdapi import sabnzbdClient
-from asyncio import run
+from asyncio import get_event_loop
 
 from web.nodes import make_tree
 
 app = Flask(__name__)
+
+web_loop = get_event_loop()
 
 aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
 
@@ -723,7 +725,7 @@ def list_torrent_contents(id_):
             await client.log_out()
             return res
 
-        res = run(get_files())
+        res = web_loop.run_until_complete(get_files())
         cont = make_tree(res, "nzb")
     elif len(id_) > 20:
         client = qbClient(host="localhost", port="8090")
@@ -755,7 +757,7 @@ def set_priority(id_):
             await client.remove_file(id_, to_remove)
             await client.log_out()
 
-        run(remove_files())
+        web_loop.run_until_complete(remove_files())
         LOGGER.info(f"Verified! nzo_id: {id_}")
 
     elif len(id_) > 20:
