@@ -48,8 +48,6 @@ async def _stop_duplicate(nzo_id):
     task = await getTaskByGid(nzo_id)
     await task.update()
     task.listener.name = task.name()
-    if not hasattr(task, "listener"):
-        return
     msg, button = await stop_duplicate_check(task.listener)
     if msg:
         _onDownloadError(msg, nzo_id, button)

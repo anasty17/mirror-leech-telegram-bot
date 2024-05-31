@@ -4,7 +4,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from urllib.parse import quote
 
-from bot import bot, LOGGER, config_dict, get_qb_client
+from bot import bot, LOGGER, config_dict, qbittorrent_client
 from bot.helper.ext_utils.bot_utils import sync_to_async, new_task
 from bot.helper.ext_utils.status_utils import get_readable_file_size
 from bot.helper.ext_utils.telegraph_helper import telegraph
@@ -19,19 +19,19 @@ TELEGRAPH_LIMIT = 300
 
 
 async def initiate_search_tools():
-    qbclient = get_qb_client()
-    qb_plugins = await sync_to_async(qbclient.search_plugins)
+    qb_plugins = await sync_to_async(qbittorrent_client.search_plugins)
     if SEARCH_PLUGINS := config_dict["SEARCH_PLUGINS"]:
         globals()["PLUGINS"] = []
         if qb_plugins:
             names = [plugin["name"] for plugin in qb_plugins]
-            await sync_to_async(qbclient.search_uninstall_plugin, names=names)
-        await sync_to_async(qbclient.search_install_plugin, SEARCH_PLUGINS)
+            await sync_to_async(qbittorrent_client.search_uninstall_plugin, names=names)
+        await sync_to_async(qbittorrent_client.search_install_plugin, SEARCH_PLUGINS)
     elif qb_plugins:
         for plugin in qb_plugins:
-            await sync_to_async(qbclient.search_uninstall_plugin, names=plugin["name"])
+            await sync_to_async(
+                qbittorrent_client.search_uninstall_plugin, names=plugin["name"]
+            )
         globals()["PLUGINS"] = []
-    await sync_to_async(qbclient.auth_log_out)
 
     if SEARCH_API_LINK := config_dict["SEARCH_API_LINK"]:
         global SITES
@@ -99,20 +99,21 @@ async def _search(key, site, message, method):
             return
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
-        client = get_qb_client()
         search = await sync_to_async(
-            client.search_start, pattern=key, plugins=site, category="all"
+            qbittorrent_client.search_start, pattern=key, plugins=site, category="all"
         )
         search_id = search.id
         while True:
             result_status = await sync_to_async(
-                client.search_status, search_id=search_id
+                qbittorrent_client.search_status, search_id=search_id
             )
             status = result_status[0].status
             if status != "Running":
                 break
         dict_search_results = await sync_to_async(
-            client.search_results, search_id=search_id, limit=TELEGRAPH_LIMIT
+            qbittorrent_client.search_results,
+            search_id=search_id,
+            limit=TELEGRAPH_LIMIT,
         )
         search_results = dict_search_results.results
         total_results = dict_search_results.total
@@ -124,8 +125,7 @@ async def _search(key, site, message, method):
             return
         msg = f"<b>Found {min(total_results, TELEGRAPH_LIMIT)}</b>"
         msg += f" <b>result(s) for <i>{key}</i>\nTorrent Site:- <i>{site.capitalize()}</i></b>"
-        await sync_to_async(client.search_delete, search_id=search_id)
-        await sync_to_async(client.auth_log_out)
+        await sync_to_async(qbittorrent_client.search_delete, search_id=search_id)
     link = await _getResult(search_results, key, message, method)
     buttons = ButtonMaker()
     buttons.ubutton("🔎 VIEW", link)
@@ -223,11 +223,9 @@ def _api_buttons(user_id, method):
 async def _plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
-        qbclient = get_qb_client()
-        pl = await sync_to_async(qbclient.search_plugins)
+        pl = await sync_to_async(qbittorrent_client.search_plugins)
         for name in pl:
             PLUGINS.append(name["name"])
-        await sync_to_async(qbclient.auth_log_out)
     for siteName in PLUGINS:
         buttons.ibutton(siteName.capitalize(), f"torser {user_id} {siteName} plugin")
     buttons.ibutton("All", f"torser {user_id} all plugin")
