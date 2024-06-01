@@ -559,9 +559,6 @@ def get_qb_options():
                 del qbit_options[k]
     else:
         qb_opt = {**qbit_options}
-        for k, v in list(qb_opt.items()):
-            if v in ["", "*"]:
-                del qb_opt[k]
         qbittorrent_client.app_set_preferences(qb_opt)
 
 
