@@ -11,6 +11,8 @@ from bot import (
     user_data,
     LOGGER,
     config_dict,
+    qbittorrent_client,
+    sabnzbd_client,
 )
 from bot.helper.ext_utils.bot_utils import bt_selection_buttons, sync_to_async
 from bot.helper.ext_utils.status_utils import getTaskByGid, MirrorStatus
@@ -75,11 +77,13 @@ async def select(_, message):
         id_ = task.gid()
         if not task.queued:
             if task.listener.isNzb:
-                await task.client.pause_job(id_)
+                await sabnzbd_client.pause_job(id_)
             elif task.listener.isQbit:
                 await sync_to_async(task.update)
                 id_ = task.hash()
-                await sync_to_async(task.client.torrents_pause, torrent_hashes=id_)
+                await sync_to_async(
+                    qbittorrent_client.torrents_pause, torrent_hashes=id_
+                )
             else:
                 await sync_to_async(task.update)
                 try:
@@ -117,10 +121,14 @@ async def get_confirm(_, query):
         if hasattr(task, "seeding"):
             if task.listener.isQbit:
                 tor_info = (
-                    await sync_to_async(task.client.torrents_info, torrent_hash=id_)
+                    await sync_to_async(
+                        qbittorrent_client.torrents_info, torrent_hash=id_
+                    )
                 )[0]
                 path = tor_info.content_path.rsplit("/", 1)[0]
-                res = await sync_to_async(task.client.torrents_files, torrent_hash=id_)
+                res = await sync_to_async(
+                    qbittorrent_client.torrents_files, torrent_hash=id_
+                )
                 for f in res:
                     if f.priority == 0:
                         f_paths = [f"{path}/{f.name}", f"{path}/{f.name}.!qB"]
@@ -131,7 +139,9 @@ async def get_confirm(_, query):
                                 except:
                                     pass
                 if not task.queued:
-                    await sync_to_async(task.client.torrents_resume, torrent_hashes=id_)
+                    await sync_to_async(
+                        qbittorrent_client.torrents_resume, torrent_hashes=id_
+                    )
             else:
                 res = await sync_to_async(aria2.client.get_files, id_)
                 for f in res:
@@ -148,7 +158,7 @@ async def get_confirm(_, query):
                             f"{e} Error in resume, this mostly happens after abuse aria2. Try to use select cmd again!"
                         )
         elif task.listener.isNzb:
-            await task.client.resume_job(id_)
+            await sabnzbd_client.resume_job(id_)
         await sendStatusMessage(message)
         await deleteMessage(message)
     else:
