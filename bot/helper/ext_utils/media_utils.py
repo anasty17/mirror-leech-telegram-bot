@@ -202,9 +202,8 @@ async def get_document_type(path):
                 path,
             ]
         )
-        if res := result[1]:
-            if mime_type.startswith("video"):
-                is_video = True
+        if result[1] and mime_type.startswith("video"):
+            is_video = True
     except Exception as e:
         LOGGER.error(f"Get Document Type: {e}. Mostly File not found! - File: {path}")
         if mime_type.startswith("video"):

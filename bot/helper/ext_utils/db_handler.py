@@ -37,7 +37,7 @@ class DbManager:
             return
         # Save bot settings
         try:
-            res = await self._db.settings.config.replace_one(
+            await self._db.settings.config.replace_one(
                 {"_id": bot_id}, config_dict, upsert=True
             )
         except Exception as e:

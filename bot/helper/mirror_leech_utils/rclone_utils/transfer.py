@@ -401,8 +401,9 @@ class RcloneTransferHelper:
             return None, None
         elif return_code != 0:
             error = (
-                await self._proc.stderr.read()
-            ).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
+                (await self._proc.stderr.read()).decode().strip()
+                or "Use <code>/shell cat rlog.txt</code> to see more information"
+            )
             LOGGER.error(error)
             await self._listener.onUploadError(error[:4000])
             return None, None

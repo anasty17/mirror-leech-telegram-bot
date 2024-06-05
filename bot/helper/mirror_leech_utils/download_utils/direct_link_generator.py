@@ -1445,13 +1445,13 @@ def filelions_and_streamwish(url):
         if quality == version["name"]:
             return version["url"]
         elif version["name"] == "l":
-            error += f"\nLow"
+            error += "\nLow"
         elif version["name"] == "n":
-            error += f"\nNormal"
+            error += "\nNormal"
         elif version["name"] == "o":
-            error += f"\nOriginal"
+            error += "\nOriginal"
         elif version["name"] == "h":
-            error += f"\nHD"
+            error += "\nHD"
         error += f" <code>{url}_{version['name']}</code>"
     raise DirectDownloadLinkException(f"ERROR: {error}")
 
