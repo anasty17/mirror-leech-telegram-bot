@@ -382,7 +382,7 @@ async def edit_qbit(_, message, pre_message, key):
         value = float(value)
     elif value.isdigit():
         value = int(value)
-    await sync_to_async(().app_set_preferences, {key: value})
+    await sync_to_async(qbittorrent_client.app_set_preferences, {key: value})
     qbit_options[key] = value
     await update_buttons(pre_message, "qbit")
     await deleteMessage(message)
