@@ -63,7 +63,7 @@ def bt_selection_buttons(id_):
     BASE_URL = config_dict["BASE_URL"]
     if config_dict["WEB_PINCODE"]:
         buttons.ubutton("Select Files", f"{BASE_URL}/app/files/{id_}")
-        buttons.ibutton("Pincode", f"btsel pin {gid} {pincode}")
+        buttons.ibutton("Pincode", f"sel pin {gid} {pincode}")
     else:
         buttons.ubutton(
             "Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}"
