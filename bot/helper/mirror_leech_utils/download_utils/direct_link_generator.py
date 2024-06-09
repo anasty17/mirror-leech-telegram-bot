@@ -12,7 +12,7 @@ from urllib.parse import parse_qs, urlparse
 from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode
-
+import requests
 from bot import config_dict, LOGGER
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
@@ -1313,9 +1313,11 @@ def doods(url):
                 "ERROR: Token Link not found or maybe not allow to download! open in browser."
             )
         link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
+        LOGGER.info(f"link is {link}")
         sleep(2)
         try:
-            _res = session.get(link)
+            _res = requests.get(link)
+            LOGGER.info(f"Respone text is {_res.text}")
         except Exception as e:
             raise DirectDownloadLinkException(
                 f"ERROR: {e.__class__.__name__} While fetching download link"
