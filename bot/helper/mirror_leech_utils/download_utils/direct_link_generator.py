@@ -1307,7 +1307,7 @@ def doods(url):
             response = session.get(url)
             response.raise_for_status()  # Ensure we got a successful response
             html_content = response.text
-            LOGGER.info(f"response text {html_content}")  # Debug: Print HTML content to verify structure
+            #LOGGER.info(f"response text {html_content}")  # Debug: Print HTML content to verify structure
             html = HTML(html_content)
         except Exception as e:
             raise DirectDownloadLinkException(
@@ -1318,9 +1318,11 @@ def doods(url):
                 "ERROR: Token Link not found or maybe not allow to download! open in browser."
             )
         link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
+        LOGGER.info(f"link is {link}")
         sleep(2)
         try:
             _res = session.get(link)
+            LOGGER.info(f"res is {_res}")
         except Exception as e:
             raise DirectDownloadLinkException(
                 f"ERROR: {e.__class__.__name__} While fetching download link"
