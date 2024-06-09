@@ -1304,6 +1304,7 @@ def doods(url):
     with create_scraper() as session:
         try:
             html = HTML(session.get(url).text)
+            print(html)
         except Exception as e:
             raise DirectDownloadLinkException(
                 f"ERROR: {e.__class__.__name__} While fetching token link"
