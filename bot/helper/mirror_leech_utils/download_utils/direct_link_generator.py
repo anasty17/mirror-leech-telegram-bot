@@ -1322,7 +1322,7 @@ def doods(url):
         sleep(2)
         try:
             _res = session.get(link)
-            LOGGER.info(f"res is {_res}")
+            LOGGER.info(f"res is {_res.text}")
         except Exception as e:
             raise DirectDownloadLinkException(
                 f"ERROR: {e.__class__.__name__} While fetching download link"
