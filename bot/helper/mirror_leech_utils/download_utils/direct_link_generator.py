@@ -1305,55 +1305,28 @@ def doods(url):
     if "/e/" in url:
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
-    LOGGER.info(f"Parsed URL{parsed_url}")
-
-    def fetch_with_selenium(url):
-        options = Options()
-        options.headless = True
-        driver = webdriver.Chrome(options=options)
-        
+    with create_scraper() as session:
         try:
-            driver.get(url)
-            time.sleep(6)  # Add a delay to ensure content is loaded
-            return driver.page_source
-        except WebDriverException as e:
-            raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching content with Selenium"
-            ) from e
-        finally:
-            driver.quit()
-
-    with ThreadPoolExecutor() as executor:
-        try:
-            html_content = executor.submit(fetch_with_selenium, url).result()
-            html = HTML(html_content)
+            html = HTML(session.get(url).text)
         except Exception as e:
             raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching token link with Selenium"
+                f"ERROR: {e.__class__.__name__} While fetching token link"
             ) from e
-        
         if not (link := html.xpath("//div[@class='download-content']//a/@href")):
             raise DirectDownloadLinkException(
-                "ERROR: Token Link not found or maybe not allowed to download! Open in browser."
+                "ERROR: Token Link not found or maybe not allow to download! open in browser."
             )
-
         link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
-        LOGGER.info(f"link is {link}")
-
+        sleep(2)
         try:
-            _res_content = executor.submit(fetch_with_selenium, link).result()
-            time.sleep(10)  # Add a delay to ensure content is loaded
-            LOGGER.info(f"res content is {_res_content}")
+            _res = session.get(link)
         except Exception as e:
             raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching download link with Selenium"
+                f"ERROR: {e.__class__.__name__} While fetching download link"
             ) from e
-
-    if not (link := search(r"window\.open\('(\S+)'", _res_content)):
-        raise DirectDownloadLinkException("ERROR: Download link not found, try again")
-    
+    if not (link := search(r"window\.open\('(\S+)'", _res.text)):
+        raise DirectDownloadLinkException("ERROR: Download link not found try again")
     return (link.group(1), f"Referer: {parsed_url.scheme}://{parsed_url.hostname}/")
-
 
 def easyupload(url):
     if "::" in url:
