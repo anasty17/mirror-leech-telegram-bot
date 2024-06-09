@@ -18,7 +18,11 @@ from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from bot.helper.ext_utils.links_utils import is_share_link
 from bot.helper.ext_utils.status_utils import speed_string_to_bytes
-
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from concurrent.futures import ThreadPoolExecutor
 _caches = {}
 user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
@@ -1302,34 +1306,52 @@ def doods(url):
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
     LOGGER.info(f"Parsed URL{parsed_url}")
-    with create_scraper() as session:
+
+    def fetch_with_selenium(url):
+        options = Options()
+        options.headless = True
+        driver = webdriver.Chrome(options=options)
+        
         try:
-            response = session.get(url)
-            response.raise_for_status()  # Ensure we got a successful response
-            html_content = response.text
-            #LOGGER.info(f"response text {html_content}")  # Debug: Print HTML content to verify structure
+            driver.get(url)
+            time.sleep(6)  # Add a delay to ensure content is loaded
+            return driver.page_source
+        except WebDriverException as e:
+            raise DirectDownloadLinkException(
+                f"ERROR: {e.__class__.__name__} While fetching content with Selenium"
+            ) from e
+        finally:
+            driver.quit()
+
+    with ThreadPoolExecutor() as executor:
+        try:
+            html_content = executor.submit(fetch_with_selenium, url).result()
             html = HTML(html_content)
         except Exception as e:
             raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching token link"
+                f"ERROR: {e.__class__.__name__} While fetching token link with Selenium"
             ) from e
+        
         if not (link := html.xpath("//div[@class='download-content']//a/@href")):
             raise DirectDownloadLinkException(
-                "ERROR: Token Link not found or maybe not allow to download! open in browser."
+                "ERROR: Token Link not found or maybe not allowed to download! Open in browser."
             )
+
         link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
         LOGGER.info(f"link is {link}")
-        sleep(6)
+
         try:
-            _res = session.get(link)
-            sleep(10)
-            LOGGER.info(f"res is {_res.text}")
+            _res_content = executor.submit(fetch_with_selenium, link).result()
+            time.sleep(10)  # Add a delay to ensure content is loaded
+            LOGGER.info(f"res content is {_res_content}")
         except Exception as e:
             raise DirectDownloadLinkException(
-                f"ERROR: {e.__class__.__name__} While fetching download link"
+                f"ERROR: {e.__class__.__name__} While fetching download link with Selenium"
             ) from e
-    if not (link := search(r"window\.open\('(\S+)'", _res.text)):
-        raise DirectDownloadLinkException("ERROR: Download link not found try again")
+
+    if not (link := search(r"window\.open\('(\S+)'", _res_content)):
+        raise DirectDownloadLinkException("ERROR: Download link not found, try again")
+    
     return (link.group(1), f"Referer: {parsed_url.scheme}://{parsed_url.hostname}/")
 
 
