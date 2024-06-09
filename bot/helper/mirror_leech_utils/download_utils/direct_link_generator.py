@@ -1319,9 +1319,10 @@ def doods(url):
             )
         link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
         LOGGER.info(f"link is {link}")
-        sleep(2)
+        sleep(6)
         try:
             _res = session.get(link)
+            sleep(10)
             LOGGER.info(f"res is {_res.text}")
         except Exception as e:
             raise DirectDownloadLinkException(
