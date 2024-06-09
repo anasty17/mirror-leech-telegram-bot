@@ -1301,7 +1301,7 @@ def doods(url):
     if "/e/" in url:
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
-    print("Passed URL",passed_url)
+    print("Passed URL",parsed_url)
     with create_scraper() as session:
         try:
             response = session.get(url)
