@@ -13,7 +13,7 @@ from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode
 
-from bot import config_dict
+from bot import config_dict, LOGGER
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from bot.helper.ext_utils.links_utils import is_share_link
@@ -1301,13 +1301,13 @@ def doods(url):
     if "/e/" in url:
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
-    print("Passed URL",parsed_url)
+    LOGGER.info("Passed URL",parsed_url)
     with create_scraper() as session:
         try:
             response = session.get(url)
             response.raise_for_status()  # Ensure we got a successful response
             html_content = response.text
-            print(html_content)  # Debug: Print HTML content to verify structure
+            LOGGER.info(html_content)  # Debug: Print HTML content to verify structure
             html = HTML(html_content)
         except Exception as e:
             raise DirectDownloadLinkException(
