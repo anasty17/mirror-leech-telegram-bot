@@ -1301,13 +1301,13 @@ def doods(url):
     if "/e/" in url:
         url = url.replace("/e/", "/d/")
     parsed_url = urlparse(url)
-    LOGGER.info("Passed URL",parsed_url)
+    LOGGER.info(f"Parsed URL{parsed_url}")
     with create_scraper() as session:
         try:
             response = session.get(url)
             response.raise_for_status()  # Ensure we got a successful response
             html_content = response.text
-            LOGGER.info(html_content)  # Debug: Print HTML content to verify structure
+            LOGGER.info(f"response text {html_content}")  # Debug: Print HTML content to verify structure
             html = HTML(html_content)
         except Exception as e:
             raise DirectDownloadLinkException(
