@@ -1309,36 +1309,39 @@ def random_str(length: int = 10) -> str:
 def js_date_now() -> int:
     return int(time() * 1000)
 def doods(url):
-    with create_scraper() as session:
-        # Initial HEAD request to check for redirects
-        LOGGER.info(url)
-        response = session.get(url).text
-        LOGGER.info(response)
-        final_url = url
-        # Follow redirects if necessary
-        
-            
+   with requests.Session() as session:
+        # Initial request to follow redirects
+        response = session.get(url, allow_redirects=True)
+        final_url = response.url  # Get the final URL after following redirects
+        LOGGER.info("Final URL after following redirects:", final_url)
 
-        # Get the final URL response text
-        response = session.get(final_url).text
-        LOGGER.info("Final response text:", response)
+        # Get the response text from the final URL
+        response_text = response.text
+        LOGGER.info("Final response text:", response_text)
 
         # Extract pass_md5 from the response
-        pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response)
+        pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response_text)
         if not pass_md5:
             raise ValueError("Pattern not found in the response text")
 
-        # Construct the final URL and make a GET request
+        # Construct the final URL with pass_md5
+        final_url_with_pass_md5 = f"https://d0000d.com{pass_md5.group()}"
+        LOGGER.info("Final URL with pass_md5:", final_url_with_pass_md5)
+
+        # Make a GET request to the final URL with pass_md5
         final_response = session.get(
-            f"https://d0000d.com{pass_md5.group()}",
-            headers={"Referer": "https://d0000d.com/"},
+            final_url_with_pass_md5,
+            headers={"Referer": "https://d0000d.com/"}
         )
-        print("Final response text after pass_md5:", final_response.text)
+        LOGGER.info("Final response text after pass_md5:", final_response.text)
         
         # Generate the final direct link with token and expiry
-        final_url = f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
-        LOGGER.info(final_url)
-        return final_url, {"Referer": "https://d0000d.com/"}
+        final_direct_link = (
+            f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
+        )
+        LOGGER.info("Final direct link:", final_direct_link)
+
+        return final_direct_link, {"Referer": "https://d0000d.com/"}
     
 
 def easyupload(url):
