@@ -1322,7 +1322,7 @@ def doods(url):
 
         # Get the final URL response text
         response = session.get(final_url)
-        print("Final response text:", response.text)
+        LOGGER.info("Final response text:", response.text)
 
         # Extract pass_md5 from the response
         pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response.text)
