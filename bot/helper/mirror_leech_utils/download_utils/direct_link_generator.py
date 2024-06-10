@@ -1309,11 +1309,11 @@ def random_str(length: int = 10) -> str:
 def js_date_now() -> int:
     return int(time() * 1000)
 def doods(url):
-    with requests.Session() as session:
+    with create_scraper() as session:
         # Initial HEAD request to check for redirects
         LOGGER.info(url)
-        response = session.head(url, allow_redirects=True)
-        LOGGER.info(response.text)
+        response = HTML(session.get(url).text)
+        LOGGER.info(response)
         
         # Follow redirects if necessary
         if response.history:
@@ -1322,11 +1322,11 @@ def doods(url):
             final_url = url
 
         # Get the final URL response text
-        response = session.get(final_url)
-        LOGGER.info("Final response text:", response.text)
+        response = HTML(session.get(final_url).text)
+        LOGGER.info("Final response text:", response)
 
         # Extract pass_md5 from the response
-        pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response.text)
+        pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response)
         if not pass_md5:
             raise ValueError("Pattern not found in the response text")
 
