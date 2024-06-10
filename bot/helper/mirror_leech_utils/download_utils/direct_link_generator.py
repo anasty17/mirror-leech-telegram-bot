@@ -1312,7 +1312,7 @@ def doods(url):
     with create_scraper() as session:
         # Initial HEAD request to check for redirects
         LOGGER.info(url)
-        response = HTML(session.get(url).text)
+        response = session.get(url).text
         LOGGER.info(response)
         final_url = url
         # Follow redirects if necessary
@@ -1320,7 +1320,7 @@ def doods(url):
             
 
         # Get the final URL response text
-        response = HTML(session.get(final_url).text)
+        response = session.get(final_url).text
         LOGGER.info("Final response text:", response)
 
         # Extract pass_md5 from the response
