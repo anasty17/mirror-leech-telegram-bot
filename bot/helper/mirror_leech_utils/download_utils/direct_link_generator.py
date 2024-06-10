@@ -1322,35 +1322,26 @@ def doods(url):
         response_text = response.text
         LOGGER.info("Final response text:", response_text)
 
-        return response_text
-    except Exception as e:
-        LOGGER.error("Request failed:", str(e))
-        return None
-   
-
-        # Extract pass_md5 from the response
+        # Extract pass_md5 from the response_text
         pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response_text)
         if not pass_md5:
             raise ValueError("Pattern not found in the response text")
 
-        # Construct the final URL with pass_md5
-        final_url_with_pass_md5 = f"https://d0000d.com{pass_md5.group()}"
-        LOGGER.info("Final URL with pass_md5:", final_url_with_pass_md5)
-
-        # Make a GET request to the final URL with pass_md5
-        final_response = session.get(
-            final_url_with_pass_md5,
+        # Construct the final URL with pass_md5 and make a GET request to it
+        final_response = scraper.get(
+            f"https://d0000d.com{pass_md5.group()}",
             headers={"Referer": "https://d0000d.com/"}
         )
         LOGGER.info("Final response text after pass_md5:", final_response.text)
-        
-        # Generate the final direct link with token and expiry
-        final_direct_link = (
-            f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
-        )
-        LOGGER.info("Final direct link:", final_direct_link)
 
-        return final_direct_link, {"Referer": "https://d0000d.com/"}
+        # Generate the final direct link with token and expiry
+        final_url = f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
+        LOGGER.info("Final direct link:", final_url)
+
+        return final_url, {"Referer": "https://d0000d.com/"}
+    except Exception as e:
+        LOGGER.error("Request failed:", str(e))
+        return None
     
 
 def easyupload(url):
