@@ -1339,7 +1339,7 @@ def doods(url):
         final_url = f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
         LOGGER.info("Final direct link:", final_url)
 
-        return final_url
+        #return final_url
     except Exception as e:
         LOGGER.error("Request failed:", str(e))
         return None
