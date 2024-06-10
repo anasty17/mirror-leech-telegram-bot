@@ -1318,7 +1318,7 @@ def doods(url):
         if response.history:
             final_url = response.url
         else:
-            final_url = self.url
+            final_url = url
 
         # Get the final URL response text
         response = session.get(final_url)
