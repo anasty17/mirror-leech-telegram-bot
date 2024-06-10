@@ -1311,6 +1311,7 @@ def js_date_now() -> int:
 def doods(url):
     with requests.Session() as session:
         # Initial HEAD request to check for redirects
+        LOGGER.info(url)
         response = session.head(url, allow_redirects=True)
         LOGGER.info(response.text)
         
