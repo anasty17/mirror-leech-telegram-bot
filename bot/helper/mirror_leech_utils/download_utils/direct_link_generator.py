@@ -1314,12 +1314,10 @@ def doods(url):
         LOGGER.info(url)
         response = HTML(session.get(url).text)
         LOGGER.info(response)
-        
+        final_url = url
         # Follow redirects if necessary
-        if response.history:
-            final_url = response.url
-        else:
-            final_url = url
+        
+            
 
         # Get the final URL response text
         response = HTML(session.get(final_url).text)
