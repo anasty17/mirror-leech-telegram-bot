@@ -7,21 +7,18 @@ from os import path as ospath
 from re import findall, match, search
 from requests import Session, post, get
 from requests.adapters import HTTPAdapter
-from time import sleep,time
+from time import sleep
 from urllib.parse import parse_qs, urlparse
 from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode
-import requests
-from bot import config_dict, LOGGER
+
+from bot import config_dict
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from bot.helper.ext_utils.links_utils import is_share_link
 from bot.helper.ext_utils.status_utils import speed_string_to_bytes
-from random import choices
-from re import compile as re_compile
-from string import ascii_letters, digits
-import requests
+
 _caches = {}
 user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
@@ -1299,51 +1296,34 @@ def send_cm(url):
         return (details["contents"][0]["url"], details["header"])
     return details
 
-EXTRACT_DOODSTREAM_HLS_PATTERN = re_compile(r"/pass_md5/[\w-]+/[\w-]+")
 
-# Function to generate a random string
-def random_str(length: int = 10) -> str:
-    return "".join(choices(ascii_letters + digits, k=length))
-
-# Function to generate the current time in milliseconds
-def js_date_now() -> int:
-    return int(time() * 1000)
 def doods(url):
-    scraper = create_scraper()
-    try:
-        # Initial request to follow redirects
-        response = scraper.get(url)
-        response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
-
-        final_url = response.url  # Get the final URL after following redirects
-        LOGGER.info("Final URL after following redirects:", final_url)
-
-        # Get the response text from the final URL
-        response_text = response.text
-        LOGGER.info("Final response text:", response_text)
-
-        # Extract pass_md5 from the response_text
-        pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response_text)
-        if not pass_md5:
-            raise ValueError("Pattern not found in the response text")
-
-        # Construct the final URL with pass_md5 and make a GET request to it
-        with requests.Session() as session:
-            final_response = session.get(
-                f"https://d0000d.com{pass_md5.group()}",
-                headers={"Referer": "https://d0000d.com/"},
+    if "/e/" in url:
+        url = url.replace("/e/", "/d/")
+    parsed_url = urlparse(url)
+    with create_scraper() as session:
+        try:
+            html = HTML(session.get(url).text)
+        except Exception as e:
+            raise DirectDownloadLinkException(
+                f"ERROR: {e.__class__.__name__} While fetching token link"
+            ) from e
+        if not (link := html.xpath("//div[@class='download-content']//a/@href")):
+            raise DirectDownloadLinkException(
+                "ERROR: Token Link not found or maybe not allow to download! open in browser."
             )
-        LOGGER.info("Final response text after pass_md5:", final_response.text)
+        link = f"{parsed_url.scheme}://{parsed_url.hostname}{link[0]}"
+        sleep(2)
+        try:
+            _res = session.get(link)
+        except Exception as e:
+            raise DirectDownloadLinkException(
+                f"ERROR: {e.__class__.__name__} While fetching download link"
+            ) from e
+    if not (link := search(r"window\.open\('(\S+)'", _res.text)):
+        raise DirectDownloadLinkException("ERROR: Download link not found try again")
+    return (link.group(1), f"Referer: {parsed_url.scheme}://{parsed_url.hostname}/")
 
-        # Generate the final direct link with token and expiry
-        final_url = f"{final_response.text}{random_str()}?token={pass_md5.group().split('/')[-1]}&expiry={js_date_now()}"
-        LOGGER.info("Final direct link:", final_url)
-
-        #return final_url
-    except Exception as e:
-        LOGGER.error("Request failed:", str(e))
-        return None
-    
 
 def easyupload(url):
     if "::" in url:
