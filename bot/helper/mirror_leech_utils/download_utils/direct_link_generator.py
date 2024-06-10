@@ -1328,10 +1328,11 @@ def doods(url):
             raise ValueError("Pattern not found in the response text")
 
         # Construct the final URL with pass_md5 and make a GET request to it
-        final_response = scraper.get(
-            f"https://d0000d.com{pass_md5.group()}",
-            headers={"Referer": "https://d0000d.com/"}
-        )
+        with requests.Session() as session:
+            final_response = session.get(
+                f"https://d0000d.com{pass_md5.group()}",
+                headers={"Referer": "https://d0000d.com/"},
+            )
         LOGGER.info("Final response text after pass_md5:", final_response.text)
 
         # Generate the final direct link with token and expiry
