@@ -1309,15 +1309,24 @@ def random_str(length: int = 10) -> str:
 def js_date_now() -> int:
     return int(time() * 1000)
 def doods(url):
-   with requests.Session() as session:
+    scraper = create_scraper()
+    try:
         # Initial request to follow redirects
-        response = session.get(url, allow_redirects=True)
+        response = scraper.get(url)
+        response.raise_for_status()  # Raise an exception for 4xx and 5xx status codes
+
         final_url = response.url  # Get the final URL after following redirects
         LOGGER.info("Final URL after following redirects:", final_url)
 
         # Get the response text from the final URL
         response_text = response.text
         LOGGER.info("Final response text:", response_text)
+
+        return response_text
+    except Exception as e:
+        LOGGER.error("Request failed:", str(e))
+        return None
+   
 
         # Extract pass_md5 from the response
         pass_md5 = EXTRACT_DOODSTREAM_HLS_PATTERN.search(response_text)
