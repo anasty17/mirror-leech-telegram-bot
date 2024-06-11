@@ -501,6 +501,7 @@ def krakenfiles(url):
         html = HTML(_res.text)
         if post_url := html.xpath('//form[@id="dl-form"]/@action'):
             post_url = f"https:{post_url[0]}"
+            LOGGER.info(post_url)
         else:
             raise DirectDownloadLinkException("ERROR: Unable to find post link.")
         if token := html.xpath('//input[@id="dl-token"]/@value'):
