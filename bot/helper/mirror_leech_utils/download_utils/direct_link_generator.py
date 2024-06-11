@@ -13,7 +13,7 @@ from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode
 
-from bot import config_dict
+from bot import config_dict,LOGGER
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from bot.helper.ext_utils.links_utils import is_share_link
