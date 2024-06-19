@@ -54,8 +54,8 @@ If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
 /cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/@username/pm(leech by bot) or -up u:id/@username(leech by user) or -up m:id/@username(mixed leech)
 
-Incase you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
-DEFAULT_UPLOAD doesn't effect on leech cmds.
+In case you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
+DEFAULT_UPLOAD doesn't affect on leech cmds.
 """
 
 user_download = """<b>User Download</b>: link
@@ -75,7 +75,7 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>."""
 
 bulk = """<b>Bulk Download</b>: -b
 
-Bulk can be used by text message and by replying to text file contains links seperated by new line.
+Bulk can be used by text message and by replying to text file contains links separated by new line.
 You can use it only by reply to message(text/file).
 Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
@@ -123,13 +123,13 @@ Note: Range link will work only by replying cmd to it"""
 
 sample_video = """<b>Sample Video</b>: -sv
 
-Create sample video for one video or folder of vidoes.
+Create sample video for one video or folder of videos.
 /cmd -sv (it will take the default values which 60sec sample duration and part duration is 4sec).
 You can control those values. Example: /cmd -sv 70:5(sample-duration:part-duration) or /cmd -sv :5 or /cmd -sv 70."""
 
 screenshot = """<b>ScreenShots</b>: -ss
 
-Create up to 10 screenshots for one video or folder of vidoes.
+Create up to 10 screenshots for one video or folder of videos.
 /cmd -ss (it will take the default values which is 10 photos).
 You can control this value. Example: /cmd -ss 6."""
 
@@ -146,7 +146,7 @@ zip_arg = """<b>Zip</b>: -z password
 
 qual = """<b>Quality Buttons</b>: -s
 
-Incase default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
+In case default quality added from yt-dlp options using format option and you need to select quality for specific link or links with multi links feature.
 /cmd link -s"""
 
 yt_opt = """<b>Options</b>: -opt
@@ -164,7 +164,7 @@ convert_media = """<b>Convert Media</b>: -ca -cv
 /cmd link -cv mkv - webm flv (convert all videos to mp4 except webm and flv)"""
 
 force_start = """<b>Force Start</b>: -f -fd -fu
-/cmd link -f (force downlaod and upload)
+/cmd link -f (force download and upload)
 /cmd link -fd (force download only)
 /cmd link -fu (force upload directly after download finish)"""
 
@@ -183,14 +183,14 @@ If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 
 name_sub = """<b>Name Substitution</b>: -ns
 /cmd link -ns tea : coffee : s|ACC :  : s|mP4
-This will effect on all files. Formate: wordToReplace : wordToReplaceWith : sensitiveCase
+This will affect on all files. Format: wordToReplace : wordToReplaceWith : sensitiveCase
 1. tea will get replaced by coffee with sensitive case because I have added `s` last of the option.
 2. ACC will get removed because I have added nothing between to replace with sensitive case because I have added `s` last of the option.
 3. mP4 will get removed because I have added nothing to replace with
 """
 
 mixed_leech = """Mixed leech: -ml
-/cmd link -ml (leech by user and bot sessionwith respect to size)"""
+/cmd link -ml (leech by user and bot session with respect to size)"""
 
 YT_HELP_DICT = {
     "main": yt,
@@ -260,15 +260,15 @@ Title3 link -c cmd -d ratio:time -z password
 -stv true or false (sensitive filter)
 
 Example: Title https://www.rss-url.com -inf 1080 or 720 or 144p|mkv or mp4|hevc -exf flv or web|xxx
-This filter will parse links that it's titles contains `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't conyain (flv or web) and xxx` words. You can add whatever you want.
+This filter will parse links that its titles contain `(1080 or 720 or 144p) and (mkv or mp4) and hevc` and doesn't contain (flv or web) and xxx words. You can add whatever you want.
 
-Another example: -inf  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contains ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080 to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without spaces after it.
+Another example: -inf  1080  or 720p|.web. or .webrip.|hvec or x264. This will parse titles that contain ( 1080  or 720p) and (.web. or .webrip.) and (hvec or x264). I have added space before and after 1080 to avoid wrong matching. If this `10805695` number in title it will match 1080 if added 1080 without spaces after it.
 
 Filter Notes:
 1. | means and.
-2. Add `or` between similar keys, you can add it between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web)."
-3. You can add `or` and `|` as much as you want."
-4. Take look on title if it has static special character after or before the qualities or extensions or whatever and use them in filter to avoid wrong match.
+2. Add `or` between similar keys, you can add it between qualities or between extensions, so don't add filter like this f: 1080|mp4 or 720|web because this will parse 1080 and (mp4 or 720) and web ... not (1080 and mp4) or (720 and web).
+3. You can add `or` and `|` as much as you want.
+4. Take a look at the title if it has a static special character after or before the qualities or extensions or whatever and use them in the filter to avoid wrong match.
 Timeout: 60 sec.
 """
 
