@@ -57,7 +57,7 @@ async def convert_video(listener, video_file, ext, retry=False):
         else:
             try:
                 stderr = stderr.decode().strip()
-            except:
+            except Exception:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
                 f"{stderr}. Something went wrong while converting video, mostly file need specific codec. Path: {video_file}"
@@ -91,7 +91,7 @@ async def convert_audio(listener, audio_file, ext):
     else:
         try:
             stderr = stderr.decode().strip()
-        except:
+        except Exception:
             stderr = "Unable to decode the error!"
         LOGGER.error(
             f"{stderr}. Something went wrong while converting audio, mostly file need specific codec. Path: {audio_file}"
@@ -261,7 +261,7 @@ async def take_ss(video_file, ss_nb) -> bool:
                 )
                 await rmtree(dirpath, ignore_errors=True)
                 return False
-        except:
+        except Exception:
             LOGGER.error(
                 f"Error while creating sreenshots from video. Path: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
             )
@@ -330,7 +330,7 @@ async def create_thumbnail(video_file, duration):
                 f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
             )
             return None
-    except:
+    except Exception:
         LOGGER.error(
             f"Error while extracting thumbnail from video. Name: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
         )
@@ -404,11 +404,11 @@ async def split_file(
             elif code != 0:
                 try:
                     stderr = stderr.decode().strip()
-                except:
+                except Exception:
                     stderr = "Unable to decode the error!"
                 try:
                     await remove(out_path)
-                except:
+                except Exception:
                     pass
                 if multi_streams:
                     LOGGER.warning(
@@ -488,7 +488,7 @@ async def split_file(
         elif code != 0:
             try:
                 stderr = stderr.decode().strip()
-            except:
+            except Exception:
                 stderr = "Unable to decode the error!"
             LOGGER.error(f"{stderr}. Split Document: {path}")
     return True
@@ -556,7 +556,7 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
     else:
         try:
             stderr = stderr.decode().strip()
-        except:
+        except Exception:
             stderr = "Unable to decode the error!"
         LOGGER.error(
             f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"

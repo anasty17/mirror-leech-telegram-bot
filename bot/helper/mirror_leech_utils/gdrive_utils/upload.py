@@ -223,7 +223,7 @@ class gdUpload(GoogleDriveHelper):
         if not self.listener.seed or self.listener.newDir or file_path in ft_delete:
             try:
                 remove(file_path)
-            except:
+            except Exception:
                 pass
         self.file_processed_bytes = 0
         # Insert new permissions

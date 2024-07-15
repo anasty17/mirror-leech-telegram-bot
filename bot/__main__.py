@@ -39,26 +39,7 @@ from .helper.telegram_helper.bot_commands import BotCommands
 from .helper.telegram_helper.button_build import ButtonMaker
 from .helper.telegram_helper.filters import CustomFilters
 from .helper.telegram_helper.message_utils import sendMessage, editMessage, sendFile
-from .modules import (
-    authorize,
-    cancel_task,
-    clone,
-    exec,
-    file_selector,
-    gd_count,
-    gd_delete,
-    gd_search,
-    mirror_leech,
-    status,
-    torrent_search,
-    ytdlp,
-    rss,
-    shell,
-    users_settings,
-    bot_settings,
-    help,
-    force_start,
-)
+from .modules import authorize, cancel_task, clone, exec, file_selector, gd_count, gd_delete, gd_search, mirror_leech, status, torrent_search, ytdlp, rss, shell, users_settings, bot_settings, help, force_start  # noqa: F401
 
 
 async def stats(_, message):
@@ -245,7 +226,7 @@ async def restart_notification():
             await bot.edit_message_text(
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
-        except:
+        except Exception:
             pass
         await remove(".restartmsg")
 

@@ -110,7 +110,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                         ]:
                             await deleteMessage(meta)
                             break
-                    except:
+                    except Exception:
                         await deleteMessage(meta)
                         return
 

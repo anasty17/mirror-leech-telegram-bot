@@ -658,7 +658,7 @@ async def rssMonitor():
                             res = await client.get(data["link"])
                         html = res.text
                         break
-                    except:
+                    except Exception:
                         tries += 1
                         if tries > 3:
                             raise
@@ -677,7 +677,7 @@ async def rssMonitor():
                 while True:
                     try:
                         await sleep(10)
-                    except:
+                    except Exception:
                         raise RssShutdownException("Rss Monitor Stopped!")
                     try:
                         item_title = rss_d.entries[feed_count]["title"]

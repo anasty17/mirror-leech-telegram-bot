@@ -17,7 +17,7 @@ class DirectStatus:
     def progress_raw(self):
         try:
             return self._obj.processed_bytes / self.listener.size * 100
-        except:
+        except Exception:
             return 0
 
     def progress(self):
@@ -36,7 +36,7 @@ class DirectStatus:
         try:
             seconds = (self.listener.size - self._obj.processed_bytes) / self._obj.speed
             return get_readable_time(seconds)
-        except:
+        except Exception:
             return "-"
 
     def status(self):

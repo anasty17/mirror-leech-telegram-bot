@@ -52,7 +52,7 @@ class GoogleDriveHelper:
     def speed(self):
         try:
             return self.proc_bytes / self.total_time
-        except:
+        except Exception:
             return 0
 
     @property

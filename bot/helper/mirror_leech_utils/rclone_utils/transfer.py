@@ -59,7 +59,7 @@ class RcloneTransferHelper:
         while not (self._proc is None or self._listener.isCancelled):
             try:
                 data = (await self._proc.stdout.readline()).decode()
-            except:
+            except Exception:
                 continue
             if not data:
                 break
@@ -492,7 +492,7 @@ class RcloneTransferHelper:
         if self._proc is not None:
             try:
                 self._proc.kill()
-            except:
+            except Exception:
                 pass
         if self._is_download:
             LOGGER.info(f"Cancelling Download: {self._listener.name}")
