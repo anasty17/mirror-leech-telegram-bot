@@ -38,7 +38,7 @@ async def stop_duplicate_check(listener):
     elif listener.extract:
         try:
             name = get_base_name(name)
-        except:
+        except Exception:
             name = None
 
     if name is not None:

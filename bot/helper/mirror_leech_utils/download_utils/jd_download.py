@@ -67,7 +67,7 @@ class JDownloaderHelper:
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
-        except:
+        except Exception:
             await editMessage(self._reply_to, "Timed Out. Task has been cancelled!")
             self.listener.isCancelled = True
             self.event.set()
@@ -97,7 +97,7 @@ async def add_jd_download(listener, path):
 
         try:
             await wait_for(retry_function(jdownloader.device.jd.version), timeout=10)
-        except:
+        except Exception:
             is_connected = await jdownloader.jdconnect()
             if not is_connected:
                 await listener.onDownloadError(jdownloader.error)

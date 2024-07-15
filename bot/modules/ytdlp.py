@@ -87,7 +87,7 @@ class YtSelection:
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
-        except:
+        except Exception:
             await editMessage(self._reply_to, "Timed Out. Task has been cancelled!")
             self.qual = None
             self.listener.isCancelled = True
@@ -318,7 +318,7 @@ class YtDlp(TaskListener):
 
         try:
             self.multi = int(args["-i"])
-        except:
+        except Exception:
             self.multi = 0
 
         self.select = args["-s"]

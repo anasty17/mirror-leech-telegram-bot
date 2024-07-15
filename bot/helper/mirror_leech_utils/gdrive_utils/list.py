@@ -145,7 +145,7 @@ class gdriveList(GoogleDriveHelper):
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
-        except:
+        except Exception:
             self.id = "Timed Out. Task has been cancelled!"
             self.listener.isCancelled = True
             self.event.set()
@@ -263,6 +263,7 @@ class gdriveList(GoogleDriveHelper):
             await self.get_items()
         elif len(drives) == 0:
             msg = "Service accounts Doesn't have access to any drive!"
+            buttons = ButtonMaker()
             if self._token_user and self._token_owner:
                 buttons.ibutton("Back", "gdq back dr", position="footer")
             buttons.ibutton("Cancel", "gdq cancel", position="footer")

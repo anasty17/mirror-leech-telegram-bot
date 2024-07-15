@@ -64,7 +64,7 @@ class TelegramDownloadHelper:
         async with global_lock:
             try:
                 GLOBAL_GID.remove(self._id)
-            except:
+            except Exception:
                 pass
         await self._listener.onDownloadError(error)
 

@@ -93,7 +93,7 @@ async def select(_, message):
                         f"{e} Error in pause, this mostly happens after abuse aria2"
                     )
         task.listener.select = True
-    except:
+    except Exception:
         await sendMessage(message, "This is not a bittorrent or sabnzbd task!")
         return
 
@@ -136,7 +136,7 @@ async def get_confirm(_, query):
                             if await aiopath.exists(f_path):
                                 try:
                                     await remove(f_path)
-                                except:
+                                except Exception:
                                     pass
                 if not task.queued:
                     await sync_to_async(
@@ -148,7 +148,7 @@ async def get_confirm(_, query):
                     if f["selected"] == "false" and await aiopath.exists(f["path"]):
                         try:
                             await remove(f["path"])
-                        except:
+                        except Exception:
                             pass
                 if not task.queued:
                     try:
