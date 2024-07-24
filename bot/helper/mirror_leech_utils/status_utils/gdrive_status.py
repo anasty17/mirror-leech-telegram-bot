@@ -36,7 +36,7 @@ class GdriveStatus:
     def progress_raw(self):
         try:
             return self._obj.processed_bytes / self._size * 100
-        except Exception:
+        except:
             return 0
 
     def progress(self):
@@ -49,7 +49,7 @@ class GdriveStatus:
         try:
             seconds = (self._size - self._obj.processed_bytes) / self._obj.speed
             return get_readable_time(seconds)
-        except Exception:
+        except:
             return "-"
 
     def task(self):

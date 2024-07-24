@@ -57,7 +57,7 @@ class TaskListener(TaskConfig):
                     intvl.cancel()
             Intervals["status"].clear()
             await gather(sync_to_async(aria2.purge), delete_status())
-        except Exception:
+        except:
             pass
 
     def removeFromSameDir(self):

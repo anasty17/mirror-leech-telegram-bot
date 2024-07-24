@@ -57,7 +57,7 @@ async def convert_video(listener, video_file, ext, retry=False):
         else:
             try:
                 stderr = stderr.decode().strip()
-            except Exception:
+            except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
                 f"{stderr}. Something went wrong while converting video, mostly file need specific codec. Path: {video_file}"
@@ -91,7 +91,7 @@ async def convert_audio(listener, audio_file, ext):
     else:
         try:
             stderr = stderr.decode().strip()
-        except Exception:
+        except:
             stderr = "Unable to decode the error!"
         LOGGER.error(
             f"{stderr}. Something went wrong while converting audio, mostly file need specific codec. Path: {audio_file}"
@@ -261,7 +261,7 @@ async def take_ss(video_file, ss_nb) -> bool:
                 )
                 await rmtree(dirpath, ignore_errors=True)
                 return False
-        except Exception:
+        except:
             LOGGER.error(
                 f"Error while creating sreenshots from video. Path: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
             )
@@ -330,7 +330,7 @@ async def create_thumbnail(video_file, duration):
                 f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
             )
             return None
-    except Exception:
+    except:
         LOGGER.error(
             f"Error while extracting thumbnail from video. Name: {video_file}. Error: Timeout some issues with ffmpeg with specific arch!"
         )
@@ -404,11 +404,11 @@ async def split_file(
             elif code != 0:
                 try:
                     stderr = stderr.decode().strip()
-                except Exception:
+                except:
                     stderr = "Unable to decode the error!"
                 try:
                     await remove(out_path)
-                except Exception:
+                except:
                     pass
                 if multi_streams:
                     LOGGER.warning(
@@ -488,14 +488,13 @@ async def split_file(
         elif code != 0:
             try:
                 stderr = stderr.decode().strip()
-            except Exception:
+            except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(f"{stderr}. Split Document: {path}")
     return True
 
 
 async def createSampleVideo(listener, video_file, sample_duration, part_duration):
-    filter_complex = ""
     dir, name = video_file.rsplit("/", 1)
     output_file = f"{dir}/SAMPLE.{name}"
     segments = [(0, part_duration)]
@@ -509,6 +508,7 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         next_segment += time_interval
     segments.append((duration - part_duration, duration))
 
+    filter_complex = ""
     for i, (start, end) in enumerate(segments):
         filter_complex += (
             f"[0:v]trim=start={start}:end={end},setpts=PTS-STARTPTS[v{i}]; "
@@ -564,3 +564,90 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         if await aiopath.exists(output_file):
             await remove(output_file)
         return False
+
+    """finished_segments = []
+    await makedirs(f"{dir}/mltb_segments/", exist_ok=True)
+    ext = name.rsplit(".", 1)[-1]
+    for index, (start_time, end_time) in enumerate(segments, start=1):
+        output_seg = f"{dir}/mltb_segments/segment{index}.{ext}"
+        cmd = [
+            "ffmpeg",
+            "-i",
+            video_file,
+            "-ss",
+            f"{start_time}",
+            "-to",
+            f"{end_time}",
+            "-c",
+            "copy",
+            output_seg,
+        ]
+        if listener.isCancelled:
+            return False
+        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+        _, stderr = await listener.suproc.communicate()
+        if listener.isCancelled:
+            return False
+        code = listener.suproc.returncode
+        if code == -9:
+            listener.isCancelled = True
+            return False
+        elif code != 0:
+            try:
+                stderr = stderr.decode().strip()
+            except:
+                stderr = "Unable to decode the error!"
+            LOGGER.error(
+                f"{stderr}. Something went wrong while splitting file for sample video, mostly file is corrupted. Path: {video_file}"
+            )
+            if await aiopath.exists(output_file):
+                await remove(output_file)
+            return False
+        else:
+            finished_segments.append(f"file '{output_seg}'")
+
+    segments_file = f"{dir}/segments.txt"
+
+    async with aiopen(segments_file, "w+") as f:
+        await f.write("\n".join(finished_segments))
+
+    cmd = [
+        "ffmpeg",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        segments_file,
+        "-c:v",
+        "libx264",
+        "-c:a",
+        "aac",
+        "-threads",
+        f"{cpu_count() // 2}",
+        output_file,
+    ]
+    if listener.isCancelled:
+        return False
+    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    _, stderr = await listener.suproc.communicate()
+    if listener.isCancelled:
+        return False
+    code = listener.suproc.returncode
+    if code == -9:
+        listener.isCancelled = True
+        return False
+    elif code != 0:
+        try:
+            stderr = stderr.decode().strip()
+        except:
+            stderr = "Unable to decode the error!"
+        LOGGER.error(
+            f"{stderr}. Something went wrong while creating sample video, mostly file is corrupted. Path: {video_file}"
+        )
+        if await aiopath.exists(output_file):
+            await remove(output_file)
+        await gather(remove(segments_file), rmtree(f"{dir}/mltb_segments"))
+        return False
+    await gather(remove(segments_file), rmtree(f"{dir}/mltb_segments"))
+    return output_file"""

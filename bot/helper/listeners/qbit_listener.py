@@ -83,7 +83,7 @@ async def _onDownloadComplete(tor):
                 if f.priority == 0 and await aiopath.exists(f"{path}/{f.name}"):
                     try:
                         await remove(f"{path}/{f.name}")
-                    except Exception:
+                    except:
                         pass
         await task.listener.onDownloadComplete()
         if Intervals["stopAll"]:

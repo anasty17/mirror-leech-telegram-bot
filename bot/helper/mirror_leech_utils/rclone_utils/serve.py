@@ -14,7 +14,7 @@ async def rclone_serve_booter():
             try:
                 RcloneServe[0].kill()
                 RcloneServe.clear()
-            except Exception:
+            except:
                 pass
         return
     config = ConfigParser()
@@ -32,7 +32,7 @@ async def rclone_serve_booter():
         try:
             RcloneServe[0].kill()
             RcloneServe.clear()
-        except Exception:
+        except:
             pass
     cmd = [
         "rclone",

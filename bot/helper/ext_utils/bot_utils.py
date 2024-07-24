@@ -163,7 +163,7 @@ async def get_content_type(url):
         async with AsyncClient() as client:
             response = await client.get(url, allow_redirects=True, verify=False)
             return response.headers.get("Content-Type")
-    except Exception:
+    except:
         return None
 
 
@@ -175,7 +175,7 @@ def update_user_ldata(id_, key, value):
 async def retry_function(func, *args, **kwargs):
     try:
         return await func(*args, **kwargs)
-    except Exception:
+    except:
         return await retry_function(func, *args, **kwargs)
 
 
@@ -187,11 +187,11 @@ async def cmd_exec(cmd, shell=False):
     stdout, stderr = await proc.communicate()
     try:
         stdout = stdout.decode().strip()
-    except Exception:
+    except:
         stdout = "Unable to decode the response!"
     try:
         stderr = stderr.decode().strip()
-    except Exception:
+    except:
         stderr = "Unable to decode the error!"
     return stdout, stderr, proc.returncode
 

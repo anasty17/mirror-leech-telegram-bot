@@ -140,7 +140,7 @@ class RcloneList:
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
-        except Exception:
+        except:
             self.path = ""
             self.remote = "Timed Out. Task has been cancelled!"
             self.listener.isCancelled = True

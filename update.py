@@ -35,7 +35,7 @@ try:
     if bool(environ.get("_____REMOVE_THIS_LINE_____")):
         log_error("The README.md file there to be read! Exiting now!")
         exit(1)
-except Exception:
+except:
     pass
 
 BOT_TOKEN = environ.get("BOT_TOKEN", "")

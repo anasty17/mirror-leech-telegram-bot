@@ -37,7 +37,7 @@ async def _onDownloadStarted(api, gid):
                     if download.is_removed or download.followed_by_ids:
                         await deleteMessage(meta)
                         break
-                    download = await sync_to_async(download.live)
+                    await sync_to_async(download.update)
         return
     else:
         LOGGER.info(f"onDownloadStarted: {download.name} - Gid: {gid}")
@@ -46,7 +46,7 @@ async def _onDownloadStarted(api, gid):
     if task := await getTaskByGid(gid):
         download = await sync_to_async(api.get_download, gid)
         await sleep(2)
-        download = await sync_to_async(download.live)
+        await sync_to_async(download.update)
         task.listener.name = download.name
         msg, button = await stop_duplicate_check(task.listener)
         if msg:
@@ -59,7 +59,7 @@ async def _onDownloadStarted(api, gid):
 async def _onDownloadComplete(api, gid):
     try:
         download = await sync_to_async(api.get_download, gid)
-    except Exception:
+    except:
         return
     if download.options.follow_torrent == "false":
         return
@@ -107,7 +107,7 @@ async def _onBtDownloadComplete(api, gid):
                 if not file_o.selected and await aiopath.exists(f_path):
                     try:
                         await remove(f_path)
-                    except Exception:
+                    except:
                         pass
             await clean_unwanted(download.dir)
         if task.listener.seed:
@@ -127,10 +127,10 @@ async def _onBtDownloadComplete(api, gid):
         await task.listener.onDownloadComplete()
         if Intervals["stopAll"]:
             return
-        download = await sync_to_async(download.live)
+        await sync_to_async(download.update)
         if task.listener.seed:
             if download.is_complete:
-                if task := await getTaskByGid(gid):
+                if await getTaskByGid(gid):
                     LOGGER.info(f"Cancelling Seed: {download.name}")
                     await task.listener.onUploadError(
                         f"Seeding stopped with Ratio: {task.ratio()} and Time: {task.seeding_time()}"
@@ -170,7 +170,7 @@ async def _onDownloadError(api, gid):
             return
         error = download.error_message
         LOGGER.info(f"Download Error: {error}")
-    except Exception:
+    except:
         pass
     if task := await getTaskByGid(gid):
         await task.listener.onDownloadError(error)

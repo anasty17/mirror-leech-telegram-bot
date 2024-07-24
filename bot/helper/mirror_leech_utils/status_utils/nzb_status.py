@@ -47,7 +47,7 @@ class SabnzbdStatus:
     def speed_raw(self):
         try:
             return int(float(self._info["mb"]) * 1048576) / self.eta_raw()
-        except Exception:
+        except:
             return 0
 
     def speed(self):

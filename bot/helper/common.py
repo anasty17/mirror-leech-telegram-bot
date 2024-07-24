@@ -310,7 +310,7 @@ class TaskConfig:
                         await self.client.send_chat_action(
                             self.upDest, ChatAction.TYPING
                         )
-                    except Exception:
+                    except:
                         raise ValueError("Start the bot and try again!")
             elif (self.userTransmission or self.mixedLeech) and not self.isSuperChat:
                 self.userTransmission = False
@@ -345,13 +345,18 @@ class TaskConfig:
 
     async def getTag(self, text: list):
         if len(text) > 1 and text[1].startswith("Tag: "):
-            self.tag, id_ = text[1].split("Tag: ")[1].split()
+            user_info = text[1].split("Tag: ")
+            if len(user_info) >= 3:
+                id_ = user_info[-1]
+                self.tag = " ".join(user_info[:-1])
+            else:
+                self.tag, id_ = text[1].split("Tag: ")[1].split()
             self.user = self.message.from_user = await self.client.get_users(id_)
             self.userId = self.user.id
             self.userDict = user_data.get(self.userId, {})
             try:
                 await self.message.unpin()
-            except Exception:
+            except:
                 pass
         if self.user:
             if username := self.user.username:
@@ -453,7 +458,7 @@ class TaskConfig:
                 self.multiTag,
                 self.options,
             ).newEvent()
-        except Exception:
+        except:
             await sendMessage(
                 self.message,
                 "Reply to text file or to telegram message that have links seperated by new line!",
@@ -510,7 +515,7 @@ class TaskConfig:
                             if code != 0:
                                 try:
                                     stderr = stderr.decode().strip()
-                                except Exception:
+                                except:
                                     stderr = "Unable to decode the error!"
                                 LOGGER.error(
                                     f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
@@ -525,7 +530,7 @@ class TaskConfig:
                                 del_path = ospath.join(dirpath, file_)
                                 try:
                                     await remove(del_path)
-                                except Exception:
+                                except:
                                     self.isCancelled = True
                 return up_path
             else:
@@ -560,13 +565,13 @@ class TaskConfig:
                     if not self.seed:
                         try:
                             await remove(dl_path)
-                        except Exception:
+                        except:
                             self.isCancelled = True
                     return up_path
                 else:
                     try:
                         stderr = stderr.decode().strip()
-                    except Exception:
+                    except:
                         stderr = "Unable to decode the error!"
                     LOGGER.error(
                         f"{stderr}. Unable to extract archive! Uploading anyway. Path: {dl_path}"
@@ -642,7 +647,7 @@ class TaskConfig:
                 if await aiopath.exists(f):
                     try:
                         await remove(f)
-                    except Exception:
+                    except:
                         pass
             ft_delete.clear()
             return up_path
@@ -652,7 +657,7 @@ class TaskConfig:
                 self.newDir = ""
             try:
                 stderr = stderr.decode().strip()
-            except Exception:
+            except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
             return dl_path
@@ -684,13 +689,13 @@ class TaskConfig:
                             else:
                                 try:
                                     await remove(f_path)
-                                except Exception:
+                                except:
                                     return
                         continue
                     elif not self.seed or self.newDir:
                         try:
                             await remove(f_path)
-                        except Exception:
+                        except:
                             return
                     else:
                         m_size.append(f_size)
@@ -866,7 +871,7 @@ class TaskConfig:
                 else:
                     try:
                         await remove(dl_path)
-                    except Exception:
+                    except:
                         pass
                     return output_file
         else:
@@ -886,7 +891,7 @@ class TaskConfig:
                         else:
                             try:
                                 await remove(f_path)
-                            except Exception:
+                            except:
                                 pass
             if checked:
                 cpu_eater_lock.release()
@@ -932,7 +937,9 @@ class TaskConfig:
             up_dir, name = dl_path.rsplit("/", 1)
             for substitution in self.nameSub:
                 pattern = substitution[0]
-                res = substitution[1] if len(substitution) > 1 and substitution[1] else ""
+                res = (
+                    substitution[1] if len(substitution) > 1 and substitution[1] else ""
+                )
                 sen = len(substitution) > 2 and substitution[2] == "s"
                 new_name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
             new_path = ospath.join(up_dir, new_name)
@@ -944,7 +951,11 @@ class TaskConfig:
                     f_path = ospath.join(dirpath, file_)
                     for substitution in self.nameSub:
                         pattern = substitution[0]
-                        res = substitution[1] if len(substitution) > 1 and substitution[1] else ""
+                        res = (
+                            substitution[1]
+                            if len(substitution) > 1 and substitution[1]
+                            else ""
+                        )
                         sen = len(substitution) > 2 and substitution[2] == "s"
                         new_name = sub(rf"{pattern}", res, file_, flags=I if sen else 0)
                     await move(f_path, ospath.join(dirpath, new_name))

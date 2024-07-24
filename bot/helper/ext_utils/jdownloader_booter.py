@@ -124,7 +124,7 @@ class JDownloader(Myjdapi):
                         break
                 else:
                     continue
-            except Exception:
+            except:
                 continue
             break
         await self.device.enable_direct_connection()

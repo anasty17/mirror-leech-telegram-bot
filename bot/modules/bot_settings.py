@@ -412,7 +412,7 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
         if key == "newser":
             try:
                 value = eval(value)
-            except Exception:
+            except:
                 await sendMessage(message, "Invalid dict format!")
                 await update_buttons(pre_message, "nzbserver")
                 return
@@ -446,7 +446,7 @@ async def sync_jdownloader():
         return
     try:
         await wait_for(retry_function(jdownloader.update_devices), timeout=10)
-    except Exception:
+    except:
         is_connected = await jdownloader.jdconnect()
         if not is_connected:
             LOGGER.error(jdownloader.error)
@@ -999,7 +999,7 @@ async def load_config():
             USENET_SERVERS = []
         else:
             USENET_SERVERS = eval(USENET_SERVERS)
-    except Exception:
+    except:
         LOGGER.error(f"Wrong USENET_SERVERS format: {USENET_SERVERS}")
         USENET_SERVERS = []
 
@@ -1029,7 +1029,7 @@ async def load_config():
     else:
         try:
             SEARCH_PLUGINS = eval(SEARCH_PLUGINS)
-        except Exception:
+        except:
             LOGGER.error(f"Wrong SEARCH_PLUGINS fornat {SEARCH_PLUGINS}")
             SEARCH_PLUGINS = ""
 

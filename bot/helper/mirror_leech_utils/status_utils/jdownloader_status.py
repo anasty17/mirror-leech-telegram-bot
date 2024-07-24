@@ -26,7 +26,7 @@ def _get_combined_info(result):
         status = "UnknownError"
     try:
         eta = (bytesTotal - bytesLoaded) / speed
-    except Exception:
+    except:
         eta = 0
     return {
         "name": name,
@@ -56,7 +56,7 @@ async def get_download(gid, old_info):
             ]
         )
         return _get_combined_info(result) if len(result) > 1 else result[0]
-    except Exception:
+    except:
         return old_info
 
 
@@ -72,7 +72,7 @@ class JDownloaderStatus:
     def progress(self):
         try:
             return f"{round((self._info.get('bytesLoaded', 0) / self._info.get('bytesTotal', 0)) * 100, 2)}%"
-        except Exception:
+        except:
             return "0%"
 
     def processed_bytes(self):

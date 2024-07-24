@@ -17,7 +17,7 @@ async def update_download(gid, value):
             task._gid = new_gid
         async with jd_lock:
             del jd_downloads[gid]
-    except Exception:
+    except:
         pass
 
 
@@ -71,7 +71,7 @@ async def _jd_listener():
                 await wait_for(
                     retry_function(jdownloader.device.jd.version), timeout=10
                 )
-            except Exception:
+            except:
                 is_connected = await jdownloader.jdconnect()
                 if not is_connected:
                     LOGGER.error(jdownloader.error)
@@ -84,7 +84,7 @@ async def _jd_listener():
                 packages = await jdownloader.device.downloads.query_packages(
                     [{"finished": True}]
                 )
-            except Exception:
+            except:
                 continue
             finished = [
                 pack["uuid"] for pack in packages if pack.get("finished", False)

@@ -193,7 +193,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             if hasattr(task, "seeders_num"):
                 try:
                     msg += f"\n<b>Seeders:</b> {task.seeders_num()} | <b>Leechers:</b> {task.leechers_num()}"
-                except Exception:
+                except:
                     pass
         elif tstatus == MirrorStatus.STATUS_SEEDING:
             msg += f"\n<b>Size: </b>{task.size()}"
