@@ -259,7 +259,10 @@ def mediafire(url, session=None):
             "ERROR: No links found in this page Try Again"
         )
     if final_link[0].startswith("//"):
-        return mediafire(f"https://{final_link[0][2:]}", session)
+        final_url = f"https://{final_link[0][2:]}"
+        if _password:
+            final_url += f"::{_password}"
+        return mediafire(final_url, session)
     session.close()
     return final_link[0]
 
