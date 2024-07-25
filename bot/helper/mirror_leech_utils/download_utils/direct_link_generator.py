@@ -1048,6 +1048,11 @@ def gofile(url):
 
 
 def mediafireFolder(url):
+    if "::" in url:
+        _password = url.split("::")[-1]
+        url = url.split("::")[-2]
+    else:
+        _password = ""
     try:
         raw = url.split("/", 4)[-1]
         folderkey = raw.split("/", 1)[0]
@@ -1109,6 +1114,17 @@ def mediafireFolder(url):
             html = HTML(session.get(url).text)
         except:
             return
+        if html.xpath("//div[@class='passwordPrompt']"):
+            if not _password:
+                raise DirectDownloadLinkException(
+                    f"ERROR: {PASSWORD_ERROR_MESSAGE}".format(url)
+                )
+            try:
+                html = HTML(session.post(url, data={"downloadp": _password}).text)
+            except:
+                return
+            if html.xpath("//div[@class='passwordPrompt']"):
+                return
         if final_link := html.xpath("//a[@id='downloadButton']/@href"):
             return final_link[0]
 
