@@ -18,3 +18,5 @@ downloads
 bot.session*
 terabox.txt
 rclone.conf
+
+venv
