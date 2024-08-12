@@ -5,7 +5,7 @@ from os import walk, path as ospath, makedirs
 from re import split as re_split, I, search as re_search, escape
 from shutil import rmtree
 from subprocess import run as srun
-from sys import exit as sexit
+from sys import exit
 
 from bot import aria2, LOGGER, DOWNLOAD_DIR, qbittorrent_client
 from bot.helper.ext_utils.bot_utils import sync_to_async, cmd_exec
@@ -105,10 +105,10 @@ def exit_clean_up(signal, frame):
         LOGGER.info("Please wait, while we clean up and stop the running downloads")
         clean_all()
         srun(["pkill", "-9", "-f", "gunicorn|aria2c|qbittorrent-nox|ffmpeg|java"])
-        sexit(0)
+        exit(0)
     except KeyboardInterrupt:
         LOGGER.warning("Force Exiting before the cleanup finishes!")
-        sexit(1)
+        exit(1)
 
 
 async def clean_unwanted(path, custom_list=None):

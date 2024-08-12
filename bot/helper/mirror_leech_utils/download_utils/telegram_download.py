@@ -1,6 +1,6 @@
 from asyncio import Lock, sleep
 from time import time
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, FloodPremiumWait
 
 from bot import (
     LOGGER,
@@ -81,7 +81,7 @@ class TelegramDownloadHelper:
             if self._listener.isCancelled:
                 await self._onDownloadError("Cancelled by user!")
                 return
-        except FloodWait as f:
+        except (FloodWait, FloodPremiumWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
         except Exception as e:

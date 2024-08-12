@@ -36,11 +36,15 @@ async def shell(_, message):
 
 bot.add_handler(
     MessageHandler(
-        shell, filters=command(BotCommands.ShellCommand) & CustomFilters.owner
+        shell,
+        filters=command(BotCommands.ShellCommand, case_sensitive=True)
+        & CustomFilters.owner,
     )
 )
 bot.add_handler(
     EditedMessageHandler(
-        shell, filters=command(BotCommands.ShellCommand) & CustomFilters.owner
+        shell,
+        filters=command(BotCommands.ShellCommand, case_sensitive=True)
+        & CustomFilters.owner,
     )
 )

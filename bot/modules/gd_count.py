@@ -50,6 +50,8 @@ async def countNode(_, message):
 
 bot.add_handler(
     MessageHandler(
-        countNode, filters=command(BotCommands.CountCommand) & CustomFilters.authorized
+        countNode,
+        filters=command(BotCommands.CountCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )

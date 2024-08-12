@@ -1,5 +1,5 @@
 from aiofiles.os import path as aiopath
-from asyncio import wait_for, Event, wrap_future, gather
+from asyncio import wait_for, Event, gather
 from functools import partial
 from logging import getLogger
 from natsort import natsorted
@@ -9,7 +9,7 @@ from tenacity import RetryError
 from time import time
 
 from bot import config_dict
-from bot.helper.ext_utils.bot_utils import new_thread, new_task, update_user_ldata
+from bot.helper.ext_utils.bot_utils import new_task, update_user_ldata
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -25,7 +25,6 @@ LOGGER = getLogger(__name__)
 LIST_LIMIT = 6
 
 
-@new_task
 async def id_updates(_, query, obj):
     await query.answer()
     message = query.message
@@ -134,7 +133,6 @@ class gdriveList(GoogleDriveHelper):
         self.page_step = 1
         super().__init__()
 
-    @new_thread
     async def _event_handler(self):
         pfunc = partial(id_updates, obj=self)
         handler = self.listener.client.add_handler(
@@ -351,7 +349,6 @@ class gdriveList(GoogleDriveHelper):
 
     async def get_target_id(self, status, token_path=None):
         self.list_status = status
-        future = self._event_handler()
         if token_path is None:
             self._token_user, self._token_owner, self._sa_owner = await gather(
                 aiopath.exists(self.user_token_path),
@@ -366,7 +363,7 @@ class gdriveList(GoogleDriveHelper):
             self.token_path = token_path
             self.use_sa = self.token_path == "accounts"
             await self.list_drives()
-        await wrap_future(future)
+        await self._event_handler()
         if self._reply_to:
             await deleteMessage(self._reply_to)
         if not self.listener.isCancelled:

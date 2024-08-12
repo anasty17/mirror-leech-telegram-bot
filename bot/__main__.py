@@ -264,31 +264,44 @@ async def main():
     )
     create_help_buttons()
 
-    bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
     bot.add_handler(
         MessageHandler(
-            log, filters=command(BotCommands.LogCommand) & CustomFilters.sudo
+            start, filters=command(BotCommands.StartCommand, case_sensitive=True)
         )
     )
     bot.add_handler(
         MessageHandler(
-            restart, filters=command(BotCommands.RestartCommand) & CustomFilters.sudo
+            log,
+            filters=command(BotCommands.LogCommand, case_sensitive=True)
+            & CustomFilters.sudo,
         )
     )
     bot.add_handler(
         MessageHandler(
-            ping, filters=command(BotCommands.PingCommand) & CustomFilters.authorized
+            restart,
+            filters=command(BotCommands.RestartCommand, case_sensitive=True)
+            & CustomFilters.sudo,
+        )
+    )
+    bot.add_handler(
+        MessageHandler(
+            ping,
+            filters=command(BotCommands.PingCommand, case_sensitive=True)
+            & CustomFilters.authorized,
         )
     )
     bot.add_handler(
         MessageHandler(
             bot_help,
-            filters=command(BotCommands.HelpCommand) & CustomFilters.authorized,
+            filters=command(BotCommands.HelpCommand, case_sensitive=True)
+            & CustomFilters.authorized,
         )
     )
     bot.add_handler(
         MessageHandler(
-            stats, filters=command(BotCommands.StatsCommand) & CustomFilters.authorized
+            stats,
+            filters=command(BotCommands.StatsCommand, case_sensitive=True)
+            & CustomFilters.authorized,
         )
     )
     LOGGER.info("Bot Started!")

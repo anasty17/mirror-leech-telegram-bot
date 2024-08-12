@@ -10,7 +10,7 @@ from asyncio import sleep
 from logging import getLogger
 from natsort import natsorted
 from os import walk, path as ospath
-from pyrogram.errors import FloodWait, RPCError
+from pyrogram.errors import FloodWait, RPCError, FloodPremiumWait, SlowmodeWait
 from pyrogram.types import InputMediaVideo, InputMediaDocument, InputMediaPhoto
 from re import match as re_match, sub as re_sub
 from tenacity import (
@@ -469,7 +469,7 @@ class TgUploader:
                 and await aiopath.exists(thumb)
             ):
                 await remove(thumb)
-        except FloodWait as f:
+        except (FloodWait, FloodPremiumWait, SlowmodeWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value * 1.3)
             if (

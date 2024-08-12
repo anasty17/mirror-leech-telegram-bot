@@ -84,22 +84,29 @@ async def removeSudo(client, message):
 
 bot.add_handler(
     MessageHandler(
-        authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo
+        authorize,
+        filters=command(BotCommands.AuthorizeCommand, case_sensitive=True)
+        & CustomFilters.sudo,
     )
 )
 bot.add_handler(
     MessageHandler(
         unauthorize,
-        filters=command(BotCommands.UnAuthorizeCommand) & CustomFilters.sudo,
+        filters=command(BotCommands.UnAuthorizeCommand, case_sensitive=True)
+        & CustomFilters.sudo,
     )
 )
 bot.add_handler(
     MessageHandler(
-        addSudo, filters=command(BotCommands.AddSudoCommand) & CustomFilters.sudo
+        addSudo,
+        filters=command(BotCommands.AddSudoCommand, case_sensitive=True)
+        & CustomFilters.sudo,
     )
 )
 bot.add_handler(
     MessageHandler(
-        removeSudo, filters=command(BotCommands.RmSudoCommand) & CustomFilters.sudo
+        removeSudo,
+        filters=command(BotCommands.RmSudoCommand, case_sensitive=True)
+        & CustomFilters.sudo,
     )
 )

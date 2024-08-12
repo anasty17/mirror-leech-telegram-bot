@@ -165,13 +165,15 @@ async def cancel_all_update(_, query):
 bot.add_handler(
     MessageHandler(
         cancel_task,
-        filters=command(BotCommands.CancelTaskCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.CancelTaskCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
         cancell_all_buttons,
-        filters=command(BotCommands.CancelAllCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.CancelAllCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(CallbackQueryHandler(cancel_all_update, filters=regex("^canall")))

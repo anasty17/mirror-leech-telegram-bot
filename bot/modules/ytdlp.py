@@ -1,5 +1,5 @@
 from httpx import AsyncClient
-from asyncio import wait_for, Event, wrap_future
+from asyncio import wait_for, Event
 from functools import partial
 from pyrogram.filters import command, regex, user
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
@@ -10,7 +10,6 @@ from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER
 from bot.helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
-    new_thread,
     arg_parser,
     COMMAND_USAGE,
 )
@@ -28,7 +27,6 @@ from bot.helper.telegram_helper.message_utils import (
 )
 
 
-@new_task
 async def select_format(_, query, obj):
     data = query.data.split()
     message = query.message
@@ -76,7 +74,6 @@ class YtSelection:
         self.formats = {}
         self.qual = None
 
-    @new_thread
     async def _event_handler(self):
         pfunc = partial(select_format, obj=self)
         handler = self.listener.client.add_handler(
@@ -96,7 +93,6 @@ class YtSelection:
             self.listener.client.remove_handler(*handler)
 
     async def get_quality(self, result):
-        future = self._event_handler()
         buttons = ButtonMaker()
         if "entries" in result:
             self._is_playlist = True
@@ -172,7 +168,7 @@ class YtSelection:
         self._reply_to = await sendMessage(
             self.listener.message, msg, self._main_buttons
         )
-        await wrap_future(future)
+        await self._event_handler()
         if not self.listener.isCancelled:
             await deleteMessage(self._reply_to)
         return self.qual
@@ -460,12 +456,13 @@ async def ytdlleech(client, message):
 
 bot.add_handler(
     MessageHandler(
-        ytdl, filters=command(BotCommands.YtdlCommand) & CustomFilters.authorized
+        ytdl, filters=command(BotCommands.YtdlCommand, case_sensitive=True) & CustomFilters.authorized
     )
 )
 bot.add_handler(
     MessageHandler(
         ytdlleech,
-        filters=command(BotCommands.YtdlLeechCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.YtdlLeechCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )

@@ -384,45 +384,55 @@ async def nzb_leech(client, message):
 
 bot.add_handler(
     MessageHandler(
-        mirror, filters=command(BotCommands.MirrorCommand) & CustomFilters.authorized
+        mirror, filters=command(BotCommands.MirrorCommand, case_sensitive=True) & CustomFilters.authorized
     )
 )
 bot.add_handler(
     MessageHandler(
         qb_mirror,
-        filters=command(BotCommands.QbMirrorCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.QbMirrorCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
         jd_mirror,
-        filters=command(BotCommands.JdMirrorCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.JdMirrorCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
         nzb_mirror,
-        filters=command(BotCommands.NzbMirrorCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.NzbMirrorCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
-        leech, filters=command(BotCommands.LeechCommand) & CustomFilters.authorized
+        leech,
+        filters=command(BotCommands.LeechCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
-        qb_leech, filters=command(BotCommands.QbLeechCommand) & CustomFilters.authorized
+        qb_leech,
+        filters=command(BotCommands.QbLeechCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
-        jd_leech, filters=command(BotCommands.JdLeechCommand) & CustomFilters.authorized
+        jd_leech,
+        filters=command(BotCommands.JdLeechCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(
     MessageHandler(
         nzb_leech,
-        filters=command(BotCommands.NzbLeechCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.NzbLeechCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )

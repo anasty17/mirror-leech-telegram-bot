@@ -4,17 +4,15 @@ from aioshutil import rmtree
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
-    sleep,
     gather,
     wait_for,
 )
 from dotenv import load_dotenv
-from functools import partial
 from io import BytesIO
 from os import environ, getcwd
-from pyrogram.filters import command, regex, create
+from pyrogram import filters
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-from time import time
+from pyrogram.errors import ListenerTimeout, ListenerStopped
 
 from bot import (
     config_dict,
@@ -44,7 +42,6 @@ from bot import (
 from bot.helper.ext_utils.bot_utils import (
     setInterval,
     sync_to_async,
-    new_thread,
     retry_function,
 )
 from bot.helper.ext_utils.db_handler import DbManager
@@ -66,7 +63,6 @@ from bot.modules.torrent_search import initiate_search_tools
 
 START = 0
 STATE = "view"
-handler_dict = {}
 default_values = {
     "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "LEECH_SPLIT_SIZE": MAX_SPLIT_SIZE,
@@ -251,8 +247,7 @@ async def update_buttons(message, key=None, edit_type=None):
     await editMessage(message, msg, button)
 
 
-async def edit_variable(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+async def edit_variable(message, pre_message, key):
     value = message.text
     if value.lower() == "true":
         value = True
@@ -343,8 +338,7 @@ async def edit_variable(_, message, pre_message, key):
             await sabnzbd_client.set_special_config("servers", s)
 
 
-async def edit_aria(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+async def edit_aria(message, pre_message, key):
     value = message.text
     if key == "newkey":
         key, value = [x.strip() for x in value.split(":", 1)]
@@ -371,8 +365,7 @@ async def edit_aria(_, message, pre_message, key):
         await DbManager().update_aria2(key, value)
 
 
-async def edit_qbit(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+async def edit_qbit(message, pre_message, key):
     value = message.text
     if value.lower() == "true":
         value = True
@@ -390,8 +383,7 @@ async def edit_qbit(_, message, pre_message, key):
         await DbManager().update_qbittorrent(key, value)
 
 
-async def edit_nzb(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+async def edit_nzb(message, pre_message, key):
     value = message.text
     if value.isdigit():
         value = int(value)
@@ -405,8 +397,7 @@ async def edit_nzb(_, message, pre_message, key):
         await DbManager().update_nzb_config()
 
 
-async def edit_nzb_server(_, message, pre_message, key, index=0):
-    handler_dict[message.chat.id] = False
+async def edit_nzb_server(message, pre_message, key, index=0):
     value = message.text
     if value.startswith("{") and value.endswith("}"):
         if key == "newser":
@@ -471,8 +462,7 @@ async def sync_jdownloader():
     await DbManager().update_private_file("cfg.zip")
 
 
-async def update_private_file(_, message, pre_message):
-    handler_dict[message.chat.id] = False
+async def update_private_file(message, pre_message):
     if not message.media and (file_name := message.text):
         fn = file_name.rsplit(".zip", 1)[0]
         if await aiopath.isfile(fn) and file_name != "config.env":
@@ -550,35 +540,20 @@ async def update_private_file(_, message, pre_message):
         await remove("accounts.zip")
 
 
-async def event_handler(client, query, pfunc, rfunc, document=False):
-    chat_id = query.message.chat.id
-    handler_dict[chat_id] = True
-    start_time = time()
-
-    async def event_filter(_, __, event):
-        user = event.from_user or event.sender_chat
-        return bool(
-            user.id == query.from_user.id
-            and event.chat.id == chat_id
-            and (event.text or event.document and document)
-        )
-
-    handler = client.add_handler(
-        MessageHandler(pfunc, filters=create(event_filter)), group=-1
+async def event_handler(client, query, document=False):
+    event_filter = filters.text | filters.document if document else filters.text
+    return await client.listen(
+        chat_id=query.message.chat.id,
+        user_id=query.from_user.id,
+        filters=event_filter,
+        timeout=60,
     )
-    while handler_dict[chat_id]:
-        await sleep(0.5)
-        if time() - start_time > 60:
-            handler_dict[chat_id] = False
-            await rfunc()
-    client.remove_handler(*handler)
 
 
-@new_thread
 async def edit_bot_settings(client, query):
-    data = query.data.split()
     message = query.message
-    handler_dict[message.chat.id] = False
+    await client.stop_listening(chat_id=message.chat.id, user_id=query.from_user.id)
+    data = query.data.split()
     if data[1] == "close":
         await query.answer()
         await deleteMessage(message.reply_to_message)
@@ -772,15 +747,25 @@ async def edit_bot_settings(client, query):
     elif data[1] == "private":
         await query.answer()
         await update_buttons(message, data[1])
-        pfunc = partial(update_private_file, pre_message=message)
-        rfunc = partial(update_buttons, message)
-        await event_handler(client, query, pfunc, rfunc, True)
+        try:
+            event = await event_handler(client, query, True)
+        except ListenerTimeout:
+            await update_buttons(message)
+        except ListenerStopped:
+            pass
+        else:
+            await update_private_file(event, message)
     elif data[1] == "botvar" and STATE == "edit":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_variable, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "var")
-        await event_handler(client, query, pfunc, rfunc)
+        try:
+            event = await event_handler(client, query)
+        except ListenerTimeout:
+            await update_buttons(message, "var")
+        except ListenerStopped:
+            pass
+        else:
+            await edit_variable(event, message, data[2])
     elif data[1] == "botvar" and STATE == "view":
         value = f"{config_dict[data[2]]}"
         if len(value) > 200:
@@ -795,9 +780,14 @@ async def edit_bot_settings(client, query):
     elif data[1] == "ariavar" and (STATE == "edit" or data[2] == "newkey"):
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_aria, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "aria")
-        await event_handler(client, query, pfunc, rfunc)
+        try:
+            event = await event_handler(client, query)
+        except ListenerTimeout:
+            await update_buttons(message, "aria")
+        except ListenerStopped:
+            pass
+        else:
+            await edit_aria(event, message, data[2])
     elif data[1] == "ariavar" and STATE == "view":
         value = f"{aria2_options[data[2]]}"
         if len(value) > 200:
@@ -812,9 +802,14 @@ async def edit_bot_settings(client, query):
     elif data[1] == "qbitvar" and STATE == "edit":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_qbit, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "qbit")
-        await event_handler(client, query, pfunc, rfunc)
+        try:
+            event = await event_handler(client, query)
+        except ListenerTimeout:
+            await update_buttons(message, "qbit")
+        except ListenerStopped:
+            pass
+        else:
+            await edit_qbit(event, message, data[2])
     elif data[1] == "qbitvar" and STATE == "view":
         value = f"{qbit_options[data[2]]}"
         if len(value) > 200:
@@ -829,9 +824,14 @@ async def edit_bot_settings(client, query):
     elif data[1] == "nzbvar" and STATE == "edit":
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_nzb, pre_message=message, key=data[2])
-        rfunc = partial(update_buttons, message, "nzb")
-        await event_handler(client, query, pfunc, rfunc)
+        try:
+            event = await event_handler(client, query)
+        except ListenerTimeout:
+            await update_buttons(message, "nzb")
+        except ListenerStopped:
+            pass
+        else:
+            await edit_nzb(event, message, data[2])
     elif data[1] == "nzbvar" and STATE == "view":
         value = f"{nzb_options[data[2]]}"
         if len(value) > 200:
@@ -861,9 +861,14 @@ async def edit_bot_settings(client, query):
         index = 0 if data[2] == "newser" else int(data[1].replace("nzbsevar", ""))
         await query.answer()
         await update_buttons(message, data[2], data[1])
-        pfunc = partial(edit_nzb_server, pre_message=message, key=data[2], index=index)
-        rfunc = partial(update_buttons, message, data[1])
-        await event_handler(client, query, pfunc, rfunc)
+        try:
+            event = await event_handler(client, query)
+        except ListenerTimeout:
+            await update_buttons(message, data[1])
+        except ListenerStopped:
+            pass
+        else:
+            await edit_nzb_server(event, message, data[2], index)
     elif data[1].startswith("nzbsevar") and STATE == "view":
         index = int(data[1].replace("nzbsevar", ""))
         value = f"{config_dict['USENET_SERVERS'][index][data[2]]}"
@@ -912,8 +917,8 @@ async def edit_bot_settings(client, query):
         await deleteMessage(message)
 
 
-async def bot_settings(_, message):
-    handler_dict[message.chat.id] = False
+async def bot_settings(client, message):
+    await client.stop_listening(chat_id=message.chat.id, user_id=message.from_user.id)
     msg, button = await get_buttons()
     globals()["START"] = 0
     await sendMessage(message, msg, button)
@@ -1281,11 +1286,11 @@ async def load_config():
 
 bot.add_handler(
     MessageHandler(
-        bot_settings, filters=command(BotCommands.BotSetCommand) & CustomFilters.sudo
+        bot_settings, filters=filters.command(BotCommands.BotSetCommand, case_sensitive=True) & CustomFilters.sudo
     )
 )
 bot.add_handler(
     CallbackQueryHandler(
-        edit_bot_settings, filters=regex("^botset") & CustomFilters.sudo
+        edit_bot_settings, filters=filters.regex("^botset") & CustomFilters.sudo
     )
 )

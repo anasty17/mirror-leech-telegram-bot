@@ -77,6 +77,7 @@ async def remove_from_queue(_, message):
 bot.add_handler(
     MessageHandler(
         remove_from_queue,
-        filters=command(BotCommands.ForceStartCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.ForceStartCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )

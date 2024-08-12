@@ -168,7 +168,9 @@ async def get_confirm(_, query):
 
 bot.add_handler(
     MessageHandler(
-        select, filters=command(BotCommands.SelectCommand) & CustomFilters.authorized
+        select,
+        filters=command(BotCommands.SelectCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(CallbackQueryHandler(get_confirm, filters=regex("^sel")))

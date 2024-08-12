@@ -34,6 +34,7 @@ async def deletefile(_, message):
 bot.add_handler(
     MessageHandler(
         deletefile,
-        filters=command(BotCommands.DeleteCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.DeleteCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )

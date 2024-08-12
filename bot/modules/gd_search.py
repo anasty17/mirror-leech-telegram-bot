@@ -95,7 +95,8 @@ async def gdrive_search(_, message):
 bot.add_handler(
     MessageHandler(
         gdrive_search,
-        filters=command(BotCommands.ListCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.ListCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(CallbackQueryHandler(select_type, filters=regex("^list_types")))

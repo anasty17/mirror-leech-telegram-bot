@@ -1,6 +1,6 @@
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath
-from asyncio import wait_for, Event, wrap_future, gather
+from asyncio import wait_for, Event, gather
 from configparser import ConfigParser
 from functools import partial
 from json import loads
@@ -11,7 +11,6 @@ from time import time
 from bot import LOGGER, config_dict
 from bot.helper.ext_utils.bot_utils import (
     cmd_exec,
-    new_thread,
     new_task,
     update_user_ldata,
 )
@@ -27,7 +26,6 @@ from bot.helper.telegram_helper.message_utils import (
 LIST_LIMIT = 6
 
 
-@new_task
 async def path_updates(_, query, obj):
     await query.answer()
     message = query.message
@@ -129,7 +127,6 @@ class RcloneList:
         self.iter_start = 0
         self.page_step = 1
 
-    @new_thread
     async def _event_handler(self):
         pfunc = partial(path_updates, obj=self)
         handler = self.listener.client.add_handler(
@@ -313,7 +310,6 @@ class RcloneList:
 
     async def get_rclone_path(self, status, config_path=None):
         self.list_status = status
-        future = self._event_handler()
         if config_path is None:
             self._rc_user, self._rc_owner = await gather(
                 aiopath.exists(self.user_rcc_path), aiopath.exists("rclone.conf")
@@ -325,7 +321,7 @@ class RcloneList:
         else:
             self.config_path = config_path
             await self.list_remotes()
-        await wrap_future(future)
+        await self._event_handler()
         await deleteMessage(self._reply_to)
         if self.config_path != "rclone.conf" and not self.listener.isCancelled:
             return f"mrcc:{self.remote}{self.path}"

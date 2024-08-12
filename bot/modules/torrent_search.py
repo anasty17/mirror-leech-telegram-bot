@@ -314,7 +314,8 @@ async def torrentSearchUpdate(_, query):
 bot.add_handler(
     MessageHandler(
         torrentSearch,
-        filters=command(BotCommands.SearchCommand) & CustomFilters.authorized,
+        filters=command(BotCommands.SearchCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(CallbackQueryHandler(torrentSearchUpdate, filters=regex("^torser")))

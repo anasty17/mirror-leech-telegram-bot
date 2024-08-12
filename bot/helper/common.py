@@ -139,6 +139,10 @@ class TaskConfig:
         )
 
     async def isTokenExists(self, path, status):
+        if not self.upDest:
+            raise ValueError("No Upload Destination!")
+        if not is_gdrive_id(self.upDest) and not is_rclone_path(self.upDest):
+            raise ValueError("Wrong Upload Destination!")
         if is_rclone_path(path):
             config_path = self.getConfigPath(path)
             if config_path != "rclone.conf" and status == "up":
@@ -176,7 +180,15 @@ class TaskConfig:
             else ["aria2", "!qB"]
         )
         if self.link not in ["rcl", "gdl"]:
-            if not self.isYtDlp and not self.isJd:
+            if (
+                not self.isYtDlp
+                and not self.isJd
+                and (
+                    is_gdrive_id(self.link)
+                    or is_rclone_path(self.link)
+                    or is_gdrive_link(self.link)
+                )
+            ):
                 await self.isTokenExists(self.link, "dl")
         elif self.link == "rcl":
             if not self.isYtDlp and not self.isJd:
@@ -217,10 +229,6 @@ class TaskConfig:
                 )
             elif (not self.upDest and default_upload == "gd") or self.upDest == "gd":
                 self.upDest = self.userDict.get("gdrive_id") or config_dict["GDRIVE_ID"]
-            if not self.upDest:
-                raise ValueError("No Upload Destination!")
-            if not is_gdrive_id(self.upDest) and not is_rclone_path(self.upDest):
-                raise ValueError("Wrong Upload Destination!")
             if self.upDest not in ["rcl", "gdl"]:
                 await self.isTokenExists(self.upDest, "up")
 
