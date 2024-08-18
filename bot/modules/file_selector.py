@@ -14,7 +14,7 @@ from bot import (
     qbittorrent_client,
     sabnzbd_client,
 )
-from bot.helper.ext_utils.bot_utils import bt_selection_buttons, sync_to_async
+from bot.helper.ext_utils.bot_utils import bt_selection_buttons, sync_to_async, new_task
 from bot.helper.ext_utils.status_utils import getTaskByGid, MirrorStatus
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -25,6 +25,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 
 
+@new_task
 async def select(_, message):
     if not config_dict["BASE_URL"]:
         await sendMessage(message, "Base URL not defined!")
@@ -102,6 +103,7 @@ async def select(_, message):
     await sendMessage(message, msg, SBUTTONS)
 
 
+@new_task
 async def get_confirm(_, query):
     user_id = query.from_user.id
     data = query.data.split()

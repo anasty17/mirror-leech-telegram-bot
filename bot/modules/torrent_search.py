@@ -233,6 +233,7 @@ async def _plugin_buttons(user_id):
     return buttons.build_menu(2)
 
 
+@new_task
 async def torrentSearch(_, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()

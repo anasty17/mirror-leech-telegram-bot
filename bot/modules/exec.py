@@ -108,6 +108,7 @@ async def do(func, message):
             return result
 
 
+@new_task
 async def clear(_, message):
     log_input(message)
     global namespaces

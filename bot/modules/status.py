@@ -12,7 +12,7 @@ from bot import (
     Intervals,
     bot,
 )
-from bot.helper.ext_utils.bot_utils import new_task, sync_to_async
+from bot.helper.ext_utils.bot_utils import sync_to_async, new_task
 from bot.helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,

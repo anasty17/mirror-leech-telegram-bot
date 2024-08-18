@@ -1,5 +1,6 @@
 from asyncio import sleep
-from pyrogram.errors import FloodWait
+from pyrogram.errors import FloodWait, FloodPremiumWait
+from pyrogram.types import LinkPreviewOptions
 from re import match as re_match
 from time import time
 
@@ -14,7 +15,7 @@ async def sendMessage(message, text, buttons=None, block=True):
         return await message.reply(
             text=text,
             quote=True,
-            disable_web_page_preview=True,
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
             disable_notification=True,
             reply_markup=buttons,
         )
@@ -32,7 +33,9 @@ async def sendMessage(message, text, buttons=None, block=True):
 async def editMessage(message, text, buttons=None, block=True):
     try:
         await message.edit(
-            text=text, disable_web_page_preview=True, reply_markup=buttons
+            text=text,
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+            reply_markup=buttons,
         )
     except FloodWait as f:
         LOGGER.warning(str(f))
@@ -65,10 +68,10 @@ async def sendRss(text):
         return await app.send_message(
             chat_id=config_dict["RSS_CHAT"],
             text=text,
-            disable_web_page_preview=True,
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
             disable_notification=True,
         )
-    except FloodWait as f:
+    except (FloodWait, FloodPremiumWait) as f:
         LOGGER.warning(str(f))
         await sleep(f.value * 1.2)
         return await sendRss(text)

@@ -10,8 +10,13 @@ from asyncio import sleep
 from logging import getLogger
 from natsort import natsorted
 from os import walk, path as ospath
-from pyrogram.errors import FloodWait, RPCError, FloodPremiumWait, SlowmodeWait
-from pyrogram.types import InputMediaVideo, InputMediaDocument, InputMediaPhoto
+from pyrogram.errors import FloodWait, RPCError, FloodPremiumWait
+from pyrogram.types import (
+    InputMediaVideo,
+    InputMediaDocument,
+    InputMediaPhoto,
+    LinkPreviewOptions,
+)
 from re import match as re_match, sub as re_sub
 from tenacity import (
     retry,
@@ -93,14 +98,14 @@ class TgUploader:
                     self._sent_msg = await user.send_message(
                         chat_id=self._listener.upDest,
                         text=msg,
-                        disable_web_page_preview=True,
+                        link_preview_options=LinkPreviewOptions(is_disabled=True),
                         disable_notification=True,
                     )
                 else:
                     self._sent_msg = await self._listener.client.send_message(
                         chat_id=self._listener.upDest,
                         text=msg,
-                        disable_web_page_preview=True,
+                        link_preview_options=LinkPreviewOptions(is_disabled=True),
                         disable_notification=True,
                     )
                     self._is_private = self._sent_msg.chat.type.name == "PRIVATE"
@@ -115,7 +120,7 @@ class TgUploader:
                 self._sent_msg = await user.send_message(
                     chat_id=self._listener.message.chat.id,
                     text="Deleted Cmd Message! Don't delete the cmd message again!",
-                    disable_web_page_preview=True,
+                    link_preview_options=LinkPreviewOptions(is_disabled=True),
                     disable_notification=True,
                 )
         else:
@@ -469,7 +474,7 @@ class TgUploader:
                 and await aiopath.exists(thumb)
             ):
                 await remove(thumb)
-        except (FloodWait, FloodPremiumWait, SlowmodeWait) as f:
+        except (FloodWait, FloodPremiumWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value * 1.3)
             if (

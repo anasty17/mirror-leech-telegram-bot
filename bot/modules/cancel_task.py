@@ -16,6 +16,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 
 
+@new_task
 async def cancel_task(_, message):
     user_id = message.from_user.id if message.from_user else message.sender_chat.id
     msg = message.text.split()
@@ -53,6 +54,7 @@ async def cancel_task(_, message):
     await obj.cancel_task()
 
 
+@new_task
 async def cancel_multi(_, query):
     data = query.data.split()
     user_id = query.from_user.id
@@ -110,6 +112,7 @@ def create_cancel_buttons(isSudo, userId=""):
     return buttons.build_menu(2)
 
 
+@new_task
 async def cancell_all_buttons(_, message):
     async with task_dict_lock:
         count = len(task_dict)

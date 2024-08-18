@@ -21,7 +21,7 @@ pillow
 psutil
 pycryptodome
 pymongo
-pyrofork
+pyrotgfork
 python-dotenv
 python-magic
 qbittorrent-api

@@ -420,7 +420,7 @@ class TaskConfig:
             nextmsg.sender_chat = self.user
         if Intervals["stopAll"]:
             return
-        obj(
+        await obj(
             self.client,
             nextmsg,
             self.isQbit,

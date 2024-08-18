@@ -4,9 +4,8 @@ from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 from secrets import token_urlsafe
 
-from bot import LOGGER, task_dict, task_dict_lock, bot
+from bot import LOGGER, task_dict, task_dict_lock, bot, bot_loop
 from bot.helper.ext_utils.bot_utils import (
-    new_task,
     sync_to_async,
     cmd_exec,
     arg_parser,
@@ -63,7 +62,6 @@ class Clone(TaskListener):
         super().__init__()
         self.isClone = True
 
-    @new_task
     async def newEvent(self):
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
@@ -285,7 +283,7 @@ class Clone(TaskListener):
 
 
 async def clone(client, message):
-    Clone(client, message).newEvent()
+    bot_loop.create_task(Clone(client, message).newEvent())
 
 
 bot.add_handler(

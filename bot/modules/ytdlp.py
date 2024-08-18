@@ -6,7 +6,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
 from yt_dlp import YoutubeDL
 
-from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER
+from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER, bot_loop
 from bot.helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
@@ -27,6 +27,7 @@ from bot.helper.telegram_helper.message_utils import (
 )
 
 
+@new_task
 async def select_format(_, query, obj):
     data = query.data.split()
     message = query.message
@@ -280,7 +281,6 @@ class YtDlp(TaskListener):
         self.isYtDlp = True
         self.isLeech = isLeech
 
-    @new_task
     async def newEvent(self):
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
@@ -447,16 +447,18 @@ class YtDlp(TaskListener):
 
 
 async def ytdl(client, message):
-    YtDlp(client, message).newEvent()
+    bot_loop.create_task(YtDlp(client, message).newEvent())
 
 
 async def ytdlleech(client, message):
-    YtDlp(client, message, isLeech=True).newEvent()
+    bot_loop.create_task(YtDlp(client, message, isLeech=True).newEvent())
 
 
 bot.add_handler(
     MessageHandler(
-        ytdl, filters=command(BotCommands.YtdlCommand, case_sensitive=True) & CustomFilters.authorized
+        ytdl,
+        filters=command(BotCommands.YtdlCommand, case_sensitive=True)
+        & CustomFilters.authorized,
     )
 )
 bot.add_handler(

@@ -9,7 +9,7 @@ from tenacity import RetryError
 from time import time
 
 from bot import config_dict
-from bot.helper.ext_utils.bot_utils import update_user_ldata
+from bot.helper.ext_utils.bot_utils import update_user_ldata, new_task
 from bot.helper.ext_utils.db_handler import DbManager
 from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -25,6 +25,7 @@ LOGGER = getLogger(__name__)
 LIST_LIMIT = 6
 
 
+@new_task
 async def id_updates(_, query, obj):
     await query.answer()
     message = query.message

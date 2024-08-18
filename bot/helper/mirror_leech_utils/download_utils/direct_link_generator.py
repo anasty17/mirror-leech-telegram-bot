@@ -566,15 +566,12 @@ def terabox(url, video_quality="HD Video", save_dir="HD_Video"):
         raise DirectDownloadLinkException("ERROR: Invalid terabox URL")
 
     netloc = urlparse(url).netloc
-    terabox_url = url.replace(
-        netloc,
-        "1024tera.com"
-    )
+    terabox_url = url.replace(netloc, "1024tera.com")
 
     urls = [
         "https://ytshorts.savetube.me/api/v1/terabox-downloader",
         f"https://teraboxvideodownloader.nepcoderdevs.workers.dev/?url={terabox_url}",
-        f"https://terabox.udayscriptsx.workers.dev/?url={terabox_url}"
+        f"https://terabox.udayscriptsx.workers.dev/?url={terabox_url}",
     ]
 
     headers = {
@@ -586,17 +583,13 @@ def terabox(url, video_quality="HD Video", save_dir="HD_Video"):
         "Alt-Used": "ytshorts.savetube.me",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin"
+        "Sec-Fetch-Site": "same-origin",
     }
 
     for base_url in urls:
         try:
             if "api/v1" in base_url:
-                response = post(
-                    base_url,
-                    headers=headers,
-                    json={"url": terabox_url}
-                )
+                response = post(base_url, headers=headers, json={"url": terabox_url})
             else:
                 response = get(base_url)
 
@@ -608,28 +601,15 @@ def terabox(url, video_quality="HD Video", save_dir="HD_Video"):
         raise DirectDownloadLinkException("ERROR: Unable to fetch the JSON data")
 
     data = response.json()
-    details = {
-        "contents": [],
-        "title": "",
-        "total_size": 0
-    }
+    details = {"contents": [], "title": "", "total_size": 0}
 
     for item in data["response"]:
         title = item["title"]
-        resolutions = item.get(
-            "resolutions",
-            {}
-        )
-        zlink = resolutions.get(video_quality)
-        if zlink:
-            details["contents"].append({
-                "url": zlink,
-                "filename": title,
-                "path": ospath.join(
-                    title,
-                    save_dir
-                )
-            })
+        resolutions = item.get("resolutions", {})
+        if zlink := resolutions.get(video_quality):
+            details["contents"].append(
+                {"url": zlink, "filename": title, "path": ospath.join(title, save_dir)}
+            )
         details["title"] = title
 
     if not details["contents"]:

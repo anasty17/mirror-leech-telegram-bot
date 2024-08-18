@@ -2,7 +2,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from bot import LOGGER, bot, user_data
-from bot.helper.ext_utils.bot_utils import sync_to_async, new_task, get_telegraph_list
+from bot.helper.ext_utils.bot_utils import sync_to_async, get_telegraph_list, new_task
 from bot.helper.mirror_leech_utils.gdrive_utils.search import gdSearch
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.button_build import ButtonMaker
@@ -84,6 +84,7 @@ async def select_type(_, query):
     await _list_drive(key, message, item_type, isRecursive, user_token, user_id)
 
 
+@new_task
 async def gdrive_search(_, message):
     if len(message.text.split()) == 1:
         return await sendMessage(message, "Send a search key along with command")
