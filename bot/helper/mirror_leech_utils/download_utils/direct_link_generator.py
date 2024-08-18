@@ -5,7 +5,7 @@ from json import loads
 from lxml.etree import HTML
 from os import path as ospath
 from re import findall, match, search
-from requests import Session, post, get
+from requests import Session, post, get, RequestException
 from requests.adapters import HTTPAdapter
 from time import sleep
 from urllib.parse import parse_qs, urlparse
@@ -557,32 +557,25 @@ def uploadee(url):
         raise DirectDownloadLinkException("ERROR: Direct Link not found")
 
 
-def terabox(url):
+def terabox(url, video_quality="HD Video", save_dir="HD_Video"):
     """Terabox direct link generator
-    By: https://github.com/Dawn-India/Z-Mirror"""
+    https://github.com/Dawn-India/Z-Mirror"""
 
-    pattern1 = r"/s/(\w+)"
-    pattern2 = r"surl=(\w+)"
-
-    if not (
-        search(
-            pattern1,
-            url
-        ) or search(
-            pattern2,
-            url
-        )
-    ):
+    pattern = r"/s/(\w+)|surl=(\w+)"
+    if not search(pattern, url):
         raise DirectDownloadLinkException("ERROR: Invalid terabox URL")
 
     netloc = urlparse(url).netloc
-    url = url.replace(
+    terabox_url = url.replace(
         netloc,
         "1024tera.com"
     )
-    response = get(url)
-    if response.status_code != 200:
-        raise DirectDownloadLinkException("ERROR: Unable to fetch the webpage")
+
+    urls = [
+        "https://ytshorts.savetube.me/api/v1/terabox-downloader",
+        f"https://teraboxvideodownloader.nepcoderdevs.workers.dev/?url={terabox_url}",
+        f"https://terabox.udayscriptsx.workers.dev/?url={terabox_url}"
+    ]
 
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
@@ -596,16 +589,30 @@ def terabox(url):
         "Sec-Fetch-Site": "same-origin"
     }
 
-    response = post(
-        "https://ytshorts.savetube.me/api/v1/terabox-downloader",
-        headers=headers,
-        json={"url": url}
-    )
-    if response.status_code != 200:
+    for base_url in urls:
+        try:
+            if "api/v1" in base_url:
+                response = post(
+                    base_url,
+                    headers=headers,
+                    json={"url": terabox_url}
+                )
+            else:
+                response = get(base_url)
+
+            if response.status_code == 200:
+                break
+        except RequestException as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+    else:
         raise DirectDownloadLinkException("ERROR: Unable to fetch the JSON data")
 
     data = response.json()
-    details = {"contents": [], "title": "", "total_size": 0}
+    details = {
+        "contents": [],
+        "title": "",
+        "total_size": 0
+    }
 
     for item in data["response"]:
         title = item["title"]
@@ -613,20 +620,24 @@ def terabox(url):
             "resolutions",
             {}
         )
-        zlink = resolutions.get("HD Video")
+        zlink = resolutions.get(video_quality)
         if zlink:
             details["contents"].append({
                 "url": zlink,
                 "filename": title,
                 "path": ospath.join(
                     title,
-                    "HD_Video"
+                    save_dir
                 )
             })
         details["title"] = title
 
+    if not details["contents"]:
+        raise DirectDownloadLinkException("ERROR: No valid download links found")
+
     if len(details["contents"]) == 1:
         return details["contents"][0]["url"]
+
     return details
 
 
