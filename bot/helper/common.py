@@ -22,6 +22,7 @@ from bot import (
     cpu_eater_lock,
     subprocess_lock,
     Intervals,
+    bot_loop,
 )
 from bot.helper.ext_utils.bot_utils import new_task, sync_to_async, getSizeBytes
 from bot.helper.ext_utils.bulk_links import extractBulkLinks
@@ -446,7 +447,7 @@ class TaskConfig:
                 nextmsg.from_user = self.user
             else:
                 nextmsg.sender_chat = self.user
-            obj(
+            bot_loop.create_task(obj(
                 self.client,
                 nextmsg,
                 self.isQbit,
@@ -457,7 +458,7 @@ class TaskConfig:
                 self.bulk,
                 self.multiTag,
                 self.options,
-            ).newEvent()
+            ).newEvent())
         except:
             await sendMessage(
                 self.message,
