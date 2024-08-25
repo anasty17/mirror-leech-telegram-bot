@@ -7,7 +7,7 @@ from .job_functions import JobFunctions
 from .exception import APIConnectionError
 
 
-class sabnzbdSession(AsyncClient):
+class SabnzbdSession(AsyncClient):
     @wraps(AsyncClient.request)
     async def request(self, method: str, url: str, **kwargs):
         kwargs.setdefault("timeout", Timeout(connect=30, read=60, write=60, pool=None))
@@ -15,7 +15,7 @@ class sabnzbdSession(AsyncClient):
         return await super().request(method, url, **kwargs)
 
 
-class sabnzbdClient(JobFunctions):
+class SabnzbdClient(JobFunctions):
 
     LOGGED_IN = False
 
@@ -48,7 +48,7 @@ class sabnzbdClient(JobFunctions):
             retries=self._RETRIES, verify=self._VERIFY_CERTIFICATE
         )
 
-        self._http_session = sabnzbdSession(transport=transport)
+        self._http_session = SabnzbdSession(transport=transport)
 
         self._http_session.verify = self._VERIFY_CERTIFICATE
 

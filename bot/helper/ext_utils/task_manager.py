@@ -9,24 +9,21 @@ from bot import (
     queue_dict_lock,
     LOGGER,
 )
-from bot.helper.ext_utils.bot_utils import (
-    sync_to_async,
-    get_telegraph_list,
-)
-from bot.helper.ext_utils.files_utils import get_base_name
-from bot.helper.ext_utils.links_utils import is_gdrive_id
-from bot.helper.mirror_leech_utils.gdrive_utils.search import gdSearch
+from .bot_utils import sync_to_async, get_telegraph_list
+from .files_utils import get_base_name
+from .links_utils import is_gdrive_id
+from ..mirror_leech_utils.gdrive_utils.search import GoogleDriveSearch
 
 
 async def stop_duplicate_check(listener):
     if (
-        isinstance(listener.upDest, int)
-        or listener.isLeech
+        isinstance(listener.up_dest, int)
+        or listener.is_leech
         or listener.select
-        or not is_gdrive_id(listener.upDest)
-        or (listener.upDest.startswith("mtp:") and listener.stopDuplicate)
-        or not listener.stopDuplicate
-        or listener.sameDir
+        or not is_gdrive_id(listener.up_dest)
+        or (listener.up_dest.startswith("mtp:") and listener.stop_duplicate)
+        or not listener.stop_duplicate
+        or listener.same_dir
     ):
         return False, None
 
@@ -43,10 +40,10 @@ async def stop_duplicate_check(listener):
 
     if name is not None:
         telegraph_content, contents_no = await sync_to_async(
-            gdSearch(stopDup=True, noMulti=listener.isClone).drive_list,
+            GoogleDriveSearch(stop_dup=True, no_multi=listener.is_clone).drive_list,
             name,
-            listener.upDest,
-            listener.userId,
+            listener.up_dest,
+            listener.user_id,
         )
         if telegraph_content:
             msg = f"File/Folder is already available in Drive.\nHere are {contents_no} list results:"
@@ -68,9 +65,9 @@ async def check_running_tasks(listener, state="dl"):
             non_queued_dl.remove(listener.mid)
         if (
             (all_limit or state_limit)
-            and not listener.forceRun
-            and not (listener.forceUpload and state == "up")
-            and not (listener.forceDownload and state == "dl")
+            and not listener.force_run
+            and not (listener.force_upload and state == "up")
+            and not (listener.force_download and state == "dl")
         ):
             dl_count = len(non_queued_dl)
             up_count = len(non_queued_up)

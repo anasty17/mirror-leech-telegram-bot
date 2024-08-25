@@ -1,5 +1,3 @@
-from sabnzbdapi.requests import sabnzbdClient
+from sabnzbdapi.requests import SabnzbdClient
 
-__all__ = [
-    "sabnzbdClient"
-]
+__all__ = ["SabnzbdClient"]

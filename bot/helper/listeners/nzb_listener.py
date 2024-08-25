@@ -1,17 +1,16 @@
 from asyncio import sleep, gather
 
 from bot import (
-    Intervals,
+    intervals,
     sabnzbd_client,
     nzb_jobs,
     nzb_listener_lock,
     task_dict_lock,
     LOGGER,
-    bot_loop,
 )
-from bot.helper.ext_utils.bot_utils import new_task
-from bot.helper.ext_utils.status_utils import getTaskByGid
-from bot.helper.ext_utils.task_manager import stop_duplicate_check
+from ..ext_utils.bot_utils import new_task
+from ..ext_utils.status_utils import get_task_by_gid
+from ..ext_utils.task_manager import stop_duplicate_check
 
 
 async def _remove_job(nzo_id, mid):
@@ -27,49 +26,50 @@ async def _remove_job(nzo_id, mid):
 
 
 @new_task
-async def _onDownloadError(err, nzo_id, button=None):
-    task = await getTaskByGid(nzo_id)
+async def _on_download_error(err, nzo_id, button=None):
+    task = await get_task_by_gid(nzo_id)
     LOGGER.info(f"Cancelling Download: {task.name()}")
     await gather(
-        task.listener.onDownloadError(err, button),
+        task.listener.on_download_error(err, button),
         _remove_job(nzo_id, task.listener.mid),
     )
 
 
 @new_task
 async def _change_status(nzo_id, status):
-    task = await getTaskByGid(nzo_id)
+    task = await get_task_by_gid(nzo_id)
     async with task_dict_lock:
         task.cstatus = status
 
 
 @new_task
 async def _stop_duplicate(nzo_id):
-    task = await getTaskByGid(nzo_id)
+    task = await get_task_by_gid(nzo_id)
     await task.update()
     task.listener.name = task.name()
     msg, button = await stop_duplicate_check(task.listener)
     if msg:
-        _onDownloadError(msg, nzo_id, button)
+        _on_download_error(msg, nzo_id, button)
 
 
 @new_task
-async def _onDownloadComplete(nzo_id):
-    task = await getTaskByGid(nzo_id)
-    await task.listener.onDownloadComplete()
-    if Intervals["stopAll"]:
+async def _on_download_complete(nzo_id):
+    task = await get_task_by_gid(nzo_id)
+    await task.listener.on_download_complete()
+    if intervals["stopAll"]:
         return
     await _remove_job(nzo_id, task.listener.mid)
 
 
+@new_task
 async def _nzb_listener():
-    while not Intervals["stopAll"]:
+    while not intervals["stopAll"]:
         async with nzb_listener_lock:
             try:
                 jobs = (await sabnzbd_client.get_history())["history"]["slots"]
                 downloads = (await sabnzbd_client.get_downloads())["queue"]["slots"]
                 if len(nzb_jobs) == 0:
-                    Intervals["nzb"] = ""
+                    intervals["nzb"] = ""
                     break
                 for job in jobs:
                     nzo_id = job["nzo_id"]
@@ -78,10 +78,10 @@ async def _nzb_listener():
                     if job["status"] == "Completed":
                         if not nzb_jobs[nzo_id]["uploaded"]:
                             nzb_jobs[nzo_id]["uploaded"] = True
-                            _onDownloadComplete(nzo_id)
+                            _on_download_complete(nzo_id)
                             nzb_jobs[nzo_id]["status"] = "Completed"
                     elif job["status"] == "Failed":
-                        _onDownloadError(job["fail_message"], nzo_id)
+                        _on_download_error(job["fail_message"], nzo_id)
                     elif job["status"] in [
                         "QuickCheck",
                         "Verifying",
@@ -108,12 +108,12 @@ async def _nzb_listener():
         await sleep(3)
 
 
-async def onDownloadStart(nzo_id):
+async def on_download_start(nzo_id):
     async with nzb_listener_lock:
         nzb_jobs[nzo_id] = {
             "uploaded": False,
             "stop_dup_check": False,
             "status": "Downloading",
         }
-        if not Intervals["nzb"]:
-            Intervals["nzb"] = bot_loop.create_task(_nzb_listener())
+        if not intervals["nzb"]:
+            intervals["nzb"] = _nzb_listener()

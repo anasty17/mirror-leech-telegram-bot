@@ -3,14 +3,18 @@ from flask import Flask, request
 from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
 from qbittorrentapi import NotFound404Error, Client as qbClient
 from time import sleep
-from sabnzbdapi import sabnzbdClient
-from asyncio import get_event_loop
+from sabnzbdapi import SabnzbdClient
+from asyncio import get_running_loop, new_event_loop, set_event_loop
 
 from web.nodes import make_tree
 
 app = Flask(__name__)
 
-web_loop = get_event_loop()
+try:
+    web_loop = get_running_loop()
+except RuntimeError:
+    web_loop = new_event_loop()
+    set_event_loop(web_loop)
 
 qbittorrent_client = qbClient(
     host="localhost",
@@ -20,7 +24,7 @@ qbittorrent_client = qbClient(
     HTTPADAPTER_ARGS={"pool_maxsize": 200, "pool_block": True},
 )
 
-sabnzbd_client = sabnzbdClient(
+sabnzbd_client = SabnzbdClient(
     host="http://localhost",
     api_key="mltb",
     port="8070",

@@ -8,10 +8,10 @@ from textwrap import indent
 from traceback import format_exc
 
 from bot import LOGGER, bot
-from bot.helper.ext_utils.bot_utils import sync_to_async, new_task
-from bot.helper.telegram_helper.bot_commands import BotCommands
-from bot.helper.telegram_helper.filters import CustomFilters
-from bot.helper.telegram_helper.message_utils import sendFile, sendMessage
+from ..helper.ext_utils.bot_utils import sync_to_async, handler_new_task
+from ..helper.telegram_helper.bot_commands import BotCommands
+from ..helper.telegram_helper.filters import CustomFilters
+from ..helper.telegram_helper.message_utils import send_file, send_message
 
 namespaces = {}
 
@@ -39,18 +39,18 @@ async def send(msg, message):
     if len(str(msg)) > 2000:
         with BytesIO(str.encode(msg)) as out_file:
             out_file.name = "output.txt"
-            await sendFile(message, out_file)
+            await send_file(message, out_file)
     else:
         LOGGER.info(f"OUT: '{msg}'")
-        await sendMessage(message, f"<code>{msg}</code>")
+        await send_message(message, f"<code>{msg}</code>")
 
 
-@new_task
+@handler_new_task
 async def aioexecute(_, message):
     await send(await do("aexec", message), message)
 
 
-@new_task
+@handler_new_task
 async def execute(_, message):
     await send(await do("exec", message), message)
 
@@ -108,7 +108,7 @@ async def do(func, message):
             return result
 
 
-@new_task
+@handler_new_task
 async def clear(_, message):
     log_input(message)
     global namespaces

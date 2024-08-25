@@ -1,12 +1,12 @@
-from bot.helper.ext_utils.files_utils import get_path_size
-from bot.helper.ext_utils.status_utils import (
+from ...ext_utils.files_utils import get_path_size
+from ...ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
     get_readable_time,
 )
 
 
-class YtDlpDownloadStatus:
+class YtDlpStatus:
     def __init__(self, listener, obj, gid):
         self._obj = obj
         self._gid = gid

@@ -1,8 +1,8 @@
 from asyncio import gather
 
 from bot import LOGGER, sabnzbd_client, nzb_jobs, nzb_listener_lock
-from bot.helper.ext_utils.bot_utils import async_to_sync
-from bot.helper.ext_utils.status_utils import (
+from ...ext_utils.bot_utils import async_to_sync
+from ...ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
     get_readable_time,
@@ -84,11 +84,11 @@ class SabnzbdStatus:
         return self._gid
 
     async def cancel_task(self):
-        self.listener.isCancelled = True
+        self.listener.is_cancelled = True
         await self.update()
         LOGGER.info(f"Cancelling Download: {self.name()}")
         await gather(
-            self.listener.onDownloadError("Download stopped by user!"),
+            self.listener.on_download_error("Download stopped by user!"),
             sabnzbd_client.delete_job(self._gid, delete_files=True),
             sabnzbd_client.delete_category(f"{self.listener.mid}"),
         )

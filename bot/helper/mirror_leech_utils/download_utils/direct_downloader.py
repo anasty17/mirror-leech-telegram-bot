@@ -9,18 +9,18 @@ from bot import (
     non_queued_dl,
     queue_dict_lock,
 )
-from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.task_manager import check_running_tasks, stop_duplicate_check
-from bot.helper.listeners.direct_listener import DirectListener
-from bot.helper.mirror_leech_utils.status_utils.direct_status import DirectStatus
-from bot.helper.mirror_leech_utils.status_utils.queue_status import QueueStatus
-from bot.helper.telegram_helper.message_utils import sendStatusMessage
+from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
+from ...listeners.direct_listener import DirectListener
+from ...mirror_leech_utils.status_utils.direct_status import DirectStatus
+from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
+from ...telegram_helper.message_utils import send_status_message
 
 
 async def add_direct_download(listener, path):
     details = listener.link
     if not (contents := details.get("contents")):
-        await listener.onDownloadError("There is nothing to download!")
+        await listener.on_download_error("There is nothing to download!")
         return
     listener.size = details["total_size"]
 
@@ -30,7 +30,7 @@ async def add_direct_download(listener, path):
 
     msg, button = await stop_duplicate_check(listener)
     if msg:
-        await listener.onDownloadError(msg, button)
+        await listener.on_download_error(msg, button)
         return
 
     gid = token_urlsafe(10)
@@ -39,11 +39,11 @@ async def add_direct_download(listener, path):
         LOGGER.info(f"Added to Queue/Download: {listener.name}")
         async with task_dict_lock:
             task_dict[listener.mid] = QueueStatus(listener, gid, "dl")
-        await listener.onDownloadStart()
+        await listener.on_download_start()
         if listener.multi <= 1:
-            await sendStatusMessage(listener.message)
+            await send_status_message(listener.message)
         await event.wait()
-        if listener.isCancelled:
+        if listener.is_cancelled:
             return
         async with queue_dict_lock:
             non_queued_dl.add(listener.mid)
@@ -63,8 +63,8 @@ async def add_direct_download(listener, path):
         LOGGER.info(f"Start Queued Download from Direct Download: {listener.name}")
     else:
         LOGGER.info(f"Download from Direct Download: {listener.name}")
-        await listener.onDownloadStart()
+        await listener.on_download_start()
         if listener.multi <= 1:
-            await sendStatusMessage(listener.message)
+            await send_status_message(listener.message)
 
     await sync_to_async(directListener.download, contents)

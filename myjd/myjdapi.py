@@ -822,7 +822,7 @@ class clientSession(AsyncClient):
         return await super().request(method, url, **kwargs)
 
 
-class Myjdapi:
+class MyJdApi:
 
     def __init__(self):
         self.__request_id = int(time() * 1000)

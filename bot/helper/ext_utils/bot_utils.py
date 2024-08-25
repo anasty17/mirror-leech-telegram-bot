@@ -1,26 +1,26 @@
 from httpx import AsyncClient
+from asyncio.subprocess import PIPE
+from functools import partial, wraps
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
     run_coroutine_threadsafe,
     sleep,
 )
-from asyncio.subprocess import PIPE
-from functools import partial, wraps
 
 from bot import user_data, config_dict, bot_loop
-from bot.helper.ext_utils.help_messages import (
+from ..telegram_helper.button_build import ButtonMaker
+from .telegraph_helper import telegraph
+from .help_messages import (
     YT_HELP_DICT,
     MIRROR_HELP_DICT,
     CLONE_HELP_DICT,
 )
-from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.telegram_helper.button_build import ButtonMaker
 
 COMMAND_USAGE = {}
 
 
-class setInterval:
+class SetInterval:
     def __init__(self, interval, action, *args, **kwargs):
         self.interval = interval
         self.action = action
@@ -35,22 +35,19 @@ class setInterval:
         self.task.cancel()
 
 
-def create_help_buttons():
+def _build_command_usage(help_dict, command_key):
     buttons = ButtonMaker()
-    for name in list(MIRROR_HELP_DICT.keys())[1:]:
-        buttons.ibutton(name, f"help mirror {name}")
-    buttons.ibutton("Close", "help close")
-    COMMAND_USAGE["mirror"] = [MIRROR_HELP_DICT["main"], buttons.build_menu(3)]
+    for name in list(help_dict.keys())[1:]:
+        buttons.data_button(name, f"help {command_key} {name}")
+    buttons.data_button("Close", "help close")
+    COMMAND_USAGE[command_key] = [help_dict["main"], buttons.build_menu(3)]
     buttons.reset()
-    for name in list(YT_HELP_DICT.keys())[1:]:
-        buttons.ibutton(name, f"help yt {name}")
-    buttons.ibutton("Close", "help close")
-    COMMAND_USAGE["yt"] = [YT_HELP_DICT["main"], buttons.build_menu(3)]
-    buttons.reset()
-    for name in list(CLONE_HELP_DICT.keys())[1:]:
-        buttons.ibutton(name, f"help clone {name}")
-    buttons.ibutton("Close", "help close")
-    COMMAND_USAGE["clone"] = [CLONE_HELP_DICT["main"], buttons.build_menu(3)]
+
+
+def create_help_buttons():
+    _build_command_usage(MIRROR_HELP_DICT, "mirror")
+    _build_command_usage(YT_HELP_DICT, "yt")
+    _build_command_usage(CLONE_HELP_DICT, "clone")
 
 
 def bt_selection_buttons(id_):
@@ -59,14 +56,14 @@ def bt_selection_buttons(id_):
     buttons = ButtonMaker()
     BASE_URL = config_dict["BASE_URL"]
     if config_dict["WEB_PINCODE"]:
-        buttons.ubutton("Select Files", f"{BASE_URL}/app/files/{id_}")
-        buttons.ibutton("Pincode", f"sel pin {gid} {pincode}")
+        buttons.url_button("Select Files", f"{BASE_URL}/app/files/{id_}")
+        buttons.data_button("Pincode", f"sel pin {gid} {pincode}")
     else:
-        buttons.ubutton(
+        buttons.url_button(
             "Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}"
         )
-    buttons.ibutton("Done Selecting", f"sel done {gid} {id_}")
-    buttons.ibutton("Cancel", f"sel cancel {gid}")
+    buttons.data_button("Done Selecting", f"sel done {gid} {id_}")
+    buttons.data_button("Cancel", f"sel cancel {gid}")
     return buttons.build_menu(2)
 
 
@@ -82,7 +79,7 @@ async def get_telegraph_list(telegraph_content):
     if len(path) > 1:
         await telegraph.edit_telegraph(path, telegraph_content)
     buttons = ButtonMaker()
-    buttons.ubutton("🔎 VIEW", f"https://telegra.ph/{path[0]}")
+    buttons.url_button("🔎 VIEW", f"https://telegra.ph/{path[0]}")
     return buttons.build_menu(1)
 
 
@@ -142,7 +139,7 @@ def arg_parser(items, arg_base):
             arg_base["link"] = " ".join(link)
 
 
-def getSizeBytes(size):
+def get_size_bytes(size):
     size = size.lower()
     if size.endswith("mb"):
         size = size.split("mb")[0]
@@ -193,7 +190,7 @@ async def cmd_exec(cmd, shell=False):
     return stdout, stderr, proc.returncode
 
 
-def new_task(func):
+def handler_new_task(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         bot_loop.create_task(func(*args, **kwargs))
@@ -202,6 +199,14 @@ def new_task(func):
             pass
 
         return dummy
+
+    return wrapper
+
+
+def new_task(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        return bot_loop.create_task(func(*args, **kwargs))
 
     return wrapper
 
@@ -217,7 +222,7 @@ def async_to_sync(func, *args, wait=True, **kwargs):
     return future.result() if wait else future
 
 
-def new_thread(func):
+def loop_thread(func):
     @wraps(func)
     def wrapper(*args, wait=False, **kwargs):
         future = run_coroutine_threadsafe(func(*args, **kwargs), bot_loop)

@@ -1,8 +1,8 @@
 from time import time
 
 from bot import LOGGER, subprocess_lock
-from bot.helper.ext_utils.files_utils import get_path_size
-from bot.helper.ext_utils.status_utils import (
+from ...ext_utils.files_utils import get_path_size
+from ...ext_utils.status_utils import (
     get_readable_file_size,
     MirrorStatus,
     get_readable_time,
@@ -53,8 +53,8 @@ class ZipStatus:
         return MirrorStatus.STATUS_ARCHIVING
 
     async def processed_raw(self):
-        if self.listener.newDir:
-            self._proccessed_bytes = await get_path_size(self.listener.newDir)
+        if self.listener.new_dir:
+            self._proccessed_bytes = await get_path_size(self.listener.new_dir)
         else:
             self._proccessed_bytes = await get_path_size(self.listener.dir) - self._size
 
@@ -66,11 +66,11 @@ class ZipStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Archive: {self.listener.name}")
-        self.listener.isCancelled = True
+        self.listener.is_cancelled = True
         async with subprocess_lock:
             if (
                 self.listener.suproc is not None
                 and self.listener.suproc.returncode is None
             ):
                 self.listener.suproc.kill()
-        await self.listener.onUploadError("archiving stopped by user!")
+        await self.listener.on_upload_error("archiving stopped by user!")

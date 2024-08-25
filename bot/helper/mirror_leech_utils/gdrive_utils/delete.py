@@ -6,13 +6,13 @@ from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 LOGGER = getLogger(__name__)
 
 
-class gdDelete(GoogleDriveHelper):
+class GoogleDriveDelete(GoogleDriveHelper):
     def __init__(self):
         super().__init__()
 
     def deletefile(self, link, user_id):
         try:
-            file_id = self.getIdFromUrl(link, user_id)
+            file_id = self.get_id_from_url(link, user_id)
         except (KeyError, IndexError):
             return "Google Drive ID could not be found in the provided link"
         self.service = self.authorize()

@@ -82,3 +82,5 @@ class TelegraphHelper:
 telegraph = TelegraphHelper(
     "Mirror-Leech-Telegram-Bot", "https://github.com/anasty17/mirror-leech-telegram-bot"
 )
+
+print(__name__)

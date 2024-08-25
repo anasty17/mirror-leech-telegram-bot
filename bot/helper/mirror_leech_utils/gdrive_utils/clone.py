@@ -10,13 +10,13 @@ from tenacity import (
 )
 from time import time
 
-from bot.helper.ext_utils.bot_utils import async_to_sync
-from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
+from ...ext_utils.bot_utils import async_to_sync
+from ...mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 
 
-class gdClone(GoogleDriveHelper):
+class GoogleDriveClone(GoogleDriveHelper):
     def __init__(self, listener):
         self.listener = listener
         self._start_time = time()
@@ -25,24 +25,24 @@ class gdClone(GoogleDriveHelper):
         self.user_setting()
 
     def user_setting(self):
-        if self.listener.upDest.startswith("mtp:") or self.listener.link.startswith(
+        if self.listener.up_dest.startswith("mtp:") or self.listener.link.startswith(
             "mtp:"
         ):
-            self.token_path = f"tokens/{self.listener.userId}.pickle"
-            self.listener.upDest = self.listener.upDest.replace("mtp:", "", 1)
+            self.token_path = f"tokens/{self.listener.user_id}.pickle"
+            self.listener.up_dest = self.listener.up_dest.replace("mtp:", "", 1)
             self.use_sa = False
-        elif self.listener.upDest.startswith("tp:"):
-            self.listener.upDest = self.listener.upDest.replace("tp:", "", 1)
+        elif self.listener.up_dest.startswith("tp:"):
+            self.listener.up_dest = self.listener.up_dest.replace("tp:", "", 1)
             self.use_sa = False
-        elif self.listener.upDest.startswith("sa:") or self.listener.link.startswith(
+        elif self.listener.up_dest.startswith("sa:") or self.listener.link.startswith(
             "sa:"
         ):
-            self.listener.upDest = self.listener.upDest.replace("sa:", "", 1)
+            self.listener.up_dest = self.listener.up_dest.replace("sa:", "", 1)
             self.use_sa = True
 
     def clone(self):
         try:
-            file_id = self.getIdFromUrl(self.listener.link)
+            file_id = self.get_id_from_url(self.listener.link)
         except (KeyError, IndexError):
             return (
                 "Google Drive ID could not be found in the provided link",
@@ -55,13 +55,13 @@ class gdClone(GoogleDriveHelper):
         msg = ""
         LOGGER.info(f"File ID: {file_id}")
         try:
-            meta = self.getFileMetadata(file_id)
+            meta = self.get_file_metadata(file_id)
             mime_type = meta.get("mimeType")
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
-                dir_id = self.create_directory(meta.get("name"), self.listener.upDest)
+                dir_id = self.create_directory(meta.get("name"), self.listener.up_dest)
                 self._cloneFolder(meta.get("name"), meta.get("id"), dir_id)
                 durl = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
-                if self.listener.isCancelled:
+                if self.listener.is_cancelled:
                     LOGGER.info("Deleting cloned data from Drive...")
                     self.service.files().delete(
                         fileId=dir_id, supportsAllDrives=True
@@ -70,7 +70,7 @@ class gdClone(GoogleDriveHelper):
                 mime_type = "Folder"
                 self.listener.size = self.proc_bytes
             else:
-                file = self._copyFile(meta.get("id"), self.listener.upDest)
+                file = self._copyFile(meta.get("id"), self.listener.up_dest)
                 msg += f'<b>Name: </b><code>{file.get("name")}</code>'
                 durl = self.G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 if mime_type is None:
@@ -81,7 +81,7 @@ class gdClone(GoogleDriveHelper):
                 mime_type,
                 self.total_files,
                 self.total_folders,
-                self.getIdFromUrl(durl),
+                self.get_id_from_url(durl),
             )
         except Exception as err:
             if isinstance(err, RetryError):
@@ -99,12 +99,12 @@ class gdClone(GoogleDriveHelper):
                 msg = "File not found."
             else:
                 msg = f"Error.\n{err}"
-            async_to_sync(self.listener.onUploadError, msg)
+            async_to_sync(self.listener.on_upload_error, msg)
             return None, None, None, None, None
 
     def _cloneFolder(self, folder_name, folder_id, dest_id):
         LOGGER.info(f"Syncing: {folder_name}")
-        files = self.getFilesByFolderId(folder_id)
+        files = self.get_files_by_folder_id(folder_id)
         if len(files) == 0:
             return dest_id
         for file in files:
@@ -116,13 +116,13 @@ class gdClone(GoogleDriveHelper):
             elif (
                 not file.get("name")
                 .lower()
-                .endswith(tuple(self.listener.extensionFilter))
+                .endswith(tuple(self.listener.extension_filter))
             ):
                 self.total_files += 1
                 self._copyFile(file.get("id"), dest_id)
                 self.proc_bytes += int(file.get("size", 0))
                 self.total_time = int(time() - self._start_time)
-            if self.listener.isCancelled:
+            if self.listener.is_cancelled:
                 break
 
     @retry(
@@ -156,9 +156,9 @@ class gdClone(GoogleDriveHelper):
                         )
                         raise err
                     else:
-                        if self.listener.isCancelled:
+                        if self.listener.is_cancelled:
                             return
-                        self.switchServiceAccount()
+                        self.switch_service_account()
                         return self._copyFile(file_id, dest_id)
                 else:
                     LOGGER.error(f"Got: {reason}")

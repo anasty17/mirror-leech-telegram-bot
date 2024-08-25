@@ -1,5 +1,5 @@
 from bot import LOGGER
-from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStatus
+from ...ext_utils.status_utils import get_readable_file_size, MirrorStatus
 
 
 class SampleVideoStatus:
@@ -25,7 +25,7 @@ class SampleVideoStatus:
 
     async def cancel_task(self):
         LOGGER.info(f"Cancelling Sample Video: {self.listener.name}")
-        self.listener.isCancelled = True
+        self.listener.is_cancelled = True
         if self.listener.suproc is not None and self.listener.suproc.returncode is None:
             self.listener.suproc.kill()
-        await self.listener.onUploadError("Creating sample video stopped by user!")
+        await self.listener.on_upload_error("Creating sample video stopped by user!")

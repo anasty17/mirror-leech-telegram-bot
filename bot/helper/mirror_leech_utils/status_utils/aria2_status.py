@@ -1,8 +1,8 @@
 from time import time
 
 from bot import aria2, LOGGER
-from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.status_utils import MirrorStatus, get_readable_time
+from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.status_utils import MirrorStatus, get_readable_time
 
 
 def get_download(gid, old_info=None):
@@ -89,17 +89,17 @@ class Aria2Status:
         return self._gid
 
     async def cancel_task(self):
-        self.listener.isCancelled = True
+        self.listener.is_cancelled = True
         await sync_to_async(self.update)
         if self._download.seeder and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
-            await self.listener.onUploadError(
+            await self.listener.on_upload_error(
                 f"Seeding stopped with Ratio: {self.ratio()} and Time: {self.seeding_time()}"
             )
             await sync_to_async(aria2.remove, [self._download], force=True, files=True)
         elif downloads := self._download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-            await self.listener.onDownloadError("Download cancelled by user!")
+            await self.listener.on_download_error("Download cancelled by user!")
             downloads.append(self._download)
             await sync_to_async(aria2.remove, downloads, force=True, files=True)
         else:
@@ -109,5 +109,5 @@ class Aria2Status:
             else:
                 LOGGER.info(f"Cancelling Download: {self.name()}")
                 msg = "Download stopped by user!"
-            await self.listener.onDownloadError(msg)
+            await self.listener.on_download_error(msg)
             await sync_to_async(aria2.remove, [self._download], force=True, files=True)

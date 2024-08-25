@@ -5,7 +5,7 @@ from bot.helper.ext_utils.status_utils import (
 )
 
 
-class GdriveStatus:
+class GoogleDriveStatus:
     def __init__(self, listener, obj, gid, status):
         self.listener = listener
         self._obj = obj

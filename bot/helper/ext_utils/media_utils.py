@@ -8,9 +8,8 @@ from time import time
 from aioshutil import rmtree
 
 from bot import LOGGER, subprocess_lock
-from bot.helper.ext_utils.bot_utils import cmd_exec
-from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.files_utils import ARCH_EXT, get_mime_type
+from .bot_utils import cmd_exec, sync_to_async
+from .files_utils import ARCH_EXT, get_mime_type
 
 
 async def convert_video(listener, video_file, ext, retry=False):
@@ -37,17 +36,17 @@ async def convert_video(listener, video_file, ext, retry=False):
             cmd[7:7] = ["-c:s", "copy"]
     else:
         cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     code = listener.suproc.returncode
     if code == 0:
         return output
     elif code == -9:
-        listener.isCancelled = True
+        listener.is_cancelled = True
         return False
     else:
         if not retry:
@@ -76,17 +75,17 @@ async def convert_audio(listener, audio_file, ext):
         f"{cpu_count() // 2}",
         output,
     ]
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     code = listener.suproc.returncode
     if code == 0:
         return output
     elif code == -9:
-        listener.isCancelled = True
+        listener.is_cancelled = True
         return False
     else:
         try:
@@ -101,7 +100,7 @@ async def convert_audio(listener, audio_file, ext):
     return False
 
 
-async def createThumb(msg, _id=""):
+async def create_thumb(msg, _id=""):
     if not _id:
         _id = msg.id
     path = "Thumbnails/"
@@ -356,13 +355,13 @@ async def split_file(
     inLoop=False,
     multi_streams=True,
 ):
-    if listener.seed and not listener.newDir:
+    if listener.seed and not listener.new_dir:
         dirpath = f"{dirpath}/splited_files_mltb"
         await makedirs(dirpath, exist_ok=True)
-    parts = -(-size // listener.splitSize)
-    if listener.equalSplits and not inLoop:
+    parts = -(-size // listener.split_size)
+    if listener.equal_splits and not inLoop:
         split_size = (size // parts) + (size % parts)
-    if not listener.asDoc and (await get_document_type(path))[0]:
+    if not listener.as_doc and (await get_document_type(path))[0]:
         if multi_streams:
             multi_streams = await is_multi_streams(path)
         duration = (await get_media_info(path))[0]
@@ -396,16 +395,16 @@ async def split_file(
             if not multi_streams:
                 del cmd[10]
                 del cmd[10]
-            if listener.isCancelled:
+            if listener.is_cancelled:
                 return False
             async with subprocess_lock:
                 listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
             _, stderr = await listener.suproc.communicate()
-            if listener.isCancelled:
+            if listener.is_cancelled:
                 return False
             code = listener.suproc.returncode
             if code == -9:
-                listener.isCancelled = True
+                listener.is_cancelled = True
                 return False
             elif code != 0:
                 try:
@@ -434,12 +433,12 @@ async def split_file(
                     )
                 else:
                     LOGGER.warning(
-                        f"{stderr}. Unable to split this video, if it's size less than {listener.maxSplitSize} will be uploaded as it is. Path: {path}"
+                        f"{stderr}. Unable to split this video, if it's size less than {listener.max_split_size} will be uploaded as it is. Path: {path}"
                     )
                 return False
             out_size = await aiopath.getsize(out_path)
-            if out_size > listener.maxSplitSize:
-                dif = out_size - listener.maxSplitSize
+            if out_size > listener.max_split_size:
+                dif = out_size - listener.max_split_size
                 split_size -= dif + 5000000
                 await remove(out_path)
                 return await split_file(
@@ -473,7 +472,7 @@ async def split_file(
     else:
         out_path = f"{dirpath}/{file_}."
         async with subprocess_lock:
-            if listener.isCancelled:
+            if listener.is_cancelled:
                 return False
             listener.suproc = await create_subprocess_exec(
                 "split",
@@ -485,11 +484,11 @@ async def split_file(
                 stderr=PIPE,
             )
         _, stderr = await listener.suproc.communicate()
-        if listener.isCancelled:
+        if listener.is_cancelled:
             return False
         code = listener.suproc.returncode
         if code == -9:
-            listener.isCancelled = True
+            listener.is_cancelled = True
             return False
         elif code != 0:
             try:
@@ -500,7 +499,7 @@ async def split_file(
     return True
 
 
-async def createSampleVideo(listener, video_file, sample_duration, part_duration):
+async def create_sample_video(listener, video_file, sample_duration, part_duration):
     dir, name = video_file.rsplit("/", 1)
     output_file = f"{dir}/SAMPLE.{name}"
     segments = [(0, part_duration)]
@@ -547,15 +546,15 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         output_file,
     ]
 
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     code = listener.suproc.returncode
     if code == -9:
-        listener.isCancelled = True
+        listener.is_cancelled = True
         return False
     elif code == 0:
         return output_file
@@ -588,15 +587,15 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
             "copy",
             output_seg,
         ]
-        if listener.isCancelled:
+        if listener.is_cancelled:
             return False
         listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
         _, stderr = await listener.suproc.communicate()
-        if listener.isCancelled:
+        if listener.is_cancelled:
             return False
         code = listener.suproc.returncode
         if code == -9:
-            listener.isCancelled = True
+            listener.is_cancelled = True
             return False
         elif code != 0:
             try:
@@ -633,15 +632,15 @@ async def createSampleVideo(listener, video_file, sample_duration, part_duration
         f"{cpu_count() // 2}",
         output_file,
     ]
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
-    if listener.isCancelled:
+    if listener.is_cancelled:
         return False
     code = listener.suproc.returncode
     if code == -9:
-        listener.isCancelled = True
+        listener.is_cancelled = True
         return False
     elif code != 0:
         try:

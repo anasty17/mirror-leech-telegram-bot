@@ -1,18 +1,18 @@
 from logging import getLogger
 from tenacity import RetryError
 
-from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
+from ...mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 
 
-class gdCount(GoogleDriveHelper):
+class GoogleDriveCount(GoogleDriveHelper):
     def __init__(self):
         super().__init__()
 
     def count(self, link, user_id):
         try:
-            file_id = self.getIdFromUrl(link, user_id)
+            file_id = self.get_id_from_url(link, user_id)
         except (KeyError, IndexError):
             return (
                 "Google Drive ID could not be found in the provided link",
@@ -42,7 +42,7 @@ class gdCount(GoogleDriveHelper):
         return msg, None, None, None, None
 
     def _proceed_count(self, file_id):
-        meta = self.getFileMetadata(file_id)
+        meta = self.get_file_metadata(file_id)
         name = meta["name"]
         LOGGER.info(f"Counting: {name}")
         mime_type = meta.get("mimeType")
@@ -61,7 +61,7 @@ class gdCount(GoogleDriveHelper):
         self.proc_bytes += size
 
     def _gDrive_directory(self, drive_folder):
-        files = self.getFilesByFolderId(drive_folder["id"])
+        files = self.get_files_by_folder_id(drive_folder["id"])
         if len(files) == 0:
             return
         for filee in files:
@@ -69,7 +69,7 @@ class gdCount(GoogleDriveHelper):
             if shortcut_details is not None:
                 mime_type = shortcut_details["targetMimeType"]
                 file_id = shortcut_details["targetId"]
-                filee = self.getFileMetadata(file_id)
+                filee = self.get_file_metadata(file_id)
             else:
                 mime_type = filee.get("mimeType")
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
