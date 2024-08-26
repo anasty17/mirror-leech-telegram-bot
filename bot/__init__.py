@@ -160,7 +160,8 @@ else:
     config_dict = {}
 
 if ospath.exists("cfg.zip"):
-    rmtree("/JDownloader/cfg")
+    if ospath.exists("/JDownloader/cfg"):
+        rmtree("/JDownloader/cfg", ignore_errors=True)
     run(["7z", "x", "cfg.zip", "-o/JDownloader"])
     remove("cfg.zip")
 
