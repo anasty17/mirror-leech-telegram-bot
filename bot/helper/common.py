@@ -22,7 +22,6 @@ from bot import (
     cpu_eater_lock,
     subprocess_lock,
     intervals,
-    bot_loop,
 )
 from .ext_utils.bot_utils import new_task, sync_to_async, get_size_bytes
 from .ext_utils.bulk_links import extract_bulk_links
@@ -117,6 +116,7 @@ class TaskConfig:
         self.force_download = False
         self.force_upload = False
         self.is_torrent = False
+        self.chat_thread_id = None
         self.suproc = None
         self.thumb = None
         self.extension_filter = []
@@ -288,7 +288,11 @@ class TaskConfig:
                     elif self.up_dest.startswith("m:"):
                         self.user_transmission = IS_PREMIUM_USER
                         self.mixed_leech = self.user_transmission
-                    if self.up_dest.isdigit() or self.up_dest.startswith("-"):
+                    if "|" in self.up_dest:
+                        self.up_dest, self.chat_thread_id = list(
+                            map(int, self.up_dest.split("|", 1))
+                        )
+                    elif self.up_dest.isdigit() or self.up_dest.startswith("-"):
                         self.up_dest = int(self.up_dest)
                     elif self.up_dest.lower() == "pm":
                         self.up_dest = self.user_id

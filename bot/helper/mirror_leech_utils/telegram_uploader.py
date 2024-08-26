@@ -99,6 +99,7 @@ class TelegramUploader:
                         chat_id=self._listener.up_dest,
                         text=msg,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        message_thread_id=self._listener.chat_thread_id,
                         disable_notification=True,
                     )
                 else:
@@ -106,6 +107,7 @@ class TelegramUploader:
                         chat_id=self._listener.up_dest,
                         text=msg,
                         link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        message_thread_id=self._listener.chat_thread_id,
                         disable_notification=True,
                     )
                     self._is_private = self._sent_msg.chat.type.name == "PRIVATE"

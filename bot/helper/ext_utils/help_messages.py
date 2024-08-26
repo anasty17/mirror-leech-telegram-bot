@@ -46,15 +46,24 @@ Note: Only mb and gb are supported or write in bytes without unit!"""
 
 upload = """<b>Upload Destination</b>: -up
 
-/cmd link -up rcl/gdl (To select rclone config/token.pickle, remote & path/ gdrive id or Tg id/username)
-You can directly add the upload path: -up remote:dir/subdir or -up (Gdrive_id) or -up id/username
+/cmd link -up rcl/gdl (rcl: to select rclone config, remote & path | gdl: To select token.pickle, gdrive id) using buttons
+You can directly add the upload path: -up remote:dir/subdir or -up Gdrive_id or -up id/username (telegram) or -up id/username|topic_id (telegram)
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 
-If you want to add path or gdrive manually from your config/token (uploaded from usetting) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
-/cmd link -up mrcc:main:dump or -up mtp:gdrive_id or -up b:id/@username/pm(leech by bot) or -up u:id/@username(leech by user) or -up m:id/@username(mixed leech)
+If you want to add path or gdrive manually from your config/token (UPLOADED FROM USETTING) add mrcc: for rclone and mtp: before the path/gdrive_id without space.
+/cmd link -up mrcc:main:dump or -up mtp:gdrive_id
 
-In case you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id or sa:gdrive_id or mtp:gdrive_id.
+To add leech destination:
+-up id
+-up @username
+-up b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you)
+when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.
+-up u:id/@username(u: means leech by user) This incase OWNER added USER_STRING_SESSION.
+-up m:id/@username(mixed leech) m: to upload files by bot and user based on file size.
+-up id/@username|topic_id(leech in specific chat and topic) add | without space and write topic id after chat id or username.
+
+In case you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id (using token.pickle) or sa:gdrive_id (using service accounts) or mtp:gdrive_id (using token.pickle uploaded from usetting).
 DEFAULT_UPLOAD doesn't affect on leech cmds.
 """
 
