@@ -717,7 +717,7 @@ async def rss_monitor():
                             data.get("sensitive", False)
                             and any(x.lower() in item_title.lower() for x in flist)
                         ) or (
-                            data.get("sensitive", False)
+                            not data.get("sensitive", False)
                             and any(x in item_title for x in flist)
                         ):
                             parse = False
@@ -769,6 +769,7 @@ def add_job():
         next_run_time=datetime.now() + timedelta(seconds=20),
         replace_existing=True,
     )
+
 
 bot.add_handler(
     MessageHandler(

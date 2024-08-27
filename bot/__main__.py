@@ -274,6 +274,8 @@ async def main():
         sync_to_async(start_aria2_listener, wait=False),
     )
     create_help_buttons()
+    bot_settings.add_job()
+    scheduler.start()
 
     bot.add_handler(
         MessageHandler(

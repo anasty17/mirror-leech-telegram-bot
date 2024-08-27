@@ -239,14 +239,13 @@ AUTHORIZED_CHATS = environ.get("AUTHORIZED_CHATS", "")
 if len(AUTHORIZED_CHATS) != 0:
     aid = AUTHORIZED_CHATS.split()
     for id_ in aid:
-        if "|" in id_:
-            chat_id, thread_id = id_.split("|")
-            user_data[int(chat_id.strip())] = {
-                "is_auth": True,
-                "thread_ids": [int(thread_id.strip())],
-            }
+        chat_id, *thread_ids = id_.split("|")
+        chat_id = int(chat_id.strip())
+        if thread_ids:
+            thread_ids = list(map(lambda x: int(x.strip()), thread_ids))
+            user_data[chat_id] = {"is_auth": True, "thread_ids": thread_ids}
         else:
-            user_data[int(id_.strip())] = {"is_auth": True}
+            user_data[chat_id] = {"is_auth": True}
 
 SUDO_USERS = environ.get("SUDO_USERS", "")
 if len(SUDO_USERS) != 0:

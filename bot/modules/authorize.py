@@ -27,8 +27,10 @@ async def authorize(_, message):
             thread_id = message.message_thread_id
         chat_id = message.chat.id
     if chat_id in user_data and user_data[chat_id].get("is_auth"):
-        if thread_id is not None and thread_id in user_data[chat_id].get(
-            "thread_ids", []
+        if (
+            thread_id is not None
+            and thread_id in user_data[chat_id].get("thread_ids", [])
+            or thread_id is None
         ):
             msg = "Already Authorized!"
         else:
@@ -65,7 +67,9 @@ async def unauthorize(_, message):
             thread_id = message.message_thread_id
         chat_id = message.chat.id
     if chat_id in user_data and user_data[chat_id].get("is_auth"):
-        if thread_id is not None and thread_id in user_data[chat_id].get("thread_ids", []):
+        if thread_id is not None and thread_id in user_data[chat_id].get(
+            "thread_ids", []
+        ):
             user_data[chat_id]["thread_ids"].remove(thread_id)
         else:
             update_user_ldata(chat_id, "is_auth", False)
