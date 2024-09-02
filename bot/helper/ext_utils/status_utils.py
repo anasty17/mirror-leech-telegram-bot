@@ -95,8 +95,8 @@ async def get_all_tasks(req_status: str, user_id):
         return await sync_to_async(get_specific_tasks, req_status, user_id)
 
 
-def get_readable_file_size(size_in_bytes: int):
-    if not isinstance(size_in_bytes, int) or size_in_bytes < 0:
+def get_readable_file_size(size_in_bytes):
+    if not size_in_bytes:
         return "0B"
 
     index = 0

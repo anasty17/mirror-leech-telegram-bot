@@ -194,7 +194,7 @@ async def cmd_exec(cmd, shell=False):
 
 def handler_new_task(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         bot_loop.create_task(func(*args, **kwargs))
 
         async def dummy():
@@ -207,7 +207,7 @@ def handler_new_task(func):
 
 def new_task(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    async def wrapper(*args, **kwargs):
         return bot_loop.create_task(func(*args, **kwargs))
 
     return wrapper
