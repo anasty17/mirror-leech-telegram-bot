@@ -61,17 +61,17 @@ async def get_task_by_gid(gid: str):
         return None
 
 
-def get_specific_tasks(status, userId):
+def get_specific_tasks(status, user_id):
     if status == "All":
-        if userId:
-            return [tk for tk in task_dict.values() if tk.listener.user_id == userId]
+        if user_id:
+            return [tk for tk in task_dict.values() if tk.listener.user_id == user_id]
         else:
             return list(task_dict.values())
-    elif userId:
+    elif user_id:
         return [
             tk
             for tk in task_dict.values()
-            if tk.listener.user_id == userId
+            if tk.listener.user_id == user_id
             and (
                 (st := tk.status())
                 and st == status
@@ -90,23 +90,21 @@ def get_specific_tasks(status, userId):
         ]
 
 
-async def get_all_tasks(req_status: str, userId):
+async def get_all_tasks(req_status: str, user_id):
     async with task_dict_lock:
-        return await sync_to_async(get_specific_tasks, req_status, userId)
+        return await sync_to_async(get_specific_tasks, req_status, user_id)
 
 
 def get_readable_file_size(size_in_bytes: int):
-    if size_in_bytes is None:
+    if not isinstance(size_in_bytes, int) or size_in_bytes < 0:
         return "0B"
+
     index = 0
     while size_in_bytes >= 1024 and index < len(SIZE_UNITS) - 1:
         size_in_bytes /= 1024
         index += 1
-    return (
-        f"{size_in_bytes:.2f}{SIZE_UNITS[index]}"
-        if index > 0
-        else f"{size_in_bytes:.2f}B"
-    )
+
+    return f"{size_in_bytes:.2f}{SIZE_UNITS[index]}"
 
 
 def get_readable_time(seconds: int):

@@ -75,8 +75,8 @@ async def cancel_multi(_, query):
     await delete_message(query.message)
 
 
-async def cancel_all(status, userId):
-    matches = await get_all_tasks(status.strip(), userId)
+async def cancel_all(status, user_id):
+    matches = await get_all_tasks(status.strip(), user_id)
     if not matches:
         return False
     for task in matches:
@@ -86,41 +86,45 @@ async def cancel_all(status, userId):
     return True
 
 
-def create_cancel_buttons(isSudo, userId=""):
+def create_cancel_buttons(is_sudo, user_id=""):
     buttons = button_build.ButtonMaker()
     buttons.data_button(
-        "Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING} {userId}"
+        "Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING} {user_id}"
     )
     buttons.data_button(
-        "Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING} {userId}"
+        "Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING} {user_id}"
     )
-    buttons.data_button("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING} {userId}")
+    buttons.data_button("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING} {user_id}")
     buttons.data_button(
-        "Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING} {userId}"
+        "Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING} {user_id}"
     )
-    buttons.data_button("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING} {userId}")
+    buttons.data_button("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING} {user_id}")
     buttons.data_button(
-        "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING} {userId}"
-    )
-    buttons.data_button(
-        "Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING} {userId}"
-    )
-    buttons.data_button("QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL} {userId}")
-    buttons.data_button("QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP} {userId}")
-    buttons.data_button(
-        "SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID} {userId}"
+        "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING} {user_id}"
     )
     buttons.data_button(
-        "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING} {userId}"
+        "Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING} {user_id}"
     )
-    buttons.data_button("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {userId}")
-    buttons.data_button("All", f"canall ms All {userId}")
-    if isSudo:
-        if userId:
-            buttons.data_button("All Added Tasks", f"canall bot ms {userId}")
+    buttons.data_button(
+        "QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL} {user_id}"
+    )
+    buttons.data_button(
+        "QueuedUp", f"canall ms {MirrorStatus.STATUS_QUEUEUP} {user_id}"
+    )
+    buttons.data_button(
+        "SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID} {user_id}"
+    )
+    buttons.data_button(
+        "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING} {user_id}"
+    )
+    buttons.data_button("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {user_id}")
+    buttons.data_button("All", f"canall ms All {user_id}")
+    if is_sudo:
+        if user_id:
+            buttons.data_button("All Added Tasks", f"canall bot ms {user_id}")
         else:
-            buttons.data_button("My Tasks", f"canall user ms {userId}")
-    buttons.data_button("Close", f"canall close ms {userId}")
+            buttons.data_button("My Tasks", f"canall user ms {user_id}")
+    buttons.data_button("Close", f"canall close ms {user_id}")
     return buttons.build_menu(2)
 
 
@@ -131,8 +135,8 @@ async def cancell_all_buttons(_, message):
     if count == 0:
         await send_message(message, "No active tasks!")
         return
-    isSudo = await CustomFilters.sudo("", message)
-    button = create_cancel_buttons(isSudo, message.from_user.id)
+    is_sudo = await CustomFilters.sudo("", message)
+    button = create_cancel_buttons(is_sudo, message.from_user.id)
     can_msg = await send_message(message, "Choose tasks to cancel!", button)
     await auto_delete_message(message, can_msg)
 
@@ -142,9 +146,9 @@ async def cancel_all_update(_, query):
     data = query.data.split()
     message = query.message
     reply_to = message.reply_to_message
-    userId = int(data[3]) if len(data) > 3 else ""
-    isSudo = await CustomFilters.sudo("", query)
-    if not isSudo and userId and userId != query.from_user.id:
+    user_id = int(data[3]) if len(data) > 3 else ""
+    is_sudo = await CustomFilters.sudo("", query)
+    if not is_sudo and user_id and user_id != query.from_user.id:
         await query.answer("Not Yours!", show_alert=True)
     else:
         await query.answer()
@@ -152,27 +156,27 @@ async def cancel_all_update(_, query):
         await delete_message(reply_to)
         await delete_message(message)
     elif data[1] == "back":
-        button = create_cancel_buttons(isSudo, userId)
+        button = create_cancel_buttons(is_sudo, user_id)
         await edit_message(message, "Choose tasks to cancel!", button)
     elif data[1] == "bot":
-        button = create_cancel_buttons(isSudo, "")
+        button = create_cancel_buttons(is_sudo, "")
         await edit_message(message, "Choose tasks to cancel!", button)
     elif data[1] == "user":
-        button = create_cancel_buttons(isSudo, query.from_user.id)
+        button = create_cancel_buttons(is_sudo, query.from_user.id)
         await edit_message(message, "Choose tasks to cancel!", button)
     elif data[1] == "ms":
         buttons = button_build.ButtonMaker()
-        buttons.data_button("Yes!", f"canall {data[2]} confirm {userId}")
-        buttons.data_button("Back", f"canall back confirm {userId}")
-        buttons.data_button("Close", f"canall close confirm {userId}")
+        buttons.data_button("Yes!", f"canall {data[2]} confirm {user_id}")
+        buttons.data_button("Back", f"canall back confirm {user_id}")
+        buttons.data_button("Close", f"canall close confirm {user_id}")
         button = buttons.build_menu(2)
         await edit_message(
             message, f"Are you sure you want to cancel all {data[2]} tasks", button
         )
     else:
-        button = create_cancel_buttons(isSudo, userId)
+        button = create_cancel_buttons(is_sudo, user_id)
         await edit_message(message, "Choose tasks to cancel.", button)
-        res = await cancel_all(data[1], userId)
+        res = await cancel_all(data[1], user_id)
         if not res:
             await send_message(reply_to, f"No matching tasks for {data[1]}!")
 

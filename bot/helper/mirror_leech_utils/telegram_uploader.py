@@ -17,7 +17,6 @@ from pyrogram.types import (
     InputMediaVideo,
     InputMediaDocument,
     InputMediaPhoto,
-    LinkPreviewOptions,
 )
 from tenacity import (
     retry,
@@ -98,7 +97,7 @@ class TelegramUploader:
                     self._sent_msg = await user.send_message(
                         chat_id=self._listener.up_dest,
                         text=msg,
-                        link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        disable_web_page_preview=True,
                         message_thread_id=self._listener.chat_thread_id,
                         disable_notification=True,
                     )
@@ -106,7 +105,7 @@ class TelegramUploader:
                     self._sent_msg = await self._listener.client.send_message(
                         chat_id=self._listener.up_dest,
                         text=msg,
-                        link_preview_options=LinkPreviewOptions(is_disabled=True),
+                        disable_web_page_preview=True,
                         message_thread_id=self._listener.chat_thread_id,
                         disable_notification=True,
                     )
@@ -122,7 +121,7 @@ class TelegramUploader:
                 self._sent_msg = await user.send_message(
                     chat_id=self._listener.message.chat.id,
                     text="Deleted Cmd Message! Don't delete the cmd message again!",
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
+                    disable_web_page_preview=True,
                     disable_notification=True,
                 )
         else:

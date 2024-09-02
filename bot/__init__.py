@@ -26,7 +26,6 @@ from subprocess import Popen, run
 from time import time
 from tzlocal import get_localzone
 from uvloop import install
-from concurrent.futures import ThreadPoolExecutor
 
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
@@ -48,9 +47,6 @@ try:
 except RuntimeError:
     bot_loop = new_event_loop()
     set_event_loop(bot_loop)
-
-THREADPOOL = ThreadPoolExecutor(max_workers=99999)
-bot_loop.set_default_executor(THREADPOOL)
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

@@ -13,7 +13,6 @@ from psutil import (
 )
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
-from pyrogram.types import LinkPreviewOptions
 from signal import signal, SIGINT
 from sys import executable
 from time import time
@@ -231,7 +230,7 @@ async def restart_notification():
                 await bot.send_message(
                     chat_id=cid,
                     text=msg,
-                    link_preview_options=LinkPreviewOptions(is_disabled=True),
+                    disable_web_page_preview=True,
                     disable_notification=True,
                 )
         except Exception as e:
