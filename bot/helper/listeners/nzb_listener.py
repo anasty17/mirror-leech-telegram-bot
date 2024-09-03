@@ -78,10 +78,10 @@ async def _nzb_listener():
                     if job["status"] == "Completed":
                         if not nzb_jobs[nzo_id]["uploaded"]:
                             nzb_jobs[nzo_id]["uploaded"] = True
-                            _on_download_complete(nzo_id)
+                            await _on_download_complete(nzo_id)
                             nzb_jobs[nzo_id]["status"] = "Completed"
                     elif job["status"] == "Failed":
-                        _on_download_error(job["fail_message"], nzo_id)
+                        await _on_download_error(job["fail_message"], nzo_id)
                     elif job["status"] in [
                         "QuickCheck",
                         "Verifying",
@@ -91,7 +91,7 @@ async def _nzb_listener():
                         "Extracting",
                     ]:
                         if job["status"] != nzb_jobs[nzo_id]["status"]:
-                            _change_status(nzo_id, job["status"])
+                            await _change_status(nzo_id, job["status"])
                 for dl in downloads:
                     nzo_id = dl["nzo_id"]
                     if nzo_id not in nzb_jobs:
@@ -102,7 +102,7 @@ async def _nzb_listener():
                         and not dl["filename"].startswith("Trying")
                     ):
                         nzb_jobs[nzo_id]["stop_dup_check"] = True
-                        _stop_duplicate(nzo_id)
+                        await _stop_duplicate(nzo_id)
             except Exception as e:
                 LOGGER.error(str(e))
         await sleep(3)

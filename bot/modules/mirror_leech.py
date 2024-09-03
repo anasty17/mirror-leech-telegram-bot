@@ -186,7 +186,7 @@ class Mirror(TaskListener):
         if len(self.bulk) != 0:
             del self.bulk[0]
 
-        self.run_multi(input_list, folder_name, Mirror)
+        await self.run_multi(input_list, folder_name, Mirror)
 
         await self.get_tag(text)
 

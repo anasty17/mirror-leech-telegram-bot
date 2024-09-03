@@ -107,7 +107,7 @@ class Clone(TaskListener):
         if not self.link and (reply_to := self.message.reply_to_message):
             self.link = reply_to.text.split("\n", 1)[0].strip()
 
-        self.run_multi(input_list, "", Clone)
+        await self.run_multi(input_list, "", Clone)
 
         if len(self.link) == 0:
             await send_message(

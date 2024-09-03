@@ -770,6 +770,8 @@ def add_job():
         replace_existing=True,
     )
 
+add_job()
+scheduler.start()
 
 bot.add_handler(
     MessageHandler(

@@ -432,7 +432,7 @@ class YtDlp(TaskListener):
             self.remove_from_same_dir()
             return
         finally:
-            self.run_multi(input_list, folder_name, YtDlp)
+            await self.run_multi(input_list, folder_name, YtDlp)
 
         if not qual:
             qual = await YtSelection(self).get_quality(result)

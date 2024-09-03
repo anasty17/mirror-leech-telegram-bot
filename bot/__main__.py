@@ -263,8 +263,8 @@ async def restart_notification():
 async def main():
     if config_dict["DATABASE_URL"]:
         await database.db_load()
-    jdownloader.initiate()
     await gather(
+        jdownloader.initiate(),
         sync_to_async(clean_all),
         bot_settings.initiate_search_tools(),
         restart_notification(),
@@ -273,8 +273,6 @@ async def main():
         sync_to_async(start_aria2_listener, wait=False),
     )
     create_help_buttons()
-    bot_settings.add_job()
-    scheduler.start()
 
     bot.add_handler(
         MessageHandler(
