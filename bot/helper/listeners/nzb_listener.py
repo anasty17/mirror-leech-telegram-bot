@@ -116,4 +116,4 @@ async def on_download_start(nzo_id):
             "status": "Downloading",
         }
         if not intervals["nzb"]:
-            intervals["nzb"] = _nzb_listener()
+            intervals["nzb"] = await _nzb_listener()

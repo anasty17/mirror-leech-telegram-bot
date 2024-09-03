@@ -208,4 +208,4 @@ async def on_download_start(tag):
             "seeding": False,
         }
         if not intervals["qb"]:
-            intervals["qb"] = _qb_listener()
+            intervals["qb"] = await _qb_listener()

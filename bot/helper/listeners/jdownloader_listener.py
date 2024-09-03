@@ -115,4 +115,4 @@ async def _jd_listener():
 async def on_download_start():
     async with jd_lock:
         if not intervals["jd"]:
-            intervals["jd"] = _jd_listener()
+            intervals["jd"] = await _jd_listener()
