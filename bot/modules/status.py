@@ -12,7 +12,7 @@ from bot import (
     intervals,
     bot,
 )
-from ..helper.ext_utils.bot_utils import sync_to_async, handler_new_task
+from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -32,7 +32,7 @@ from ..helper.telegram_helper.message_utils import (
 from ..helper.telegram_helper.button_build import ButtonMaker
 
 
-@handler_new_task
+@new_task
 async def mirror_status(_, message):
     async with task_dict_lock:
         count = len(task_dict)
@@ -60,7 +60,7 @@ async def mirror_status(_, message):
         await delete_message(message)
 
 
-@handler_new_task
+@new_task
 async def status_pages(_, query):
     data = query.data.split()
     key = int(data[1])

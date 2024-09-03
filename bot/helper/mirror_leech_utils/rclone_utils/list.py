@@ -9,11 +9,7 @@ from pyrogram.handlers import CallbackQueryHandler
 from time import time
 
 from bot import LOGGER, config_dict
-from ...ext_utils.bot_utils import (
-    cmd_exec,
-    handler_new_task,
-    update_user_ldata,
-)
+from ...ext_utils.bot_utils import cmd_exec, update_user_ldata, new_task
 from ...ext_utils.db_handler import database
 from ...ext_utils.status_utils import get_readable_file_size, get_readable_time
 from ...telegram_helper.button_build import ButtonMaker
@@ -26,7 +22,7 @@ from ...telegram_helper.message_utils import (
 LIST_LIMIT = 6
 
 
-@handler_new_task
+@new_task
 async def path_updates(_, query, obj):
     await query.answer()
     message = query.message

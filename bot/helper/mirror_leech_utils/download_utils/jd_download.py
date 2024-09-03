@@ -16,7 +16,7 @@ from bot import (
     jd_lock,
     jd_downloads,
 )
-from ...ext_utils.bot_utils import retry_function, handler_new_task
+from ...ext_utils.bot_utils import retry_function, new_task
 from ...ext_utils.jdownloader_booter import jdownloader
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...listeners.jdownloader_listener import on_download_start
@@ -31,7 +31,7 @@ from ...telegram_helper.message_utils import (
 )
 
 
-@handler_new_task
+@new_task
 async def configureDownload(_, query, obj):
     data = query.data.split()
     message = query.message

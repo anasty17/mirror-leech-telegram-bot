@@ -2,7 +2,7 @@ from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
 
 from bot import bot
-from ..helper.ext_utils.bot_utils import COMMAND_USAGE, handler_new_task
+from ..helper.ext_utils.bot_utils import COMMAND_USAGE, new_task
 from ..helper.ext_utils.help_messages import (
     YT_HELP_DICT,
     MIRROR_HELP_DICT,
@@ -12,7 +12,7 @@ from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.message_utils import edit_message, delete_message
 
 
-@handler_new_task
+@new_task
 async def arg_usage(_, query):
     data = query.data.split()
     message = query.message

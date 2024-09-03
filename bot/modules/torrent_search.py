@@ -5,7 +5,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from urllib.parse import quote
 
 from bot import bot, LOGGER, config_dict, qbittorrent_client
-from ..helper.ext_utils.bot_utils import sync_to_async, handler_new_task
+from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.ext_utils.status_utils import get_readable_file_size
 from ..helper.ext_utils.telegraph_helper import telegraph
 from ..helper.telegram_helper.bot_commands import BotCommands
@@ -235,7 +235,7 @@ async def plugin_buttons(user_id):
     return buttons.build_menu(2)
 
 
-@handler_new_task
+@new_task
 async def torrent_search(_, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
@@ -267,7 +267,7 @@ async def torrent_search(_, message):
         await send_message(message, "Choose site to search | Plugins:", button)
 
 
-@handler_new_task
+@new_task
 async def torrent_search_update(_, query):
     user_id = query.from_user.id
     message = query.message

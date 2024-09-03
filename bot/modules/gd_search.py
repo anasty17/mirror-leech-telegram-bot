@@ -5,7 +5,7 @@ from bot import LOGGER, bot, user_data
 from ..helper.ext_utils.bot_utils import (
     sync_to_async,
     get_telegraph_list,
-    handler_new_task,
+    new_task,
 )
 from ..helper.mirror_leech_utils.gdrive_utils.search import GoogleDriveSearch
 from ..helper.telegram_helper.bot_commands import BotCommands
@@ -22,7 +22,9 @@ async def list_buttons(user_id, is_recursive=True, user_token=False):
     buttons.data_button(
         "Files", f"list_types {user_id} files {is_recursive} {user_token}"
     )
-    buttons.data_button("Both", f"list_types {user_id} both {is_recursive} {user_token}")
+    buttons.data_button(
+        "Both", f"list_types {user_id} both {is_recursive} {user_token}"
+    )
     buttons.data_button(
         f"Recursive: {is_recursive}",
         f"list_types {user_id} rec {is_recursive} {user_token}",
@@ -61,7 +63,7 @@ async def _list_drive(key, message, item_type, is_recursive, user_token, user_id
         await edit_message(message, f"No result found for <i>{key}</i>")
 
 
-@handler_new_task
+@new_task
 async def select_type(_, query):
     user_id = query.from_user.id
     message = query.message
@@ -90,7 +92,7 @@ async def select_type(_, query):
     await _list_drive(key, message, item_type, is_recursive, user_token, user_id)
 
 
-@handler_new_task
+@new_task
 async def gdrive_search(_, message):
     if len(message.text.split()) == 1:
         return await send_message(message, "Send a search key along with command")

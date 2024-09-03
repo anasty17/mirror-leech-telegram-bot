@@ -17,7 +17,7 @@ from bot import (
 from ..helper.ext_utils.bot_utils import (
     bt_selection_buttons,
     sync_to_async,
-    handler_new_task,
+    new_task,
 )
 from ..helper.ext_utils.status_utils import get_task_by_gid, MirrorStatus
 from ..helper.telegram_helper.bot_commands import BotCommands
@@ -29,7 +29,7 @@ from ..helper.telegram_helper.message_utils import (
 )
 
 
-@handler_new_task
+@new_task
 async def select(_, message):
     if not config_dict["BASE_URL"]:
         await send_message(message, "Base URL not defined!")
@@ -107,7 +107,7 @@ async def select(_, message):
     await send_message(message, msg, SBUTTONS)
 
 
-@handler_new_task
+@new_task
 async def get_confirm(_, query):
     user_id = query.from_user.id
     data = query.data.split()

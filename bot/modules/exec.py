@@ -8,7 +8,7 @@ from textwrap import indent
 from traceback import format_exc
 
 from bot import LOGGER, bot
-from ..helper.ext_utils.bot_utils import sync_to_async, handler_new_task
+from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_file, send_message
@@ -45,12 +45,12 @@ async def send(msg, message):
         await send_message(message, f"<code>{msg}</code>")
 
 
-@handler_new_task
+@new_task
 async def aioexecute(_, message):
     await send(await do("aexec", message), message)
 
 
-@handler_new_task
+@new_task
 async def execute(_, message):
     await send(await do("exec", message), message)
 
@@ -108,7 +108,7 @@ async def do(func, message):
             return result
 
 
-@handler_new_task
+@new_task
 async def clear(_, message):
     log_input(message)
     global namespaces

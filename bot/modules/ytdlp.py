@@ -8,7 +8,7 @@ from yt_dlp import YoutubeDL
 
 from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER, bot_loop
 from ..helper.ext_utils.bot_utils import (
-    handler_new_task,
+    new_task,
     sync_to_async,
     arg_parser,
     COMMAND_USAGE,
@@ -27,7 +27,7 @@ from ..helper.telegram_helper.message_utils import (
 )
 
 
-@handler_new_task
+@new_task
 async def select_format(_, query, obj):
     data = query.data.split()
     message = query.message

@@ -3,13 +3,13 @@ from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler, EditedMessageHandler
 
 from bot import LOGGER, bot
-from ..helper.ext_utils.bot_utils import cmd_exec, handler_new_task
+from ..helper.ext_utils.bot_utils import cmd_exec, new_task
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message, send_file
 
 
-@handler_new_task
+@new_task
 async def shell(_, message):
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:

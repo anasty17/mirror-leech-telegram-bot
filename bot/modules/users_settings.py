@@ -18,7 +18,7 @@ from bot import (
 )
 from ..helper.ext_utils.bot_utils import (
     update_user_ldata,
-    handler_new_task,
+    new_task,
     get_size_bytes,
 )
 from ..helper.ext_utils.db_handler import database
@@ -206,7 +206,7 @@ async def update_user_settings(query):
     await edit_message(query.message, msg, button)
 
 
-@handler_new_task
+@new_task
 async def user_settings(_, message):
     from_user = message.from_user
     handler_dict[from_user.id] = False
@@ -214,7 +214,7 @@ async def user_settings(_, message):
     await send_message(message, msg, button)
 
 
-@handler_new_task
+@new_task
 async def set_thumb(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -226,7 +226,7 @@ async def set_thumb(_, message, pre_event):
         await database.update_user_doc(user_id, "thumb", des_dir)
 
 
-@handler_new_task
+@new_task
 async def add_rclone(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -241,7 +241,7 @@ async def add_rclone(_, message, pre_event):
         await database.update_user_doc(user_id, "rclone_config", des_dir)
 
 
-@handler_new_task
+@new_task
 async def add_token_pickle(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -256,7 +256,7 @@ async def add_token_pickle(_, message, pre_event):
         await database.update_user_doc(user_id, "token_pickle", des_dir)
 
 
-@handler_new_task
+@new_task
 async def delete_path(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -273,7 +273,7 @@ async def delete_path(_, message, pre_event):
         await database.update_user_doc(user_id, "upload_paths", new_value)
 
 
-@handler_new_task
+@new_task
 async def set_option(_, message, pre_event, option):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -340,7 +340,7 @@ async def event_handler(client, query, pfunc, photo=False, document=False):
     client.remove_handler(*handler)
 
 
-@handler_new_task
+@new_task
 async def edit_user_settings(client, query):
     from_user = query.from_user
     user_id = from_user.id
@@ -853,7 +853,7 @@ Example-2: \(text\) | \[test\] : test | \\text\\ : text : s
         await delete_message(message)
 
 
-@handler_new_task
+@new_task
 async def send_users_settings(_, message):
     if user_data:
         msg = ""

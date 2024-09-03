@@ -3,7 +3,7 @@ from pyrogram.filters import command, regex
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
 from bot import task_dict, bot, task_dict_lock, OWNER_ID, user_data, multi_tags
-from ..helper.ext_utils.bot_utils import handler_new_task
+from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import (
     get_task_by_gid,
     get_all_tasks,
@@ -20,7 +20,7 @@ from ..helper.telegram_helper.message_utils import (
 )
 
 
-@handler_new_task
+@new_task
 async def cancel_task(_, message):
     user_id = message.from_user.id if message.from_user else message.sender_chat.id
     msg = message.text.split()
@@ -58,7 +58,7 @@ async def cancel_task(_, message):
     await obj.cancel_task()
 
 
-@handler_new_task
+@new_task
 async def cancel_multi(_, query):
     data = query.data.split()
     user_id = query.from_user.id
@@ -128,7 +128,7 @@ def create_cancel_buttons(is_sudo, user_id=""):
     return buttons.build_menu(2)
 
 
-@handler_new_task
+@new_task
 async def cancell_all_buttons(_, message):
     async with task_dict_lock:
         count = len(task_dict)
@@ -141,7 +141,7 @@ async def cancell_all_buttons(_, message):
     await auto_delete_message(message, can_msg)
 
 
-@handler_new_task
+@new_task
 async def cancel_all_update(_, query):
     data = query.data.split()
     message = query.message

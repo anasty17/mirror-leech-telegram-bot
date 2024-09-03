@@ -192,23 +192,11 @@ async def cmd_exec(cmd, shell=False):
     return stdout, stderr, proc.returncode
 
 
-def handler_new_task(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        bot_loop.create_task(func(*args, **kwargs))
-
-        async def dummy():
-            pass
-
-        return dummy
-
-    return wrapper
-
-
 def new_task(func):
     @wraps(func)
     async def wrapper(*args, **kwargs):
-        return bot_loop.create_task(func(*args, **kwargs))
+        task = bot_loop.create_task(func(*args, **kwargs))
+        return task
 
     return wrapper
 

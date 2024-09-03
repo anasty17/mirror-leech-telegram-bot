@@ -10,7 +10,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
 
 from bot import scheduler, rss_dict, LOGGER, config_dict, bot
-from ..helper.ext_utils.bot_utils import handler_new_task, arg_parser
+from ..helper.ext_utils.bot_utils import new_task, arg_parser
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.exceptions import RssShutdownException
 from ..helper.ext_utils.help_messages import RSS_HELP_MESSAGE
@@ -60,13 +60,13 @@ async def update_rss_menu(query):
     await edit_message(query.message, msg, button)
 
 
-@handler_new_task
+@new_task
 async def get_rss_menu(_, message):
     msg, button = await rss_menu(message)
     await send_message(message, msg, button)
 
 
-@handler_new_task
+@new_task
 async def rss_sub(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -202,7 +202,7 @@ async def get_user_id(title):
         )
 
 
-@handler_new_task
+@new_task
 async def rss_update(_, message, pre_event, state):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -305,7 +305,7 @@ async def rss_list(query, start, all_users=False):
     await edit_message(query.message, list_feed, button)
 
 
-@handler_new_task
+@new_task
 async def rss_get(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -362,7 +362,7 @@ async def rss_get(_, message, pre_event):
     await update_rss_menu(pre_event)
 
 
-@handler_new_task
+@new_task
 async def rss_edit(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
@@ -416,7 +416,7 @@ async def rss_edit(_, message, pre_event):
     await update_rss_menu(pre_event)
 
 
-@handler_new_task
+@new_task
 async def rss_delete(_, message, pre_event):
     handler_dict[message.from_user.id] = False
     users = message.text.split()
@@ -449,7 +449,7 @@ async def event_handler(client, query, pfunc):
     client.remove_handler(*handler)
 
 
-@handler_new_task
+@new_task
 async def rss_listener(client, query):
     user_id = query.from_user.id
     message = query.message
@@ -769,6 +769,7 @@ def add_job():
         next_run_time=datetime.now() + timedelta(seconds=20),
         replace_existing=True,
     )
+
 
 add_job()
 scheduler.start()

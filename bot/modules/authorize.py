@@ -2,14 +2,14 @@ from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
 
 from bot import user_data, config_dict, bot
-from ..helper.ext_utils.bot_utils import update_user_ldata, handler_new_task
+from ..helper.ext_utils.bot_utils import update_user_ldata, new_task
 from ..helper.ext_utils.db_handler import database
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message
 
 
-@handler_new_task
+@new_task
 async def authorize(_, message):
     msg = message.text.split()
     thread_id = None
@@ -49,7 +49,7 @@ async def authorize(_, message):
     await send_message(message, msg)
 
 
-@handler_new_task
+@new_task
 async def unauthorize(_, message):
     msg = message.text.split()
     thread_id = None
@@ -81,7 +81,7 @@ async def unauthorize(_, message):
     await send_message(message, msg)
 
 
-@handler_new_task
+@new_task
 async def addSudo(_, message):
     id_ = ""
     msg = message.text.split()
@@ -102,7 +102,7 @@ async def addSudo(_, message):
     await send_message(message, msg)
 
 
-@handler_new_task
+@new_task
 async def removeSudo(_, message):
     id_ = ""
     msg = message.text.split()

@@ -31,7 +31,7 @@ from .helper.ext_utils.bot_utils import (
     cmd_exec,
     sync_to_async,
     create_help_buttons,
-    handler_new_task,
+    new_task,
 )
 from .helper.ext_utils.db_handler import database
 from .helper.ext_utils.files_utils import clean_all, exit_clean_up
@@ -63,7 +63,7 @@ from .modules import (
 )
 
 
-@handler_new_task
+@new_task
 async def stats(_, message):
     if await aiopath.exists(".git"):
         last_commit = await cmd_exec(
@@ -96,7 +96,7 @@ async def stats(_, message):
     await send_message(message, stats)
 
 
-@handler_new_task
+@new_task
 async def start(client, message):
     buttons = ButtonMaker()
     buttons.url_button(
@@ -118,7 +118,7 @@ Type /{BotCommands.HelpCommand} to get a list of available commands
         )
 
 
-@handler_new_task
+@new_task
 async def restart(_, message):
     intervals["stopAll"] = True
     restart_message = await send_message(message, "Restarting...")
@@ -153,7 +153,7 @@ async def restart(_, message):
     osexecl(executable, executable, "-m", "bot")
 
 
-@handler_new_task
+@new_task
 async def ping(_, message):
     start_time = int(round(time() * 1000))
     reply = await send_message(message, "Starting Ping")
@@ -161,7 +161,7 @@ async def ping(_, message):
     await edit_message(reply, f"{end_time - start_time} ms")
 
 
-@handler_new_task
+@new_task
 async def log(_, message):
     await send_file(message, "log.txt")
 
@@ -207,7 +207,7 @@ NOTE: Try each command without any argument to see more detalis.
 """
 
 
-@handler_new_task
+@new_task
 async def bot_help(_, message):
     await send_message(message, help_string)
 

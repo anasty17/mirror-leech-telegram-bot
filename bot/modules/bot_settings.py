@@ -43,8 +43,8 @@ from bot import (
 from ..helper.ext_utils.bot_utils import (
     SetInterval,
     sync_to_async,
-    handler_new_task,
     retry_function,
+    new_task,
 )
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.jdownloader_booter import jdownloader
@@ -249,7 +249,7 @@ async def update_buttons(message, key=None, edit_type=None):
     await edit_message(message, msg, button)
 
 
-@handler_new_task
+@new_task
 async def edit_variable(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -344,7 +344,7 @@ async def edit_variable(_, message, pre_message, key):
             await sabnzbd_client.set_special_config("servers", s)
 
 
-@handler_new_task
+@new_task
 async def edit_aria(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -373,7 +373,7 @@ async def edit_aria(_, message, pre_message, key):
         await database.update_aria2(key, value)
 
 
-@handler_new_task
+@new_task
 async def edit_qbit(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -393,7 +393,7 @@ async def edit_qbit(_, message, pre_message, key):
         await database.update_qbittorrent(key, value)
 
 
-@handler_new_task
+@new_task
 async def edit_nzb(_, message, pre_message, key):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -409,7 +409,7 @@ async def edit_nzb(_, message, pre_message, key):
         await database.update_nzb_config()
 
 
-@handler_new_task
+@new_task
 async def edit_nzb_server(_, message, pre_message, key, index=0):
     handler_dict[message.chat.id] = False
     value = message.text
@@ -474,7 +474,7 @@ async def sync_jdownloader():
     await database.update_private_file("cfg.zip")
 
 
-@handler_new_task
+@new_task
 async def update_private_file(_, message, pre_message):
     handler_dict[message.chat.id] = False
     if not message.media and (file_name := message.text):
@@ -578,7 +578,7 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
     client.remove_handler(*handler)
 
 
-@handler_new_task
+@new_task
 async def edit_bot_settings(client, query):
     data = query.data.split()
     message = query.message
@@ -918,7 +918,7 @@ async def edit_bot_settings(client, query):
         await delete_message(message)
 
 
-@handler_new_task
+@new_task
 async def bot_settings(_, message):
     handler_dict[message.chat.id] = False
     msg, button = await get_buttons()

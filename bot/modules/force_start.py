@@ -11,7 +11,7 @@ from bot import (
     queued_dl,
     queue_dict_lock,
 )
-from ..helper.ext_utils.bot_utils import handler_new_task
+from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import get_task_by_gid
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
@@ -19,7 +19,7 @@ from ..helper.telegram_helper.message_utils import send_message
 from ..helper.ext_utils.task_manager import start_dl_from_queued, start_up_from_queued
 
 
-@handler_new_task
+@new_task
 async def remove_from_queue(_, message):
     user_id = message.from_user.id if message.from_user else message.sender_chat.id
     msg = message.text.split()
