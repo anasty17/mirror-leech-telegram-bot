@@ -138,6 +138,7 @@ def direct_link_generator(link):
             "teraboxlink.com",
             "freeterabox.com",
             "1024terabox.com",
+            "teraboxshare.com"
         ]
     ):
         return terabox(link)
