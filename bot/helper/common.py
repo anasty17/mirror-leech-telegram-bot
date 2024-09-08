@@ -177,7 +177,7 @@ class TaskConfig:
             else ["aria2", "!qB"]
         )
         if self.link not in ["rcl", "gdl"]:
-            if is_rclone_path(self.link) or is_gdrive_link(self.link):
+            if not self.is_jd and is_rclone_path(self.link) or is_gdrive_link(self.link):
                 await self.is_token_exists(self.link, "dl")
         elif self.link == "rcl":
             if not self.is_ytdlp and not self.is_jd:
