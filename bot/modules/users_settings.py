@@ -283,7 +283,7 @@ async def set_option(_, message, pre_event, option):
             value = get_size_bytes(value)
         value = min(int(value), MAX_SPLIT_SIZE)
     elif option == "leech_dest":
-        if value.startswith("-") or value.isdigit():
+        if "|" not in value and (value.startswith("-") or value.isdigit()):
             value = int(value)
     elif option == "excluded_extensions":
         fx = value.split()
