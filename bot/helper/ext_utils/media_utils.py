@@ -184,10 +184,6 @@ async def get_document_type(path):
     mime_type = await sync_to_async(get_mime_type, path)
     if mime_type.startswith("image"):
         return False, False, True
-    if mime_type.startswith("audio"):
-        return False, True, False
-    if not mime_type.startswith("video") and not mime_type.endswith("octet-stream"):
-        return is_video, is_audio, is_image
     try:
         result = await cmd_exec(
             [
@@ -205,6 +201,10 @@ async def get_document_type(path):
             is_video = True
     except Exception as e:
         LOGGER.error(f"Get Document Type: {e}. Mostly File not found! - File: {path}")
+        if mime_type.startswith("audio"):
+            return False, True, False
+        if not mime_type.startswith("video") and not mime_type.endswith("octet-stream"):
+            return is_video, is_audio, is_image
         if mime_type.startswith("video"):
             is_video = True
         return is_video, is_audio, is_image

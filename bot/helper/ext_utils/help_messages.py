@@ -190,12 +190,18 @@ If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 /cmd rcl or rclonePath -up rclonePath or rc or rcl
 /cmd mrcc:rclonePath -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
 
-name_sub = """<b>Name Substitution</b>: -ns
-/cmd link -ns tea : coffee : s|ACC :  : s|mP4
-This will affect on all files. Format: wordToReplace : wordToReplaceWith : sensitiveCase
-1. tea will get replaced by coffee with sensitive case because I have added `s` last of the option.
-2. ACC will get removed because I have added nothing between to replace with sensitive case because I have added `s` last of the option.
-3. mP4 will get removed because I have added nothing to replace with
+name_sub = r"""<b>Name Substitution</b>: -ns
+/cmd link -ns script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
+This will affect on all files. Format: wordToReplace/wordToReplaceWith/sensitiveCase
+Word Subtitions. You can add pattern instead of normal text. Timeout: 60 sec
+NOTE: You must add \ before any character, those are the characters: \^$.|?*+()[]{}-
+1. script will get replaced by code with sensitive case
+2. mirror will get replaced by leech
+4. tea will get replaced by space with sensitive case
+5. clone will get removed
+6. cpu will get replaced by space
+7. [mltb] will get replaced by mltb
+8. \text\ will get replaced by text with sensitive case
 """
 
 mixed_leech = """Mixed leech: -ml
