@@ -121,7 +121,7 @@ if u have link(folder) have splitted files:
 tg_links = """<b>TG Links</b>:
 
 Treat links like any direct link
-Some links need user access so sure you must add USER_SESSION_STRING for it.
+Some links need user access so you must add USER_SESSION_STRING for it.
 Three types of links:
 Public: https://t.me/channel_name/message_id
 Private: tg://openmessage?user_id=xxxxxx&message_id=xxxxx

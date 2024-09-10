@@ -262,9 +262,6 @@ async def edit_variable(_, message, pre_message, key):
     elif key == "DOWNLOAD_DIR":
         if not value.endswith("/"):
             value += "/"
-    elif key in ["LEECH_DUMP_CHAT", "RSS_CHAT"]:
-        if "|" not in value and (value.isdigit() or value.startswith("-")):
-            value = int(value)
     elif key == "STATUS_UPDATE_INTERVAL":
         value = int(value)
         if len(task_dict) != 0 and (st := intervals["status"]):
@@ -1075,16 +1072,12 @@ async def load_config():
 
     LEECH_DUMP_CHAT = environ.get("LEECH_DUMP_CHAT", "")
     LEECH_DUMP_CHAT = "" if len(LEECH_DUMP_CHAT) == 0 else LEECH_DUMP_CHAT
-    if LEECH_DUMP_CHAT.isdigit() or LEECH_DUMP_CHAT.startswith("-"):
-        LEECH_DUMP_CHAT = int(LEECH_DUMP_CHAT)
 
     STATUS_LIMIT = environ.get("STATUS_LIMIT", "")
     STATUS_LIMIT = 4 if len(STATUS_LIMIT) == 0 else int(STATUS_LIMIT)
 
     RSS_CHAT = environ.get("RSS_CHAT", "")
     RSS_CHAT = "" if len(RSS_CHAT) == 0 else RSS_CHAT
-    if RSS_CHAT.isdigit() or RSS_CHAT.startswith("-"):
-        RSS_CHAT = int(RSS_CHAT)
 
     RSS_DELAY = environ.get("RSS_DELAY", "")
     RSS_DELAY = 600 if len(RSS_DELAY) == 0 else int(RSS_DELAY)

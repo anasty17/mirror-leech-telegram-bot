@@ -177,7 +177,11 @@ class TaskConfig:
             else ["aria2", "!qB"]
         )
         if self.link not in ["rcl", "gdl"]:
-            if not self.is_jd and is_rclone_path(self.link) or is_gdrive_link(self.link):
+            if (
+                not self.is_jd
+                and is_rclone_path(self.link)
+                or is_gdrive_link(self.link)
+            ):
                 await self.is_token_exists(self.link, "dl")
         elif self.link == "rcl":
             if not self.is_ytdlp and not self.is_jd:
@@ -290,9 +294,12 @@ class TaskConfig:
                         self.mixed_leech = self.user_transmission
                     if "|" in self.up_dest:
                         self.up_dest, self.chat_thread_id = list(
-                            map(int, self.up_dest.split("|", 1))
+                            map(
+                                lambda x: int(x) if x.lstrip("-").isdigit() else x,
+                                self.up_dest.split("|", 1),
+                            )
                         )
-                    elif self.up_dest.isdigit() or self.up_dest.startswith("-"):
+                    elif self.up_dest.lstrip("-").isdigit():
                         self.up_dest = int(self.up_dest)
                     elif self.up_dest.lower() == "pm":
                         self.up_dest = self.user_id

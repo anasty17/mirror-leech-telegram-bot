@@ -348,7 +348,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in
   sec. `Int`
-- `RSS_CHAT`: Chat ID/USERNAME where rss links will be sent. If you want message to be sent to the channel then add
+- `RSS_CHAT`: Chat `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID` where rss links will be sent. If you want message to be sent to the channel then add
   channel id. Add `-100` before channel id. `Int`|`Str`
     - **RSS NOTES**: `RSS_CHAT` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR--
       *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT`

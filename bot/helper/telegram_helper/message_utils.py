@@ -61,13 +61,14 @@ async def send_file(message, file, caption=""):
         return str(e)
 
 
-async def send_rss(text):
+async def send_rss(text, chat_id, thread_id):
     try:
         app = user or bot
         return await app.send_message(
-            chat_id=config_dict["RSS_CHAT"],
+            chat_id=chat_id,
             text=text,
             disable_web_page_preview=True,
+            message_thread_id=thread_id,
             disable_notification=True,
         )
     except (FloodWait, FloodPremiumWait) as f:
