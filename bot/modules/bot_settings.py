@@ -1181,6 +1181,9 @@ async def load_config():
     MIXED_LEECH = environ.get("MIXED_LEECH", "")
     MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
 
+    THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
+    THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
+
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -1267,6 +1270,7 @@ async def load_config():
             "SUDO_USERS": SUDO_USERS,
             "TELEGRAM_API": TELEGRAM_API,
             "TELEGRAM_HASH": TELEGRAM_HASH,
+            "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
             "TORRENT_TIMEOUT": TORRENT_TIMEOUT,
             "USER_TRANSMISSION": USER_TRANSMISSION,
             "UPSTREAM_REPO": UPSTREAM_REPO,

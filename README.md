@@ -3,6 +3,9 @@ substantial modifications and is designed for efficiently mirroring or leeching 
 destinations, including Google Drive, Telegram, or any rclone-supported cloud. It is built using asynchronous
 programming in Python.
 
+- **TELEGRAM CHANNEL:** https://t.me/mltb_official_channel
+- **TELEGRAM GROUP:** https://t.me/mltb_official_support
+
 # Features
 
 ## qBittorrent
@@ -40,6 +43,8 @@ programming in Python.
 - Download restricted messages (document or link) by tg private/public/super links (task option)
 - Choose transfer by bot or user session in case you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
+- Upload with custom layout multiple thubnmail (global, user option and task option)
+- Topics support
 
 ## Google Drive
 
@@ -142,6 +147,7 @@ programming in Python.
 - Bulk download from telegram txt file or text message contains links seperated by new line (task option)
 - Join splitted files that have splitted before by split(linux pkg) (task option)
 - Sample video Generator (task option)
+- Screenshots Generator (task option)
 - Ability to cancel upload/clone/archive/extract/split/queue (task option)
 - Cancel all buttons for choosing specific tasks status to cancel (global option)
 - Convert videos and audios to specific format with filter (task option)
@@ -312,6 +318,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `MIXED_LEECH`: Upload by user and bot session with respect to file size. Only in superChat. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
 - `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
+- `THUMBNAIL_LAYOUT`: Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.`Str`
 
 **7. qBittorrent/Aria2c/Sabnzbd**
 

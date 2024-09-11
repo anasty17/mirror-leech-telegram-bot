@@ -84,6 +84,7 @@ class TaskConfig:
         self.name = ""
         self.new_dir = ""
         self.name_sub = ""
+        self.thumbnail_layout = ""
         self.split_size = 0
         self.max_split_size = 0
         self.multi = 0
@@ -360,6 +361,16 @@ class TaskConfig:
                 self.user_dict.get("as_doc", False)
                 or config_dict["AS_DOCUMENT"]
                 and "as_doc" not in self.user_dict
+            )
+
+            self.thumbnail_layout = (
+                self.thumbnail_layout
+                or self.user_dict.get("thumb_layout", False)
+                or (
+                    config_dict["THUMBNAIL_LAYOUT"]
+                    if "thumb_layout" not in self.user_dict
+                    else ""
+                )
             )
 
             if is_telegram_link(self.thumb):
