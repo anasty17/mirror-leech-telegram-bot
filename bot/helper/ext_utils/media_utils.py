@@ -3,7 +3,7 @@ from aiofiles.os import remove, path as aiopath, makedirs
 from asyncio import create_subprocess_exec, gather, wait_for
 from asyncio.subprocess import PIPE
 from os import path as ospath, cpu_count
-from re import search as re_search
+from re import search as re_search, escape
 from time import time
 from aioshutil import rmtree
 
@@ -363,7 +363,7 @@ async def get_multiple_frames_thumbnail(video_file, layout, keep_screenshots):
         "-pattern_type",
         "glob",
         "-i",
-        f"{dirpath}/*.png",
+        f"{escape(dirpath)}/*.png",
         "-vf",
         f"tile={layout}, thumbnail",
         "-q:v",
