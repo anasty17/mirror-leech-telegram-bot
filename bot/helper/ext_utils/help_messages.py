@@ -210,6 +210,10 @@ mixed_leech = """Mixed leech: -ml
 thumbnail_layout = """Thumbnail Layout: -tl
 /cmd link -tl 3x3 (widthxheight) 3 photos in row and 3 photos in column"""
 
+leech_as = """<b>Leech as</b>: -doc -med
+/cmd link -doc (Leech as document)
+/cmd link -med (Leech as media)"""
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
@@ -229,6 +233,8 @@ YT_HELP_DICT = {
     "Force-Start": force_start,
     "Name-Substitute": name_sub,
     "Mixed-Leech": mixed_leech,
+    "Thumbnail-Layout": thumbnail_layout,
+    "Leech-Type": leech_as,
 }
 
 MIRROR_HELP_DICT = {
@@ -257,6 +263,7 @@ MIRROR_HELP_DICT = {
     "Name-Substitute": name_sub,
     "Mixed-Leech": mixed_leech,
     "Thumbnail-Layout": thumbnail_layout,
+    "Leech-Type": leech_as,
 }
 
 CLONE_HELP_DICT = {

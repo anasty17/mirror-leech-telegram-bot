@@ -36,7 +36,7 @@ programming in Python.
 - Split size (global, user, and task option)
 - Thumbnail (user and task option)
 - Leech filename prefix (user option)
-- Set upload as a document or as media (global and user option)
+- Set upload as a document or as media (global, user and task option)
 - Upload all files to a specific chat (superGroup/channel/private/topic) (global, user, and task option)
 - Equal split size settings (global and user option)
 - Ability to leech split file parts in a media group (global and user option)
