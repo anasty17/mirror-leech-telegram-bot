@@ -103,7 +103,9 @@ async def convert_audio(listener, audio_file, ext):
 async def create_thumb(msg, _id=""):
     if not _id:
         _id = msg.id
-    path = f"{DOWNLOAD_DIR}Thumbnails"
+        path = f"{DOWNLOAD_DIR}Thumbnails"
+    else:
+        path = 'Thumbnails'
     await makedirs(path, exist_ok=True)
     photo_dir = await msg.download()
     output = ospath.join(path, f"{_id}.jpg")
