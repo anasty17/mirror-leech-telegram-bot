@@ -107,6 +107,7 @@ programming in Python.
 
 - Extract splits with or without password
 - Zip file/folder with or without password
+- Decompress zst files
 - Using 7-zip tool to extract with or without password all supported types:
 
 > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2,MBR,

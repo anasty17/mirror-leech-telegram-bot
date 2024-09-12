@@ -18,6 +18,7 @@ from bot import (
     queued_up,
     queued_dl,
     queue_dict_lock,
+    same_directory_lock,
 )
 from ..common import TaskConfig
 from ..ext_utils.bot_utils import sync_to_async
@@ -78,12 +79,17 @@ class TaskListener(TaskConfig):
     async def on_download_complete(self):
         multi_links = False
         if self.same_dir and self.mid in self.same_dir["tasks"]:
-            while not (
-                self.same_dir["total"] in [1, 0]
-                or self.same_dir["total"] > 1
-                and len(self.same_dir["tasks"]) > 1
-            ):
-                await sleep(0.5)
+            async with same_directory_lock:
+                while True:
+                    async with task_dict_lock:
+                        if self.mid not in self.same_dir["tasks"]:
+                            return
+                        if self.mid in self.same_dir["tasks"] and (
+                            self.same_dir["total"] == 1
+                            or len(self.same_dir["tasks"]) > 1
+                        ):
+                            break
+                    await sleep(1)
 
         async with task_dict_lock:
             if (
@@ -95,9 +101,7 @@ class TaskListener(TaskConfig):
                 self.same_dir["total"] -= 1
                 folder_name = self.same_dir["name"]
                 spath = f"{self.dir}{folder_name}"
-                des_path = (
-                    f"{DOWNLOAD_DIR}{list(self.same_dir['tasks'])[0]}{folder_name}"
-                )
+                des_path = f"{DOWNLOAD_DIR}{list(self.same_dir["tasks"])[0]}{folder_name}"
                 await makedirs(des_path, exist_ok=True)
                 for item in await listdir(spath):
                     if item.endswith((".aria2", ".!qB")):
@@ -108,6 +112,8 @@ class TaskListener(TaskConfig):
                     else:
                         await move(item_path, f"{des_path}/{item}")
                 multi_links = True
+            elif self.same_dir and self.mid not in self.same_dir["tasks"]:
+                return
             download = task_dict[self.mid]
             self.name = download.name()
             gid = download.gid()
@@ -121,8 +127,11 @@ class TaskListener(TaskConfig):
         files_to_delete = []
 
         if multi_links:
-            await self.on_upload_error("Downloaded! Waiting for other tasks...")
+            await self.on_upload_error(f"{self.name} Downloaded!\n\nWaiting for other tasks to finish...")
             return
+
+        if self.same_dir:
+            self.name = self.same_dir["name"].split("/")[-1]
 
         if not await aiopath.exists(f"{self.dir}/{self.name}"):
             try:

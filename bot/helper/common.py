@@ -359,10 +359,14 @@ class TaskConfig:
             self.split_size = min(self.split_size, self.max_split_size)
 
             if not self.as_doc:
-                self.as_doc = not self.as_med if self.as_med else (
-                    self.user_dict.get("as_doc", False)
-                    or config_dict["AS_DOCUMENT"]
-                    and "as_doc" not in self.user_dict
+                self.as_doc = (
+                    not self.as_med
+                    if self.as_med
+                    else (
+                        self.user_dict.get("as_doc", False)
+                        or config_dict["AS_DOCUMENT"]
+                        and "as_doc" not in self.user_dict
+                    )
                 )
 
             self.thumbnail_layout = (
@@ -502,6 +506,57 @@ class TaskConfig:
                 "Reply to text file or to telegram message that have links seperated by new line!",
             )
 
+    async def decompress_zst(self, dl_path, is_dir=False):
+        if is_dir:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    if file_.endswith(".zst"):
+                        f_path = ospath.join(dirpath, file_)
+                        out_path = get_base_name(f_path)
+                        cmd = ["unzstd", f_path, "-o", out_path]
+                        if self.is_cancelled:
+                            return ""
+                        async with subprocess_lock:
+                            self.suproc = await create_subprocess_exec(
+                                *cmd, stderr=PIPE
+                            )
+                        _, stderr = await self.suproc.communicate()
+                        if self.is_cancelled:
+                            return ""
+                        code = self.suproc.returncode
+                        if code != 0:
+                            try:
+                                stderr = stderr.decode().strip()
+                            except:
+                                stderr = "Unable to decode the error!"
+                            LOGGER.error(
+                                f"{stderr}. Unable to extract zst file!. Path: {f_path}"
+                            )
+                        elif not self.seed:
+                            await remove(f_path)
+            return
+        elif dl_path.endswith(".zst"):
+            out_path = get_base_name(dl_path)
+            cmd = ["unzstd", dl_path, "-o", out_path]
+            if self.is_cancelled:
+                return ""
+            async with subprocess_lock:
+                self.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+            _, stderr = await self.suproc.communicate()
+            if self.is_cancelled:
+                return ""
+            code = self.suproc.returncode
+            if code != 0:
+                try:
+                    stderr = stderr.decode().strip()
+                except:
+                    stderr = "Unable to decode the error!"
+                LOGGER.error(f"{stderr}. Unable to extract zst file!. Path: {dl_path}")
+            elif not self.seed:
+                await remove(dl_path)
+            return out_path
+        return dl_path
+
     async def proceed_extract(self, dl_path, gid):
         pswd = self.extract if isinstance(self.extract, str) else ""
         try:
@@ -514,6 +569,7 @@ class TaskConfig:
                     up_path = f"{self.new_dir}/{self.name}"
                 else:
                     up_path = dl_path
+                await self.decompress_zst(dl_path, is_dir=True)
                 for dirpath, _, files in await sync_to_async(
                     walk, dl_path, topdown=False
                 ):
@@ -522,6 +578,7 @@ class TaskConfig:
                             is_first_archive_split(file_)
                             or is_archive(file_)
                             and not file_.endswith(".rar")
+                            and not file_.endswith(".zst")
                         ):
                             f_path = ospath.join(dirpath, file_)
                             t_path = (
@@ -572,6 +629,7 @@ class TaskConfig:
                                     self.is_cancelled = True
                 return up_path
             else:
+                dl_path = await self.decompress_zst(dl_path)
                 up_path = get_base_name(dl_path)
                 if self.seed:
                     self.new_dir = f"{self.dir}10000"

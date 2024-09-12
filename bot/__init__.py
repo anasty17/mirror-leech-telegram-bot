@@ -90,6 +90,7 @@ nzb_listener_lock = Lock()
 jd_lock = Lock()
 cpu_eater_lock = Lock()
 subprocess_lock = Lock()
+same_directory_lock = Lock()
 status_dict = {}
 task_dict = {}
 rss_dict = {}
