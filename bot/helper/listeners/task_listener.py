@@ -90,7 +90,7 @@ class TaskListener(TaskConfig):
                         ):
                             break
                     await sleep(1)
-
+        await sleep(2) # wait for qbitorrent or any other package to rearrange files and folders like removing !qB
         async with task_dict_lock:
             if (
                 self.same_dir
