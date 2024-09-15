@@ -729,7 +729,7 @@ async def edit_bot_settings(client, query):
         await query.answer(
             "Syncronization Started. It takes up to 2 sec!", show_alert=True
         )
-        await get_qb_options()
+        await sync_to_async(get_qb_options)
         if config_dict["DATABASE_URL"]:
             await database.save_qbit_settings()
     elif data[1] == "emptyaria":
