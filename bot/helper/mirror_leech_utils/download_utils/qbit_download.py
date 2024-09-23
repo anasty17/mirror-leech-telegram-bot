@@ -143,5 +143,5 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
     except Exception as e:
         await listener.on_download_error(f"{e}")
     finally:
-        if tpath and await aiopath.exists(listener.link):
-            await remove(listener.link)
+        if tpath and await aiopath.exists(tpath):
+            await remove(tpath)

@@ -324,7 +324,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 **7. qBittorrent/Aria2c/Sabnzbd**
 
 - `TORRENT_TIMEOUT`: Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds. `Int`
-- `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent web files selection. Format of URL should
+- `BASE_URL`: Valid BASE URL where the bot is deployed to use torrent/nzb web files selection. Format of URL should
   be `http://myip`, where `myip` is the IP/Domain(public) of your bot or if you have chosen port other than `80` so
   write it in this format `http://myip:port` (`http` and not `https`). `Str`
 - `BASE_URL_PORT`: Which is the **BASE_URL** Port. Default is `80`. `Int`
@@ -355,8 +355,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
 - `RSS_DELAY`: Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in
   sec. `Int`
-- `RSS_CHAT`: Chat `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID` where rss links will be sent. If you want message to be sent to the channel then add
-  channel id. Add `-100` before channel id. `Int`|`Str`
+- `RSS_CHAT`: Chat `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID` where rss links will be sent. If you want message to be sent to the channel then add channel id. Add `-100` before channel id. `Int`|`Str`
     - **RSS NOTES**: `RSS_CHAT` is required, otherwise monitor will not work. You must use `USER_STRING_SESSION` --OR--
       *CHANNEL*. If using channel then bot should be added in both channel and group(linked to channel) and `RSS_CHAT`
       is the channel id, so messages sent by the bot to channel will be forwarded to group. Otherwise

@@ -272,7 +272,6 @@ async def take_ss(video_file, ss_nb) -> bool:
         return dirpath
     else:
         LOGGER.error("take_ss: Can't get the duration of video")
-        await rmtree(dirpath, ignore_errors=True)
         return False
 
 

@@ -406,7 +406,7 @@ class YtDlp(TaskListener):
             yt_opts = opt.split("|")
             for ytopt in yt_opts:
                 key, value = map(str.strip, ytopt.split(":", 1))
-                if key == "postprocessors":
+                if key in ["postprocessors", "download_ranges"]:
                     continue
                 if key == "format" and not self.select:
                     if value.startswith("ba/b-"):

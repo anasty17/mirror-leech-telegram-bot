@@ -8,7 +8,7 @@ from bot import (
     intervals,
     qbittorrent_client,
     config_dict,
-    QbTorrents,
+    qb_torrents,
     qb_listener_lock,
     LOGGER,
 )
@@ -25,8 +25,8 @@ async def _remove_torrent(hash_, tag):
         qbittorrent_client.torrents_delete, torrent_hashes=hash_, delete_files=True
     )
     async with qb_listener_lock:
-        if tag in QbTorrents:
-            del QbTorrents[tag]
+        if tag in qb_torrents:
+            del qb_torrents[tag]
     await sync_to_async(qbittorrent_client.torrents_delete_tags, tags=tag)
 
 
@@ -100,8 +100,8 @@ async def _on_download_complete(tor):
                 await _remove_torrent(ext_hash, tag)
                 return
             async with qb_listener_lock:
-                if tag in QbTorrents:
-                    QbTorrents[tag]["seeding"] = True
+                if tag in qb_torrents:
+                    qb_torrents[tag]["seeding"] = True
                 else:
                     return
             await update_status_message(task.listener.message.chat.id)
@@ -123,12 +123,12 @@ async def _qb_listener():
                     break
                 for tor_info in torrents:
                     tag = tor_info.tags
-                    if tag not in QbTorrents:
+                    if tag not in qb_torrents:
                         continue
                     state = tor_info.state
                     if state == "metaDL":
                         TORRENT_TIMEOUT = config_dict["TORRENT_TIMEOUT"]
-                        QbTorrents[tag]["stalled_time"] = time()
+                        qb_torrents[tag]["stalled_time"] = time()
                         if (
                             TORRENT_TIMEOUT
                             and time() - tor_info.added_on >= TORRENT_TIMEOUT
@@ -140,14 +140,14 @@ async def _qb_listener():
                                 torrent_hashes=tor_info.hash,
                             )
                     elif state == "downloading":
-                        QbTorrents[tag]["stalled_time"] = time()
-                        if not QbTorrents[tag]["stop_dup_check"]:
-                            QbTorrents[tag]["stop_dup_check"] = True
+                        qb_torrents[tag]["stalled_time"] = time()
+                        if not qb_torrents[tag]["stop_dup_check"]:
+                            qb_torrents[tag]["stop_dup_check"] = True
                             await _stop_duplicate(tor_info)
                     elif state == "stalledDL":
                         TORRENT_TIMEOUT = config_dict["TORRENT_TIMEOUT"]
                         if (
-                            not QbTorrents[tag]["rechecked"]
+                            not qb_torrents[tag]["rechecked"]
                             and 0.99989999999999999 < tor_info.progress < 1
                         ):
                             msg = f"Force recheck - Name: {tor_info.name} Hash: "
@@ -158,10 +158,10 @@ async def _qb_listener():
                                 qbittorrent_client.torrents_recheck,
                                 torrent_hashes=tor_info.hash,
                             )
-                            QbTorrents[tag]["rechecked"] = True
+                            qb_torrents[tag]["rechecked"] = True
                         elif (
                             TORRENT_TIMEOUT
-                            and time() - QbTorrents[tag]["stalled_time"]
+                            and time() - qb_torrents[tag]["stalled_time"]
                             >= TORRENT_TIMEOUT
                         ):
                             await _on_download_error("Dead Torrent!", tor_info)
@@ -181,16 +181,17 @@ async def _qb_listener():
                         )
                     elif (
                         tor_info.completion_on != 0
-                        and not QbTorrents[tag]["uploaded"]
+                        and not qb_torrents[tag]["uploaded"]
                         and state
                         not in ["checkingUP", "checkingDL", "checkingResumeData"]
                     ):
-                        QbTorrents[tag]["uploaded"] = True
+                        qb_torrents[tag]["uploaded"] = True
                         await _on_download_complete(tor_info)
                     elif (
-                        state in ["pausedUP", "pausedDL"] and QbTorrents[tag]["seeding"]
+                        state in ["pausedUP", "pausedDL"]
+                        and qb_torrents[tag]["seeding"]
                     ):
-                        QbTorrents[tag]["seeding"] = False
+                        qb_torrents[tag]["seeding"] = False
                         await _onSeedFinish(tor_info)
                         await sleep(0.5)
             except Exception as e:
@@ -200,7 +201,7 @@ async def _qb_listener():
 
 async def on_download_start(tag):
     async with qb_listener_lock:
-        QbTorrents[tag] = {
+        qb_torrents[tag] = {
             "stalled_time": time(),
             "stop_dup_check": False,
             "rechecked": False,

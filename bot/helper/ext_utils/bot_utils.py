@@ -19,7 +19,8 @@ from .help_messages import (
 )
 
 COMMAND_USAGE = {}
-THREADPOOL = ThreadPoolExecutor(max_workers=99999)
+
+THREAD_POOL = ThreadPoolExecutor(max_workers=3000)
 
 
 class SetInterval:
@@ -205,7 +206,7 @@ def new_task(func):
 
 async def sync_to_async(func, *args, wait=True, **kwargs):
     pfunc = partial(func, *args, **kwargs)
-    future = bot_loop.run_in_executor(THREADPOOL, pfunc)
+    future = bot_loop.run_in_executor(THREAD_POOL, pfunc)
     return await future if wait else future
 
 
