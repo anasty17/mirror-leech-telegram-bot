@@ -232,8 +232,7 @@ async def add_jd_download(listener, path):
                     jdownloader.device.linkgrabber.remove_links,
                     package_ids=packages_to_remove,
                 )
-            async with jd_lock:
-                del jd_downloads[gid]
+            del jd_downloads[gid]
             return
 
         jd_downloads[gid]["ids"] = online_packages
@@ -268,13 +267,29 @@ async def add_jd_download(listener, path):
             del jd_downloads[gid]
         return
 
-    if listener.select and await JDownloaderHelper(listener).wait_for_configurations():
-        await retry_function(
-            jdownloader.device.linkgrabber.remove_links,
-            package_ids=online_packages,
-        )
-        listener.remove_from_same_dir()
-        return
+    if listener.select:
+        if await JDownloaderHelper(listener).wait_for_configurations():
+            await retry_function(
+                jdownloader.device.linkgrabber.remove_links,
+                package_ids=online_packages,
+            )
+            listener.remove_from_same_dir()
+            return
+        else:
+            queued_downloads = await retry_function(
+                jdownloader.device.linkgrabber.query_packages, [{"saveTo": True}])
+            updated_packages = [
+                qd["uuid"] for qd in queued_downloads if qd["saveTo"].startswith(path)
+            ]
+            async with jd_lock:
+                online_packages = [
+                    pack for pack in online_packages if pack in updated_packages
+                ]
+                if gid not in online_packages:
+                    del jd_downloads[gid]
+                    gid = online_packages[0]
+                    jd_downloads[gid] = {"status": "collect"}
+                jd_downloads[gid]["ids"] = online_packages
 
     add_to_queue, event = await check_running_tasks(listener)
     if add_to_queue:
