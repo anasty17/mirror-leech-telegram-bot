@@ -124,9 +124,10 @@ programming in Python.
 
 ## Rclone
 
-- Rclone transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
-- Ability to choose config, remote and path from list with buttons (global, user and task option)
-- Ability to set rclone flags for each task or globally from config (global, user and task option)
+- Transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
+- Ability to choose config, remote and path from list with or without buttons (global, user and task option)
+- Ability to set flags for each task or globally from config (global, user and task option)
+- Abitity to select specific files or folders to download/copy using buttons (task option)
 - Rclone.conf (global and user option)
 - Rclone serve for combine remote to use it as index from all remotes (global option)
 - Upload destination (global, user and task option)

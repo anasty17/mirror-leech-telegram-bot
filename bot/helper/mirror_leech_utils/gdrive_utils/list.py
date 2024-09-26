@@ -68,6 +68,7 @@ async def id_updates(_, query, obj):
             obj.event.set()
     elif data[1] == "ps":
         if obj.page_step == int(data[2]):
+            obj.query_proc = False
             return
         obj.page_step = int(data[2])
         await obj.get_items_buttons()
