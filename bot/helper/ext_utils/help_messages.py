@@ -30,10 +30,27 @@ multi_link = """<b>Multi links only by replying to first link/file</b>: -i
 
 /cmd -i 10(number of links/files)"""
 
-same_dir = """<b>Multi links within same upload directory only by replying to first link/file</b>: -m
+same_dir = """<b>Move file(s)/folder(s) to new folder</b>: -m
 
-/cmd -i 10(number of links/files) -m folder name (multi message)
-/cmd -b -m folder name (bulk-message/file)"""
+You can use this arg also to move multiple links/torrents contents to the same directory, so all links will be uploaded together as one task
+
+/cmd link -m new folder (only one link inside new folder) 
+/cmd -i 10(number of links/files) -m folder name (all links contents in one folder)
+/cmd -b -m folder name (reply to batch of message/file(each link on new line))
+
+While using bulk you can also use this arg with different folder name along with the links in message or file batch
+Example: 
+link1 -m folder1
+link2 -m folder1
+link3 -m folder2
+link4 -m folder2
+link5 -m folder3
+link6
+so link1 and link2 content will be uploaded from same folder which is folder1
+link3 and link4 content will be uploaded from same folder also which is folder2
+link5 will uploaded alone inside new folder named folder3
+link6 will get uploaded normally alone 
+"""
 
 thumb = """<b>Thumbnail for current task</b>: -t
 
@@ -84,13 +101,16 @@ Check here all <a href='https://rclone.org/flags/'>RcloneFlags</a>."""
 
 bulk = """<b>Bulk Download</b>: -b
 
-Bulk can be used by text message and by replying to text file contains links separated by new line.
-You can use it only by reply to message(text/file).
+Bulk can be used only by replying to text message or text file contains links separated by new line.
 Example:
 link1 -n new name -up remote1:path1 -rcf |key:value|key:value
 link2 -z -n new name -up remote2:path2
 link3 -e -n new name -up remote2:path2
-Reply to this example by this cmd -> /cmd -b(bulk) or /cmd -b -m folder name
+Reply to this example by this cmd -> /cmd -b(bulk)
+
+Note: Any arg along with the cmd will be setted to all links
+/cmd -b -up remote: -z -m folder name (all links contents in one zipped folder uploaded to one destination)
+so you can't set different upload destinations along with link incase you have added -m along with cmd
 You can set start and end of the links from the bulk like seed, with -b start:end or only end by -b :end or only start by -b start.
 The default start is from zero(first link) to inf."""
 

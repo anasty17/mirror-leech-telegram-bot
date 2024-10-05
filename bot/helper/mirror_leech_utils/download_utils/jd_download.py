@@ -273,11 +273,12 @@ async def add_jd_download(listener, path):
                 jdownloader.device.linkgrabber.remove_links,
                 package_ids=online_packages,
             )
-            listener.remove_from_same_dir()
+            await listener.remove_from_same_dir()
             return
         else:
             queued_downloads = await retry_function(
-                jdownloader.device.linkgrabber.query_packages, [{"saveTo": True}])
+                jdownloader.device.linkgrabber.query_packages, [{"saveTo": True}]
+            )
             updated_packages = [
                 qd["uuid"] for qd in queued_downloads if qd["saveTo"].startswith(path)
             ]

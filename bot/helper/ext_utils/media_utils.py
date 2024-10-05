@@ -38,7 +38,8 @@ async def convert_video(listener, video_file, ext, retry=False):
         cmd = ["ffmpeg", "-i", video_file, "-map", "0", "-c", "copy", output]
     if listener.is_cancelled:
         return False
-    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    async with subprocess_lock:
+        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.is_cancelled:
         return False
@@ -77,7 +78,8 @@ async def convert_audio(listener, audio_file, ext):
     ]
     if listener.is_cancelled:
         return False
-    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    async with subprocess_lock:
+        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.is_cancelled:
         return False
@@ -105,7 +107,7 @@ async def create_thumb(msg, _id=""):
         _id = msg.id
         path = f"{DOWNLOAD_DIR}Thumbnails"
     else:
-        path = 'Thumbnails'
+        path = "Thumbnails"
     await makedirs(path, exist_ok=True)
     photo_dir = await msg.download()
     output = ospath.join(path, f"{_id}.jpg")
@@ -598,7 +600,8 @@ async def create_sample_video(listener, video_file, sample_duration, part_durati
 
     if listener.is_cancelled:
         return False
-    listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
+    async with subprocess_lock:
+        listener.suproc = await create_subprocess_exec(*cmd, stderr=PIPE)
     _, stderr = await listener.suproc.communicate()
     if listener.is_cancelled:
         return False

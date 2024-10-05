@@ -6,7 +6,7 @@ from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
 from yt_dlp import YoutubeDL
 
-from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER, bot_loop
+from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER, bot_loop, task_dict_lock
 from ..helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
@@ -340,9 +340,9 @@ class YtDlp(TaskListener):
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
+        self.folder_name = args["-m"]
 
         is_bulk = args["-b"]
-        folder_name = args["-m"]
 
         bulk_start = 0
         bulk_end = 0
@@ -357,17 +357,34 @@ class YtDlp(TaskListener):
             is_bulk = True
 
         if not is_bulk:
-            if folder_name:
-                folder_name = f"/{folder_name}"
-                if not self.same_dir:
-                    self.same_dir = {
-                        "total": self.multi,
-                        "tasks": set(),
-                        "name": folder_name,
-                    }
-                self.same_dir["tasks"].add(self.mid)
-            elif self.same_dir:
-                self.same_dir["total"] -= 1
+            if self.multi > 0:
+                if self.folder_name:
+                    self.folder_name = f"/{self.folder_name}"
+                    async with task_dict_lock:
+                        if self.folder_name in self.same_dir:
+                            self.same_dir[self.folder_name]["tasks"].add(self.mid)
+                            for fd_name in self.same_dir:
+                                if fd_name != self.folder_name:
+                                    self.same_dir[fd_name]["total"] -= 1
+                        elif self.same_dir:
+                            self.same_dir[self.folder_name] = {
+                                "total": self.multi,
+                                "tasks": {self.mid},
+                            }
+                            for fd_name in self.same_dir:
+                                if fd_name != self.folder_name:
+                                    self.same_dir[fd_name]["total"] -= 1
+                        else:
+                            self.same_dir = {
+                                self.folder_name: {
+                                    "total": self.multi,
+                                    "tasks": {self.mid},
+                                }
+                            }
+                elif self.same_dir:
+                    async with task_dict_lock:
+                        for fd_name in self.same_dir:
+                            self.same_dir[fd_name]["total"] -= 1
         else:
             await self.init_bulk(input_list, bulk_start, bulk_end, YtDlp)
             return
@@ -375,7 +392,7 @@ class YtDlp(TaskListener):
         if len(self.bulk) != 0:
             del self.bulk[0]
 
-        path = f"{DOWNLOAD_DIR}{self.mid}{folder_name}"
+        path = f"{DOWNLOAD_DIR}{self.mid}{self.folder_name}"
 
         await self.get_tag(text)
 
@@ -388,7 +405,7 @@ class YtDlp(TaskListener):
             await send_message(
                 self.message, COMMAND_USAGE["yt"][0], COMMAND_USAGE["yt"][1]
             )
-            self.remove_from_same_dir()
+            await self.remove_from_same_dir()
             return
 
         if "mdisk.me" in self.link:
@@ -398,7 +415,7 @@ class YtDlp(TaskListener):
             await self.before_start()
         except Exception as e:
             await send_message(self.message, e)
-            self.remove_from_same_dir()
+            await self.remove_from_same_dir()
             return
 
         options = {"usenetrc": True, "cookiefile": "cookies.txt"}
@@ -435,15 +452,15 @@ class YtDlp(TaskListener):
         except Exception as e:
             msg = str(e).replace("<", " ").replace(">", " ")
             await send_message(self.message, f"{self.tag} {msg}")
-            self.remove_from_same_dir()
+            await self.remove_from_same_dir()
             return
         finally:
-            await self.run_multi(input_list, folder_name, YtDlp)
+            await self.run_multi(input_list, YtDlp)
 
         if not qual:
             qual = await YtSelection(self).get_quality(result)
             if qual is None:
-                self.remove_from_same_dir()
+                await self.remove_from_same_dir()
                 return
 
         LOGGER.info(f"Downloading with YT-DLP: {self.link}")

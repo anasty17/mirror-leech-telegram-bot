@@ -61,10 +61,15 @@ class TaskListener(TaskConfig):
         except:
             pass
 
-    def remove_from_same_dir(self):
-        if self.same_dir and self.mid in self.same_dir["tasks"]:
-            self.same_dir["tasks"].remove(self.mid)
-            self.same_dir["total"] -= 1
+    async def remove_from_same_dir(self):
+        async with task_dict_lock:
+            if (
+                self.folder_name
+                and self.same_dir
+                and self.mid in self.same_dir[self.folder_name]["tasks"]
+            ):
+                self.same_dir[self.folder_name]["tasks"].remove(self.mid)
+                self.same_dir[self.folder_name]["total"] -= 1
 
     async def on_download_start(self):
         if (
@@ -77,43 +82,48 @@ class TaskListener(TaskConfig):
             )
 
     async def on_download_complete(self):
+        await sleep(2)
         multi_links = False
-        if self.same_dir and self.mid in self.same_dir["tasks"]:
+        if (
+            self.folder_name
+            and self.same_dir
+            and self.mid in self.same_dir[self.folder_name]["tasks"]
+        ):
             async with same_directory_lock:
                 while True:
                     async with task_dict_lock:
-                        if self.mid not in self.same_dir["tasks"]:
+                        if self.mid not in self.same_dir[self.folder_name]["tasks"]:
                             return
-                        if self.mid in self.same_dir["tasks"] and (
-                            self.same_dir["total"] == 1
-                            or len(self.same_dir["tasks"]) > 1
+                        if self.mid in self.same_dir[self.folder_name]["tasks"] and (
+                            self.same_dir[self.folder_name]["total"] <= 1
+                            or len(self.same_dir[self.folder_name]["tasks"]) > 1
                         ):
+                            if self.same_dir[self.folder_name]["total"] > 1:
+                                self.same_dir[self.folder_name]["tasks"].remove(
+                                    self.mid
+                                )
+                                self.same_dir[self.folder_name]["total"] -= 1
+                                spath = f"{self.dir}{self.folder_name}"
+                                des_id = list(self.same_dir[self.folder_name]["tasks"])[
+                                    0
+                                ]
+                                des_path = f"{DOWNLOAD_DIR}{des_id}{self.folder_name}"
+                                await makedirs(des_path, exist_ok=True)
+                                LOGGER.info(f"Moving files from {self.mid} to {des_id}")
+                                for item in await listdir(spath):
+                                    if item.endswith((".aria2", ".!qB")):
+                                        continue
+                                    item_path = f"{self.dir}{self.folder_name}/{item}"
+                                    if item in await listdir(des_path):
+                                        await move(
+                                            item_path, f"{des_path}/{self.mid}-{item}"
+                                        )
+                                    else:
+                                        await move(item_path, f"{des_path}/{item}")
+                                multi_links = True
                             break
                     await sleep(1)
-        await sleep(2) # wait for qbitorrent or any other package to rearrange files and folders like removing !qB
         async with task_dict_lock:
-            if (
-                self.same_dir
-                and self.same_dir["total"] > 1
-                and self.mid in self.same_dir["tasks"]
-            ):
-                self.same_dir["tasks"].remove(self.mid)
-                self.same_dir["total"] -= 1
-                folder_name = self.same_dir["name"]
-                spath = f"{self.dir}{folder_name}"
-                des_path = f"{DOWNLOAD_DIR}{list(self.same_dir["tasks"])[0]}{folder_name}"
-                await makedirs(des_path, exist_ok=True)
-                for item in await listdir(spath):
-                    if item.endswith((".aria2", ".!qB")):
-                        continue
-                    item_path = f"{self.dir}{folder_name}/{item}"
-                    if item in await listdir(des_path):
-                        await move(item_path, f"{des_path}/{self.mid}-{item}")
-                    else:
-                        await move(item_path, f"{des_path}/{item}")
-                multi_links = True
-            elif self.same_dir and self.mid not in self.same_dir["tasks"]:
-                return
             download = task_dict[self.mid]
             self.name = download.name()
             gid = download.gid()
@@ -127,11 +137,13 @@ class TaskListener(TaskConfig):
         files_to_delete = []
 
         if multi_links:
-            await self.on_upload_error(f"{self.name} Downloaded!\n\nWaiting for other tasks to finish...")
+            await self.on_upload_error(
+                f"{self.name} Downloaded!\n\nWaiting for other tasks to finish..."
+            )
             return
 
-        if self.same_dir:
-            self.name = self.same_dir["name"].split("/")[-1]
+        if self.folder_name:
+            self.name = self.folder_name.split("/")[-1]
 
         if not await aiopath.exists(f"{self.dir}/{self.name}"):
             try:
@@ -354,7 +366,7 @@ class TaskListener(TaskConfig):
             if self.mid in task_dict:
                 del task_dict[self.mid]
             count = len(task_dict)
-            self.remove_from_same_dir()
+        await self.remove_from_same_dir()
         msg = f"{self.tag} Download: {escape(error)}"
         await send_message(self.message, msg, button)
         if count == 0:
