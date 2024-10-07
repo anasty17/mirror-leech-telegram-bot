@@ -137,7 +137,7 @@ class Mirror(TaskListener):
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
-        self.folder_name = args["-m"]
+        self.folder_name = f"/{args["-m"]}"
 
         headers = args["-h"]
         is_bulk = args["-b"]
@@ -175,7 +175,6 @@ class Mirror(TaskListener):
                     self.seed = False
                     ratio = None
                     seed_time = None
-                    self.folder_name = f"/{self.folder_name}"
                     async with task_dict_lock:
                         if self.folder_name in self.same_dir:
                             self.same_dir[self.folder_name]["tasks"].add(self.mid)

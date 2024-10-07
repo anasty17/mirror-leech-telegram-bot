@@ -34,12 +34,12 @@ same_dir = """<b>Move file(s)/folder(s) to new folder</b>: -m
 
 You can use this arg also to move multiple links/torrents contents to the same directory, so all links will be uploaded together as one task
 
-/cmd link -m new folder (only one link inside new folder) 
+/cmd link -m new folder (only one link inside new folder)
 /cmd -i 10(number of links/files) -m folder name (all links contents in one folder)
 /cmd -b -m folder name (reply to batch of message/file(each link on new line))
 
 While using bulk you can also use this arg with different folder name along with the links in message or file batch
-Example: 
+Example:
 link1 -m folder1
 link2 -m folder1
 link3 -m folder2
@@ -49,7 +49,7 @@ link6
 so link1 and link2 content will be uploaded from same folder which is folder1
 link3 and link4 content will be uploaded from same folder also which is folder2
 link5 will uploaded alone inside new folder named folder3
-link6 will get uploaded normally alone 
+link6 will get uploaded normally alone
 """
 
 thumb = """<b>Thumbnail for current task</b>: -t

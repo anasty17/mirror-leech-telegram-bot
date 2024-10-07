@@ -340,7 +340,7 @@ class YtDlp(TaskListener):
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
-        self.folder_name = args["-m"]
+        self.folder_name = f"/{args["-m"]}"
 
         is_bulk = args["-b"]
 
@@ -359,7 +359,6 @@ class YtDlp(TaskListener):
         if not is_bulk:
             if self.multi > 0:
                 if self.folder_name:
-                    self.folder_name = f"/{self.folder_name}"
                     async with task_dict_lock:
                         if self.folder_name in self.same_dir:
                             self.same_dir[self.folder_name]["tasks"].add(self.mid)
