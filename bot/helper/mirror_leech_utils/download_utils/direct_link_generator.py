@@ -29,8 +29,6 @@ def direct_link_generator(link):
     domain = urlparse(link).hostname
     if not domain:
         raise DirectDownloadLinkException("ERROR: Invalid URL")
-    if "youtube.com" in domain or "youtu.be" in domain:
-        raise DirectDownloadLinkException("ERROR: Use ytdl cmds for Youtube links")
     elif "yadi.sk" in link or "disk.yandex." in link:
         return yandex_disk(link)
     elif "mediafire.com" in domain:

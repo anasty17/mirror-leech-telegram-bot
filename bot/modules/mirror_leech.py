@@ -1,4 +1,4 @@
-from aiofiles.os import path as aiopath, remove
+from aiofiles.os import path as aiopath
 from base64 import b64encode
 from pyrogram.filters import command
 from pyrogram.handlers import MessageHandler
@@ -43,7 +43,6 @@ from ..helper.mirror_leech_utils.download_utils.telegram_download import (
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message, get_tg_link_message
-from myjd.exception import MYJDException
 
 
 class Mirror(TaskListener):
@@ -332,15 +331,7 @@ class Mirror(TaskListener):
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
         elif self.is_jd:
-            try:
-                await add_jd_download(self, path)
-            except (Exception, MYJDException) as e:
-                await send_message(self.message, f"{e}".strip())
-                await self.remove_from_same_dir()
-                return
-            finally:
-                if await aiopath.exists(self.link):
-                    await remove(self.link)
+            await add_jd_download(self, path)
         elif self.is_qbit:
             await add_qb_torrent(self, path, ratio, seed_time)
         elif self.is_nzb:

@@ -67,7 +67,7 @@ class JDownloaderStatus:
         self._info = {}
 
     async def _update(self):
-        self._info = await get_download(int(self._gid), self._info)
+        self._info = await get_download(self._gid, self._info)
 
     def progress(self):
         try:
