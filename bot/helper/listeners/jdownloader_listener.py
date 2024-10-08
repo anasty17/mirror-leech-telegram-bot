@@ -53,18 +53,9 @@ async def _jd_listener():
                 intervals["jd"] = ""
                 break
             try:
-                await wait_for(
-                    retry_function(jdownloader.device.jd.version), timeout=10
-                )
+                await jdownloader.check_jdownloader_state()
             except:
-                is_connected = await jdownloader.jdconnect()
-                if not is_connected:
-                    LOGGER.error(jdownloader.error)
-                    continue
-                jdownloader.boot()
-                isDeviceConnected = await jdownloader.connectToDevice()
-                if not isDeviceConnected:
-                    continue
+                continue
             try:
                 packages = await jdownloader.device.downloads.query_packages(
                     [{"finished": True, "saveTo": True}]
