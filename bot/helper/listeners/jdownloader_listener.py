@@ -85,13 +85,12 @@ async def _jd_listener():
                             for dl in all_packages
                             if dl["saveTo"].startswith(path)
                         ]
-                        if len(jd_downloads[d_gid]["ids"]) == 0:
-                            await remove_download(d_gid)
+                    if len(jd_downloads[d_gid]["ids"]) == 0:
+                        await remove_download(d_gid)
 
-            completed_packages = [
+            if completed_packages := [
                 pack["uuid"] for pack in packages if pack.get("finished", False)
-            ]
-            if completed_packages:
+            ]:
                 for d_gid, d_dict in list(jd_downloads.items()):
                     if d_dict["status"] == "down":
                         is_finished = all(
