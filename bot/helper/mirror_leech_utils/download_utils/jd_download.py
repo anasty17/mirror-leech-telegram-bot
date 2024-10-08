@@ -7,6 +7,7 @@ from aiofiles.os import path as aiopath, remove
 from aiofiles import open as aiopen
 from base64 import b64encode
 from secrets import token_urlsafe
+from os import path as ospath
 from myjd.exception import MYJDException
 
 from bot import (
@@ -120,7 +121,7 @@ async def add_jd_download(listener, path):
                 if odl_list := [
                     od["uuid"]
                     for od in odl
-                    if od.get("saveTo", "").startswith("/root/Downloads/")
+                    if not od.get("saveTo", "").startswith(path)
                 ]:
                     await retry_function(
                         jdownloader.device.linkgrabber.remove_links,
@@ -180,20 +181,14 @@ async def add_jd_download(listener, path):
                     raise MYJDException(error)
 
                 for pack in queued_downloads:
-                    online = pack.get("onlineCount", 1)
-                    if online == 0:
+                    if pack.get("onlineCount", 1) == 0:
                         error = f"{pack.get('name', '')}"
                         LOGGER.error(error)
                         corrupted_packages.append(pack["uuid"])
                         continue
                     save_to = pack["saveTo"]
                     if not name:
-                        if save_to.startswith("/root/Downloads/"):
-                            name = save_to.replace("/root/Downloads/", "", 1).split(
-                                "/", 1
-                            )[0]
-                        else:
-                            name = save_to.replace(f"{path}/", "", 1).split("/", 1)[0]
+                        name = ospath.basename(save_to)
 
                     if (
                         pack.get("tempUnknownCount", 0) > 0
@@ -203,10 +198,10 @@ async def add_jd_download(listener, path):
 
                     listener.size += pack.get("bytesTotal", 0)
                     online_packages.append(pack["uuid"])
-                    if save_to.startswith("/root/Downloads/"):
+                    if not save_to.startswith(path):
                         await retry_function(
                             jdownloader.device.linkgrabber.set_download_directory,
-                            save_to.replace("/root/Downloads", path, 1),
+                            ospath.join(path, name),
                             [pack["uuid"]],
                         )
 
