@@ -340,7 +340,7 @@ class YtDlp(TaskListener):
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
-        self.folder_name = f"/{args["-m"]}"
+        self.folder_name = f"/{args["-m"]}" if len(args["-m"]) > 0 else ""
 
         is_bulk = args["-b"]
 
