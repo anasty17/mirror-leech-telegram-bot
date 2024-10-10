@@ -168,6 +168,7 @@ async def add_jd_download(listener, path):
                             "bytesTotal": True,
                             "saveTo": True,
                             "availableOnlineCount": True,
+                            "availableOfflineCount": True,
                             "availableTempUnknownCount": True,
                             "availableUnknownCount": True,
                         }
@@ -199,6 +200,7 @@ async def add_jd_download(listener, path):
                     if (
                         pack.get("tempUnknownCount", 0) > 0
                         or pack.get("unknownCount", 0) > 0
+                        or pack.get("offlineCount", 0) > 0
                     ):
                         remove_unknown = True
 

@@ -136,7 +136,7 @@ def direct_link_generator(link):
             "teraboxlink.com",
             "freeterabox.com",
             "1024terabox.com",
-            "teraboxshare.com"
+            "teraboxshare.com",
         ]
     ):
         return terabox(link)
@@ -229,6 +229,7 @@ def mediafire(url, session=None):
         r"https?:\/\/download\d+\.mediafire\.com\/\S+\/\S+\/\S+", url
     ):
         return final_link[0]
+
     def _repair_download(url, session):
         try:
             html = HTML(session.get(url).text)
@@ -236,6 +237,7 @@ def mediafire(url, session=None):
                 return mediafire(f"https://mediafire.com/{new_link[0]}")
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+
     if session is None:
         session = create_scraper()
         parsed_url = urlparse(url)
@@ -1101,6 +1103,7 @@ def mediafireFolder(url):
         session = create_scraper()
         parsed_url = urlparse(url)
         url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+
         def __repair_download(url):
             try:
                 html = HTML(session.get(url).text)
@@ -1108,6 +1111,7 @@ def mediafireFolder(url):
                     return __scraper(f"https://mediafire.com/{new_link[0]}")
             except:
                 return
+
         try:
             html = HTML(session.get(url).text)
         except:
