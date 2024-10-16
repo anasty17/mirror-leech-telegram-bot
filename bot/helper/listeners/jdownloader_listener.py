@@ -1,6 +1,6 @@
-from asyncio import sleep, wait_for
+from asyncio import sleep
 
-from bot import intervals, jd_lock, jd_downloads, LOGGER
+from bot import intervals, jd_lock, jd_downloads
 from ..ext_utils.bot_utils import new_task, retry_function
 from ..ext_utils.jdownloader_booter import jdownloader
 from ..ext_utils.status_utils import get_task_by_gid
@@ -12,7 +12,7 @@ async def remove_download(gid):
         return
     await retry_function(
         jdownloader.device.downloads.remove_links,
-        package_ids=[gid],
+        package_ids=jd_downloads[gid]["ids"],
     )
     if task := await get_task_by_gid(gid):
         await task.listener.on_download_error("Download removed manually!")

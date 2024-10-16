@@ -112,8 +112,6 @@ def trim_path(path):
 async def add_jd_download(listener, path):
     try:
         async with jd_lock:
-            gid = token_urlsafe(12)
-            jd_downloads[gid] = {"status": "collect", "path": path}
             if jdownloader.device is None:
                 raise MYJDException(jdownloader.error)
 
@@ -141,6 +139,10 @@ async def add_jd_download(listener, path):
                         jdownloader.device.linkgrabber.remove_links,
                         package_ids=odl_list,
                     )
+
+            gid = token_urlsafe(12)
+            jd_downloads[gid] = {"status": "collect", "path": path}
+
             if await aiopath.exists(listener.link):
                 async with aiopen(listener.link, "rb") as dlc:
                     content = await dlc.read()
