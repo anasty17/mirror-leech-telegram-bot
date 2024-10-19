@@ -39,9 +39,9 @@ async def _on_download_started(api, gid):
         LOGGER.info(f"onDownloadStarted: {download.name} - Gid: {gid}")
         await sleep(1)
 
+    await sleep(2)
     if task := await get_task_by_gid(gid):
         download = await sync_to_async(api.get_download, gid)
-        await sleep(2)
         await sync_to_async(download.update)
         task.listener.name = download.name
         msg, button = await stop_duplicate_check(task.listener)
@@ -158,6 +158,7 @@ async def _on_download_stopped(_, gid):
 
 @loop_thread
 async def _on_download_error(api, gid):
+    await sleep(1)
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"
     try:

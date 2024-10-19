@@ -116,7 +116,6 @@ async def start_from_queued():
                 f_tasks = all_limit - all_
                 if queued_up and (not up_limit or up < up_limit):
                     for index, mid in enumerate(list(queued_up.keys()), start=1):
-                        f_tasks = all_limit - all_
                         await start_up_from_queued(mid)
                         f_tasks -= 1
                         if f_tasks == 0 or (up_limit and index >= up_limit - up):

@@ -367,7 +367,7 @@ class TaskListener(TaskConfig):
                 del task_dict[self.mid]
             count = len(task_dict)
         await self.remove_from_same_dir()
-        msg = f"{self.tag} Download: {escape(error)}"
+        msg = f"{self.tag} Download: {escape(str(error))}"
         await send_message(self.message, msg, button)
         if count == 0:
             await self.clean()
@@ -406,7 +406,7 @@ class TaskListener(TaskConfig):
             if self.mid in task_dict:
                 del task_dict[self.mid]
             count = len(task_dict)
-        await send_message(self.message, f"{self.tag} {escape(error)}")
+        await send_message(self.message, f"{self.tag} {escape(str(error))}")
         if count == 0:
             await self.clean()
         else:
