@@ -92,12 +92,12 @@ class JDownloader(MyJdApi):
             MYJDErrorEmailNotConfirmedException,
         ) as err:
             self.error = f"{err}".strip()
-            LOGGER.info(f"Failed to connect with jdownloader! ERROR: {self.error}")
+            LOGGER.error(f"Failed to connect with jdownloader! ERROR: {self.error}")
             self.device = None
             return False
         except MYJDException as e:
             self.error = f"{e}".strip()
-            LOGGER.info(
+            LOGGER.error(
                 f"Failed to connect with jdownloader! Retrying... ERROR: {self.error}"
             )
             return await self.jdconnect()
