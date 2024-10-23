@@ -8,8 +8,6 @@ from bot import (
     sabnzbd_client,
     LOGGER,
     config_dict,
-    non_queued_dl,
-    queue_dict_lock,
 )
 from ...ext_utils.bot_utils import bt_selection_buttons
 from ...ext_utils.task_manager import check_running_tasks
@@ -153,8 +151,6 @@ async def add_nzb(listener, path):
             await event.wait()
             if listener.is_cancelled:
                 return
-            async with queue_dict_lock:
-                non_queued_dl.add(listener.mid)
             async with task_dict_lock:
                 task_dict[listener.mid].queued = False
 

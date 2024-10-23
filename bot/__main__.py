@@ -264,7 +264,7 @@ async def main():
     if config_dict["DATABASE_URL"]:
         await database.db_load()
     await gather(
-        jdownloader.initiate(),
+        jdownloader.boot(),
         sync_to_async(clean_all),
         bot_settings.initiate_search_tools(),
         restart_notification(),

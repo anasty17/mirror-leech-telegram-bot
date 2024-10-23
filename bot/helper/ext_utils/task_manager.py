@@ -1,4 +1,4 @@
-from asyncio import Event, sleep
+from asyncio import Event
 
 from bot import (
     config_dict,
@@ -95,13 +95,13 @@ async def check_running_tasks(listener, state="dl"):
 async def start_dl_from_queued(mid: int):
     queued_dl[mid].set()
     del queued_dl[mid]
-    await sleep(0.7)
+    non_queued_dl.add(mid)
 
 
 async def start_up_from_queued(mid: int):
     queued_up[mid].set()
     del queued_up[mid]
-    await sleep(0.7)
+    non_queued_up.add(mid)
 
 
 async def start_from_queued():

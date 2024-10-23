@@ -1,32 +1,13 @@
-# -*- encoding: utf-8 -*-
-from Crypto.Cipher import AES
-from base64 import b64encode, b64decode
-from hashlib import sha256
-from hmac import new
 from json import dumps, loads, JSONDecodeError
 from httpx import AsyncClient, RequestError
 from httpx import AsyncHTTPTransport
-from time import time
-from urllib.parse import quote
 from functools import wraps
 
 from .exception import (
     MYJDApiException,
     MYJDConnectionException,
     MYJDDecodeException,
-    MYJDDeviceNotFoundException,
 )
-
-
-BS = 16
-
-
-def PAD(s):
-    return s + ((BS - len(s) % BS) * chr(BS - len(s) % BS)).encode()
-
-
-def UNPAD(s):
-    return s[: -s[-1]]
 
 
 class System:
@@ -254,7 +235,7 @@ class Linkgrabber:
         self.url = "/linkgrabberv2"
 
     async def clear_list(self):
-        return await self.device.action(f"{self.url}/clearList", http_action="POST")
+        return await self.device.action(f"{self.url}/clearList")
 
     async def move_to_downloadlist(self, link_ids=None, package_ids=None):
         """
@@ -679,8 +660,12 @@ class Downloads:
     async def move_to_new_package(
         self, link_ids, package_ids, new_pkg_name, download_path
     ):
-        params = link_ids, package_ids, new_pkg_name, download_path
+        params = [link_ids, package_ids, new_pkg_name, download_path]
         return await self.device.action(f"{self.url}/movetoNewPackage", params)
+
+    async def rename_link(self, link_id: list, new_name: str):
+        params = [link_id, new_name]
+        return await self.device.action(f"{self.url}/renameLink", params)
 
 
 class Captcha:
@@ -701,15 +686,12 @@ class Captcha:
 
 class Jddevice:
 
-    def __init__(self, jd, device_dict):
+    def __init__(self, jd):
         """This functions initializates the device instance.
         It uses the provided dictionary to create the device.
 
         :param device_dict: Device dictionary
         """
-        self.name = device_dict["name"]
-        self.device_id = device_dict["id"]
-        self.device_type = device_dict["type"]
         self.myjd = jd
         self.config = Config(self)
         self.linkgrabber = Linkgrabber(self)
@@ -719,105 +701,22 @@ class Jddevice:
         self.extensions = Extension(self)
         self.jd = Jd(self)
         self.system = System(self)
-        self.__direct_connection_info = None
-        self.__direct_connection_enabled = False
-        self.__direct_connection_cooldown = 0
-        self.__direct_connection_consecutive_failures = 0
-
-    async def __refresh_direct_connections(self):
-        response = await self.myjd.request_api(
-            "/device/getDirectConnectionInfos", "POST", None, self.__action_url()
-        )
-        if (
-            response is not None
-            and "data" in response
-            and "infos" in response["data"]
-            and len(response["data"]["infos"]) != 0
-        ):
-            self.__update_direct_connections(response["data"]["infos"])
-
-    def __update_direct_connections(self, direct_info):
-        """
-        Updates the direct_connections info keeping the order.
-        """
-        tmp = []
-        if self.__direct_connection_info is None:
-            tmp.extend({"conn": conn, "cooldown": 0} for conn in direct_info)
-            self.__direct_connection_info = tmp
-            return
-        #  We remove old connections not available anymore.
-        for i in self.__direct_connection_info:
-            if i["conn"] not in direct_info:
-                tmp.remove(i)
-            else:
-                direct_info.remove(i["conn"])
-        # We add new connections
-        tmp.extend({"conn": conn, "cooldown": 0} for conn in direct_info)
-        self.__direct_connection_info = tmp
 
     async def ping(self):
         return await self.action("/device/ping")
 
-    async def enable_direct_connection(self):
-        self.__direct_connection_enabled = True
-        await self.__refresh_direct_connections()
-
-    def disable_direct_connection(self):
-        self.__direct_connection_enabled = False
-        self.__direct_connection_info = None
-
-    async def action(self, path, params=(), http_action="POST"):
-        action_url = self.__action_url()
-        if (
-            self.__direct_connection_enabled
-            and self.__direct_connection_info is not None
-            and time() >= self.__direct_connection_cooldown
-        ):
-            return await self.__direct_connect(path, http_action, params, action_url)
-        response = await self.myjd.request_api(path, http_action, params, action_url)
+    async def action(self, path, params=()):
+        response = await self.myjd.request_api(path, params)
         if response is None:
             raise (MYJDConnectionException("No connection established\n"))
-        if (
-            self.__direct_connection_enabled
-            and time() >= self.__direct_connection_cooldown
-        ):
-            await self.__refresh_direct_connections()
         return response["data"]
-
-    async def __direct_connect(self, path, http_action, params, action_url):
-        for conn in self.__direct_connection_info:
-            if time() > conn["cooldown"]:
-                connection = conn["conn"]
-                api = "http://" + connection["ip"] + ":" + str(connection["port"])
-                response = await self.myjd.request_api(
-                    path, http_action, params, action_url, api
-                )
-                if response is not None:
-                    self.__direct_connection_info.remove(conn)
-                    self.__direct_connection_info.insert(0, conn)
-                    self.__direct_connection_consecutive_failures = 0
-                    return response["data"]
-                else:
-                    conn["cooldown"] = time() + 60
-        self.__direct_connection_consecutive_failures += 1
-        self.__direct_connection_cooldown = time() + (
-            60 * self.__direct_connection_consecutive_failures
-        )
-        response = await self.myjd.request_api(path, http_action, params, action_url)
-        if response is None:
-            raise (MYJDConnectionException("No connection established\n"))
-        await self.__refresh_direct_connections()
-        return response["data"]
-
-    def __action_url(self):
-        return f"/t_{self.myjd.get_session_token()}_{self.device_id}"
 
 
 class clientSession(AsyncClient):
 
     @wraps(AsyncClient.request)
     async def request(self, method: str, url: str, **kwargs):
-        kwargs.setdefault("timeout", 1.5)
+        kwargs.setdefault("timeout", 3)
         kwargs.setdefault("follow_redirects", True)
         return await super().request(method, url, **kwargs)
 
@@ -825,19 +724,9 @@ class clientSession(AsyncClient):
 class MyJdApi:
 
     def __init__(self):
-        self.__request_id = int(time() * 1000)
-        self.__api_url = "https://api.jdownloader.org"
-        self.__app_key = "mltb"
-        self.__api_version = 1
-        self.__devices = None
-        self.__login_secret = None
-        self.__device_secret = None
-        self.__session_token = None
-        self.__regain_token = None
-        self.__server_encryption_token = None
-        self.__device_encryption_token = None
-        self.__connected = False
+        self.__api_url = "http://127.0.0.1:3128"
         self._http_session = None
+        self.device = Jddevice(self)
 
     def _session(self):
         if self._http_session is not None:
@@ -851,337 +740,51 @@ class MyJdApi:
 
         return self._http_session
 
-    def get_session_token(self):
-        return self.__session_token
-
-    def is_connected(self):
-        """
-        Indicates if there is a connection established.
-        """
-        return self.__connected
-
-    def set_app_key(self, app_key):
-        """
-        Sets the APP Key.
-        """
-        self.__app_key = app_key
-
-    def __secret_create(self, email, password, domain):
-        """
-        Calculates the login_secret and device_secret
-
-        :param email: My.Jdownloader User email
-        :param password: My.Jdownloader User password
-        :param domain: The domain , if is for Server (login_secret) or Device (device_secret)
-        :return: secret hash
-
-        """
-        secret_hash = sha256()
-        secret_hash.update(
-            email.lower().encode("utf-8")
-            + password.encode("utf-8")
-            + domain.lower().encode("utf-8")
-        )
-        return secret_hash.digest()
-
-    def __update_encryption_tokens(self):
-        """
-        Updates the server_encryption_token and device_encryption_token
-
-        """
-        if self.__server_encryption_token is None:
-            old_token = self.__login_secret
-        else:
-            old_token = self.__server_encryption_token
-        new_token = sha256()
-        new_token.update(old_token + bytearray.fromhex(self.__session_token))
-        self.__server_encryption_token = new_token.digest()
-        new_token = sha256()
-        new_token.update(self.__device_secret + bytearray.fromhex(self.__session_token))
-        self.__device_encryption_token = new_token.digest()
-
-    def __signature_create(self, key, data):
-        """
-        Calculates the signature for the data given a key.
-
-        :param key:
-        :param data:
-        """
-        signature = new(key, data.encode("utf-8"), sha256)
-        return signature.hexdigest()
-
-    def __decrypt(self, secret_token, data):
-        """
-        Decrypts the data from the server using the provided token
-
-        :param secret_token:
-        :param data:
-        """
-        init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2 :]
-        decryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        return UNPAD(decryptor.decrypt(b64decode(data)))
-
-    def __encrypt(self, secret_token, data):
-        """
-        Encrypts the data from the server using the provided token
-
-        :param secret_token:
-        :param data:
-        """
-        data = PAD(data.encode("utf-8"))
-        init_vector = secret_token[: len(secret_token) // 2]
-        key = secret_token[len(secret_token) // 2 :]
-        encryptor = AES.new(key, AES.MODE_CBC, init_vector)
-        encrypted_data = b64encode(encryptor.encrypt(data))
-        return encrypted_data.decode("utf-8")
-
-    def update_request_id(self):
-        """
-        Updates Request_Id
-        """
-        self.__request_id = int(time())
-
-    async def connect(self, email, password):
-        """Establish connection to api
-
-        :param email: My.Jdownloader User email
-        :param password: My.Jdownloader User password
-        :returns: boolean -- True if succesful, False if there was any error.
-
-        """
-        self.__clean_resources()
-        self.__login_secret = self.__secret_create(email, password, "server")
-        self.__device_secret = self.__secret_create(email, password, "device")
-        response = await self.request_api(
-            "/my/connect", "GET", [("email", email), ("appkey", self.__app_key)]
-        )
-        self.__connected = True
-        self.update_request_id()
-        self.__session_token = response["sessiontoken"]
-        self.__regain_token = response["regaintoken"]
-        self.__update_encryption_tokens()
-        return response
-
-    async def reconnect(self):
-        """
-        Reestablish connection to API.
-
-        :returns: boolean -- True if successful, False if there was any error.
-
-        """
-        response = await self.request_api(
-            "/my/reconnect",
-            "GET",
-            [
-                ("sessiontoken", self.__session_token),
-                ("regaintoken", self.__regain_token),
-            ],
-        )
-        self.update_request_id()
-        self.__session_token = response["sessiontoken"]
-        self.__regain_token = response["regaintoken"]
-        self.__update_encryption_tokens()
-        return response
-
-    async def disconnect(self):
-        """
-        Disconnects from  API
-
-        :returns: boolean -- True if successful, False if there was any error.
-
-        """
-        response = await self.request_api(
-            "/my/disconnect", "GET", [("sessiontoken", self.__session_token)]
-        )
-        self.__clean_resources()
-        if self._http_session is not None:
-            self._http_session = None
-            await self._http_session.aclose()
-        return response
-
-    def __clean_resources(self):
-        self.update_request_id()
-        self.__login_secret = None
-        self.__device_secret = None
-        self.__session_token = None
-        self.__regain_token = None
-        self.__server_encryption_token = None
-        self.__device_encryption_token = None
-        self.__devices = None
-        self.__connected = False
-
-    async def update_devices(self):
-        """
-        Updates available devices. Use list_devices() to get the devices list.
-
-        :returns: boolean -- True if successful, False if there was any error.
-        """
-        response = await self.request_api(
-            "/my/listdevices", "GET", [("sessiontoken", self.__session_token)]
-        )
-        self.update_request_id()
-        self.__devices = response["list"]
-
-    def list_devices(self):
-        """
-        Returns available devices. Use getDevices() to update the devices list.
-        Each device in the list is a dictionary like this example:
-
-        {
-            'name': 'Device',
-            'id': 'af9d03a21ddb917492dc1af8a6427f11',
-            'type': 'jd'
-        }
-
-        :returns: list -- list of devices.
-        """
-        return self.__devices
-
-    def get_device(self, device_name=None, device_id=None):
-        """
-        Returns a jddevice instance of the device
-
-        :param deviceid:
-        """
-        if not self.is_connected():
-            raise (MYJDConnectionException("No connection established\n"))
-        if device_id is not None:
-            for device in self.__devices:
-                if device["id"] == device_id:
-                    return Jddevice(self, device)
-        elif device_name is not None:
-            for device in self.__devices:
-                if device["name"] == device_name:
-                    return Jddevice(self, device)
-        raise (MYJDDeviceNotFoundException("Device not found\n"))
-
-    async def request_api(
-        self, path, http_method="GET", params=None, action=None, api=None
-    ):
-        """
-        Makes a request to the API to the 'path' using the 'http_method' with parameters,'params'.
-        Ex:
-        http_method=GET
-        params={"test":"test"}
-        post_params={"test2":"test2"}
-        action=True
-        This would make a request to "https://api.jdownloader.org"
-        """
+    async def request_api(self, path, params=None):
         session = self._session()
-        if not api:
-            api = self.__api_url
-        data = None
-        if not self.is_connected() and path != "/my/connect":
-            raise (MYJDConnectionException("No connection established\n"))
-        if http_method == "GET":
-            query = [f"{path}?"]
-            if params is not None:
-                for param in params:
-                    if param[0] != "encryptedLoginSecret":
-                        query += [f"{param[0]}={quote(param[1])}"]
-                    else:
-                        query += [f"&{param[0]}={param[1]}"]
-            query += [f"rid={str(self.__request_id)}"]
-            if self.__server_encryption_token is None:
-                query += [
-                    "signature="
-                    + str(
-                        self.__signature_create(
-                            self.__login_secret, query[0] + "&".join(query[1:])
-                        )
-                    )
-                ]
-            else:
-                query += [
-                    "signature="
-                    + str(
-                        self.__signature_create(
-                            self.__server_encryption_token,
-                            query[0] + "&".join(query[1:]),
-                        )
-                    )
-                ]
-            query = query[0] + "&".join(query[1:])
-            res = await session.request(http_method, api + query)
-            encrypted_response = res.text
-        else:
-            params_request = []
-            if params is not None:
-                for param in params:
-                    if isinstance(param, (str, list)):
-                        params_request += [param]
-                    elif isinstance(param, (dict, bool)):
-                        params_request += [dumps(param)]
-                    else:
-                        params_request += [str(param)]
-            params_request = {
-                "apiVer": self.__api_version,
-                "url": path,
-                "params": params_request,
-                "rid": self.__request_id,
-            }
-            data = dumps(params_request)
-            # Removing quotes around null elements.
-            data = data.replace('"null"', "null")
-            data = data.replace("'null'", "null")
-            encrypted_data = self.__encrypt(self.__device_encryption_token, data)
-            request_url = api + action + path if action is not None else api + path
-            try:
-                res = await session.request(
-                    http_method,
-                    request_url,
-                    headers={"Content-Type": "application/aesjson-jd; charset=utf-8"},
-                    content=encrypted_data,
-                )
-                encrypted_response = res.text
-            except RequestError:
-                return None
+
+        # Prepare params_request based on the input params
+        params_request = params if params is not None else []
+
+        # Construct the request payload
+        params_request = {
+            "params": params_request,
+        }
+        data = dumps(params_request)
+        # Removing quotes around null elements.
+        data = data.replace('"null"', "null")
+        data = data.replace("'null'", "null")
+        request_url = self.__api_url + path
+        try:
+            res = await session.request(
+                "POST",
+                request_url,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                content=data,
+            )
+            response = res.text
+        except RequestError:
+            return None
         if res.status_code != 200:
             try:
-                error_msg = loads(encrypted_response)
-            except JSONDecodeError:
-                try:
-                    error_msg = loads(
-                        self.__decrypt(
-                            self.__device_encryption_token, encrypted_response
-                        )
-                    )
-                except JSONDecodeError as exc:
-                    raise MYJDDecodeException(
-                        "Failed to decode response: {}", encrypted_response
-                    ) from exc
+                error_msg = loads(response)
+            except JSONDecodeError as exc:
+                raise MYJDDecodeException(
+                    "Failed to decode response: {}", response
+                ) from exc
             msg = (
                 "\n\tSOURCE: "
                 + error_msg["src"]
                 + "\n\tTYPE: "
                 + error_msg["type"]
                 + "\n------\nREQUEST_URL: "
-                + api
-                + (path if http_method != "GET" else "")
+                + self.__api_url
+                + path
             )
-            if http_method == "GET":
-                msg += query
             msg += "\n"
             if data is not None:
                 msg += "DATA:\n" + data
             raise (
                 MYJDApiException.get_exception(error_msg["src"], error_msg["type"], msg)
             )
-        if action is None:
-            if not self.__server_encryption_token:
-                response = self.__decrypt(self.__login_secret, encrypted_response)
-            else:
-                response = self.__decrypt(
-                    self.__server_encryption_token, encrypted_response
-                )
-        else:
-            response = self.__decrypt(
-                self.__device_encryption_token, encrypted_response
-            )
-        jsondata = loads(response.decode("utf-8"))
-        if jsondata["rid"] != self.__request_id:
-            self.update_request_id()
-            return None
-        self.update_request_id()
-        return jsondata
+        return loads(response)

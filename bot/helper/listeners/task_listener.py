@@ -228,8 +228,6 @@ class TaskListener(TaskConfig):
             await event.wait()
             if self.is_cancelled:
                 return
-            async with queue_dict_lock:
-                non_queued_up.add(self.mid)
             LOGGER.info(f"Start from Queued/Upload: {self.name}")
 
         self.size = await get_path_size(up_dir)

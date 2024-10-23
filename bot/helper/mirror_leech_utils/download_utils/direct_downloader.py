@@ -6,8 +6,6 @@ from bot import (
     aria2c_global,
     task_dict,
     task_dict_lock,
-    non_queued_dl,
-    queue_dict_lock,
 )
 from ...ext_utils.bot_utils import sync_to_async
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
@@ -45,8 +43,6 @@ async def add_direct_download(listener, path):
         await event.wait()
         if listener.is_cancelled:
             return
-        async with queue_dict_lock:
-            non_queued_dl.add(listener.mid)
 
     a2c_opt = {**aria2_options}
     [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]

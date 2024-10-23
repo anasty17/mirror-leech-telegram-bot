@@ -1053,6 +1053,9 @@ class TaskConfig:
                 else:
                     res = ""
                 name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
+                if len(name.encode()) > 255:
+                    LOGGER.error(f"Substitute: {name} is too long")
+                    return dl_path
             new_path = ospath.join(up_dir, name)
             await move(dl_path, new_path)
             return new_path
@@ -1074,5 +1077,8 @@ class TaskConfig:
                         else:
                             res = ""
                         file_ = sub(rf"{pattern}", res, file_, flags=I if sen else 0)
+                        if len(file_.encode()) > 255:
+                            LOGGER.error(f"Substitute: {file_} is too long")
+                            continue
                     await move(f_path, ospath.join(dirpath, file_))
             return dl_path

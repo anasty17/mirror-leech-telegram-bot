@@ -4,7 +4,7 @@ from re import search as re_search
 from secrets import token_urlsafe
 from yt_dlp import YoutubeDL, DownloadError
 
-from bot import task_dict_lock, task_dict, non_queued_dl, queue_dict_lock
+from bot import task_dict_lock, task_dict
 from ...ext_utils.bot_utils import sync_to_async, async_to_sync
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
@@ -325,8 +325,6 @@ class YoutubeDLHelper:
             await event.wait()
             if self._listener.is_cancelled:
                 return
-            async with queue_dict_lock:
-                non_queued_dl.add(self._listener.mid)
             LOGGER.info(f"Start Queued Download from YT_DLP: {self._listener.name}")
             await self._on_download_start(True)
 
