@@ -1,6 +1,5 @@
 from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
-from time import time
 
 from bot import (
     task_dict,
@@ -60,9 +59,8 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             tor_info = await sync_to_async(
                 qbittorrent_client.torrents_info, tag=f"{listener.mid}"
             )
-            start_time = time()
             if len(tor_info) == 0:
-                while (time() - start_time) <= 60:
+                while True:
                     if add_to_queue and event.is_set():
                         add_to_queue = False
                     tor_info = await sync_to_async(
@@ -71,10 +69,6 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                     if len(tor_info) > 0:
                         break
                     await sleep(1)
-                else:
-                    raise Exception(
-                        "Use torrent file or magnet link incase you have added direct link! Timed Out!"
-                    )
             tor_info = tor_info[0]
             listener.name = tor_info.name
             ext_hash = tor_info.hash
