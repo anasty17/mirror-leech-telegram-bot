@@ -28,6 +28,11 @@ from ..helper.telegram_helper.message_utils import (
 rss_dict_lock = Lock()
 handler_dict = {}
 
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
 async def rss_menu(event):
     user_id = event.from_user.id
@@ -124,7 +129,9 @@ async def rss_sub(_, message, pre_event):
             cmd = None
             stv = False
         try:
-            async with AsyncClient(verify=False) as client:
+            async with AsyncClient(
+                headers=headers, follow_redirects=True, timeout=60, verify=False
+            ) as client:
                 res = await client.get(feed_link)
             html = res.text
             rss_d = feed_parse(html)
@@ -326,7 +333,9 @@ async def rss_get(_, message, pre_event):
                 msg = await send_message(
                     message, f"Getting the last <b>{count}</b> item(s) from {title}"
                 )
-                async with AsyncClient(verify=False) as client:
+                async with AsyncClient(
+                    headers=headers, follow_redirects=True, timeout=60, verify=False
+                ) as client:
                     res = await client.get(data["link"])
                 html = res.text
                 rss_d = feed_parse(html)
@@ -673,7 +682,12 @@ async def rss_monitor():
                 tries = 0
                 while True:
                     try:
-                        async with AsyncClient(verify=False) as client:
+                        async with AsyncClient(
+                            headers=headers,
+                            follow_redirects=True,
+                            timeout=60,
+                            verify=False,
+                        ) as client:
                             res = await client.get(data["link"])
                         html = res.text
                         break
