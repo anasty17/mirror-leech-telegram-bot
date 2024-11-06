@@ -31,7 +31,7 @@ async def send_message(message, text, buttons=None, block=True):
 
 async def edit_message(message, text, buttons=None, block=True):
     try:
-        await message.edit(
+        return await message.edit(
             text=text,
             disable_web_page_preview=True,
             reply_markup=buttons,
