@@ -314,20 +314,18 @@ class TelegramUploader:
                     self._corrupted += 1
                     if self._listener.is_cancelled:
                         return
-                    continue
-                finally:
-                    if (
-                        not self._listener.is_cancelled
-                        and await aiopath.exists(self._up_path)
-                        and (
-                            not self._listener.seed
-                            or self._listener.new_dir
-                            or dirpath.endswith("/splited_files_mltb")
-                            or "/copied_mltb/" in self._up_path
-                            or delete_file
-                        )
-                    ):
-                        await remove(self._up_path)
+                if (
+                    not self._listener.is_cancelled
+                    and await aiopath.exists(self._up_path)
+                    and (
+                        not self._listener.seed
+                        or self._listener.new_dir
+                        or dirpath.endswith("/splited_files_mltb")
+                        or "/copied_mltb/" in self._up_path
+                        or delete_file
+                    )
+                ):
+                    await remove(self._up_path)
         for key, value in list(self._media_dict.items()):
             for subkey, msgs in list(value.items()):
                 if len(msgs) > 1:

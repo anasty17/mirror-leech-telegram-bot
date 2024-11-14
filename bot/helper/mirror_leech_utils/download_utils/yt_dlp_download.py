@@ -49,7 +49,6 @@ class YoutubeDLHelper:
         self._eta = "-"
         self._listener = listener
         self._gid = ""
-        self._downloading = False
         self._ext = ""
         self.is_playlist = False
         self.opts = {
@@ -93,7 +92,6 @@ class YoutubeDLHelper:
         return self._eta
 
     def _on_download_progress(self, d):
-        self._downloading = True
         if self._listener.is_cancelled:
             raise ValueError("Cancelling...")
         if d["status"] == "finished":
@@ -336,8 +334,7 @@ class YoutubeDLHelper:
     async def cancel_task(self):
         self._listener.is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self._listener.name}")
-        if not self._downloading:
-            await self._listener.on_download_error("Download Cancelled by User!")
+        await self._listener.on_download_error("Download Cancelled by User!")
 
     def _set_options(self, options):
         options = options.split("|")
