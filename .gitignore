@@ -1,3 +1,4 @@
+mltbenv/*
 config.env
 *.pyc
 data*
