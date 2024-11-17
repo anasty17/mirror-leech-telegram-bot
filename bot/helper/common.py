@@ -1052,7 +1052,11 @@ class TaskConfig:
                         res = substitution[1]
                 else:
                     res = ""
-                name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
+                try:
+                    name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
+                except Exception as e:
+                    LOGGER.error(f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}")
+                    return dl_path
                 if len(name.encode()) > 255:
                     LOGGER.error(f"Substitute: {name} is too long")
                     return dl_path
@@ -1076,7 +1080,11 @@ class TaskConfig:
                                 res = substitution[1]
                         else:
                             res = ""
-                        file_ = sub(rf"{pattern}", res, file_, flags=I if sen else 0)
+                        try:
+                            file_ = sub(rf"{pattern}", res, file_, flags=I if sen else 0)
+                        except Exception as e:
+                            LOGGER.error(f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}")
+                            continue
                         if len(file_.encode()) > 255:
                             LOGGER.error(f"Substitute: {file_} is too long")
                             continue
