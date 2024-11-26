@@ -260,6 +260,8 @@ if len(JD_EMAIL) == 0 or len(JD_PASS) == 0:
     JD_EMAIL = ""
     JD_PASS = ""
 
+BOT_PM = environ.get("BOT_PM", '')
+BOT_PM = BOT_PM.lower() == "true"
 USENET_SERVERS = environ.get("USENET_SERVERS", "")
 try:
     if len(USENET_SERVERS) == 0:
