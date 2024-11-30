@@ -50,6 +50,7 @@ ARCH_EXT = [
     ".vhd",
     ".xar",
     ".zst",
+    ".cbz",
 ]
 
 FIRST_SPLIT_REGEX = r"(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$"
