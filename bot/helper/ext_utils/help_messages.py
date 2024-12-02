@@ -224,7 +224,7 @@ NOTE: You must add \ before any character, those are the characters: \^$.|?*+()[
 8. \text\ will get replaced by text with sensitive case
 """
 
-mixed_leech = """Mixed leech: -ml
+mixed_leech = """<b>Mixed leech</b>: -ml
 /cmd link -ml (leech by user and bot session with respect to size)"""
 
 thumbnail_layout = """Thumbnail Layout: -tl
@@ -233,6 +233,19 @@ thumbnail_layout = """Thumbnail Layout: -tl
 leech_as = """<b>Leech as</b>: -doc -med
 /cmd link -doc (Leech as document)
 /cmd link -med (Leech as media)"""
+
+ffmpeg_cmds = """<b>FFmpeg Commands</b>: -ff
+list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
+Notes:
+1. Add <code>-del</code> to the list(s) which you want from the bot to delete the original files after command run complete!
+2. Seed will get disbaled while using this option
+3. It must be list of list(s) event of one list added like [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv", "-del"]]
+Examples: [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv", "-del"], ["-i", "mltb.video", "-c", "copy", "-c:s", "srt", "mltb"], ["-i", "mltb.m4a", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"], ["-i", "mltb.audio", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"]]
+Here I will explain how to use mltb.* which is reference to files you want to work on.
+1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. -del will delete the original media after complete run of the cmd.
+2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
+3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
+4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3."""
 
 YT_HELP_DICT = {
     "main": yt,
@@ -255,6 +268,7 @@ YT_HELP_DICT = {
     "Mixed-Leech": mixed_leech,
     "Thumbnail-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
+    "FFmpeg-Cmds": ffmpeg_cmds,
 }
 
 MIRROR_HELP_DICT = {
@@ -284,6 +298,7 @@ MIRROR_HELP_DICT = {
     "Mixed-Leech": mixed_leech,
     "Thumbnail-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
+    "FFmpeg-Cmds": ffmpeg_cmds,
 }
 
 CLONE_HELP_DICT = {

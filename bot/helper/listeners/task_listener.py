@@ -173,11 +173,6 @@ class TaskListener(TaskConfig):
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
 
-        if self.name_sub:
-            up_path = await self.substitute(up_path)
-            if self.is_cancelled:
-                return
-            self.name = up_path.rsplit("/", 1)[1]
         if self.ffmpeg_cmds:
             up_path = await self.proceed_ffmpeg(
                 up_path,
@@ -187,6 +182,12 @@ class TaskListener(TaskConfig):
                 return
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+
+        if self.name_sub:
+            up_path = await self.substitute(up_path)
+            if self.is_cancelled:
+                return
+            self.name = up_path.rsplit("/", 1)[1]
 
         if self.screen_shots:
             up_path = await self.generate_screenshots(up_path)

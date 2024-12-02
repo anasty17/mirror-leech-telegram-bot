@@ -713,12 +713,17 @@ async def create_sample_video(listener, video_file, sample_duration, part_durati
 
 async def run_ffmpeg_cmd(listener, ffmpeg, path):
     base_name, ext = ospath.splitext(path)
+    dir, base_name = base_name.rsplit("/", 1)
     output_file = ffmpeg[-1]
     if output_file != "mltb" and output_file.startswith("mltb"):
-        ext = ospath.splitext(output_file)[-1]
+        oext = ospath.splitext(output_file)[-1]
+        if ext == oext:
+            base_name = f"ffmpeg.{base_name}"
+        else:
+            ext = oext
     else:
-        base_name = f"ffmpeg - {base_name}"
-    output = f"{base_name}{ext}"
+        base_name = f"ffmpeg.{base_name}"
+    output = f"{dir}/{base_name}{ext}"
     ffmpeg[-1] = output
     if listener.is_cancelled:
         return False
