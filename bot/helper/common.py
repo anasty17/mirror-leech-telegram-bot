@@ -1121,14 +1121,14 @@ class TaskConfig:
     async def proceed_ffmpeg(self, dl_path, gid):
         checked = False
         for ffmpeg_cmd in self.ffmpeg_cmds:
-            if "-del" in ffmpeg_cmd:
-                ffmpeg_cmd.remove("-del")
+            cmd = ["ffmpeg"] + ffmpeg_cmd
+            if "-del" in cmd:
+                cmd.remove("-del")
                 delete_files = True
             else:
                 delete_files = False
-            ffmpeg_cmd.insert(0, "ffmpeg")
-            index = ffmpeg_cmd.index("-i")
-            input_file = ffmpeg_cmd[index + 1]
+            index = cmd.index("-i")
+            input_file = cmd[index + 1]
             if input_file.endswith(".video"):
                 ext = "video"
             elif input_file.endswith(".audio"):
@@ -1159,8 +1159,8 @@ class TaskConfig:
                         task_dict[self.mid] = FFmpegStatus(self, gid)
                     await cpu_eater_lock.acquire()
                 LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
-                ffmpeg_cmd[index + 1] = file_path
-                res = await run_ffmpeg_cmd(self, ffmpeg_cmd, file_path)
+                cmd[index + 1] = file_path
+                res = await run_ffmpeg_cmd(self, cmd, file_path)
                 if res and delete_files:
                     await remove(file_path)
             else:
@@ -1181,14 +1181,14 @@ class TaskConfig:
                             continue
                         elif ext != "all" and not f_path.endswith(ext):
                             continue
-                        ffmpeg_cmd[index + 1] = f_path
+                        cmd[index + 1] = f_path
                         if not checked:
                             checked = True
                             async with task_dict_lock:
                                 task_dict[self.mid] = FFmpegStatus(self, gid)
                             await cpu_eater_lock.acquire()
                         LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
-                        res = await run_ffmpeg_cmd(self, ffmpeg_cmd, f_path)
+                        res = await run_ffmpeg_cmd(self, cmd, f_path)
                         if res and delete_files:
                             await remove(f_path)
         if checked:
