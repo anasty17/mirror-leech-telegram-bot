@@ -76,6 +76,7 @@ multi_tags = set()
 try:
     if bool(environ.get("_____REMOVE_THIS_LINE_____")):
         log_error("The README.md file there to be read! Exiting now!")
+        bot_loop.stop()
         exit(1)
 except:
     pass
@@ -95,6 +96,7 @@ rss_dict = {}
 BOT_TOKEN = environ.get("BOT_TOKEN", "")
 if len(BOT_TOKEN) == 0:
     log_error("BOT_TOKEN variable is missing! Exiting now")
+    bot_loop.stop()
     exit(1)
 
 BOT_ID = BOT_TOKEN.split(":", 1)[0]
@@ -170,6 +172,7 @@ run(
 OWNER_ID = environ.get("OWNER_ID", "")
 if len(OWNER_ID) == 0:
     log_error("OWNER_ID variable is missing! Exiting now")
+    bot_loop.stop()
     exit(1)
 else:
     OWNER_ID = int(OWNER_ID)
@@ -177,6 +180,7 @@ else:
 TELEGRAM_API = environ.get("TELEGRAM_API", "")
 if len(TELEGRAM_API) == 0:
     log_error("TELEGRAM_API variable is missing! Exiting now")
+    bot_loop.stop()
     exit(1)
 else:
     TELEGRAM_API = int(TELEGRAM_API)
@@ -184,6 +188,7 @@ else:
 TELEGRAM_HASH = environ.get("TELEGRAM_HASH", "")
 if len(TELEGRAM_HASH) == 0:
     log_error("TELEGRAM_HASH variable is missing! Exiting now")
+    bot_loop.stop()
     exit(1)
 
 USER_SESSION_STRING = environ.get("USER_SESSION_STRING", "")
@@ -220,8 +225,8 @@ if len(RCLONE_FLAGS) == 0:
     RCLONE_FLAGS = ""
 
 DEFAULT_UPLOAD = environ.get("DEFAULT_UPLOAD", "")
-if DEFAULT_UPLOAD != "rc":
-    DEFAULT_UPLOAD = "gd"
+if DEFAULT_UPLOAD != "gd":
+    DEFAULT_UPLOAD = "rc"
 
 DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
 if len(DOWNLOAD_DIR) == 0:
@@ -420,6 +425,13 @@ MIXED_LEECH = MIXED_LEECH.lower() == "true" and IS_PREMIUM_USER
 THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
 THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
 
+FFMPEG_CMDS = environ.get("FFMPEG_CMDS", "")
+try:
+    FFMPEG_CMDS = [] if len(FFMPEG_CMDS) == 0 else eval(FFMPEG_CMDS)
+except:
+    log_error(f"Wrong FFMPEG_CMDS format: {FFMPEG_CMDS}")
+    FFMPEG_CMDS = []
+
 config_dict = {
     "AS_DOCUMENT": AS_DOCUMENT,
     "AUTHORIZED_CHATS": AUTHORIZED_CHATS,
@@ -432,6 +444,7 @@ config_dict = {
     "DOWNLOAD_DIR": DOWNLOAD_DIR,
     "EQUAL_SPLITS": EQUAL_SPLITS,
     "EXTENSION_FILTER": EXTENSION_FILTER,
+    "FFMPEG_CMDS": FFMPEG_CMDS,
     "FILELION_API": FILELION_API,
     "GDRIVE_ID": GDRIVE_ID,
     "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,

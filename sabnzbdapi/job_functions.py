@@ -3,9 +3,6 @@ from sabnzbdapi.bound_methods import SubFunctions
 
 class JobFunctions(SubFunctions):
 
-    def __init__(self):
-        pass
-
     async def add_uri(
         self,
         url: str = "",

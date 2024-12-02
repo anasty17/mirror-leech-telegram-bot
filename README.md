@@ -57,8 +57,19 @@ programming in Python.
   on [Sreeraj](https://github.com/SVR666) searchX-bot. (task option)
 - Stop Duplicates (global and user option)
 - Custom upload destination (global, user, and task option)
+- Ability to choose token.pickle or service acccount and upload destinations from list with or without buttons (global, user and task option)
 - Index link support only
   for [Bhadoo](https://gitlab.com/GoogleDriveIndex/Google-Drive-Index/-/blob/master/src/worker.js)
+
+## Rclone
+
+- Transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
+- Ability to choose config, remote and path from list with or without buttons (global, user and task option)
+- Ability to set flags for each task or globally from config (global, user and task option)
+- Abitity to select specific files or folders to download/copy using buttons (task option)
+- Rclone.conf (global and user option)
+- Rclone serve for combine remote to use it as index from all remotes (global option)
+- Upload destination (global, user and task option)
 
 ## Status
 
@@ -122,16 +133,6 @@ programming in Python.
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
 
-## Rclone
-
-- Transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
-- Ability to choose config, remote and path from list with or without buttons (global, user and task option)
-- Ability to set flags for each task or globally from config (global, user and task option)
-- Abitity to select specific files or folders to download/copy using buttons (task option)
-- Rclone.conf (global and user option)
-- Rclone serve for combine remote to use it as index from all remotes (global option)
-- Upload destination (global, user and task option)
-
 ## Overall
 
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
@@ -156,7 +157,7 @@ programming in Python.
 - Force start to upload or download or both from queue using cmds or args once you add the download (task option)
 - Shell and Executor
 - Add sudo users
-- Ability to save upload Paths
+- Ability to save upload paths
 - Name Substitution to rename the files before upload
 - Supported Direct links Generators:
 
@@ -244,7 +245,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `CMD_SUFFIX`: Commands index number. This number will added at the end all commands. `Str`|`Int`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX|10 or Ex:-100XXXXXXXXXXX|10|12. Separate them by space. `Int`
 - `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
-- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `gd`. Read
+- `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `rc`. Read
   More [HERE](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upload).`Str`
 - `STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10`
   seconds at least. `Int`
@@ -265,6 +266,17 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work
   see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account)
   section below. Default is `False`. `Bool`
+- `FFMPEG_CMDS`: list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments. `list`
+  - Examples: [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv"], ["-i", "mltb.video", "-c", "copy", "-c:s", "srt", "mltb"], ["-i", "mltb.m4a", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"], ["-i", "mltb.audio", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"]]
+  **Notes**:
+  - Add `-del` to the list(s) which you want from the bot to delete the original files after command run complete!
+  - Seed will get disbaled while using this option
+  **Example**:
+  - Here I will explain how to use mltb.* which is reference to files you want to work on.
+  1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv.
+  2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
+  3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
+  4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
 - `NAME_SUBSTITUTE`: Add word/letter/character/sentense/pattern to remove or replace with other words with sensitive case or without. **Notes**:
   1. Seed will get disbaled while using this option
   2. Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
@@ -338,9 +350,9 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
 **8. JDownloader**
 
-- `JD_EMAIL`: jdownlaoder email sign up on [JDownloader](https://my.jdownloader.org/)
-- `JD_PASS`: jdownlaoder password
-  - **JDownloader Config**: You can use your config from local device to bot by *zipping* cfg folder (cfg.zip) and add it in repo folder but *before zip* you must change the downloads directory to `/root/Downloads`.
+- `JD_EMAIL`: jdownloader email sign up on [JDownloader](https://my.jdownloader.org/)
+- `JD_PASS`: jdownloader password
+  - **JDownloader Config**: You can use your config from local machine in bot by *zipping* cfg folder (cfg.zip) and add it in repo folder.
 
 **9. Sabnzbd**
 
@@ -350,7 +362,7 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
   - [READ THIS FOR MORE INFORMATION](https://sabnzbd.org/wiki/configuration/4.2/servers)
 
-  - Open port 8070 in your vps to access full web interface from any device. Use it like http://ip:8070/sabnzbd/.
+  - Open port 8070 in your vps to access full web interface from any device. Use it like http://ip:8070/sabnzbd/. username: mltb, password: mltbmltb
 
 **10. RSS**
 

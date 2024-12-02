@@ -99,6 +99,7 @@ async def status_pages(_, query):
             "Pause": 0,
             "SamVid": 0,
             "ConvertMedia": 0,
+            "FFmpeg": 0,
         }
         dl_speed = 0
         up_speed = 0
@@ -135,6 +136,8 @@ async def status_pages(_, query):
                         tasks["SamVid"] += 1
                     case MirrorStatus.STATUS_CONVERTING:
                         tasks["ConvertMedia"] += 1
+                    case MirrorStatus.STATUS_FFMPEG:
+                        tasks["FFMPEG"] += 1
                     case _:
                         tasks["Download"] += 1
                         dl_speed += speed_string_to_bytes(download.speed())
@@ -142,7 +145,7 @@ async def status_pages(_, query):
         msg = f"""<b>DL:</b> {tasks['Download']} | <b>UP:</b> {tasks['Upload']} | <b>SD:</b> {tasks['Seed']} | <b>AR:</b> {tasks['Archive']}
 <b>EX:</b> {tasks['Extract']} | <b>SP:</b> {tasks['Split']} | <b>QD:</b> {tasks['QueueDl']} | <b>QU:</b> {tasks['QueueUp']}
 <b>CL:</b> {tasks['Clone']} | <b>CK:</b> {tasks['CheckUp']} | <b>PA:</b> {tasks['Pause']} | <b>SV:</b> {tasks['SamVid']}
-<b>CM:</b> {tasks['ConvertMedia']}
+<b>CM:</b> {tasks['ConvertMedia']} <b>FF:</b> {tasks['FFmpeg']}
 
 <b>ODLS:</b> {get_readable_file_size(dl_speed)}/s
 <b>OULS:</b> {get_readable_file_size(up_speed)}/s

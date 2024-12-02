@@ -1,8 +1,5 @@
 class SubFunctions:
 
-    def __init__(self):
-        pass
-
     async def check_login(self):
         res = await self.get_config("servers")
         if res["config"]:

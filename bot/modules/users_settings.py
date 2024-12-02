@@ -156,8 +156,15 @@ async def get_user_settings(from_user):
         user_dict.get("default_upload", "") or config_dict["DEFAULT_UPLOAD"]
     )
     du = "Gdrive API" if default_upload == "gd" else "Rclone"
-    dub = "Gdrive API" if default_upload != "gd" else "Rclone"
-    buttons.data_button(f"Upload using {dub}", f"userset {user_id} {default_upload}")
+    dur = "Gdrive API" if default_upload != "gd" else "Rclone"
+    buttons.data_button(f"Upload using {dur}", f"userset {user_id} {default_upload}")
+
+    user_tokens = user_dict.get("user_tokens", False)
+    tr = "MY" if user_tokens else "OWNER"
+    trr = "OWNER" if user_tokens else "MY"
+    buttons.data_button(
+        f"Use {trr} token/config", f"userset {user_id} user_tokens {user_tokens}"
+    )
 
     buttons.data_button("Excluded Extensions", f"userset {user_id} ex_ex")
     if user_dict.get("excluded_extensions", False):
@@ -173,10 +180,18 @@ async def get_user_settings(from_user):
     buttons.data_button("YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get("yt_opt", False):
         ytopt = user_dict["yt_opt"]
-    elif "yt_opt" not in user_dict and (YTO := config_dict["YT_DLP_OPTIONS"]):
-        ytopt = YTO
+    elif "yt_opt" not in user_dict and config_dict["YT_DLP_OPTIONS"]:
+        ytopt = config_dict["YT_DLP_OPTIONS"]
     else:
         ytopt = "None"
+
+    buttons.data_button("Ffmpeg Cmds", f"userset {user_id} ffc")
+    if user_dict.get("ffmpeg_cmds", False):
+        ffc = user_dict["ffmpeg_cmds"]
+    elif "ffmpeg_cmds" not in user_dict and config_dict["FFMPEG_CMDS"]:
+        ffc = config_dict["FFMPEG_CMDS"]
+    else:
+        ffc = "None"
 
     if user_dict:
         buttons.data_button("Reset All", f"userset {user_id} reset")
@@ -201,10 +216,12 @@ Upload Paths is <b>{upload_paths}</b>
 Gdrive ID is <code>{gdrive_id}</code>
 Index Link is <code>{index}</code>
 Stop Duplicate is <b>{sd_msg}</b>
-Default Upload is <b>{du}</b>
+Default Package is <b>{du}</b>
+Upload using <b>{tr}</b> token/config
 Name substitution is <b>{ns_msg}</b>
 Excluded Extensions is <code>{ex_ex}</code>
-YT-DLP Options is <b><code>{escape(ytopt)}</code></b>"""
+YT-DLP Options is <code>{escape(ytopt)}</code>
+FFMPEG Commands is <code>{ffc}</code>"""
 
     return text, buttons.build_menu(1)
 
@@ -309,6 +326,18 @@ async def set_option(_, message, pre_event, option):
             name, path = data
             user_dict["upload_paths"][name] = path
         value = user_dict["upload_paths"]
+    elif option == "ffmpeg_cmds":
+        if value.startswith("[") and value.endswith("]"):
+            try:
+                value = eval(value)
+            except Exception as e:
+                await send_message(message, str(e))
+                await update_user_settings(pre_event)
+                return
+        else:
+            await send_message(message, "It must be list of lists!")
+            await update_user_settings(pre_event)
+            return
     update_user_ldata(user_id, option, value)
     await delete_message(message)
     await update_user_settings(pre_event)
@@ -396,6 +425,7 @@ async def edit_user_settings(client, query):
         "excluded_extensions",
         "name_sub",
         "thumb_layout",
+        "ffmpeg_cmds",
     ]:
         await query.answer()
         update_user_ldata(user_id, data[2], "")
@@ -622,6 +652,28 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         await edit_message(message, rmsg, buttons.build_menu(1))
         pfunc = partial(set_option, pre_event=query, option="yt_opt")
         await event_handler(client, query, pfunc)
+    elif data[2] == "ffc":
+        await query.answer()
+        buttons = ButtonMaker()
+        if user_dict.get("ffmpeg_cmds", False) or config_dict["YT_DLP_OPTIONS"]:
+            buttons.data_button(
+                "Remove YT-DLP Options", f"userset {user_id} ffmpeg_cmds", "header"
+            )
+        buttons.data_button("Back", f"userset {user_id} back")
+        buttons.data_button("Close", f"userset {user_id} close")
+        rmsg = """list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
+Notes:
+1. Add <code>-del</code> to the list(s) which you want from the bot to delete the original files after command run complete!
+2. Seed will get disbaled while using this option
+Examples: [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv"], ["-i", "mltb.video", "-c", "copy", "-c:s", "srt", "mltb"], ["-i", "mltb.m4a", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"], ["-i", "mltb.audio", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"]]
+Here I will explain how to use mltb.* which is reference to files you want to work on.
+1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv.
+2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
+3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
+4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3."""
+        await edit_message(message, rmsg, buttons.build_menu(1))
+        pfunc = partial(set_option, pre_event=query, option="ffmpeg_cmds")
+        await event_handler(client, query, pfunc)
     elif data[2] == "lss":
         await query.answer()
         buttons = ButtonMaker()
@@ -805,6 +857,13 @@ Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb |
         await query.answer()
         du = "rc" if data[2] == "gd" else "gd"
         update_user_ldata(user_id, "default_upload", du)
+        await update_user_settings(query)
+        if config_dict["DATABASE_URL"]:
+            await database.update_user_data(user_id)
+    elif data[2] == "user_tokens":
+        await query.answer()
+        tr = data[3].lower() == "false"
+        update_user_ldata(user_id, "user_tokens", tr)
         await update_user_settings(query)
         if config_dict["DATABASE_URL"]:
             await database.update_user_data(user_id)

@@ -933,8 +933,8 @@ async def load_config():
         RCLONE_PATH = ""
 
     DEFAULT_UPLOAD = environ.get("DEFAULT_UPLOAD", "")
-    if DEFAULT_UPLOAD != "rc":
-        DEFAULT_UPLOAD = "gd"
+    if DEFAULT_UPLOAD != "gd":
+        DEFAULT_UPLOAD = "rc"
 
     RCLONE_FLAGS = environ.get("RCLONE_FLAGS", "")
     if len(RCLONE_FLAGS) == 0:
@@ -1157,6 +1157,13 @@ async def load_config():
     THUMBNAIL_LAYOUT = environ.get("THUMBNAIL_LAYOUT", "")
     THUMBNAIL_LAYOUT = "" if len(THUMBNAIL_LAYOUT) == 0 else THUMBNAIL_LAYOUT
 
+    FFMPEG_CMDS = environ.get("FFMPEG_CMDS", "")
+    try:
+        FFMPEG_CMDS = [] if len(FFMPEG_CMDS) == 0 else eval(FFMPEG_CMDS)
+    except:
+        LOGGER.error(f"Wrong FFMPEG_CMDS format: {FFMPEG_CMDS}")
+        FFMPEG_CMDS = []
+
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     BASE_URL = environ.get("BASE_URL", "").rstrip("/")
     if len(BASE_URL) == 0:
@@ -1208,6 +1215,7 @@ async def load_config():
             "DOWNLOAD_DIR": DOWNLOAD_DIR,
             "EQUAL_SPLITS": EQUAL_SPLITS,
             "EXTENSION_FILTER": EXTENSION_FILTER,
+            "FFMPEG_CMDS": FFMPEG_CMDS,
             "FILELION_API": FILELION_API,
             "GDRIVE_ID": GDRIVE_ID,
             "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,

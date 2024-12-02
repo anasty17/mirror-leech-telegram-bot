@@ -709,3 +709,38 @@ async def create_sample_video(listener, video_file, sample_duration, part_durati
         return False
     await gather(remove(segments_file), rmtree(f"{dir}/mltb_segments"))
     return output_file"""
+
+
+async def run_ffmpeg_cmd(listener, ffmpeg, path):
+    base_name, ext = ospath.splitext(path)
+    output_file = ffmpeg[-1]
+    if output_file != "mltb" and output_file.startswith("mltb"):
+        ext = ospath.splitext(output_file)[-1]
+    else:
+        base_name = f"ffmpeg - {base_name}"
+    output = f"{base_name}{ext}"
+    ffmpeg[-1] = output
+    if listener.is_cancelled:
+        return False
+    async with subprocess_lock:
+        listener.suproc = await create_subprocess_exec(*ffmpeg, stderr=PIPE)
+    _, stderr = await listener.suproc.communicate()
+    if listener.is_cancelled:
+        return False
+    code = listener.suproc.returncode
+    if code == 0:
+        return output
+    elif code == -9:
+        listener.is_cancelled = True
+        return False
+    else:
+        try:
+            stderr = stderr.decode().strip()
+        except:
+            stderr = "Unable to decode the error!"
+        LOGGER.error(
+            f"{stderr}. Something went wrong while running ffmpeg cmd, mostly file requires different/specific arguments. Path: {path}"
+        )
+        if await aiopath.exists(output):
+            await remove(output)
+        return False

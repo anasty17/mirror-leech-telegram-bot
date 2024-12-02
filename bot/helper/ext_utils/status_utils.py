@@ -31,6 +31,7 @@ class MirrorStatus:
     STATUS_SEEDING = "Seed"
     STATUS_SAMVID = "SamVid"
     STATUS_CONVERTING = "Convert"
+    STATUS_FFMPEG = "FFmpeg"
 
 
 STATUSES = {
@@ -43,10 +44,11 @@ STATUSES = {
     "EX": MirrorStatus.STATUS_EXTRACTING,
     "SD": MirrorStatus.STATUS_SEEDING,
     "CM": MirrorStatus.STATUS_CONVERTING,
-    "CL": MirrorStatus.STATUS_CLONING,
     "SP": MirrorStatus.STATUS_SPLITTING,
     "CK": MirrorStatus.STATUS_CHECKING,
     "SV": MirrorStatus.STATUS_SAMVID,
+    "FF": MirrorStatus.STATUS_FFMPEG,
+    "CL": MirrorStatus.STATUS_CLONING,
     "PA": MirrorStatus.STATUS_PAUSED,
 }
 
@@ -118,8 +120,22 @@ def get_readable_time(seconds: int):
 
 
 def time_to_seconds(time_duration):
-    hours, minutes, seconds = map(int, time_duration.split(":"))
-    return hours * 3600 + minutes * 60 + seconds
+    try:
+        parts = time_duration.split(":")
+        if len(parts) == 3:
+            hours, minutes, seconds = map(int, parts)
+        elif len(parts) == 2:
+            hours = 0
+            minutes, seconds = map(int, parts)
+        elif len(parts) == 1:
+            hours = 0
+            minutes = 0
+            seconds = int(parts[0])
+        else:
+            return 0
+        return hours * 3600 + minutes * 60 + seconds
+    except ValueError as e:
+        return 0
 
 
 def speed_string_to_bytes(size_text: str):
@@ -178,6 +194,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             MirrorStatus.STATUS_SEEDING,
             MirrorStatus.STATUS_SAMVID,
             MirrorStatus.STATUS_CONVERTING,
+            MirrorStatus.STATUS_FFMPEG,
             MirrorStatus.STATUS_QUEUEUP,
         ]:
             progress = (

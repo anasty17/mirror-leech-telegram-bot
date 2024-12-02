@@ -44,6 +44,7 @@ from .ext_utils.media_utils import (
     create_thumb,
     create_sample_video,
     take_ss,
+    run_ffmpeg_cmd,
 )
 from .ext_utils.media_utils import (
     split_file,
@@ -62,6 +63,7 @@ from .mirror_leech_utils.status_utils.media_convert_status import (
 )
 from .mirror_leech_utils.status_utils.split_status import SplitStatus
 from .mirror_leech_utils.status_utils.zip_status import ZipStatus
+from .mirror_leech_utils.status_utils.ffmpeg_status import FFmpegStatus
 from .telegram_helper.bot_commands import BotCommands
 from .telegram_helper.message_utils import (
     send_message,
@@ -119,6 +121,7 @@ class TaskConfig:
         self.is_torrent = False
         self.as_med = False
         self.as_doc = False
+        self.ffmpeg_cmds = None
         self.chat_thread_id = None
         self.suproc = None
         self.thumb = None
@@ -126,6 +129,10 @@ class TaskConfig:
         self.is_super_chat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
 
     def get_token_path(self, dest):
+        if not dest.startswith(("mtp:", "tp:", "sa:")) and self.user_dict.get(
+            "user_tokens", False
+        ):
+            return f"tokens/{self.user_id}.pickle"
         if dest.startswith("mtp:"):
             return f"tokens/{self.user_id}.pickle"
         elif (
@@ -138,6 +145,8 @@ class TaskConfig:
             return "token.pickle"
 
     def get_config_path(self, dest):
+        if not dest.startswith("mrcc:") and self.user_dict.get("user_tokens", False):
+            return f"rclone/{self.user_id}.conf"
         return (
             f"rclone/{self.user_id}.conf" if dest.startswith("mrcc:") else "rclone.conf"
         )
@@ -385,6 +394,18 @@ class TaskConfig:
                 self.thumb = (
                     await create_thumb(msg) if msg.photo or msg.document else ""
                 )
+
+            self.ffmpeg_cmds = (
+                self.ffmpeg_cmds
+                or self.user_dict.get("ffmpeg_cmds", None)
+                or (
+                    config_dict["FFMPEG_CMDS"]
+                    if "ffmpeg_cmds" not in self.user_dict
+                    else None
+                )
+            )
+            if self.ffmpeg_cmds:
+                self.seed = False
 
     async def get_tag(self, text: list):
         if len(text) > 1 and text[1].startswith("Tag: "):
@@ -828,25 +849,25 @@ class TaskConfig:
                         self, dl_path, sample_duration, part_duration
                     )
                 if res:
-                    newfolder = ospath.splitext(dl_path)[0]
+                    new_folder = ospath.splitext(dl_path)[0]
                     name = dl_path.rsplit("/", 1)[1]
                     if self.seed and not self.new_dir:
                         if self.is_leech and not self.compress:
                             return self.dir
                         self.new_dir = f"{self.dir}10000"
-                        newfolder = newfolder.replace(self.dir, self.new_dir)
-                        await makedirs(newfolder, exist_ok=True)
+                        new_folder = new_folder.replace(self.dir, self.new_dir)
+                        await makedirs(new_folder, exist_ok=True)
                         await gather(
-                            copy2(dl_path, f"{newfolder}/{name}"),
-                            move(res, f"{newfolder}/SAMPLE.{name}"),
+                            copy2(dl_path, f"{new_folder}/{name}"),
+                            move(res, f"{new_folder}/SAMPLE.{name}"),
                         )
                     else:
-                        await makedirs(newfolder, exist_ok=True)
+                        await makedirs(new_folder, exist_ok=True)
                         await gather(
-                            move(dl_path, f"{newfolder}/{name}"),
-                            move(res, f"{newfolder}/SAMPLE.{name}"),
+                            move(dl_path, f"{new_folder}/{name}"),
+                            move(res, f"{new_folder}/SAMPLE.{name}"),
                         )
-                    return newfolder
+                    return new_folder
         else:
             for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
                 for file_ in files:
@@ -859,7 +880,8 @@ class TaskConfig:
                             await cpu_eater_lock.acquire()
                             LOGGER.info(f"Creating Sample videos: {self.name}")
                         if self.is_cancelled:
-                            cpu_eater_lock.release()
+                            if checked:
+                                cpu_eater_lock.release()
                             return ""
                         res = await create_sample_video(
                             self, f_path, sample_duration, part_duration
@@ -982,7 +1004,8 @@ class TaskConfig:
             for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
                 for file_ in files:
                     if self.is_cancelled:
-                        cpu_eater_lock.release()
+                        if checked:
+                            cpu_eater_lock.release()
                         return ""
                     f_path = ospath.join(dirpath, file_)
                     res = await proceed_convert(f_path)
@@ -1008,25 +1031,23 @@ class TaskConfig:
                 LOGGER.info(f"Creating Screenshot for: {dl_path}")
                 res = await take_ss(dl_path, ss_nb)
                 if res:
-                    newfolder = ospath.splitext(dl_path)[0]
+                    new_folder = ospath.splitext(dl_path)[0]
                     name = dl_path.rsplit("/", 1)[1]
                     if self.seed and not self.new_dir:
-                        if self.is_leech and not self.compress:
-                            return self.dir
-                        await makedirs(newfolder, exist_ok=True)
                         self.new_dir = f"{self.dir}10000"
-                        newfolder = newfolder.replace(self.dir, self.new_dir)
+                        new_folder = new_folder.replace(self.dir, self.new_dir)
+                        await makedirs(new_folder, exist_ok=True)
                         await gather(
-                            copy2(dl_path, f"{newfolder}/{name}"),
-                            move(res, newfolder),
+                            copy2(dl_path, f"{new_folder}/{name}"),
+                            move(res, new_folder),
                         )
                     else:
-                        await makedirs(newfolder, exist_ok=True)
+                        await makedirs(new_folder, exist_ok=True)
                         await gather(
-                            move(dl_path, f"{newfolder}/{name}"),
-                            move(res, newfolder),
+                            move(dl_path, f"{new_folder}/{name}"),
+                            move(res, new_folder),
                         )
-                    return newfolder
+                    return new_folder
         else:
             LOGGER.info(f"Creating Screenshot for: {dl_path}")
             for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
@@ -1055,7 +1076,9 @@ class TaskConfig:
                 try:
                     name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
                 except Exception as e:
-                    LOGGER.error(f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}")
+                    LOGGER.error(
+                        f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}"
+                    )
                     return dl_path
                 if len(name.encode()) > 255:
                     LOGGER.error(f"Substitute: {name} is too long")
@@ -1081,12 +1104,93 @@ class TaskConfig:
                         else:
                             res = ""
                         try:
-                            file_ = sub(rf"{pattern}", res, file_, flags=I if sen else 0)
+                            file_ = sub(
+                                rf"{pattern}", res, file_, flags=I if sen else 0
+                            )
                         except Exception as e:
-                            LOGGER.error(f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}")
+                            LOGGER.error(
+                                f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}"
+                            )
                             continue
                         if len(file_.encode()) > 255:
                             LOGGER.error(f"Substitute: {file_} is too long")
                             continue
                     await move(f_path, ospath.join(dirpath, file_))
             return dl_path
+
+    async def proceed_ffmpeg(self, dl_path, gid):
+        checked = False
+        for ffmpeg_cmd in self.ffmpeg_cmds:
+            if "-del" in ffmpeg_cmd:
+                ffmpeg_cmd.remove("-del")
+                delete_files = True
+            else:
+                delete_files = False
+            ffmpeg_cmd.insert(0, "ffmpeg")
+            index = ffmpeg_cmd.index("-i")
+            input_file = ffmpeg_cmd[index + 1]
+            if input_file.endswith(".video"):
+                ext = "video"
+            elif input_file.endswith(".audio"):
+                ext = "audio"
+            elif "." not in input_file:
+                ext = "all"
+            else:
+                ext = ospath.splitext(input_file)[-1]
+            if await aiopath.isfile(dl_path):
+                is_video, is_audio, _ = await get_document_type(dl_path)
+                if not is_video and not is_audio:
+                    break
+                elif is_video and ext == "audio":
+                    break
+                elif is_audio and ext == "video":
+                    break
+                elif ext != "all" and not dl_path.endswith(ext):
+                    break
+                new_folder = ospath.splitext(dl_path)[0]
+                name = dl_path.rsplit("/", 1)[1]
+                await makedirs(new_folder, exist_ok=True)
+                file_path = f"{new_folder}/{name}"
+                await move(dl_path, file_path)
+                dl_path = new_folder
+                if not checked:
+                    checked = True
+                    async with task_dict_lock:
+                        task_dict[self.mid] = FFmpegStatus(self, gid)
+                    await cpu_eater_lock.acquire()
+                LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
+                ffmpeg_cmd[index + 1] = file_path
+                res = await run_ffmpeg_cmd(self, ffmpeg_cmd, file_path)
+                if res and delete_files:
+                    await remove(file_path)
+            else:
+                for dirpath, _, files in await sync_to_async(
+                    walk, dl_path, topdown=False
+                ):
+                    for file_ in files:
+                        if self.is_cancelled:
+                            cpu_eater_lock.release()
+                            return ""
+                        f_path = ospath.join(dirpath, file_)
+                        is_video, is_audio, _ = await get_document_type(f_path)
+                        if not is_video and not is_audio:
+                            continue
+                        elif is_video and ext == "audio":
+                            continue
+                        elif is_audio and ext == "video":
+                            continue
+                        elif ext != "all" and not f_path.endswith(ext):
+                            continue
+                        ffmpeg_cmd[index + 1] = f_path
+                        if not checked:
+                            checked = True
+                            async with task_dict_lock:
+                                task_dict[self.mid] = FFmpegStatus(self, gid)
+                            await cpu_eater_lock.acquire()
+                        LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
+                        res = await run_ffmpeg_cmd(self, ffmpeg_cmd, f_path)
+                        if res and delete_files:
+                            await remove(f_path)
+        if checked:
+            cpu_eater_lock.release()
+        return dl_path

@@ -311,6 +311,7 @@ class YtDlp(TaskListener):
             "-cv": "",
             "-ns": "",
             "-tl": "",
+            "-ff": "None",
         }
 
         arg_parser(input_list[1:], args)
@@ -319,6 +320,11 @@ class YtDlp(TaskListener):
             self.multi = int(args["-i"])
         except:
             self.multi = 0
+
+        try:
+            self.ffmpeg_cmds = eval(args["-ff"])
+        except:
+            self.ffmpeg_cmds = None
 
         self.select = args["-s"]
         self.name = args["-n"]

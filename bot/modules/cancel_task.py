@@ -117,6 +117,7 @@ def create_cancel_buttons(is_sudo, user_id=""):
     buttons.data_button(
         "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING} {user_id}"
     )
+    buttons.data_button("FFmpeg", f"canall ms {MirrorStatus.STATUS_FFMPEG} {user_id}")
     buttons.data_button("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {user_id}")
     buttons.data_button("All", f"canall ms All {user_id}")
     if is_sudo:
