@@ -48,8 +48,9 @@ def get_folders(path):
 
 
 def make_tree(res, tool=False):
-    if tool == "qbit":
+    if tool == "qbittorrent":
         parent = TorNode("QBITTORRENT")
+        folder_id = 0
         for i in res:
             folders = qb_get_folders(i.name)
             if len(folders) > 1:
@@ -61,8 +62,12 @@ def make_tree(res, tool=False):
                     )
                     if current_node is None:
                         previous_node = TorNode(
-                            folders[j], parent=previous_node, is_folder=True
+                            folders[j],
+                            is_folder=True,
+                            parent=previous_node,
+                            file_id=folder_id,
                         )
+                        folder_id += 1
                     else:
                         previous_node = current_node
                 TorNode(
@@ -84,8 +89,9 @@ def make_tree(res, tool=False):
                     file_id=i.id,
                     progress=round(i.progress * 100, 5),
                 )
-    elif tool == "aria":
+    elif tool == "aria2":
         parent = TorNode("ARIA2")
+        folder_id = 0
         for i in res:
             folders = get_folders(i["path"])
             priority = 1
@@ -100,8 +106,12 @@ def make_tree(res, tool=False):
                     )
                     if current_node is None:
                         previous_node = TorNode(
-                            folders[j], parent=previous_node, is_folder=True
+                            folders[j],
+                            is_folder=True,
+                            parent=previous_node,
+                            file_id=folder_id,
                         )
+                        folder_id += 1
                     else:
                         previous_node = current_node
                 TorNode(
@@ -128,24 +138,8 @@ def make_tree(res, tool=False):
                     ),
                 )
 
-    else:
-        parent = TorNode("SABNZBD+")
-        priority = 1
-        for i in res["files"]:
-            TorNode(
-                i["filename"],
-                is_file=True,
-                parent=parent,
-                size=float(i["mb"]) * 1048576,
-                priority=priority,
-                file_id=i["nzf_id"],
-                progress=round(
-                    ((float(i["mb"]) - float(i["mbleft"])) / float(i["mb"])) * 100,
-                    5,
-                ),
-            )
-
-    return create_list(parent, ["", 0])
+    result = create_list(parent)
+    return {"files": result, "engine": tool}
 
 
 """
@@ -156,31 +150,30 @@ def print_tree(parent):
 """
 
 
-def create_list(par, msg):
-    if par.name != ".unwanted":
-        msg[0] += "<ul>"
-    for i in par.children:
-        msg[0] += "<li>"
+def create_list(parent, contents=None):
+    if contents is None:
+        contents = []
+    for i in parent.children:
         if i.is_folder:
-            if i.name != ".unwanted":
-                msg[
-                    0
-                ] += f'<input type="checkbox" name="foldernode_{msg[1]}"> <label for="{i.name}">{i.name}</label>'
-            create_list(i, msg)
-            msg[0] += "</li>"
-            msg[1] += 1
+            childrens = []
+            create_list(i, childrens)
+            contents.append(
+                {
+                    "id": f"folderNode_{i.file_id}",
+                    "name": i.name,
+                    "type": "folder",
+                    "children": childrens,
+                }
+            )
         else:
-            if i.priority == 0:
-                msg[
-                    0
-                ] += f'<input type="checkbox" name="filenode_{i.file_id}" data-size="{i.fsize}"> <label data-size="{i.fsize}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
-            else:
-                msg[
-                    0
-                ] += f'<input type="checkbox" checked name="filenode_{i.file_id}" data-size="{i.fsize}"> <label data-size="{i.fsize}" for="filenode_{i.file_id}">{i.name}</label> / {i.progress}%'
-            msg[0] += f'<input type="hidden" value="off" name="filenode_{i.file_id}">'
-            msg[0] += "</li>"
-
-    if par.name != ".unwanted":
-        msg[0] += "</ul>"
-    return msg
+            contents.append(
+                {
+                    "id": i.file_id,
+                    "name": i.name,
+                    "size": i.fsize,
+                    "type": "file",
+                    "selected": bool(i.priority),
+                    "progress": i.progress,
+                }
+            )
+    return contents

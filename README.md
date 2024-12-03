@@ -27,7 +27,6 @@ programming in Python.
 ## Sabnzbd
 
 - External access to web interface, so you can remove files or edit settings. Then you can sync settings in database with sync button in bsetting
-- Remove files from job before and during download using mltb file selector (Requires Base URL) (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
 - Servers menu to edit/add/remove usenet servers
 
