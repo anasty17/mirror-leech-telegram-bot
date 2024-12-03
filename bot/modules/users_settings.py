@@ -655,9 +655,11 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "ffc":
         await query.answer()
         buttons = ButtonMaker()
-        if user_dict.get("ffmpeg_cmds", False) or config_dict["YT_DLP_OPTIONS"]:
+        if user_dict.get("ffmpeg_cmds", False) or config_dict["FFMPEG_CMDS"]:
             buttons.data_button(
-                "Remove YT-DLP Options", f"userset {user_id} ffmpeg_cmds", "header"
+                "Remove FFMPEG Commands",
+                f"userset {user_id} ffmpeg_cmds",
+                "header",
             )
         buttons.data_button("Back", f"userset {user_id} back")
         buttons.data_button("Close", f"userset {user_id} close")

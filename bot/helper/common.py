@@ -129,10 +129,6 @@ class TaskConfig:
         self.is_super_chat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
 
     def get_token_path(self, dest):
-        if not dest.startswith(("mtp:", "tp:", "sa:")) and self.user_dict.get(
-            "user_tokens", False
-        ):
-            return f"tokens/{self.user_id}.pickle"
         if dest.startswith("mtp:"):
             return f"tokens/{self.user_id}.pickle"
         elif (
@@ -145,8 +141,6 @@ class TaskConfig:
             return "token.pickle"
 
     def get_config_path(self, dest):
-        if not dest.startswith("mrcc:") and self.user_dict.get("user_tokens", False):
-            return f"rclone/{self.user_id}.conf"
         return (
             f"rclone/{self.user_id}.conf" if dest.startswith("mrcc:") else "rclone.conf"
         )
@@ -189,12 +183,19 @@ class TaskConfig:
             else ["aria2", "!qB"]
         )
         if self.link not in ["rcl", "gdl"]:
-            if (
-                not self.is_jd
-                and is_rclone_path(self.link)
-                or is_gdrive_link(self.link)
-            ):
-                await self.is_token_exists(self.link, "dl")
+            if not self.is_jd:
+                if is_rclone_path(self.link):
+                    if not self.link.startswith("mrcc:") and self.user_dict.get(
+                        "user_tokens", False
+                    ):
+                        self.link = f"mrcc:{self.link}"
+                    await self.is_token_exists(self.link, "dl")
+                elif is_gdrive_link(self.link):
+                    if not self.link.startswith(
+                        ("mtp:", "tp:", "sa:")
+                    ) and self.user_dict.get("user_tokens", False):
+                        self.link = f"mtp:{self.link}"
+                    await self.is_token_exists(self.link, "dl")
         elif self.link == "rcl":
             if not self.is_ytdlp and not self.is_jd:
                 self.link = await RcloneList(self).get_rclone_path("rcd")
@@ -219,6 +220,18 @@ class TaskConfig:
         ):
             self.up_dest = self.user_dict["upload_paths"][self.up_dest]
 
+        self.ffmpeg_cmds = (
+            self.ffmpeg_cmds
+            or self.user_dict.get("ffmpeg_cmds", None)
+            or (
+                config_dict["FFMPEG_CMDS"]
+                if "ffmpeg_cmds" not in self.user_dict
+                else None
+            )
+        )
+        if self.ffmpeg_cmds:
+            self.seed = False
+
         if not self.is_leech:
             self.stop_duplicate = (
                 self.user_dict.get("stop_duplicate")
@@ -239,8 +252,19 @@ class TaskConfig:
                 )
             if not self.up_dest:
                 raise ValueError("No Upload Destination!")
-            if not is_gdrive_id(self.up_dest) and not is_rclone_path(self.up_dest):
+            if is_gdrive_id(self.up_dest):
+                if not self.up_dest.startswith(
+                    ("mtp:", "tp:", "sa:")
+                ) and self.user_dict.get("user_tokens", False):
+                    self.up_dest = f"mtp:{self.up_dest}"
+            elif is_rclone_path(self.up_dest):
+                if not self.up_dest.startswith("mrcc:") and self.user_dict.get(
+                    "user_tokens", False
+                ):
+                    self.up_dest = f"mrcc:{self.up_dest}"
+            else:
                 raise ValueError("Wrong Upload Destination!")
+
             if self.up_dest not in ["rcl", "gdl"]:
                 await self.is_token_exists(self.up_dest, "up")
 
@@ -394,18 +418,6 @@ class TaskConfig:
                 self.thumb = (
                     await create_thumb(msg) if msg.photo or msg.document else ""
                 )
-
-            self.ffmpeg_cmds = (
-                self.ffmpeg_cmds
-                or self.user_dict.get("ffmpeg_cmds", None)
-                or (
-                    config_dict["FFMPEG_CMDS"]
-                    if "ffmpeg_cmds" not in self.user_dict
-                    else None
-                )
-            )
-            if self.ffmpeg_cmds:
-                self.seed = False
 
     async def get_tag(self, text: list):
         if len(text) > 1 and text[1].startswith("Tag: "):

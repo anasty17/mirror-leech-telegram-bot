@@ -1,7 +1,7 @@
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath
 from asyncio import wait_for, Event, gather
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from functools import partial
 from json import loads
 from pyrogram.filters import regex, user
@@ -292,7 +292,7 @@ class RcloneList:
         await self.get_path_buttons()
 
     async def list_remotes(self):
-        config = ConfigParser()
+        config = RawConfigParser()
         async with aiopen(self.config_path, "r") as f:
             contents = await f.read()
             config.read_string(contents)

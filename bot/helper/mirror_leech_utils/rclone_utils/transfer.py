@@ -2,7 +2,7 @@ from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath, makedirs, listdir
 from asyncio import create_subprocess_exec, gather
 from asyncio.subprocess import PIPE
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from json import loads
 from logging import getLogger
 from random import randrange
@@ -484,7 +484,7 @@ class RcloneTransferHelper:
 
     @staticmethod
     async def _get_remote_options(config_path, remote):
-        config = ConfigParser()
+        config = RawConfigParser()
         async with aiopen(config_path, "r") as f:
             contents = await f.read()
             config.read_string(contents)
