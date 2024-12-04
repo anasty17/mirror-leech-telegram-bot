@@ -9,7 +9,7 @@ from ...ext_utils.bot_utils import sync_to_async, async_to_sync
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...telegram_helper.message_utils import send_status_message
-from ..status_utils.yt_dlp_download_status import YtDlpStatus
+from ..status_utils.yt_dlp_status import YtDlpStatus
 
 LOGGER = getLogger(__name__)
 

@@ -21,8 +21,8 @@ class TelegramStatus:
 
     def status(self):
         if self._status == "up":
-            return MirrorStatus.STATUS_UPLOADING
-        return MirrorStatus.STATUS_DOWNLOADING
+            return MirrorStatus.STATUS_UPLOAD
+        return MirrorStatus.STATUS_DOWNLOAD
 
     def name(self):
         return self.listener.name

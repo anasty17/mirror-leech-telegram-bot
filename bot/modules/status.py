@@ -107,34 +107,34 @@ async def status_pages(_, query):
         async with task_dict_lock:
             for download in task_dict.values():
                 match await sync_to_async(download.status):
-                    case MirrorStatus.STATUS_DOWNLOADING:
+                    case MirrorStatus.STATUS_DOWNLOAD:
                         tasks["Download"] += 1
                         dl_speed += speed_string_to_bytes(download.speed())
-                    case MirrorStatus.STATUS_UPLOADING:
+                    case MirrorStatus.STATUS_UPLOAD:
                         tasks["Upload"] += 1
                         up_speed += speed_string_to_bytes(download.speed())
-                    case MirrorStatus.STATUS_SEEDING:
+                    case MirrorStatus.STATUS_SEED:
                         tasks["Seed"] += 1
                         seed_speed += speed_string_to_bytes(download.seed_speed())
-                    case MirrorStatus.STATUS_ARCHIVING:
+                    case MirrorStatus.STATUS_ARCHIVE:
                         tasks["Archive"] += 1
-                    case MirrorStatus.STATUS_EXTRACTING:
+                    case MirrorStatus.STATUS_EXTRACT:
                         tasks["Extract"] += 1
-                    case MirrorStatus.STATUS_SPLITTING:
+                    case MirrorStatus.STATUS_SPLIT:
                         tasks["Split"] += 1
                     case MirrorStatus.STATUS_QUEUEDL:
                         tasks["QueueDl"] += 1
                     case MirrorStatus.STATUS_QUEUEUP:
                         tasks["QueueUp"] += 1
-                    case MirrorStatus.STATUS_CLONING:
+                    case MirrorStatus.STATUS_CLONE:
                         tasks["Clone"] += 1
-                    case MirrorStatus.STATUS_CHECKING:
+                    case MirrorStatus.STATUS_CHECK:
                         tasks["CheckUp"] += 1
                     case MirrorStatus.STATUS_PAUSED:
                         tasks["Pause"] += 1
                     case MirrorStatus.STATUS_SAMVID:
                         tasks["SamVid"] += 1
-                    case MirrorStatus.STATUS_CONVERTING:
+                    case MirrorStatus.STATUS_CONVERT:
                         tasks["ConvertMedia"] += 1
                     case MirrorStatus.STATUS_FFMPEG:
                         tasks["FFMPEG"] += 1

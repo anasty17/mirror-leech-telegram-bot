@@ -59,11 +59,11 @@ class QbittorrentStatus:
         elif state in ["pausedDL", "pausedUP"]:
             return MirrorStatus.STATUS_PAUSED
         elif state in ["checkingUP", "checkingDL"]:
-            return MirrorStatus.STATUS_CHECKING
+            return MirrorStatus.STATUS_CHECK
         elif state in ["stalledUP", "uploading"] and self.seeding:
-            return MirrorStatus.STATUS_SEEDING
+            return MirrorStatus.STATUS_SEED
         else:
-            return MirrorStatus.STATUS_DOWNLOADING
+            return MirrorStatus.STATUS_DOWNLOAD
 
     def seeders_num(self):
         return self._info.num_seeds

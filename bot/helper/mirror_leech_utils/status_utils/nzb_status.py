@@ -75,7 +75,7 @@ class SabnzbdStatus:
         elif state == "Paused":
             return MirrorStatus.STATUS_PAUSED
         else:
-            return MirrorStatus.STATUS_DOWNLOADING
+            return MirrorStatus.STATUS_DOWNLOAD
 
     def task(self):
         return self

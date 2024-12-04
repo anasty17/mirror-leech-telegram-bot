@@ -21,11 +21,11 @@ class GoogleDriveStatus:
 
     def status(self):
         if self._status == "up":
-            return MirrorStatus.STATUS_UPLOADING
+            return MirrorStatus.STATUS_UPLOAD
         elif self._status == "dl":
-            return MirrorStatus.STATUS_DOWNLOADING
+            return MirrorStatus.STATUS_DOWNLOAD
         else:
-            return MirrorStatus.STATUS_CLONING
+            return MirrorStatus.STATUS_CLONE
 
     def name(self):
         return self.listener.name

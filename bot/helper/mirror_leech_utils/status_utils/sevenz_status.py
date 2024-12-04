@@ -9,13 +9,14 @@ from ...ext_utils.status_utils import (
 )
 
 
-class ExtractStatus:
-    def __init__(self, listener, gid):
+class SevenZStatus:
+    def __init__(self, listener, gid, status=""):
         self.listener = listener
         self._size = self.listener.size
         self._gid = gid
         self._start_time = time()
         self._proccessed_bytes = 0
+        self.cstatus = status
 
     def gid(self):
         return self._gid
@@ -50,7 +51,10 @@ class ExtractStatus:
             return "-"
 
     def status(self):
-        return MirrorStatus.STATUS_EXTRACTING
+        if self.cstatus == "Extract":
+            return MirrorStatus.STATUS_EXTRACT
+        else:
+            return MirrorStatus.STATUS_ARCHIVE
 
     def processed_bytes(self):
         return get_readable_file_size(self._proccessed_bytes)
@@ -65,12 +69,12 @@ class ExtractStatus:
         return self
 
     async def cancel_task(self):
-        LOGGER.info(f"Cancelling Extract: {self.listener.name}")
+        LOGGER.info(f"Cancelling {self.cstatus}: {self.listener.name}")
         self.listener.is_cancelled = True
         async with subprocess_lock:
             if (
-                self.listener.suproc is not None
-                and self.listener.suproc.returncode is None
+                self.listener.subproc is not None
+                and self.listener.subproc.returncode is None
             ):
-                self.listener.suproc.kill()
-        await self.listener.on_upload_error("extracting stopped by user!")
+                self.listener.subproc.kill()
+        await self.listener.on_upload_error(f"{self.cstatus} stopped by user!")

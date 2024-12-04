@@ -28,11 +28,11 @@ class RcloneStatus:
 
     def status(self):
         if self._status == "dl":
-            return MirrorStatus.STATUS_DOWNLOADING
+            return MirrorStatus.STATUS_DOWNLOAD
         elif self._status == "up":
-            return MirrorStatus.STATUS_UPLOADING
+            return MirrorStatus.STATUS_UPLOAD
         else:
-            return MirrorStatus.STATUS_CLONING
+            return MirrorStatus.STATUS_CLONE
 
     def processed_bytes(self):
         return self._obj.transferred_size

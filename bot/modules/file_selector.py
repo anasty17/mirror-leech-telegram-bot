@@ -64,7 +64,7 @@ async def select(_, message):
         await send_message(message, "This task is not for you!")
         return
     if await sync_to_async(task.status) not in [
-        MirrorStatus.STATUS_DOWNLOADING,
+        MirrorStatus.STATUS_DOWNLOAD,
         MirrorStatus.STATUS_PAUSED,
         MirrorStatus.STATUS_QUEUEDL,
     ]:

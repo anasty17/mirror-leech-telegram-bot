@@ -89,21 +89,21 @@ async def cancel_all(status, user_id):
 def create_cancel_buttons(is_sudo, user_id=""):
     buttons = button_build.ButtonMaker()
     buttons.data_button(
-        "Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOADING} {user_id}"
+        "Downloading", f"canall ms {MirrorStatus.STATUS_DOWNLOAD} {user_id}"
     )
     buttons.data_button(
-        "Uploading", f"canall ms {MirrorStatus.STATUS_UPLOADING} {user_id}"
+        "Uploading", f"canall ms {MirrorStatus.STATUS_UPLOAD} {user_id}"
     )
-    buttons.data_button("Seeding", f"canall ms {MirrorStatus.STATUS_SEEDING} {user_id}")
+    buttons.data_button("Seeding", f"canall ms {MirrorStatus.STATUS_SEED} {user_id}")
     buttons.data_button(
-        "Spltting", f"canall ms {MirrorStatus.STATUS_SPLITTING} {user_id}"
+        "Spltting", f"canall ms {MirrorStatus.STATUS_SPLIT} {user_id}"
     )
-    buttons.data_button("Cloning", f"canall ms {MirrorStatus.STATUS_CLONING} {user_id}")
+    buttons.data_button("Cloning", f"canall ms {MirrorStatus.STATUS_CLONE} {user_id}")
     buttons.data_button(
-        "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACTING} {user_id}"
+        "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACT} {user_id}"
     )
     buttons.data_button(
-        "Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVING} {user_id}"
+        "Archiving", f"canall ms {MirrorStatus.STATUS_ARCHIVE} {user_id}"
     )
     buttons.data_button(
         "QueuedDl", f"canall ms {MirrorStatus.STATUS_QUEUEDL} {user_id}"
@@ -115,7 +115,7 @@ def create_cancel_buttons(is_sudo, user_id=""):
         "SampleVideo", f"canall ms {MirrorStatus.STATUS_SAMVID} {user_id}"
     )
     buttons.data_button(
-        "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERTING} {user_id}"
+        "ConvertMedia", f"canall ms {MirrorStatus.STATUS_CONVERT} {user_id}"
     )
     buttons.data_button("FFmpeg", f"canall ms {MirrorStatus.STATUS_FFMPEG} {user_id}")
     buttons.data_button("Paused", f"canall ms {MirrorStatus.STATUS_PAUSED} {user_id}")
