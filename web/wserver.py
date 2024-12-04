@@ -124,33 +124,29 @@ def handle_torrent():
         else:
             selected_files = ",".join(selected_files)
             set_aria2(gid, selected_files)
-        content = jsonify(
-            {
+        content = {
                 "files": [],
                 "engine": "",
                 "error": "",
                 "message": "Your selection has been submitted successfully.",
             }
-        )
-    if request.method == "GET":
+    else:
         try:
             if len(gid) > 20:
                 res = qbittorrent_client.torrents_files(torrent_hash=gid)
-                content = jsonify(make_tree(res, "qbittorrent"))
+                content = make_tree(res, "qbittorrent")
             else:
                 res = aria2.client.get_files(gid)
-                content = jsonify(make_tree(res, "aria2"))
+                content = make_tree(res, "aria2")
         except Exception as e:
             LOGGER.error(str(e))
-            content = jsonify(
-                {
-                    "files": [],
-                    "engine": "",
-                    "error": "Error getting files",
-                    "message": str(e),
-                }
-            )
-    return content
+            content = {
+                "files": [],
+                "engine": "",
+                "error": "Error getting files",
+                "message": str(e),
+            }
+    return jsonify(content)
 
 
 def set_qbittorrent(gid, selected_files, unselected_files):
