@@ -55,16 +55,14 @@ def create_help_buttons():
 
 def bt_selection_buttons(id_):
     gid = id_[:12] if len(id_) > 25 else id_
-    pincode = "".join([n for n in id_ if n.isdigit()][:4])
+    pin = "".join([n for n in id_ if n.isdigit()][:4])
     buttons = ButtonMaker()
     BASE_URL = config_dict["BASE_URL"]
     if config_dict["WEB_PINCODE"]:
-        buttons.url_button("Select Files", f"{BASE_URL}/app/files/{id_}")
-        buttons.data_button("Pincode", f"sel pin {gid} {pincode}")
+        buttons.url_button("Select Files", f"{BASE_URL}/app/files?gid={id_}")
+        buttons.data_button("Pincode", f"sel pin {gid} {pin}")
     else:
-        buttons.url_button(
-            "Select Files", f"{BASE_URL}/app/files/{id_}?pin_code={pincode}"
-        )
+        buttons.url_button("Select Files", f"{BASE_URL}/app/files?gid={id_}&pin={pin}")
     buttons.data_button("Done Selecting", f"sel done {gid} {id_}")
     buttons.data_button("Cancel", f"sel cancel {gid}")
     return buttons.build_menu(2)

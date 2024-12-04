@@ -118,7 +118,7 @@ def make_tree(res, tool=False):
                     folders[-1],
                     is_file=True,
                     parent=previous_node,
-                    size=i["length"],
+                    size=float(i["length"]),
                     priority=priority,
                     file_id=i["index"],
                     progress=round(
@@ -130,7 +130,7 @@ def make_tree(res, tool=False):
                     folders[-1],
                     is_file=True,
                     parent=parent,
-                    size=i["length"],
+                    size=float(i["length"]),
                     priority=priority,
                     file_id=i["index"],
                     progress=round(
@@ -155,14 +155,14 @@ def create_list(parent, contents=None):
         contents = []
     for i in parent.children:
         if i.is_folder:
-            childrens = []
-            create_list(i, childrens)
+            children = []
+            create_list(i, children)
             contents.append(
                 {
                     "id": f"folderNode_{i.file_id}",
                     "name": i.name,
                     "type": "folder",
-                    "children": childrens,
+                    "children": children,
                 }
             )
         else:
@@ -177,3 +177,19 @@ def create_list(parent, contents=None):
                 }
             )
     return contents
+
+
+def extract_file_ids(data):
+    selected_files = []
+    unselected_files = []
+    for item in data:
+        if item.get("type") == "file":
+            if item.get("selected"):
+                selected_files.append(str(item["id"]))
+            else:
+                unselected_files.append(str(item["id"]))
+        if item.get("children"):
+            child_selected, child_unselected = extract_file_ids(item["children"])
+            selected_files.extend(child_selected)
+            unselected_files.extend(child_unselected)
+    return selected_files, unselected_files
