@@ -693,6 +693,16 @@
             renderFileTree(nodes);
         }
 
+        function getFullPath(node) {
+            const path = [];
+            let currentNode = findParent(files[0], node.id);
+            while (currentNode) {
+                path.unshift(currentNode.name);
+                currentNode = findParent(files[0], currentNode.id);
+            }
+            return path.length > 0 ? path.join('/') : '';
+        }
+
         function openEditFileNameModal(node) {
             modalTitle.textContent = 'Edit File Name';
             modalBody.innerHTML = `
@@ -707,12 +717,32 @@
             const editNameInput = document.getElementById('editNameInput');
 
             saveNameBtn.addEventListener('click', () => {
+                closeModal();
                 const newName = editNameInput.value.trim();
                 if (newName && newName !== node.name) {
-                    node.name = newName;
-                    renderFileTree(currentFolder ? currentFolder.children : files);
+                    const fullPath = getFullPath(node);
+                    const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}&mode=rename`;
+                    const body = {
+                        old_path: fullPath ? `${fullPath}/${node.name}` : node.name,
+                        new_path: fullPath ? `${fullPath}/${newName}` : newName,
+                    };
+                    fetch(requestUrl, {
+                        'method': 'POST',
+                        'body': JSON.stringify(body),
+                    }).then(response => {
+                        if (response.ok) {
+                            modalTitle.textContent = 'Success!';
+                            modalBody.innerHTML = '<p>Your Rename has been submitted successfully.</p>';
+                            node.name = newName;
+                            renderFileTree(currentFolder ? currentFolder.children : files);
+                        } else {
+                            modalTitle.textContent = 'Error';
+                            modalBody.innerHTML = '<p>There was an error submitting your Rename. Please try again.</p>';
+                        }
+                        modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Okay</button>';
+                        openModal();
+                    });
                 }
-                closeModal();
             });
 
             editNameInput.addEventListener('keypress', (e) => {
@@ -746,7 +776,7 @@
             modalBody.innerHTML = `<p>Submitting your selection ${selectedCount.innerText} ... </p>`;
             modalFooter.innerHTML = '';
             openModal();
-            const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}`;
+            const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}&mode=selection`;
             fetch(requestUrl, { 'method': 'POST', 'body': JSON.stringify(files) }).then(response => {
                 if (reusableModal.style.display === 'block') {
                     closeModal();
@@ -785,7 +815,7 @@
                 openModal();
                 return false;
             }
-            const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}`;
+            const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}&mode=get`;
             fetch(requestUrl).then(function (response) {
                 if (response.ok) {
                     return response.json().then(data => {
