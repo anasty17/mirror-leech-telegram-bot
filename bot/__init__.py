@@ -40,7 +40,7 @@ getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(ERROR)
 getLogger("pymongo").setLevel(ERROR)
 
-botStartTime = time()
+bot_start_time = time()
 
 bot_loop = new_event_loop()
 set_event_loop(bot_loop)

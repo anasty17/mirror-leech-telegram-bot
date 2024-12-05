@@ -47,20 +47,20 @@ class GoogleDriveCount(GoogleDriveHelper):
         LOGGER.info(f"Counting: {name}")
         mime_type = meta.get("mimeType")
         if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
-            self._gDrive_directory(meta)
+            self._gdrive_directory(meta)
             mime_type = "Folder"
         else:
             if mime_type is None:
                 mime_type = "File"
             self.total_files += 1
-            self._gDrive_file(meta)
+            self._gdrive_file(meta)
         return name, mime_type, self.proc_bytes, self.total_files, self.total_folders
 
-    def _gDrive_file(self, filee):
+    def _gdrive_file(self, filee):
         size = int(filee.get("size", 0))
         self.proc_bytes += size
 
-    def _gDrive_directory(self, drive_folder):
+    def _gdrive_directory(self, drive_folder):
         files = self.get_files_by_folder_id(drive_folder["id"])
         if len(files) == 0:
             return
@@ -74,7 +74,7 @@ class GoogleDriveCount(GoogleDriveHelper):
                 mime_type = filee.get("mimeType")
             if mime_type == self.G_DRIVE_DIR_MIME_TYPE:
                 self.total_folders += 1
-                self._gDrive_directory(filee)
+                self._gdrive_directory(filee)
             else:
                 self.total_files += 1
-                self._gDrive_file(filee)
+                self._gdrive_file(filee)

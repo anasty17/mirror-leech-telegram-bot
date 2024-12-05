@@ -7,7 +7,7 @@ from bot import (
     task_dict_lock,
     status_dict,
     task_dict,
-    botStartTime,
+    bot_start_time,
     DOWNLOAD_DIR,
     intervals,
     bot,
@@ -37,7 +37,7 @@ async def mirror_status(_, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
-        currentTime = get_readable_time(time() - botStartTime)
+        currentTime = get_readable_time(time() - bot_start_time)
         free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
         msg = f"No Active Tasks!\nEach user can get status for his tasks by adding me or user_id after cmd: /{BotCommands.StatusCommand} me"
         msg += (

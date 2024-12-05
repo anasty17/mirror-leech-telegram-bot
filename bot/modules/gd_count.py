@@ -12,7 +12,7 @@ from ..helper.telegram_helper.message_utils import delete_message, send_message
 
 
 @new_task
-async def countNode(_, message):
+async def count_node(_, message):
     args = message.text.split()
     user = message.from_user or message.sender_chat
     if username := user.username:
@@ -50,7 +50,7 @@ async def countNode(_, message):
 
 bot.add_handler(
     MessageHandler(
-        countNode,
+        count_node,
         filters=command(BotCommands.CountCommand, case_sensitive=True)
         & CustomFilters.authorized,
     )
