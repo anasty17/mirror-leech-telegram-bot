@@ -312,6 +312,7 @@
             display: flex;
             flex-direction: column;
             flex-grow: 1;
+            min-width: 0;
         }
 
         .file-info-row {
@@ -339,6 +340,12 @@
             align-items: center;
             justify-content: center;
             width: 40px;
+        }
+
+        .file-name {
+            word-break: break-word;
+            max-width: 100%;
+            overflow-wrap: break-word;
         }
     </style>
 </head>
@@ -372,10 +379,20 @@
         </div>
 
         <div id="fileManager" class="card p-6 hidden">
-            <div class="flex justify-between items-center mb-4">
-                <button id="selectAllBtn" class="btn btn-primary">Select
-                    All</button>
-                <button id="submitBtn" class="btn btn-primary">Submit</button>
+            <div class="flex flex-wrap justify-between items-start mb-4">
+                <div class="flex flex-col items-center mr-2 mb-2">
+                    <button id="selectAllBtn" class="btn btn-primary">Select All</button>
+                    <span class="text-xs mt-1">in this folder</span>
+                </div>
+                <div class="flex flex-col items-center mr-2 mb-2">
+                    <button id="invertSelectionBtn" class="btn btn-primary">Invert Selection</button>
+                    <span class="text-xs mt-1">in this folder</span>
+                </div>
+                <div class="flex flex-col items-center mr-2 mb-2">
+                    <button id="selectEverythingBtn" class="btn btn-primary">Select Everything</button>
+                    <span class="text-xs mt-1">all files</span>
+                </div>
+                <button id="submitBtn" class="btn btn-primary mb-2">Submit</button>
             </div>
             <div class="mb-4">
                 <p>Selected files: <span id="selectedCount">0</span> / <span id="totalCount">0</span></p>
@@ -566,10 +583,18 @@
                     } else if (areSomeChildrenSelected(node)) {
                         checkbox.indeterminate = true;
                     }
+                    if (allowEdit) {
+                        const editBtn = document.createElement('span');
+                        editBtn.textContent = ' | Edit ✏️';
+                        editBtn.className = 'edit-btn';
+                        sizeInfo.appendChild(editBtn);
+                    }
                 }
 
                 fileTree.appendChild(div);
             });
+            updateSelectAllButtonText();
+            updateSelectEverythingButtonText();
         }
 
         function areAllChildrenSelected(folder) {
@@ -682,15 +707,63 @@
 
         function selectAll() {
             const nodes = currentFolder ? currentFolder.children : files;
+            const allSelected = nodes.every(node => node.type === 'folder' ? areAllChildrenSelected(node) : node.selected);
             nodes.forEach(node => {
                 if (node.type === 'folder') {
-                    toggleFolder(node, true);
+                    toggleFolder(node, !allSelected);
                 } else {
-                    node.selected = true;
+                    node.selected = !allSelected;
                 }
             });
             updateStats();
             renderFileTree(nodes);
+            updateSelectAllButtonText();
+        }
+
+        function invertSelection() {
+            const nodes = currentFolder ? currentFolder.children : files;
+            nodes.forEach(node => {
+                if (node.type === 'folder') {
+                    invertFolderSelection(node);
+                } else {
+                    node.selected = !node.selected;
+                }
+            });
+            updateStats();
+            renderFileTree(nodes);
+        }
+
+        function invertFolderSelection(folder) {
+            folder.selected = !folder.selected;
+            if (folder.children) {
+                folder.children.forEach(child => {
+                    if (child.type === 'folder') {
+                        invertFolderSelection(child);
+                    } else {
+                        child.selected = !child.selected;
+                    }
+                });
+            }
+        }
+
+        function selectEverything() {
+            const allSelected = files.every(node => node.type === 'folder' ? areAllChildrenSelected(node) : node.selected);
+            function recursiveSelect(nodes, select) {
+                nodes.forEach(node => {
+                    if (node.type === 'folder') {
+                        node.selected = select;
+                        if (node.children) {
+                            recursiveSelect(node.children, select);
+                        }
+                    } else {
+                        node.selected = select;
+                    }
+                });
+            }
+            recursiveSelect(files, !allSelected);
+            updateStats();
+            renderFileTree(currentFolder ? currentFolder.children : files);
+            updateSelectEverythingButtonText();
         }
 
         function getFullPath(node) {
@@ -704,7 +777,7 @@
         }
 
         function openEditFileNameModal(node) {
-            modalTitle.textContent = 'Edit File Name';
+            modalTitle.textContent = `Edit ${node.type === 'folder' ? 'Folder' : 'File'} Name`;
             modalBody.innerHTML = `
                 <input type="text" id="editNameInput" class="edit-name-input" value="${node.name}">
             `;
@@ -725,6 +798,7 @@
                     const body = {
                         old_path: fullPath ? `${fullPath}/${node.name}` : node.name,
                         new_path: fullPath ? `${fullPath}/${newName}` : newName,
+                        type: node.type,
                     };
                     fetch(requestUrl, {
                         'method': 'POST',
@@ -833,6 +907,8 @@
                                 fileManager.classList.remove('hidden');
                                 renderFileTree(files);
                                 updateStats();
+                                updateSelectAllButtonText();
+                                updateSelectEverythingButtonText();
                             }, 500)
                         }
                     });
@@ -850,13 +926,33 @@
             });
         });
         themeToggle.addEventListener('change', toggleTheme);
+        const invertSelectionBtn = document.getElementById('invertSelectionBtn');
+        const selectEverythingBtn = document.getElementById('selectEverythingBtn');
+
+        invertSelectionBtn.addEventListener('click', invertSelection);
+        selectEverythingBtn.addEventListener('click', selectEverything);
+
         selectAllBtn.addEventListener('click', selectAll);
+        selectEverythingBtn.addEventListener('click', selectEverything);
         submitBtn.addEventListener('click', submitData);
+
         reusableModal.addEventListener('click', (event) => {
             if (event.target === reusableModal) {
                 event.stopPropagation();
             }
         });
+
+        function updateSelectAllButtonText() {
+            const nodes = currentFolder ? currentFolder.children : files;
+            const allSelected = nodes.every(node => node.type === 'folder' ? areAllChildrenSelected(node) : node.selected);
+            selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+        }
+
+        function updateSelectEverythingButtonText() {
+            const allSelected = selectedCount === totalCount;
+            selectEverythingBtn.textContent = allSelected ? 'Deselect Everything' : 'Select Everything';
+        }
+
         loadThemePreference();
     </script>
 </body>

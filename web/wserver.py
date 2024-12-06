@@ -179,7 +179,12 @@ def handle_torrent():
 
 def handle_rename(gid, data):
     try:
-        qbittorrent_client.torrents_rename_file(torrent_hash=gid, **data)
+        _type = data["type"]
+        del data["type"]
+        if _type == "file":
+            qbittorrent_client.torrents_rename_file(torrent_hash=gid, **data)
+        else:
+            qbittorrent_client.torrents_rename_folder(torrent_hash=gid, **data)
     except NotFound404Error as e:
         raise NotFound404Error from e
     except Exception as e:
