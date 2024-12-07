@@ -16,7 +16,7 @@ class GoogleDriveSearch(GoogleDriveHelper):
         self._is_recursive = is_recursive
         self._item_type = item_type
 
-    def _drive_query(self, dirId, file_name, is_recursive):
+    def _drive_query(self, dir_id, file_name, is_recursive):
         try:
             if is_recursive:
                 if self._stop_dup:
@@ -33,7 +33,7 @@ class GoogleDriveSearch(GoogleDriveHelper):
                     elif self._item_type == "folders":
                         query += f"mimeType = '{self.G_DRIVE_DIR_MIME_TYPE}' and "
                 query += "trashed = false"
-                if dirId == "root":
+                if dir_id == "root":
                     return (
                         self.service.files()
                         .list(
@@ -51,7 +51,7 @@ class GoogleDriveSearch(GoogleDriveHelper):
                         .list(
                             supportsAllDrives=True,
                             includeItemsFromAllDrives=True,
-                            driveId=dirId,
+                            driveId=dir_id,
                             q=query,
                             spaces="drive",
                             pageSize=150,
@@ -63,9 +63,9 @@ class GoogleDriveSearch(GoogleDriveHelper):
                     )
             else:
                 if self._stop_dup:
-                    query = f"'{dirId}' in parents and name = '{file_name}' and "
+                    query = f"'{dir_id}' in parents and name = '{file_name}' and "
                 else:
-                    query = f"'{dirId}' in parents and "
+                    query = f"'{dir_id}' in parents and "
                     file_name = file_name.split()
                     for name in file_name:
                         if name != "":

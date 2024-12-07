@@ -42,7 +42,7 @@ async def _on_download_error(err, tor, button=None):
 
 
 @new_task
-async def _onSeedFinish(tor):
+async def _on_seed_finish(tor):
     ext_hash = tor.hash
     LOGGER.info(f"Cancelling Seed: {tor.name}")
     if task := await get_task_by_gid(ext_hash[:12]):
@@ -192,7 +192,7 @@ async def _qb_listener():
                         and qb_torrents[tag]["seeding"]
                     ):
                         qb_torrents[tag]["seeding"] = False
-                        await _onSeedFinish(tor_info)
+                        await _on_seed_finish(tor_info)
                         await sleep(0.5)
             except Exception as e:
                 LOGGER.error(str(e))

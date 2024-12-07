@@ -207,8 +207,8 @@ If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tool
 rclone_cl = """<b>Rclone</b>: path
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 /cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
-/cmd rcl or rclonePath -up rclonePath or rc or rcl
-/cmd mrcc:rclonePath -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
+/cmd rcl or rclone_path -up rclone_path or rc or rcl
+/cmd mrcc:rclone_path -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
 
 name_sub = r"""<b>Name Substitution</b>: -ns
 /cmd link -ns script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
