@@ -717,10 +717,10 @@ class TaskConfig:
         pswd = self.compress if isinstance(self.compress, str) else ""
         if self.seed and not self.new_dir:
             self.new_dir = f"{self.dir}10000"
-            up_path = f"{self.new_dir}/{self.name}.7z"
+            up_path = f"{self.new_dir}/{self.name}.zip"
             delete = False
         else:
-            up_path = f"{dl_path}.7z"
+            up_path = f"{dl_path}.zip"
             delete = True
         async with task_dict_lock:
             task_dict[self.mid] = SevenZStatus(self, gid, "Zip")

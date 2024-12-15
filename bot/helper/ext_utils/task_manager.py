@@ -31,7 +31,7 @@ async def stop_duplicate_check(listener):
     LOGGER.info(f"Checking File/Folder if already in Drive: {name}")
 
     if listener.compress:
-        name = f"{name}.7z"
+        name = f"{name}.zip"
     elif listener.extract:
         try:
             name = get_base_name(name)
