@@ -114,28 +114,34 @@ def make_tree(res, tool=False):
                         folder_id += 1
                     else:
                         previous_node = current_node
+                try:
+                    progress = round((int(i["completedLength"]) / int(i["length"])) * 100, 5)
+                except:
+                    progress = 0
                 TorNode(
                     folders[-1],
                     is_file=True,
                     parent=previous_node,
-                    size=float(i["length"]),
+                    size=int(i["length"]),
                     priority=priority,
                     file_id=i["index"],
-                    progress=round(
-                        (int(i["completedLength"]) / int(i["length"])) * 100, 5
-                    ),
+                    progress=progress,
                 )
             else:
+                try:
+                    progress = round(
+                        (int(i["completedLength"]) / int(i["length"])) * 100, 5
+                    )
+                except:
+                    progress = 0
                 TorNode(
                     folders[-1],
                     is_file=True,
                     parent=parent,
-                    size=float(i["length"]),
+                    size=int(i["length"]),
                     priority=priority,
                     file_id=i["index"],
-                    progress=round(
-                        (int(i["completedLength"]) / int(i["length"])) * 100, 5
-                    ),
+                    progress=progress,
                 )
 
     result = create_list(parent)
