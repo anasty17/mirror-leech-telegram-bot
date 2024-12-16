@@ -32,11 +32,11 @@ async def convert_video(listener, video_file, ext, retry=False):
             output,
         ]
         if ext == "mp4":
-            cmd[7:7] = ["-c:s", "mov_text", "-f", "mp4"]
+            cmd[10:10] = ["-c:s", "mov_text"]
         elif ext == "mkv":
-            cmd[7:7] = ["-c:s", "ass"]
+            cmd[10:10] = ["-c:s", "ass"]
         else:
-            cmd[7:7] = ["-c:s", "copy"]
+            cmd[10:10] = ["-c:s", "copy"]
     else:
         cmd = [
             "ffmpeg",
