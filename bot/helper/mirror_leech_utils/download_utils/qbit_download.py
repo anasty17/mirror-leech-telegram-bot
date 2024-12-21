@@ -1,9 +1,11 @@
 from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
+from time import time
 
 from bot import (
     task_dict,
     task_dict_lock,
+    qb_torrents,
     qbittorrent_client,
     LOGGER,
     config_dict,
@@ -134,6 +136,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                 LOGGER.info(
                     f"Start Queued Download from Qbittorrent: {tor_info.name} - Hash: {ext_hash}"
                 )
+                qb_torrents[f"{listener.mid}"].update({"stalled_time": time(), "queue_time": time()})
             await sync_to_async(
                 qbittorrent_client.torrents_start, torrent_hashes=ext_hash
             )

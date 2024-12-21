@@ -129,9 +129,10 @@ async def _qb_listener():
                     if state == "metaDL":
                         TORRENT_TIMEOUT = config_dict["TORRENT_TIMEOUT"]
                         qb_torrents[tag]["stalled_time"] = time()
+                        started_time = qb_torrents[tag]["queue_time"] or tor_info.added_on
                         if (
                             TORRENT_TIMEOUT
-                            and time() - tor_info.added_on >= TORRENT_TIMEOUT
+                            and time() - started_time >= TORRENT_TIMEOUT
                         ):
                             await _on_download_error("Dead Torrent!", tor_info)
                         else:
@@ -203,6 +204,7 @@ async def on_download_start(tag):
     async with qb_listener_lock:
         qb_torrents[tag] = {
             "stalled_time": time(),
+            "queue_time": 0,
             "stop_dup_check": False,
             "rechecked": False,
             "uploaded": False,
