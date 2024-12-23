@@ -1,5 +1,7 @@
 from signal import signal, SIGINT
 from asyncio import gather
+from pyrogram.filters import regex
+from pyrogram.handlers import CallbackQueryHandler
 
 from .core.config_manager import Config
 
@@ -18,12 +20,39 @@ from .core.startup import (
     update_variables,
 )
 from .helper.ext_utils.telegraph_helper import telegraph
-from .helper.ext_utils.bot_utils import sync_to_async, create_help_buttons
+from .helper.ext_utils.bot_utils import sync_to_async, create_help_buttons, new_task
 from .helper.ext_utils.files_utils import clean_all, exit_clean_up
 from .helper.ext_utils.jdownloader_booter import jdownloader
 from .helper.listeners.aria2_listener import start_aria2_listener
+from .helper.telegram_helper.filters import CustomFilters
 from .helper.mirror_leech_utils.rclone_utils.serve import rclone_serve_booter
+from .helper.telegram_helper.message_utils import (
+    send_message,
+    edit_message,
+    delete_message,
+)
 from .modules import initiate_search_tools, get_packages_version, restart_notification
+
+
+@new_task
+async def restart_sessions_confirm(_, query):
+    data = query.data.split()
+    message = query.message
+    if data[1] == "confirm":
+        reply_to = message.reply_to_message
+        restart_message = await send_message(reply_to, "Restarting Session(s)...")
+        await delete_message(message)
+        await TgClient.reload()
+        add_handlers()
+        TgClient.bot.add_handler(
+            CallbackQueryHandler(
+                restart_sessions_confirm,
+                filters=regex("^sessionrestart") & CustomFilters.sudo,
+            )
+        )
+        await edit_message(restart_message, "Session(s) Restarted Successfully!")
+    else:
+        await delete_message(message)
 
 
 async def main():
@@ -48,6 +77,12 @@ async def main():
     )
     create_help_buttons()
     add_handlers()
+    TgClient.bot.add_handler(
+        CallbackQueryHandler(
+            restart_sessions_confirm,
+            filters=regex("^sessionrestart") & CustomFilters.sudo,
+        )
+    )
     LOGGER.info("Bot Started!")
     signal(SIGINT, exit_clean_up)
 

@@ -87,16 +87,19 @@ class Config:
         for attr in dir(settings):
             if hasattr(cls, attr):
                 value = getattr(settings, attr)
-                if isinstance(value, str):
-                    value = value.strip()
                 if not value:
                     continue
-                if attr == "DEFAULT_UPLOAD" and value != "rc":
-                    value = "gd"
+                if isinstance(value, str):
+                    value = value.strip()
+                if attr == "DEFAULT_UPLOAD" and value != "gd":
+                    value = "rc"
                 elif attr == "DOWNLOAD_DIR" and not value.endswith("/"):
                     value = f"{value}/"
                 elif attr == "USENET_SERVERS":
-                    if not value[0].get("host"):
+                    try:
+                        if not value[0].get("host"):
+                            continue
+                    except:
                         continue
                 setattr(cls, attr, value)
         for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
@@ -110,14 +113,17 @@ class Config:
     def load_dict(cls, config_dict):
         for key, value in config_dict.items():
             if hasattr(cls, key):
-                if key == "DEFAULT_UPLOAD" and value != "rc":
-                    value = "gd"
+                if key == "DEFAULT_UPLOAD" and value != "gd":
+                    value = "rc"
                 elif key == "DOWNLOAD_DIR":
                     if not value.endswith("/"):
                         value = f"{value}/"
                 elif key == "USENET_SERVERS":
-                    if not value[0].get("host"):
-                        continue
+                    try:
+                        if not value[0].get("host"):
+                            value = []
+                    except:
+                        value = []
                 setattr(cls, key, value)
         for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
             value = getattr(cls, key)

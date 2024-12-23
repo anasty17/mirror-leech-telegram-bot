@@ -143,9 +143,9 @@ class YoutubeDLHelper:
                     if not entry:
                         continue
                     elif "filesize_approx" in entry:
-                        self._listener.size += entry["filesize_approx"]
+                        self._listener.size += entry.get("filesize_approx", 0)
                     elif "filesize" in entry:
-                        self._listener.size += entry["filesize"]
+                        self._listener.size += entry.get("filesize", 0)
                     if not self._listener.name:
                         outtmpl_ = "%(series,playlist_title,channel)s%(season_number& |)s%(season_number&S|)s%(season_number|)02d.%(ext)s"
                         self._listener.name, ext = ospath.splitext(

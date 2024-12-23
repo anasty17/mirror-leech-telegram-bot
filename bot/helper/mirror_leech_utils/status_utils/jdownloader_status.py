@@ -23,7 +23,7 @@ def _get_combined_info(result):
         bytesTotal += res.get("bytesTotal", 0)
         speed += res.get("speed", 0)
     if len(status) == 0:
-        status = "UnknownError Check Web Interface"
+        status = "UnknownError Check WebUI"
     try:
         eta = (bytesTotal - bytesLoaded) / speed
     except:
@@ -92,10 +92,10 @@ class JDownloaderStatus:
 
     def status(self):
         async_to_sync(self._update)
-        state = self._info.get("status", "jdlimit")
+        state = self._info.get("status", "jdlimit").capitalize()
         if len(state) == 0:
-            return "UnknownError Check Web Interface"
-        return MirrorStatus.STATUS_QUEUEDL if state == "jdlimit" else state
+            return "UnknownError Check WebUI"
+        return MirrorStatus.STATUS_QUEUEDL if state == "Jdlimit" else state
 
     def task(self):
         return self
@@ -106,7 +106,9 @@ class JDownloaderStatus:
     async def cancel_task(self):
         self.listener.is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self.name()}")
-        await jdownloader.device.downloads.remove_links(package_ids=jd_downloads[self._gid]["ids"])
+        await jdownloader.device.downloads.remove_links(
+            package_ids=jd_downloads[self._gid]["ids"]
+        )
         async with jd_lock:
             del jd_downloads[self._gid]
         await self.listener.on_download_error("Download cancelled by user!")

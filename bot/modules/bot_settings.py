@@ -901,6 +901,9 @@ async def load_config():
     index_urls.clear()
     await update_variables()
 
+    if not await aiopath.exists("accounts"):
+        Config.USE_SERVICE_ACCOUNTS = False
+
     if len(task_dict) != 0 and (st := intervals["status"]):
         for key, intvl in list(st.items()):
             intvl.cancel()

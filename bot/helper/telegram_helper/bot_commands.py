@@ -30,6 +30,7 @@ class _BotCommands:
         self.RmSudoCommand = f"rmsudo{Config.CMD_SUFFIX}"
         self.PingCommand = f"ping{Config.CMD_SUFFIX}"
         self.RestartCommand = f"restart{Config.CMD_SUFFIX}"
+        self.RestartSessionsCommand = f"restartses{Config.CMD_SUFFIX}"
         self.StatsCommand = f"stats{Config.CMD_SUFFIX}"
         self.HelpCommand = f"help{Config.CMD_SUFFIX}"
         self.LogCommand = f"log{Config.CMD_SUFFIX}"

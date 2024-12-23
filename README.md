@@ -517,6 +517,7 @@ shell - Run commands in Shell
 aexec - Execute async function
 exec - Execute sync function
 restart - Restart the Bot
+restartses - Restart Telegram Session(s)
 stats - Bot Usage Stats
 ping - Ping the Bot
 help - All cmds with description

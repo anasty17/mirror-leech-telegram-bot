@@ -19,7 +19,12 @@ from .mirror_leech import (
     nzb_leech,
     nzb_mirror,
 )
-from .restart import restart_bot, restart_notification
+from .restart import (
+    restart_bot,
+    restart_notification,
+    confirm_restart,
+    restart_sessions,
+)
 from .rss import get_rss_menu, rss_listener
 from .search import torrent_search, torrent_search_update, initiate_search_tools
 from .services import start, ping, log
@@ -62,6 +67,8 @@ __all__ = [
     "nzb_mirror",
     "restart_bot",
     "restart_notification",
+    "confirm_restart",
+    "restart_sessions",
     "get_rss_menu",
     "rss_listener",
     "torrent_search",

@@ -60,7 +60,7 @@ class TgClient:
                 await cls.bot.stop()
             if cls.user:
                 await cls.user.stop()
-            LOGGER.info("Client stopped")
+            LOGGER.info("Client(s) stopped")
 
     @classmethod
     async def reload(cls):
@@ -68,4 +68,4 @@ class TgClient:
             await cls.bot.restart()
             if cls.user:
                 await cls.user.restart()
-            LOGGER.info("Client restarted")
+            LOGGER.info("Client(s) restarted")
