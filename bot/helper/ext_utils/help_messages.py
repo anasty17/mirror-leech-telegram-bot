@@ -56,7 +56,7 @@ link6 will get uploaded normally alone
 
 thumb = """<b>Thumbnail for current task</b>: -t
 
-/cmd link -t tg-message-link(doc or photo)"""
+/cmd link -t tg-message-link (doc or photo) or none (file without thumb)"""
 
 split_size = """<b>Split size for current task</b>: -sp
 
