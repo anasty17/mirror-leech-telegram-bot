@@ -22,7 +22,7 @@ from ..core.config_manager import Config
 async def restart_bot(_, message):
     buttons = button_build.ButtonMaker()
     buttons.data_button("Yes!", "botrestart confirm")
-    buttons.data_button("Cancel", "restart cancel")
+    buttons.data_button("Cancel", "botrestart cancel")
     button = buttons.build_menu(2)
     await send_message(message, "Are you sure you want to restart the bot ?!", button)
 
@@ -31,7 +31,7 @@ async def restart_bot(_, message):
 async def restart_sessions(_, message):
     buttons = button_build.ButtonMaker()
     buttons.data_button("Yes!", "sessionrestart confirm")
-    buttons.data_button("Cancel", "restart cancel")
+    buttons.data_button("Cancel", "sessionrestart cancel")
     button = buttons.build_menu(2)
     await send_message(
         message, "Are you sure you want to restart the session(s) ?!", button
