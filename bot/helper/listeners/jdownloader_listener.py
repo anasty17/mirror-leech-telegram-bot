@@ -1,6 +1,6 @@
 from asyncio import sleep
 
-from bot import intervals, jd_lock, jd_downloads
+from ... import intervals, jd_lock, jd_downloads
 from ..ext_utils.bot_utils import new_task
 from ..ext_utils.jdownloader_booter import jdownloader
 from ..ext_utils.status_utils import get_task_by_gid

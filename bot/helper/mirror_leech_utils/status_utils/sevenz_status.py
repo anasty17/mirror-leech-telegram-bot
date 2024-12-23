@@ -1,6 +1,6 @@
 from time import time
 
-from bot import LOGGER, subprocess_lock
+from .... import LOGGER, subprocess_lock
 from ...ext_utils.files_utils import get_path_size
 from ...ext_utils.status_utils import (
     get_readable_file_size,

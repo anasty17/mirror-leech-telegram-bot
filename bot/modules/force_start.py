@@ -1,16 +1,12 @@
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
-
-from bot import (
+from .. import (
     task_dict,
-    bot,
     task_dict_lock,
-    OWNER_ID,
     user_data,
     queued_up,
     queued_dl,
     queue_dict_lock,
 )
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import get_task_by_gid
 from ..helper.telegram_helper.bot_commands import BotCommands
@@ -44,7 +40,7 @@ async def remove_from_queue(_, message):
         await send_message(message, msg)
         return
     if (
-        OWNER_ID != user_id
+        Config.OWNER_ID != user_id
         and task.listener.user_id != user_id
         and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
@@ -74,12 +70,3 @@ async def remove_from_queue(_, message):
                 msg = "Task have been force started to download and upload will start once download finish!"
     if msg:
         await send_message(message, msg)
-
-
-bot.add_handler(
-    MessageHandler(
-        remove_from_queue,
-        filters=command(BotCommands.ForceStartCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)

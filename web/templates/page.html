@@ -354,8 +354,8 @@
     <header>
         <div class="container mx-auto px-4">
             <div class="flex flex-col sm:flex-row justify-between items-center">
-                <h1 class="text-3xl font-bold text-white mb-4 sm:mb-0">Torrent
-                    file selector</h1>
+                <h1 class="text-3xl font-bold text-white mb-4 sm:mb-0">🗂 Torrent
+                    File Selector</h1>
                 <div class="flex items-center space-x-4">
                     <div class="flex items-center">
                         <span id="themeIcon" class="mr-2 text-white">🌙</span>
@@ -405,7 +405,7 @@
     <footer>
         <div class="container mx-auto px-4">
             <div class="footer-content flex flex-col sm:flex-row justify-between items-center">
-                <p class="text-white mb-4 sm:mb-0">&copy; 2024 Torrent file selector.
+                <p class="text-white mb-4 sm:mb-0">&copy; 2024 Torrent File Selector.
                     All rights reserved.</p>
                 <div class="footer-buttons flex space-x-4">
                     <a href="https://github.com/anasty17/mirror-leech-telegram-bot" target="_blank"
@@ -811,7 +811,7 @@
                             renderFileTree(currentFolder ? currentFolder.children : files);
                         } else {
                             modalTitle.textContent = 'Error';
-                            modalBody.innerHTML = '<p>There was an error submitting your Rename. Please try again.</p>';
+                            modalBody.innerHTML = '<p>There was an error submitting your Rename. Try Again!.</p>';
                         }
                         modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Okay</button>';
                         openModal();
@@ -847,7 +847,7 @@
                 return;
             }
             modalTitle.textContent = 'Processing...';
-            modalBody.innerHTML = `<p>Submitting your selection ${selectedCount.innerText} ... </p>`;
+            modalBody.innerHTML = `<p>Submitting, ${selectedCount.innerText} file(s)... </p>`;
             modalFooter.innerHTML = '';
             openModal();
             const requestUrl = `/app/files/torrent?gid=${urlParams.gid}&pin=${pinInput.value}&mode=selection`;
@@ -860,7 +860,7 @@
                     modalBody.innerHTML = '<p>Your selection has been submitted successfully.</p>';
                 } else {
                     modalTitle.textContent = 'Error';
-                    modalBody.innerHTML = '<p>There was an error submitting your selection. Please try again.</p>';
+                    modalBody.innerHTML = '<p>An error occurred while submitting your selection. Try Again!</p>';
                 }
                 modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Okay</button>';
                 openModal();
@@ -895,7 +895,7 @@
                     return response.json().then(data => {
                         if (data.error) {
                             modalTitle.textContent = data.error;
-                            modalBody.innerHTML = `<p>${data.message}. Please try again.</p>`;
+                            modalBody.innerHTML = `<p>${data.message}. Try Again!</p>`;
                             modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Retry</button>';
                             openModal();
                         } else {
@@ -913,14 +913,14 @@
                         }
                     });
                 } else {
-                    modalTitle.textContent = 'Something Went Wrong';
-                    modalBody.innerHTML = '<p>Please check console. Status Code: ' + response.status + '</p>';
+                    modalTitle.textContent = 'Something Went Wrong!';
+                    modalBody.innerHTML = '<p>Check console. Status Code: ' + response.status + '</p>';
                     modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Retry</button>';
                     openModal();
                 }
             }).catch(error => {
                 modalTitle.textContent = 'Server Error';
-                modalBody.innerHTML = '<p>There was an error connecting to the server. Please try again.</p><br>' + error.message;
+                modalBody.innerHTML = '<p>There was an error connecting to the server. Try Again!</p><br>' + error.message;
                 modalFooter.innerHTML = '<button class="btn btn-primary" onclick="closeModal()">Retry</button>';
                 openModal();
             });

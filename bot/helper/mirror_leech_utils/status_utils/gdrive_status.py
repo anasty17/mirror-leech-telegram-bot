@@ -1,4 +1,4 @@
-from bot.helper.ext_utils.status_utils import (
+from ....helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
     get_readable_time,

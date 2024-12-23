@@ -1,12 +1,4 @@
 from anytree import NodeMixin
-from os import environ
-from re import findall as re_findall
-
-DOWNLOAD_DIR = environ.get("DOWNLOAD_DIR", "")
-if len(DOWNLOAD_DIR) == 0:
-    DOWNLOAD_DIR = "/usr/src/app/downloads/"
-elif not DOWNLOAD_DIR.endswith("/"):
-    DOWNLOAD_DIR += "/"
 
 
 class TorNode(NodeMixin):
@@ -42,12 +34,12 @@ def qb_get_folders(path):
     return path.split("/")
 
 
-def get_folders(path):
-    fs = re_findall(f"{DOWNLOAD_DIR}[0-9]+/(.+)", path)[0]
+def get_folders(path, root_path):
+    fs = path.split(root_path)[-1]
     return fs.split("/")
 
 
-def make_tree(res, tool=False):
+def make_tree(res, tool=False, root_path=""):
     if tool == "qbittorrent":
         parent = TorNode("QBITTORRENT")
         folder_id = 0
@@ -93,7 +85,7 @@ def make_tree(res, tool=False):
         parent = TorNode("ARIA2")
         folder_id = 0
         for i in res:
-            folders = get_folders(i["path"])
+            folders = get_folders(i["path"], root_path)
             priority = 1
             if i["selected"] == "false":
                 priority = 0
@@ -115,7 +107,9 @@ def make_tree(res, tool=False):
                     else:
                         previous_node = current_node
                 try:
-                    progress = round((int(i["completedLength"]) / int(i["length"])) * 100, 5)
+                    progress = round(
+                        (int(i["completedLength"]) / int(i["length"])) * 100, 5
+                    )
                 except:
                     progress = 0
                 TorNode(

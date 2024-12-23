@@ -4,18 +4,13 @@ from functools import partial
 from html import escape
 from io import BytesIO
 from os import getcwd
-from pyrogram.filters import command, regex, create
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.filters import create
+from pyrogram.handlers import MessageHandler
 from time import time
 
-from bot import (
-    bot,
-    IS_PREMIUM_USER,
-    user_data,
-    config_dict,
-    MAX_SPLIT_SIZE,
-    global_extension_filter,
-)
+from .. import user_data, extension_filter
+from ..core.config_manager import Config
+from ..core.mltb_client import TgClient
 from ..helper.ext_utils.bot_utils import (
     update_user_ldata,
     new_task,
@@ -23,9 +18,7 @@ from ..helper.ext_utils.bot_utils import (
 )
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.media_utils import create_thumb
-from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
     send_message,
     edit_message,
@@ -48,7 +41,7 @@ async def get_user_settings(from_user):
     if (
         user_dict.get("as_doc", False)
         or "as_doc" not in user_dict
-        and config_dict["AS_DOCUMENT"]
+        and Config.AS_DOCUMENT
     ):
         ltype = "DOCUMENT"
     else:
@@ -59,12 +52,12 @@ async def get_user_settings(from_user):
     if user_dict.get("split_size", False):
         split_size = user_dict["split_size"]
     else:
-        split_size = config_dict["LEECH_SPLIT_SIZE"]
+        split_size = Config.LEECH_SPLIT_SIZE
 
     if (
         user_dict.get("equal_splits", False)
         or "equal_splits" not in user_dict
-        and config_dict["EQUAL_SPLITS"]
+        and Config.EQUAL_SPLITS
     ):
         equal_splits = "Enabled"
     else:
@@ -73,7 +66,7 @@ async def get_user_settings(from_user):
     if (
         user_dict.get("media_group", False)
         or "media_group" not in user_dict
-        and config_dict["MEDIA_GROUP"]
+        and Config.MEDIA_GROUP
     ):
         media_group = "Enabled"
     else:
@@ -81,33 +74,33 @@ async def get_user_settings(from_user):
 
     if user_dict.get("lprefix", False):
         lprefix = user_dict["lprefix"]
-    elif "lprefix" not in user_dict and config_dict["LEECH_FILENAME_PREFIX"]:
-        lprefix = config_dict["LEECH_FILENAME_PREFIX"]
+    elif "lprefix" not in user_dict and Config.LEECH_FILENAME_PREFIX:
+        lprefix = Config.LEECH_FILENAME_PREFIX
     else:
         lprefix = "None"
 
     if user_dict.get("leech_dest", False):
         leech_dest = user_dict["leech_dest"]
-    elif "leech_dest" not in user_dict and config_dict["LEECH_DUMP_CHAT"]:
-        leech_dest = config_dict["LEECH_DUMP_CHAT"]
+    elif "leech_dest" not in user_dict and Config.LEECH_DUMP_CHAT:
+        leech_dest = Config.LEECH_DUMP_CHAT
     else:
         leech_dest = "None"
 
     if (
-        IS_PREMIUM_USER
+        TgClient.IS_PREMIUM_USER
         and user_dict.get("user_transmission", False)
         or "user_transmission" not in user_dict
-        and config_dict["USER_TRANSMISSION"]
+        and Config.USER_TRANSMISSION
     ):
         leech_method = "user"
     else:
         leech_method = "bot"
 
     if (
-        IS_PREMIUM_USER
+        TgClient.IS_PREMIUM_USER
         and user_dict.get("mixed_leech", False)
         or "mixed_leech" not in user_dict
-        and config_dict["MIXED_LEECH"]
+        and Config.MIXED_LEECH
     ):
         mixed_leech = "Enabled"
     else:
@@ -115,8 +108,8 @@ async def get_user_settings(from_user):
 
     if user_dict.get("thumb_layout", False):
         thumb_layout = user_dict["thumb_layout"]
-    elif "thumb_layout" not in user_dict and config_dict["THUMBNAIL_LAYOUT"]:
-        thumb_layout = config_dict["THUMBNAIL_LAYOUT"]
+    elif "thumb_layout" not in user_dict and Config.THUMBNAIL_LAYOUT:
+        thumb_layout = Config.THUMBNAIL_LAYOUT
     else:
         thumb_layout = "None"
 
@@ -126,7 +119,7 @@ async def get_user_settings(from_user):
     rccmsg = "Exists" if await aiopath.exists(rclone_conf) else "Not Exists"
     if user_dict.get("rclone_path", False):
         rccpath = user_dict["rclone_path"]
-    elif RP := config_dict["RCLONE_PATH"]:
+    elif RP := Config.RCLONE_PATH:
         rccpath = RP
     else:
         rccpath = "None"
@@ -135,7 +128,7 @@ async def get_user_settings(from_user):
     tokenmsg = "Exists" if await aiopath.exists(token_pickle) else "Not Exists"
     if user_dict.get("gdrive_id", False):
         gdrive_id = user_dict["gdrive_id"]
-    elif GI := config_dict["GDRIVE_ID"]:
+    elif GI := Config.GDRIVE_ID:
         gdrive_id = GI
     else:
         gdrive_id = "None"
@@ -143,7 +136,7 @@ async def get_user_settings(from_user):
     if (
         user_dict.get("stop_duplicate", False)
         or "stop_duplicate" not in user_dict
-        and config_dict["STOP_DUPLICATE"]
+        and Config.STOP_DUPLICATE
     ):
         sd_msg = "Enabled"
     else:
@@ -152,9 +145,7 @@ async def get_user_settings(from_user):
     upload_paths = "Added" if user_dict.get("upload_paths", False) else "None"
     buttons.data_button("Upload Paths", f"userset {user_id} upload_paths")
 
-    default_upload = (
-        user_dict.get("default_upload", "") or config_dict["DEFAULT_UPLOAD"]
-    )
+    default_upload = user_dict.get("default_upload", "") or Config.DEFAULT_UPLOAD
     du = "Gdrive API" if default_upload == "gd" else "Rclone"
     dur = "Gdrive API" if default_upload != "gd" else "Rclone"
     buttons.data_button(f"Upload using {dur}", f"userset {user_id} {default_upload}")
@@ -169,8 +160,8 @@ async def get_user_settings(from_user):
     buttons.data_button("Excluded Extensions", f"userset {user_id} ex_ex")
     if user_dict.get("excluded_extensions", False):
         ex_ex = user_dict["excluded_extensions"]
-    elif "excluded_extensions" not in user_dict and global_extension_filter:
-        ex_ex = global_extension_filter
+    elif "excluded_extensions" not in user_dict and extension_filter:
+        ex_ex = extension_filter
     else:
         ex_ex = "None"
 
@@ -180,16 +171,16 @@ async def get_user_settings(from_user):
     buttons.data_button("YT-DLP Options", f"userset {user_id} yto")
     if user_dict.get("yt_opt", False):
         ytopt = user_dict["yt_opt"]
-    elif "yt_opt" not in user_dict and config_dict["YT_DLP_OPTIONS"]:
-        ytopt = config_dict["YT_DLP_OPTIONS"]
+    elif "yt_opt" not in user_dict and Config.YT_DLP_OPTIONS:
+        ytopt = Config.YT_DLP_OPTIONS
     else:
         ytopt = "None"
 
     buttons.data_button("Ffmpeg Cmds", f"userset {user_id} ffc")
     if user_dict.get("ffmpeg_cmds", False):
         ffc = user_dict["ffmpeg_cmds"]
-    elif "ffmpeg_cmds" not in user_dict and config_dict["FFMPEG_CMDS"]:
-        ffc = config_dict["FFMPEG_CMDS"]
+    elif "ffmpeg_cmds" not in user_dict and Config.FFMPEG_CMDS:
+        ffc = Config.FFMPEG_CMDS
     else:
         ffc = "None"
 
@@ -232,7 +223,7 @@ async def update_user_settings(query):
 
 
 @new_task
-async def user_settings(_, message):
+async def send_user_settings(_, message):
     from_user = message.from_user
     handler_dict[from_user.id] = False
     msg, button = await get_user_settings(from_user)
@@ -247,8 +238,7 @@ async def set_thumb(_, message, pre_event):
     update_user_ldata(user_id, "thumb", des_dir)
     await delete_message(message)
     await update_user_settings(pre_event)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_doc(user_id, "thumb", des_dir)
+    await database.update_user_doc(user_id, "thumb", des_dir)
 
 
 @new_task
@@ -262,8 +252,7 @@ async def add_rclone(_, message, pre_event):
     update_user_ldata(user_id, "rclone_config", f"rclone/{user_id}.conf")
     await delete_message(message)
     await update_user_settings(pre_event)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_doc(user_id, "rclone_config", des_dir)
+    await database.update_user_doc(user_id, "rclone_config", des_dir)
 
 
 @new_task
@@ -277,8 +266,7 @@ async def add_token_pickle(_, message, pre_event):
     update_user_ldata(user_id, "token_pickle", f"tokens/{user_id}.pickle")
     await delete_message(message)
     await update_user_settings(pre_event)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_doc(user_id, "token_pickle", des_dir)
+    await database.update_user_doc(user_id, "token_pickle", des_dir)
 
 
 @new_task
@@ -294,8 +282,7 @@ async def delete_path(_, message, pre_event):
     update_user_ldata(user_id, "upload_paths", new_value)
     await delete_message(message)
     await update_user_settings(pre_event)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_doc(user_id, "upload_paths", new_value)
+    await database.update_user_doc(user_id, "upload_paths", new_value)
 
 
 @new_task
@@ -306,7 +293,7 @@ async def set_option(_, message, pre_event, option):
     if option == "split_size":
         if not value.isdigit():
             value = get_size_bytes(value)
-        value = min(int(value), MAX_SPLIT_SIZE)
+        value = min(int(value), TgClient.MAX_SPLIT_SIZE)
     elif option == "excluded_extensions":
         fx = value.split()
         value = ["aria2", "!qB"]
@@ -341,8 +328,7 @@ async def set_option(_, message, pre_event, option):
     update_user_ldata(user_id, option, value)
     await delete_message(message)
     await update_user_settings(pre_event)
-    if config_dict["DATABASE_URL"]:
-        await database.update_user_data(user_id)
+    await database.update_user_data(user_id)
 
 
 async def event_handler(client, query, pfunc, photo=False, document=False):
@@ -399,8 +385,7 @@ async def edit_user_settings(client, query):
         update_user_ldata(user_id, data[2], data[3] == "true")
         await query.answer()
         await update_user_settings(query)
-        if config_dict["DATABASE_URL"]:
-            await database.update_user_data(user_id)
+        await database.update_user_data(user_id)
     elif data[2] in ["thumb", "rclone_config", "token_pickle"]:
         if data[2] == "thumb":
             fpath = thumb_path
@@ -413,8 +398,7 @@ async def edit_user_settings(client, query):
             await remove(fpath)
             update_user_ldata(user_id, data[2], "")
             await update_user_settings(query)
-            if config_dict["DATABASE_URL"]:
-                await database.update_user_doc(user_id, data[2])
+            await database.update_user_doc(user_id, data[2])
         else:
             await query.answer("Old Settings", show_alert=True)
             await update_user_settings(query)
@@ -430,15 +414,13 @@ async def edit_user_settings(client, query):
         await query.answer()
         update_user_ldata(user_id, data[2], "")
         await update_user_settings(query)
-        if config_dict["DATABASE_URL"]:
-            await database.update_user_data(user_id)
+        await database.update_user_data(user_id)
     elif data[2] in ["split_size", "leech_dest", "rclone_path", "gdrive_id"]:
         await query.answer()
         if data[2] in user_data.get(user_id, {}):
             del user_data[user_id][data[2]]
             await update_user_settings(query)
-            if config_dict["DATABASE_URL"]:
-                await database.update_user_data(user_id)
+            await database.update_user_data(user_id)
     elif data[2] == "leech":
         await query.answer()
         thumbpath = f"Thumbnails/{user_id}.jpg"
@@ -449,25 +431,25 @@ async def edit_user_settings(client, query):
         if user_dict.get("split_size", False):
             split_size = user_dict["split_size"]
         else:
-            split_size = config_dict["LEECH_SPLIT_SIZE"]
+            split_size = Config.LEECH_SPLIT_SIZE
         buttons.data_button("Leech Destination", f"userset {user_id} ldest")
         if user_dict.get("leech_dest", False):
             leech_dest = user_dict["leech_dest"]
-        elif "leech_dest" not in user_dict and config_dict["LEECH_DUMP_CHAT"]:
-            leech_dest = config_dict["LEECH_DUMP_CHAT"]
+        elif "leech_dest" not in user_dict and Config.LEECH_DUMP_CHAT:
+            leech_dest = Config.LEECH_DUMP_CHAT
         else:
             leech_dest = "None"
         buttons.data_button("Leech Prefix", f"userset {user_id} leech_prefix")
         if user_dict.get("lprefix", False):
             lprefix = user_dict["lprefix"]
-        elif "lprefix" not in user_dict and config_dict["LEECH_FILENAME_PREFIX"]:
-            lprefix = config_dict["LEECH_FILENAME_PREFIX"]
+        elif "lprefix" not in user_dict and Config.LEECH_FILENAME_PREFIX:
+            lprefix = Config.LEECH_FILENAME_PREFIX
         else:
             lprefix = "None"
         if (
             user_dict.get("as_doc", False)
             or "as_doc" not in user_dict
-            and config_dict["AS_DOCUMENT"]
+            and Config.AS_DOCUMENT
         ):
             ltype = "DOCUMENT"
             buttons.data_button("Send As Media", f"userset {user_id} as_doc false")
@@ -477,7 +459,7 @@ async def edit_user_settings(client, query):
         if (
             user_dict.get("equal_splits", False)
             or "equal_splits" not in user_dict
-            and config_dict["EQUAL_SPLITS"]
+            and Config.EQUAL_SPLITS
         ):
             buttons.data_button(
                 "Disable Equal Splits", f"userset {user_id} equal_splits false"
@@ -491,7 +473,7 @@ async def edit_user_settings(client, query):
         if (
             user_dict.get("media_group", False)
             or "media_group" not in user_dict
-            and config_dict["MEDIA_GROUP"]
+            and Config.MEDIA_GROUP
         ):
             buttons.data_button(
                 "Disable Media Group", f"userset {user_id} media_group false"
@@ -503,16 +485,16 @@ async def edit_user_settings(client, query):
             )
             media_group = "Disabled"
         if (
-            IS_PREMIUM_USER
+            TgClient.IS_PREMIUM_USER
             and user_dict.get("user_transmission", False)
             or "user_transmission" not in user_dict
-            and config_dict["USER_TRANSMISSION"]
+            and Config.USER_TRANSMISSION
         ):
             buttons.data_button(
                 "Leech by Bot", f"userset {user_id} user_transmission false"
             )
             leech_method = "user"
-        elif IS_PREMIUM_USER:
+        elif TgClient.IS_PREMIUM_USER:
             leech_method = "bot"
             buttons.data_button(
                 "Leech by User", f"userset {user_id} user_transmission true"
@@ -521,16 +503,16 @@ async def edit_user_settings(client, query):
             leech_method = "bot"
 
         if (
-            IS_PREMIUM_USER
+            TgClient.IS_PREMIUM_USER
             and user_dict.get("mixed_leech", False)
             or "mixed_leech" not in user_dict
-            and config_dict["MIXED_LEECH"]
+            and Config.MIXED_LEECH
         ):
             mixed_leech = "Enabled"
             buttons.data_button(
                 "Disable Mixed Leech", f"userset {user_id} mixed_leech false"
             )
-        elif IS_PREMIUM_USER:
+        elif TgClient.IS_PREMIUM_USER:
             mixed_leech = "Disabled"
             buttons.data_button(
                 "Enable Mixed Leech", f"userset {user_id} mixed_leech true"
@@ -541,8 +523,8 @@ async def edit_user_settings(client, query):
         buttons.data_button("Thumbnail Layout", f"userset {user_id} tlayout")
         if user_dict.get("thumb_layout", False):
             thumb_layout = user_dict["thumb_layout"]
-        elif "thumb_layout" not in user_dict and config_dict["THUMBNAIL_LAYOUT"]:
-            thumb_layout = config_dict["THUMBNAIL_LAYOUT"]
+        elif "thumb_layout" not in user_dict and Config.THUMBNAIL_LAYOUT:
+            thumb_layout = Config.THUMBNAIL_LAYOUT
         else:
             thumb_layout = "None"
 
@@ -571,7 +553,7 @@ Thumbnail Layout is <b>{thumb_layout}</b>
         rccmsg = "Exists" if await aiopath.exists(rclone_conf) else "Not Exists"
         if user_dict.get("rclone_path", False):
             rccpath = user_dict["rclone_path"]
-        elif RP := config_dict["RCLONE_PATH"]:
+        elif RP := Config.RCLONE_PATH:
             rccpath = RP
         else:
             rccpath = "None"
@@ -588,7 +570,7 @@ Rclone Path is <code>{rccpath}</code>"""
         if (
             user_dict.get("stop_duplicate", False)
             or "stop_duplicate" not in user_dict
-            and config_dict["STOP_DUPLICATE"]
+            and Config.STOP_DUPLICATE
         ):
             buttons.data_button(
                 "Disable Stop Duplicate", f"userset {user_id} stop_duplicate false"
@@ -604,7 +586,7 @@ Rclone Path is <code>{rccpath}</code>"""
         tokenmsg = "Exists" if await aiopath.exists(token_pickle) else "Not Exists"
         if user_dict.get("gdrive_id", False):
             gdrive_id = user_dict["gdrive_id"]
-        elif GDID := config_dict["GDRIVE_ID"]:
+        elif GDID := Config.GDRIVE_ID:
             gdrive_id = GDID
         else:
             gdrive_id = "None"
@@ -637,7 +619,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
     elif data[2] == "yto":
         await query.answer()
         buttons = ButtonMaker()
-        if user_dict.get("yt_opt", False) or config_dict["YT_DLP_OPTIONS"]:
+        if user_dict.get("yt_opt", False) or Config.YT_DLP_OPTIONS:
             buttons.data_button(
                 "Remove YT-DLP Options", f"userset {user_id} yt_opt", "header"
             )
@@ -655,7 +637,7 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
     elif data[2] == "ffc":
         await query.answer()
         buttons = ButtonMaker()
-        if user_dict.get("ffmpeg_cmds", False) or config_dict["FFMPEG_CMDS"]:
+        if user_dict.get("ffmpeg_cmds", False) or Config.FFMPEG_CMDS:
             buttons.data_button(
                 "Remove FFMPEG Commands",
                 f"userset {user_id} ffmpeg_cmds",
@@ -665,10 +647,9 @@ Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp
         buttons.data_button("Close", f"userset {user_id} close")
         rmsg = """list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
 Notes:
-1. Add <code>-del</code> to the list(s) which you want from the bot to delete the original files after command run complete!
+1. Add <code>-del</code> to the list which you want from the bot to delete the original files after command run complete!
 2. Seed will get disbaled while using this option
-3. It must be list of list(s) event of one list added like [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv", "-del"]]
-Examples: [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv", "-del"], ["-i", "mltb.video", "-c", "copy", "-c:s", "srt", "mltb"], ["-i", "mltb.m4a", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"], ["-i", "mltb.audio", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"]]
+Examples: ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb", "-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]
 Here I will explain how to use mltb.* which is reference to files you want to work on.
 1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. -del will delete the original media after complete run of the cmd.
 2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
@@ -686,7 +667,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
         buttons.data_button("Close", f"userset {user_id} close")
         await edit_message(
             message,
-            f"Send Leech split size in bytes. IS_PREMIUM_USER: {IS_PREMIUM_USER}. Timeout: 60 sec",
+            f"Send Leech split size in bytes. IS_PREMIUM_USER: {TgClient.IS_PREMIUM_USER}. Timeout: 60 sec",
             buttons.build_menu(1),
         )
         pfunc = partial(set_option, pre_event=query, option="split_size")
@@ -758,7 +739,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
         if (
             user_dict.get("lprefix", False)
             or "lprefix" not in user_dict
-            and config_dict["LEECH_FILENAME_PREFIX"]
+            and Config.LEECH_FILENAME_PREFIX
         ):
             buttons.data_button("Remove Leech Prefix", f"userset {user_id} lprefix")
         buttons.data_button("Back", f"userset {user_id} leech")
@@ -776,7 +757,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
         if (
             user_dict.get("leech_dest", False)
             or "leech_dest" not in user_dict
-            and config_dict["LEECH_DUMP_CHAT"]
+            and Config.LEECH_DUMP_CHAT
         ):
             buttons.data_button(
                 "Reset Leech Destination", f"userset {user_id} leech_dest"
@@ -796,7 +777,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
         if (
             user_dict.get("thumb_layout", False)
             or "thumb_layout" not in user_dict
-            and config_dict["THUMBNAIL_LAYOUT"]
+            and Config.THUMBNAIL_LAYOUT
         ):
             buttons.data_button(
                 "Reset Thumbnail Layout", f"userset {user_id} thumb_layout"
@@ -816,7 +797,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
         if (
             user_dict.get("excluded_extensions", False)
             or "excluded_extensions" not in user_dict
-            and global_extension_filter
+            and extension_filter
         ):
             buttons.data_button(
                 "Remove Excluded Extensions", f"userset {user_id} excluded_extensions"
@@ -861,15 +842,13 @@ Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb |
         du = "rc" if data[2] == "gd" else "gd"
         update_user_ldata(user_id, "default_upload", du)
         await update_user_settings(query)
-        if config_dict["DATABASE_URL"]:
-            await database.update_user_data(user_id)
+        await database.update_user_data(user_id)
     elif data[2] == "user_tokens":
         await query.answer()
         tr = data[3].lower() == "false"
         update_user_ldata(user_id, "user_tokens", tr)
         await update_user_settings(query)
-        if config_dict["DATABASE_URL"]:
-            await database.update_user_data(user_id)
+        await database.update_user_data(user_id)
     elif data[2] == "upload_paths":
         await query.answer()
         buttons = ButtonMaker()
@@ -933,8 +912,7 @@ Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb |
             else:
                 user_data[user_id].clear()
         await update_user_settings(query)
-        if config_dict["DATABASE_URL"]:
-            await database.update_user_data(user_id)
+        await database.update_user_data(user_id)
         for fpath in [thumb_path, rclone_conf, token_pickle]:
             if await aiopath.exists(fpath):
                 await remove(fpath)
@@ -948,7 +926,7 @@ Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb |
 
 
 @new_task
-async def send_users_settings(_, message):
+async def get_users_settings(_, message):
     if user_data:
         msg = ""
         for u, d in user_data.items():
@@ -967,20 +945,3 @@ async def send_users_settings(_, message):
             await send_message(message, msg)
     else:
         await send_message(message, "No users data!")
-
-
-bot.add_handler(
-    MessageHandler(
-        send_users_settings,
-        filters=command(BotCommands.UsersCommand, case_sensitive=True)
-        & CustomFilters.sudo,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        user_settings,
-        filters=command(BotCommands.UserSetCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex("^userset")))

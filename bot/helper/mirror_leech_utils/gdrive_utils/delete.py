@@ -1,7 +1,7 @@
 from googleapiclient.errors import HttpError
 from logging import getLogger
 
-from bot.helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
+from ....helper.mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 
 LOGGER = getLogger(__name__)
 

@@ -1,16 +1,11 @@
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
-
-from bot import LOGGER, bot, user_data
+from .. import LOGGER, user_data
 from ..helper.ext_utils.bot_utils import (
     sync_to_async,
     get_telegraph_list,
     new_task,
 )
 from ..helper.mirror_leech_utils.gdrive_utils.search import GoogleDriveSearch
-from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message, edit_message
 
 
@@ -101,11 +96,4 @@ async def gdrive_search(_, message):
     await send_message(message, "Choose list options:", buttons)
 
 
-bot.add_handler(
-    MessageHandler(
-        gdrive_search,
-        filters=command(BotCommands.ListCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(select_type, filters=regex("^list_types")))
+

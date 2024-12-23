@@ -8,7 +8,7 @@ from logging import getLogger
 from random import randrange
 from re import findall as re_findall
 
-from bot import config_dict
+from ....core.config_manager import Config
 from ...ext_utils.bot_utils import cmd_exec, sync_to_async
 from ...ext_utils.files_utils import (
     get_mime_type,
@@ -33,7 +33,7 @@ class RcloneTransferHelper:
         self._sa_count = 1
         self._sa_index = 0
         self._sa_number = 0
-        self._use_service_accounts = config_dict["USE_SERVICE_ACCOUNTS"]
+        self._use_service_accounts = Config.USE_SERVICE_ACCOUNTS
         self.rclone_select = False
 
     @property
@@ -121,7 +121,9 @@ class RcloneTransferHelper:
         if return_code == 0:
             await self._listener.on_download_complete()
         elif return_code != -9:
-            error = (await self._proc.stderr.read()).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
+            error = (
+                await self._proc.stderr.read()
+            ).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
             if not error and remote_type == "drive" and self._use_service_accounts:
                 error = "Mostly your service accounts don't have access to this drive!"
             elif not error:
@@ -177,7 +179,7 @@ class RcloneTransferHelper:
 
         if (
             remote_type == "drive"
-            and not config_dict["RCLONE_FLAGS"]
+            and not Config.RCLONE_FLAGS
             and not self._listener.rc_flags
         ):
             cmd.append("--drive-acknowledge-abuse")
@@ -207,6 +209,11 @@ class RcloneTransferHelper:
             "--config",
             config_path,
             epath,
+            "--log-systemd",
+            "--log-file",
+            "rlog.txt",
+            "--log-level",
+            "ERROR",
         ]
         res, err, code = await cmd_exec(cmd)
 
@@ -239,7 +246,9 @@ class RcloneTransferHelper:
         if return_code == -9:
             return False
         elif return_code != 0:
-            error = (await self._proc.stderr.read()).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
+            error = (
+                await self._proc.stderr.read()
+            ).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
             if not error and remote_type == "drive" and self._use_service_accounts:
                 error = "Mostly your service accounts don't have access to this drive or RATE_LIMIT_EXCEEDED"
             elif not error:
@@ -325,7 +334,7 @@ class RcloneTransferHelper:
         )
         if (
             remote_type == "drive"
-            and not config_dict["RCLONE_FLAGS"]
+            and not Config.RCLONE_FLAGS
             and not self._listener.rc_flags
         ):
             cmd.extend(("--drive-chunk-size", "128M", "--drive-upload-cutoff", "128M"))
@@ -346,7 +355,18 @@ class RcloneTransferHelper:
             else:
                 destination = f"{oremote}:{self._listener.name}"
 
-            cmd = ["rclone", "link", "--config", oconfig_path, destination]
+            cmd = [
+                "rclone",
+                "link",
+                "--config",
+                oconfig_path,
+                destination,
+                "--log-systemd",
+                "--log-file",
+                "rlog.txt",
+                "--log-level",
+                "ERROR",
+            ]
             res, err, code = await cmd_exec(cmd)
 
             if code == 0:
@@ -386,7 +406,7 @@ class RcloneTransferHelper:
         cmd = self._get_updated_command(
             config_path, f"{src_remote}:{src_path}", destination, method
         )
-        if not self._listener.rc_flags and not config_dict["RCLONE_FLAGS"]:
+        if not self._listener.rc_flags and not Config.RCLONE_FLAGS:
             if src_remote_type == "drive" and dst_remote_type != "drive":
                 cmd.append("--drive-acknowledge-abuse")
             elif src_remote_type == "drive":
@@ -401,7 +421,9 @@ class RcloneTransferHelper:
         if return_code == -9:
             return None, None
         elif return_code != 0:
-            error = (await self._proc.stderr.read()).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
+            error = (
+                await self._proc.stderr.read()
+            ).decode().strip() or "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(error)
             await self._listener.on_upload_error(error[:4000])
             return None, None
@@ -419,7 +441,18 @@ class RcloneTransferHelper:
                         f"/{self._listener.name}" if dst_path else self._listener.name
                     )
 
-                cmd = ["rclone", "link", "--config", config_path, destination]
+                cmd = [
+                    "rclone",
+                    "link",
+                    "--config",
+                    config_path,
+                    destination,
+                    "--log-systemd",
+                    "--log-file",
+                    "rlog.txt",
+                    "--log-level",
+                    "ERROR",
+                ]
                 res, err, code = await cmd_exec(cmd)
 
                 if self._listener.is_cancelled:
@@ -460,16 +493,17 @@ class RcloneTransferHelper:
             "--low-level-retries",
             "1",
             "-M",
+            "--log-systemd",
             "--log-file",
             "rlog.txt",
             "--log-level",
-            "DEBUG",
+            "ERROR",
         ]
         if self.rclone_select:
             cmd.extend(("--files-from", self._listener.link))
         else:
             cmd.extend(("--exclude", ext))
-        if rcflags := self._listener.rc_flags or config_dict["RCLONE_FLAGS"]:
+        if rcflags := self._listener.rc_flags or Config.RCLONE_FLAGS:
             rcflags = rcflags.split("|")
             for flag in rcflags:
                 if ":" in flag:

@@ -1,6 +1,6 @@
 from asyncio import sleep, gather
 
-from bot import (
+from ... import (
     intervals,
     sabnzbd_client,
     nzb_jobs,

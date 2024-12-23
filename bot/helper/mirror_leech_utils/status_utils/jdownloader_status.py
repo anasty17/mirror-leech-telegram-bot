@@ -1,4 +1,4 @@
-from bot import LOGGER, jd_lock, jd_downloads
+from .... import LOGGER, jd_lock, jd_downloads
 from ...ext_utils.bot_utils import async_to_sync
 from ...ext_utils.jdownloader_booter import jdownloader
 from ...ext_utils.status_utils import (

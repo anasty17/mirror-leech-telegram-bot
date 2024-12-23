@@ -7,22 +7,19 @@ from aioshutil import move, copy2
 from pyrogram.enums import ChatAction
 from re import sub, I
 
-from bot import (
-    DOWNLOAD_DIR,
-    MAX_SPLIT_SIZE,
-    config_dict,
+from .. import (
     user_data,
-    IS_PREMIUM_USER,
-    user,
     multi_tags,
     LOGGER,
     task_dict_lock,
     task_dict,
-    global_extension_filter,
+    extension_filter,
     cpu_eater_lock,
     subprocess_lock,
     intervals,
 )
+from ..core.config_manager import Config
+from ..core.mltb_client import TgClient
 from .ext_utils.bot_utils import new_task, sync_to_async, get_size_bytes
 from .ext_utils.bulk_links import extract_bulk_links
 from .ext_utils.exceptions import NotSupportedExtractionArchive
@@ -70,7 +67,7 @@ class TaskConfig:
         self.user = self.message.from_user or self.message.sender_chat
         self.user_id = self.user.id
         self.user_dict = user_data.get(self.user_id, {})
-        self.dir = f"{DOWNLOAD_DIR}{self.mid}"
+        self.dir = f"{Config.DOWNLOAD_DIR}{self.mid}"
         self.link = ""
         self.up_dest = ""
         self.rc_flags = ""
@@ -125,7 +122,7 @@ class TaskConfig:
             return f"tokens/{self.user_id}.pickle"
         elif (
             dest.startswith("sa:")
-            or config_dict["USE_SERVICE_ACCOUNTS"]
+            or Config.USE_SERVICE_ACCOUNTS
             and not dest.startswith("tp:")
         ):
             return "accounts"
@@ -160,17 +157,13 @@ class TaskConfig:
         self.name_sub = (
             self.name_sub
             or self.user_dict.get("name_sub", False)
-            or (
-                config_dict["NAME_SUBSTITUTE"]
-                if "name_sub" not in self.user_dict
-                else ""
-            )
+            or (Config.NAME_SUBSTITUTE if "name_sub" not in self.user_dict else "")
         )
         if self.name_sub:
             self.name_sub = [x.split("/") for x in self.name_sub.split(" | ")]
             self.seed = False
         self.extension_filter = self.user_dict.get("excluded_extensions") or (
-            global_extension_filter
+            extension_filter
             if "excluded_extensions" not in self.user_dict
             else ["aria2", "!qB"]
         )
@@ -199,9 +192,9 @@ class TaskConfig:
                 if not is_gdrive_id(self.link):
                     raise ValueError(self.link)
 
-        self.user_transmission = IS_PREMIUM_USER and (
+        self.user_transmission = TgClient.IS_PREMIUM_USER and (
             self.user_dict.get("user_transmission")
-            or config_dict["USER_TRANSMISSION"]
+            or Config.USER_TRANSMISSION
             and "user_transmission" not in self.user_dict
         )
 
@@ -215,11 +208,7 @@ class TaskConfig:
         self.ffmpeg_cmds = (
             self.ffmpeg_cmds
             or self.user_dict.get("ffmpeg_cmds", None)
-            or (
-                config_dict["FFMPEG_CMDS"]
-                if "ffmpeg_cmds" not in self.user_dict
-                else None
-            )
+            or (Config.FFMPEG_CMDS if "ffmpeg_cmds" not in self.user_dict else None)
         )
         if self.ffmpeg_cmds:
             self.seed = False
@@ -228,20 +217,15 @@ class TaskConfig:
             self.stop_duplicate = (
                 self.user_dict.get("stop_duplicate")
                 or "stop_duplicate" not in self.user_dict
-                and config_dict["STOP_DUPLICATE"]
+                and Config.STOP_DUPLICATE
             )
             default_upload = (
-                self.user_dict.get("default_upload", "")
-                or config_dict["DEFAULT_UPLOAD"]
+                self.user_dict.get("default_upload", "") or Config.DEFAULT_UPLOAD
             )
             if (not self.up_dest and default_upload == "rc") or self.up_dest == "rc":
-                self.up_dest = (
-                    self.user_dict.get("rclone_path") or config_dict["RCLONE_PATH"]
-                )
+                self.up_dest = self.user_dict.get("rclone_path") or Config.RCLONE_PATH
             elif (not self.up_dest and default_upload == "gd") or self.up_dest == "gd":
-                self.up_dest = (
-                    self.user_dict.get("gdrive_id") or config_dict["GDRIVE_ID"]
-                )
+                self.up_dest = self.user_dict.get("gdrive_id") or Config.GDRIVE_ID
             if not self.up_dest:
                 raise ValueError("No Upload Destination!")
             if is_gdrive_id(self.up_dest):
@@ -301,11 +285,11 @@ class TaskConfig:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("leech_dest")
-                or config_dict["LEECH_DUMP_CHAT"]
+                or Config.LEECH_DUMP_CHAT
             )
-            self.mixed_leech = IS_PREMIUM_USER and (
+            self.mixed_leech = TgClient.IS_PREMIUM_USER and (
                 self.user_dict.get("mixed_leech")
-                or config_dict["MIXED_LEECH"]
+                or Config.MIXED_LEECH
                 and "mixed_leech" not in self.user_dict
             )
             if self.up_dest:
@@ -316,9 +300,9 @@ class TaskConfig:
                         self.mixed_leech = False
                     elif self.up_dest.startswith("u:"):
                         self.up_dest = self.up_dest.replace("u:", "", 1)
-                        self.user_transmission = IS_PREMIUM_USER
+                        self.user_transmission = TgClient.IS_PREMIUM_USER
                     elif self.up_dest.startswith("m:"):
-                        self.user_transmission = IS_PREMIUM_USER
+                        self.user_transmission = TgClient.IS_PREMIUM_USER
                         self.mixed_leech = self.user_transmission
                     if "|" in self.up_dest:
                         self.up_dest, self.chat_thread_id = list(
@@ -333,32 +317,58 @@ class TaskConfig:
                         self.up_dest = self.user_id
 
                 if self.user_transmission:
-                    chat = await user.get_chat(self.up_dest)
-                    uploader_id = user.me.id
-                else:
-                    chat = await self.client.get_chat(self.up_dest)
-                    uploader_id = self.client.me.id
-
-                if chat.type.name in ["SUPERGROUP", "CHANNEL"]:
-                    member = await chat.get_member(uploader_id)
-                    if (
-                        not member.privileges.can_manage_chat
-                        or not member.privileges.can_delete_messages
-                    ):
-                        raise ValueError(
-                            "You don't have enough privileges in this chat!"
-                        )
-                elif self.user_transmission:
-                    raise ValueError(
-                        "Custom Leech Destination only allowed for super-group or channel when UserTransmission enalbed!\nDisable UserTransmission so bot can send files to user!"
-                    )
-                else:
                     try:
-                        await self.client.send_chat_action(
-                            self.up_dest, ChatAction.TYPING
-                        )
+                        chat = await TgClient.user.get_chat(self.up_dest)
                     except:
-                        raise ValueError("Start the bot and try again!")
+                        chat = None
+                    if chat is None:
+                        self.user_transmission = False
+                        self.mixed_leech = False
+                    else:
+                        uploader_id = TgClient.user.me.id
+                        if chat.type.name not in ["SUPERGROUP", "CHANNEL", "GROUP"]:
+                            self.user_transmission = False
+                            self.mixed_leech = False
+                        else:
+                            member = await chat.get_member(uploader_id)
+                            if (
+                                not member.privileges.can_manage_chat
+                                or not member.privileges.can_delete_messages
+                            ):
+                                self.user_transmission = False
+                                self.mixed_leech = False
+
+                if not self.user_transmission or self.mixed_leech:
+                    try:
+                        chat = await self.client.get_chat(self.up_dest)
+                    except:
+                        chat = None
+                    if chat is None:
+                            if self.user_transmission:
+                                self.mixed_leech = False
+                            else:
+                                raise ValueError("Chat not found!")
+                    else:
+                        uploader_id = self.client.me.id
+                        if chat.type.name in ["SUPERGROUP", "CHANNEL", "GROUP"]:
+                            member = await chat.get_member(uploader_id)
+                            if (
+                                not member.privileges.can_manage_chat
+                                or not member.privileges.can_delete_messages
+                            ):
+                                if not self.user_transmission:
+                                    raise ValueError(
+                                        "You don't have enough privileges in this chat!"
+                                    )
+                                else:
+                                    self.mixed_leech = False
+                        else:
+                            try:
+                                await self.client.send_chat_action(
+                                    self.up_dest, ChatAction.TYPING
+                                )
+                            except:
+                                raise ValueError("Start the bot and try again!")
             elif (
                 self.user_transmission or self.mixed_leech
             ) and not self.is_super_chat:
@@ -372,15 +382,15 @@ class TaskConfig:
             self.split_size = (
                 self.split_size
                 or self.user_dict.get("split_size")
-                or config_dict["LEECH_SPLIT_SIZE"]
+                or Config.LEECH_SPLIT_SIZE
             )
             self.equal_splits = (
                 self.user_dict.get("equal_splits")
-                or config_dict["EQUAL_SPLITS"]
+                or Config.EQUAL_SPLITS
                 and "equal_splits" not in self.user_dict
             )
             self.max_split_size = (
-                MAX_SPLIT_SIZE if self.user_transmission else 2097152000
+                TgClient.MAX_SPLIT_SIZE if self.user_transmission else 2097152000
             )
             self.split_size = min(self.split_size, self.max_split_size)
 
@@ -390,7 +400,7 @@ class TaskConfig:
                     if self.as_med
                     else (
                         self.user_dict.get("as_doc", False)
-                        or config_dict["AS_DOCUMENT"]
+                        or Config.AS_DOCUMENT
                         and "as_doc" not in self.user_dict
                     )
                 )
@@ -399,7 +409,7 @@ class TaskConfig:
                 self.thumbnail_layout
                 or self.user_dict.get("thumb_layout", False)
                 or (
-                    config_dict["THUMBNAIL_LAYOUT"]
+                    Config.THUMBNAIL_LAYOUT
                     if "thumb_layout" not in self.user_dict
                     else ""
                 )
@@ -1124,7 +1134,11 @@ class TaskConfig:
 
     async def proceed_ffmpeg(self, dl_path, gid):
         checked = False
-        for ffmpeg_cmd in self.ffmpeg_cmds:
+        cmds = [
+            [part.strip() for part in item.split() if part.strip()]
+            for item in self.ffmpeg_cmds
+        ]
+        for ffmpeg_cmd in cmds:
             cmd = [
                 "ffmpeg",
                 "-hide_banner",

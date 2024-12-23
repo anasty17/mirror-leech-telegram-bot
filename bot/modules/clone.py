@@ -1,11 +1,9 @@
 from asyncio import gather
 from json import loads
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
 from secrets import token_urlsafe
 from aiofiles.os import remove
 
-from bot import LOGGER, task_dict, task_dict_lock, bot, bot_loop
+from .. import LOGGER, task_dict, task_dict_lock, bot_loop
 from ..helper.ext_utils.bot_utils import (
     sync_to_async,
     cmd_exec,
@@ -29,8 +27,6 @@ from ..helper.mirror_leech_utils.gdrive_utils.count import GoogleDriveCount
 from ..helper.mirror_leech_utils.rclone_utils.transfer import RcloneTransferHelper
 from ..helper.mirror_leech_utils.status_utils.gdrive_status import GoogleDriveStatus
 from ..helper.mirror_leech_utils.status_utils.rclone_status import RcloneStatus
-from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
     send_message,
     delete_message,
@@ -195,6 +191,11 @@ class Clone(TaskListener):
                     "--config",
                     config_path,
                     f"{remote}:{src_path}",
+                    "--log-systemd",
+                    "--log-file",
+                    "rlog.txt",
+                    "--log-level",
+                    "ERROR",
                 ]
                 res = await cmd_exec(cmd)
                 if res[2] != 0:
@@ -297,14 +298,5 @@ class Clone(TaskListener):
             )
 
 
-async def clone(client, message):
+async def clone_node(client, message):
     bot_loop.create_task(Clone(client, message).new_event())
-
-
-bot.add_handler(
-    MessageHandler(
-        clone,
-        filters=command(BotCommands.CloneCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)

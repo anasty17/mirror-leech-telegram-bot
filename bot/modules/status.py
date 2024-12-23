@@ -1,17 +1,14 @@
 from psutil import cpu_percent, virtual_memory, disk_usage
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from time import time
 
-from bot import (
+from .. import (
     task_dict_lock,
     status_dict,
     task_dict,
     bot_start_time,
-    DOWNLOAD_DIR,
     intervals,
-    bot,
 )
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.ext_utils.status_utils import (
     MirrorStatus,
@@ -20,7 +17,6 @@ from ..helper.ext_utils.status_utils import (
     speed_string_to_bytes,
 )
 from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
     send_message,
     delete_message,
@@ -33,12 +29,12 @@ from ..helper.telegram_helper.button_build import ButtonMaker
 
 
 @new_task
-async def mirror_status(_, message):
+async def task_status(_, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
         currentTime = get_readable_time(time() - bot_start_time)
-        free = get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)
+        free = get_readable_file_size(disk_usage(Config.DOWNLOAD_DIR).free)
         msg = f"No Active Tasks!\nEach user can get status for his tasks by adding me or user_id after cmd: /{BotCommands.StatusCommand} me"
         msg += (
             f"\n<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {free}"
@@ -154,13 +150,3 @@ async def status_pages(_, query):
         button = ButtonMaker()
         button.data_button("Back", f"status {data[1]} ref")
         await edit_message(message, msg, button.build_menu())
-
-
-bot.add_handler(
-    MessageHandler(
-        mirror_status,
-        filters=command(BotCommands.StatusCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(status_pages, filters=regex("^status")))

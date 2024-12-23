@@ -3,7 +3,7 @@ from secrets import token_urlsafe
 from telegraph.aio import Telegraph
 from telegraph.exceptions import RetryAfterError
 
-from bot import LOGGER
+from ... import LOGGER
 
 
 class TelegraphHelper:

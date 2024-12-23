@@ -1,4 +1,4 @@
-from bot import LOGGER
+from .... import LOGGER
 from ...ext_utils.status_utils import get_readable_file_size, MirrorStatus
 
 

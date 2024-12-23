@@ -1,6 +1,6 @@
 from secrets import token_urlsafe
 
-from bot import task_dict, task_dict_lock, LOGGER
+from .... import task_dict, task_dict_lock, LOGGER
 from ...ext_utils.bot_utils import sync_to_async
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.gdrive_utils.count import GoogleDriveCount

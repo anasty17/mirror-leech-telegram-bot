@@ -1,4 +1,4 @@
-from bot import LOGGER, subprocess_lock
+from .... import LOGGER, subprocess_lock
 from ...ext_utils.status_utils import get_readable_file_size, MirrorStatus
 
 

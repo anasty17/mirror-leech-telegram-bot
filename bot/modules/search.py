@@ -1,16 +1,13 @@
 from httpx import AsyncClient
 from html import escape
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from urllib.parse import quote
 
-from bot import bot, LOGGER, config_dict, qbittorrent_client
+from .. import LOGGER, qbittorrent_client
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.ext_utils.status_utils import get_readable_file_size
 from ..helper.ext_utils.telegraph_helper import telegraph
-from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import edit_message, send_message
 
 PLUGINS = []
@@ -20,12 +17,14 @@ TELEGRAPH_LIMIT = 300
 
 async def initiate_search_tools():
     qb_plugins = await sync_to_async(qbittorrent_client.search_plugins)
-    if SEARCH_PLUGINS := config_dict["SEARCH_PLUGINS"]:
+    if Config.SEARCH_PLUGINS:
         globals()["PLUGINS"] = []
         if qb_plugins:
             names = [plugin["name"] for plugin in qb_plugins]
             await sync_to_async(qbittorrent_client.search_uninstall_plugin, names=names)
-        await sync_to_async(qbittorrent_client.search_install_plugin, SEARCH_PLUGINS)
+        await sync_to_async(
+            qbittorrent_client.search_install_plugin, Config.SEARCH_PLUGINS
+        )
     elif qb_plugins:
         for plugin in qb_plugins:
             await sync_to_async(
@@ -33,11 +32,11 @@ async def initiate_search_tools():
             )
         globals()["PLUGINS"] = []
 
-    if SEARCH_API_LINK := config_dict["SEARCH_API_LINK"]:
+    if Config.SEARCH_API_LINK:
         global SITES
         try:
             async with AsyncClient() as client:
-                response = await client.get(f"{SEARCH_API_LINK}/api/v1/sites")
+                response = await client.get(f"{Config.SEARCH_API_LINK}/api/v1/sites")
                 data = response.json()
             SITES = {
                 str(site): str(site).capitalize() for site in data["supported_sites"]
@@ -52,28 +51,24 @@ async def initiate_search_tools():
 
 async def search(key, site, message, method):
     if method.startswith("api"):
-        SEARCH_API_LINK = config_dict["SEARCH_API_LINK"]
-        SEARCH_LIMIT = config_dict["SEARCH_LIMIT"]
         if method == "apisearch":
             LOGGER.info(f"API Searching: {key} from {site}")
             if site == "all":
-                api = f"{SEARCH_API_LINK}/api/v1/all/search?query={key}&limit={SEARCH_LIMIT}"
+                api = f"{Config.SEARCH_API_LINK}/api/v1/all/search?query={key}&limit={Config.SEARCH_LIMIT}"
             else:
-                api = f"{SEARCH_API_LINK}/api/v1/search?site={site}&query={key}&limit={SEARCH_LIMIT}"
+                api = f"{Config.SEARCH_API_LINK}/api/v1/search?site={site}&query={key}&limit={Config.SEARCH_LIMIT}"
         elif method == "apitrend":
             LOGGER.info(f"API Trending from {site}")
             if site == "all":
-                api = f"{SEARCH_API_LINK}/api/v1/all/trending?limit={SEARCH_LIMIT}"
+                api = f"{Config.SEARCH_API_LINK}/api/v1/all/trending?limit={Config.SEARCH_LIMIT}"
             else:
-                api = f"{SEARCH_API_LINK}/api/v1/trending?site={site}&limit={SEARCH_LIMIT}"
+                api = f"{Config.SEARCH_API_LINK}/api/v1/trending?site={site}&limit={Config.SEARCH_LIMIT}"
         elif method == "apirecent":
             LOGGER.info(f"API Recent from {site}")
             if site == "all":
-                api = f"{SEARCH_API_LINK}/api/v1/all/recent?limit={SEARCH_LIMIT}"
+                api = f"{Config.SEARCH_API_LINK}/api/v1/all/recent?limit={Config.SEARCH_LIMIT}"
             else:
-                api = (
-                    f"{SEARCH_API_LINK}/api/v1/recent?site={site}&limit={SEARCH_LIMIT}"
-                )
+                api = f"{Config.SEARCH_API_LINK}/api/v1/recent?site={site}&limit={Config.SEARCH_LIMIT}"
         try:
             async with AsyncClient() as client:
                 response = await client.get(api)
@@ -240,8 +235,7 @@ async def torrent_search(_, message):
     user_id = message.from_user.id
     buttons = ButtonMaker()
     key = message.text.split()
-    SEARCH_PLUGINS = config_dict["SEARCH_PLUGINS"]
-    if SITES is None and not SEARCH_PLUGINS:
+    if SITES is None and not Config.SEARCH_PLUGINS:
         await send_message(
             message, "No API link or search PLUGINS added for this function"
         )
@@ -253,7 +247,7 @@ async def torrent_search(_, message):
         buttons.data_button("Cancel", f"torser {user_id} cancel")
         button = buttons.build_menu(2)
         await send_message(message, "Send a search key along with command", button)
-    elif SITES is not None and SEARCH_PLUGINS:
+    elif SITES is not None and Config.SEARCH_PLUGINS:
         buttons.data_button("Api", f"torser {user_id} apisearch")
         buttons.data_button("Plugins", f"torser {user_id} plugin")
         buttons.data_button("Cancel", f"torser {user_id} cancel")
@@ -312,13 +306,3 @@ async def torrent_search_update(_, query):
     else:
         await query.answer()
         await edit_message(message, "Search has been canceled!")
-
-
-bot.add_handler(
-    MessageHandler(
-        torrent_search,
-        filters=command(BotCommands.SearchCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(torrent_search_update, filters=regex("^torser")))

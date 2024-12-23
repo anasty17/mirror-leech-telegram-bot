@@ -1,10 +1,9 @@
 from aiofiles.os import path as aiopath
 from base64 import b64encode
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
 from re import match as re_match
 
-from bot import bot, DOWNLOAD_DIR, LOGGER, bot_loop, task_dict_lock
+from .. import LOGGER, bot_loop, task_dict_lock
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import (
     get_content_type,
     sync_to_async,
@@ -40,8 +39,6 @@ from ..helper.mirror_leech_utils.download_utils.rclone_download import (
 from ..helper.mirror_leech_utils.download_utils.telegram_download import (
     TelegramDownloadHelper,
 )
-from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message, get_tg_link_message
 
 
@@ -209,7 +206,7 @@ class Mirror(TaskListener):
 
         await self.get_tag(text)
 
-        path = f"{DOWNLOAD_DIR}{self.mid}{self.folder_name}"
+        path = f"{Config.DOWNLOAD_DIR}{self.mid}{self.folder_name}"
 
         if not self.link and (reply_to := self.message.reply_to_message):
             if reply_to.text:
@@ -392,61 +389,3 @@ async def nzb_leech(client, message):
     bot_loop.create_task(
         Mirror(client, message, is_leech=True, is_nzb=True).new_event()
     )
-
-
-bot.add_handler(
-    MessageHandler(
-        mirror,
-        filters=command(BotCommands.MirrorCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        qb_mirror,
-        filters=command(BotCommands.QbMirrorCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        jd_mirror,
-        filters=command(BotCommands.JdMirrorCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        nzb_mirror,
-        filters=command(BotCommands.NzbMirrorCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        leech,
-        filters=command(BotCommands.LeechCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        qb_leech,
-        filters=command(BotCommands.QbLeechCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        jd_leech,
-        filters=command(BotCommands.JdLeechCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        nzb_leech,
-        filters=command(BotCommands.NzbLeechCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)

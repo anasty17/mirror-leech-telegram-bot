@@ -2,16 +2,16 @@ from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
 from time import time
 
-from bot import (
+from ... import (
     task_dict,
     task_dict_lock,
     intervals,
     qbittorrent_client,
-    config_dict,
     qb_torrents,
     qb_listener_lock,
     LOGGER,
 )
+from ...core.config_manager import Config
 from ..ext_utils.bot_utils import new_task, sync_to_async
 from ..ext_utils.files_utils import clean_unwanted
 from ..ext_utils.status_utils import get_readable_time, get_task_by_gid
@@ -127,11 +127,11 @@ async def _qb_listener():
                         continue
                     state = tor_info.state
                     if state == "metaDL":
-                        TORRENT_TIMEOUT = config_dict["TORRENT_TIMEOUT"]
                         qb_torrents[tag]["stalled_time"] = time()
                         if (
-                            TORRENT_TIMEOUT
-                            and time() - tor_info.added_on >= TORRENT_TIMEOUT
+                            Config.TORRENT_TIMEOUT
+                            and time() - qb_torrents[tag]["start_time"]
+                            >= Config.TORRENT_TIMEOUT
                         ):
                             await _on_download_error("Dead Torrent!", tor_info)
                         else:
@@ -145,7 +145,6 @@ async def _qb_listener():
                             qb_torrents[tag]["stop_dup_check"] = True
                             await _stop_duplicate(tor_info)
                     elif state == "stalledDL":
-                        TORRENT_TIMEOUT = config_dict["TORRENT_TIMEOUT"]
                         if (
                             not qb_torrents[tag]["rechecked"]
                             and 0.99989999999999999 < tor_info.progress < 1
@@ -160,9 +159,9 @@ async def _qb_listener():
                             )
                             qb_torrents[tag]["rechecked"] = True
                         elif (
-                            TORRENT_TIMEOUT
+                            Config.TORRENT_TIMEOUT
                             and time() - qb_torrents[tag]["stalled_time"]
-                            >= TORRENT_TIMEOUT
+                            >= Config.TORRENT_TIMEOUT
                         ):
                             await _on_download_error("Dead Torrent!", tor_info)
                         else:
@@ -202,6 +201,7 @@ async def _qb_listener():
 async def on_download_start(tag):
     async with qb_listener_lock:
         qb_torrents[tag] = {
+            "start_time": time(),
             "stalled_time": time(),
             "stop_dup_check": False,
             "rechecked": False,

@@ -2,13 +2,12 @@ from asyncio import Lock, sleep
 from time import time
 from pyrogram.errors import FloodWait, FloodPremiumWait
 
-from bot import (
+from .... import (
     LOGGER,
     task_dict,
     task_dict_lock,
-    bot,
-    user,
 )
+from ....core.mltb_client import TgClient
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...mirror_leech_utils.status_utils.telegram_status import TelegramStatus
@@ -50,12 +49,12 @@ class TelegramDownloadHelper:
         else:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
-    async def _on_download_progress(self, current, total):
+    async def _on_download_progress(self, current, _):
         if self._listener.is_cancelled:
             if self.session == "user":
-                user.stop_transmission()
+                TgClient.user.stop_transmission()
             else:
-                bot.stop_transmission()
+                TgClient.bot.stop_transmission()
         self._processed_bytes = current
 
     async def _on_download_error(self, error):
@@ -75,11 +74,12 @@ class TelegramDownloadHelper:
                 file_name=path, progress=self._on_download_progress
             )
             if self._listener.is_cancelled:
-                await self._on_download_error("Cancelled by user!")
                 return
         except (FloodWait, FloodPremiumWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
+            await self._download(message, path)
+            return
         except Exception as e:
             LOGGER.error(str(e))
             await self._on_download_error(str(e))
@@ -97,7 +97,7 @@ class TelegramDownloadHelper:
             and self._listener.is_super_chat
         ):
             self.session = "user"
-            message = await user.get_messages(
+            message = await TgClient.user.get_messages(
                 chat_id=message.chat.id, message_ids=message.id
             )
         elif self.session != "user":
@@ -165,3 +165,4 @@ class TelegramDownloadHelper:
         LOGGER.info(
             f"Cancelling download on user request: name: {self._listener.name} id: {self._id}"
         )
+        await self._on_download_error("Cancelled by user!")

@@ -1,14 +1,7 @@
 from aiofiles.os import remove, path as aiopath
 
-from bot import (
-    aria2,
-    task_dict_lock,
-    task_dict,
-    LOGGER,
-    config_dict,
-    aria2_options,
-    aria2c_global,
-)
+from .... import aria2, task_dict_lock, task_dict, LOGGER
+from ....core.config_manager import Config
 from ...ext_utils.bot_utils import bt_selection_buttons, sync_to_async
 from ...ext_utils.task_manager import check_running_tasks
 from ...mirror_leech_utils.status_utils.aria2_status import Aria2Status
@@ -16,9 +9,7 @@ from ...telegram_helper.message_utils import send_status_message, send_message
 
 
 async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
-    a2c_opt = {**aria2_options}
-    [a2c_opt.pop(k) for k in aria2c_global if k in aria2_options]
-    a2c_opt["dir"] = dpath
+    a2c_opt = {"dir": dpath}
     if listener.name:
         a2c_opt["out"] = listener.name
     if header:
@@ -27,7 +18,7 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
         a2c_opt["seed-ratio"] = ratio
     if seed_time:
         a2c_opt["seed-time"] = seed_time
-    if TORRENT_TIMEOUT := config_dict["TORRENT_TIMEOUT"]:
+    if TORRENT_TIMEOUT := Config.TORRENT_TIMEOUT:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
 
     add_to_queue, event = await check_running_tasks(listener)
@@ -66,7 +57,7 @@ async def add_aria2c_download(listener, dpath, header, ratio, seed_time):
 
     if (
         not add_to_queue
-        and (not listener.select or not config_dict["BASE_URL"])
+        and (not listener.select or not Config.BASE_URL)
         and listener.multi <= 1
     ):
         await send_status_message(listener.message)

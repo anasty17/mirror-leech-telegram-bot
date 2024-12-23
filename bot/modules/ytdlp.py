@@ -1,12 +1,13 @@
 from httpx import AsyncClient
 from asyncio import wait_for, Event
 from functools import partial
-from pyrogram.filters import command, regex, user
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.filters import regex, user
+from pyrogram.handlers import CallbackQueryHandler
 from time import time
 from yt_dlp import YoutubeDL
 
-from bot import DOWNLOAD_DIR, bot, config_dict, LOGGER, bot_loop, task_dict_lock
+from .. import LOGGER, bot_loop, task_dict_lock
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import (
     new_task,
     sync_to_async,
@@ -17,9 +18,7 @@ from ..helper.ext_utils.links_utils import is_url
 from ..helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from ..helper.listeners.task_listener import TaskListener
 from ..helper.mirror_leech_utils.download_utils.yt_dlp_download import YoutubeDLHelper
-from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
     send_message,
     edit_message,
@@ -398,11 +397,11 @@ class YtDlp(TaskListener):
         if len(self.bulk) != 0:
             del self.bulk[0]
 
-        path = f"{DOWNLOAD_DIR}{self.mid}{self.folder_name}"
+        path = f"{Config.DOWNLOAD_DIR}{self.mid}{self.folder_name}"
 
         await self.get_tag(text)
 
-        opt = opt or self.user_dict.get("yt_opt") or config_dict["YT_DLP_OPTIONS"]
+        opt = opt or self.user_dict.get("yt_opt") or Config.YT_DLP_OPTIONS
 
         if not self.link and (reply_to := self.message.reply_to_message):
             self.link = reply_to.text.split("\n", 1)[0].strip()
@@ -481,19 +480,3 @@ async def ytdl(client, message):
 
 async def ytdl_leech(client, message):
     bot_loop.create_task(YtDlp(client, message, is_leech=True).new_event())
-
-
-bot.add_handler(
-    MessageHandler(
-        ytdl,
-        filters=command(BotCommands.YtdlCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        ytdl_leech,
-        filters=command(BotCommands.YtdlLeechCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)

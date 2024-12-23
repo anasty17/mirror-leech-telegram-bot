@@ -2,13 +2,13 @@ from aiofiles.os import remove, path as aiopath
 from asyncio import gather, sleep
 from sabnzbdapi.exception import NotLoggedIn, LoginFailed
 
-from bot import (
+from .... import (
     task_dict,
     task_dict_lock,
     sabnzbd_client,
     LOGGER,
-    config_dict,
 )
+from ....core.config_manager import Config
 from ...ext_utils.task_manager import check_running_tasks
 from ...listeners.nzb_listener import on_download_start
 from ...ext_utils.db_handler import database
@@ -21,15 +21,13 @@ async def add_servers():
     if res and (servers := res["servers"]):
         tasks = []
         servers_hosts = [x["host"] for x in servers]
-        for server in list(config_dict["USENET_SERVERS"]):
+        for server in list(Config.USENET_SERVERS):
             if server["host"] not in servers_hosts:
                 tasks.append(sabnzbd_client.add_server(server))
-                config_dict["USENET_SERVERS"].append(server)
-        if config_dict["DATABASE_URL"]:
+                Config.USENET_SERVERS.append(server)
+        if Config.DATABASE_URL:
             tasks.append(
-                database.update_config(
-                    {"USENET_SERVERS": config_dict["USENET_SERVERS"]}
-                )
+                database.update_config({"USENET_SERVERS": Config.USENET_SERVERS})
             )
         if tasks:
             try:
@@ -37,19 +35,18 @@ async def add_servers():
             except LoginFailed as e:
                 raise e
     elif not res and (
-        config_dict["USENET_SERVERS"]
+        Config.USENET_SERVERS
         and (
-            not config_dict["USENET_SERVERS"][0]["host"]
-            or not config_dict["USENET_SERVERS"][0]["username"]
-            or not config_dict["USENET_SERVERS"][0]["password"]
+            not Config.USENET_SERVERS[0]["host"]
+            or not Config.USENET_SERVERS[0]["username"]
+            or not Config.USENET_SERVERS[0]["password"]
         )
-        or not config_dict["USENET_SERVERS"]
+        or not Config.USENET_SERVERS
     ):
         raise NotLoggedIn("Set USENET_SERVERS in bsetting or config!")
     else:
         if tasks := [
-            sabnzbd_client.add_server(server)
-            for server in config_dict["USENET_SERVERS"]
+            sabnzbd_client.add_server(server) for server in Config.USENET_SERVERS
         ]:
             try:
                 await gather(*tasks)

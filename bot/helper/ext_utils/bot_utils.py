@@ -9,7 +9,8 @@ from asyncio import (
     sleep,
 )
 
-from bot import user_data, config_dict, bot_loop
+from ... import user_data, bot_loop
+from ...core.config_manager import Config
 from ..telegram_helper.button_build import ButtonMaker
 from .telegraph_helper import telegraph
 from .help_messages import (
@@ -57,12 +58,13 @@ def bt_selection_buttons(id_):
     gid = id_[:12] if len(id_) > 25 else id_
     pin = "".join([n for n in id_ if n.isdigit()][:4])
     buttons = ButtonMaker()
-    BASE_URL = config_dict["BASE_URL"]
-    if config_dict["WEB_PINCODE"]:
-        buttons.url_button("Select Files", f"{BASE_URL}/app/files?gid={id_}")
+    if Config.WEB_PINCODE:
+        buttons.url_button("Select Files", f"{Config.BASE_URL}/app/files?gid={id_}")
         buttons.data_button("Pincode", f"sel pin {gid} {pin}")
     else:
-        buttons.url_button("Select Files", f"{BASE_URL}/app/files?gid={id_}&pin={pin}")
+        buttons.url_button(
+            "Select Files", f"{Config.BASE_URL}/app/files?gid={id_}&pin={pin}"
+        )
     buttons.data_button("Done Selecting", f"sel done {gid} {id_}")
     buttons.data_button("Cancel", f"sel cancel {gid}")
     return buttons.build_menu(2)

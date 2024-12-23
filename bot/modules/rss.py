@@ -5,11 +5,12 @@ from datetime import datetime, timedelta
 from feedparser import parse as feed_parse
 from functools import partial
 from io import BytesIO
-from pyrogram.filters import command, regex, create
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
+from pyrogram.filters import create
+from pyrogram.handlers import MessageHandler
 from time import time
 
-from bot import scheduler, rss_dict, LOGGER, config_dict, bot
+from .. import scheduler, rss_dict, LOGGER
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import new_task, arg_parser
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.exceptions import RssShutdownException
@@ -185,8 +186,7 @@ async def rss_sub(_, message, pre_event):
         except Exception as e:
             await send_message(message, str(e))
     if msg:
-        if config_dict["DATABASE_URL"] and rss_dict[user_id]:
-            await database.rss_update(user_id)
+        await database.rss_update(user_id)
         await send_message(message, msg)
         is_sudo = await CustomFilters.sudo("", message)
         if scheduler.state == 2:
@@ -243,22 +243,21 @@ async def rss_update(_, message, pre_event, state):
             elif is_sudo and not scheduler.running:
                 add_job()
                 scheduler.start()
-        if is_sudo and config_dict["DATABASE_URL"] and user_id != message.from_user.id:
+        if is_sudo and Config.DATABASE_URL and user_id != message.from_user.id:
             await database.rss_update(user_id)
         if not rss_dict[user_id]:
             async with rss_dict_lock:
                 del rss_dict[user_id]
-            if config_dict["DATABASE_URL"]:
-                await database.rss_delete(user_id)
-                if not rss_dict:
-                    await database.trunc_table("rss")
+            await database.rss_delete(user_id)
+            if not rss_dict:
+                await database.trunc_table("rss")
     if updated:
         LOGGER.info(f"Rss link with Title(s): {updated} has been {state}d!")
         await send_message(
             message,
             f"Rss links with Title(s): <code>{updated}</code> has been {state}d!",
         )
-        if config_dict["DATABASE_URL"] and rss_dict.get(user_id):
+        if rss_dict.get(user_id):
             await database.rss_update(user_id)
     await update_rss_menu(pre_event)
 
@@ -420,7 +419,7 @@ async def rss_edit(_, message, pre_event):
                         y = x.split(" or ")
                         exf_lists.append(y)
                 rss_dict[user_id][title]["exf"] = exf_lists
-    if config_dict["DATABASE_URL"] and updated:
+    if updated:
         await database.rss_update(user_id)
     await update_rss_menu(pre_event)
 
@@ -433,8 +432,7 @@ async def rss_delete(_, message, pre_event):
         user = int(user)
         async with rss_dict_lock:
             del rss_dict[user]
-        if config_dict["DATABASE_URL"]:
-            await database.rss_delete(user)
+        await database.rss_delete(user)
     await update_rss_menu(pre_event)
 
 
@@ -564,23 +562,20 @@ Timeout: 60 sec. Argument -c for command and arguments
         if data[1].endswith("unsub"):
             async with rss_dict_lock:
                 del rss_dict[int(data[2])]
-            if config_dict["DATABASE_URL"]:
-                await database.rss_delete(int(data[2]))
+            await database.rss_delete(int(data[2]))
             await update_rss_menu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
                 for title in list(rss_dict[int(data[2])].keys()):
                     rss_dict[int(data[2])][title]["paused"] = True
-            if config_dict["DATABASE_URL"]:
-                await database.rss_update(int(data[2]))
+            await database.rss_update(int(data[2]))
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
                 for title in list(rss_dict[int(data[2])].keys()):
                     rss_dict[int(data[2])][title]["paused"] = False
             if scheduler.state == 2:
                 scheduler.resume()
-            if config_dict["DATABASE_URL"]:
-                await database.rss_update(int(data[2]))
+            await database.rss_update(int(data[2]))
         await update_rss_menu(query)
     elif data[1].startswith("all"):
         if len(rss_dict) == 0:
@@ -590,8 +585,7 @@ Timeout: 60 sec. Argument -c for command and arguments
         if data[1].endswith("unsub"):
             async with rss_dict_lock:
                 rss_dict.clear()
-            if config_dict["DATABASE_URL"]:
-                await database.trunc_table("rss")
+            await database.trunc_table("rss")
             await update_rss_menu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
@@ -600,8 +594,7 @@ Timeout: 60 sec. Argument -c for command and arguments
                         rss_dict[int(data[2])][title]["paused"] = True
             if scheduler.running:
                 scheduler.pause()
-            if config_dict["DATABASE_URL"]:
-                await database.rss_update_all()
+            await database.rss_update_all()
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
                 for user in list(rss_dict.keys()):
@@ -612,8 +605,7 @@ Timeout: 60 sec. Argument -c for command and arguments
             elif not scheduler.running:
                 add_job()
                 scheduler.start()
-            if config_dict["DATABASE_URL"]:
-                await database.rss_update_all()
+            await database.rss_update_all()
     elif data[1] == "deluser":
         if len(rss_dict) == 0:
             await query.answer(text="No subscriptions!", show_alert=True)
@@ -653,7 +645,7 @@ Timeout: 60 sec. Argument -c for command and arguments
 
 
 async def rss_monitor():
-    chat = config_dict["RSS_CHAT"]
+    chat = Config.RSS_CHAT
     if not chat:
         LOGGER.warning("RSS_CHAT not added! Shutting down rss scheduler...")
         scheduler.shutdown(wait=False)
@@ -788,7 +780,7 @@ async def rss_monitor():
 def add_job():
     scheduler.add_job(
         rss_monitor,
-        trigger=IntervalTrigger(seconds=config_dict["RSS_DELAY"]),
+        trigger=IntervalTrigger(seconds=Config.RSS_DELAY),
         id="0",
         name="RSS",
         misfire_grace_time=15,
@@ -801,11 +793,4 @@ def add_job():
 add_job()
 scheduler.start()
 
-bot.add_handler(
-    MessageHandler(
-        get_rss_menu,
-        filters=command(BotCommands.RssCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(rss_listener, filters=regex("^rss")))
+

@@ -7,15 +7,15 @@ from os import path as ospath, listdir
 from pickle import load as pload
 from random import randrange
 from re import search as re_search
+from urllib.parse import parse_qs, urlparse
 from tenacity import (
     retry,
     wait_exponential,
     stop_after_attempt,
     retry_if_exception_type,
 )
-from urllib.parse import parse_qs, urlparse
 
-from bot import config_dict
+from ....core.config_manager import Config
 from ...ext_utils.links_utils import is_gdrive_id
 
 LOGGER = getLogger(__name__)
@@ -46,7 +46,7 @@ class GoogleDriveHelper:
         self.total_time = 0
         self.status = None
         self.update_interval = 3
-        self.use_sa = config_dict["USE_SERVICE_ACCOUNTS"]
+        self.use_sa = Config.USE_SERVICE_ACCOUNTS
 
     @property
     def speed(self):
@@ -208,7 +208,7 @@ class GoogleDriveHelper:
             .execute()
         )
         file_id = file.get("id")
-        if not config_dict["IS_TEAM_DRIVE"]:
+        if not Config.IS_TEAM_DRIVE:
             self.set_permission(file_id)
         LOGGER.info(f'Created G-Drive Folder:\nName: {file.get("name")}\nID: {file_id}')
         return file_id

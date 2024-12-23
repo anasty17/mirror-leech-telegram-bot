@@ -1,8 +1,7 @@
 from asyncio import sleep
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
-from bot import task_dict, bot, task_dict_lock, OWNER_ID, user_data, multi_tags
+from .. import task_dict, task_dict_lock, user_data, multi_tags
+from ..core.mltb_client import Config
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import (
     get_task_by_gid,
@@ -21,7 +20,7 @@ from ..helper.telegram_helper.message_utils import (
 
 
 @new_task
-async def cancel_task(_, message):
+async def cancel(_, message):
     user_id = message.from_user.id if message.from_user else message.sender_chat.id
     msg = message.text.split()
     if len(msg) > 1:
@@ -48,7 +47,7 @@ async def cancel_task(_, message):
         await send_message(message, msg)
         return
     if (
-        OWNER_ID != user_id
+        Config.OWNER_ID != user_id
         and task.listener.user_id != user_id
         and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
@@ -95,9 +94,7 @@ def create_cancel_buttons(is_sudo, user_id=""):
         "Uploading", f"canall ms {MirrorStatus.STATUS_UPLOAD} {user_id}"
     )
     buttons.data_button("Seeding", f"canall ms {MirrorStatus.STATUS_SEED} {user_id}")
-    buttons.data_button(
-        "Spltting", f"canall ms {MirrorStatus.STATUS_SPLIT} {user_id}"
-    )
+    buttons.data_button("Spltting", f"canall ms {MirrorStatus.STATUS_SPLIT} {user_id}")
     buttons.data_button("Cloning", f"canall ms {MirrorStatus.STATUS_CLONE} {user_id}")
     buttons.data_button(
         "Extracting", f"canall ms {MirrorStatus.STATUS_EXTRACT} {user_id}"
@@ -130,7 +127,7 @@ def create_cancel_buttons(is_sudo, user_id=""):
 
 
 @new_task
-async def cancell_all_buttons(_, message):
+async def cancel_all_buttons(_, message):
     async with task_dict_lock:
         count = len(task_dict)
     if count == 0:
@@ -180,21 +177,3 @@ async def cancel_all_update(_, query):
         res = await cancel_all(data[1], user_id)
         if not res:
             await send_message(reply_to, f"No matching tasks for {data[1]}!")
-
-
-bot.add_handler(
-    MessageHandler(
-        cancel_task,
-        filters=command(BotCommands.CancelTaskCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        cancell_all_buttons,
-        filters=command(BotCommands.CancelAllCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(cancel_all_update, filters=regex("^canall")))
-bot.add_handler(CallbackQueryHandler(cancel_multi, filters=regex("^stopm")))

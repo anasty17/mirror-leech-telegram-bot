@@ -10,7 +10,7 @@ from tenacity import (
     RetryError,
 )
 
-from bot import config_dict
+from ....core.config_manager import Config
 from ...ext_utils.bot_utils import async_to_sync, SetInterval
 from ...ext_utils.files_utils import get_mime_type
 from ...mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
@@ -161,7 +161,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
                 )
                 .execute()
             )
-            if not config_dict["IS_TEAM_DRIVE"]:
+            if not Config.IS_TEAM_DRIVE:
                 self.set_permission(response["id"])
 
             drive_file = (
@@ -227,7 +227,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
                 pass
         self.file_processed_bytes = 0
         # Insert new permissions
-        if not config_dict["IS_TEAM_DRIVE"]:
+        if not Config.IS_TEAM_DRIVE:
             self.set_permission(response["id"])
         # Define file instance and get url for download
         if not in_dir:

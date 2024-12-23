@@ -8,7 +8,8 @@ from pyrogram.filters import regex, user
 from pyrogram.handlers import CallbackQueryHandler
 from time import time
 
-from bot import LOGGER, config_dict
+from .... import LOGGER
+from ....core.config_manager import Config
 from ...ext_utils.bot_utils import cmd_exec, update_user_ldata, new_task
 from ...ext_utils.db_handler import database
 from ...ext_utils.status_utils import get_readable_file_size, get_readable_time
@@ -115,7 +116,7 @@ async def path_updates(_, query, obj):
         if path != obj.listener.user_dict.get("rclone_path"):
             update_user_ldata(obj.listener.user_id, "rclone_path", path)
             await obj.get_path_buttons()
-            if config_dict["DATABASE_URL"]:
+            if Config.DATABASE_URL:
                 await database.update_user_data(obj.listener.user_id)
     elif data[1] == "owner":
         obj.config_path = "rclone.conf"
@@ -241,7 +242,7 @@ class RcloneList:
             else "\nTransfer Type: <i>Upload</i>"
         )
         if self.list_status == "rcu":
-            default_path = config_dict["RCLONE_PATH"]
+            default_path = Config.RCLONE_PATH
             msg += f"\nDefault Rclone Path: {default_path}" if default_path else ""
         msg += f"\n\nItems: {items_no}"
         if items_no > LIST_LIMIT:
@@ -253,9 +254,9 @@ class RcloneList:
 
     async def get_path(self, itype=""):
         if itype:
-            self.item_type == itype
+            self.item_type = itype
         elif self.list_status == "rcu":
-            self.item_type == "--dirs-only"
+            self.item_type = "--dirs-only"
         cmd = [
             "rclone",
             "lsjson",
@@ -266,11 +267,34 @@ class RcloneList:
             "--config",
             self.config_path,
             f"{self.remote}{self.path}",
+            "--log-systemd",
+            "--log-file",
+            "rlog.txt",
+            "--log-level",
+            "ERROR",
         ]
         if self.listener.is_cancelled:
             return
         res, err, code = await cmd_exec(cmd)
-        if code not in [0, -9]:
+        if code in [0, -9]:
+            result = loads(res)
+            if (
+                len(result) == 0
+                and itype != self.item_type
+                and self.list_status == "rcd"
+            ):
+                itype = (
+                    "--dirs-only"
+                    if self.item_type == "--files-only"
+                    else "--files-only"
+                )
+                self.item_type = itype
+                await self.get_path(itype)
+            else:
+                self.path_list = sorted(result, key=lambda x: x["Path"])
+                self.iter_start = 0
+                await self.get_path_buttons()
+        else:
             if not err:
                 err = "Use <code>/shell cat rlog.txt</code> to see more information"
             LOGGER.error(
@@ -279,17 +303,6 @@ class RcloneList:
             self.remote = err[:4000]
             self.path = ""
             self.event.set()
-            return
-        result = loads(res)
-        if len(result) == 0 and itype != self.item_type and self.list_status == "rcd":
-            itype = (
-                "--dirs-only" if self.item_type == "--files-only" else "--files-only"
-            )
-            self.item_type = itype
-            return await self.get_path(itype)
-        self.path_list = sorted(result, key=lambda x: x["Path"])
-        self.iter_start = 0
-        await self.get_path_buttons()
 
     async def list_remotes(self):
         config = RawConfigParser()

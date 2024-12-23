@@ -2,7 +2,8 @@ from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
 from time import time
 
-from bot import aria2, task_dict_lock, task_dict, LOGGER, config_dict, intervals
+from ... import aria2, task_dict_lock, task_dict, LOGGER, intervals
+from ...core.config_manager import Config
 from ..ext_utils.bot_utils import loop_thread, bt_selection_buttons, sync_to_async
 from ..ext_utils.files_utils import clean_unwanted
 from ..ext_utils.status_utils import get_task_by_gid
@@ -64,7 +65,7 @@ async def _on_download_complete(api, gid):
         LOGGER.info(f"Gid changed from {gid} to {new_gid}")
         if task := await get_task_by_gid(new_gid):
             task.listener.is_torrent = True
-            if config_dict["BASE_URL"] and task.listener.select:
+            if Config.BASE_URL and task.listener.select:
                 if not task.queued:
                     await sync_to_async(api.client.force_pause, new_gid)
                 SBUTTONS = bt_selection_buttons(new_gid)

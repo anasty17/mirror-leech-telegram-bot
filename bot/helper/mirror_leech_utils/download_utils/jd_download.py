@@ -9,7 +9,7 @@ from base64 import b64encode
 from secrets import token_urlsafe
 from myjd.exception import MYJDException
 
-from bot import (
+from .... import (
     task_dict,
     task_dict_lock,
     LOGGER,
@@ -367,13 +367,13 @@ async def add_jd_download(listener, path):
     links_to_remove = []
     force_download = False
     for dlink in links:
-        if dlink["status"] == "Invalid download directory":
+        if dlink.get("status", "") == "Invalid download directory":
             force_download = True
             new_name, ext = dlink["name"].rsplit(".", 1)
             new_name = new_name[: 250 - len(f".{ext}".encode())]
             new_name = f"{new_name}.{ext}"
             await jdownloader.device.downloads.rename_link(dlink["uuid"], new_name)
-        elif dlink["status"] == "HLS stream broken?":
+        elif dlink.get("status", "") == "HLS stream broken?":
             links_to_remove.append(dlink["uuid"])
 
     if links_to_remove:

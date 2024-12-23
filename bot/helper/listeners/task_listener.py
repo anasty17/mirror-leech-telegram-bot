@@ -4,15 +4,12 @@ from asyncio import sleep, gather
 from html import escape
 from requests import utils as rutils
 
-from bot import (
+from ... import (
     intervals,
     aria2,
-    DOWNLOAD_DIR,
     task_dict,
     task_dict_lock,
     LOGGER,
-    DATABASE_URL,
-    config_dict,
     non_queued_up,
     non_queued_dl,
     queued_up,
@@ -20,6 +17,7 @@ from bot import (
     queue_dict_lock,
     same_directory_lock,
 )
+from ...core.config_manager import Config
 from ..common import TaskConfig
 from ..ext_utils.bot_utils import sync_to_async
 from ..ext_utils.db_handler import database
@@ -74,8 +72,8 @@ class TaskListener(TaskConfig):
     async def on_download_start(self):
         if (
             self.is_super_chat
-            and config_dict["INCOMPLETE_TASK_NOTIFIER"]
-            and DATABASE_URL
+            and Config.INCOMPLETE_TASK_NOTIFIER
+            and Config.DATABASE_URL
         ):
             await database.add_incomplete_task(
                 self.message.chat.id, self.message.link, self.tag
@@ -107,7 +105,7 @@ class TaskListener(TaskConfig):
                                 des_id = list(self.same_dir[self.folder_name]["tasks"])[
                                     0
                                 ]
-                                des_path = f"{DOWNLOAD_DIR}{des_id}{self.folder_name}"
+                                des_path = f"{Config.DOWNLOAD_DIR}{des_id}{self.folder_name}"
                                 await makedirs(des_path, exist_ok=True)
                                 LOGGER.info(f"Moving files from {self.mid} to {des_id}")
                                 for item in await listdir(spath):
@@ -157,7 +155,7 @@ class TaskListener(TaskConfig):
 
         up_path = f"{self.dir}/{self.name}"
         self.size = await get_path_size(up_path)
-        if not config_dict["QUEUE_ALL"]:
+        if not Config.QUEUE_ALL:
             async with queue_dict_lock:
                 if self.mid in non_queued_dl:
                     non_queued_dl.remove(self.mid)
@@ -281,8 +279,8 @@ class TaskListener(TaskConfig):
     ):
         if (
             self.is_super_chat
-            and config_dict["INCOMPLETE_TASK_NOTIFIER"]
-            and DATABASE_URL
+            and Config.INCOMPLETE_TASK_NOTIFIER
+            and Config.DATABASE_URL
         ):
             await database.rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(self.name)}</code>\n\n<b>Size: </b>{get_readable_file_size(self.size)}"
@@ -312,7 +310,7 @@ class TaskListener(TaskConfig):
             if (
                 link
                 or rclone_path
-                and config_dict["RCLONE_SERVE_URL"]
+                and Config.RCLONE_SERVE_URL
                 and not self.private_link
             ):
                 buttons = ButtonMaker()
@@ -320,14 +318,10 @@ class TaskListener(TaskConfig):
                     buttons.url_button("☁️ Cloud Link", link)
                 else:
                     msg += f"\n\nPath: <code>{rclone_path}</code>"
-                if (
-                    rclone_path
-                    and (RCLONE_SERVE_URL := config_dict["RCLONE_SERVE_URL"])
-                    and not self.private_link
-                ):
+                if rclone_path and Config.RCLONE_SERVE_URL and not self.private_link:
                     remote, path = rclone_path.split(":", 1)
                     url_path = rutils.quote(f"{path}")
-                    share_url = f"{RCLONE_SERVE_URL}/{remote}/{url_path}"
+                    share_url = f"{Config.RCLONE_SERVE_URL}/{remote}/{url_path}"
                     if mime_type == "Folder":
                         share_url += "/"
                     buttons.url_button("🔗 Rclone Link", share_url)
@@ -335,8 +329,8 @@ class TaskListener(TaskConfig):
                     INDEX_URL = ""
                     if self.private_link:
                         INDEX_URL = self.user_dict.get("index_url", "") or ""
-                    elif config_dict["INDEX_URL"]:
-                        INDEX_URL = config_dict["INDEX_URL"]
+                    elif Config.INDEX_URL:
+                        INDEX_URL = Config.INDEX_URL
                     if INDEX_URL:
                         share_url = f"{INDEX_URL}findpath?id={dir_id}"
                         buttons.url_button("⚡ Index Link", share_url)
@@ -388,8 +382,8 @@ class TaskListener(TaskConfig):
 
         if (
             self.is_super_chat
-            and config_dict["INCOMPLETE_TASK_NOTIFIER"]
-            and DATABASE_URL
+            and Config.INCOMPLETE_TASK_NOTIFIER
+            and Config.DATABASE_URL
         ):
             await database.rm_complete_task(self.message.link)
 
@@ -426,8 +420,8 @@ class TaskListener(TaskConfig):
 
         if (
             self.is_super_chat
-            and config_dict["INCOMPLETE_TASK_NOTIFIER"]
-            and DATABASE_URL
+            and Config.INCOMPLETE_TASK_NOTIFIER
+            and Config.DATABASE_URL
         ):
             await database.rm_complete_task(self.message.link)
 

@@ -165,7 +165,8 @@ def handle_torrent():
                 content = make_tree(res, "qbittorrent")
             else:
                 res = aria2.client.get_files(gid)
-                content = make_tree(res, "aria2")
+                fpath = f"{aria2.client.get_option(gid)['dir']}/"
+                content = make_tree(res, "aria2", fpath)
         except Exception as e:
             LOGGER.error(str(e))
             content = {

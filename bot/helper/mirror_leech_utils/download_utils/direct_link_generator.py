@@ -13,7 +13,7 @@ from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode
 
-from bot import config_dict
+from ....core.config_manager import Config
 from ...ext_utils.exceptions import DirectDownloadLinkException
 from ...ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from ...ext_utils.links_utils import is_share_link
@@ -1451,7 +1451,7 @@ def filelions_and_streamwish(url):
             "mycloudz.cc",
         ]
     ):
-        apiKey = config_dict["FILELION_API"]
+        apiKey = Config.FILELION_API
         apiUrl = "https://vidhideapi.com"
     elif any(
         x in hostname
@@ -1463,7 +1463,7 @@ def filelions_and_streamwish(url):
             "streamwish.to",
         ]
     ):
-        apiKey = config_dict["STREAMWISH_API"]
+        apiKey = Config.STREAMWISH_API
         apiUrl = "https://api.streamwish.com"
     if not apiKey:
         raise DirectDownloadLinkException(

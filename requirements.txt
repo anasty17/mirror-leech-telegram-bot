@@ -22,7 +22,6 @@ pillow
 psutil
 pymongo
 pyrofork
-python-dotenv
 python-magic
 qbittorrent-api
 requests

@@ -7,7 +7,8 @@ from re import search as re_search, escape
 from time import time
 from aioshutil import rmtree
 
-from bot import LOGGER, subprocess_lock, DOWNLOAD_DIR
+from ... import LOGGER, subprocess_lock
+from ...core.config_manager import Config
 from .bot_utils import cmd_exec, sync_to_async
 from .files_utils import ARCH_EXT, get_mime_type
 
@@ -123,7 +124,7 @@ async def convert_audio(listener, audio_file, ext):
 async def create_thumb(msg, _id=""):
     if not _id:
         _id = msg.id
-        path = f"{DOWNLOAD_DIR}Thumbnails"
+        path = f"{Config.DOWNLOAD_DIR}Thumbnails"
     else:
         path = "Thumbnails"
     await makedirs(path, exist_ok=True)
@@ -296,7 +297,7 @@ async def take_ss(video_file, ss_nb) -> bool:
 
 
 async def get_audio_thumbnail(audio_file):
-    output_dir = f"{DOWNLOAD_DIR}Thumbnails"
+    output_dir = f"{Config.DOWNLOAD_DIR}Thumbnails"
     await makedirs(output_dir, exist_ok=True)
     output = ospath.join(output_dir, f"{time()}.jpg")
     cmd = [
@@ -323,7 +324,7 @@ async def get_audio_thumbnail(audio_file):
 
 
 async def get_video_thumbnail(video_file, duration):
-    output_dir = f"{DOWNLOAD_DIR}Thumbnails"
+    output_dir = f"{Config.DOWNLOAD_DIR}Thumbnails"
     await makedirs(output_dir, exist_ok=True)
     output = ospath.join(output_dir, f"{time()}.jpg")
     if duration is None:
@@ -371,7 +372,7 @@ async def get_multiple_frames_thumbnail(video_file, layout, keep_screenshots):
     dirpath = await take_ss(video_file, ss_nb)
     if not dirpath:
         return None
-    output_dir = f"{DOWNLOAD_DIR}Thumbnails"
+    output_dir = f"{Config.DOWNLOAD_DIR}Thumbnails"
     await makedirs(output_dir, exist_ok=True)
     output = ospath.join(output_dir, f"{time()}.jpg")
     cmd = [

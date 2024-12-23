@@ -1,7 +1,6 @@
 from asyncio import Event
 
-from bot import (
-    config_dict,
+from ... import (
     queued_dl,
     queued_up,
     non_queued_up,
@@ -9,10 +8,11 @@ from bot import (
     queue_dict_lock,
     LOGGER,
 )
+from ...core.config_manager import Config
+from ..mirror_leech_utils.gdrive_utils.search import GoogleDriveSearch
 from .bot_utils import sync_to_async, get_telegraph_list
 from .files_utils import get_base_name
 from .links_utils import is_gdrive_id
-from ..mirror_leech_utils.gdrive_utils.search import GoogleDriveSearch
 
 
 async def stop_duplicate_check(listener):
@@ -54,10 +54,8 @@ async def stop_duplicate_check(listener):
 
 
 async def check_running_tasks(listener, state="dl"):
-    all_limit = config_dict["QUEUE_ALL"]
-    state_limit = (
-        config_dict["QUEUE_DOWNLOAD"] if state == "dl" else config_dict["QUEUE_UPLOAD"]
-    )
+    all_limit = Config.QUEUE_ALL
+    state_limit = Config.QUEUE_DOWNLOAD if state == "dl" else Config.QUEUE_UPLOAD
     event = None
     is_over_limit = False
     async with queue_dict_lock:
@@ -105,9 +103,9 @@ async def start_up_from_queued(mid: int):
 
 
 async def start_from_queued():
-    if all_limit := config_dict["QUEUE_ALL"]:
-        dl_limit = config_dict["QUEUE_DOWNLOAD"]
-        up_limit = config_dict["QUEUE_UPLOAD"]
+    if all_limit := Config.QUEUE_ALL:
+        dl_limit = Config.QUEUE_DOWNLOAD
+        up_limit = Config.QUEUE_UPLOAD
         async with queue_dict_lock:
             dl = len(non_queued_dl)
             up = len(non_queued_up)
@@ -127,7 +125,7 @@ async def start_from_queued():
                             break
         return
 
-    if up_limit := config_dict["QUEUE_UPLOAD"]:
+    if up_limit := Config.QUEUE_UPLOAD:
         async with queue_dict_lock:
             up = len(non_queued_up)
             if queued_up and up < up_limit:
@@ -142,7 +140,7 @@ async def start_from_queued():
                 for mid in list(queued_up.keys()):
                     await start_up_from_queued(mid)
 
-    if dl_limit := config_dict["QUEUE_DOWNLOAD"]:
+    if dl_limit := Config.QUEUE_DOWNLOAD:
         async with queue_dict_lock:
             dl = len(non_queued_dl)
             if queued_dl and dl < dl_limit:

@@ -105,8 +105,8 @@ programming in Python.
 - Store RSS data
 - Store incompleted task messages
 - Store JDownloader settings
-- Store config.env file on first build and incase any change occured to it, then next build it will define variables
-  from config.env instead of database
+- Store config.py file on first build and incase any change occured to it, then next build it will define variables
+  from config.py instead of database
 
 ## Torrents Search
 
@@ -174,11 +174,6 @@ programming in Python.
 
 ## Prerequisites
 
-- Tutorial Video from A to Z:
-    - Thanks to [Wiszky](https://github.com/vishnoe115)
-
- <p><a href="https://youtu.be/IUmq1paCiHI"> <img src="https://img.shields.io/badge/See%20Video-black?style=for-the-badge&logo=YouTube" width="160""/></a></p>
-
 ### 1. Installing requirements
 
 - Clone this repo:
@@ -212,17 +207,10 @@ pip3 install -r requirements-cli.txt
 ### 2. Setting up config file
 
 ```
-cp config_sample.env config.env
+cp config_sample.py config.py
 ```
 
-- Remove the first line saying:
-
-```
-_____REMOVE_THIS_LINE_____=True
-```
-
-Fill up rest of the fields. Meaning of each field is discussed below. **NOTE**: All values must be filled between
-quotes, even if it's `Int`, `Bool` or `List`.
+Fill up rest of the fields. Meaning of each field is discussed below.
 
 **1. Required Fields**
 
@@ -243,8 +231,8 @@ quotes, even if it's `Int`, `Bool` or `List`.
   generate database. Data will be saved in Database: bot settings, users settings, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `DOWNLOAD_DIR`: The path to the vps local folder where the downloads should be downloaded to. `Str`
 - `CMD_SUFFIX`: Commands index number. This number will added at the end all commands. `Str`|`Int`
-- `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX|10 or Ex:-100XXXXXXXXXXX|10|12. Separate them by space. `Int`
-- `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Int`
+- `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or Ex:-100XXXXXXXXXXX|10|12. Separate them by space. `Str`
+- `SUDO_USERS`: Fill user_id of users whom you want to give sudo permission. Separate them by space. `Str`
 - `DEFAULT_UPLOAD`: Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `rc`. Read
   More [HERE](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upload).`Str`
 - `STATUS_UPDATE_INTERVAL`: Time in seconds after which the progress/status message will be updated. Recommended `10`
@@ -255,40 +243,40 @@ quotes, even if it's `Int`, `Bool` or `List`.
 - `INCOMPLETE_TASK_NOTIFIER`: Get incomplete task messages after restart. Require database and superGroup. Default
   is `False`. `Bool`
 - `FILELION_API`: Filelion api key to mirror Filelion links. Get it
-  from [Filelion](https://vidhide.com/?op=my_account). `str`
+  from [Filelion](https://vidhide.com/?op=my_account). `Str`
 - `STREAMWISH_API`: Streamwish api key to mirror Streamwish links. Get it
-  from [Streamwish](https://streamwish.com/?op=my_account). `str`
+  from [Streamwish](https://streamwish.com/?op=my_account). `Str`
 - `YT_DLP_OPTIONS`: Default yt-dlp options. Check all possible
   options [HERE](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184) or use
   this [script](https://t.me/mltb_official_channel/177) to convert cli arguments to api options. Format: key:value|key:
-  value|key:value. Add `^` before integer or float, some numbers must be numeric and some string. `str`
+  value|key:value. Add `^` before integer or float, some numbers must be numeric and some string. `Str`
     - Example: "format:bv*+mergeall[vcodec=none]|nocheckcertificate:True"
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work
   see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account)
   section below. Default is `False`. `Bool`
-- `FFMPEG_CMDS`: list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments. `list`
-  - Examples: [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv"], ["-i", "mltb.video", "-c", "copy", "-c:s", "srt", "mltb"], ["-i", "mltb.m4a", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"], ["-i", "mltb.audio", "-c:a", "libmp3lame", "-q:a", "2", "mltb.mp3"]]
+- `FFMPEG_CMDS`: list of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments. `List`
+  - Examples: ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb", "-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]
   **Notes**:
-  - Add `-del` to the list(s) which you want from the bot to delete the original files after command run complete!
+  - Add `-del` to the list which you want from the bot to delete the original files after command run complete!
   - Seed will get disbaled while using this option
-  - It must be list of list(s) event of one list added like [["-i", "mltb.mkv", "-c", "copy", "-c:s", "srt", "mltb.mkv", "-del"]]
   **Example**:
   - Here I will explain how to use mltb.* which is reference to files you want to work on.
   1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. `-del` will delete the original media after complete run of the cmd.
   2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
   3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
   4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
-- `NAME_SUBSTITUTE`: Add word/letter/character/sentense/pattern to remove or replace with other words with sensitive case or without. **Notes**:
-  1. Seed will get disbaled while using this option
-  2. Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
-  * Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
-   - script will get replaced by code with sensitive case
-   - mirror will get replaced by leech
-   - tea will get replaced by space with sensitive case
-   - clone will get removed
-   - cpu will get replaced by space
-   - [mltb] will get replaced by mltb
-   - \text\ will get replaced by text with sensitive case
+- `NAME_SUBSTITUTE`: Add word/letter/character/sentense/pattern to remove or replace with other words with sensitive case or without. `Str` 
+  **Notes**:
+    1. Seed will get disbaled while using this option
+    2. Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
+    * Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
+    - script will get replaced by code with sensitive case
+    - mirror will get replaced by leech
+    - tea will get replaced by space with sensitive case
+    - clone will get removed
+    - cpu will get replaced by space
+    - [mltb] will get replaced by mltb
+    - \text\ will get replaced by text with sensitive case
 
 **3. GDrive Tools**
 
@@ -351,13 +339,13 @@ quotes, even if it's `Int`, `Bool` or `List`.
 
 **8. JDownloader**
 
-- `JD_EMAIL`: jdownloader email sign up on [JDownloader](https://my.jdownloader.org/)
-- `JD_PASS`: jdownloader password
+- `JD_EMAIL`: jdownloader email sign up on [JDownloader](https://my.jdownloader.org/). `Str`
+- `JD_PASS`: jdownloader password. `Str`
   - **JDownloader Config**: You can use your config from local machine in bot by *zipping* cfg folder (cfg.zip) and add it in repo folder.
 
 **9. Sabnzbd**
 
-- `USENET_SERVERS`: list of dictionaries, you can add as much as you want and there is a button for servers in sabnzbd settings to edit current servers and add new servers.
+- `USENET_SERVERS`: list of dictionaries, you can add as much as you want and there is a button for servers in sabnzbd settings to edit current servers and add new servers. `List`
 
   ***[{'name': 'main', 'host': '', 'port': 563, 'timeout': 60, 'username': '', 'password': '', 'connections': 8, 'ssl': 1, 'ssl_verify': 2, 'ssl_ciphers': '', 'enable': 1, 'required': 0, 'optional': 0, 'retention': 0, 'send_group': 0, 'priority': 0}]***
 
@@ -379,8 +367,8 @@ quotes, even if it's `Int`, `Bool` or `List`.
 **11. Queue System**
 
 - `QUEUE_ALL`: Number of parallel tasks of downloads and uploads. For example if 20 task added and `QUEUE_ALL` is `8`,
-  then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. **NOTE**: if you want to
-  fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and
+  then the summation of uploading and downloading tasks are 8 and the rest in queue. `Int`. 
+    **NOTE**: if you want to fill `QUEUE_DOWNLOAD` or `QUEUE_UPLOAD`, then `QUEUE_ALL` value must be greater than or equal to the greatest one and
   less than or equal to summation of `QUEUE_UPLOAD` and `QUEUE_DOWNLOAD`.
 - `QUEUE_DOWNLOAD`: Number of all parallel downloading tasks. `Int`
 - `QUEUE_UPLOAD`: Number of all parallel uploading tasks. `Int`
@@ -780,27 +768,18 @@ Format:
 machine host login username password my_password
 ```
 
-Example:
-
-```
-machine instagram login anas.tayyar password mypassword
-```
-
-**Instagram Note**: You must login even if you want to download public posts and after first try you must confirm that
-this was you logged in from different ip(you can confirm from phone app).
-
-**Youtube Note**: For `youtube` authentication
-use [cookies.txt](https://github.com/ytdl-org/youtube-dl#how-do-i-pass-cookies-to-youtube-dl) file.
-
 Using Aria2c you can also use built in feature from bot with or without username. Here example for index link without
 username.
 
 ```
 machine example.workers.dev password index_password
 ```
-
 Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts of different hosts can be added each
 separated by a new line.
+
+**Yt-dlp**: 
+Authentication using [cookies.txt](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) file.
+
 
 -----
 

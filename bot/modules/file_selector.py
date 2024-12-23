@@ -1,26 +1,20 @@
 from aiofiles.os import remove, path as aiopath
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 
-from bot import (
-    bot,
+from .. import (
     aria2,
     task_dict,
     task_dict_lock,
-    OWNER_ID,
     user_data,
     LOGGER,
-    config_dict,
     qbittorrent_client,
 )
+from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import (
     bt_selection_buttons,
     sync_to_async,
     new_task,
 )
 from ..helper.ext_utils.status_utils import get_task_by_gid, MirrorStatus
-from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
     send_message,
     send_status_message,
@@ -30,7 +24,7 @@ from ..helper.telegram_helper.message_utils import (
 
 @new_task
 async def select(_, message):
-    if not config_dict["BASE_URL"]:
+    if not Config.BASE_URL:
         await send_message(message, "Base URL not defined!")
         return
     user_id = message.from_user.id
@@ -57,7 +51,7 @@ async def select(_, message):
         return
 
     if (
-        OWNER_ID != user_id
+        Config.OWNER_ID != user_id
         and task.listener.user_id != user_id
         and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
     ):
@@ -105,7 +99,7 @@ async def select(_, message):
 
 
 @new_task
-async def get_confirm(_, query):
+async def confirm_selection(_, query):
     user_id = query.from_user.id
     data = query.data.split()
     message = query.message
@@ -165,13 +159,3 @@ async def get_confirm(_, query):
     else:
         await delete_message(message)
         await task.cancel_task()
-
-
-bot.add_handler(
-    MessageHandler(
-        select,
-        filters=command(BotCommands.SelectCommand, case_sensitive=True)
-        & CustomFilters.authorized,
-    )
-)
-bot.add_handler(CallbackQueryHandler(get_confirm, filters=regex("^sel")))

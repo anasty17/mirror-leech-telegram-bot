@@ -1,7 +1,3 @@
-from pyrogram.filters import regex
-from pyrogram.handlers import CallbackQueryHandler
-
-from bot import bot
 from ..helper.ext_utils.bot_utils import COMMAND_USAGE, new_task
 from ..helper.ext_utils.help_messages import (
     YT_HELP_DICT,
@@ -9,7 +5,8 @@ from ..helper.ext_utils.help_messages import (
     CLONE_HELP_DICT,
 )
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.message_utils import edit_message, delete_message
+from ..helper.telegram_helper.message_utils import edit_message, delete_message, send_message
+from ..helper.ext_utils.help_messages import help_string
 
 
 @new_task
@@ -46,4 +43,6 @@ async def arg_usage(_, query):
         await edit_message(message, CLONE_HELP_DICT[data[2]], button)
 
 
-bot.add_handler(CallbackQueryHandler(arg_usage, filters=regex("^help")))
+@new_task
+async def bot_help(_, message):
+    await send_message(message, help_string)

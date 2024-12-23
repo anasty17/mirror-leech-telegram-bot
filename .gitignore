@@ -1,5 +1,5 @@
 mltbenv/*
-config.env
+config.py
 *.pyc
 data*
 .vscode

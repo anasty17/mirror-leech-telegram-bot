@@ -4,7 +4,9 @@ from json import dump
 from random import randint
 from re import match
 
-from bot import config_dict, LOGGER, bot_name
+from ... import LOGGER
+from ...core.mltb_client import TgClient
+from ...core.config_manager import Config
 from .bot_utils import cmd_exec, new_task
 from myjd import MyJdApi
 
@@ -21,12 +23,12 @@ class JDownloader(MyJdApi):
     @new_task
     async def boot(self):
         await cmd_exec(["pkill", "-9", "-f", "java"])
-        if not config_dict["JD_EMAIL"] or not config_dict["JD_PASS"]:
+        if not Config.JD_EMAIL or not Config.JD_PASS:
             self.is_connected = False
             self.error = "JDownloader Credentials not provided!"
             return
         self.error = "Connecting... Try agin after couple of seconds"
-        self._device_name = f"{randint(0, 1000)}@{bot_name}"
+        self._device_name = f"{randint(0, 1000)}@{TgClient.NAME}"
         if await path.exists("/JDownloader/logs"):
             LOGGER.info(
                 "Starting JDownloader... This might take up to 10 sec and might restart once if update available!"
@@ -37,9 +39,9 @@ class JDownloader(MyJdApi):
             )
         jdata = {
             "autoconnectenabledv2": True,
-            "password": config_dict["JD_PASS"],
+            "password": Config.JD_PASS,
             "devicename": f"{self._device_name}",
-            "email": config_dict["JD_EMAIL"],
+            "email": Config.JD_EMAIL,
         }
         remote_data = {
             "localapiserverheaderaccesscontrollalloworigin": "",

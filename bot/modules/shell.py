@@ -1,16 +1,12 @@
 from io import BytesIO
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler, EditedMessageHandler
 
-from bot import LOGGER, bot
+from .. import LOGGER
 from ..helper.ext_utils.bot_utils import cmd_exec, new_task
-from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message, send_file
 
 
 @new_task
-async def shell(_, message):
+async def run_shell(_, message):
     cmd = message.text.split(maxsplit=1)
     if len(cmd) == 1:
         await send_message(message, "No command to execute was given.")
@@ -32,19 +28,3 @@ async def shell(_, message):
         await send_message(message, reply)
     else:
         await send_message(message, "No Reply")
-
-
-bot.add_handler(
-    MessageHandler(
-        shell,
-        filters=command(BotCommands.ShellCommand, case_sensitive=True)
-        & CustomFilters.owner,
-    )
-)
-bot.add_handler(
-    EditedMessageHandler(
-        shell,
-        filters=command(BotCommands.ShellCommand, case_sensitive=True)
-        & CustomFilters.owner,
-    )
-)

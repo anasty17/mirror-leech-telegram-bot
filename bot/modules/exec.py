@@ -2,15 +2,12 @@ from aiofiles import open as aiopen
 from contextlib import redirect_stdout
 from io import StringIO, BytesIO
 from os import path as ospath, getcwd, chdir
-from pyrogram.filters import command
-from pyrogram.handlers import MessageHandler
 from textwrap import indent
 from traceback import format_exc
 
-from bot import LOGGER, bot
+from .. import LOGGER
+from ..core.mltb_client import TgClient
 from ..helper.ext_utils.bot_utils import sync_to_async, new_task
-from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_file, send_message
 
 namespaces = {}
@@ -20,7 +17,7 @@ def namespace_of(message):
     if message.chat.id not in namespaces:
         namespaces[message.chat.id] = {
             "__builtins__": globals()["__builtins__"],
-            "bot": bot,
+            "bot": TgClient.bot,
             "message": message,
             "user": message.from_user or message.sender_chat,
             "chat": message.chat,
@@ -115,26 +112,3 @@ async def clear(_, message):
     if message.chat.id in namespaces:
         del namespaces[message.chat.id]
     await send("Locals Cleared.", message)
-
-
-bot.add_handler(
-    MessageHandler(
-        aioexecute,
-        filters=command(BotCommands.AExecCommand, case_sensitive=True)
-        & CustomFilters.owner,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        execute,
-        filters=command(BotCommands.ExecCommand, case_sensitive=True)
-        & CustomFilters.owner,
-    )
-)
-bot.add_handler(
-    MessageHandler(
-        clear,
-        filters=command(BotCommands.ClearLocalsCommand, case_sensitive=True)
-        & CustomFilters.owner,
-    )
-)
