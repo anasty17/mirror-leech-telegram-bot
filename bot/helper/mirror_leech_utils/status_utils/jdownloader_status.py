@@ -111,4 +111,4 @@ class JDownloaderStatus:
         )
         async with jd_lock:
             del jd_downloads[self._gid]
-        await self.listener.on_download_error("Download cancelled by user!")
+        await self.listener.on_download_error("Cancelled by user!")

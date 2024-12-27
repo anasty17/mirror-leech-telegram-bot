@@ -1,5 +1,4 @@
 from .. import user_data
-from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import update_user_ldata, new_task
 from ..helper.ext_utils.db_handler import database
 from ..helper.telegram_helper.message_utils import send_message

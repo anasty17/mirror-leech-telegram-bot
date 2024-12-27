@@ -10,7 +10,6 @@ from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import get_task_by_gid
 from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import send_message
 from ..helper.ext_utils.task_manager import start_dl_from_queued, start_up_from_queued
 
@@ -33,10 +32,16 @@ async def remove_from_queue(_, message):
             await send_message(message, "This is not an active task!")
             return
     elif len(msg) in {1, 2}:
-        msg = (
-            "Reply to an active Command message which was used to start the download"
-            f" or send <code>/{BotCommands.ForceStartCommand[0]} GID</code> to force start download and upload! Add you can use /cmd <b>fd</b> to force downlaod only or /cmd <b>fu</b> to force upload only!"
-        )
+        msg = f"""Reply to an active Command message which was used to start the download/upload.
+<code>/{BotCommands.ForceStartCommand[0]}</code> fd (to remove it from download queue) or fu (to remove it from upload queue) or nothing to start remove it from both download and upload queue.
+Also send <code>/{BotCommands.ForceStartCommand[0]} GID</code> fu|fd or obly gid to force start by removeing the task rom queue!
+Examples:
+<code>/{BotCommands.ForceStartCommand[1]}</code> GID fu (force upload)
+<code>/{BotCommands.ForceStartCommand[1]}</code> GID (force download and upload)
+By reply to task cmd:
+<code>/{BotCommands.ForceStartCommand[1]}</code> (force download and upload)
+<code>/{BotCommands.ForceStartCommand[1]}</code> fd (force download)
+"""
         await send_message(message, msg)
         return
     if (
@@ -54,11 +59,15 @@ async def remove_from_queue(_, message):
             if listener.mid in queued_up:
                 await start_up_from_queued(listener.mid)
                 msg = "Task have been force started to upload!"
+            else:
+                msg = "Force upload enabled for this task!"
         elif status == "fd":
             listener.force_download = True
             if listener.mid in queued_dl:
                 await start_dl_from_queued(listener.mid)
                 msg = "Task have been force started to download only!"
+            else:
+                msg = "This task not in download queue!"
         else:
             listener.force_download = True
             listener.force_upload = True
@@ -68,5 +77,7 @@ async def remove_from_queue(_, message):
             elif listener.mid in queued_dl:
                 await start_dl_from_queued(listener.mid)
                 msg = "Task have been force started to download and upload will start once download finish!"
+            else:
+                msg = "This task not in queue!"
     if msg:
         await send_message(message, msg)

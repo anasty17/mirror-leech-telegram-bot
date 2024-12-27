@@ -164,7 +164,8 @@ async def save_settings():
 async def update_variables():
     if (
         Config.LEECH_SPLIT_SIZE > TgClient.MAX_SPLIT_SIZE
-        or Config.LEECH_SPLIT_SIZE == 2097152000 or not Config.LEECH_SPLIT_SIZE
+        or Config.LEECH_SPLIT_SIZE == 2097152000
+        or not Config.LEECH_SPLIT_SIZE
     ):
         Config.LEECH_SPLIT_SIZE = TgClient.MAX_SPLIT_SIZE
 

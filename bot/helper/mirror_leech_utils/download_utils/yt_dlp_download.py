@@ -182,8 +182,8 @@ class YoutubeDLHelper:
             if self._listener.is_cancelled:
                 return
             async_to_sync(self._listener.on_download_complete)
-        except ValueError:
-            self._on_download_error("Download Stopped by User!")
+        except:
+            pass
 
     async def add_download(self, path, qual, playlist, options):
         if playlist:
@@ -334,7 +334,7 @@ class YoutubeDLHelper:
     async def cancel_task(self):
         self._listener.is_cancelled = True
         LOGGER.info(f"Cancelling Download: {self._listener.name}")
-        await self._listener.on_download_error("Download Cancelled by User!")
+        await self._listener.on_download_error("Stopped by User!")
 
     def _set_options(self, options):
         options = options.split("|")

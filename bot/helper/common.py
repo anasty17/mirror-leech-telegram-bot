@@ -1186,6 +1186,9 @@ class TaskConfig:
                 res = await run_ffmpeg_cmd(self, cmd, file_path)
                 if res and delete_files:
                     await remove(file_path)
+                    if "ffmpeg." in res:
+                        newres = res.replace("ffmpeg.", "")
+                        await move(res, newres)
             else:
                 for dirpath, _, files in await sync_to_async(
                     walk, dl_path, topdown=False
@@ -1214,6 +1217,9 @@ class TaskConfig:
                         res = await run_ffmpeg_cmd(self, cmd, f_path)
                         if res and delete_files:
                             await remove(f_path)
+                            if "ffmpeg." in res:
+                                newres = res.replace("ffmpeg.", "")
+                                await move(res, newres)
         if checked:
             cpu_eater_lock.release()
         return dl_path

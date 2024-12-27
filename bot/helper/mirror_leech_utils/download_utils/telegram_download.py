@@ -165,4 +165,4 @@ class TelegramDownloadHelper:
         LOGGER.info(
             f"Cancelling download on user request: name: {self._listener.name} id: {self._id}"
         )
-        await self._on_download_error("Cancelled by user!")
+        await self._on_download_error("Stopped by user!")

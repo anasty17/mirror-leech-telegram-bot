@@ -87,8 +87,14 @@ async def get_telegraph_list(telegraph_content):
 
 
 def arg_parser(items, arg_base):
+
     if not items:
         return
+
+    arg_start = -1
+    i = 0
+    total = len(items)
+
     bool_arg_set = {
         "-b",
         "-e",
@@ -106,43 +112,53 @@ def arg_parser(items, arg_base):
         "-doc",
         "-med",
     }
-    t = len(items)
-    i = 0
-    arg_start = -1
 
-    while i + 1 <= t:
+    def process_argument_with_values(start_index):
+        values = []
+        for j in range(start_index + 1, total):
+            if items[j] in arg_base:
+                break
+            values.append(items[j])
+        return values
+
+    def process_nested_list(start_index):
+        values = []
+        end_index = start_index + 1
+        while end_index < total and items[end_index] != "]":
+            values.append(items[end_index])
+            end_index += 1
+        return values, end_index - start_index
+
+    while i < total:
         part = items[i]
+
         if part in arg_base:
             if arg_start == -1:
                 arg_start = i
+
             if (
-                i + 1 == t
+                i + 1 == total
                 and part in bool_arg_set
                 or part
                 in ["-s", "-j", "-f", "-fd", "-fu", "-sync", "-ml", "-doc", "-med"]
             ):
                 arg_base[part] = True
+            elif part == "-ff" and i + 1 < total and items[i + 1].startswith("["):
+                nested_values, skip_count = process_nested_list(i + 1)
+                arg_base[part] = nested_values
+                i += skip_count
             else:
-                sub_list = []
-                for j in range(i + 1, t):
-                    item = items[j]
-                    if item in arg_base:
-                        if part in bool_arg_set and not sub_list:
-                            arg_base[part] = True
-                        break
-                    sub_list.append(item)
-                    i += 1
+                sub_list = process_argument_with_values(i)
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
+                    i += len(sub_list)
+
         i += 1
-    if "link" in arg_base and items[0] not in arg_base:
-        link = []
-        if arg_start == -1:
-            link.extend(iter(items))
-        else:
-            link.extend(items[r] for r in range(arg_start))
-        if link:
-            arg_base["link"] = " ".join(link)
+
+    if "link" in arg_base:
+        link_items = items[:arg_start] if arg_start != -1 else items
+        if link_items:
+            arg_base["link"] = " ".join(link_items)
 
 
 def get_size_bytes(size):

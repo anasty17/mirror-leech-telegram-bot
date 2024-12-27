@@ -88,7 +88,7 @@ class SabnzbdStatus:
         await self.update()
         LOGGER.info(f"Cancelling Download: {self.name()}")
         await gather(
-            self.listener.on_download_error("Download stopped by user!"),
+            self.listener.on_download_error("Stopped by user!"),
             sabnzbd_client.delete_job(self._gid, delete_files=True),
             sabnzbd_client.delete_category(f"{self.listener.mid}"),
         )

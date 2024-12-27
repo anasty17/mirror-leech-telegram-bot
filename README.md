@@ -6,16 +6,21 @@ programming in Python.
 - **TELEGRAM CHANNEL:** https://t.me/mltb_official_channel
 - **TELEGRAM GROUP:** https://t.me/mltb_official_support
 
-# Features
+<details>
+  <summary><h1>Features</h1></summary>
 
-## qBittorrent
+<details>
+  <summary><h5>QBittorrent</h5></summary>
 
 - External access to webui, so you can remove files or edit settings. Then you can sync settings in database with sync button in bsetting
 - Select files from a Torrent before and during download using mltb file selector (Requires Base URL) (task option)
 - Seed torrents to a specific ratio and time (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
 
-## Aria2c
+</details>
+
+<details>
+  <summary><h5>Aria2c</h5></summary>
 
 - Select files from a Torrent before and during download (Requires Base URL) (task option)
 - Seed torrents to a specific ratio and time (task option)
@@ -24,13 +29,19 @@ programming in Python.
   is provided) (task option)
 - Edit Global Options while the bot is running from bot settings (global option)
 
-## Sabnzbd
+</details>
+
+<details>
+  <summary><h5>Sabnzbd</h5></summary>
 
 - External access to web interface, so you can remove files or edit settings. Then you can sync settings in database with sync button in bsetting
 - Edit Global Options while the bot is running from bot settings (global option)
 - Servers menu to edit/add/remove usenet servers
 
-## TG Upload/Download
+</details>
+
+<details>
+  <summary><h5>TG Upload/Download</h5></summary>
 
 - Split size (global, user, and task option)
 - Thumbnail (user and task option)
@@ -45,7 +56,10 @@ programming in Python.
 - Upload with custom layout multiple thubnmail (global, user option and task option)
 - Topics support
 
-## Google Drive
+</details>
+
+<details>
+  <summary><h5>Google Drive</h5></summary>
 
 - Download/Upload/Clone/Delete/Count from/to Google Drive
 - Count Google Drive files/folders
@@ -60,7 +74,10 @@ programming in Python.
 - Index link support only
   for [Bhadoo](https://gitlab.com/GoogleDriveIndex/Google-Drive-Index/-/blob/master/src/worker.js)
 
-## Rclone
+</details>
+
+<details>
+  <summary><h5>Rclone</h5></summary>
 
 - Transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
 - Ability to choose config, remote and path from list with or without buttons (global, user and task option)
@@ -70,7 +87,10 @@ programming in Python.
 - Rclone serve for combine remote to use it as index from all remotes (global option)
 - Upload destination (global, user and task option)
 
-## Status
+</details>
+
+<details>
+  <summary><h5>Status</h5></summary>
 
 - Download/Upload/Extract/Archive/Seed/Clone Status
 - Status Pages for an unlimited number of tasks, view a specific number of tasks in a message (global option)
@@ -81,7 +101,10 @@ programming in Python.
 - Steps buttons for how much next/previous buttons should step backward/forward (global and user option)
 - Status for each user (no auto refresh)
 
-## Yt-dlp
+</details>
+
+<details>
+  <summary><h5>Yt-dlp</h5></summary>
 
 - Yt-dlp quality buttons (task option)
 - Ability to use a specific yt-dlp option (global, user, and task option)
@@ -90,7 +113,10 @@ programming in Python.
 - Embed the original thumbnail and add it for leech
 - All supported audio formats
 
-## JDownloader
+</details>
+
+<details>
+  <summary><h5>JDownloader</h5></summary>
 
 - Synchronize Settings (global option)
 - Waiting to select (enable/disable files or change variants) before download start
@@ -98,7 +124,10 @@ programming in Python.
 - All settings can be edited from the remote access to your JDownloader with Web Interface, Android App, iPhone App or
   Browser Extensions
 
-## Mongo Database
+</details>
+
+<details>
+  <summary><h5>Mongo Database</h5></summary>
 
 - Store bot settings
 - Store user settings including thumbnails and all private files
@@ -108,12 +137,18 @@ programming in Python.
 - Store config.py file on first build and incase any change occured to it, then next build it will define variables
   from config.py instead of database
 
-## Torrents Search
+</details>
+
+<details>
+  <summary><h5>Torrents Search</h5></summary>
 
 - Search on torrents with Torrent Search API
 - Search on torrents with variable plugins using qBittorrent search engine
 
-## Archives
+</details>
+
+<details>
+  <summary><h5>Archives</h5></summary>
 
 - Extract splits with or without password
 - Zip file/folder with or without password
@@ -123,7 +158,10 @@ programming in Python.
 > ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2,MBR,
 > MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ, CBZ
 
-## RSS
+</details>
+
+<details>
+  <summary><h5>RSS</h5></summary>
 
 - Based on this repository [rss-chan](https://github.com/hyPnOtICDo0g/rss-chan)
 - Rss feed (user option)
@@ -132,7 +170,10 @@ programming in Python.
 - Sudo settings to control users feeds
 - All functions have been improved using buttons from one command.
 
-## Overall
+</details>
+
+<details>
+  <summary><h5>Overall</h5></summary>
 
 - Docker image support for linux `amd64, arm64/v8, arm/v7`
 - Edit variables and overwrite the private files while bot running (bot, user settings)
@@ -170,11 +211,17 @@ programming in Python.
 > ytdl),
 > tmpsend.com, qiwi.gg, berkasdrive.com, mp4upload.com, terabox.com (videos only file/folders).
 
-# How to deploy?
+</details>
+</details>
 
-## Prerequisites
+<details>
+  <summary><h1>How to deploy?</h1></summary>
 
-### 1. Installing requirements
+<details>
+  <summary><h2>Prerequisites</h2></summary>
+
+<details>
+  <summary><h5>1. Installing requirements</h5></summary>
 
 - Clone this repo:
 
@@ -204,7 +251,10 @@ pip3 install -r requirements-cli.txt
 
 ------
 
-### 2. Setting up config file
+</details>
+
+<details>
+  <summary><h5>2. Setting up config file</h5></summary>
 
 ```
 cp config_sample.py config.py
@@ -227,8 +277,8 @@ Fill up rest of the fields. Meaning of each field is discussed below.
   session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. `Str`. *
   *NOTE**: You can't use bot with private message. Use it with superGroup.
 - `DATABASE_URL`: Your Mongo Database URL (Connection string). Follow
-  this [Generate Database](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#generate-database) to
-  generate database. Data will be saved in Database: bot settings, users settings, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
+  this [Create Database](https://github.com/anasty17/test?tab=readme-ov-file#create-database) to
+  create database. Data will be saved in Database: bot settings, users settings, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). `Str`
 - `DOWNLOAD_DIR`: The path to the vps local folder where the downloads should be downloaded to. `Str`
 - `CMD_SUFFIX`: Commands index number. This number will added at the end all commands. `Str`|`Int`
 - `AUTHORIZED_CHATS`: Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or Ex:-100XXXXXXXXXXX|10|12. Separate them by space. `Str`
@@ -388,9 +438,13 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 
 ------
 
-### 3. Build And Run the Docker Image
+</details>
+</details>
 
-Make sure you still mount the app folder and installed the docker from official documentation.
+<details>
+  <summary><h2>Build And Run the Docker Image</h2></summary>
+
+Make sure you still mount the repo folder and installed the docker from official documentation.
 
 - There are two methods to build and run the docker:
     1. Using official docker commands.
@@ -398,7 +452,8 @@ Make sure you still mount the app folder and installed the docker from official 
 
 ------
 
-#### Build And Run The Docker Image Using Official Docker Commands
+<details>
+  <summary><h3>Build And Run The Docker Image Using Official Docker Commands</h3></summary>
 
 - Start Docker daemon (SKIP if already running, mostly you don't need to do this):
 
@@ -430,7 +485,10 @@ sudo docker stop id
 
 ----
 
-#### Build And Run The Docker Image Using docker-compose
+</details>
+
+<details>
+  <summary><h3>Build And Run The Docker Image Using docker-compose</h3></summary>
 
 **NOTE**: If you want to use ports other than 80 and 8080 for torrent file selection and rclone serve respectively,
 change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml)
@@ -484,9 +542,15 @@ sudo docker compose logs --follow
 
 ------
 
-# Extras
+</details>
+</details>
+</details>
 
-## Bot commands to be set in [@BotFather](https://t.me/BotFather)
+<details>
+  <summary><h1>Extras</h1></summary>
+
+<details>
+  <summary><h5>Bot commands to be set in <a href="https://t.me/BotFather">@BotFather</a></h5></summary>
 
 ```
 mirror - or /m Mirror
@@ -525,7 +589,10 @@ help - All cmds with description
 
 ------
 
-## Getting Google OAuth API credential file and token.pickle
+</details>
+
+<details>
+  <summary><h5>Getting Google OAuth API credential file and token.pickle</h5></summary>
 
 **NOTES**
 
@@ -554,7 +621,10 @@ python3 generate_drive_token.py
 
 ------
 
-## Getting rclone.conf
+</details>
+
+<details>
+  <summary><h5>Generating rclone.conf</h5></summary>
 
 1. Install rclone from [Official Site](https://rclone.org/install/)
 2. Create new remote(s) using `rclone config` command.
@@ -562,7 +632,10 @@ python3 generate_drive_token.py
 
 ------
 
-## Upload
+</details>
+
+<details>
+  <summary><h5>Upload</h5></summary>
 
 - `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In additional to those variables `DEFAULT_UPLOAD` to
   choose the default tool whether it's rclone or google-api-python-client.
@@ -579,7 +652,10 @@ python3 generate_drive_token.py
 
 ------
 
-## UPSTREAM REPO (Recommended)
+</details>
+
+<details>
+  <summary><h5>UPSTREAM REPO (Recommended)</h5></summary>
 
 - `UPSTREAM_REPO` variable can be used for edit/add any file in repository.
 - You can add private/public repository link to grab/overwrite all files from it.
@@ -598,29 +674,40 @@ python3 generate_drive_token.py
 
 ------
 
-## Bittorrent Seed
+</details>
+
+<details>
+  <summary><h5>Bittorrent Seed</h5></summary>
 
 - Using `-d` argument alone will lead to use global options for aria2c or qbittorrent.
 
-### Qbittorrent
+<details>
+  <summary><h3>QBittorrent</h3></summary>
 
 - Global options: `GlobalMaxRatio` and `GlobalMaxSeedingMinutes` in qbittorrent.conf, `-1` means no limit, but you can
   cancel manually.
     - **NOTE**: Don't change `MaxRatioAction`.
 
-### Aria2c
+</details>
+
+<details>
+  <summary><h3>Aria2c</h3></summary>
 
 - Global options: `--seed-ratio` (0 means no limit) and `--seed-time` (0 means no seed) in aria.sh.
 
 ------
 
-## Using Service Accounts for uploading to avoid user rate limit
+</details>
+</details>
+
+<details>
+  <summary><h5>Using Service Accounts for uploading to avoid user rate limit</h5></summary>
 
 > For Service Account to work, you must set `USE_SERVICE_ACCOUNTS` = "True" in config file or environment variables.
 > **NOTE**: Using Service Accounts is only recommended while uploading to a Team Drive.
 
-### 1. Generate Service Accounts. [What is Service Account?](https://cloud.google.com/iam/docs/service-accounts)
-
+<details>
+  <summary><h3>1. Generate Service Accounts. <a href="https://cloud.google.com/iam/docs/service-accounts">What is Service Account?</a></h3></summary>
 Let us create only the Service Accounts that we need.
 
 **Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of
@@ -644,7 +731,8 @@ python3 gen_sa_accounts.py --download-keys $PROJECTID
 
 Choose one of these methods
 
-##### 1. Create Service Accounts in existed Project (Recommended Method)
+<details>
+  <summary><h5>1. Create Service Accounts in existed Project (Recommended Method)</h5></summary>
 
 - List your projects ids
 
@@ -670,7 +758,10 @@ python3 gen_sa_accounts.py --create-sas $PROJECTID
 python3 gen_sa_accounts.py --download-keys $PROJECTID
 ```
 
-##### 2. Create Service Accounts in New Project
+</details>
+
+<details>
+  <summary><h5>2. Create Service Accounts in New Project</h5></summary>
 
 ```
 python3 gen_sa_accounts.py --quick-setup 1 --new-only
@@ -678,13 +769,18 @@ python3 gen_sa_accounts.py --quick-setup 1 --new-only
 
 A folder named accounts will be created which will contain keys for the Service Accounts.
 
-### 2. Add Service Accounts
+</details>
+</details>
+
+<details>
+  <summary><h3>2. Add Service Accounts</h3></summary>
 
 #### Two methods to add service accounts
 
 Choose one of these methods
 
-##### 1. Add Them To Google Group then to Team Drive (Recommended)
+<details>
+  <summary><h5>1. Add Them To Google Group then to Team Drive (Recommended)</h5></summary>
 
 - Mount accounts folder
 
@@ -714,7 +810,10 @@ cd ..
 Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to
 manager and delete email.txt file from accounts folder
 
-##### 2. Add Them To Team Drive Directly
+</details>
+
+<details>
+  <summary><h5>2. Add Them To Team Drive Directly</h5></summary>
 
 - Run:
 
@@ -724,7 +823,12 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 
 ------
 
-## Generate Database
+</details>
+</details>
+</details>
+
+<details>
+  <summary><h5>Create Database</h5></summary>
 
 1. Go to `https://mongodb.com/` and sign-up.
 2. Create Shared Cluster.
@@ -737,7 +841,10 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 
 ------
 
-## Multi Drive List
+</details>
+
+<details>
+  <summary><h5>Multi Drive List</h5></summary>
 
 To use list from multi TD/folder. Run driveid.py in your terminal and follow it. It will generate **list_drives.txt**
 file or u can simply create `list_drives.txt` file in working directory and fill it, check below format:
@@ -756,7 +863,10 @@ TD2 0AO1JDB1t3i5jUk9PVA https://example.dev
 
 -----
 
-## Yt-dlp and Aria2c Authentication Using .netrc File
+</details>
+
+<details>
+  <summary><h5>Yt-dlp and Aria2c Authentication Using .netrc File</h5></summary>
 
 For using your premium accounts in yt-dlp or for protected Index Links, create .netrc file according to following
 format:
@@ -784,15 +894,17 @@ Authentication using [cookies.txt](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how
 
 -----
 
->
+</details>
+</details>
 
-## All Thanks To Our Contributors
+
+# All Thanks To Our Contributors
 
 <a href="https://github.com/anasty17/mirror-leech-telegram-bot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=anasty17/mirror-leech-telegram-bot" />
 </a>
 
-## Donations
+# Donations
 
 <p> If you feel like showing your appreciation for this project, then how about buying me a coffee.</p>
 

@@ -104,7 +104,7 @@ class QbittorrentStatus:
                 msg = "task have been removed from queue/download"
             else:
                 LOGGER.info(f"Cancelling Download: {self._info.name}")
-                msg = "Download stopped by user!"
+                msg = "Stopped by user!"
             await sleep(0.3)
             await gather(
                 self.listener.on_download_error(msg),

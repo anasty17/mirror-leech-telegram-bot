@@ -99,7 +99,7 @@ class Aria2Status:
             await sync_to_async(aria2.remove, [self._download], force=True, files=True)
         elif downloads := self._download.followed_by:
             LOGGER.info(f"Cancelling Download: {self.name()}")
-            await self.listener.on_download_error("Download cancelled by user!")
+            await self.listener.on_download_error("Cancelled by user!")
             downloads.append(self._download)
             await sync_to_async(aria2.remove, downloads, force=True, files=True)
         else:
@@ -108,6 +108,6 @@ class Aria2Status:
                 msg = "task have been removed from queue/download"
             else:
                 LOGGER.info(f"Cancelling Download: {self.name()}")
-                msg = "Download stopped by user!"
+                msg = "Stopped by user!"
             await self.listener.on_download_error(msg)
             await sync_to_async(aria2.remove, [self._download], force=True, files=True)
