@@ -344,10 +344,10 @@ class TaskConfig:
                     except:
                         chat = None
                     if chat is None:
-                            if self.user_transmission:
-                                self.mixed_leech = False
-                            else:
-                                raise ValueError("Chat not found!")
+                        if self.user_transmission:
+                            self.mixed_leech = False
+                        else:
+                            raise ValueError("Chat not found!")
                     else:
                         uploader_id = self.client.me.id
                         if chat.type.name in ["SUPERGROUP", "CHANNEL", "GROUP"]:
@@ -1186,8 +1186,11 @@ class TaskConfig:
                 res = await run_ffmpeg_cmd(self, cmd, file_path)
                 if res and delete_files:
                     await remove(file_path)
-                    if "ffmpeg." in res:
-                        newres = res.replace("ffmpeg.", "")
+                    directory = ospath.dirname(res)
+                    file_name = ospath.basename(res)
+                    if file_name.startswith("ffmpeg."):
+                        newname = file_name.replace("ffmpeg.", "")
+                        newres = ospath.join(directory, newname)
                         await move(res, newres)
             else:
                 for dirpath, _, files in await sync_to_async(
@@ -1217,8 +1220,11 @@ class TaskConfig:
                         res = await run_ffmpeg_cmd(self, cmd, f_path)
                         if res and delete_files:
                             await remove(f_path)
-                            if "ffmpeg." in res:
-                                newres = res.replace("ffmpeg.", "")
+                            directory = ospath.dirname(res)
+                            file_name = ospath.basename(res)
+                            if file_name.startswith("ffmpeg."):
+                                newname = file_name.replace("ffmpeg.", "")
+                                newres = ospath.join(directory, newname)
                                 await move(res, newres)
         if checked:
             cpu_eater_lock.release()
