@@ -488,7 +488,6 @@ async def split_file(
             async with listener.subprocess_lock:
                 if listener.is_cancelled:
                     return False
-                code = listener.subproc.returncode
             if code == -9:
                 listener.is_cancelled = True
                 return False

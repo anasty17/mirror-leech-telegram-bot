@@ -669,7 +669,7 @@ class TaskConfig:
                     if (
                         not self.seed
                         and self.subproc is not None
-                        and self.subproc.returncode == 0
+                        and code == 0
                     ):
                         for file_ in files:
                             if is_archive_split(file_) or is_archive(file_):
@@ -761,7 +761,7 @@ class TaskConfig:
             "7z",
             f"-v{split_size}b",
             "a",
-            "-mx=9",
+            "-mx=0",
             f"-p{pswd}",
             up_path,
             dl_path,
