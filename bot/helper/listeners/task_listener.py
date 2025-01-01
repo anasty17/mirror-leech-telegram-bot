@@ -154,6 +154,7 @@ class TaskListener(TaskConfig):
                 return
 
         up_path = f"{self.dir}/{self.name}"
+        self.is_file = await aiopath.isfile(up_path)
         self.size = await get_path_size(up_path)
         if not Config.QUEUE_ALL:
             async with queue_dict_lock:
@@ -161,15 +162,19 @@ class TaskListener(TaskConfig):
                     non_queued_dl.remove(self.mid)
             await start_from_queued()
 
-        if self.join and await aiopath.isdir(up_path):
+        if self.join and not self.is_file:
             await join_files(up_path)
 
         if self.extract and not self.is_nzb:
             up_path = await self.proceed_extract(up_path, gid)
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         if self.ffmpeg_cmds:
             up_path = await self.proceed_ffmpeg(
@@ -178,21 +183,28 @@ class TaskListener(TaskConfig):
             )
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         if self.name_sub:
             up_path = await self.substitute(up_path)
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             self.name = up_path.rsplit("/", 1)[1]
 
         if self.screen_shots:
             up_path = await self.generate_screenshots(up_path)
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+            self.subproc = None
 
         if self.convert_audio or self.convert_video:
             up_path = await self.convert_media(
@@ -204,8 +216,12 @@ class TaskListener(TaskConfig):
             )
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         if self.sample_video:
             up_path = await self.generate_sample_video(
@@ -213,15 +229,23 @@ class TaskListener(TaskConfig):
             )
             if self.is_cancelled:
                 return
+            self.is_file = await aiopath.isfile(up_path)
             up_dir, self.name = up_path.rsplit("/", 1)
             self.size = await get_path_size(up_dir)
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         if self.compress:
             up_path = await self.proceed_compress(
                 up_path, gid, unwanted_files, files_to_delete
             )
+            self.is_file = await aiopath.isfile(up_path)
             if self.is_cancelled:
                 return
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         up_dir, self.name = up_path.rsplit("/", 1)
         self.size = await get_path_size(up_dir)
@@ -230,6 +254,9 @@ class TaskListener(TaskConfig):
             await self.proceed_split(up_dir, unwanted_files_size, unwanted_files, gid)
             if self.is_cancelled:
                 return
+            self.subproc = None
+            self.subname = ""
+            self.subsize = 0
 
         add_to_queue, event = await check_running_tasks(self, "up")
         await start_from_queued()

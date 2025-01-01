@@ -65,7 +65,6 @@ qb_listener_lock = Lock()
 nzb_listener_lock = Lock()
 jd_lock = Lock()
 cpu_eater_lock = Lock()
-subprocess_lock = Lock()
 same_directory_lock = Lock()
 extension_filter = ["aria2", "!qB"]
 drives_names = []

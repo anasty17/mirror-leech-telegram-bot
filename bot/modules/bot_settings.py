@@ -321,6 +321,8 @@ async def edit_variable(_, message, pre_message, key):
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
         value = eval(value)
+    elif value.startswith("{") and value.endswith("}"):
+        value = eval(value)
     if key not in [
         "CMD_SUFFIX",
         "OWNER_ID",

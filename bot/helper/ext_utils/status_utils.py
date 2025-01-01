@@ -188,21 +188,31 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"<b>{index + start_position}.{tstatus}: </b>"
         msg += f"<code>{escape(f'{task.name()}')}</code>"
-        if tstatus not in [
-            MirrorStatus.STATUS_SPLIT,
-            MirrorStatus.STATUS_SEED,
-            MirrorStatus.STATUS_SAMVID,
-            MirrorStatus.STATUS_CONVERT,
-            MirrorStatus.STATUS_FFMPEG,
-            MirrorStatus.STATUS_QUEUEUP,
-        ]:
+        if (
+            tstatus
+            not in [
+                MirrorStatus.STATUS_SEED,
+                MirrorStatus.STATUS_QUEUEUP,
+                MirrorStatus.STATUS_SPLIT,
+            ]
+            or (MirrorStatus.STATUS_SPLIT
+            and task.listener.subsize)
+        ):
             progress = (
                 await task.progress()
                 if iscoroutinefunction(task.progress)
                 else task.progress()
             )
+            if task.listener.subname:
+                msg += f"\n<i>{task.listener.subname[:35]}</i>"
             msg += f"\n{get_progress_bar_string(progress)} {progress}"
-            msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {task.size()}"
+            if task.listener.subname:
+                size = (
+                    f"{get_readable_file_size(task.listener.subsize)} ({task.size()})"
+                )
+            else:
+                size = task.size()
+            msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {size}"
             msg += f"\n<b>Speed:</b> {task.speed()} | <b>ETA:</b> {task.eta()}"
             if hasattr(task, "seeders_num"):
                 try:

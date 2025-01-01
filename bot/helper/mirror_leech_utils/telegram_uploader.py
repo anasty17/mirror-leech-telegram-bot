@@ -253,6 +253,9 @@ class TelegramUploader:
                 delete_file = False
                 self._error = ""
                 self._up_path = f_path = ospath.join(dirpath, file_)
+                if not ospath.exists(self._up_path):
+                    LOGGER.error(f"{self._up_path} not exists! Continue uploading!")
+                    continue
                 if self._up_path in ft_delete:
                     delete_file = True
                 if self._up_path in o_files:

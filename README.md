@@ -200,6 +200,7 @@ programming in Python.
 - Ability to save upload paths
 - Name Substitution to rename the files before upload
 - User can select whether he want to use his rclone.conf/token.pickle without adding mpt: or mrcc: before path/gd-id
+- FFmpeg commands to execute it after download (task option)
 - Supported Direct links Generators:
 
 > mediafire (file/folders), hxfile.co (need cookies txt with name) [hxfile.txt], streamtape.com, streamsb.net, streamhub.ink,
@@ -304,10 +305,12 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 - `USE_SERVICE_ACCOUNTS`: Whether to use Service Accounts or not, with google-api-python-client. For this to work
   see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account)
   section below. Default is `False`. `Bool`
-- `FFMPEG_CMDS`: list of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments. `List`
-  - Examples: ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb", "-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]
+- `FFMPEG_CMDS`: Dict of list values of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments. `Dict`
+  - Examples: {"subtitle": ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb"], "convert": ["-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]}
   **Notes**:
+  - Don't add ffmpeg at the beginning!
   - Add `-del` to the list which you want from the bot to delete the original files after command run complete!
+  - To execute one of those lists in bot for example, you must use -ff subtitle (list key) or -ff convert (list key)
   - Seed will get disbaled while using this option
   **Example**:
   - Here I will explain how to use mltb.* which is reference to files you want to work on.
@@ -470,7 +473,7 @@ sudo docker build . -t mltb
 - Run the image:
 
 ```
-sudo docker run -p 80:80 -p 8080:8080 mltb
+sudo docker run -p 80:80 -p 8080:8080 -p 8070:8070 -p 8090:8090 mltb
 ```
 
 - To stop the running image:
@@ -532,6 +535,8 @@ sudo docker compose logs --follow
 
 ------
 
+</details>
+
 **IMPORTANT NOTES**:
 
 1. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080`
@@ -542,7 +547,6 @@ sudo docker compose logs --follow
 
 ------
 
-</details>
 </details>
 </details>
 

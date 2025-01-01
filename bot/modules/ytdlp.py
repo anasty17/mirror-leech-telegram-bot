@@ -321,7 +321,10 @@ class YtDlp(TaskListener):
             self.multi = 0
 
         try:
-            self.ffmpeg_cmds = eval(args["-ff"])
+            if args["-ff"].strip().startswith("["):
+                self.ffmpeg_cmds = eval(args["-ff"])
+            else:
+                self.ffmpeg_cmds = args["-ff"]
         except Exception as e:
             self.ffmpeg_cmds = None
             LOGGER.error(e)

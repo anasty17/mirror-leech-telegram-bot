@@ -117,7 +117,13 @@ def arg_parser(items, arg_base):
         values = []
         for j in range(start_index + 1, total):
             if items[j] in arg_base:
-                break
+                check = " ".join(values).strip()
+                if check.startswith("[") and check.endswith("]"):
+                    break
+                elif check.startswith("["):
+                    pass
+                else:
+                    break
             values.append(items[j])
         return values
 
@@ -135,17 +141,6 @@ def arg_parser(items, arg_base):
                 in ["-s", "-j", "-f", "-fd", "-fu", "-sync", "-ml", "-doc", "-med"]
             ):
                 arg_base[part] = True
-            elif part == "-ff":
-                i += 1
-                if i < total:
-                    values = []
-                    while i < total:
-                        values.append(items[i])
-                        if items[i].endswith("]"):
-                            break
-                        else:
-                            i += 1
-                    arg_base[part] = " ".join(values)
             else:
                 sub_list = process_argument_with_values(i)
                 if sub_list:

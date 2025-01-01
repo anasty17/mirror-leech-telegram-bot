@@ -241,6 +241,7 @@ list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all f
 Notes:
 1. Add <code>-del</code> to the list(s) which you want from the bot to delete the original files after command run complete!
 2. Seed will get disbaled while using this option
+3. To execute one of pre-added lists in bot like: ({"subtitle": ["-i mltb.mkv -c copy -c:s srt mltb.mkv"]}), you must use -ff subtitle (list key)
 Examples: ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb", "-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]
 Here I will explain how to use mltb.* which is reference to files you want to work on.
 1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. -del will delete the original media after complete run of the cmd.

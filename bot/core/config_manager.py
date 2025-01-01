@@ -13,7 +13,7 @@ class Config:
     DOWNLOAD_DIR = "/usr/src/app/downloads/"
     EQUAL_SPLITS = False
     EXTENSION_FILTER = ""
-    FFMPEG_CMDS = []
+    FFMPEG_CMDS = {}
     FILELION_API = ""
     GDRIVE_ID = ""
     INCOMPLETE_TASK_NOTIFIER = False

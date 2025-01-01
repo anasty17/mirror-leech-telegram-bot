@@ -1,5 +1,5 @@
 from aiofiles.os import path as aiopath, remove, makedirs
-from asyncio import sleep, create_subprocess_exec, gather
+from asyncio import sleep, create_subprocess_exec, gather, Lock
 from asyncio.subprocess import PIPE
 from os import walk, path as ospath
 from secrets import token_urlsafe
@@ -15,7 +15,6 @@ from .. import (
     task_dict,
     extension_filter,
     cpu_eater_lock,
-    subprocess_lock,
     intervals,
 )
 from ..core.config_manager import Config
@@ -73,6 +72,7 @@ class TaskConfig:
         self.rc_flags = ""
         self.tag = ""
         self.name = ""
+        self.subname = ""
         self.new_dir = ""
         self.name_sub = ""
         self.thumbnail_layout = ""
@@ -81,6 +81,7 @@ class TaskConfig:
         self.max_split_size = 0
         self.multi = 0
         self.size = 0
+        self.subsize = 0
         self.is_leech = False
         self.is_qbit = False
         self.is_nzb = False
@@ -110,9 +111,11 @@ class TaskConfig:
         self.is_torrent = False
         self.as_med = False
         self.as_doc = False
+        self.is_file = False
         self.ffmpeg_cmds = None
         self.chat_thread_id = None
         self.subproc = None
+        self.subprocess_lock = Lock()
         self.thumb = None
         self.extension_filter = []
         self.is_super_chat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
@@ -205,11 +208,14 @@ class TaskConfig:
         ):
             self.up_dest = self.user_dict["upload_paths"][self.up_dest]
 
-        self.ffmpeg_cmds = (
-            self.ffmpeg_cmds
-            or self.user_dict.get("ffmpeg_cmds", None)
-            or (Config.FFMPEG_CMDS if "ffmpeg_cmds" not in self.user_dict else None)
-        )
+        if self.ffmpeg_cmds and not isinstance(self.ffmpeg_cmds, list):
+            if self.user_dict.get("ffmpeg_cmds", None):
+                self.ffmpeg_cmds = self.user_dict["ffmpeg_cmds"].get(self.ffmpeg_cmds, None)
+            elif "ffmpeg_cmds" not in self.user_dict and Config.FFMPEG_CMDS:
+                self.ffmpeg_cmds = Config.FFMPEG_CMDS.get(self.ffmpeg_cmds, None)
+            else:
+                self.ffmpeg_cmds = None
+
         if self.ffmpeg_cmds:
             self.seed = False
 
@@ -558,17 +564,16 @@ class TaskConfig:
                         cmd = ["unzstd", f_path, "-o", out_path]
                         if self.is_cancelled:
                             return ""
-                        async with subprocess_lock:
+                        async with self.subprocess_lock:
                             self.subproc = await create_subprocess_exec(
                                 *cmd, stderr=PIPE
                             )
-                        _, stderr = await self.subproc.communicate()
+                        code = await self.subproc.wait()
                         if self.is_cancelled:
                             return ""
-                        code = self.subproc.returncode
                         if code != 0:
                             try:
-                                stderr = stderr.decode().strip()
+                                stderr = (await self.subproc.stderr.read()).decode().strip()
                             except:
                                 stderr = "Unable to decode the error!"
                             LOGGER.error(
@@ -576,26 +581,27 @@ class TaskConfig:
                             )
                         elif not self.seed:
                             await remove(f_path)
+                    self.subproc = None
             return
         elif dl_path.endswith(".zst"):
             out_path = get_base_name(dl_path)
             cmd = ["unzstd", dl_path, "-o", out_path]
             if self.is_cancelled:
                 return ""
-            async with subprocess_lock:
+            async with self.subprocess_lock:
                 self.subproc = await create_subprocess_exec(*cmd, stderr=PIPE)
-            _, stderr = await self.subproc.communicate()
+            code = await self.subproc.wait()
             if self.is_cancelled:
                 return ""
-            code = self.subproc.returncode
             if code != 0:
                 try:
-                    stderr = stderr.decode().strip()
+                    stderr = (await self.subproc.stderr.read()).decode().strip()
                 except:
                     stderr = "Unable to decode the error!"
                 LOGGER.error(f"{stderr}. Unable to extract zst file!. Path: {dl_path}")
             elif not self.seed:
                 await remove(dl_path)
+            self.subproc = None
             return out_path
         return dl_path
 
@@ -605,7 +611,7 @@ class TaskConfig:
             LOGGER.info(f"Extracting: {self.name}")
             async with task_dict_lock:
                 task_dict[self.mid] = SevenZStatus(self, gid, "Extract")
-            if await aiopath.isdir(dl_path):
+            if not self.is_file:
                 if self.seed:
                     self.new_dir = f"{self.dir}10000"
                     up_path = f"{self.new_dir}/{self.name}"
@@ -636,22 +642,25 @@ class TaskConfig:
                                 f"-o{t_path}",
                                 "-aot",
                                 "-xr!@PaxHeader",
+                                "-bsp1",
+                                "-bse1",
+                                "-bb3",
                             ]
                             if not pswd:
                                 del cmd[2]
                             if self.is_cancelled:
                                 return ""
-                            async with subprocess_lock:
+                            self.subname = file_
+                            async with self.subprocess_lock:
                                 self.subproc = await create_subprocess_exec(
-                                    *cmd, stderr=PIPE
+                                    *cmd, stdout=PIPE, stderr=PIPE
                                 )
-                            _, stderr = await self.subproc.communicate()
+                            code = await self.subproc.wait()
                             if self.is_cancelled:
                                 return ""
-                            code = self.subproc.returncode
                             if code != 0:
                                 try:
-                                    stderr = stderr.decode().strip()
+                                    stderr = (await self.subproc.stderr.read()).decode().strip()
                                 except:
                                     stderr = "Unable to decode the error!"
                                 LOGGER.error(
@@ -669,6 +678,7 @@ class TaskConfig:
                                     await remove(del_path)
                                 except:
                                     self.is_cancelled = True
+                    self.subproc = None
                 return up_path
             else:
                 dl_path = await self.decompress_zst(dl_path)
@@ -684,17 +694,21 @@ class TaskConfig:
                     f"-o{up_path}",
                     "-aot",
                     "-xr!@PaxHeader",
+                    "-bsp1",
+                    "-bse1",
+                    "-bb3",
                 ]
                 if not pswd:
                     del cmd[2]
                 if self.is_cancelled:
                     return ""
-                async with subprocess_lock:
-                    self.subproc = await create_subprocess_exec(*cmd, stderr=PIPE)
-                _, stderr = await self.subproc.communicate()
+                async with self.subprocess_lock:
+                    self.subproc = await create_subprocess_exec(
+                        *cmd, stdout=PIPE, stderr=PIPE
+                    )
+                code = await self.subproc.wait()
                 if self.is_cancelled:
                     return ""
-                code = self.subproc.returncode
                 if code == -9:
                     self.is_cancelled = True
                     return ""
@@ -705,22 +719,25 @@ class TaskConfig:
                             await remove(dl_path)
                         except:
                             self.is_cancelled = True
+                    self.subproc = None
                     return up_path
                 else:
                     try:
-                        stderr = stderr.decode().strip()
+                        stderr = (await self.subproc.stderr.read()).decode().strip()
                     except:
                         stderr = "Unable to decode the error!"
                     LOGGER.error(
                         f"{stderr}. Unable to extract archive! Uploading anyway. Path: {dl_path}"
                     )
                     self.new_dir = ""
+                    self.subproc = None
                     return dl_path
         except NotSupportedExtractionArchive:
             LOGGER.info(
                 f"Not any valid archive, uploading file as it is. Path: {dl_path}"
             )
             self.new_dir = ""
+            self.subproc = None
             return dl_path
 
     async def proceed_compress(self, dl_path, gid, o_files, ft_delete):
@@ -744,12 +761,15 @@ class TaskConfig:
             "7z",
             f"-v{split_size}b",
             "a",
-            "-mx=0",
+            "-mx=9",
             f"-p{pswd}",
             up_path,
             dl_path,
+            "-bsp1",
+            "-bse1",
+            "-bb3",
         ]
-        if await aiopath.isdir(dl_path):
+        if not self.is_file:
             cmd.extend(f"-xr!*.{ext}" for ext in self.extension_filter)
             if o_files:
                 for f in o_files:
@@ -769,12 +789,11 @@ class TaskConfig:
             LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}")
         if self.is_cancelled:
             return ""
-        async with subprocess_lock:
-            self.subproc = await create_subprocess_exec(*cmd, stderr=PIPE)
-        _, stderr = await self.subproc.communicate()
+        async with self.subprocess_lock:
+            self.subproc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        code = await self.subproc.wait()
         if self.is_cancelled:
             return ""
-        code = self.subproc.returncode
         if code == -9:
             self.is_cancelled = True
             return ""
@@ -788,16 +807,18 @@ class TaskConfig:
                     except:
                         pass
             ft_delete.clear()
+            self.subproc = None
             return up_path
         else:
             await clean_target(self.new_dir)
             if not delete:
                 self.new_dir = ""
             try:
-                stderr = stderr.decode().strip()
+                stderr = (await self.subproc.stderr.read()).decode().strip()
             except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
+            self.subproc = None
             return dl_path
 
     async def proceed_split(self, up_dir, m_size, o_files, gid):
@@ -814,9 +835,15 @@ class TaskConfig:
                         async with task_dict_lock:
                             task_dict[self.mid] = FFmpegStatus(self, gid, "Split")
                         LOGGER.info(f"Splitting: {self.name}")
+                    if self.is_file:
+                        self.subsize = self.size
+                    else:
+                        self.subsize = f_size
+                        self.subname = file_
                     res = await split_file(
                         f_path, f_size, dirpath, file_, self.split_size, self
                     )
+                    self.subproc = None
                     if self.is_cancelled:
                         return
                     if not res:
@@ -854,14 +881,16 @@ class TaskConfig:
             task_dict[self.mid] = FFmpegStatus(self, gid, "Sample Video")
 
         checked = False
-        if await aiopath.isfile(dl_path):
+        if self.is_file:
             if (await get_document_type(dl_path))[0]:
                 checked = True
                 async with cpu_eater_lock:
                     LOGGER.info(f"Creating Sample video: {self.name}")
+                    self.subsize = self.size
                     res = await create_sample_video(
                         self, dl_path, sample_duration, part_duration
                     )
+                self.subproc = None
                 if res:
                     new_folder = ospath.splitext(dl_path)[0]
                     name = dl_path.rsplit("/", 1)[1]
@@ -897,9 +926,12 @@ class TaskConfig:
                             if checked:
                                 cpu_eater_lock.release()
                             return ""
+                        self.subsize = await aiopath.getsize(f_path)
+                        self.subname = file_
                         res = await create_sample_video(
                             self, f_path, sample_duration, part_duration
                         )
+                        self.subproc = None
                         if res:
                             ft_delete.append(res)
             if checked:
@@ -969,7 +1001,13 @@ class TaskConfig:
                     LOGGER.info(f"Converting: {self.name}")
                 else:
                     LOGGER.info(f"Converting: {m_path}")
+                if self.is_file:
+                    self.subsize = self.size
+                else:
+                    self.subsize = await aiopath.getsize(m_path)
+                    self.subname = m_path.rsplit("/", 1)[-1]
                 res = await convert_video(self, m_path, vext)
+                self.subproc = None
                 return "" if self.is_cancelled else res
             elif (
                 is_audio
@@ -992,12 +1030,18 @@ class TaskConfig:
                     LOGGER.info(f"Converting: {self.name}")
                 else:
                     LOGGER.info(f"Converting: {m_path}")
+                if self.is_file:
+                    self.subsize = self.size
+                else:
+                    self.subsize = await aiopath.getsize(m_path)
+                    self.subname = m_path.rsplit("/", 1)[-1]
                 res = await convert_audio(self, m_path, aext)
+                self.subproc = None
                 return "" if self.is_cancelled else res
             else:
                 return ""
 
-        if await aiopath.isfile(dl_path):
+        if self.is_file:
             output_file = await proceed_convert(dl_path)
             if checked:
                 cpu_eater_lock.release()
@@ -1040,7 +1084,7 @@ class TaskConfig:
 
     async def generate_screenshots(self, dl_path):
         ss_nb = int(self.screen_shots) if isinstance(self.screen_shots, str) else 10
-        if await aiopath.isfile(dl_path):
+        if self.is_file:
             if (await get_document_type(dl_path))[0]:
                 LOGGER.info(f"Creating Screenshot for: {dl_path}")
                 res = await take_ss(dl_path, ss_nb)
@@ -1072,7 +1116,7 @@ class TaskConfig:
         return dl_path
 
     async def substitute(self, dl_path):
-        if await aiopath.isfile(dl_path):
+        if self.is_file:
             up_dir, name = dl_path.rsplit("/", 1)
             for substitution in self.name_sub:
                 sen = False
@@ -1144,6 +1188,8 @@ class TaskConfig:
                 "-hide_banner",
                 "-loglevel",
                 "error",
+                "-progress",
+                "pipe:1",
             ] + ffmpeg_cmd
             if "-del" in cmd:
                 cmd.remove("-del")
@@ -1160,7 +1206,7 @@ class TaskConfig:
                 ext = "all"
             else:
                 ext = ospath.splitext(input_file)[-1]
-            if await aiopath.isfile(dl_path):
+            if self.is_file:
                 is_video, is_audio, _ = await get_document_type(dl_path)
                 if not is_video and not is_audio:
                     break
@@ -1183,7 +1229,9 @@ class TaskConfig:
                     await cpu_eater_lock.acquire()
                 LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
                 cmd[index + 1] = file_path
+                self.subsize = self.size
                 res = await run_ffmpeg_cmd(self, cmd, file_path)
+                self.subproc = None
                 if res and delete_files:
                     await remove(file_path)
                     directory = ospath.dirname(res)
@@ -1217,7 +1265,10 @@ class TaskConfig:
                                 task_dict[self.mid] = FFmpegStatus(self, gid, "FFmpeg")
                             await cpu_eater_lock.acquire()
                         LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
+                        self.subsize = await aiopath.getsize(file_path)
+                        self.subname = file_
                         res = await run_ffmpeg_cmd(self, cmd, f_path)
+                        self.subproc = None
                         if res and delete_files:
                             await remove(f_path)
                             directory = ospath.dirname(res)
