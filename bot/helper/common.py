@@ -1265,7 +1265,7 @@ class TaskConfig:
                                 task_dict[self.mid] = FFmpegStatus(self, gid, "FFmpeg")
                             await cpu_eater_lock.acquire()
                         LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
-                        self.subsize = await aiopath.getsize(file_path)
+                        self.subsize = await aiopath.getsize(f_path)
                         self.subname = file_
                         res = await run_ffmpeg_cmd(self, cmd, f_path)
                         self.subproc = None
