@@ -113,20 +113,6 @@ def arg_parser(items, arg_base):
         "-med",
     }
 
-    def process_argument_with_values(start_index):
-        values = []
-        for j in range(start_index + 1, total):
-            if items[j] in arg_base:
-                check = " ".join(values).strip()
-                if check.startswith("[") and check.endswith("]"):
-                    break
-                elif check.startswith("["):
-                    pass
-                else:
-                    break
-            values.append(items[j])
-        return values
-
     while i < total:
         part = items[i]
 
@@ -142,7 +128,20 @@ def arg_parser(items, arg_base):
             ):
                 arg_base[part] = True
             else:
-                sub_list = process_argument_with_values(i)
+                sub_list = []
+                for j in range(i + 1, total):
+                    if items[j] in arg_base:
+                        if part in bool_arg_set and not sub_list:
+                            arg_base[part] = True
+                            break
+                        if not sub_list:
+                            break
+                        check = " ".join(sub_list).strip()
+                        if check.startswith("[") and check.endswith("]"):
+                            break
+                        elif not check.startswith("["):
+                            break
+                    sub_list.append(items[j])
                 if sub_list:
                     arg_base[part] = " ".join(sub_list)
                     i += len(sub_list)

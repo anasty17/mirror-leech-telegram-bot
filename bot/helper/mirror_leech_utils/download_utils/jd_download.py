@@ -116,6 +116,7 @@ async def get_jd_download_directory():
 async def add_jd_download(listener, path):
     try:
         async with jd_lock:
+            gid = token_urlsafe(12)
             if not jdownloader.is_connected:
                 raise MYJDException(jdownloader.error)
 
@@ -137,7 +138,6 @@ async def add_jd_download(listener, path):
                         package_ids=odl_list
                     )
 
-            gid = token_urlsafe(12)
             jd_downloads[gid] = {"status": "collect", "path": path}
 
             if await aiopath.exists(listener.link):
@@ -349,7 +349,8 @@ async def add_jd_download(listener, path):
     except (Exception, MYJDException) as e:
         await listener.on_download_error(f"{e}".strip())
         async with jd_lock:
-            del jd_downloads[gid]
+            if gid in jd_downloads:
+                del jd_downloads[gid]
     finally:
         if await aiopath.exists(listener.link):
             await remove(listener.link)

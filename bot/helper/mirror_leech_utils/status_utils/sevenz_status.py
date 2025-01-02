@@ -25,7 +25,11 @@ class SevenZStatus:
         pattern = r"\b(?:Add\s+new\s+data\s+to\s+archive:.*?,\s+(\d+)\s+bytes|Physical\s+Size\s*=\s*(\d+))"
         while True:
             async with self.listener.subprocess_lock:
-                if self.listener.subproc is None or self.listener.is_cancelled:
+                if (
+                    self.listener.subproc is None
+                    or self.listener.subproc.returncode is not None
+                    or self.listener.is_cancelled
+                ):
                     break
                 line = await self.listener.subproc.stdout.readline()
                 line = line.decode().strip()
@@ -39,7 +43,11 @@ class SevenZStatus:
         s = b""
         while True:
             async with self.listener.subprocess_lock:
-                if self.listener.is_cancelled or self.listener.subproc is None:
+                if (
+                    self.listener.is_cancelled
+                    or self.listener.subproc is None
+                    or self.listener.subproc.returncode is not None
+                ):
                     break
                 char = await self.listener.subproc.stdout.read(1)
                 if not char:
@@ -56,6 +64,8 @@ class SevenZStatus:
                         self._progress_str = "0%"
                     s = b""
 
+        self._processed_bytes = 0
+        self._progress_str = "0%"
         self._active = False
 
     def gid(self):

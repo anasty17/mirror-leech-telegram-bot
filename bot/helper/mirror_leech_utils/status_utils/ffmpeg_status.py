@@ -21,7 +21,11 @@ class FFmpegStatus:
     async def _ffmpeg_progress(self):
         while True:
             async with self.listener.subprocess_lock:
-                if self.listener.subproc is None or self.listener.is_cancelled:
+                if (
+                    self.listener.subproc is None
+                    or self.listener.subproc.returncode is not None
+                    or self.listener.is_cancelled
+                ):
                     break
                 line = await self.listener.subproc.stdout.readline()
                 if not line:
@@ -37,6 +41,10 @@ class FFmpegStatus:
                             )
                         elif key == "bitrate":
                             self._speed_raw = (float(value.strip("kbits/s")) / 8) * 1000
+
+        self._processed_bytes = 0
+        self._speed_raw = 0
+        self._progress_raw = 0
         self._active = False
 
     def speed(self):
@@ -46,7 +54,11 @@ class FFmpegStatus:
         return get_readable_file_size(self._processed_bytes)
 
     async def progress(self):
-        if not self._active and self.listener.subsize and self.listener.subproc is not None:
+        if (
+            not self._active
+            and self.listener.subsize
+            and self.listener.subproc is not None
+        ):
             await self._ffmpeg_progress()
             self._active = True
         return f"{round(self._progress_raw, 2)}%"
