@@ -106,7 +106,7 @@ class Mirror(TaskListener):
             "-cv": "",
             "-ns": "",
             "-tl": "",
-            "-ff": "None",
+            "-ff": None,
         }
 
         arg_parser(input_list[1:], args)
