@@ -36,13 +36,6 @@ async def _on_download_error(err, nzo_id, button=None):
 
 
 @new_task
-async def _change_status(nzo_id, status):
-    if task := await get_task_by_gid(nzo_id):
-        async with task_dict_lock:
-            task.cstatus = status
-
-
-@new_task
 async def _stop_duplicate(nzo_id):
     if task := await get_task_by_gid(nzo_id):
         await task.update()
@@ -82,16 +75,6 @@ async def _nzb_listener():
                             nzb_jobs[nzo_id]["status"] = "Completed"
                     elif job["status"] == "Failed":
                         await _on_download_error(job["fail_message"], nzo_id)
-                    elif job["status"] in [
-                        "QuickCheck",
-                        "Verifying",
-                        "Repairing",
-                        "Fetching",
-                        "Moving",
-                        "Extracting",
-                    ]:
-                        if job["status"] != nzb_jobs[nzo_id]["status"]:
-                            await _change_status(nzo_id, job["status"])
                 for dl in downloads:
                     nzo_id = dl["nzo_id"]
                     if nzo_id not in nzb_jobs:

@@ -106,7 +106,7 @@ class Mirror(TaskListener):
             "-cv": "",
             "-ns": "",
             "-tl": "",
-            "-ff": None,
+            "-ff": set(),
         }
 
         arg_parser(input_list[1:], args)
@@ -153,10 +153,11 @@ class Mirror(TaskListener):
             self.multi = 0
 
         try:
-            if args["-ff"].strip().startswith("["):
-                self.ffmpeg_cmds = eval(args["-ff"])
-            else:
-                self.ffmpeg_cmds = args["-ff"]
+            if args["-ff"]:
+                if isinstance(args["-ff"], set):
+                    self.ffmpeg_cmds = args["-ff"]
+                else:
+                    self.ffmpeg_cmds = eval(args["-ff"])
         except Exception as e:
             self.ffmpeg_cmds = None
             LOGGER.error(e)
@@ -188,12 +189,20 @@ class Mirror(TaskListener):
                                 if fd_name != self.folder_name:
                                     self.same_dir[fd_name]["total"] -= 1
                         elif self.same_dir:
-                            self.same_dir[self.folder_name] = {"total": self.multi, "tasks": {self.mid}}
+                            self.same_dir[self.folder_name] = {
+                                "total": self.multi,
+                                "tasks": {self.mid},
+                            }
                             for fd_name in self.same_dir:
                                 if fd_name != self.folder_name:
                                     self.same_dir[fd_name]["total"] -= 1
                         else:
-                            self.same_dir = {self.folder_name: {"total": self.multi, "tasks": {self.mid}}}
+                            self.same_dir = {
+                                self.folder_name: {
+                                    "total": self.multi,
+                                    "tasks": {self.mid},
+                                }
+                            }
                 elif self.same_dir:
                     async with task_dict_lock:
                         for fd_name in self.same_dir:
