@@ -123,7 +123,7 @@ async def confirm_restart(_, query):
             "pkill",
             "-9",
             "-f",
-            "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java|sabnzbdplus|7z",
+            "gunicorn|aria2c|qbittorrent-nox|ffmpeg|rclone|java|sabnzbdplus|7z|split",
         )
         proc2 = await create_subprocess_exec("python3", "update.py")
         await gather(proc1.wait(), proc2.wait())
@@ -132,4 +132,3 @@ async def confirm_restart(_, query):
         osexecl(executable, executable, "-m", "bot")
     else:
         await delete_message(message)
-

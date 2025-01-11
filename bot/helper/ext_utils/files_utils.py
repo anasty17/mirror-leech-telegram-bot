@@ -1,11 +1,21 @@
-from aiofiles.os import remove, path as aiopath, listdir, rmdir
 from aioshutil import rmtree as aiormtree
+from asyncio import create_subprocess_exec, sleep, wait_for
+from asyncio.subprocess import PIPE
 from magic import Magic
-from os import walk, path as ospath, makedirs
+from os import walk, path as ospath, makedirs, readlink
 from re import split as re_split, I, search as re_search, escape
 from shutil import rmtree
 from subprocess import run as srun
 from sys import exit
+from aiofiles.os import (
+    remove,
+    path as aiopath,
+    listdir,
+    rmdir,
+    readlink as aioreadlink,
+    symlink,
+    makedirs as aiomakedirs,
+)
 
 from ... import aria2, LOGGER, qbittorrent_client
 from ...core.config_manager import Config
@@ -51,8 +61,34 @@ ARCH_EXT = [
     ".vhd",
     ".xar",
     ".zst",
+    ".zstd",
     ".cbz",
+    ".apfs",
+    ".ar",
+    ".qcow",
+    ".macho",
+    ".exe",
+    ".dll",
+    ".sys",
+    ".pmd",
+    ".swf",
+    ".swfc",
+    ".simg",
+    ".vdi",
+    ".vhdx",
+    ".vmdk",
+    ".gzip",
+    ".lzma86",
+    ".sha256",
+    ".sha512",
+    ".sha224",
+    ".sha384",
+    ".sha1",
+    ".md5",
+    ".crc32",
+    ".crc64",
 ]
+
 
 FIRST_SPLIT_REGEX = r"(\.|_)part0*1\.rar$|(\.|_)7z\.0*1$|(\.|_)zip\.0*1$|^(?!.*(\.|_)part\d+\.rar$).*\.rar$"
 
@@ -71,23 +107,23 @@ def is_archive_split(file):
     return bool(re_search(SPLIT_REGEX, file))
 
 
-async def clean_target(path):
-    if await aiopath.exists(path):
-        LOGGER.info(f"Cleaning Target: {path}")
+async def clean_target(opath):
+    if await aiopath.exists(opath):
+        LOGGER.info(f"Cleaning Target: {opath}")
         try:
-            if await aiopath.isdir(path):
-                await aiormtree(path, ignore_errors=True)
+            if await aiopath.isdir(opath):
+                await aiormtree(opath, ignore_errors=True)
             else:
-                await remove(path)
+                await remove(opath)
         except Exception as e:
             LOGGER.error(str(e))
 
 
-async def clean_download(path):
-    if await aiopath.exists(path):
-        LOGGER.info(f"Cleaning Download: {path}")
+async def clean_download(opath):
+    if await aiopath.exists(opath):
+        LOGGER.info(f"Cleaning Download: {opath}")
         try:
-            await aiormtree(path, ignore_errors=True)
+            await aiormtree(opath, ignore_errors=True)
         except Exception as e:
             LOGGER.error(str(e))
 
@@ -112,7 +148,7 @@ def exit_clean_up(signal, frame):
                 "pkill",
                 "-9",
                 "-f",
-                "gunicorn|aria2c|qbittorrent-nox|ffmpeg|java|sabnzbdplus|7z",
+                "gunicorn|aria2c|qbittorrent-nox|ffmpeg|java|sabnzbdplus|7z|split",
             ]
         )
         exit(0)
@@ -121,52 +157,47 @@ def exit_clean_up(signal, frame):
         exit(1)
 
 
-async def clean_unwanted(path, custom_list=None):
-    if custom_list is None:
-        custom_list = []
-    LOGGER.info(f"Cleaning unwanted files/folders: {path}")
-    for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
+async def clean_unwanted(opath):
+    LOGGER.info(f"Cleaning unwanted files/folders: {opath}")
+    for dirpath, _, files in await sync_to_async(walk, opath, topdown=False):
         for filee in files:
             f_path = ospath.join(dirpath, filee)
             if (
                 filee.endswith(".!qB")
-                or f_path in custom_list
                 or filee.endswith(".parts")
                 and filee.startswith(".")
             ):
                 await remove(f_path)
-        if dirpath.endswith((".unwanted", "splited_files_mltb", "copied_mltb")):
+        if dirpath.endswith(".unwanted"):
             await aiormtree(dirpath, ignore_errors=True)
-    for dirpath, _, files in await sync_to_async(walk, path, topdown=False):
+    for dirpath, _, files in await sync_to_async(walk, opath, topdown=False):
         if not await listdir(dirpath):
             await rmdir(dirpath)
 
 
-async def get_path_size(path):
-    if await aiopath.isfile(path):
-        return await aiopath.getsize(path)
+async def get_path_size(opath):
     total_size = 0
-    for root, _, files in await sync_to_async(walk, path):
+    if await aiopath.isfile(opath):
+        if await aiopath.islink(opath):
+            opath = await aioreadlink(opath)
+        return await aiopath.getsize(opath)
+    for root, _, files in await sync_to_async(walk, opath):
         for f in files:
             abs_path = ospath.join(root, f)
+            if await aiopath.islink(abs_path):
+                abs_path = await aioreadlink(abs_path)
             total_size += await aiopath.getsize(abs_path)
     return total_size
 
 
-async def count_files_and_folders(path, extension_filter, unwanted_files=None):
-    if unwanted_files is None:
-        unwanted_files = []
+async def count_files_and_folders(opath, extension_filter):
     total_files = 0
     total_folders = 0
-    for dirpath, dirs, files in await sync_to_async(walk, path):
+    for _, dirs, files in await sync_to_async(walk, opath):
         total_files += len(files)
         for f in files:
             if f.endswith(tuple(extension_filter)):
                 total_files -= 1
-            elif unwanted_files:
-                f_path = ospath.join(dirpath, f)
-                if f_path in unwanted_files:
-                    total_files -= 1
         total_folders += len(dirs)
     return total_folders, total_files
 
@@ -179,24 +210,42 @@ def get_base_name(orig_path):
         raise NotSupportedExtractionArchive("File format not supported for extraction")
 
 
+async def create_recursive_symlink(source, destination):
+    if ospath.isdir(source):
+        await aiomakedirs(destination, exist_ok=True)
+        for item in await listdir(source):
+            item_source = ospath.join(source, item)
+            item_dest = ospath.join(destination, item)
+            await create_recursive_symlink(item_source, item_dest)
+    elif ospath.isfile(source):
+        try:
+            await symlink(source, destination)
+        except FileExistsError:
+            LOGGER.error(f"Shortcut already exists: {destination}")
+        except Exception as e:
+            LOGGER.error(f"Error creating shortcut for {source}: {e}")
+
+
 def get_mime_type(file_path):
+    if ospath.islink(file_path):
+        file_path = readlink(file_path)
     mime = Magic(mime=True)
     mime_type = mime.from_file(file_path)
     mime_type = mime_type or "text/plain"
     return mime_type
 
 
-async def join_files(path):
-    files = await listdir(path)
+async def join_files(opath):
+    files = await listdir(opath)
     results = []
     exists = False
     for file_ in files:
         if re_search(r"\.0+2$", file_) and await sync_to_async(
-            get_mime_type, f"{path}/{file_}"
+            get_mime_type, f"{opath}/{file_}"
         ) not in ["application/x-7z-compressed", "application/zip"]:
             exists = True
             final_name = file_.rsplit(".", 1)[0]
-            fpath = f"{path}/{final_name}"
+            fpath = f"{opath}/{final_name}"
             cmd = f'cat "{fpath}."* > "{fpath}"'
             _, stderr, code = await cmd_exec(cmd, True)
             if code != 0:
@@ -213,4 +262,174 @@ async def join_files(path):
         for res in results:
             for file_ in files:
                 if re_search(rf"{escape(res)}\.0[0-9]+$", file_):
-                    await remove(f"{path}/{file_}")
+                    await remove(f"{opath}/{file_}")
+
+
+async def split_file(f_path, split_size, listener):
+    listener.subsize = 0
+    out_path = f"{f_path}."
+    if listener.is_cancelled:
+        return False
+    listener.subproc = await create_subprocess_exec(
+        "split",
+        "--numeric-suffixes=1",
+        "--suffix-length=3",
+        f"--bytes={split_size}",
+        f_path,
+        out_path,
+        stderr=PIPE,
+    )
+    _, stderr = await listener.subproc.communicate()
+    code = listener.subproc.returncode
+    if listener.is_cancelled:
+        return False
+    if code == -9:
+        listener.is_cancelled = True
+        return False
+    elif code != 0:
+        try:
+            stderr = stderr.decode().strip()
+        except:
+            stderr = "Unable to decode the error!"
+        LOGGER.error(f"{stderr}. Split Document: {f_path}")
+    return True
+
+
+class SevenZ:
+    def __init__(self, listener):
+        self._listener = listener
+        self._processed_bytes = 0
+        self._percentage = "0%"
+
+    @property
+    def processed_bytes(self):
+        return self._processed_bytes
+
+    @property
+    def progress(self):
+        return self._percentage
+
+    async def _sevenz_progress(self):
+        pattern = r"(\d+)\s+bytes"
+        while not (
+            self._listener.subproc.returncode is not None or self._listener.is_cancelled
+        ):
+            try:
+                line = await wait_for(self._listener.subproc.stdout.readline(), 2)
+            except:
+                break
+            line = line.decode().strip()
+            if match := re_search(pattern, line):
+                self._listener.subsize = int(match.group(1))
+            await sleep(0.05)
+        s = b""
+        while not (
+            self._listener.is_cancelled or self._listener.subproc.returncode is not None
+        ):
+            char = await self._listener.subproc.stdout.read(1)
+            s += char
+            if char == b"%":
+                try:
+                    self._percentage = s.decode().rsplit(" ", 1)[-1].strip()
+                    self._processed_bytes = (
+                        int(self._percentage.strip("%")) / 100
+                    ) * self._listener.subsize
+                except:
+                    self._processed_bytes = 0
+                    self._percentage = "0%"
+                s = b""
+            await sleep(0.05)
+
+        self._processed_bytes = 0
+        self._percentage = "0%"
+        return self._listener.subproc.returncode
+
+    async def extract(self, f_path, t_path, pswd):
+        cmd = [
+            "7z",
+            "x",
+            f"-p{pswd}",
+            f_path,
+            f"-o{t_path}",
+            "-aot",
+            "-xr!@PaxHeader",
+            "-bsp1",
+            "-bse1",
+            "-bb3",
+        ]
+        if not pswd:
+            del cmd[2]
+        if self._listener.is_cancelled:
+            return False
+        self._listener.subproc = await create_subprocess_exec(
+            *cmd,
+            stdout=PIPE,
+            stderr=PIPE,
+        )
+        code = await self._sevenz_progress()
+        if self._listener.is_cancelled:
+            return False
+        if code == -9:
+            self._listener.is_cancelled = True
+            return False
+        elif code != 0:
+            try:
+                stderr = (await self._listener.subproc.stderr.read()).decode().strip()
+            except:
+                stderr = "Unable to decode the error!"
+            LOGGER.error(f"{stderr}. Unable to extract archive!. Path: {f_path}")
+        return code
+
+    async def zip(self, dl_path, up_path, pswd):
+        size = await get_path_size(dl_path)
+        if self._listener.equal_splits:
+            parts = -(-size // self._listener.split_size)
+            split_size = (size // parts) + (size % parts)
+        else:
+            split_size = self._listener.split_size
+        cmd = [
+            "7z",
+            f"-v{split_size}b",
+            "a",
+            "-mx=0",
+            f"-p{pswd}",
+            up_path,
+            dl_path,
+            "-bsp1",
+            "-bse1",
+            "-bb3",
+        ]
+        if not self._listener.is_file:
+            cmd.extend(f"-xr!*.{ext}" for ext in self._listener.extension_filter)
+        if self._listener.is_leech and int(size) > self._listener.split_size:
+            if not pswd:
+                del cmd[4]
+            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}.0*")
+        else:
+            del cmd[1]
+            if not pswd:
+                del cmd[3]
+            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}")
+        if self._listener.is_cancelled:
+            return False
+        self._listener.subproc = await create_subprocess_exec(
+            *cmd, stdout=PIPE, stderr=PIPE
+        )
+        code = await self._sevenz_progress()
+        if self._listener.is_cancelled:
+            return False
+        if code == -9:
+            self._listener.is_cancelled = True
+            return False
+        elif code == 0:
+            await clean_target(dl_path)
+            return up_path
+        else:
+            if await aiopath.exists(up_path):
+                await remove(up_path)
+            try:
+                stderr = (await self._listener.subproc.stderr.read()).decode().strip()
+            except:
+                stderr = "Unable to decode the error!"
+            LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
+            return dl_path

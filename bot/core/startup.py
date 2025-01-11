@@ -205,7 +205,7 @@ async def update_variables():
         async with aiopen("list_drives.txt", "r+") as f:
             lines = await f.readlines()
             for line in lines:
-                temp = line.strip().split()
+                temp = line.split()
                 drives_ids.append(temp[1])
                 drives_names.append(temp[0].replace("_", " "))
                 if len(temp) > 2:

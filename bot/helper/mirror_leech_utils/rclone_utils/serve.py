@@ -50,11 +50,10 @@ async def rclone_serve_booter():
         "1m0s",
         "--buffer-size",
         "64M",
+        "-v",
         "--log-systemd",
         "--log-file",
         "rlog.txt",
-        "--log-level",
-        "ERROR",
     ]
     if (user := Config.RCLONE_SERVE_USER) and (pswd := Config.RCLONE_SERVE_PASS):
         cmd.extend(("--user", user, "--pass", pswd))

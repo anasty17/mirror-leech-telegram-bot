@@ -179,9 +179,6 @@ class Mirror(TaskListener):
         if not is_bulk:
             if self.multi > 0:
                 if self.folder_name:
-                    self.seed = False
-                    ratio = None
-                    seed_time = None
                     async with task_dict_lock:
                         if self.folder_name in self.same_dir:
                             self.same_dir[self.folder_name]["tasks"].add(self.mid)

@@ -3,13 +3,8 @@ from asyncio import gather
 from pyrogram.filters import regex
 from pyrogram.handlers import CallbackQueryHandler
 
-from .core.config_manager import Config
-
-Config.load()
-
 from . import LOGGER, bot_loop
-from .core.mltb_client import TgClient
-from .core.handlers import add_handlers
+from .core.config_manager import Config
 from .core.startup import (
     load_settings,
     load_configurations,
@@ -19,6 +14,12 @@ from .core.startup import (
     update_qb_options,
     update_variables,
 )
+
+Config.load()
+bot_loop.run_until_complete(load_settings())
+
+from .core.mltb_client import TgClient
+from .core.handlers import add_handlers
 from .helper.ext_utils.telegraph_helper import telegraph
 from .helper.ext_utils.bot_utils import sync_to_async, create_help_buttons, new_task
 from .helper.ext_utils.files_utils import clean_all, exit_clean_up
@@ -56,7 +57,6 @@ async def restart_sessions_confirm(_, query):
 
 
 async def main():
-    await load_settings()
     await gather(TgClient.start_bot(), TgClient.start_user())
     await gather(load_configurations(), update_variables())
     await gather(

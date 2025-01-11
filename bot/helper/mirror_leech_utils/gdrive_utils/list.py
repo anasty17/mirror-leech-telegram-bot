@@ -224,10 +224,10 @@ class GoogleDriveList(GoogleDriveHelper):
         await self._send_list_message(msg, button)
 
     async def get_items(self, itype=""):
-        if itype:
-            self.item_type = itype
-        elif self.list_status == "gdu":
+        if self.list_status == "gdu":
             self.item_type = "folders"
+        elif itype:
+            self.item_type = itype
         try:
             files = self.get_files_by_folder_id(self.id, self.item_type)
             if self.listener.is_cancelled:

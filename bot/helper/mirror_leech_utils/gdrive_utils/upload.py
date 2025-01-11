@@ -39,7 +39,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
             self.listener.up_dest = self.listener.up_dest.replace("sa:", "", 1)
             self.use_sa = True
 
-    def upload(self, unwanted_files, ft_delete):
+    def upload(self):
         self.user_setting()
         self.service = self.authorize()
         LOGGER.info(f"Uploading: {self._path}")
@@ -56,7 +56,6 @@ class GoogleDriveUpload(GoogleDriveHelper):
                     self.listener.name,
                     mime_type,
                     self.listener.up_dest,
-                    ft_delete,
                     in_dir=False,
                 )
                 if self.listener.is_cancelled:
@@ -70,7 +69,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
                     ospath.basename(ospath.abspath(self.listener.name)),
                     self.listener.up_dest,
                 )
-                result = self._upload_dir(self._path, dir_id, unwanted_files, ft_delete)
+                result = self._upload_dir(self._path, dir_id)
                 if result is None:
                     raise Exception("Upload has been manually cancelled!")
                 link = self.G_DRIVE_DIR_BASE_DOWNLOAD_URL.format(dir_id)
@@ -104,7 +103,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
                 dir_id=self.get_id_from_url(link),
             )
 
-    def _upload_dir(self, input_directory, dest_id, unwanted_files, ft_delete):
+    def _upload_dir(self, input_directory, dest_id):
         list_dirs = listdir(input_directory)
         if len(list_dirs) == 0:
             return dest_id
@@ -113,23 +112,16 @@ class GoogleDriveUpload(GoogleDriveHelper):
             current_file_name = ospath.join(input_directory, item)
             if ospath.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, dest_id)
-                new_id = self._upload_dir(
-                    current_file_name, current_dir_id, unwanted_files, ft_delete
-                )
+                new_id = self._upload_dir(current_file_name, current_dir_id)
                 self.total_folders += 1
-            elif current_file_name not in unwanted_files and not item.lower().endswith(
-                tuple(self.listener.extension_filter)
-            ):
+            elif not item.lower().endswith(tuple(self.listener.extension_filter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split("/")[-1]
-                self._upload_file(
-                    current_file_name, file_name, mime_type, dest_id, ft_delete
-                )
+                self._upload_file(current_file_name, file_name, mime_type, dest_id)
                 self.total_files += 1
                 new_id = dest_id
             else:
-                if not self.listener.seed or self.listener.new_dir:
-                    remove(current_file_name)
+                remove(current_file_name)
                 new_id = "filter"
             if self.listener.is_cancelled:
                 break
@@ -141,7 +133,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
         retry=(retry_if_exception_type(Exception)),
     )
     def _upload_file(
-        self, file_path, file_name, mime_type, dest_id, ft_delete, in_dir=True
+        self, file_path, file_name, mime_type, dest_id, in_dir=True
     ):
         # File body description
         file_metadata = {
@@ -212,7 +204,6 @@ class GoogleDriveUpload(GoogleDriveHelper):
                                 file_name,
                                 mime_type,
                                 dest_id,
-                                ft_delete,
                                 in_dir,
                             )
                     else:
@@ -220,11 +211,10 @@ class GoogleDriveUpload(GoogleDriveHelper):
                         raise err
         if self.listener.is_cancelled:
             return
-        if not self.listener.seed or self.listener.new_dir or file_path in ft_delete:
-            try:
-                remove(file_path)
-            except:
-                pass
+        try:
+            remove(file_path)
+        except:
+            pass
         self.file_processed_bytes = 0
         # Insert new permissions
         if not Config.IS_TEAM_DRIVE:

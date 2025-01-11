@@ -27,7 +27,7 @@ from .. import (
     qbittorrent_client,
     sabnzbd_client,
     nzb_options,
-    jd_lock,
+    jd_listener_lock,
     extension_filter,
 )
 from ..helper.ext_utils.bot_utils import (
@@ -454,7 +454,7 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
 
 
 async def sync_jdownloader():
-    async with jd_lock:
+    async with jd_listener_lock:
         if not Config.DATABASE_URL or not jdownloader.is_connected:
             return
         await jdownloader.device.system.exit_jd()

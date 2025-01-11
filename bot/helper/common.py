@@ -1,9 +1,8 @@
 from aiofiles.os import path as aiopath, remove, makedirs
-from asyncio import sleep, create_subprocess_exec, gather, Lock
-from asyncio.subprocess import PIPE
+from asyncio import sleep, gather
 from os import walk, path as ospath
 from secrets import token_urlsafe
-from aioshutil import move, copy2
+from aioshutil import move, rmtree
 from pyrogram.enums import ChatAction
 from re import sub, I
 
@@ -21,14 +20,19 @@ from ..core.config_manager import Config
 from ..core.mltb_client import TgClient
 from .ext_utils.bot_utils import new_task, sync_to_async, get_size_bytes
 from .ext_utils.bulk_links import extract_bulk_links
-from .ext_utils.exceptions import NotSupportedExtractionArchive
+from .mirror_leech_utils.gdrive_utils.list import GoogleDriveList
+from .mirror_leech_utils.rclone_utils.list import RcloneList
+from .mirror_leech_utils.status_utils.sevenz_status import SevenZStatus
+from .mirror_leech_utils.status_utils.ffmpeg_status import FFmpegStatus
+from .telegram_helper.bot_commands import BotCommands
 from .ext_utils.files_utils import (
     get_base_name,
     is_first_archive_split,
     is_archive,
     is_archive_split,
     get_path_size,
-    clean_target,
+    split_file,
+    SevenZ,
 )
 from .ext_utils.links_utils import (
     is_gdrive_id,
@@ -38,21 +42,10 @@ from .ext_utils.links_utils import (
 )
 from .ext_utils.media_utils import (
     create_thumb,
-    create_sample_video,
     take_ss,
-    run_ffmpeg_cmd,
-)
-from .ext_utils.media_utils import (
-    split_file,
     get_document_type,
-    convert_video,
-    convert_audio,
+    FFMpeg,
 )
-from .mirror_leech_utils.gdrive_utils.list import GoogleDriveList
-from .mirror_leech_utils.rclone_utils.list import RcloneList
-from .mirror_leech_utils.status_utils.sevenz_status import SevenZStatus
-from .mirror_leech_utils.status_utils.ffmpeg_status import FFmpegStatus
-from .telegram_helper.bot_commands import BotCommands
 from .telegram_helper.message_utils import (
     send_message,
     send_status_message,
@@ -67,13 +60,13 @@ class TaskConfig:
         self.user_id = self.user.id
         self.user_dict = user_data.get(self.user_id, {})
         self.dir = f"{Config.DOWNLOAD_DIR}{self.mid}"
+        self.up_dir = ""
         self.link = ""
         self.up_dest = ""
         self.rc_flags = ""
         self.tag = ""
         self.name = ""
         self.subname = ""
-        self.new_dir = ""
         self.name_sub = ""
         self.thumbnail_layout = ""
         self.folder_name = ""
@@ -82,6 +75,7 @@ class TaskConfig:
         self.multi = 0
         self.size = 0
         self.subsize = 0
+        self.proceed_count = 0
         self.is_leech = False
         self.is_qbit = False
         self.is_nzb = False
@@ -112,12 +106,13 @@ class TaskConfig:
         self.as_med = False
         self.as_doc = False
         self.is_file = False
+        self.progress = True
         self.ffmpeg_cmds = None
         self.chat_thread_id = None
         self.subproc = None
-        self.subprocess_lock = Lock()
         self.thumb = None
         self.extension_filter = []
+        self.files_to_proceed = []
         self.is_super_chat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL"]
 
     def get_token_path(self, dest):
@@ -164,7 +159,6 @@ class TaskConfig:
         )
         if self.name_sub:
             self.name_sub = [x.split("/") for x in self.name_sub.split(" | ")]
-            self.seed = False
         self.extension_filter = self.user_dict.get("excluded_extensions") or (
             extension_filter
             if "excluded_extensions" not in self.user_dict
@@ -227,9 +221,6 @@ class TaskConfig:
                 ]
             else:
                 self.ffmpeg_cmds = None
-
-        if self.ffmpeg_cmds:
-            self.seed = False
 
         if not self.is_leech:
             self.stop_duplicate = (
@@ -566,580 +557,181 @@ class TaskConfig:
                 "Reply to text file or to telegram message that have links seperated by new line!",
             )
 
-    async def decompress_zst(self, dl_path, is_dir=False):
-        if is_dir:
-            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
-                for file_ in files:
-                    if file_.endswith(".zst"):
-                        f_path = ospath.join(dirpath, file_)
-                        out_path = get_base_name(f_path)
-                        cmd = ["unzstd", f_path, "-o", out_path]
-                        if self.is_cancelled:
-                            return ""
-                        async with self.subprocess_lock:
-                            self.subproc = await create_subprocess_exec(
-                                *cmd, stderr=PIPE
-                            )
-                        code = await self.subproc.wait()
-                        if self.is_cancelled:
-                            return ""
-                        if code != 0:
-                            try:
-                                async with self.subprocess_lock:
-                                    stderr = (
-                                        (await self.subproc.stderr.read())
-                                        .decode()
-                                        .strip()
-                                    )
-                            except:
-                                stderr = "Unable to decode the error!"
-                            LOGGER.error(
-                                f"{stderr}. Unable to extract zst file!. Path: {f_path}"
-                            )
-                        elif not self.seed:
-                            await remove(f_path)
-                    self.subproc = None
-            return
-        elif dl_path.endswith(".zst"):
-            out_path = get_base_name(dl_path)
-            cmd = ["unzstd", dl_path, "-o", out_path]
-            if self.is_cancelled:
-                return ""
-            async with self.subprocess_lock:
-                self.subproc = await create_subprocess_exec(*cmd, stderr=PIPE)
-            code = await self.subproc.wait()
-            if self.is_cancelled:
-                return ""
-            if code != 0:
-                try:
-                    async with self.subprocess_lock:
-                        stderr = (await self.subproc.stderr.read()).decode().strip()
-                except:
-                    stderr = "Unable to decode the error!"
-                LOGGER.error(f"{stderr}. Unable to extract zst file!. Path: {dl_path}")
-            elif not self.seed:
-                await remove(dl_path)
-            self.subproc = None
-            return out_path
-        return dl_path
-
     async def proceed_extract(self, dl_path, gid):
         pswd = self.extract if isinstance(self.extract, str) else ""
-        try:
-            LOGGER.info(f"Extracting: {self.name}")
-            async with task_dict_lock:
-                task_dict[self.mid] = SevenZStatus(self, gid, "Extract")
-            if not self.is_file:
-                if self.seed:
-                    self.new_dir = f"{self.dir}10000"
-                    up_path = f"{self.new_dir}/{self.name}"
-                else:
-                    up_path = dl_path
-                await self.decompress_zst(dl_path, is_dir=True)
-                for dirpath, _, files in await sync_to_async(
-                    walk, dl_path, topdown=False
+        self.files_to_proceed = []
+        if self.is_file and is_archive(dl_path):
+            self.files_to_proceed.append(dl_path)
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    if (
+                        is_first_archive_split(file_)
+                        or is_archive(file_)
+                        and not file_.endswith(".rar")
+                    ):
+                        f_path = ospath.join(dirpath, file_)
+                        self.files_to_proceed.append(f_path)
+
+        if not self.files_to_proceed:
+            return dl_path
+        sevenz = SevenZ(self)
+        LOGGER.info(f"Extracting: {self.name}")
+        async with task_dict_lock:
+            task_dict[self.mid] = SevenZStatus(self, sevenz, gid, "Extract")
+        for dirpath, _, files in await sync_to_async(walk, self.dir, topdown=False):
+            for file_ in files:
+                if (
+                    is_first_archive_split(file_)
+                    or is_archive(file_)
+                    and not file_.endswith(".rar")
                 ):
-                    for file_ in files:
-                        if (
-                            is_first_archive_split(file_)
-                            or is_archive(file_)
-                            and not file_.endswith(".rar")
-                            and not file_.endswith(".zst")
-                        ):
-                            f_path = ospath.join(dirpath, file_)
-                            t_path = (
-                                dirpath.replace(self.dir, self.new_dir)
-                                if self.seed
-                                else dirpath
-                            )
-                            cmd = [
-                                "7z",
-                                "x",
-                                f"-p{pswd}",
-                                f_path,
-                                f"-o{t_path}",
-                                "-aot",
-                                "-xr!@PaxHeader",
-                                "-bsp1",
-                                "-bse1",
-                                "-bb3",
-                            ]
-                            if not pswd:
-                                del cmd[2]
-                            if self.is_cancelled:
-                                return ""
-                            self.subname = file_
-                            async with self.subprocess_lock:
-                                self.subproc = await create_subprocess_exec(
-                                    *cmd, stdout=PIPE, stderr=PIPE
-                                )
-                            code = await self.subproc.wait()
-                            if self.is_cancelled:
-                                return ""
-                            if code != 0:
-                                try:
-                                    async with self.subprocess_lock:
-                                        stderr = (
-                                            (await self.subproc.stderr.read())
-                                            .decode()
-                                            .strip()
-                                        )
-                                except:
-                                    stderr = "Unable to decode the error!"
-                                LOGGER.error(
-                                    f"{stderr}. Unable to extract archive splits!. Path: {f_path}"
-                                )
-                    if not self.seed and self.subproc is not None and code == 0:
-                        for file_ in files:
-                            if is_archive_split(file_) or is_archive(file_):
-                                del_path = ospath.join(dirpath, file_)
-                                try:
-                                    await remove(del_path)
-                                except:
-                                    self.is_cancelled = True
-                    self.subproc = None
-                return up_path
-            else:
-                dl_path = await self.decompress_zst(dl_path)
-                up_path = get_base_name(dl_path)
-                if self.seed:
-                    self.new_dir = f"{self.dir}10000"
-                    up_path = up_path.replace(self.dir, self.new_dir)
-                cmd = [
-                    "7z",
-                    "x",
-                    f"-p{pswd}",
-                    dl_path,
-                    f"-o{up_path}",
-                    "-aot",
-                    "-xr!@PaxHeader",
-                    "-bsp1",
-                    "-bse1",
-                    "-bb3",
-                ]
-                if not pswd:
-                    del cmd[2]
-                if self.is_cancelled:
-                    return ""
-                async with self.subprocess_lock:
-                    self.subproc = await create_subprocess_exec(
-                        *cmd, stdout=PIPE, stderr=PIPE
-                    )
-                code = await self.subproc.wait()
-                if self.is_cancelled:
-                    return ""
-                if code == -9:
-                    self.is_cancelled = True
-                    return ""
-                elif code == 0:
-                    LOGGER.info(f"Extracted Path: {up_path}")
-                    if not self.seed:
+                    self.proceed_count += 1
+                    f_path = ospath.join(dirpath, file_)
+                    t_path = get_base_name(f_path) if self.is_file else dirpath
+                    if not self.is_file:
+                        self.subname = file_
+                    code = await sevenz.extract(f_path, t_path, pswd)
+                    if code == 0:
                         try:
-                            await remove(dl_path)
+                            await remove(f_path)
                         except:
                             self.is_cancelled = True
-                    self.subproc = None
-                    return up_path
-                else:
-                    try:
-                        async with self.subprocess_lock:
-                            stderr = (await self.subproc.stderr.read()).decode().strip()
-                    except:
-                        stderr = "Unable to decode the error!"
-                    LOGGER.error(
-                        f"{stderr}. Unable to extract archive! Uploading anyway. Path: {dl_path}"
-                    )
-                    self.new_dir = ""
-                    self.subproc = None
-                    return dl_path
-        except NotSupportedExtractionArchive:
-            LOGGER.info(
-                f"Not any valid archive, uploading file as it is. Path: {dl_path}"
-            )
-            self.new_dir = ""
-            self.subproc = None
-            return dl_path
-
-    async def proceed_compress(self, dl_path, gid, o_files, ft_delete):
-        pswd = self.compress if isinstance(self.compress, str) else ""
-        if self.seed and not self.new_dir:
-            self.new_dir = f"{self.dir}10000"
-            up_path = f"{self.new_dir}/{self.name}.zip"
-            delete = False
-        else:
-            up_path = f"{dl_path}.zip"
-            delete = True
-        async with task_dict_lock:
-            task_dict[self.mid] = SevenZStatus(self, gid, "Zip")
-        size = await get_path_size(dl_path)
-        if self.equal_splits:
-            parts = -(-size // self.split_size)
-            split_size = (size // parts) + (size % parts)
-        else:
-            split_size = self.split_size
-        cmd = [
-            "7z",
-            f"-v{split_size}b",
-            "a",
-            "-mx=0",
-            f"-p{pswd}",
-            up_path,
-            dl_path,
-            "-bsp1",
-            "-bse1",
-            "-bb3",
-        ]
-        if not self.is_file:
-            cmd.extend(f"-xr!*.{ext}" for ext in self.extension_filter)
-            if o_files:
-                for f in o_files:
-                    if self.new_dir and self.new_dir in f:
-                        fte = f.replace(f"{self.new_dir}/", "")
-                    else:
-                        fte = f.replace(f"{self.dir}/", "")
-                    cmd.append(f"-xr!{fte}")
-        if self.is_leech and int(size) > self.split_size:
-            if not pswd:
-                del cmd[4]
-            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}.0*")
-        else:
-            del cmd[1]
-            if not pswd:
-                del cmd[3]
-            LOGGER.info(f"Zip: orig_path: {dl_path}, zip_path: {up_path}")
-        if self.is_cancelled:
-            return ""
-        async with self.subprocess_lock:
-            self.subproc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        code = await self.subproc.wait()
-        if self.is_cancelled:
-            return ""
-        if code == -9:
-            self.is_cancelled = True
-            return ""
-        elif code == 0:
-            if not self.seed or delete:
-                await clean_target(dl_path)
-            for f in ft_delete:
-                if await aiopath.exists(f):
-                    try:
-                        await remove(f)
-                    except:
-                        pass
-            ft_delete.clear()
-            self.subproc = None
-            return up_path
-        else:
-            await clean_target(self.new_dir)
-            if not delete:
-                self.new_dir = ""
-            try:
-                async with self.subprocess_lock:
-                    stderr = (await self.subproc.stderr.read()).decode().strip()
-            except:
-                stderr = "Unable to decode the error!"
-            LOGGER.error(f"{stderr}. Unable to zip this path: {dl_path}")
-            self.subproc = None
-            return dl_path
-
-    async def proceed_split(self, up_dir, m_size, o_files, gid):
-        checked = False
-        for dirpath, _, files in await sync_to_async(walk, up_dir, topdown=False):
             for file_ in files:
-                f_path = ospath.join(dirpath, file_)
-                if f_path in o_files:
-                    continue
-                f_size = await aiopath.getsize(f_path)
-                if f_size > self.split_size:
+                if is_archive_split(file_):
+                    del_path = ospath.join(dirpath, file_)
+                    try:
+                        await remove(del_path)
+                    except:
+                        self.is_cancelled = True
+        return t_path if self.is_file and code == 0 else dl_path
+
+    async def proceed_ffmpeg(self, dl_path, gid):
+        self.progress = False
+        checked = False
+        cmds = [
+            [part.strip() for part in item.split() if part.strip()]
+            for item in self.ffmpeg_cmds
+        ]
+        try:
+            ffmpeg = FFMpeg(self)
+            for ffmpeg_cmd in cmds:
+                self.proceed_count = 0
+                cmd = [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel",
+                    "error",
+                    "-progress",
+                    "pipe:1",
+                ] + ffmpeg_cmd
+                if "-del" in cmd:
+                    cmd.remove("-del")
+                    delete_files = True
+                else:
+                    delete_files = False
+                index = cmd.index("-i")
+                input_file = cmd[index + 1]
+                if input_file.endswith(".video"):
+                    ext = "video"
+                elif input_file.endswith(".audio"):
+                    ext = "audio"
+                elif "." not in input_file:
+                    ext = "all"
+                else:
+                    ext = ospath.splitext(input_file)[-1].lower()
+                if await aiopath.isfile(dl_path):
+                    is_video, is_audio, _ = await get_document_type(dl_path)
+                    if not is_video and not is_audio:
+                        break
+                    elif is_video and ext == "audio":
+                        break
+                    elif is_audio and ext == "video":
+                        break
+                    elif ext != "all" and not dl_path.lower().endswith(ext):
+                        break
+                    new_folder = ospath.splitext(dl_path)[0]
+                    name = ospath.basename(dl_path)
+                    await makedirs(new_folder, exist_ok=True)
+                    file_path = f"{new_folder}/{name}"
+                    await move(dl_path, file_path)
                     if not checked:
                         checked = True
                         async with task_dict_lock:
-                            task_dict[self.mid] = FFmpegStatus(self, gid, "Split")
-                        LOGGER.info(f"Splitting: {self.name}")
-                    if self.is_file:
-                        self.subsize = self.size
-                    else:
-                        self.subsize = f_size
-                        self.subname = file_
-                    res = await split_file(
-                        f_path, f_size, dirpath, file_, self.split_size, self
-                    )
-                    self.subproc = None
-                    if self.is_cancelled:
-                        return
-                    if not res:
-                        if f_size >= self.max_split_size:
-                            if self.seed and not self.new_dir:
-                                m_size.append(f_size)
-                                o_files.append(f_path)
-                            else:
-                                try:
-                                    await remove(f_path)
-                                except:
-                                    return
-                        continue
-                    elif not self.seed or self.new_dir:
-                        try:
-                            await remove(f_path)
-                        except:
-                            return
-                    else:
-                        m_size.append(f_size)
-                        o_files.append(f_path)
-
-    async def generate_sample_video(self, dl_path, gid, unwanted_files, ft_delete):
-        data = (
-            self.sample_video.split(":") if isinstance(self.sample_video, str) else ""
-        )
-        if data:
-            sample_duration = int(data[0]) if data[0] else 60
-            part_duration = int(data[1]) if len(data) > 1 else 4
-        else:
-            sample_duration = 60
-            part_duration = 4
-
-        async with task_dict_lock:
-            task_dict[self.mid] = FFmpegStatus(self, gid, "Sample Video")
-
-        checked = False
-        if self.is_file:
-            if (await get_document_type(dl_path))[0]:
-                checked = True
-                async with cpu_eater_lock:
-                    LOGGER.info(f"Creating Sample video: {self.name}")
+                            task_dict[self.mid] = FFmpegStatus(
+                                self, ffmpeg, gid, "FFmpeg"
+                            )
+                        await cpu_eater_lock.acquire()
+                        self.progress = True
+                    LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
+                    cmd[index + 1] = file_path
                     self.subsize = self.size
-                    res = await create_sample_video(
-                        self, dl_path, sample_duration, part_duration
-                    )
-                self.subproc = None
-                if res:
-                    new_folder = ospath.splitext(dl_path)[0]
-                    name = dl_path.rsplit("/", 1)[1]
-                    if self.seed and not self.new_dir:
-                        if self.is_leech and not self.compress:
-                            return self.dir
-                        self.new_dir = f"{self.dir}10000"
-                        new_folder = new_folder.replace(self.dir, self.new_dir)
-                        await makedirs(new_folder, exist_ok=True)
-                        await gather(
-                            copy2(dl_path, f"{new_folder}/{name}"),
-                            move(res, f"{new_folder}/SAMPLE.{name}"),
-                        )
-                    else:
-                        await makedirs(new_folder, exist_ok=True)
-                        await gather(
-                            move(dl_path, f"{new_folder}/{name}"),
-                            move(res, f"{new_folder}/SAMPLE.{name}"),
-                        )
-                    return new_folder
-        else:
-            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
-                for file_ in files:
-                    f_path = ospath.join(dirpath, file_)
-                    if f_path in unwanted_files:
-                        continue
-                    if (await get_document_type(f_path))[0]:
-                        if not checked:
-                            checked = True
-                            await cpu_eater_lock.acquire()
-                            LOGGER.info(f"Creating Sample videos: {self.name}")
-                        if self.is_cancelled:
-                            if checked:
-                                cpu_eater_lock.release()
-                            return ""
-                        self.subsize = await aiopath.getsize(f_path)
-                        self.subname = file_
-                        res = await create_sample_video(
-                            self, f_path, sample_duration, part_duration
-                        )
-                        self.subproc = None
-                        if res:
-                            ft_delete.append(res)
-            if checked:
-                cpu_eater_lock.release()
-
-        return dl_path
-
-    async def convert_media(self, dl_path, gid, o_files, m_size, ft_delete):
-        fvext = []
-        if self.convert_video:
-            vdata = self.convert_video.split()
-            vext = vdata[0]
-            if len(vdata) > 2:
-                if "+" in vdata[1].split():
-                    vstatus = "+"
-                elif "-" in vdata[1].split():
-                    vstatus = "-"
-                else:
-                    vstatus = ""
-                fvext.extend(f".{ext}" for ext in vdata[2:])
-            else:
-                vstatus = ""
-        else:
-            vext = ""
-            vstatus = ""
-
-        faext = []
-        if self.convert_audio:
-            adata = self.convert_audio.split()
-            aext = adata[0]
-            if len(adata) > 2:
-                if "+" in adata[1].split():
-                    astatus = "+"
-                elif "-" in adata[1].split():
-                    astatus = "-"
-                else:
-                    astatus = ""
-                faext.extend(f".{ext}" for ext in adata[2:])
-            else:
-                astatus = ""
-        else:
-            aext = ""
-            astatus = ""
-
-        checked = False
-
-        async def proceed_convert(m_path):
-            nonlocal checked
-            is_video, is_audio, _ = await get_document_type(m_path)
-            if (
-                is_video
-                and vext
-                and not m_path.endswith(f".{vext}")
-                and (
-                    vstatus == "+"
-                    and m_path.endswith(tuple(fvext))
-                    or vstatus == "-"
-                    and not m_path.endswith(tuple(fvext))
-                    or not vstatus
-                )
-            ):
-                if not checked:
-                    checked = True
-                    async with task_dict_lock:
-                        task_dict[self.mid] = FFmpegStatus(self, gid, "Convert")
-                    await cpu_eater_lock.acquire()
-                    LOGGER.info(f"Converting: {self.name}")
-                else:
-                    LOGGER.info(f"Converting: {m_path}")
-                if self.is_file:
-                    self.subsize = self.size
-                else:
-                    self.subsize = await aiopath.getsize(m_path)
-                    self.subname = m_path.rsplit("/", 1)[-1]
-                res = await convert_video(self, m_path, vext)
-                self.subproc = None
-                return "" if self.is_cancelled else res
-            elif (
-                is_audio
-                and aext
-                and not is_video
-                and not m_path.endswith(f".{aext}")
-                and (
-                    astatus == "+"
-                    and m_path.endswith(tuple(faext))
-                    or astatus == "-"
-                    and not m_path.endswith(tuple(faext))
-                    or not astatus
-                )
-            ):
-                if not checked:
-                    checked = True
-                    async with task_dict_lock:
-                        task_dict[self.mid] = FFmpegStatus(self, gid, "Convert")
-                    await cpu_eater_lock.acquire()
-                    LOGGER.info(f"Converting: {self.name}")
-                else:
-                    LOGGER.info(f"Converting: {m_path}")
-                if self.is_file:
-                    self.subsize = self.size
-                else:
-                    self.subsize = await aiopath.getsize(m_path)
-                    self.subname = m_path.rsplit("/", 1)[-1]
-                res = await convert_audio(self, m_path, aext)
-                self.subproc = None
-                return "" if self.is_cancelled else res
-            else:
-                return ""
-
-        if self.is_file:
-            output_file = await proceed_convert(dl_path)
-            if checked:
-                cpu_eater_lock.release()
-            if output_file:
-                if self.seed:
-                    self.new_dir = f"{self.dir}10000"
-                    new_output_file = output_file.replace(self.dir, self.new_dir)
-                    await makedirs(self.new_dir, exist_ok=True)
-                    await move(output_file, new_output_file)
-                    return new_output_file
-                else:
-                    try:
-                        await remove(dl_path)
-                    except:
-                        pass
-                    return output_file
-        else:
-            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
-                for file_ in files:
-                    if self.is_cancelled:
-                        if checked:
-                            cpu_eater_lock.release()
-                        return ""
-                    f_path = ospath.join(dirpath, file_)
-                    res = await proceed_convert(f_path)
+                    res = await ffmpeg.ffmpeg_cmds(cmd, file_path)
                     if res:
-                        if self.seed and not self.new_dir:
-                            o_files.append(f_path)
-                            fsize = await aiopath.getsize(f_path)
-                            m_size.append(fsize)
-                            ft_delete.append(res)
+                        if delete_files:
+                            await remove(file_path)
+                            directory = ospath.dirname(res)
+                            directory = directory.rsplit("/", 1)[0]
+                            file_name = ospath.basename(res)
+                            if file_name.startswith("ffmpeg."):
+                                self.name = file_name.replace("ffmpeg.", "", 1)
+                                newres = ospath.join(directory, self.name)
+                                await move(res, newres)
+                                dl_path = newres
                         else:
-                            try:
+                            dl_path = new_folder
+                            self.name = directory.rsplit("/", 1)[-1]
+                    else:
+                        await rmtree(new_folder)
+                else:
+                    for dirpath, _, files in await sync_to_async(
+                        walk, dl_path, topdown=False
+                    ):
+                        for file_ in files:
+                            if self.is_cancelled:
+                                if checked:
+                                    cpu_eater_lock.release()
+                                return False
+                            f_path = ospath.join(dirpath, file_)
+                            if f_path in self.files_no_upload:
+                                continue
+                            is_video, is_audio, _ = await get_document_type(f_path)
+                            if not is_video and not is_audio:
+                                continue
+                            elif is_video and ext == "audio":
+                                continue
+                            elif is_audio and ext == "video":
+                                continue
+                            elif ext != "all" and not f_path.lower().endswith(ext):
+                                continue
+                            self.proceed_count += 1
+                            cmd[index + 1] = f_path
+                            if not checked:
+                                checked = True
+                                async with task_dict_lock:
+                                    task_dict[self.mid] = FFmpegStatus(
+                                        self, ffmpeg, gid, "FFmpeg"
+                                    )
+                                await cpu_eater_lock.acquire()
+                            LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
+                            self.subsize = await get_path_size(f_path)
+                            self.subname = file_
+                            res = await ffmpeg.ffmpeg_cmds(cmd, f_path)
+                            if res and delete_files:
                                 await remove(f_path)
-                            except:
-                                pass
+                                file_name = ospath.basename(res)
+                                if file_name.startswith("ffmpeg."):
+                                    newname = file_name.replace("ffmpeg.", "", 1)
+                                    newres = ospath.join(dirpath, newname)
+                                    await move(res, newres)
+        finally:
             if checked:
                 cpu_eater_lock.release()
-        return dl_path
-
-    async def generate_screenshots(self, dl_path):
-        ss_nb = int(self.screen_shots) if isinstance(self.screen_shots, str) else 10
-        if self.is_file:
-            if (await get_document_type(dl_path))[0]:
-                LOGGER.info(f"Creating Screenshot for: {dl_path}")
-                res = await take_ss(dl_path, ss_nb)
-                if res:
-                    new_folder = ospath.splitext(dl_path)[0]
-                    name = dl_path.rsplit("/", 1)[1]
-                    if self.seed and not self.new_dir:
-                        self.new_dir = f"{self.dir}10000"
-                        new_folder = new_folder.replace(self.dir, self.new_dir)
-                        await makedirs(new_folder, exist_ok=True)
-                        await gather(
-                            copy2(dl_path, f"{new_folder}/{name}"),
-                            move(res, new_folder),
-                        )
-                    else:
-                        await makedirs(new_folder, exist_ok=True)
-                        await gather(
-                            move(dl_path, f"{new_folder}/{name}"),
-                            move(res, new_folder),
-                        )
-                    return new_folder
-        else:
-            LOGGER.info(f"Creating Screenshot for: {dl_path}")
-            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
-                for file_ in files:
-                    f_path = ospath.join(dirpath, file_)
-                    if (await get_document_type(f_path))[0]:
-                        await take_ss(f_path, ss_nb)
         return dl_path
 
     async def substitute(self, dl_path):
-        if self.is_file:
-            up_dir, name = dl_path.rsplit("/", 1)
-            for substitution in self.name_sub:
+        def perform_substitution(name, substitutions):
+            for substitution in substitutions:
                 sen = False
                 pattern = substitution[0]
                 if len(substitution) > 1:
@@ -1156,148 +748,271 @@ class TaskConfig:
                     name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
                 except Exception as e:
                     LOGGER.error(
-                        f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}"
+                        f"Substitute Error: pattern: {pattern} res: {res}. Error: {e}"
                     )
-                    return dl_path
+                    return False
                 if len(name.encode()) > 255:
                     LOGGER.error(f"Substitute: {name} is too long")
-                    return dl_path
-            new_path = ospath.join(up_dir, name)
+                    return False
+            return name
+
+        if self.is_file:
+            up_dir, name = dl_path.rsplit("/", 1)
+            new_name = perform_substitution(name, self.name_sub)
+            if not new_name:
+                return dl_path
+            new_path = ospath.join(up_dir, new_name)
             await move(dl_path, new_path)
             return new_path
         else:
             for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
                 for file_ in files:
                     f_path = ospath.join(dirpath, file_)
-                    for substitution in self.name_sub:
-                        sen = False
-                        pattern = substitution[0]
-                        if len(substitution) > 1:
-                            if len(substitution) > 2:
-                                sen = substitution[2] == "s"
-                                res = substitution[1]
-                            elif len(substitution[1]) == 0:
-                                res = " "
-                            else:
-                                res = substitution[1]
-                        else:
-                            res = ""
-                        try:
-                            file_ = sub(
-                                rf"{pattern}", res, file_, flags=I if sen else 0
-                            )
-                        except Exception as e:
-                            LOGGER.error(
-                                f"Substitute Error: pattern: {pattern} res: {res}. Errro: {e}"
-                            )
-                            continue
-                        if len(file_.encode()) > 255:
-                            LOGGER.error(f"Substitute: {file_} is too long")
-                            continue
-                    await move(f_path, ospath.join(dirpath, file_))
+                    new_name = perform_substitution(file_, self.name_sub)
+                    if not new_name:
+                        continue
+                    await move(f_path, ospath.join(dirpath, new_name))
             return dl_path
 
-    async def proceed_ffmpeg(self, dl_path, gid):
-        checked = False
-        cmds = [
-            [part.strip() for part in item.split() if part.strip()]
-            for item in self.ffmpeg_cmds
-        ]
-        for ffmpeg_cmd in cmds:
-            cmd = [
-                "ffmpeg",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-progress",
-                "pipe:1",
-            ] + ffmpeg_cmd
-            if "-del" in cmd:
-                cmd.remove("-del")
-                delete_files = True
-            else:
-                delete_files = False
-            index = cmd.index("-i")
-            input_file = cmd[index + 1]
-            if input_file.endswith(".video"):
-                ext = "video"
-            elif input_file.endswith(".audio"):
-                ext = "audio"
-            elif "." not in input_file:
-                ext = "all"
-            else:
-                ext = ospath.splitext(input_file)[-1]
-            if self.is_file:
-                is_video, is_audio, _ = await get_document_type(dl_path)
-                if not is_video and not is_audio:
-                    break
-                elif is_video and ext == "audio":
-                    break
-                elif is_audio and ext == "video":
-                    break
-                elif ext != "all" and not dl_path.endswith(ext):
-                    break
-                new_folder = ospath.splitext(dl_path)[0]
-                name = dl_path.rsplit("/", 1)[1]
-                await makedirs(new_folder, exist_ok=True)
-                file_path = f"{new_folder}/{name}"
-                await move(dl_path, file_path)
-                dl_path = new_folder
-                if not checked:
-                    checked = True
-                    async with task_dict_lock:
-                        task_dict[self.mid] = FFmpegStatus(self, gid, "FFmpeg")
-                    await cpu_eater_lock.acquire()
-                LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
-                cmd[index + 1] = file_path
-                self.subsize = self.size
-                res = await run_ffmpeg_cmd(self, cmd, file_path)
-                self.subproc = None
-                if res and delete_files:
-                    await remove(file_path)
-                    directory = ospath.dirname(res)
-                    file_name = ospath.basename(res)
-                    if file_name.startswith("ffmpeg."):
-                        newname = file_name.replace("ffmpeg.", "")
-                        newres = ospath.join(directory, newname)
-                        await move(res, newres)
-            else:
-                for dirpath, _, files in await sync_to_async(
-                    walk, dl_path, topdown=False
-                ):
-                    for file_ in files:
-                        if self.is_cancelled:
-                            cpu_eater_lock.release()
-                            return ""
-                        f_path = ospath.join(dirpath, file_)
-                        is_video, is_audio, _ = await get_document_type(f_path)
-                        if not is_video and not is_audio:
-                            continue
-                        elif is_video and ext == "audio":
-                            continue
-                        elif is_audio and ext == "video":
-                            continue
-                        elif ext != "all" and not f_path.endswith(ext):
-                            continue
-                        cmd[index + 1] = f_path
-                        if not checked:
-                            checked = True
-                            async with task_dict_lock:
-                                task_dict[self.mid] = FFmpegStatus(self, gid, "FFmpeg")
-                            await cpu_eater_lock.acquire()
-                        LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
-                        self.subsize = await aiopath.getsize(f_path)
-                        self.subname = file_
-                        res = await run_ffmpeg_cmd(self, cmd, f_path)
-                        self.subproc = None
-                        if res and delete_files:
-                            await remove(f_path)
-                            directory = ospath.dirname(res)
-                            file_name = ospath.basename(res)
-                            if file_name.startswith("ffmpeg."):
-                                newname = file_name.replace("ffmpeg.", "")
-                                newres = ospath.join(directory, newname)
-                                await move(res, newres)
-        if checked:
-            cpu_eater_lock.release()
+    async def generate_screenshots(self, dl_path):
+        ss_nb = int(self.screen_shots) if isinstance(self.screen_shots, str) else 10
+        if self.is_file:
+            if (await get_document_type(dl_path))[0]:
+                LOGGER.info(f"Creating Screenshot for: {dl_path}")
+                res = await take_ss(dl_path, ss_nb)
+                if res:
+                    new_folder = ospath.splitext(dl_path)[0]
+                    name = ospath.basename(dl_path)
+                    await makedirs(new_folder, exist_ok=True)
+                    await gather(
+                        move(dl_path, f"{new_folder}/{name}"),
+                        move(res, new_folder),
+                    )
+                    self.name = new_folder.rsplit("/", 1)[-1]
+                    return new_folder
+        else:
+            LOGGER.info(f"Creating Screenshot for: {dl_path}")
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    if (await get_document_type(f_path))[0]:
+                        await take_ss(f_path, ss_nb)
         return dl_path
+
+    async def convert_media(self, dl_path, gid):
+        self.progress = False
+        fvext = []
+        if self.convert_video:
+            vdata = self.convert_video.split()
+            vext = vdata[0].lower()
+            if len(vdata) > 2:
+                if "+" in vdata[1].split():
+                    vstatus = "+"
+                elif "-" in vdata[1].split():
+                    vstatus = "-"
+                else:
+                    vstatus = ""
+                fvext.extend(f".{ext.lower()}" for ext in vdata[2:])
+            else:
+                vstatus = ""
+        else:
+            vext = ""
+            vstatus = ""
+
+        faext = []
+        if self.convert_audio:
+            adata = self.convert_audio.split()
+            aext = adata[0].lower()
+            if len(adata) > 2:
+                if "+" in adata[1].split():
+                    astatus = "+"
+                elif "-" in adata[1].split():
+                    astatus = "-"
+                else:
+                    astatus = ""
+                faext.extend(f".{ext.lower()}" for ext in adata[2:])
+            else:
+                astatus = ""
+        else:
+            aext = ""
+            astatus = ""
+
+        self.files_to_proceed = {}
+        all_files = []
+        if self.is_file:
+            all_files.append(dl_path)
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    all_files.append(f_path)
+
+        for f_path in all_files:
+            is_video, is_audio, _ = await get_document_type(f_path)
+            if (
+                is_video
+                and vext
+                and not f_path.lower().endswith(f".{vext}")
+                and (
+                    vstatus == "+"
+                    and f_path.lower().endswith(tuple(fvext))
+                    or vstatus == "-"
+                    and not f_path.lower().endswith(tuple(fvext))
+                    or not vstatus
+                )
+            ):
+                self.files_to_proceed[f_path] = "video"
+            elif (
+                is_audio
+                and aext
+                and not is_video
+                and not f_path.lower().endswith(f".{aext}")
+                and (
+                    astatus == "+"
+                    and f_path.lower().endswith(tuple(faext))
+                    or astatus == "-"
+                    and not f_path.lower().endswith(tuple(faext))
+                    or not astatus
+                )
+            ):
+                self.files_to_proceed[f_path] = "audio"
+        del all_files
+
+        if self.files_to_proceed:
+            ffmpeg = FFMpeg(self)
+            async with task_dict_lock:
+                task_dict[self.mid] = FFmpegStatus(self, ffmpeg, gid, "Convert")
+            async with cpu_eater_lock:
+                self.progress = True
+                for f_path, f_type in self.files_to_proceed.items():
+                    self.proceed_count += 1
+                    LOGGER.info(f"Converting: {f_path}")
+                    if self.is_file:
+                        self.subsize = self.size
+                    else:
+                        self.subsize = await get_path_size(f_path)
+                        self.subname = ospath.basename(f_path)
+                    if f_type == "video":
+                        res = await ffmpeg.convert_video(f_path, vext)
+                    else:
+                        res = await ffmpeg.convert_audio(f_path, aext)
+                    if res:
+                        try:
+                            await remove(f_path)
+                        except:
+                            self.is_cancelled = True
+                            return False
+                        if self.is_file:
+                            return res
+        return dl_path
+
+    async def generate_sample_video(self, dl_path, gid):
+        self.progress = False
+        data = (
+            self.sample_video.split(":") if isinstance(self.sample_video, str) else ""
+        )
+        if data:
+            sample_duration = int(data[0]) if data[0] else 60
+            part_duration = int(data[1]) if len(data) > 1 else 4
+        else:
+            sample_duration = 60
+            part_duration = 4
+
+        self.files_to_proceed = {}
+        if self.is_file and (await get_document_type(dl_path))[0]:
+            file_ = ospath.basename(dl_path)
+            self.files_to_proceed[dl_path] = file_
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    if (await get_document_type(f_path))[0]:
+                        self.files_to_proceed[f_path] = file_
+        if self.files_to_proceed:
+            ffmpeg = FFMpeg(self)
+            async with task_dict_lock:
+                task_dict[self.mid] = FFmpegStatus(self, ffmpeg, gid, "Sample Video")
+            async with cpu_eater_lock:
+                self.progress = True
+                LOGGER.info(f"Creating Sample video: {self.name}")
+                for f_path, file_ in self.files_to_proceed.items():
+                    self.proceed_count += 1
+                    if self.is_file:
+                        self.subsize = self.size
+                    else:
+                        self.subsize = await get_path_size(f_path)
+                        self.subname = file_
+                    res = await ffmpeg.sample_video(
+                        f_path, sample_duration, part_duration
+                    )
+                    if res and self.is_file:
+                        new_folder = ospath.splitext(f_path)[0]
+                        await makedirs(new_folder, exist_ok=True)
+                        await gather(
+                            move(f_path, f"{new_folder}/{file_}"),
+                            move(res, f"{new_folder}/SAMPLE.{file_}"),
+                        )
+                        return new_folder
+        return dl_path
+
+    async def proceed_compress(self, dl_path, gid):
+        pswd = self.compress if isinstance(self.compress, str) else ""
+        if self.is_leech and self.is_file:
+            new_folder = ospath.splitext(dl_path)[0]
+            name = ospath.basename(dl_path)
+            await makedirs(new_folder, exist_ok=True)
+            new_dl_path = f"{new_folder}/{name}"
+            await move(dl_path, new_dl_path)
+            dl_path = new_dl_path
+            up_path = f"{new_dl_path}.zip"
+            self.is_file = False
+        else:
+            up_path = f"{dl_path}.zip"
+        sevenz = SevenZ(self)
+        async with task_dict_lock:
+            task_dict[self.mid] = SevenZStatus(self, sevenz, gid, "Zip")
+        return await sevenz.zip(dl_path, up_path, pswd)
+
+    async def proceed_split(self, dl_path, gid):
+        self.files_to_proceed = {}
+        if self.is_file:
+            f_size = await get_path_size(dl_path)
+            if f_size > self.split_size:
+                self.files_to_proceed[dl_path] = [f_size, ospath.basename(dl_path)]
+        else:
+            for dirpath, _, files in await sync_to_async(walk, dl_path, topdown=False):
+                for file_ in files:
+                    f_path = ospath.join(dirpath, file_)
+                    f_size = await get_path_size(f_path)
+                    if f_size > self.split_size:
+                        self.files_to_proceed[f_path] = [f_size, file_]
+        if self.files_to_proceed:
+            ffmpeg = FFMpeg(self)
+            async with task_dict_lock:
+                task_dict[self.mid] = FFmpegStatus(self, ffmpeg, gid, "Split")
+            LOGGER.info(f"Splitting: {self.name}")
+            for f_path, (f_size, file_) in self.files_to_proceed.items():
+                self.proceed_count += 1
+                if self.is_file:
+                    self.subsize = self.size
+                else:
+                    self.subsize = f_size
+                    self.subname = file_
+                parts = -(-f_size // self.split_size)
+                if self.equal_splits:
+                    split_size = (f_size // parts) + (f_size % parts)
+                else:
+                    split_size = self.split_size
+                if not self.as_doc and (await get_document_type(f_path))[0]:
+                    self.progress = True
+                    res = await ffmpeg.split(f_path, file_, parts, split_size)
+                else:
+                    self.progress = False
+                    res = await split_file(f_path, split_size, self)
+                if self.is_cancelled:
+                    return False
+                if res or f_size >= self.max_split_size:
+                    try:
+                        await remove(f_path)
+                    except:
+                        self.is_cancelled = True

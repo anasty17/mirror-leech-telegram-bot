@@ -151,12 +151,8 @@ programming in Python.
   <summary><h5>Archives</h5></summary>
 
 - Extract splits with or without password
-- Zip file/folder with or without password
-- Decompress zst files
-- Using 7-zip tool to extract with or without password all supported types:
-
-> ZIP, RAR, TAR, 7z, ISO, WIM, CAB, GZIP, BZIP2, APM, ARJ, CHM, CPIO, CramFS, DEB, DMG, FAT, HFS, LZH, LZMA, LZMA2,MBR,
-> MSI, MSLZ, NSIS, NTFS, RPM, SquashFS, UDF, VHD, XAR, Z, TAR.XZ, CBZ
+- Zip file/folder with or without password and splits incase of leech
+- Using 7z package to extract with or without password all supported types
 
 </details>
 
@@ -311,7 +307,6 @@ Fill up rest of the fields. Meaning of each field is discussed below.
   - Don't add ffmpeg at the beginning!
   - Add `-del` to the list which you want from the bot to delete the original files after command run complete!
   - To execute one of those lists in bot for example, you must use -ff subtitle (list key) or -ff convert (list key)
-  - Seed will get disbaled while using this option
   **Example**:
   - Here I will explain how to use mltb.* which is reference to files you want to work on.
   1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. `-del` will delete the original media after complete run of the cmd.
@@ -320,8 +315,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
   4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
 - `NAME_SUBSTITUTE`: Add word/letter/character/sentense/pattern to remove or replace with other words with sensitive case or without. `Str` 
   **Notes**:
-    1. Seed will get disbaled while using this option
-    2. Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
+    - Before any character you must add `\BACKSLASH`, those are the characters: `\^$.|?*+()[]{}-`
     * Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
     - script will get replaced by code with sensitive case
     - mirror will get replaced by leech
@@ -373,7 +367,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 - `USER_TRANSMISSION`: Upload/Download by user session. Only in superChat. Default is `False`. `Bool`
 - `MIXED_LEECH`: Upload by user and bot session with respect to file size. Only in superChat. Default is `False`. `Bool`
 - `LEECH_FILENAME_PREFIX`: Add custom word to leeched file name. `Str`
-- `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. `Int`|`Str`. Add `-100` before channel/superGroup id.
+- `LEECH_DUMP_CHAT`: ID or USERNAME or PM(private message) to where files would be uploaded. Add `-100` before channel/superGroup id. To use only specific topic write it in this format `chat_id|thread_id`. Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or pm or @xxxxxxx or @xxxxxxx|10. `Int`|`Str`
 - `THUMBNAIL_LAYOUT`: Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.`Str`
 
 **7. qBittorrent/Aria2c/Sabnzbd**

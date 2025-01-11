@@ -74,8 +74,7 @@ If you want to add path or gdrive manually from your config/token (UPLOADED FROM
 /cmd link -up mrcc:main:dump or -up mtp:gdrive_id <strong>or you can simply edit upload using owner/user token/config from usetting without adding mtp: or mrcc: before the upload path/id</strong>
 
 To add leech destination:
--up id
--up @username
+-up id/@username/pm
 -up b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you)
 when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.
 -up u:id/@username(u: means leech by user) This incase OWNER added USER_STRING_SESSION.
@@ -93,7 +92,8 @@ user_download = """<b>User Download</b>: link
 /cmd tp:gdrive_id to download using token.pickle and file_id incase service account enabled.
 /cmd sa:gdrive_id to download using service account and file_id incase service account disabled.
 /cmd mtp:gdrive_id or mtp:link to download using user token.pickle uploaded from usetting
-/cmd mrcc:remote:path to download using user rclone config uploaded from usetting"""
+/cmd mrcc:remote:path to download using user rclone config uploaded from usetting
+you can simply edit upload using owner/user token/config from usetting without adding mtp: or mrcc: before the path/id"""
 
 rcf = """<b>Rclone Flags</b>: -rcf
 
@@ -122,7 +122,8 @@ Treat rclone paths exactly like links
 /cmd main:dump/ubuntu.iso or rcl(To select config, remote and path)
 Users can add their own rclone from user settings
 If you want to add path manually from your config add mrcc: before the path without space
-/cmd mrcc:main:dump/ubuntu.iso"""
+/cmd mrcc:main:dump/ubuntu.iso
+You can simply edit using owner/user config from usetting without adding mrcc: before the path"""
 
 extract_zip = """<b>Extract/Zip</b>: -e -z
 
@@ -204,13 +205,15 @@ If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tool
 /cmd gdriveLink or gdl or gdriveId -up gdl or gdriveId or gd
 /cmd tp:gdriveLink or tp:gdriveId -up tp:gdriveId or gdl or gd (to use token.pickle if service account enabled)
 /cmd sa:gdriveLink or sa:gdriveId -p sa:gdriveId or gdl or gd (to use service account if service account disabled)
-/cmd mtp:gdriveLink or mtp:gdriveId -up mtp:gdriveId or gdl or gd(if you have added upload gdriveId from usetting) (to use user token.pickle that uploaded by usetting)"""
+/cmd mtp:gdriveLink or mtp:gdriveId -up mtp:gdriveId or gdl or gd(if you have added upload gdriveId from usetting) (to use user token.pickle that uploaded by usetting)
+You can simply edit using owner/user token from usetting without adding mtp: before the id"""
 
 rclone_cl = """<b>Rclone</b>: path
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 /cmd rcl/rclone_path -up rcl/rclone_path/rc -rcf flagkey:flagvalue|flagkey|flagkey:flagvalue
 /cmd rcl or rclone_path -up rclone_path or rc or rcl
-/cmd mrcc:rclone_path -up rcl or rc(if you have add rclone path from usetting) (to use user config)"""
+/cmd mrcc:rclone_path -up rcl or rc(if you have add rclone path from usetting) (to use user config)
+You can simply edit using owner/user config from usetting without adding mrcc: before the path"""
 
 name_sub = r"""<b>Name Substitution</b>: -ns
 /cmd link -ns script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
@@ -240,7 +243,6 @@ ffmpeg_cmds = """<b>FFmpeg Commands</b>: -ff
 list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
 Notes:
 1. Add <code>-del</code> to the list(s) which you want from the bot to delete the original files after command run complete!
-2. Seed will get disbaled while using this option
 3. To execute one of pre-added lists in bot like: ({"subtitle": ["-i mltb.mkv -c copy -c:s srt mltb.mkv"]}), you must use -ff subtitle (list key)
 Examples: ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb", "-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"]
 Here I will explain how to use mltb.* which is reference to files you want to work on.

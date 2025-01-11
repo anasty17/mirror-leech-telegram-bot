@@ -95,6 +95,14 @@ class Config:
                     value = "rc"
                 elif attr == "DOWNLOAD_DIR" and not value.endswith("/"):
                     value = f"{value}/"
+                elif attr in [
+                    "BASE_URL",
+                    "RCLONE_SERVE_URL",
+                    "INDEX_URL",
+                    "SEARCH_API_LINK",
+                ]:
+                    if value:
+                        value = value.strip("/")
                 elif attr == "USENET_SERVERS":
                     try:
                         if not value[0].get("host"):
@@ -118,6 +126,14 @@ class Config:
                 elif key == "DOWNLOAD_DIR":
                     if not value.endswith("/"):
                         value = f"{value}/"
+                elif key in [
+                    "BASE_URL",
+                    "RCLONE_SERVE_URL",
+                    "INDEX_URL",
+                    "SEARCH_API_LINK",
+                ]:
+                    if value:
+                        value = value.strip("/")
                 elif key == "USENET_SERVERS":
                     try:
                         if not value[0].get("host"):

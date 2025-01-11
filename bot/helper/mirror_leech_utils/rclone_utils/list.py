@@ -253,10 +253,10 @@ class RcloneList:
         await self._send_list_message(msg, button)
 
     async def get_path(self, itype=""):
-        if itype:
-            self.item_type = itype
-        elif self.list_status == "rcu":
+        if self.list_status == "rcu":
             self.item_type = "--dirs-only"
+        elif itype:
+            self.item_type = itype
         cmd = [
             "rclone",
             "lsjson",
@@ -267,11 +267,10 @@ class RcloneList:
             "--config",
             self.config_path,
             f"{self.remote}{self.path}",
+            "-v",
             "--log-systemd",
             "--log-file",
             "rlog.txt",
-            "--log-level",
-            "ERROR",
         ]
         if self.listener.is_cancelled:
             return

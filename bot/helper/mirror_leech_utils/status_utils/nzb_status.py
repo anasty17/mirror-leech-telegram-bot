@@ -85,7 +85,7 @@ class SabnzbdStatus:
         return self._info["size"]
 
     def eta_raw(self):
-        return time_to_seconds(self._info["timeleft"])
+        return int(time_to_seconds(self._info["timeleft"]))
 
     def eta(self):
         return get_readable_time(self.eta_raw())

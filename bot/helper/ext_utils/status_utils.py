@@ -122,18 +122,18 @@ def time_to_seconds(time_duration):
     try:
         parts = time_duration.split(":")
         if len(parts) == 3:
-            hours, minutes, seconds = map(int, parts)
+            hours, minutes, seconds = map(float, parts)
         elif len(parts) == 2:
             hours = 0
-            minutes, seconds = map(int, parts)
+            minutes, seconds = map(float, parts)
         elif len(parts) == 1:
             hours = 0
             minutes = 0
-            seconds = int(parts[0])
+            seconds = float(parts[0])
         else:
             return 0
         return hours * 3600 + minutes * 60 + seconds
-    except ValueError as e:
+    except:
         return 0
 
 
@@ -188,32 +188,29 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"<b>{index + start_position}.{tstatus}: </b>"
         msg += f"<code>{escape(f'{task.name()}')}</code>"
+        if task.listener.subname:
+            msg += f"\n<i>{task.listener.subname}</i>"
         if (
-            tstatus
-            not in [
-                MirrorStatus.STATUS_SEED,
-                MirrorStatus.STATUS_QUEUEUP,
-                MirrorStatus.STATUS_SPLIT,
-            ]
-            or (MirrorStatus.STATUS_SPLIT
-            and task.listener.subsize)
+            tstatus not in [MirrorStatus.STATUS_SEED, MirrorStatus.STATUS_QUEUEUP]
+            and task.listener.progress
         ):
             progress = (
                 await task.progress()
                 if iscoroutinefunction(task.progress)
                 else task.progress()
             )
-            if task.listener.subname:
-                msg += f"\n<i>{task.listener.subname[:35]}</i>"
             msg += f"\n{get_progress_bar_string(progress)} {progress}"
             if task.listener.subname:
-                size = (
-                    f"{get_readable_file_size(task.listener.subsize)} ({task.size()})"
-                )
+                subsize = f"/{get_readable_file_size(task.listener.subsize)}"
+                ac = len(task.listener.files_to_proceed)
+                count = f"({task.listener.proceed_count}/{ac or '?'})"
             else:
-                size = task.size()
-            msg += f"\n<b>Processed:</b> {task.processed_bytes()} of {size}"
-            msg += f"\n<b>Speed:</b> {task.speed()} | <b>ETA:</b> {task.eta()}"
+                subsize = ""
+                count = ""
+            msg += f"\n<b>Processed:</b> {task.processed_bytes()}{subsize} {count}"
+            msg += f"\n<b>Size:</b> {task.size()}"
+            msg += f"\n<b>Speed:</b> {task.speed()}"
+            msg += f"\n<b>ETA:</b> {task.eta()}"
             if hasattr(task, "seeders_num"):
                 try:
                     msg += f"\n<b>Seeders:</b> {task.seeders_num()} | <b>Leechers:</b> {task.leechers_num()}"

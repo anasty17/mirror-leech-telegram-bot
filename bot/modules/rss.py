@@ -15,7 +15,6 @@ from ..helper.ext_utils.bot_utils import new_task, arg_parser
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.exceptions import RssShutdownException
 from ..helper.ext_utils.help_messages import RSS_HELP_MESSAGE
-from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.message_utils import (
