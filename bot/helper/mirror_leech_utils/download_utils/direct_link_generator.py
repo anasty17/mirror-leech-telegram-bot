@@ -2,6 +2,7 @@ from cloudscraper import create_scraper
 from hashlib import sha256
 from http.cookiejar import MozillaCookieJar
 from json import loads
+import yt_dlp
 from lxml.etree import HTML
 from os import path as ospath
 from re import findall, match, search
@@ -37,6 +38,8 @@ def direct_link_generator(link):
         return mediafire(link)
     elif "osdn.net" in domain:
         return osdn(link)
+    elif 'instagram.com' in domain:
+        return insta(link)
     elif "github.com" in domain:
         return github(link)
     elif "hxfile.co" in domain:
@@ -217,6 +220,29 @@ def get_captcha_token(session, params):
     res = session.post(f"{recaptcha_api}/reload", params=params)
     if token := findall(r'"rresp","(.*?)"', res.text):
         return token[0]
+
+
+
+# insta reels support now
+async def insta(url: str) -> str:
+    try:
+        ydl_opts = {
+            'quiet': True,
+            'format': 'bestaudio/best',
+            'noplaylist': True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=False)
+            if 'entries' in info_dict:
+                info_dict = info_dict['entries'][0]
+            if 'url' in info_dict:
+                return info_dict['url']
+            else:
+                return "Could not extract media URL."
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return "This is not a proper Instagram link. Please check and send it again."
+
 
 def buzzheavier(url):
     """
