@@ -31,6 +31,8 @@ def direct_link_generator(link):
         raise DirectDownloadLinkException("ERROR: Invalid URL")
     elif "yadi.sk" in link or "disk.yandex." in link:
         return yandex_disk(link)
+    elif "buzzheavier.com" in domain:
+        return buzzheavier(link)
     elif "mediafire.com" in domain:
         return mediafire(link)
     elif "osdn.net" in domain:
@@ -216,7 +218,39 @@ def get_captcha_token(session, params):
     if token := findall(r'"rresp","(.*?)"', res.text):
         return token[0]
 
+def buzzheavier(url):
+    """
+    Generate a direct download link for buzzheavier URLs.
+    @param link: URL from buzzheavier
+    @return: Direct download link
+    """
+    session = Session()
+    if not "/download" in url:
+        url += "/download"
+    
+    # Normalize URL
+    url = url.strip()
+    session.headers.update({
+        'referer': url.split("/download")[0],
+        'hx-current-url': url.split("/download")[0],
+        'hx-request': 'true',
+        'priority': 'u=1, i'
+    })
 
+    try:
+        response = session.get(url)
+        d_url = response.headers.get('Hx-Redirect')
+
+        if not d_url:
+            raise DirectDownloadLinkException("ERROR: Failed to fetch direct link.")
+
+        parsed_url = urlparse(url)
+        direct_url = f"{parsed_url.scheme}://{parsed_url.netloc}{d_url}"
+        return direct_url
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {str(e)}")
+    finally:
+        session.close()
 def mediafire(url, session=None):
     if "/folder/" in url:
         return mediafireFolder(url)
