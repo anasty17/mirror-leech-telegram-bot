@@ -690,11 +690,11 @@ class TaskConfig:
                     else:
                         await rmtree(new_folder)
                 else:
-                    var_cmd = cmd.copy()
                     for dirpath, _, files in await sync_to_async(
                         walk, dl_path, topdown=False
                     ):
                         for file_ in files:
+                            var_cmd = cmd.copy()
                             if self.is_cancelled:
                                 return False
                             f_path = ospath.join(dirpath, file_)

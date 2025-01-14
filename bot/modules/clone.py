@@ -206,7 +206,9 @@ class Clone(TaskListener):
                 if rstat["IsDir"]:
                     if not self.name:
                         self.name = src_path.rsplit("/", 1)[-1] if src_path else remote
-                    self.up_dest += f"/{self.name}"
+                    self.up_dest += (
+                        self.name if self.up_dest.endswith(":") else f"/{self.name}"
+                    )
                     mime_type = "Folder"
                 else:
                     if not self.name:

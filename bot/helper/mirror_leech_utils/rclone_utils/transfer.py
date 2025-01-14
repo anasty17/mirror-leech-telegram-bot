@@ -293,7 +293,7 @@ class RcloneTransferHelper:
                 path,
                 self._listener.extension_filter,
             )
-            rc_path += f"/{self._listener.name}"
+            rc_path += f"/{self._listener.name}" if rc_path else self._listener.name
         else:
             if path.lower().endswith(tuple(self._listener.extension_filter)):
                 await self._listener.on_upload_error(
@@ -345,8 +345,10 @@ class RcloneTransferHelper:
 
         if mime_type == "Folder":
             destination = f"{oremote}:{rc_path}"
-        else:
+        elif rc_path:
             destination = f"{oremote}:{rc_path}/{self._listener.name}"
+        else:
+            destination = f"{oremote}:{self._listener.name}"
 
         if remote_type == "drive":
             link = await self._get_gdrive_link(oconfig_path, destination, mime_type)
@@ -417,11 +419,11 @@ class RcloneTransferHelper:
             return None, None
         elif return_code == 0:
             if mime_type != "Folder":
-                destination += f"/{self._listener.name}"
-            if dst_remote_type == "drive":
-                link = await self._get_gdrive_link(
-                    config_path, f"{dst_remote}:{dst_path}", mime_type
+                destination += (
+                    f"/{self._listener.name}" if dst_path else self._listener.name
                 )
+            if dst_remote_type == "drive":
+                link = await self._get_gdrive_link(config_path, destination, mime_type)
                 return (
                     (None, None) if self._listener.is_cancelled else (link, destination)
                 )

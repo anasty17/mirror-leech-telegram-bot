@@ -1,6 +1,6 @@
 from PIL import Image
 from aiofiles.os import remove, path as aiopath, makedirs
-from asyncio import create_subprocess_exec, gather, wait_for, sleep
+from asyncio import create_subprocess_exec, create_subprocess_shell, gather, wait_for, sleep
 from asyncio.subprocess import PIPE
 from os import path as ospath, cpu_count
 from re import search as re_search, escape
@@ -420,8 +420,8 @@ class FFMpeg:
             ffmpeg[index] = output
         if self._listener.is_cancelled:
             return False
-        self._listener.subproc = await create_subprocess_exec(
-            *ffmpeg, stdout=PIPE, stderr=PIPE
+        self._listener.subproc = await create_subprocess_shell(
+            (" ").join(ffmpeg), stdout=PIPE, stderr=PIPE
         )
         await self._ffmpeg_progress()
         _, stderr = await self._listener.subproc.communicate()
