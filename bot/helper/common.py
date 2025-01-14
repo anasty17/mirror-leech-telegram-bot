@@ -5,6 +5,7 @@ from secrets import token_urlsafe
 from aioshutil import move, rmtree
 from pyrogram.enums import ChatAction
 from re import sub, I
+from shlex import split
 
 from .. import (
     user_data,
@@ -610,7 +611,7 @@ class TaskConfig:
     async def proceed_ffmpeg(self, dl_path, gid):
         checked = False
         cmds = [
-            [part.strip() for part in item.split() if part.strip()]
+            [part.strip() for part in split(item) if part.strip()]
             for item in self.ffmpeg_cmds
         ]
         try:
