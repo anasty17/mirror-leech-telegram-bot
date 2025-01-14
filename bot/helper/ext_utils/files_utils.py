@@ -96,15 +96,15 @@ SPLIT_REGEX = r"\.r\d+$|\.7z\.\d+$|\.z\d+$|\.zip\.\d+$"
 
 
 def is_first_archive_split(file):
-    return bool(re_search(FIRST_SPLIT_REGEX, file))
+    return bool(re_search(FIRST_SPLIT_REGEX, file.lower(), I))
 
 
 def is_archive(file):
-    return file.endswith(tuple(ARCH_EXT))
+    return file.lower().endswith(tuple(ARCH_EXT))
 
 
 def is_archive_split(file):
-    return bool(re_search(SPLIT_REGEX, file))
+    return bool(re_search(SPLIT_REGEX, file.lower(), I))
 
 
 async def clean_target(opath):
@@ -198,7 +198,7 @@ async def count_files_and_folders(opath, extension_filter):
     for _, dirs, files in await sync_to_async(walk, opath):
         total_files += len(files)
         for f in files:
-            if f.endswith(tuple(extension_filter)):
+            if f.lower().endswith(tuple(extension_filter)):
                 total_files -= 1
         total_folders += len(dirs)
     return total_folders, total_files
@@ -318,7 +318,7 @@ class SevenZ:
             or self._listener.subproc.stdout.at_eof()
         ):
             try:
-                line = await wait_for(self._listener.subproc.stdout.readline(), 2)
+                line = await wait_for(self._listener.subproc.stdout.readline(), 5)
             except:
                 break
             line = line.decode().strip()

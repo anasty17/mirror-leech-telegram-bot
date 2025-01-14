@@ -39,6 +39,7 @@ class Config:
     RCLONE_SERVE_PORT = 8080
     RSS_CHAT = ""
     RSS_DELAY = 600
+    RSS_SIZE_LIMIT = 0
     SEARCH_API_LINK = ""
     SEARCH_LIMIT = 0
     SEARCH_PLUGINS = []

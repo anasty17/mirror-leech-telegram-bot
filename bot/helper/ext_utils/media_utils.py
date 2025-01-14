@@ -362,7 +362,7 @@ class FFMpeg:
             or self._listener.subproc.stdout.at_eof()
         ):
             try:
-                line = await wait_for(self._listener.subproc.stdout.readline(), 2)
+                line = await wait_for(self._listener.subproc.stdout.readline(), 10)
             except:
                 break
             line = line.decode().strip()
@@ -462,9 +462,7 @@ class FFMpeg:
                 "-i",
                 video_file,
                 "-map",
-                "0:v",
-                "-map",
-                "0:a",
+                "0",
                 "-c:v",
                 "libx264",
                 "-c:a",
@@ -474,11 +472,11 @@ class FFMpeg:
                 output,
             ]
             if ext == "mp4":
-                cmd[16:16] = ["-c:s", "mov_text"]
+                cmd[14:14] = ["-c:s", "mov_text"]
             elif ext == "mkv":
-                cmd[16:16] = ["-c:s", "ass"]
+                cmd[14:14] = ["-c:s", "ass"]
             else:
-                cmd[16:16] = ["-c:s", "copy"]
+                cmd[14:14] = ["-c:s", "copy"]
         else:
             cmd = [
                 "ffmpeg",
@@ -654,7 +652,7 @@ class FFMpeg:
 
     async def split(self, f_path, file_, parts, split_size):
         self.clear()
-        multi_streams = await is_multi_streams(f_path)
+        multi_streams = True
         self._total_time = duration = (await get_media_info(f_path))[0]
         base_name, extension = ospath.splitext(file_)
         split_size -= 3000000

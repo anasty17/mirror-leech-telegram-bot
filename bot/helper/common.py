@@ -571,7 +571,7 @@ class TaskConfig:
                     if (
                         is_first_archive_split(file_)
                         or is_archive(file_)
-                        and not file_.endswith(".rar")
+                        and not file_.lower().endswith(".rar")
                     ):
                         f_path = ospath.join(dirpath, file_)
                         self.files_to_proceed.append(f_path)
