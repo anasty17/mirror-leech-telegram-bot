@@ -23,7 +23,6 @@ class TgClient:
             Config.TELEGRAM_HASH,
             bot_token=Config.BOT_TOKEN,
             parse_mode=enums.ParseMode.HTML,
-            sleep_threshold=60,
             max_concurrent_transmissions=10,
         )
         await cls.bot.start()

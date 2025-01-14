@@ -134,6 +134,8 @@ def clean_all():
     try:
         LOGGER.info("Cleaning Download Directory")
         rmtree(Config.DOWNLOAD_DIR, ignore_errors=True)
+        if ospath.exists("Thumbnails"):
+            rmtree("Thumbnails", ignore_errors=True)
     except:
         pass
     makedirs(Config.DOWNLOAD_DIR, exist_ok=True)
@@ -141,7 +143,7 @@ def clean_all():
 
 def exit_clean_up(signal, frame):
     try:
-        LOGGER.info("Please wait, while we clean up and stop the running downloads")
+        LOGGER.info("Please wait! Bot clean up and stop the running downloads...")
         clean_all()
         srun(
             [
@@ -266,7 +268,6 @@ async def join_files(opath):
 
 
 async def split_file(f_path, split_size, listener):
-    listener.subsize = 0
     out_path = f"{f_path}."
     if listener.is_cancelled:
         return False
@@ -347,7 +348,7 @@ class SevenZ:
                     self._processed_bytes = 0
                     self._percentage = "0%"
                 s = b""
-            await sleep(0.1)
+            await sleep(0.05)
 
         self._processed_bytes = 0
         self._percentage = "0%"

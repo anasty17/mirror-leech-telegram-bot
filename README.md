@@ -887,7 +887,7 @@ Where host is the name of extractor (eg. instagram, Twitch). Multiple accounts o
 separated by a new line.
 
 **Yt-dlp**: 
-Authentication using [cookies.txt](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) file.
+Authentication using [cookies.txt](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#exporting-youtube-cookies) file.
 
 
 -----

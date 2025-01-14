@@ -165,6 +165,7 @@ class TaskConfig:
             else ["aria2", "!qB"]
         )
         if self.link not in ["rcl", "gdl"]:
+            self.link = self.link.strip("/")
             if not self.is_jd:
                 if is_rclone_path(self.link):
                     if not self.link.startswith("mrcc:") and self.user_dict.get(
@@ -181,6 +182,7 @@ class TaskConfig:
         elif self.link == "rcl":
             if not self.is_ytdlp and not self.is_jd:
                 self.link = await RcloneList(self).get_rclone_path("rcd")
+                self.link = self.link.strip("/")
                 if not is_rclone_path(self.link):
                     raise ValueError(self.link)
         elif self.link == "gdl":
@@ -247,6 +249,7 @@ class TaskConfig:
                     "user_tokens", False
                 ):
                     self.up_dest = f"mrcc:{self.up_dest}"
+                self.up_dest = self.up_dest.strip("/")
             else:
                 raise ValueError("Wrong Upload Destination!")
 
@@ -687,6 +690,7 @@ class TaskConfig:
                     else:
                         await rmtree(new_folder)
                 else:
+                    var_cmd = cmd.copy()
                     for dirpath, _, files in await sync_to_async(
                         walk, dl_path, topdown=False
                     ):
@@ -704,7 +708,7 @@ class TaskConfig:
                             elif ext != "all" and not f_path.lower().endswith(ext):
                                 continue
                             self.proceed_count += 1
-                            cmd[index + 1] = f_path
+                            var_cmd[index + 1] = f_path
                             if not checked:
                                 checked = True
                                 async with task_dict_lock:
@@ -717,7 +721,7 @@ class TaskConfig:
                             LOGGER.info(f"Running ffmpeg cmd for: {f_path}")
                             self.subsize = await get_path_size(f_path)
                             self.subname = file_
-                            res = await ffmpeg.ffmpeg_cmds(cmd, f_path)
+                            res = await ffmpeg.ffmpeg_cmds(var_cmd, f_path)
                             if res and delete_files:
                                 await remove(f_path)
                                 if len(res) == 1:
@@ -790,7 +794,6 @@ class TaskConfig:
                         move(dl_path, f"{new_folder}/{name}"),
                         move(res, new_folder),
                     )
-                    self.name = new_folder.rsplit("/", 1)[-1]
                     return new_folder
         else:
             LOGGER.info(f"Creating Screenshot for: {dl_path}")

@@ -218,6 +218,7 @@ def get_captcha_token(session, params):
     if token := findall(r'"rresp","(.*?)"', res.text):
         return token[0]
 
+
 def buzzheavier(url):
     """
     Generate a direct download link for buzzheavier URLs.
@@ -225,32 +226,35 @@ def buzzheavier(url):
     @return: Direct download link
     """
     session = Session()
-    if not "/download" in url:
+    if "/download" not in url:
         url += "/download"
-    
+
     # Normalize URL
     url = url.strip()
-    session.headers.update({
-        'referer': url.split("/download")[0],
-        'hx-current-url': url.split("/download")[0],
-        'hx-request': 'true',
-        'priority': 'u=1, i'
-    })
+    session.headers.update(
+        {
+            "referer": url.split("/download")[0],
+            "hx-current-url": url.split("/download")[0],
+            "hx-request": "true",
+            "priority": "u=1, i",
+        }
+    )
 
     try:
         response = session.get(url)
-        d_url = response.headers.get('Hx-Redirect')
+        d_url = response.headers.get("Hx-Redirect")
 
         if not d_url:
             raise DirectDownloadLinkException("ERROR: Failed to fetch direct link.")
 
         parsed_url = urlparse(url)
-        direct_url = f"{parsed_url.scheme}://{parsed_url.netloc}{d_url}"
-        return direct_url
+        return f"{parsed_url.scheme}://{parsed_url.netloc}{d_url}"
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {str(e)}")
+        raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
     finally:
         session.close()
+
+
 def mediafire(url, session=None):
     if "/folder/" in url:
         return mediafireFolder(url)
