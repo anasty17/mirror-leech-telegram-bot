@@ -2,6 +2,7 @@ from aiofiles.os import path as aiopath, remove, makedirs
 from aiofiles import open as aiopen
 from aioshutil import rmtree
 from asyncio import create_subprocess_exec, create_subprocess_shell
+from importlib import import_module
 
 from .. import (
     aria2_options,
@@ -54,14 +55,19 @@ async def load_settings():
     await database.connect()
     if database.db is not None:
         BOT_ID = Config.BOT_TOKEN.split(":", 1)[0]
-        config_file = Config.get_all()
-        old_config = await database.db.settings.deployConfig.find_one({"_id": BOT_ID})
+        settings = import_module("config")
+        config_file = {
+            key: value.strip() if isinstance(value, str) else value
+            for key, value in vars(settings).items()
+            if not key.startswith("__")
+        }
+        old_config = await database.db.settings.deployConfig.find_one(
+            {"_id": BOT_ID}, {"_id": 0}
+        )
         if old_config is None:
             database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
             )
-        else:
-            del old_config["_id"]
         if old_config and old_config != config_file:
             await database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
