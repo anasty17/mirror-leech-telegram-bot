@@ -647,9 +647,13 @@ class TaskConfig:
                         break
                     elif is_video and ext == "audio":
                         break
-                    elif is_audio and ext == "video":
+                    elif is_audio and not is_video and ext == "video":
                         break
-                    elif ext != "all" and not dl_path.lower().endswith(ext):
+                    elif ext not in [
+                        "all",
+                        "audio",
+                        "video",
+                    ] and not dl_path.lower().endswith(ext):
                         break
                     new_folder = ospath.splitext(dl_path)[0]
                     name = ospath.basename(dl_path)
@@ -702,9 +706,13 @@ class TaskConfig:
                                 continue
                             elif is_video and ext == "audio":
                                 continue
-                            elif is_audio and ext == "video":
+                            elif is_audio and not is_video and ext == "video":
                                 continue
-                            elif ext != "all" and not f_path.lower().endswith(ext):
+                            elif ext not in [
+                                "all",
+                                "audio",
+                                "video",
+                            ] and not f_path.lower().endswith(ext):
                                 continue
                             self.proceed_count += 1
                             var_cmd[index + 1] = f_path

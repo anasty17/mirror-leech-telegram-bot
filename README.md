@@ -453,12 +453,6 @@ Make sure you still mount the repo folder and installed the docker from official
 <details>
   <summary><h3>Build And Run The Docker Image Using Official Docker Commands</h3></summary>
 
-- Start Docker daemon (SKIP if already running, mostly you don't need to do this):
-
-```
-sudo dockerd
-```
-
 - Build Docker image:
 
 ```
@@ -468,7 +462,7 @@ sudo docker build . -t mltb
 - Run the image:
 
 ```
-sudo docker run -p 80:80 -p 8080:8080 -p 8070:8070 -p 8090:8090 mltb
+sudo docker run --network host mltb
 ```
 
 - To stop the running image:
@@ -487,10 +481,6 @@ sudo docker stop id
 
 <details>
   <summary><h3>Build And Run The Docker Image Using docker-compose</h3></summary>
-
-**NOTE**: If you want to use ports other than 80 and 8080 for torrent file selection and rclone serve respectively,
-change it in [docker-compose.yml](https://github.com/anasty17/mirror-leech-telegram-bot/blob/master/docker-compose.yml)
-also.
 
 - Install docker compose plugin
 
