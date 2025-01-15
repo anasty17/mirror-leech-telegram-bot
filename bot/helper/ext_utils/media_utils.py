@@ -413,14 +413,18 @@ class FFMpeg:
         for index in indices:
             output_file = ffmpeg[index]
             if output_file != "mltb" and output_file.startswith("mltb"):
-                oext = ospath.splitext(output_file)[-1]
-                if ext == oext:
-                    base_name = f"ffmpeg{index}.{base_name}"
+                bo, oext = ospath.splitext(output_file)
+                if oext:
+                    if ext == oext:
+                        prefix = f"ffmpeg{index}." if bo == "mltb" else ""
+                    else:
+                        prefix = ""
+                    ext = ""
                 else:
-                    ext = oext
+                    prefix = ""
             else:
-                base_name = f"ffmpeg{index}.{base_name}"
-            output = f"{dir}/{base_name}{ext}"
+                prefix = f"ffmpeg{index}."
+            output = f"{dir}/{prefix}{output_file.replace("mltb", base_name)}{ext}"
             outputs.append(output)
             ffmpeg[index] = output
         if self._listener.is_cancelled:
