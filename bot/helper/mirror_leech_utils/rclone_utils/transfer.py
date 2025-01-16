@@ -62,7 +62,7 @@ class RcloneTransferHelper:
             or self._listener.is_cancelled
         ):
             try:
-                data = await wait_for(self._proc.stdout.readline(), 10)
+                data = await wait_for(self._proc.stdout.readline(), 60)
             except:
                 break
             if not data:

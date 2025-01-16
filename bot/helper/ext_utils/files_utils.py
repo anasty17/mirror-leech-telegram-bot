@@ -332,7 +332,7 @@ class SevenZ:
             or self._listener.subproc.stdout.at_eof()
         ):
             try:
-                char = await wait_for(self._listener.subproc.stdout.read(1), 30)
+                char = await wait_for(self._listener.subproc.stdout.read(1), 60)
             except:
                 break
             if not char:
