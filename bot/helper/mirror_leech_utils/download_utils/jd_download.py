@@ -351,6 +351,7 @@ async def add_jd_download(listener, path):
         async with jd_listener_lock:
             if gid in jd_downloads:
                 del jd_downloads[gid]
+        return
     finally:
         if await aiopath.exists(listener.link):
             await remove(listener.link)
