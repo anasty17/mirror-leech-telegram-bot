@@ -15,7 +15,7 @@ from aioshutil import rmtree
 from ... import LOGGER
 from ...core.config_manager import Config
 from .bot_utils import cmd_exec, sync_to_async
-from .files_utils import ARCH_EXT, get_mime_type
+from .files_utils import get_mime_type, is_archive, is_archive_split
 from .status_utils import time_to_seconds
 
 
@@ -31,39 +31,6 @@ async def create_thumb(msg, _id=""):
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, output, "JPEG")
     await remove(photo_dir)
     return output
-
-
-async def is_multi_streams(path):
-    try:
-        result = await cmd_exec(
-            [
-                "ffprobe",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-print_format",
-                "json",
-                "-show_streams",
-                path,
-            ]
-        )
-    except Exception as e:
-        LOGGER.error(f"Get Video Streams: {e}. Mostly File not found! - File: {path}")
-        return False
-    if result[0] and result[2] == 0:
-        fields = eval(result[0]).get("streams")
-        if fields is None:
-            LOGGER.error(f"get_video_streams: {result}")
-            return False
-        videos = 0
-        audios = 0
-        for stream in fields:
-            if stream.get("codec_type") == "video":
-                videos += 1
-            elif stream.get("codec_type") == "audio":
-                audios += 1
-        return videos > 1 or audios > 1
-    return False
 
 
 async def get_media_info(path):
@@ -98,8 +65,10 @@ async def get_media_info(path):
 
 async def get_document_type(path):
     is_video, is_audio, is_image = False, False, False
-    if path.endswith(tuple(ARCH_EXT)) or re_search(
-        r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path
+    if (
+        is_archive(path)
+        or is_archive_split(path)
+        or re_search(r".+(\.|_)(rar|7z|zip|bin)(\.0*\d+)?$", path)
     ):
         return is_video, is_audio, is_image
     mime_type = await sync_to_async(get_mime_type, path)

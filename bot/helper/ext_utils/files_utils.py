@@ -318,7 +318,7 @@ class SevenZ:
             or self._listener.subproc.stdout.at_eof()
         ):
             try:
-                line = await wait_for(self._listener.subproc.stdout.readline(), 5)
+                line = await wait_for(self._listener.subproc.stdout.readline(), 2)
             except:
                 break
             line = line.decode().strip()
