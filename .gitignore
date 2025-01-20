@@ -1,11 +1,7 @@
 mltbenv/*
 config.py
-*.pyc
-data*
-.vscode
-.idea
-*.json
-*.pickle
+token.pickle
+rclone.conf
 .netrc
 log.txt
 accounts/*
@@ -15,6 +11,5 @@ tokens/*
 sabnzbd/*
 list_drives.txt
 cookies.txt
-downloads
+downloads/*
 bot.session*
-rclone.conf

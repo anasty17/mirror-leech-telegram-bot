@@ -21,9 +21,9 @@ async def send_message(message, text, buttons=None, block=True):
             reply_markup=buttons,
         )
     except FloodWait as f:
-        if not block:
-            return message
         LOGGER.warning(str(f))
+        if not block:
+            return str(f)
         await sleep(f.value * 1.2)
         return await send_message(message, text, buttons)
     except Exception as e:
@@ -39,9 +39,9 @@ async def edit_message(message, text, buttons=None, block=True):
             reply_markup=buttons,
         )
     except FloodWait as f:
-        if not block:
-            return message
         LOGGER.warning(str(f))
+        if not block:
+            return str(f)
         await sleep(f.value * 1.2)
         return await edit_message(message, text, buttons)
     except Exception as e:
@@ -181,9 +181,7 @@ async def check_permission(client, chat, uploader_id, up_dest):
         not member.privileges.can_manage_chat
         or not member.privileges.can_delete_messages
     ):
-        raise ValueError(
-            "You don't have enough privileges in this chat!"
-        )
+        raise ValueError("You don't have enough privileges in this chat!")
 
 
 async def update_status_message(sid, force=False):
@@ -212,7 +210,9 @@ async def update_status_message(sid, force=False):
                 del intervals["status"][sid]
             return
         if text != status_dict[sid]["message"].text:
-            message = await edit_message(status_dict[sid]["message"], text, buttons, block=False)
+            message = await edit_message(
+                status_dict[sid]["message"], text, buttons, block=False
+            )
             if isinstance(message, str):
                 if message.startswith("Telegram says: [40"):
                     del status_dict[sid]
@@ -247,14 +247,14 @@ async def send_status_message(msg, user_id=0):
                     obj.cancel()
                     del intervals["status"][sid]
                 return
-            message = status_dict[sid]["message"]
-            await delete_message(message)
+            old_message = status_dict[sid]["message"]
             message = await send_message(msg, text, buttons, block=False)
             if isinstance(message, str):
                 LOGGER.error(
                     f"Status with id: {sid} haven't been sent. Error: {message}"
                 )
                 return
+            await delete_message(old_message)
             message.text = text
             status_dict[sid].update({"message": message, "time": time()})
         else:

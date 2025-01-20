@@ -145,6 +145,14 @@ class TelegramDownloadHelper:
                     if self._listener.multi <= 1:
                         await send_status_message(self._listener.message)
                     await event.wait()
+                    if self.session == "bot":
+                        message = await self._listener.client.get_messages(
+                            chat_id=message.chat.id, message_ids=message.id
+                        )
+                    else:
+                        message = await TgClient.user.get_messages(
+                            chat_id=message.chat.id, message_ids=message.id
+                        )
                     if self._listener.is_cancelled:
                         async with global_lock:
                             if self._id in GLOBAL_GID:

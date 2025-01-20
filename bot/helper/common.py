@@ -586,7 +586,7 @@ class TaskConfig:
                 if (
                     is_first_archive_split(file_)
                     or is_archive(file_)
-                    and not file_.endswith(".rar")
+                    and not file_.lower().endswith(".rar")
                 ):
                     self.proceed_count += 1
                     f_path = ospath.join(dirpath, file_)
@@ -594,18 +594,14 @@ class TaskConfig:
                     if not self.is_file:
                         self.subname = file_
                     code = await sevenz.extract(f_path, t_path, pswd)
-                    if code == 0:
+            if code == 0:
+                for file_ in files:
+                    if is_archive_split(file_) or is_archive(file_):
+                        del_path = ospath.join(dirpath, file_)
                         try:
-                            await remove(f_path)
+                            await remove(del_path)
                         except:
                             self.is_cancelled = True
-            for file_ in files:
-                if is_archive_split(file_):
-                    del_path = ospath.join(dirpath, file_)
-                    try:
-                        await remove(del_path)
-                    except:
-                        self.is_cancelled = True
         return t_path if self.is_file and code == 0 else dl_path
 
     async def proceed_ffmpeg(self, dl_path, gid):
