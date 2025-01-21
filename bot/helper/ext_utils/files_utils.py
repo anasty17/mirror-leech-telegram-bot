@@ -136,8 +136,6 @@ def clean_all():
     try:
         LOGGER.info("Cleaning Download Directory")
         rmtree(Config.DOWNLOAD_DIR, ignore_errors=True)
-        if ospath.exists("Thumbnails"):
-            rmtree("Thumbnails", ignore_errors=True)
     except:
         pass
     makedirs(Config.DOWNLOAD_DIR, exist_ok=True)

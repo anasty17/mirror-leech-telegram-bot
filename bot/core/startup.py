@@ -50,6 +50,8 @@ async def update_nzb_options():
 
 
 async def load_settings():
+    if await aiopath.exists("Thumbnails"):
+        await rmtree("Thumbnails", ignore_errors=True)
     if not Config.DATABASE_URL:
         return
     await database.connect()
