@@ -1,8 +1,7 @@
 from time import time
 
 from .... import LOGGER, jd_listener_lock, jd_downloads
-from ...ext_utils.bot_utils import async_to_sync
-from ...ext_utils.jdownloader_booter import jdownloader
+from ....core.jdownloader_booter import jdownloader
 from ...ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -73,6 +72,7 @@ class JDownloaderStatus:
         self.listener = listener
         self._gid = gid
         self._info = {}
+        self.tool = "jdownloader"
 
     async def _update(self):
         self._info = await get_download(self._gid, self._info)
@@ -98,8 +98,8 @@ class JDownloaderStatus:
     def eta(self):
         return get_readable_time(eta) if (eta := self._info.get("eta", False)) else "-"
 
-    def status(self):
-        async_to_sync(self._update)
+    async def status(self):
+        await self._update()
         state = self._info.get("status", "jdlimit").capitalize()
         if len(state) == 0:
             if self._info.get("bytesLoaded", 0) == 0:

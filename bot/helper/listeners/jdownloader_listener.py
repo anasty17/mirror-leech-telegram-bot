@@ -2,7 +2,7 @@ from asyncio import sleep
 
 from ... import intervals, jd_listener_lock, jd_downloads
 from ..ext_utils.bot_utils import new_task
-from ..ext_utils.jdownloader_booter import jdownloader
+from ...core.jdownloader_booter import jdownloader
 from ..ext_utils.status_utils import get_task_by_gid
 
 
@@ -27,7 +27,7 @@ async def _on_download_complete(gid):
                 await jdownloader.device.downloads.cleanup(
                     "DELETE_DISABLED",
                     "REMOVE_LINKS_AND_DELETE_FILES",
-                    "SELECTED",
+                    "ALL",
                     package_ids=jd_downloads[gid]["ids"],
                 )
         await task.listener.on_download_complete()

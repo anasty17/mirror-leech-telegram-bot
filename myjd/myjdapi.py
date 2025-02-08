@@ -740,6 +740,11 @@ class MyJdApi:
 
         return self._http_session
 
+    async def close(self):
+        if self._http_session is not None:
+            await self._http_session.aclose()
+            self._http_session = None
+
     async def request_api(self, path, params=None):
         session = self._session()
 

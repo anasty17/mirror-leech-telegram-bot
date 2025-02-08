@@ -877,14 +877,14 @@
             pinInput.blur();
             if (pinInput.value === '') {
                 modalTitle.textContent = 'Missing Pin';
-                modalBody.innerHTML = `<p>The <code>pin</code> is missing.</p>`;
+                modalBody.innerHTML = `<p>The pin is missing.</p>`;
                 modalFooter.innerHTML = '<button class="btn btn-primary" onClick="closeModal()">Try Again</button>';
                 openModal();
                 return false;
             }
             if (urlParams.gid == null || urlParams.gid === '') {
                 modalTitle.textContent = 'Missing parameter';
-                modalBody.innerHTML = `<p>The parameter <code>gid</code> is missing.</p>`;
+                modalBody.innerHTML = `<p>The parameter gid is missing.</p>`;
                 modalFooter.innerHTML = '<button class="btn btn-primary" onClick="closeModal()">Try Again</button>';
                 openModal();
                 return false;

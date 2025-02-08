@@ -51,7 +51,7 @@ async def bot_stats(_, message):
 <b>DISK:</b> {disk}%
 
 <b>Physical Cores:</b> {cpu_count(logical=False)}
-<b>Total Cores:</b> {cpu_count(logical=True)}
+<b>Total Cores:</b> {cpu_count()}
 <b>SWAP:</b> {get_readable_file_size(swap.total)} | <b>Used:</b> {swap.percent}%
 
 <b>Memory Total:</b> {get_readable_file_size(memory.total)}

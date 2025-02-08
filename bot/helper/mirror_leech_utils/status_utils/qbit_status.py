@@ -1,7 +1,7 @@
 from asyncio import sleep, gather
 
-from .... import LOGGER, qbittorrent_client, qb_torrents, qb_listener_lock
-from ...ext_utils.bot_utils import sync_to_async
+from .... import LOGGER, qb_torrents, qb_listener_lock
+from ....core.torrent_manager import TorrentManager
 from ...ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -9,9 +9,9 @@ from ...ext_utils.status_utils import (
 )
 
 
-def get_download(tag, old_info=None):
+async def get_download(tag, old_info=None):
     try:
-        res = qbittorrent_client.torrents_info(tag=tag)[0]
+        res = (await TorrentManager.qbittorrent.torrents.info(tag=tag))[0]
         return res or old_info
     except Exception as e:
         LOGGER.error(f"{e}: Qbittorrent, while getting torrent info. Tag: {tag}")
@@ -24,9 +24,10 @@ class QbittorrentStatus:
         self.seeding = seeding
         self.listener = listener
         self._info = None
+        self.tool = "qbittorrent"
 
-    def update(self):
-        self._info = get_download(f"{self.listener.mid}", self._info)
+    async def update(self):
+        self._info = await get_download(f"{self.listener.mid}", self._info)
 
     def progress(self):
         return f"{round(self._info.progress * 100, 2)}%"
@@ -47,10 +48,10 @@ class QbittorrentStatus:
         return get_readable_file_size(self._info.size)
 
     def eta(self):
-        return get_readable_time(self._info.eta)
+        return get_readable_time(self._info.eta.total_seconds())
 
-    def status(self):
-        self.update()
+    async def status(self):
+        await self.update()
         state = self._info.state
         if state == "queuedDL" or self.queued:
             return MirrorStatus.STATUS_QUEUEDL
@@ -81,7 +82,7 @@ class QbittorrentStatus:
         return f"{round(self._info.ratio, 3)}"
 
     def seeding_time(self):
-        return get_readable_time(self._info.seeding_time)
+        return get_readable_time(int(self._info.seeding_time.total_seconds()))
 
     def task(self):
         return self
@@ -94,10 +95,8 @@ class QbittorrentStatus:
 
     async def cancel_task(self):
         self.listener.is_cancelled = True
-        await sync_to_async(self.update)
-        await sync_to_async(
-            qbittorrent_client.torrents_stop, torrent_hashes=self._info.hash
-        )
+        await self.update()
+        await TorrentManager.qbittorrent.torrents.stop([self._info.hash])
         if not self.seeding:
             if self.queued:
                 LOGGER.info(f"Cancelling QueueDL: {self.name()}")
@@ -108,15 +107,11 @@ class QbittorrentStatus:
             await sleep(0.3)
             await gather(
                 self.listener.on_download_error(msg),
-                sync_to_async(
-                    qbittorrent_client.torrents_delete,
-                    torrent_hashes=self._info.hash,
-                    delete_files=True,
-                ),
-                sync_to_async(
-                    qbittorrent_client.torrents_delete_tags, tags=self._info.tags
+                TorrentManager.qbittorrent.torrents.delete([self._info.hash], True),
+                TorrentManager.qbittorrent.torrents.delete_tags(
+                    tags=[self._info.tags[0]]
                 ),
             )
             async with qb_listener_lock:
-                if self._info.tags in qb_torrents:
-                    del qb_torrents[self._info.tags]
+                if self._info.tags[0] in qb_torrents:
+                    del qb_torrents[self._info.tags[0]]

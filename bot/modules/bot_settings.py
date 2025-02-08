@@ -19,16 +19,16 @@ from .. import (
     drives_ids,
     drives_names,
     index_urls,
-    aria2,
     intervals,
     aria2_options,
     task_dict,
     qbit_options,
-    qbittorrent_client,
     sabnzbd_client,
     nzb_options,
     jd_listener_lock,
-    extension_filter,
+    excluded_extensions,
+    auth_chats,
+    sudo_users,
 )
 from ..helper.ext_utils.bot_utils import (
     SetInterval,
@@ -37,9 +37,10 @@ from ..helper.ext_utils.bot_utils import (
 )
 from ..core.config_manager import Config
 from ..core.mltb_client import TgClient
+from ..core.torrent_manager import TorrentManager
 from ..core.startup import update_qb_options, update_nzb_options, update_variables
 from ..helper.ext_utils.db_handler import database
-from ..helper.ext_utils.jdownloader_booter import jdownloader
+from ..core.jdownloader_booter import jdownloader
 from ..helper.ext_utils.task_manager import start_from_queued
 from ..helper.mirror_leech_utils.rclone_utils.serve import rclone_serve_booter
 from ..helper.telegram_helper.button_build import ButtonMaker
@@ -57,7 +58,6 @@ start = 0
 state = "view"
 handler_dict = {}
 DEFAULT_VALUES = {
-    "DOWNLOAD_DIR": "/usr/src/app/downloads/",
     "LEECH_SPLIT_SIZE": TgClient.MAX_SPLIT_SIZE,
     "RSS_DELAY": 600,
     "STATUS_UPDATE_INTERVAL": 15,
@@ -92,16 +92,13 @@ async def get_buttons(key=None, edit_type=None):
                 "TELEGRAM_HASH",
                 "TELEGRAM_API",
                 "BOT_TOKEN",
-                "DOWNLOAD_DIR",
-                "SUDO_USERS",
-                "AUTHORIZED_CHATS",
+                "TG_PROXY",
             ]:
                 msg += "Restart required for this edit to take effect! You will not see the changes in bot vars, the edit will be in database only!\n\n"
             msg += f"Send a valid value for {key}. Current value is '{Config.get(key)}'. Timeout: 60 sec"
         elif edit_type == "ariavar":
             buttons.data_button("Back", "botset aria")
             if key != "newkey":
-                buttons.data_button("Default", f"botset resetaria {key}")
                 buttons.data_button("Empty String", f"botset emptyaria {key}")
             buttons.data_button("Close", "botset close")
             msg = (
@@ -133,22 +130,6 @@ async def get_buttons(key=None, edit_type=None):
     elif key == "var":
         conf_dict = Config.get_all()
         for k in list(conf_dict.keys())[start : 10 + start]:
-            if (
-                key
-                in [
-                    "CMD_SUFFIX",
-                    "OWNER_ID",
-                    "USER_SESSION_STRING",
-                    "TELEGRAM_HASH",
-                    "TELEGRAM_API",
-                    "BOT_TOKEN",
-                    "DOWNLOAD_DIR",
-                    "SUDO_USERS",
-                    "AUTHORIZED_CHATS",
-                ]
-                and not Config.DATABASE_URL
-            ):
-                continue
             if k == "DATABASE_URL" and state != "view":
                 continue
             buttons.data_button(k, f"botset botvar {k}")
@@ -172,7 +153,8 @@ Note: Changing .netrc will not take effect for aria2c until restart.
 Timeout: 60 sec"""
     elif key == "aria":
         for k in list(aria2_options.keys())[start : 10 + start]:
-            buttons.data_button(k, f"botset ariavar {k}")
+            if k not in ["checksum", "index-out", "out", "pause", "select-file"]:
+                buttons.data_button(k, f"botset ariavar {k}")
         if state == "view":
             buttons.data_button("Edit", "botset edit aria")
         else:
@@ -266,9 +248,6 @@ async def edit_variable(_, message, pre_message, key):
         value = False
         if key == "INCOMPLETE_TASK_NOTIFIER" and Config.DATABASE_URL:
             await database.trunc_table("tasks")
-    elif key == "DOWNLOAD_DIR":
-        if not value.endswith("/"):
-            value += "/"
     elif key == "STATUS_UPDATE_INTERVAL":
         value = int(value)
         if len(task_dict) != 0 and (st := intervals["status"]):
@@ -278,19 +257,7 @@ async def edit_variable(_, message, pre_message, key):
                     value, update_status_message, cid
                 )
     elif key == "TORRENT_TIMEOUT":
-        value = int(value)
-        downloads = await sync_to_async(aria2.get_downloads)
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await sync_to_async(
-                        aria2.client.change_option,
-                        download.gid,
-                        {"bt-stop-timeout": f"{value}"},
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = f"{value}"
+        await TorrentManager.change_aria2_option("bt-stop-timeout", value)
     elif key == "LEECH_SPLIT_SIZE":
         value = min(int(value), TgClient.MAX_SPLIT_SIZE)
     elif key == "BASE_URL_PORT":
@@ -298,15 +265,15 @@ async def edit_variable(_, message, pre_message, key):
         if Config.BASE_URL:
             await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
             await create_subprocess_shell(
-                f"gunicorn web.wserver:app --bind 0.0.0.0:{value} --worker-class gevent"
+                f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{value}"
             )
-    elif key == "EXTENSION_FILTER":
+    elif key == "EXCLUDED_EXTENSIONS":
         fx = value.split()
-        extension_filter.clear()
-        extension_filter.extend(["aria2", "!qB"])
+        excluded_extensions.clear()
+        excluded_extensions.extend(["aria2", "!qB"])
         for x in fx:
             x = x.lstrip(".")
-            extension_filter.append(x.strip().lower())
+            excluded_extensions.append(x.strip().lower())
     elif key == "GDRIVE_ID":
         if drives_names and drives_names[0] == "Main":
             drives_ids[0] = value
@@ -317,24 +284,29 @@ async def edit_variable(_, message, pre_message, key):
             index_urls[0] = value
         else:
             index_urls.insert(0, value)
+    elif key == "AUTHORIZED_CHATS":
+        aid = value.split()
+        auth_chats.clear()
+        for id_ in aid:
+            chat_id, *thread_ids = id_.split("|")
+            chat_id = int(chat_id.strip())
+            if thread_ids:
+                thread_ids = list(map(lambda x: int(x.strip()), thread_ids))
+                auth_chats[chat_id] = thread_ids
+            else:
+                auth_chats[chat_id] = []
+    elif key == "SUDO_USERS":
+        sudo_users.clear()
+        aid = value.split()
+        for id_ in aid:
+            sudo_users.append(int(id_.strip()))
     elif value.isdigit():
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
         value = eval(value)
     elif value.startswith("{") and value.endswith("}"):
         value = eval(value)
-    if key not in [
-        "CMD_SUFFIX",
-        "OWNER_ID",
-        "USER_SESSION_STRING",
-        "TELEGRAM_HASH",
-        "TELEGRAM_API",
-        "BOT_TOKEN",
-        "DOWNLOAD_DIR",
-        "SUDO_USERS",
-        "AUTHORIZED_CHATS",
-    ]:
-        Config.set(key, value)
+    Config.set(key, value)
     await update_buttons(pre_message, "var")
     await delete_message(message)
     await database.update_config({key: value})
@@ -368,21 +340,10 @@ async def edit_aria(_, message, pre_message, key):
         value = "true"
     elif value.lower() == "false":
         value = "false"
-    downloads = await sync_to_async(aria2.get_downloads)
-    for download in downloads:
-        if not download.is_complete:
-            try:
-                await sync_to_async(
-                    aria2.client.change_option, download.gid, {key: value}
-                )
-            except Exception as e:
-                LOGGER.error(e)
+    await TorrentManager.change_aria2_option(key, value)
     await update_buttons(pre_message, "aria")
     await delete_message(message)
-    if key not in ["checksum", "index-out", "out", "pause", "select-file"]:
-        await sync_to_async(aria2.set_global_options, {key: value})
-        aria2_options[key] = value
-        await database.update_aria2(key, value)
+    await database.update_aria2(key, value)
 
 
 @new_task
@@ -397,7 +358,7 @@ async def edit_qbit(_, message, pre_message, key):
         value = float(value)
     elif value.isdigit():
         value = int(value)
-    await sync_to_async(qbittorrent_client.app_set_preferences, {key: value})
+    await TorrentManager.qbittorrent.app.set_preferences({key: value})
     qbit_options[key] = value
     await update_buttons(pre_message, "qbit")
     await delete_message(message)
@@ -411,7 +372,12 @@ async def edit_nzb(_, message, pre_message, key):
     if value.isdigit():
         value = int(value)
     elif value.startswith("[") and value.endswith("]"):
-        value = ",".join(eval(value))
+        try:
+            value = ",".join(eval(value))
+        except Exception as e:
+            LOGGER.error(e)
+            await update_buttons(pre_message, "nzb")
+            return
     res = await sabnzbd_client.set_config("misc", key, value)
     nzb_options[key] = res["config"]["misc"][key]
     await update_buttons(pre_message, "nzb")
@@ -423,8 +389,8 @@ async def edit_nzb(_, message, pre_message, key):
 async def edit_nzb_server(_, message, pre_message, key, index=0):
     handler_dict[message.chat.id] = False
     value = message.text
-    if value.startswith("{") and value.endswith("}"):
-        if key == "newser":
+    if key == "newser":
+        if value.startswith("{") and value.endswith("}"):
             try:
                 value = eval(value)
             except:
@@ -438,7 +404,11 @@ async def edit_nzb_server(_, message, pre_message, key, index=0):
                 return
             Config.USENET_SERVERS.append(value)
             await update_buttons(pre_message, "nzbserver")
-    elif key != "newser":
+        else:
+            await send_message(message, "Invalid dict format!")
+            await update_buttons(pre_message, "nzbserver")
+            return
+    else:
         if value.isdigit():
             value = int(value)
         res = await sabnzbd_client.add_server(
@@ -617,22 +587,11 @@ async def edit_bot_settings(client, query):
                     intervals["status"][key] = SetInterval(
                         value, update_status_message, key
                     )
-        elif data[2] == "EXTENSION_FILTER":
-            extension_filter.clear()
-            extension_filter.extend(["aria2", "!qB"])
+        elif data[2] == "EXCLUDED_EXTENSIONS":
+            excluded_extensions.clear()
+            excluded_extensions.extend(["aria2", "!qB"])
         elif data[2] == "TORRENT_TIMEOUT":
-            downloads = await sync_to_async(aria2.get_downloads)
-            for download in downloads:
-                if not download.is_complete:
-                    try:
-                        await sync_to_async(
-                            aria2.client.change_option,
-                            download.gid,
-                            {"bt-stop-timeout": "0"},
-                        )
-                    except Exception as e:
-                        LOGGER.error(e)
-            aria2_options["bt-stop-timeout"] = "0"
+            await TorrentManager.change_aria2_option("bt-stop-timeout", "0")
             await database.update_aria2("bt-stop-timeout", "0")
         elif data[2] == "BASE_URL":
             await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
@@ -643,7 +602,7 @@ async def edit_bot_settings(client, query):
                     await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")
                 ).wait()
                 await create_subprocess_shell(
-                    "gunicorn web.wserver:app --bind 0.0.0.0:80 --worker-class gevent"
+                    f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{value}"
                 )
         elif data[2] == "GDRIVE_ID":
             if drives_names and drives_names[0] == "Main":
@@ -660,6 +619,10 @@ async def edit_bot_settings(client, query):
         elif data[2] == "USENET_SERVERS":
             for s in Config.USENET_SERVERS:
                 await sabnzbd_client.delete_config("servers", s["name"])
+        elif data[2] == "AUTHORIZED_CHATS":
+            auth_chats.clear()
+        elif data[2] == "SUDO_USERS":
+            sudo_users.clear()
         Config.set(data[2], value)
         await update_buttons(message, "var")
         if data[2] == "DATABASE_URL":
@@ -676,25 +639,6 @@ async def edit_bot_settings(client, query):
             "RCLONE_SERVE_PASS",
         ]:
             await rclone_serve_booter()
-    elif data[1] == "resetaria":
-        aria2_defaults = await sync_to_async(aria2.client.get_global_option)
-        if aria2_defaults[data[2]] == aria2_options[data[2]]:
-            await query.answer("Value already same as you added in aria.sh!")
-            return
-        await query.answer()
-        value = aria2_defaults[data[2]]
-        aria2_options[data[2]] = value
-        await update_buttons(message, "aria")
-        downloads = await sync_to_async(aria2.get_downloads)
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await sync_to_async(
-                        aria2.client.change_option, download.gid, {data[2]: value}
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
-        await database.update_aria2(data[2], value)
     elif data[1] == "resetnzb":
         await query.answer()
         res = await sabnzbd_client.set_config_default(data[2])
@@ -719,20 +663,11 @@ async def edit_bot_settings(client, query):
         await query.answer()
         aria2_options[data[2]] = ""
         await update_buttons(message, "aria")
-        downloads = await sync_to_async(aria2.get_downloads)
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await sync_to_async(
-                        aria2.client.change_option, download.gid, {data[2]: ""}
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
-        if Config.DATABASE_URL:
-            await database.update_aria2(data[2], "")
+        await TorrentManager.change_aria2_option(data[2], "")
+        await database.update_aria2(data[2], "")
     elif data[1] == "emptyqbit":
         await query.answer()
-        await sync_to_async(qbittorrent_client.app_set_preferences, {data[2]: value})
+        await TorrentManager.qbittorrent.app.set_preferences({data[2]: value})
         qbit_options[data[2]] = ""
         await update_buttons(message, "qbit")
         await database.update_qbittorrent(data[2], "")
@@ -913,33 +848,11 @@ async def load_config():
                 Config.STATUS_UPDATE_INTERVAL, update_status_message, key
             )
 
-    downloads = aria2.get_downloads()
-    if not Config.TORRENT_TIMEOUT:
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await sync_to_async(
-                        aria2.client.change_option,
-                        download.gid,
-                        {"bt-stop-timeout": "0"},
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = "0"
-        await database.update_aria2("bt-stop-timeout", "0")
-    else:
-        for download in downloads:
-            if not download.is_complete:
-                try:
-                    await sync_to_async(
-                        aria2.client.change_option,
-                        download.gid,
-                        {"bt-stop-timeout": Config.TORRENT_TIMEOUT},
-                    )
-                except Exception as e:
-                    LOGGER.error(e)
-        aria2_options["bt-stop-timeout"] = Config.TORRENT_TIMEOUT
-        await database.update_aria2("bt-stop-timeout", Config.TORRENT_TIMEOUT)
+    if Config.TORRENT_TIMEOUT:
+        await TorrentManager.change_aria2_option(
+            "bt-stop-timeout", f"{Config.TORRENT_TIMEOUT}"
+        )
+        await database.update_aria2("bt-stop-timeout", f"{Config.TORRENT_TIMEOUT}")
 
     if not Config.INCOMPLETE_TASK_NOTIFIER:
         await database.trunc_table("tasks")
@@ -947,7 +860,7 @@ async def load_config():
     await (await create_subprocess_exec("pkill", "-9", "-f", "gunicorn")).wait()
     if Config.BASE_URL:
         await create_subprocess_shell(
-            f"gunicorn web.wserver:app --bind 0.0.0.0:{Config.BASE_URL_PORT} --worker-class gevent"
+            f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{Config.BASE_URL_PORT}"
         )
 
     if Config.DATABASE_URL:

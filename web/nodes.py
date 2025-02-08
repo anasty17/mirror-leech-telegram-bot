@@ -39,7 +39,7 @@ def get_folders(path, root_path):
     return fs.split("/")
 
 
-def make_tree(res, tool=False, root_path=""):
+def make_tree(res, tool, root_path=""):
     if tool == "qbittorrent":
         parent = TorNode("QBITTORRENT")
         folder_id = 0
@@ -68,7 +68,7 @@ def make_tree(res, tool=False, root_path=""):
                     parent=previous_node,
                     size=i.size,
                     priority=i.priority,
-                    file_id=i.id,
+                    file_id=i.index,
                     progress=round(i.progress * 100, 5),
                 )
             else:
@@ -78,7 +78,7 @@ def make_tree(res, tool=False, root_path=""):
                     parent=parent,
                     size=i.size,
                     priority=i.priority,
-                    file_id=i.id,
+                    file_id=i.index,
                     progress=round(i.progress * 100, 5),
                 )
     elif tool == "aria2":
@@ -137,6 +137,22 @@ def make_tree(res, tool=False, root_path=""):
                     file_id=i["index"],
                     progress=progress,
                 )
+    else:
+        parent = TorNode("SABNZBD+")
+        priority = 1
+        for i in res["files"]:
+            TorNode(
+                i["filename"],
+                is_file=True,
+                parent=parent,
+                size=float(i["mb"]) * 1048576,
+                priority=priority,
+                file_id=i["nzf_id"],
+                progress=round(
+                    ((float(i["mb"]) - float(i["mbleft"])) / float(i["mb"])) * 100,
+                    5,
+                ),
+            )
 
     result = create_list(parent)
     return {"files": result, "engine": tool}

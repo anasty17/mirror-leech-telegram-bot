@@ -2,8 +2,7 @@ from aiofiles.os import path as aiopath
 from base64 import b64encode
 from re import match as re_match
 
-from .. import LOGGER, bot_loop, task_dict_lock
-from ..core.config_manager import Config
+from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
 from ..helper.ext_utils.bot_utils import (
     get_content_type,
     sync_to_async,
@@ -21,7 +20,7 @@ from ..helper.ext_utils.links_utils import (
 )
 from ..helper.listeners.task_listener import TaskListener
 from ..helper.mirror_leech_utils.download_utils.aria2_download import (
-    add_aria2c_download,
+    add_aria2_download,
 )
 from ..helper.mirror_leech_utils.download_utils.direct_downloader import (
     add_direct_download,
@@ -90,7 +89,9 @@ class Mirror(TaskListener):
             "-f": False,
             "-fd": False,
             "-fu": False,
-            "-ml": False,
+            "-hl": False,
+            "-bt": False,
+            "-ut": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -130,11 +131,13 @@ class Mirror(TaskListener):
         self.convert_audio = args["-ca"]
         self.convert_video = args["-cv"]
         self.name_sub = args["-ns"]
-        self.mixed_leech = args["-ml"]
+        self.hybrid_leech = args["-hl"]
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
         self.folder_name = f"/{args["-m"]}" if len(args["-m"]) > 0 else ""
+        self.bot_trans = args["-bt"]
+        self.user_trans = args["-ut"]
 
         headers = args["-h"]
         is_bulk = args["-b"]
@@ -215,7 +218,7 @@ class Mirror(TaskListener):
 
         await self.get_tag(text)
 
-        path = f"{Config.DOWNLOAD_DIR}{self.mid}{self.folder_name}"
+        path = f"{DOWNLOAD_DIR}{self.mid}{self.folder_name}"
 
         if not self.link and (reply_to := self.message.reply_to_message):
             if reply_to.text:
@@ -361,7 +364,7 @@ class Mirror(TaskListener):
                 headers += (
                     f" authorization: Basic {b64encode(auth.encode()).decode('ascii')}"
                 )
-            await add_aria2c_download(self, path, headers, ratio, seed_time)
+            await add_aria2_download(self, path, headers, ratio, seed_time)
 
 
 async def mirror(client, message):

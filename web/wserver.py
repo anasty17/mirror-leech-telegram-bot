@@ -1,23 +1,45 @@
-from aria2p import API as ariaAPI, Client as ariaClient
-from flask import Flask, request, render_template, jsonify
-from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig
-from qbittorrentapi import NotFound404Error, Client as qbClient
-from time import sleep
+from uvloop import install
+
+install()
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
+from logging import getLogger, FileHandler, StreamHandler, INFO, basicConfig, WARNING
+from asyncio import sleep
+from sabnzbdapi import SabnzbdClient
+from aioaria2 import Aria2HttpClient
+from aioqbt.client import create_client
+from aiohttp.client_exceptions import ClientResponseError
 
 from web.nodes import extract_file_ids, make_tree
 
-app = Flask(__name__)
+getLogger("httpx").setLevel(WARNING)
+getLogger("aiohttp").setLevel(WARNING)
 
-
-qbittorrent_client = qbClient(
-    host="localhost",
-    port=8090,
-    VERIFY_WEBUI_CERTIFICATE=False,
-    REQUESTS_ARGS={"timeout": (30, 60)},
-    HTTPADAPTER_ARGS={"pool_maxsize": 200, "pool_block": True},
+aria2 = None
+qbittorrent = None
+sabnzbd_client = SabnzbdClient(
+    host="http://localhost",
+    api_key="mltb",
+    port="8070",
 )
 
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global aria2, qbittorrent
+    aria2 = Aria2HttpClient("http://localhost:6800/jsonrpc")
+    qbittorrent = await create_client("http://localhost:8090/api/v2/")
+    yield
+    await aria2.close()
+    await qbittorrent.close()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+templates = Jinja2Templates(directory="web/templates/")
 
 basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -28,45 +50,36 @@ basicConfig(
 LOGGER = getLogger(__name__)
 
 
-def re_verify(paused, resumed, hash_id):
-    paused = paused.strip()
-    resumed = resumed.strip()
-    if paused:
-        paused = paused.split("|")
-    if resumed:
-        resumed = resumed.split("|")
-
+async def re_verify(paused, resumed, hash_id):
     k = 0
     while True:
-        res = qbittorrent_client.torrents_files(torrent_hash=hash_id)
+        res = await qbittorrent.torrents.files(hash_id)
         verify = True
         for i in res:
-            if str(i.id) in paused and i.priority != 0:
+            if i.index in paused and i.priority != 0:
                 verify = False
                 break
-            if str(i.id) in resumed and i.priority == 0:
+            if i.index in resumed and i.priority == 0:
                 verify = False
                 break
         if verify:
             break
         LOGGER.info("Reverification Failed! Correcting stuff...")
-        sleep(1)
-        try:
-            qbittorrent_client.torrents_file_priority(
-                torrent_hash=hash_id, file_ids=paused, priority=0
-            )
-        except NotFound404Error as e:
-            raise NotFound404Error from e
-        except Exception as e:
-            LOGGER.error(f"{e} Errored in reverification paused!")
-        try:
-            qbittorrent_client.torrents_file_priority(
-                torrent_hash=hash_id, file_ids=resumed, priority=1
-            )
-        except NotFound404Error as e:
-            raise NotFound404Error from e
-        except Exception as e:
-            LOGGER.error(f"{e} Errored in reverification resumed!")
+        await sleep(0.5)
+        if paused:
+            try:
+                await qbittorrent.torrents.file_prio(
+                    hash=hash_id, id=paused, priority=0
+                )
+            except ClientResponseError as e:
+                LOGGER.error(f"{e} Errored in reverification paused!")
+        if resumed:
+            try:
+                await qbittorrent.torrents.file_prio(
+                    hash=hash_id, id=resumed, priority=1
+                )
+            except ClientResponseError as e:
+                LOGGER.error(f"{e} Errored in reverification resumed!")
         k += 1
         if k > 5:
             return False
@@ -74,15 +87,19 @@ def re_verify(paused, resumed, hash_id):
     return True
 
 
-@app.route("/app/files")
-def files():
-    return render_template("page.html")
+@app.get("/app/files", response_class=HTMLResponse)
+async def files(request: Request):
+    return templates.TemplateResponse("page.html", {"request": request})
 
 
-@app.route("/app/files/torrent", methods=["GET", "POST"])
-def handle_torrent():
-    if not (gid := request.args.get("gid")):
-        return jsonify(
+@app.api_route(
+    "/app/files/torrent", methods=["GET", "POST"], response_class=HTMLResponse
+)
+async def handle_torrent(request: Request):
+    params = request.query_params
+
+    if not (gid := params.get("gid")):
+        return JSONResponse(
             {
                 "files": [],
                 "engine": "",
@@ -91,8 +108,8 @@ def handle_torrent():
             }
         )
 
-    if not (pin := request.args.get("pin")):
-        return jsonify(
+    if not (pin := params.get("pin")):
+        return JSONResponse(
             {
                 "files": [],
                 "engine": "",
@@ -101,14 +118,9 @@ def handle_torrent():
             }
         )
 
-    code = ""
-    for nbr in gid:
-        if nbr.isdigit():
-            code += str(nbr)
-        if len(code) == 4:
-            break
+    code = "".join([nbr for nbr in gid if nbr.isdigit()][:4])
     if code != pin:
-        return jsonify(
+        return JSONResponse(
             {
                 "files": [],
                 "engine": "",
@@ -116,9 +128,10 @@ def handle_torrent():
                 "message": "The PIN you entered is incorrect",
             }
         )
+
     if request.method == "POST":
-        if not (mode := request.args.get("mode")):
-            return jsonify(
+        if not (mode := params.get("mode")):
+            return JSONResponse(
                 {
                     "files": [],
                     "engine": "",
@@ -126,10 +139,10 @@ def handle_torrent():
                     "message": "Mode is not specified",
                 }
             )
-        data = request.get_json(cache=False, force=True)
+        data = await request.json()
         if mode == "rename":
             if len(gid) > 20:
-                handle_rename(gid, data)
+                await handle_rename(gid, data)
                 content = {
                     "files": [],
                     "engine": "",
@@ -145,13 +158,13 @@ def handle_torrent():
                 }
         else:
             selected_files, unselected_files = extract_file_ids(data)
-            if len(gid) > 20:
-                selected_files = "|".join(selected_files)
-                unselected_files = "|".join(unselected_files)
-                set_qbittorrent(gid, selected_files, unselected_files)
+            if gid.startswith("SABnzbd_nzo"):
+                await set_sabnzbd(gid, unselected_files)
+            elif len(gid) > 20:
+                await set_qbittorrent(gid, selected_files, unselected_files)
             else:
                 selected_files = ",".join(selected_files)
-                set_aria2(gid, selected_files)
+                await set_aria2(gid, selected_files)
             content = {
                 "files": [],
                 "engine": "",
@@ -160,14 +173,18 @@ def handle_torrent():
             }
     else:
         try:
-            if len(gid) > 20:
-                res = qbittorrent_client.torrents_files(torrent_hash=gid)
+            if gid.startswith("SABnzbd_nzo"):
+                res = await sabnzbd_client.get_files(gid)
+                content = make_tree(res, "sabnzbd")
+            elif len(gid) > 20:
+                res = await qbittorrent.torrents.files(gid)
                 content = make_tree(res, "qbittorrent")
             else:
-                res = aria2.client.get_files(gid)
-                fpath = f"{aria2.client.get_option(gid)['dir']}/"
+                res = await aria2.getFiles(gid)
+                op = await aria2.getOption(gid)
+                fpath = f"{op['dir']}/"
                 content = make_tree(res, "aria2", fpath)
-        except Exception as e:
+        except (Exception, ClientResponseError) as e:
             LOGGER.error(str(e))
             content = {
                 "files": [],
@@ -175,65 +192,66 @@ def handle_torrent():
                 "error": "Error getting files",
                 "message": str(e),
             }
-    return jsonify(content)
+    return JSONResponse(content)
 
 
-def handle_rename(gid, data):
+async def handle_rename(gid, data):
     try:
         _type = data["type"]
         del data["type"]
         if _type == "file":
-            qbittorrent_client.torrents_rename_file(torrent_hash=gid, **data)
+            await qbittorrent.torrents.rename_file(hash=gid, **data)
         else:
-            qbittorrent_client.torrents_rename_folder(torrent_hash=gid, **data)
-    except NotFound404Error as e:
-        raise NotFound404Error from e
-    except Exception as e:
+            await qbittorrent.torrents.rename_folder(hash=gid, **data)
+    except ClientResponseError as e:
         LOGGER.error(f"{e} Errored in renaming")
 
 
-def set_qbittorrent(gid, selected_files, unselected_files):
-    try:
-        qbittorrent_client.torrents_file_priority(
-            torrent_hash=gid, file_ids=unselected_files, priority=0
-        )
-    except NotFound404Error as e:
-        raise NotFound404Error from e
-    except Exception as e:
-        LOGGER.error(f"{e} Errored in paused")
-    try:
-        qbittorrent_client.torrents_file_priority(
-            torrent_hash=gid, file_ids=selected_files, priority=1
-        )
-    except NotFound404Error as e:
-        raise NotFound404Error from e
-    except Exception as e:
-        LOGGER.error(f"{e} Errored in resumed")
-    sleep(1)
-    if not re_verify(unselected_files, selected_files, gid):
+async def set_sabnzbd(gid, unselected_files):
+    await sabnzbd_client.remove_file(gid, unselected_files)
+    LOGGER.info(f"Verified! nzo_id: {gid}")
+
+
+async def set_qbittorrent(gid, selected_files, unselected_files):
+    if unselected_files:
+        try:
+            await qbittorrent.torrents.file_prio(
+                hash=gid, id=unselected_files, priority=0
+            )
+        except ClientResponseError as e:
+            LOGGER.error(f"{e} Errored in paused")
+    if selected_files:
+        try:
+            await qbittorrent.torrents.file_prio(
+                hash=gid, id=selected_files, priority=1
+            )
+        except ClientResponseError as e:
+            LOGGER.error(f"{e} Errored in resumed")
+    await sleep(0.5)
+    if not await re_verify(unselected_files, selected_files, gid):
         LOGGER.error(f"Verification Failed! Hash: {gid}")
 
 
-def set_aria2(gid, selected_files):
-    res = aria2.client.change_option(gid, {"select-file": selected_files})
+async def set_aria2(gid, selected_files):
+    res = await aria2.changeOption(gid, {"select-file": selected_files})
     if res == "OK":
         LOGGER.info(f"Verified! Gid: {gid}")
     else:
         LOGGER.info(f"Verification Failed! Report! Gid: {gid}")
 
 
-@app.route("/")
-def homepage():
-    return "<h1>See mirror-leech-telegram-bot <a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> By <a href='https://github.com/anasty17'>Anas</a></h1>"
-
-
-@app.errorhandler(Exception)
-def page_not_found(e):
+@app.get("/", response_class=HTMLResponse)
+async def homepage():
     return (
-        f"<h1>404: Task not found! Mostly wrong input. <br><br>Error: {e}</h2>",
-        404,
+        "<h1>See mirror-leech-telegram-bot "
+        "<a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> "
+        "By <a href='https://github.com/anasty17'>Anas</a></h1>"
     )
 
 
-if __name__ == "__main__":
-    app.run()
+@app.exception_handler(Exception)
+async def page_not_found(_, exc):
+    return HTMLResponse(
+        f"<h1>404: Task not found! Mostly wrong input. <br><br>Error: {exc}</h1>",
+        status_code=404,
+    )

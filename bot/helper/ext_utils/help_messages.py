@@ -1,4 +1,5 @@
 from ..telegram_helper.bot_commands import BotCommands
+from ...core.mltb_client import TgClient
 
 mirror = """<b>Send link along with command line or </b>
 
@@ -78,7 +79,7 @@ To add leech destination:
 -up b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you)
 when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.
 -up u:id/@username(u: means leech by user) This incase OWNER added USER_STRING_SESSION.
--up m:id/@username(mixed leech) m: to upload files by bot and user based on file size.
+-up h:id/@username(hybrid leech) h: to upload files by bot and user based on file size.
 -up id/@username|topic_id(leech in specific chat and topic) add | without space and write topic id after chat id or username.
 
 In case you want to specify whether using token.pickle or service accounts you can add tp:gdrive_id (using token.pickle) or sa:gdrive_id (using service accounts) or mtp:gdrive_id (using token.pickle uploaded from usetting).
@@ -183,10 +184,9 @@ In case default quality added from yt-dlp options using format option and you ne
 
 yt_opt = """<b>Options</b>: -opt
 
-/cmd link -opt playliststart:^10|fragment_retries:^inf|matchtitle:S13|writesubtitles:true|live_from_start:true|postprocessor_args:{"ffmpeg": ["-threads", "4"]}|wait_for_video:(5, 100)|download_ranges:[{"start_time": 0, "end_time": 10}]
-Note: Add `^` before integer or float, some values must be numeric and some string.
-Like playlist_items:10 works with string, so no need to add `^` before the number but playlistend works only with integer so you must add `^` before the number like example above.
-You can add tuple and dict also. Use double quotes inside dict."""
+/cmd link -opt {"format": "bv*+mergeall[vcodec=none]", "nocheckcertificate": True, "playliststart": 10, "fragment_retries": float("inf"), "matchtitle": "S13", "writesubtitles": True, "live_from_start": True, "postprocessor_args": {"ffmpeg": ["-threads", "4"]}, "wait_for_video": (5, 100), "download_ranges": [{"start_time": 0, "end_time": 10}]}
+
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options."""
 
 convert_media = """<b>Convert Media</b>: -ca -cv
 /cmd link -ca mp3 -cv mp4 (convert all audios to mp3 and all videos to mp4)
@@ -229,8 +229,10 @@ NOTE: You must add \ before any character, those are the characters: \^$.|?*+()[
 8. \text\ will get replaced by text with sensitive case
 """
 
-mixed_leech = """<b>Mixed leech</b>: -ml
-/cmd link -ml (leech by user and bot session with respect to size)"""
+transmission = """<b>Tg transmission</b>: -hl -ut -bt
+/cmd link -hl (leech by user and bot session with respect to size) (Hybrid Leech)
+/cmd link -bt (leech by bot session)
+/cmd link -ut (leech by user)"""
 
 thumbnail_layout = """Thumbnail Layout: -tl
 /cmd link -tl 3x3 (widthxheight) 3 photos in row and 3 photos in column"""
@@ -269,8 +271,8 @@ YT_HELP_DICT = {
     "Convert-Media": convert_media,
     "Force-Start": force_start,
     "Name-Substitute": name_sub,
-    "Mixed-Leech": mixed_leech,
-    "Thumbnail-Layout": thumbnail_layout,
+    "TG-Transmission": transmission,
+    "Thumb-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
     "FFmpeg-Cmds": ffmpeg_cmds,
 }
@@ -299,8 +301,8 @@ MIRROR_HELP_DICT = {
     "Force-Start": force_start,
     "User-Download": user_download,
     "Name-Substitute": name_sub,
-    "Mixed-Leech": mixed_leech,
-    "Thumbnail-Layout": thumbnail_layout,
+    "TG-Transmission": transmission,
+    "Thumb-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
     "FFmpeg-Cmds": ffmpeg_cmds,
 }
@@ -343,6 +345,47 @@ PASSWORD_ERROR_MESSAGE = """
 
 <b>Example:</b> link::my password
 """
+
+user_settings_text = {
+    "LEECH_SPLIT_SIZE": f"Send Leech split size in bytes or use gb or mb. Example: 40000000 or 2.5gb or 1000mb. IS_PREMIUM_USER: {TgClient.IS_PREMIUM_USER}. Timeout: 60 sec",
+    "LEECH_DUMP_CHAT": """"Send leech destination ID/USERNAME/PM. 
+* b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you) when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.
+* u:id/@username(u: means leech by user) This incase OWNER added USER_STRING_SESSION.
+* h:id/@username(hybrid leech) h: to upload files by bot and user based on file size.
+* id/@username|topic_id(leech in specific chat and topic) add | without space and write topic id after chat id or username. Timeout: 60 sec""",
+    "LEECH_FILENAME_PREFIX": r"Send Leech Filename Prefix. You can add HTML tags. Example: <code>@mychannel</code>. Timeout: 60 sec",
+    "THUMBNAIL_LAYOUT": "Send thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...). Example: 3x3. Timeout: 60 sec",
+    "RCLONE_PATH": "Send Rclone Path. If you want to use your rclone config edit using owner/user config from usetting or add mrcc: before rclone path. Example mrcc:remote:folder. Timeout: 60 sec",
+    "GDRIVE_ID": "Send Gdrive ID. If you want to use your token.pickle edit using owner/user token from usetting or add mtp: before the id. Example: mtp:F435RGGRDXXXXXX . Timeout: 60 sec",
+    "INDEX_URL": "Send Index URL. Timeout: 60 sec",
+    "UPLOAD_PATHS": "Send Dict of keys that have path values. Example: {'path 1': 'remote:rclonefolder', 'path 2': 'gdrive1 id', 'path 3': 'tg chat id', 'path 4': 'mrcc:remote:', 'path 5': b:@username} . Timeout: 60 sec",
+    "EXCLUDED_EXTENSIONS": "Send exluded extenions seperated by space without dot at beginning. Timeout: 60 sec",
+    "NAME_SUBSTITUTE": r"""Word Subtitions. You can add pattern instead of normal text. Timeout: 60 sec
+NOTE: You must add \ before any character, those are the characters: \^$.|?*+()[]{}-
+Example: script/code/s | mirror/leech | tea/ /s | clone | cpu/ | \[mltb\]/mltb | \\text\\/text/s
+1. script will get replaced by code with sensitive case
+2. mirror will get replaced by leech
+4. tea will get replaced by space with sensitive case
+5. clone will get removed
+6. cpu will get replaced by space
+7. [mltb] will get replaced by mltb
+8. \text\ will get replaced by text with sensitive case
+""",
+    "YT_DLP_OPTIONS": """Send dict of YT-DLP Options. Timeout: 60 sec
+Format: {key: value, key: value, key: value}.
+Example: {"format": "bv*+mergeall[vcodec=none]", "nocheckcertificate": True, "playliststart": 10, "fragment_retries": float("inf"), "matchtitle": "S13", "writesubtitles": True, "live_from_start": True, "postprocessor_args": {"ffmpeg": ["-threads", "4"]}, "wait_for_video": (5, 100), "download_ranges": [{"start_time": 0, "end_time": 10}]}
+Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L184'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options.""",
+    "FFMPEG_CMDS": """Dict of list values of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
+Examples: {"subtitle": ["-i mltb.mkv -c copy -c:s srt mltb.mkv", "-i mltb.video -c copy -c:s srt mltb"], "convert": ["-i mltb.m4a -c:a libmp3lame -q:a 2 mltb.mp3", "-i mltb.audio -c:a libmp3lame -q:a 2 mltb.mp3"], extract: ["-i mltb -map 0:a -c copy mltb.mka -map 0:s -c copy mltb.srt"]}
+Notes:
+- Add `-del` to the list which you want from the bot to delete the original files after command run complete!
+- To execute one of those lists in bot for example, you must use -ff subtitle (list key) or -ff convert (list key)
+Here I will explain how to use mltb.* which is reference to files you want to work on.
+1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. -del will delete the original media after complete run of the cmd.
+2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extenstion is same as input files.
+3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
+4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.""",
+}
 
 
 help_string = f"""

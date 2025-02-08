@@ -5,7 +5,6 @@ from ... import (
     sabnzbd_client,
     nzb_jobs,
     nzb_listener_lock,
-    task_dict_lock,
     LOGGER,
 )
 from ..ext_utils.bot_utils import new_task

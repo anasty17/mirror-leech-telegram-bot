@@ -113,8 +113,8 @@ async def path_updates(_, query, obj):
             if obj.config_path == "rclone.conf"
             else f"mrcc:{obj.remote}{obj.path}"
         )
-        if path != obj.listener.user_dict.get("rclone_path"):
-            update_user_ldata(obj.listener.user_id, "rclone_path", path)
+        if path != obj.listener.user_dict.get("RCLONE_PATH"):
+            update_user_ldata(obj.listener.user_id, "RCLONE_PATH", path)
             await obj.get_path_buttons()
             if Config.DATABASE_URL:
                 await database.update_user_data(obj.listener.user_id)

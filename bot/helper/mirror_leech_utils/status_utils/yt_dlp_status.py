@@ -1,4 +1,3 @@
-from ...ext_utils.files_utils import get_path_size
 from ...ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
@@ -11,19 +10,13 @@ class YtDlpStatus:
         self._obj = obj
         self._gid = gid
         self.listener = listener
-        self._processed_bytes = 0
+        self.tool = "yt-dlp"
 
     def gid(self):
         return self._gid
 
     def processed_bytes(self):
-        return get_readable_file_size(self._processed_bytes)
-
-    async def processed_raw(self):
-        if self._obj.downloaded_bytes != 0:
-            self._processed_bytes = self._obj.downloaded_bytes
-        else:
-            self._processed_bytes = await get_path_size(self.listener.dir)
+        return get_readable_file_size(self._obj.downloaded_bytes)
 
     def size(self):
         return get_readable_file_size(self._obj.size)
@@ -34,8 +27,7 @@ class YtDlpStatus:
     def name(self):
         return self.listener.name
 
-    async def progress(self):
-        await self.processed_raw()
+    def progress(self):
         return f"{round(self._obj.progress, 2)}%"
 
     def speed(self):
@@ -46,7 +38,7 @@ class YtDlpStatus:
             return get_readable_time(self._obj.eta)
         try:
             seconds = (
-                self._obj.size - self._processed_bytes
+                self._obj.size - self._obj.downloaded_bytes
             ) / self._obj.download_speed
             return get_readable_time(seconds)
         except:

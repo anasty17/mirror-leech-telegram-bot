@@ -12,6 +12,7 @@ class FFmpegStatus:
         self._obj = obj
         self._gid = gid
         self._cstatus = status
+        self.tool = "ffmpeg"
 
     def speed(self):
         return f"{get_readable_file_size(self._obj.speed_raw)}/s"
@@ -19,7 +20,7 @@ class FFmpegStatus:
     def processed_bytes(self):
         return get_readable_file_size(self._obj.processed_bytes)
 
-    async def progress(self):
+    def progress(self):
         return f"{round(self._obj.progress_raw, 2)}%"
 
     def gid(self):

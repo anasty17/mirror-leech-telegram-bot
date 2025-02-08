@@ -20,7 +20,7 @@ GLOBAL_GID = set()
 class TelegramDownloadHelper:
     def __init__(self, listener):
         self._processed_bytes = 0
-        self._start_time = time()
+        self._start_time = 1
         self._listener = listener
         self._id = ""
         self.session = ""
@@ -67,6 +67,7 @@ class TelegramDownloadHelper:
         await self._listener.on_download_complete()
         async with global_lock:
             GLOBAL_GID.remove(self._id)
+        return
 
     async def _download(self, message, path):
         try:
@@ -88,21 +89,18 @@ class TelegramDownloadHelper:
             await self._on_download_complete()
         elif not self._listener.is_cancelled:
             await self._on_download_error("Internal error occurred")
+        return
 
     async def add_download(self, message, path, session):
         self.session = session
-        if (
-            self.session not in ["user", "bot"]
-            and self._listener.user_transmission
-            and self._listener.is_super_chat
-        ):
-            self.session = "user"
-            message = await TgClient.user.get_messages(
-                chat_id=message.chat.id, message_ids=message.id
-            )
-        elif self.session != "user":
-            self.session = "bot"
-
+        if not self.session:
+            if self._listener.user_transmission and self._listener.is_super_chat:
+                self.session = "user"
+                message = await TgClient.user.get_messages(
+                    chat_id=message.chat.id, message_ids=message.id
+                )
+            else:
+                self.session = "bot"
         media = (
             message.document
             or message.photo
@@ -158,7 +156,7 @@ class TelegramDownloadHelper:
                             if self._id in GLOBAL_GID:
                                 GLOBAL_GID.remove(self._id)
                         return
-
+                self._start_time = time()
                 await self._on_download_start(gid, add_to_queue)
                 await self._download(message, path)
             else:

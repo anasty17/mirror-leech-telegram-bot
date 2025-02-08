@@ -7,6 +7,7 @@ class RcloneStatus:
         self._gid = gid
         self._status = status
         self.listener = listener
+        self.tool = "rclone"
 
     def gid(self):
         return self._gid

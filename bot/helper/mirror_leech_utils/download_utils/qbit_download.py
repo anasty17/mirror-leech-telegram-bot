@@ -1,14 +1,17 @@
 from aiofiles.os import remove, path as aiopath
+from aiofiles import open as aiopen
 from asyncio import sleep
+from aioqbt.api import AddFormBuilder
 
 from .... import (
     task_dict,
     task_dict_lock,
-    qbittorrent_client,
     LOGGER,
+    qb_torrents,
 )
 from ....core.config_manager import Config
-from ...ext_utils.bot_utils import bt_selection_buttons, sync_to_async
+from ....core.torrent_manager import TorrentManager
+from ...ext_utils.bot_utils import bt_selection_buttons
 from ...ext_utils.task_manager import check_running_tasks
 from ...listeners.qbit_listener import on_download_start
 from ...mirror_leech_utils.status_utils.qbit_status import QbittorrentStatus
@@ -39,44 +42,45 @@ def _get_hash_file(fpath):
 
 async def add_qb_torrent(listener, path, ratio, seed_time):
     try:
-        url = listener.link
-        tpath = None
+        form = AddFormBuilder.with_client(TorrentManager.qbittorrent)
         if await aiopath.exists(listener.link):
-            url = None
-            tpath = listener.link
-        add_to_queue, event = await check_running_tasks(listener)
-        op = await sync_to_async(
-            qbittorrent_client.torrents_add,
-            url,
-            tpath,
-            path,
-            is_paused=add_to_queue,
-            tags=f"{listener.mid}",
-            ratio_limit=ratio,
-            seeding_time_limit=seed_time,
-        )
-        if op.lower() == "ok.":
-            tor_info = await sync_to_async(
-                qbittorrent_client.torrents_info, tag=f"{listener.mid}"
-            )
-            if len(tor_info) == 0:
-                while True:
-                    if add_to_queue and event.is_set():
-                        add_to_queue = False
-                    tor_info = await sync_to_async(
-                        qbittorrent_client.torrents_info, tag=f"{listener.mid}"
-                    )
-                    if len(tor_info) > 0:
-                        break
-                    await sleep(1)
-            tor_info = tor_info[0]
-            listener.name = tor_info.name
-            ext_hash = tor_info.hash
+            async with aiopen(listener.link, "rb") as f:
+                data = await f.read()
+                form = form.include_file(data)
         else:
+            form = form.include_url(listener.link)
+        form = form.savepath(path).tags([f"{listener.mid}"])
+        add_to_queue, event = await check_running_tasks(listener)
+        if add_to_queue:
+            form = form.stopped(add_to_queue)
+        if ratio:
+            form = form.ratio_limit(ratio)
+        if seed_time:
+            form = form.seeding_time_limit(int(seed_time))
+        try:
+            await TorrentManager.qbittorrent.torrents.add(form.build())
+        except Exception as e:
+            LOGGER.error(
+                f"{e}. {listener.mid}. Already added torrent or unsupported link/file type!"
+            )
             await listener.on_download_error(
-                "This Torrent already added or unsupported/invalid link/file.",
+                f"{e}. {listener.mid}. Already added torrent or unsupported link/file type!"
             )
             return
+        tor_info = await TorrentManager.qbittorrent.torrents.info(tag=f"{listener.mid}")
+        if len(tor_info) == 0:
+            while True:
+                if add_to_queue and event.is_set():
+                    add_to_queue = False
+                tor_info = await TorrentManager.qbittorrent.torrents.info(
+                    tag=f"{listener.mid}"
+                )
+                if len(tor_info) > 0:
+                    break
+                await sleep(1)
+        tor_info = tor_info[0]
+        listener.name = tor_info.name
+        ext_hash = tor_info.hash
 
         async with task_dict_lock:
             task_dict[listener.mid] = QbittorrentStatus(listener, queued=add_to_queue)
@@ -94,8 +98,8 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                 metamsg = "Downloading Metadata, wait then you can select files. Use torrent file to avoid this wait."
                 meta = await send_message(listener.message, metamsg)
                 while True:
-                    tor_info = await sync_to_async(
-                        qbittorrent_client.torrents_info, tag=f"{listener.mid}"
+                    tor_info = await TorrentManager.qbittorrent.torrents.info(
+                        tag=f"{listener.mid}"
                     )
                     if len(tor_info) == 0:
                         await delete_message(meta)
@@ -115,9 +119,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
 
             ext_hash = tor_info.hash
             if not add_to_queue:
-                await sync_to_async(
-                    qbittorrent_client.torrents_stop, torrent_hashes=ext_hash
-                )
+                await TorrentManager.qbittorrent.torrents.stop([ext_hash])
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
             await send_message(listener.message, msg, SBUTTONS)
@@ -135,12 +137,10 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                     f"Start Queued Download from Qbittorrent: {tor_info.name} - Hash: {ext_hash}"
                 )
             await on_download_start(f"{listener.mid}")
-            await sync_to_async(
-                qbittorrent_client.torrents_start, torrent_hashes=ext_hash
-            )
-
+            await TorrentManager.qbittorrent.torrents.start([ext_hash])
     except Exception as e:
+        del qb_torrents[f"{listener.mid}"]
         await listener.on_download_error(f"{e}")
     finally:
-        if tpath and await aiopath.exists(tpath):
-            await remove(tpath)
+        if await aiopath.exists(listener.link):
+            await remove(listener.link)

@@ -87,8 +87,8 @@ async def id_updates(_, query, obj):
             id_ = f"sa:{obj.id}" if obj.use_sa else f"tp:{obj.id}"
         else:
             id_ = f"mtp:{obj.id}"
-        if id_ != obj.listener.user_dict.get("gdrive_id"):
-            update_user_ldata(obj.listener.user_id, "gdrive_id", id_)
+        if id_ != obj.listener.user_dict.get("GDRIVE_ID"):
+            update_user_ldata(obj.listener.user_id, "GDRIVE_ID", id_)
             await obj.get_items_buttons()
             if Config.DATABASE_URL:
                 await database.update_user_data(obj.listener.user_id)
@@ -210,9 +210,7 @@ class GoogleDriveList(GoogleDriveHelper):
             else "\nTransfer Type: <i>Upload</i>"
         )
         if self.list_status == "gdu":
-            default_id = (
-                self.listener.user_dict.get("gdrive_id") or Config.GDRIVE_ID
-            )
+            default_id = self.listener.user_dict.get("GDRIVE_ID") or Config.GDRIVE_ID
             msg += f"\nDefault Gdrive ID: {default_id}" if default_id else ""
         msg += f"\n\nItems: {items_no}"
         if items_no > LIST_LIMIT:
