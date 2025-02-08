@@ -596,6 +596,7 @@ class TaskConfig:
         for dirpath, _, files in await sync_to_async(
             walk, self.up_dir or self.dir, topdown=False
         ):
+            code = 0
             for file_ in files:
                 if self.is_cancelled:
                     return False
@@ -611,8 +612,6 @@ class TaskConfig:
                     if not self.is_file:
                         self.subname = file_
                     code = await sevenz.extract(f_path, t_path, pswd)
-                else:
-                    code = 0
             if self.is_cancelled:
                 return code
             if code == 0:
