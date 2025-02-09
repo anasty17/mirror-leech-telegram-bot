@@ -123,7 +123,7 @@ async def load_settings():
                 thumb_path = f"Thumbnails/{uid}.jpg"
                 rclone_config_path = f"rclone/{uid}.conf"
                 token_path = f"tokens/{uid}.pickle"
-                if row.get("thumb"):
+                if row.get("THUMBNAIL"):
                     if not await aiopath.exists("Thumbnails"):
                         await makedirs("Thumbnails")
                     async with aiopen(thumb_path, "wb+") as f:
