@@ -1,10 +1,12 @@
 from . import LOGGER, bot_loop
 from .core.mltb_client import TgClient
+from .core.config_manager import Config
+
+Config.load()
 
 
 async def main():
     from asyncio import gather
-    from .core.config_manager import Config
     from .core.startup import (
         load_settings,
         load_configurations,
@@ -15,7 +17,6 @@ async def main():
         update_variables,
     )
 
-    Config.load()
     await load_settings()
 
     await gather(TgClient.start_bot(), TgClient.start_user())

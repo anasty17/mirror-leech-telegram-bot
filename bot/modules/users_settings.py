@@ -14,7 +14,7 @@ from ..core.mltb_client import TgClient
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.media_utils import create_thumb
 from ..helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.ext_utils.help_messages import user_settings_text
+from ..helper.ext_utils.help_messages import user_settings_text
 from ..helper.ext_utils.bot_utils import (
     update_user_ldata,
     new_task,

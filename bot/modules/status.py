@@ -12,8 +12,8 @@ from .. import (
     DOWNLOAD_DIR,
 )
 from ..core.torrent_manager import TorrentManager
+from ..core.jdownloader_booter import jdownloader
 from ..helper.ext_utils.bot_utils import new_task
-from bot.core.jdownloader_booter import jdownloader
 from ..helper.ext_utils.status_utils import (
     MirrorStatus,
     get_readable_file_size,
