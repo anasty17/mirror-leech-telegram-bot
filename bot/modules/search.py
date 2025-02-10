@@ -18,16 +18,12 @@ TELEGRAPH_LIMIT = 300
 
 async def initiate_search_tools():
     qb_plugins = await TorrentManager.qbittorrent.search.plugins()
+    if qb_plugins:
+        names = [plugin.name for plugin in qb_plugins]
+        await TorrentManager.qbittorrent.search.uninstall_plugin(names)
+        PLUGINS.clear()
     if Config.SEARCH_PLUGINS:
-        globals()["PLUGINS"] = []
-        if qb_plugins:
-            names = [plugin["name"] for plugin in qb_plugins]
-            await TorrentManager.qbittorrent.search.uninstall_plugin(names)
         await TorrentManager.qbittorrent.search.install_plugin(Config.SEARCH_PLUGINS)
-    elif qb_plugins:
-        for plugin in qb_plugins:
-            await TorrentManager.qbittorrent.search.uninstall_plugin(plugin["name"])
-        globals()["PLUGINS"] = []
 
     if Config.SEARCH_API_LINK:
         global SITES
@@ -91,14 +87,18 @@ async def search(key, site, message, method):
             return
     else:
         LOGGER.info(f"PLUGINS Searching: {key} from {site}")
-        search = await TorrentManager.qbittorrent.search.start(pattern=key, plugins=site, category="all")
+        search = await TorrentManager.qbittorrent.search.start(
+            pattern=key, plugins=[site], category="all"
+        )
         search_id = search.id
         while True:
             result_status = await TorrentManager.qbittorrent.search.status(search_id)
             status = result_status[0].status
             if status != "Running":
                 break
-        dict_search_results = await TorrentManager.qbittorrent.search.results(id=search_id, limit=TELEGRAPH_LIMIT)
+        dict_search_results = await TorrentManager.qbittorrent.search.results(
+            id=search_id, limit=TELEGRAPH_LIMIT
+        )
         search_results = dict_search_results.results
         total_results = dict_search_results.total
         if total_results == 0:
@@ -208,8 +208,8 @@ async def plugin_buttons(user_id):
     buttons = ButtonMaker()
     if not PLUGINS:
         pl = await TorrentManager.qbittorrent.search.plugins()
-        for name in pl:
-            PLUGINS.append(name["name"])
+        for i in pl:
+            PLUGINS.append(i.name)
     for siteName in PLUGINS:
         buttons.data_button(
             siteName.capitalize(), f"torser {user_id} {siteName} plugin"
