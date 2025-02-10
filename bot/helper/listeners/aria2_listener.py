@@ -134,7 +134,7 @@ async def _on_bt_download_complete(api, data):
             and download.get("status", "") == "complete"
             and await get_task_by_gid(gid)
         ):
-            LOGGER.info(f"Cancelling Seed: {download.name}")
+            LOGGER.info(f"Cancelling Seed: {aria2_name(download)}")
             await task.listener.on_upload_error(
                 f"Seeding stopped with Ratio: {task.ratio()} and Time: {task.seeding_time()}"
             )
