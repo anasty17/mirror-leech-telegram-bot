@@ -195,7 +195,7 @@ Thumbnail Layout is <b>{thumb_layout}</b>
         text = f"""<u>Rclone Settings for {name}</u>
 Rclone Config <b>{rccmsg}</b>
 Rclone Path is <code>{rccpath}</code>"""
-    elif stype == "GDrive":
+    elif stype == "gdrive":
         buttons.data_button("token.pickle", f"userset {user_id} menu TOKEN_PICKLE")
         buttons.data_button("Default Gdrive ID", f"userset {user_id} menu GDRIVE_ID")
         buttons.data_button("Index URL", f"userset {user_id} menu INDEX_URL")
@@ -495,7 +495,7 @@ async def edit_user_settings(client, query):
     elif data[2] == "tog":
         await query.answer()
         update_user_ldata(user_id, data[3], data[4] == "t")
-        if data[3] == "STOP_DUPLIATE":
+        if data[3] == "STOP_DUPLICATE":
             back_to = "gdrive"
         elif data[3] == "USER_TOKENS":
             back_to = "main"
