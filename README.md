@@ -274,9 +274,9 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 - `USER_SESSION_STRING` (`Str`): To download/upload from your telegram account if user is `PREMIUM` and to send rss. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. **NOTE**: You can't use bot with private message. Use it with superGroup.
 - `DATABASE_URL` (`Str`): Your Mongo Database URL (Connection string). Follow this [Create Database](https://github.com/anasty17/test?tab=readme-ov-file#create-database) to create database. Data will be saved in Database: bot settings, users settings, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). 
 - `CMD_SUFFIX` (`Str`|`Int`): Commands index number. This number will added at the end all commands.
-- `AUTHORIZED_CHATS` (`Str`): Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or Ex:-100XXXXXXXXXXX|10|12. Separate them by space.
+- `AUTHORIZED_CHATS` (`Str`): Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or -100XXXXXXXXXXX|10|12. Separate them by space.
 - `SUDO_USERS` (`Str`):  Fill user_id of users whom you want to give sudo permission. Separate them by space.
-- `UPLOAD_PATHS` (`Dict`): Send Dict of keys that have path values. Example: {'path 1': 'remote:rclonefolder', 'path 2': 'gdrive1 id', 'path 3': 'tg chat id', 'path 4': 'mrcc:remote:', 'path 5': b:@username}. 
+- `UPLOAD_PATHS` (`Dict`): Send Dict of keys that have path values. Example: {"path 1": "remote:rclonefolder", "path 2": "gdrive1 id", "path 3": "tg chat id", "path 4": "mrcc:remote:", "path 5": "b: @username"}. 
 - `DEFAULT_UPLOAD` (`Str`): Whether `rc` to upload to `RCLONE_PATH` or `gd` to upload to `GDRIVE_ID`. Default is `rc`. Read
   More [HERE](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upload).
 - `STATUS_UPDATE_INTERVAL` (`Int`): Time in seconds after which the progress/status message will be updated. Recommended `10`
