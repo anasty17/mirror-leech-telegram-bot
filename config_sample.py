@@ -4,7 +4,13 @@ OWNER_ID = 0
 TELEGRAM_API = 0
 TELEGRAM_HASH = ""
 # OPTIONAL CONFIG
-TG_PROXY = {}
+TG_PROXY = {
+    #  "scheme": "socks5",  # "socks4", "socks5" and "http" are supported
+    #  "hostname": "0.0.0.0", #IP address or url for proxy
+    #  "port": 1234,
+    #  "username": "username", #optional
+    #  "password": "password"  #optional
+ }
 USER_SESSION_STRING = ""
 CMD_SUFFIX = ""
 AUTHORIZED_CHATS = ""
