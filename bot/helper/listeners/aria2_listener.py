@@ -118,7 +118,7 @@ async def _on_bt_download_complete(api, data):
                         await remove(f_path)
                     except:
                         pass
-            await clean_unwanted(download.dir)
+            await clean_unwanted(download.get('dir', ''))
         if task.listener.seed:
             try:
                 await api.changeOption(gid, {"max-upload-limit": "0"})
