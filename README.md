@@ -270,7 +270,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
   from <https://my.telegram.org>.
 
 **2. Optional Fields**
-- `TG_PROXY` (`Dict`): The Proxy settings as dict. Ex: {scheme: "socks5", hostname: "11.22.33.44", port: 1234, username: "user", password: "pass"}. The username and password can be omitted if the proxy doesn’t require authorization. 
+- `TG_PROXY` (`Dict`): The Proxy settings as dict. Ex: {"scheme": "socks5", "hostname": "11.22.33.44", "port": 1234, "username": "user", "password": "pass"}. The username and password can be omitted if the proxy doesn’t require authorization. 
 - `USER_SESSION_STRING` (`Str`): To download/upload from your telegram account if user is `PREMIUM` and to send rss. To generate session string use this command `python3 generate_string_session.py` after mounting repo folder for sure. **NOTE**: You can't use bot with private message. Use it with superGroup.
 - `DATABASE_URL` (`Str`): Your Mongo Database URL (Connection string). Follow this [Create Database](https://github.com/anasty17/test?tab=readme-ov-file#create-database) to create database. Data will be saved in Database: bot settings, users settings, rss data and incomplete tasks. **NOTE**: You can always edit all settings that saved in database from the official site -> (Browse collections). 
 - `CMD_SUFFIX` (`Str`|`Int`): Commands index number. This number will added at the end all commands.
@@ -408,7 +408,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 </details>
 
 <details>
-  <summary><h2>Build And Run the Docker Image</h2></summary>
+  <summary><h2>Build And Run</h2></summary>
 
 Make sure you still mount the repo folder and installed the docker from official documentation.
 
