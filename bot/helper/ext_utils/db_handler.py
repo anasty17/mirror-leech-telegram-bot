@@ -106,12 +106,12 @@ class DbManager:
         if self._return:
             return
         data = user_data.get(user_id, {})
-        if data.get("thumb"):
-            del data["thumb"]
-        if data.get("rclone_config"):
-            del data["rclone_config"]
-        if data.get("token_pickle"):
-            del data["token_pickle"]
+        if data.get("THUMBNAIL"):
+            del data["THUMBNAIL"]
+        if data.get("RCLONE_CONFIG"):
+            del data["RCLONE_CONFIG"]
+        if data.get("TOKEN_PICKLE"):
+            del data["TOKEN_PICKLE"]
         await self.db.users.replace_one({"_id": user_id}, data, upsert=True)
 
     async def update_user_doc(self, user_id, key, path=""):
