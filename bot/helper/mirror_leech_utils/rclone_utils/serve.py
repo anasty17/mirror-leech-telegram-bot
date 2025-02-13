@@ -51,7 +51,6 @@ async def rclone_serve_booter():
         "--buffer-size",
         "64M",
         "-v",
-        "--log-systemd",
         "--log-file",
         "rlog.txt",
     ]
