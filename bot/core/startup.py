@@ -72,10 +72,11 @@ async def load_settings():
             {"_id": BOT_ID}, {"_id": 0}
         )
         if old_config is None:
-            database.db.settings.deployConfig.replace_one(
+            await database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
             )
         if old_config and old_config != config_file:
+            LOGGER.info("Replacing existing config file in Database")
             await database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
             )
