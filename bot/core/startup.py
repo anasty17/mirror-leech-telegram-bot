@@ -251,7 +251,6 @@ async def load_configurations():
         await (
             await create_subprocess_exec("7z", "x", "cfg.zip", "-o/JDownloader")
         ).wait()
-        await remove("cfg.zip")
 
     if await aiopath.exists("accounts.zip"):
         if await aiopath.exists("accounts"):

@@ -4,6 +4,7 @@ token.pickle
 rclone.conf
 .netrc
 log.txt
+cfg.zip
 accounts/*
 Thumbnails/*
 rclone/*

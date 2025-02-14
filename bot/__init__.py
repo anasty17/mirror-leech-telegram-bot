@@ -14,7 +14,6 @@ from logging import (
 )
 from sabnzbdapi import SabnzbdClient
 from time import time
-from tzlocal import get_localzone
 from os import cpu_count
 
 getLogger("requests").setLevel(WARNING)
@@ -75,4 +74,4 @@ sabnzbd_client = SabnzbdClient(
     port="8070",
 )
 
-scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
+scheduler = AsyncIOScheduler(event_loop=bot_loop)

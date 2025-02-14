@@ -339,6 +339,10 @@ class Mirror(TaskListener):
                         await send_message(self.message, e)
                         await self.remove_from_same_dir()
                         return
+                except Exception as e:
+                    await send_message(self.message, e)
+                    await self.remove_from_same_dir()
+                    return
 
         if file_ is not None:
             await TelegramDownloadHelper(self).add_download(
