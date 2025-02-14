@@ -51,6 +51,7 @@ async def add_aria2_download(listener, dpath, header, ratio, seed_time):
     if download.get("errorMessage"):
         error = str(download["errorMessage"]).replace("<", " ").replace(">", " ")
         LOGGER.info(f"Aria2c Download Error: {error}")
+        await TorrentManager.aria2_remove(download)
         await listener.on_download_error(error)
         return
     if await aiopath.exists(listener.link):

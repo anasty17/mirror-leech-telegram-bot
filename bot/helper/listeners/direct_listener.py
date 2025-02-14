@@ -39,15 +39,15 @@ class DirectListener:
                 gid = await TorrentManager.aria2.addUri(
                     uris=[content["url"]], options=self._a2c_opt, position=0
                 )
-                self.download_task = await TorrentManager.aria2.tellStatus(gid)
             except Exception as e:
                 self._failed += 1
                 LOGGER.error(f"Unable to download {filename} due to: {e}")
                 continue
+            self.download_task = await TorrentManager.aria2.tellStatus(gid)
             while True:
                 if self.listener.is_cancelled:
                     if self.download_task:
-                        await TorrentManager.aria2.forceRemove(gid)
+                        await TorrentManager.aria2_remove(self.download_task)
                     break
                 self.download_task = await TorrentManager.aria2.tellStatus(gid)
                 if error_message := self.download_task.get("errorMessage"):
@@ -55,11 +55,11 @@ class DirectListener:
                     LOGGER.error(
                         f"Unable to download {aria2_name(self.download_task)} due to: {error_message}"
                     )
-                    await TorrentManager.aria2.forceRemove(gid)
+                    await TorrentManager.aria2_remove(self.download_task)
                     break
                 elif self.download_task.get("status", "") == "complete":
                     self._proc_bytes += int(self.download_task.get("totalLength", "0"))
-                    await TorrentManager.aria2.forceRemove(gid)
+                    await TorrentManager.aria2_remove(self.download_task)
                     break
                 await sleep(1)
             self.download_task = None
@@ -76,4 +76,4 @@ class DirectListener:
         LOGGER.info(f"Cancelling Download: {self.listener.name}")
         await self.listener.on_download_error("Download Cancelled by User!")
         if self.download_task:
-            await TorrentManager.aria2.forceRemove(self.download_task.get("gid"))
+            await TorrentManager.aria2_remove(self.download_task)

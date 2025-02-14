@@ -44,7 +44,9 @@ class Aria2Status:
         return get_readable_file_size(int(self._download.get("completedLength", "0")))
 
     def speed(self):
-        return f"{get_readable_file_size(int(self._download.get("downloadSpeed", "0")))}/s"
+        return (
+            f"{get_readable_file_size(int(self._download.get("downloadSpeed", "0")))}/s"
+        )
 
     def name(self):
         return aria2_name(self._download)
@@ -88,7 +90,9 @@ class Aria2Status:
         return get_readable_file_size(int(self._download.get("uploadLength", "0")))
 
     def seed_speed(self):
-        return f"{get_readable_file_size(int(self._download.get("uploadSpeed", "0")))}/s"
+        return (
+            f"{get_readable_file_size(int(self._download.get("uploadSpeed", "0")))}/s"
+        )
 
     def ratio(self):
         try:
@@ -112,7 +116,7 @@ class Aria2Status:
     async def cancel_task(self):
         self.listener.is_cancelled = True
         await self.update()
-        await TorrentManager.aria2.forcePause(self._gid)
+        await TorrentManager.aria2_remove(self._download)
         if self._download.get("seeder", "") == "true" and self.seeding:
             LOGGER.info(f"Cancelling Seed: {self.name()}")
             await self.listener.on_upload_error(
@@ -126,4 +130,3 @@ class Aria2Status:
                 LOGGER.info(f"Cancelling Download: {self.name()}")
                 msg = "Stopped by user!"
             await self.listener.on_download_error(msg)
-        await TorrentManager.aria2.forceRemove(self._gid)

@@ -22,6 +22,13 @@ class TorrentManager:
         await gather(cls.aria2.close(), cls.qbittorrent.close())
 
     @classmethod
+    async def aria2_remove(cls, download):
+        if download.get("status", "") in ["active", "paused", "waiting"]:
+            await cls.aria2.forceRemove(download.get("gid", ""))
+        else:
+            await cls.aria2.removeDownloadResult(download.get("gid", ""))
+
+    @classmethod
     async def remove_all(cls):
         await cls.pause_all()
         await gather(
