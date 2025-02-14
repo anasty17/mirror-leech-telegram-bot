@@ -10,7 +10,7 @@ class BotCommands:
     NzbMirrorCommand = [f"nzbmirror{Config.CMD_SUFFIX}", f"nm{Config.CMD_SUFFIX}"]
     LeechCommand = [f"leech{Config.CMD_SUFFIX}", f"l{Config.CMD_SUFFIX}"]
     QbLeechCommand = [f"qbleech{Config.CMD_SUFFIX}", f"ql{Config.CMD_SUFFIX}"]
-    JdLeechCommand = [f"jdLeech{Config.CMD_SUFFIX}", f"jl{Config.CMD_SUFFIX}"]
+    JdLeechCommand = [f"jdleech{Config.CMD_SUFFIX}", f"jl{Config.CMD_SUFFIX}"]
     YtdlLeechCommand = [f"ytdlleech{Config.CMD_SUFFIX}", f"yl{Config.CMD_SUFFIX}"]
     NzbLeechCommand = [f"nzbleech{Config.CMD_SUFFIX}", f"nl{Config.CMD_SUFFIX}"]
     CloneCommand = f"clone{Config.CMD_SUFFIX}"
@@ -23,8 +23,8 @@ class BotCommands:
     SearchCommand = f"search{Config.CMD_SUFFIX}"
     StatusCommand = f"status{Config.CMD_SUFFIX}"
     UsersCommand = f"users{Config.CMD_SUFFIX}"
-    AuthorizeCommand = f"authorize{Config.CMD_SUFFIX}"
-    UnAuthorizeCommand = f"unauthorize{Config.CMD_SUFFIX}"
+    AuthorizeCommand = f"auth{Config.CMD_SUFFIX}"
+    UnAuthorizeCommand = f"unauth{Config.CMD_SUFFIX}"
     AddSudoCommand = f"addsudo{Config.CMD_SUFFIX}"
     RmSudoCommand = f"rmsudo{Config.CMD_SUFFIX}"
     PingCommand = f"ping{Config.CMD_SUFFIX}"

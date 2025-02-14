@@ -540,6 +540,8 @@ cancelall - Cancel all tasks
 forcestart - or /fs to start task from queue
 del - Delete file/folder from GDrive
 log - Get the Bot Log
+auth - Authorize user or chat
+unauth - Unauthorize uer or chat
 shell - Run commands in Shell
 aexec - Execute async function
 exec - Execute sync function
