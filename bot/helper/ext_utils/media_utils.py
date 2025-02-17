@@ -358,8 +358,8 @@ class FFMpeg:
                         )
                         try:
                             self._progress_raw = (
-                                self._processed_time / self._total_time * 100
-                            )
+                                self._processed_time * 100
+                            ) / self._total_time
                             self._eta_raw = (
                                 self._total_time - self._processed_time
                             ) / self._time_rate
