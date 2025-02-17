@@ -2,6 +2,7 @@ from aiofiles.os import remove, path as aiopath
 from aiofiles import open as aiopen
 from asyncio import sleep
 from aioqbt.api import AddFormBuilder
+from aioqbt.exc import AQError
 
 from .... import (
     task_dict,
@@ -59,7 +60,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             form = form.seeding_time_limit(int(seed_time))
         try:
             await TorrentManager.qbittorrent.torrents.add(form.build())
-        except Exception as e:
+        except AQError as e:
             LOGGER.error(
                 f"{e}. {listener.mid}. Already added torrent or unsupported link/file type!"
             )
@@ -138,8 +139,9 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
                 )
             await on_download_start(f"{listener.mid}")
             await TorrentManager.qbittorrent.torrents.start([ext_hash])
-    except Exception as e:
-        del qb_torrents[f"{listener.mid}"]
+    except AQError as e:
+        if f"{listener.mid}" in qb_torrents:
+            del qb_torrents[f"{listener.mid}"]
         await listener.on_download_error(f"{e}")
     finally:
         if await aiopath.exists(listener.link):

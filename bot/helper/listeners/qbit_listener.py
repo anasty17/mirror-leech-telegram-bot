@@ -1,6 +1,7 @@
 from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
 from time import time
+from aioqbt.exc import AQError
 
 from ... import (
     task_dict,
@@ -161,7 +162,9 @@ async def _qb_listener():
                                 [tor_info.hash]
                             )
                     elif state == "missingFiles":
-                        await TorrentManager.qbittorrent.torrents.recheck([tor_info.hash])
+                        await TorrentManager.qbittorrent.torrents.recheck(
+                            [tor_info.hash]
+                        )
                     elif state == "error":
                         await _on_download_error(
                             "No enough space for this torrent on device", tor_info
@@ -181,7 +184,7 @@ async def _qb_listener():
                         qb_torrents[tag]["seeding"] = False
                         await _on_seed_finish(tor_info)
                         await sleep(0.5)
-            except Exception as e:
+            except AQError as e:
                 LOGGER.error(str(e))
         await sleep(3)
 
