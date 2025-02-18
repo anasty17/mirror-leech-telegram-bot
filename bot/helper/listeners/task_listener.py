@@ -123,7 +123,7 @@ class TaskListener(TaskConfig):
                                 await makedirs(des_path, exist_ok=True)
                                 LOGGER.info(f"Moving files from {self.mid} to {des_id}")
                                 for item in await listdir(spath):
-                                    if item.endswith((".aria2")):
+                                    if item.endswith((".aria2", ".!qB")):
                                         continue
                                     item_path = f"{self.dir}{self.folder_name}/{item}"
                                     if item in await listdir(des_path):
@@ -159,7 +159,7 @@ class TaskListener(TaskConfig):
             self.seed = False
 
         if self.folder_name:
-            self.name = self.folder_name.strip("/")
+            self.name = self.folder_name.strip("/").split("/", 1)[0]
 
         if not await aiopath.exists(f"{self.dir}/{self.name}"):
             try:
@@ -176,11 +176,12 @@ class TaskListener(TaskConfig):
         self.is_file = await aiopath.isfile(dl_path)
 
         if self.seed:
-            self.up_dir = f"{self.dir}10000"
+            up_dir = self.up_dir = f"{self.dir}10000"
             up_path = f"{self.up_dir}/{self.name}"
             await create_recursive_symlink(self.dir, self.up_dir)
             LOGGER.info(f"Shortcut created: {dl_path} -> {up_path}")
         else:
+            up_dir = self.dir
             up_path = dl_path
 
         await remove_excluded_files(self.up_dir or self.dir, self.excluded_extensions)
@@ -199,7 +200,7 @@ class TaskListener(TaskConfig):
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            up_dir, self.name = up_path.rsplit("/", 1)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
             self.clear()
             await remove_excluded_files(up_dir, self.excluded_extensions)
@@ -212,7 +213,7 @@ class TaskListener(TaskConfig):
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            up_dir, self.name = up_path.rsplit("/", 1)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
             self.clear()
 
@@ -221,14 +222,14 @@ class TaskListener(TaskConfig):
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            self.name = up_path.rsplit("/", 1)[1]
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
 
         if self.screen_shots:
             up_path = await self.generate_screenshots(up_path)
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            up_dir, self.name = up_path.rsplit("/", 1)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
 
         if self.convert_audio or self.convert_video:
@@ -239,7 +240,7 @@ class TaskListener(TaskConfig):
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            up_dir, self.name = up_path.rsplit("/", 1)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
             self.clear()
 
@@ -248,7 +249,7 @@ class TaskListener(TaskConfig):
             if self.is_cancelled:
                 return
             self.is_file = await aiopath.isfile(up_path)
-            up_dir, self.name = up_path.rsplit("/", 1)
+            self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
             self.clear()
 
@@ -262,7 +263,7 @@ class TaskListener(TaskConfig):
                 return
             self.clear()
 
-        up_dir, self.name = up_path.rsplit("/", 1)
+        self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
         self.size = await get_path_size(up_dir)
 
         if self.is_leech and not self.compress:
