@@ -109,7 +109,7 @@ class DbManager:
         data = data.copy()
         for key in ("THUMBNAIL", "RCLONE_CONFIG", "TOKEN_PICKLE"):
             data.pop(key, None)
-        await self.db.users.replace_one({"_id": user_id}, data, upsert=True)
+        await self.db.users.update_one({"_id": user_id}, {"$set": data}, upsert=True)
 
     async def update_user_doc(self, user_id, key, path=""):
         if self._return:

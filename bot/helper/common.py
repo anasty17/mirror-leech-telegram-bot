@@ -172,6 +172,11 @@ class TaskConfig:
             if "EXCLUDED_EXTENSIONS" not in self.user_dict
             else ["aria2", "!qB"]
         )
+        if not self.rc_flags:
+            if self.user_dict.get("RCLONE_FLAGS"):
+                self.rc_flags = self.user_dict["RCLONE_FLAGS"]
+            elif "RCLONE_FLAGS" not in self.user_dict and Config.RCLONE_FLAGS:
+                self.rc_flags = Config.RCLONE_FLAGS
         if self.link not in ["rcl", "gdl"]:
             if not self.is_jd:
                 if is_rclone_path(self.link):

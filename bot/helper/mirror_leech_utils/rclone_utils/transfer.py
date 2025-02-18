@@ -182,7 +182,6 @@ class RcloneTransferHelper:
 
         if (
             remote_type == "drive"
-            and not Config.RCLONE_FLAGS
             and not self._listener.rc_flags
         ):
             cmd.extend(
@@ -310,7 +309,6 @@ class RcloneTransferHelper:
         )
         if (
             remote_type == "drive"
-            and not Config.RCLONE_FLAGS
             and not self._listener.rc_flags
         ):
             cmd.extend(
@@ -385,7 +383,7 @@ class RcloneTransferHelper:
         cmd = self._get_updated_command(
             config_path, f"{src_remote}:{src_path}", destination, method
         )
-        if not self._listener.rc_flags and not Config.RCLONE_FLAGS:
+        if not self._listener.rc_flags:
             if src_remote_type == "drive" and dst_remote_type != "drive":
                 cmd.append("--drive-acknowledge-abuse")
             elif src_remote_type == "drive":
@@ -475,7 +473,7 @@ class RcloneTransferHelper:
             cmd.extend(("--files-from", self._listener.link))
         else:
             cmd.extend(("--exclude", ext))
-        if rcflags := self._listener.rc_flags or Config.RCLONE_FLAGS:
+        if rcflags := self._listener.rc_flags:
             rcflags = rcflags.split("|")
             for flag in rcflags:
                 if ":" in flag:
