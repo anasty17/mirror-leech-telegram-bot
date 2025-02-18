@@ -281,7 +281,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
   More [HERE](https://github.com/anasty17/mirror-leech-telegram-bot/tree/master#upload).
 - `STATUS_UPDATE_INTERVAL` (`Int`): Time in seconds after which the progress/status message will be updated. Recommended `10`
   seconds at least.
-- `STATUS_LIMIT` (`Int`): Limit the no. of tasks shown in status message with buttons. Default is `10`. **NOTE**: Recommended
+- `STATUS_LIMIT` (`Int`): Limit the no. of tasks shown in status message with buttons. Default is `4`. **NOTE**: Recommended
   limit is `4` tasks.
 - `EXCLUDED_EXTENSIONS` (`Str`): File extensions that won't upload/clone. Separate them by space.
 - `INCOMPLETE_TASK_NOTIFIER` (`Bool`): Get incomplete task messages after restart. Require database and superGroup. Default
