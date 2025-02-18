@@ -24,6 +24,7 @@ from ...telegram_helper.message_utils import (
 async def add_servers():
     res = await sabnzbd_client.check_login()
     if res and (servers := res["servers"]):
+        sabnzbd_client.LOGGED_IN = True
         tasks = []
         servers_hosts = [x["host"] for x in servers]
         for server in list(Config.USENET_SERVERS):
@@ -48,6 +49,7 @@ async def add_servers():
         )
         or not Config.USENET_SERVERS
     ):
+        sabnzbd_client.LOGGED_IN = False
         raise NotLoggedIn("Set USENET_SERVERS in bsetting or config!")
     else:
         if tasks := [
@@ -55,7 +57,10 @@ async def add_servers():
         ]:
             try:
                 await gather(*tasks)
+                sabnzbd_client.LOGGED_IN = True
             except LoginFailed as e:
+                if len(tasks) == 1:
+                    sabnzbd_client.LOGGED_IN = False
                 raise e
 
 

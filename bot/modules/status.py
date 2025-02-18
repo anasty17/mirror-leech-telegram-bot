@@ -105,7 +105,7 @@ async def status_pages(_, query):
         ds, ss = await TorrentManager.overall_speed()
         if sabnzbd_client.LOGGED_IN:
             sds = await sabnzbd_client.get_downloads()
-            sds = int(sds.get("kbpersec", "0")) * 1024
+            sds = int(float(sds["queue"].get("kbpersec", "0"))) * 1024
             ds += sds
         if jdownloader.is_connected:
             jdres = await jdownloader.device.downloadcontroller.get_speed_in_bytes()

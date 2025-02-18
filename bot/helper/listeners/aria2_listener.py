@@ -1,4 +1,4 @@
-import contextlib
+from contextlib import suppress
 from aiofiles.os import remove, path as aiopath
 from asyncio import sleep
 from time import time
@@ -174,7 +174,7 @@ async def _on_download_error(api, data):
     await sleep(1)
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"
-    with contextlib.suppress(Aria2rpcException, ClientError):
+    with suppress(Aria2rpcException, ClientError):
         download = await api.tellStatus(gid)
         options = await api.getOption(gid)
         error = download.get("errorMessage", "")
