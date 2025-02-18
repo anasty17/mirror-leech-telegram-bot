@@ -330,6 +330,7 @@ class TaskConfig:
                         self.up_dest = self.up_dest.replace("u:", "", 1)
                         self.user_transmission = TgClient.IS_PREMIUM_USER
                     elif self.up_dest.startswith("h:"):
+                        self.up_dest = self.up_dest.replace("h:", "", 1)
                         self.user_transmission = TgClient.IS_PREMIUM_USER
                         self.hybrid_leech = self.user_transmission
                     if "|" in self.up_dest:

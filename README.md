@@ -414,7 +414,7 @@ Make sure you still mount the repo folder and installed the docker from official
 
 - There are two methods to build and run the docker:
     1. Using official docker commands.
-    2. Using docker-compose. (Recommended)
+    2. Using docker compose plugin. (Recommended)
 
 ------
 
@@ -456,31 +456,31 @@ sudo docker stop id
 sudo apt install docker-compose-plugin
 ```
 
-- Build and run Docker image or to view current running image:
+- Build and run Docker image:
 
 ```
 sudo docker compose up
 ```
 
-- After editing files with nano for example (nano start.sh) or git pull:
+- After editing files with nano, for example (nano start.sh) or git pull you must use --build to edit container files:
 
 ```
 sudo docker compose up --build
 ```
 
-- To stop the running image:
+- To stop the running container:
 
 ```
 sudo docker compose stop
 ```
 
-- To run the image:
+- To run the container:
 
 ```
 sudo docker compose start
 ```
 
-- To get log from already running image (after mounting the folder):
+- To get log from already running container (after mounting the folder):
 
 ```
 sudo docker compose logs --follow
