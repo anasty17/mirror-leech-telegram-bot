@@ -1,7 +1,7 @@
 from aiofiles.os import remove, path as aiopath
-from asyncio import sleep
+from asyncio import sleep, TimeoutError
 from time import time
-from aioqbt.exc import APIError
+from aiohttp.client_exceptions import ClientError
 
 from ... import (
     task_dict,
@@ -184,7 +184,7 @@ async def _qb_listener():
                         qb_torrents[tag]["seeding"] = False
                         await _on_seed_finish(tor_info)
                         await sleep(0.5)
-            except APIError as e:
+            except (ClientError, TimeoutError) as e:
                 LOGGER.error(str(e))
         await sleep(3)
 

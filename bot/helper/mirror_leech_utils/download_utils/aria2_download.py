@@ -1,8 +1,8 @@
 from aiofiles.os import remove, path as aiopath
 from aiofiles import open as aiopen
 from base64 import b64encode
-from aioaria2.exceptions import Aria2rpcException
 from aiohttp.client_exceptions import ClientError
+from asyncio import TimeoutError
 
 from .... import task_dict_lock, task_dict, LOGGER
 from ....core.config_manager import Config
@@ -45,7 +45,7 @@ async def add_aria2_download(listener, dpath, header, ratio, seed_time):
             gid = await TorrentManager.aria2.addUri(
                 uris=[listener.link], options=a2c_opt
             )
-    except (Aria2rpcException, ClientError) as e:
+    except (TimeoutError, ClientError) as e:
         LOGGER.info(f"Aria2c Download Error: {e}")
         await listener.on_download_error(f"{e}")
         return
