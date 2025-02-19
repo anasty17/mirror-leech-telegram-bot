@@ -115,6 +115,7 @@ class GoogleDriveClone(GoogleDriveHelper):
                 self._clone_folder(file_path, file.get("id"), current_dir_id)
             elif (
                 not file.get("name")
+                .strip()
                 .lower()
                 .endswith(tuple(self.listener.excluded_extensions))
             ):

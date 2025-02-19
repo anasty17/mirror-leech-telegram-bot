@@ -395,7 +395,7 @@ def hxfile(url):
     cookies = {cookie.name: cookie.value for cookie in jar}
     with Session() as session:
         try:
-            if url.endswith(".html"):
+            if url.strip().endswith(".html"):
                 url = url[:-5]
             file_code = url.split("/")[-1]
             html = HTML(
@@ -920,7 +920,7 @@ def linkBox(url: str):
             raise DirectDownloadLinkException("ERROR: itemInfo not found")
         filename = itemInfo["name"]
         sub_type = itemInfo.get("sub_type")
-        if sub_type and not filename.endswith(sub_type):
+        if sub_type and not filename.strip().endswith(sub_type):
             filename += f".{sub_type}"
         if not details["title"]:
             details["title"] = filename
@@ -977,7 +977,7 @@ def linkBox(url: str):
                 if not folderPath:
                     folderPath = details["title"]
                 filename = content["name"]
-                if (sub_type := content.get("sub_type")) and not filename.endswith(
+                if (sub_type := content.get("sub_type")) and not filename.strip().endswith(
                     sub_type
                 ):
                     filename += f".{sub_type}"
@@ -1538,7 +1538,7 @@ def filelions_and_streamwish(url):
         )
     file_code = url.split("/")[-1]
     quality = ""
-    if bool(file_code.endswith(("_o", "_h", "_n", "_l"))):
+    if bool(file_code.strip().endswith(("_o", "_h", "_n", "_l"))):
         spited_file_code = file_code.rsplit("_", 1)
         quality = spited_file_code[1]
         file_code = spited_file_code[0]
@@ -1576,7 +1576,7 @@ def streamvid(url: str):
     file_code = url.split("/")[-1]
     parsed_url = urlparse(url)
     url = f"{parsed_url.scheme}://{parsed_url.hostname}/d/{file_code}"
-    quality_defined = bool(url.endswith(("_o", "_h", "_n", "_l")))
+    quality_defined = bool(url.strip().endswith(("_o", "_h", "_n", "_l")))
     with create_scraper() as session:
         try:
             html = HTML(session.get(url).text)

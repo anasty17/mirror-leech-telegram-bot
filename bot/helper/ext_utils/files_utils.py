@@ -99,7 +99,7 @@ def is_first_archive_split(file):
 
 
 def is_archive(file):
-    return file.lower().endswith(tuple(ARCH_EXT))
+    return file.strip().lower().endswith(tuple(ARCH_EXT))
 
 
 def is_archive_split(file):
@@ -142,9 +142,9 @@ async def clean_unwanted(opath):
     for dirpath, _, files in await sync_to_async(walk, opath, topdown=False):
         for filee in files:
             f_path = ospath.join(dirpath, filee)
-            if filee.endswith(".parts") and filee.startswith("."):
+            if filee.strip().endswith(".parts") and filee.startswith("."):
                 await remove(f_path)
-        if dirpath.endswith(".unwanted"):
+        if dirpath.strip().endswith(".unwanted"):
             await aiormtree(dirpath, ignore_errors=True)
     for dirpath, _, files in await sync_to_async(walk, opath, topdown=False):
         if not await listdir(dirpath):
@@ -176,7 +176,9 @@ async def count_files_and_folders(opath):
 
 
 def get_base_name(orig_path):
-    extension = next((ext for ext in ARCH_EXT if orig_path.lower().endswith(ext)), "")
+    extension = next(
+        (ext for ext in ARCH_EXT if orig_path.strip().lower().endswith(ext)), ""
+    )
     if extension != "":
         return re_split(f"{extension}$", orig_path, maxsplit=1, flags=I)[0]
     else:
@@ -211,7 +213,7 @@ def get_mime_type(file_path):
 async def remove_excluded_files(fpath, ee):
     for root, _, files in await sync_to_async(walk, fpath):
         for f in files:
-            if f.lower().endswith(tuple(ee)):
+            if f.strip().lower().endswith(tuple(ee)):
                 await remove(ospath.join(root, f))
 
 

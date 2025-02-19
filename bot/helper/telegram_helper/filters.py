@@ -21,13 +21,13 @@ class CustomFilters:
             or (
                 uid in user_data
                 and (
-                    user_data[uid].get("is_auth", False)
-                    or user_data[uid].get("is_sudo", False)
+                    user_data[uid].get("AUTH", False)
+                    or user_data[uid].get("SUDO", False)
                 )
             )
             or (
                 chat_id in user_data
-                and user_data[chat_id].get("is_auth", False)
+                and user_data[chat_id].get("AUTH", False)
                 and (
                     thread_id is None
                     or thread_id in user_data[chat_id].get("thread_ids", [])
@@ -52,7 +52,7 @@ class CustomFilters:
         return bool(
             uid == Config.OWNER_ID
             or uid in user_data
-            and user_data[uid].get("is_sudo")
+            and user_data[uid].get("SUDO")
             or uid in sudo_users
         )
 

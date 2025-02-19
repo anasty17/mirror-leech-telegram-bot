@@ -49,7 +49,7 @@ async def cancel(_, message):
     if (
         Config.OWNER_ID != user_id
         and task.listener.user_id != user_id
-        and (user_id not in user_data or not user_data[user_id].get("is_sudo"))
+        and (user_id not in user_data or not user_data[user_id].get("SUDO"))
     ):
         await send_message(message, "This task is not for you!")
         return

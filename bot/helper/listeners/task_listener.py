@@ -123,7 +123,7 @@ class TaskListener(TaskConfig):
                                 await makedirs(des_path, exist_ok=True)
                                 LOGGER.info(f"Moving files from {self.mid} to {des_id}")
                                 for item in await listdir(spath):
-                                    if item.endswith((".aria2", ".!qB")):
+                                    if item.strip().endswith((".aria2", ".!qB")):
                                         continue
                                     item_path = f"{self.dir}{self.folder_name}/{item}"
                                     if item in await listdir(des_path):
