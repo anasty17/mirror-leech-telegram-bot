@@ -81,17 +81,19 @@ class DbManager:
     async def update_private_file(self, path):
         if self._return:
             return
+        db_path = path.replace(".", "__")
         if await aiopath.exists(path):
             async with aiopen(path, "rb+") as pf:
                 pf_bin = await pf.read()
+            await self.db.settings.files.update_one(
+                {"_id": TgClient.ID}, {"$set": {db_path: pf_bin}}, upsert=True
+            )
+            if path == "config.py":
+                await self.update_deploy_config()
         else:
-            pf_bin = ""
-        path = path.replace(".", "__")
-        await self.db.settings.files.update_one(
-            {"_id": TgClient.ID}, {"$set": {path: pf_bin}}, upsert=True
-        )
-        if path == "config.py":
-            await self.update_deploy_config()
+            await self.db.settings.files.update_one(
+                {"_id": TgClient.ID}, {"$unset": {db_path: ""}}, upsert=True
+            )
 
     async def update_nzb_config(self):
         if self._return:

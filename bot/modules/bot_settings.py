@@ -441,10 +441,9 @@ async def sync_jdownloader():
 async def update_private_file(_, message, pre_message):
     handler_dict[message.chat.id] = False
     if not message.media and (file_name := message.text):
-        fn = file_name.rsplit(".zip", 1)[0]
-        if await aiopath.isfile(fn) and file_name != "config.py":
-            await remove(fn)
-        if fn == "accounts":
+        if await aiopath.isfile(file_name) and file_name != "config.py":
+            await remove(file_name)
+        if file_name == "accounts.zip":
             if await aiopath.exists("accounts"):
                 await rmtree("accounts", ignore_errors=True)
             if await aiopath.exists("rclone_sa"):
@@ -513,8 +512,6 @@ async def update_private_file(_, message, pre_message):
         await rclone_serve_booter()
     await update_buttons(pre_message)
     await database.update_private_file(file_name)
-    if await aiopath.exists("accounts.zip"):
-        await remove("accounts.zip")
 
 
 async def event_handler(client, query, pfunc, rfunc, document=False):
