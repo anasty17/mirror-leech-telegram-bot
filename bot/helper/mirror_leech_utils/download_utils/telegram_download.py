@@ -121,7 +121,7 @@ class TelegramDownloadHelper:
                 if not self._listener.name:
                     self._listener.name = (
                         media.file_name.rsplit("/", 1)[-1]
-                        if hasattr(media, "file_name")
+                        if hasattr(media, "file_name") and media.file_name
                         else "None"
                     )
                 path = path + self._listener.name
