@@ -125,7 +125,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
     @retry(
         wait=wait_exponential(multiplier=2, min=3, max=6),
         stop=stop_after_attempt(3),
-        retry=(retry_if_exception_type(Exception)),
+        retry=retry_if_exception_type(Exception),
     )
     def _upload_file(self, file_path, file_name, mime_type, dest_id, in_dir=True):
         file_metadata = {

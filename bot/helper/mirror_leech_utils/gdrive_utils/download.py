@@ -95,7 +95,7 @@ class GoogleDriveDownload(GoogleDriveHelper):
     @retry(
         wait=wait_exponential(multiplier=2, min=3, max=6),
         stop=stop_after_attempt(3),
-        retry=(retry_if_exception_type(Exception)),
+        retry=retry_if_exception_type(Exception),
     )
     def _download_file(self, file_id, path, filename, mime_type, export=False):
         if export:
