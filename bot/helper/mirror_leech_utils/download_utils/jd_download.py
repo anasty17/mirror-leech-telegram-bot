@@ -218,10 +218,8 @@ async def add_jd_download(listener, path):
                         )
 
                 if online_packages:
-                    if (listener.join or listener.folder_name) and len(
-                        online_packages
-                    ) > 1:
-                        listener.name = listener.folder_name or "Joined Packages"
+                    if listener.join and len(online_packages) > 1:
+                        listener.name = "Joined Packages"
                         await jdownloader.device.linkgrabber.move_to_new_package(
                             listener.name,
                             f"{path}/{listener.name}",
