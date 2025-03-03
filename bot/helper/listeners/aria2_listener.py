@@ -49,6 +49,8 @@ async def _on_download_started(api, data):
     await sleep(2)
     if task := await get_task_by_gid(gid):
         download = await api.tellStatus(gid)
+        if "bittorrent" in download:
+            task.listener.is_torrent = True
         task.listener.name = aria2_name(download)
         msg, button = await stop_duplicate_check(task.listener)
         if msg:

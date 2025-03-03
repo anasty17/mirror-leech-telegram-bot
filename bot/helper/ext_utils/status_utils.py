@@ -198,7 +198,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             if task.listener.subname:
                 subsize = f"/{get_readable_file_size(task.listener.subsize)}"
                 ac = len(task.listener.files_to_proceed)
-                count = f"({task.listener.proceed_count}/{ac or '?'})"
+                count = f"{task.listener.proceed_count}/{ac or '?'}"
             else:
                 subsize = ""
                 count = ""
@@ -208,11 +208,8 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
             msg += f"\n<b>Size:</b> {task.size()}"
             msg += f"\n<b>Speed:</b> {task.speed()}"
             msg += f"\n<b>ETA:</b> {task.eta()}"
-            if hasattr(task, "seeders_num"):
-                try:
-                    msg += f"\n<b>Seeders:</b> {task.seeders_num()} | <b>Leechers:</b> {task.leechers_num()}"
-                except:
-                    pass
+            if task.listener.is_torrent or task.listener.is_qbit:
+                msg += f"\n<b>Seeders:</b> {task.seeders_num()} | <b>Leechers:</b> {task.leechers_num()}"
         elif tstatus == MirrorStatus.STATUS_SEED:
             msg += f"\n<b>Size: </b>{task.size()}"
             msg += f"\n<b>Speed: </b>{task.seed_speed()}"
