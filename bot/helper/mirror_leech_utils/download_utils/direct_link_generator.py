@@ -33,6 +33,8 @@ def direct_link_generator(link):
         return yandex_disk(link)
     elif "buzzheavier.com" in domain:
         return buzzheavier(link)
+    elif "devuploads" in domain:
+        return devuploads(link)
     elif "fuckingfast.co" in domain:
         return fuckingfast_dl(link)
     elif "mediafire.com" in domain:
@@ -283,6 +285,48 @@ def fuckingfast_dl(url):
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
     finally:
         session.close()
+
+def devuploads(url):
+    """
+    Generate a direct download link for devuploads.com URLs.
+    @param url: URL from devuploads.com
+    @return: Direct download link
+    """
+    session = Session()
+    res = session.get(url)
+    html = HTML(res.text)
+    if not html.xpath('//input[@name]'):
+        raise DirectDownloadLinkException("ERROR: Unable to find link data")
+    data = {i.get('name'): i.get('value') for i in html.xpath('//input[@name]')}
+    res = session.post("https://gujjukhabar.in/", data=data)
+    html = HTML(res.text)
+    if not html.xpath('//input[@name]'):
+        raise DirectDownloadLinkException("ERROR: Unable to find link data")
+    data = {i.get('name'): i.get('value') for i in html.xpath('//input[@name]')}
+    resp = session.get("https://du2.devuploads.com/dlhash.php", headers={
+        "Origin": "https://gujjukhabar.in",
+        "Referer": "https://gujjukhabar.in/"
+    })
+    if not resp.text:
+        raise DirectDownloadLinkException("ERROR: Unable to find ipp value")
+    data['ipp'] = resp.text.strip()
+    if not data.get('rand'):
+        raise DirectDownloadLinkException("ERROR: Unable to find rand value")
+    randpost = session.post("https://devuploads.com/token/token.php", data={'rand': data['rand'], 'msg': ''}, headers={
+        "Origin": "https://gujjukhabar.in",
+        "Referer": "https://gujjukhabar.in/"
+    })
+    if not randpost:
+        raise DirectDownloadLinkException("ERROR: Unable to find xd value")
+    data['xd'] = randpost.text.strip()
+    proxy = "http://hsakalu2:hsakalu2@45.151.162.198:6600"
+    res = session.post(url, data=data, proxies={'http': proxy, 'https': proxy})
+    html = HTML(res.text)
+    if not html.xpath("//input[@name='orilink']/@value"):
+        raise DirectDownloadLinkException("ERROR: Unable to find Direct Link")
+    direct_link = html.xpath("//input[@name='orilink']/@value")
+    session.close()
+    return direct_link[0]
 
 def mediafire(url, session=None):
     if "/folder/" in url:
