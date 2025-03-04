@@ -494,8 +494,33 @@ sudo docker compose logs --follow
 1. Flush your machine iptables to use your opened ports with docker from the host network. 
 
 ```
+# Flush All Rules (Reset iptables)
 sudo iptables -F
+sudo iptables -X
 sudo iptables -t nat -F
+sudo iptables -t nat -X
+sudo iptables -t mangle -F
+sudo iptables -t mangle -X
+
+sudo ip6tables -F
+sudo ip6tables -X
+sudo ip6tables -t nat -F
+sudo ip6tables -t nat -X
+sudo ip6tables -t mangle -F
+sudo ip6tables -t mangle -X
+
+# Set Default Policies
+sudo iptables -P INPUT ACCEPT
+sudo iptables -P FORWARD ACCEPT
+sudo iptables -P OUTPUT ACCEPT
+
+sudo ip6tables -P INPUT ACCEPT
+sudo ip6tables -P FORWARD ACCEPT
+sudo ip6tables -P OUTPUT ACCEPT
+
+# save
+sudo iptables-save | sudo tee /etc/iptables/rules.v4
+sudo ip6tables-save | sudo tee /etc/iptables/rules.v6
 ```
 
 2. Set `BASE_URL_PORT` and `RCLONE_SERVE_PORT` variables to any port you want to use. Default is `80` and `8080`
