@@ -37,6 +37,8 @@ def direct_link_generator(link):
         return devuploads(link)
     elif "lulacloud.com" in domain:
         return lulacloud(link)
+    elif "vkshare.online" in domain:
+        return vkshare(link)
     elif "fuckingfast.co" in domain:
         return fuckingfast_dl(link)
     elif "mediafire.com" in domain:
@@ -288,6 +290,24 @@ def fuckingfast_dl(url):
     finally:
         session.close()
 
+def vkshare(url):
+    """
+    Generate a direct download link for vkshare.online URLs.
+    @param url: URL from vkshare.online
+    @return: Direct download link
+    """
+    session = Session()
+    try:
+        res = session.get(url)
+        html = HTML(res.text)
+        if not html.xpath('//input[@id="filename"]/@value'):
+            raise DirectDownloadLinkException(f"ERROR: No Direct Link Found")
+        dl = html.xpath('//input[@id="filename"]/@value')[0]
+        return dl
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
+    finally:
+        session.close()
 
 def lulacloud(url):
     """
