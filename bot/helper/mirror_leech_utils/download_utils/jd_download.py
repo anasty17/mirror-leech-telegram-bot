@@ -145,7 +145,7 @@ async def add_jd_download(listener, path):
                     content = await dlc.read()
                 content = b64encode(content)
                 await jdownloader.device.linkgrabber.add_container(
-                    "DLC", f";base64,{content.decode()}"
+                    "DLC", f"data:;base64,{content.decode()}"
                 )
             else:
                 await jdownloader.device.linkgrabber.add_links(
@@ -167,7 +167,7 @@ async def add_jd_download(listener, path):
             remove_unknown = False
             name = ""
             error = ""
-            while (time() - start_time) < 60:
+            while (time() - start_time) < 90:
                 queued_downloads = await jdownloader.device.linkgrabber.query_packages(
                     [
                         {
