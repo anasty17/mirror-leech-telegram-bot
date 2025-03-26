@@ -514,26 +514,17 @@ def onedrive(link):
 
 
 def pixeldrain(url):
-    """Based on https://github.com/yash-dk/TorToolkit-Telegram"""
+    """Convert all pixeldrain link types to pd.cybar.xyz equivalent."""
     url = url.strip("/ ")
     file_id = url.split("/")[-1]
-    if url.split("/")[-2] == "l":
-        info_link = f"https://pixeldrain.com/api/list/{file_id}"
-        dl_link = f"https://pixeldrain.com/api/list/{file_id}/zip?download"
-    else:
-        info_link = f"https://pixeldrain.com/api/file/{file_id}/info"
-        dl_link = f"https://pixeldrain.com/api/file/{file_id}?download"
-    with create_scraper() as session:
-        try:
-            resp = session.get(info_link).json()
-        except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
-    if resp["success"]:
-        return dl_link
-    else:
-        raise DirectDownloadLinkException(
-            f"ERROR: Cant't download due {resp['message']}."
-        )
+
+    # Identify the link type (u, l, d, t)
+    link_type = url.split("/")[-2]
+    if link_type in ["u", "l", "d", "t"]:
+        return f"https://pd.cybar.xyz/{file_id}"
+
+    # Fallback for unknown types
+    raise DirectDownloadLinkException("ERROR: Invalid Pixeldrain URL type.")
 
 
 def streamtape(url):
