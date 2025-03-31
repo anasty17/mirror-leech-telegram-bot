@@ -174,12 +174,11 @@ async def _qb_listener():
                         int(tor_info.completion_on.timestamp()) != -1
                         and not qb_torrents[tag]["uploaded"]
                         and state
-                        not in [
-                            "checkingUP",
-                            "checkingDL",
-                            "checkingResumeData",
-                            "stoppedUP",
-                            "stoppedDL",
+                        in [
+                            "queuedUP",
+                            "stalledUP",
+                            "uploading",
+                            "forcedUP",
                         ]
                     ):
                         qb_torrents[tag]["uploaded"] = True
