@@ -56,7 +56,7 @@ async def select(_, message):
     ):
         await send_message(message, "This task is not for you!")
         return
-    if not iscoroutinefunction(task.status()):
+    if not iscoroutinefunction(task.status):
         await send_message(message, "The task have finshed the download stage!")
         return
     if await task.status() not in [
