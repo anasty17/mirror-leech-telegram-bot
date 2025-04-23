@@ -115,7 +115,7 @@ async def get_buttons(key=None, edit_type=None):
             buttons.data_button("Default", f"botset resetnzb {key}")
             buttons.data_button("Empty String", f"botset emptynzb {key}")
             buttons.data_button("Close", "botset close")
-            msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}'.\nIf the value is list then seperate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
+            msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}'.\nIf the value is list then separate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
         elif edit_type.startswith("nzbsevar"):
             index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
             buttons.data_button("Back", f"botset nzbser{index}")

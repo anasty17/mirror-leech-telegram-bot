@@ -574,7 +574,7 @@ class TaskConfig:
         except:
             await send_message(
                 self.message,
-                "Reply to text file or to telegram message that have links seperated by new line!",
+                "Reply to text file or to telegram message that have links separated by new line!",
             )
 
     async def proceed_extract(self, dl_path, gid):
