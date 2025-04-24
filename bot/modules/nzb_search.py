@@ -1,19 +1,18 @@
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree as ET
+from aiohttp import ClientSession
 
-import aiohttp
-
-from bot import LOGGER
-from bot.core.config_manager import Config
-from bot.helper.ext_utils.bot_utils import new_task
-from bot.helper.ext_utils.telegraph_helper import telegraph
-from bot.helper.telegram_helper.button_build import ButtonMaker
-from bot.helper.telegram_helper.message_utils import edit_message, send_message
+from .. import LOGGER
+from ..core.config_manager import Config
+from ..helper.ext_utils.bot_utils import new_task
+from ..helper.ext_utils.status_utils import get_readable_file_size
+from ..helper.ext_utils.telegraph_helper import telegraph
+from ..helper.telegram_helper.button_build import ButtonMaker
+from ..helper.telegram_helper.message_utils import edit_message, send_message
 
 
 @new_task
 async def hydra_search(message):
     key = message.text.split()
-
     if len(key) == 1:
         await send_message(
             message,
@@ -23,7 +22,6 @@ async def hydra_search(message):
 
     query = " ".join(key[1:]).strip()
     message = await send_message(message, f"Searching for '{query}'...")
-
     try:
         items = await search_nzbhydra(query)
         if not items:
@@ -58,7 +56,7 @@ async def search_nzbhydra(query, limit=50):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     }
 
-    async with aiohttp.ClientSession() as session:
+    async with ClientSession() as session:
         try:
             async with session.get(
                 search_url,
@@ -108,7 +106,7 @@ async def create_telegraph_page(query, items):
             if item.find("link") is not None
             else "No Link Available"
         )
-        size = format_size(size_bytes)
+        size = get_readable_file_size(size_bytes)
 
         content += (
             f"{idx}. {title}<br>"
@@ -123,12 +121,3 @@ async def create_telegraph_page(query, items):
     )
     LOGGER.info(f"Telegraph page created for search: {query}")
     return f"https://telegra.ph/{response['path']}"
-
-
-def format_size(size_bytes):
-    size_bytes = float(size_bytes)
-    for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if size_bytes < 1024:
-            return f"{size_bytes:.2f} {unit}"
-        size_bytes /= 1024
-    return f"{size_bytes:.2f} PB"
