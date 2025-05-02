@@ -49,7 +49,7 @@ def direct_link_generator(link):
         return hxfile(link)
     elif "1drv.ms" in domain:
         return onedrive(link)
-    elif "pixeldrain.com" in domain:
+    elif any(x in domain for x in ["pixeldrain.com", "pixeldra.in"]):
         return pixeldrain(link)
     elif "racaty" in domain:
         return racaty(link)
