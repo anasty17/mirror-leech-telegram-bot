@@ -515,17 +515,13 @@ def onedrive(link):
 
 
 def pixeldrain(url):
-    """Convert all pixeldrain link types to pd.cybar.xyz equivalent."""
-    url = url.strip("/ ")
-    file_id = url.split("/")[-1]
-
-    # Identify the link type (u, l, d, t)
-    link_type = url.split("/")[-2]
-    if link_type in ["u", "l", "d", "t"]:
-        return f"https://pd.cybar.xyz/{file_id}"
-
-    # Fallback for unknown types
-    raise DirectDownloadLinkException("ERROR: Invalid Pixeldrain URL type.")
+    try:
+        url = url.rstrip('/')
+        code = url.split('/')[-1].split('?', 1)[0]
+        response = get("https://pd.cybar.xyz/", allow_redirects=True)
+        return response.url + code
+    except Exception as e:
+        raise DirectDownloadLinkException("ERROR: Direct link not found")
 
 
 def streamtape(url):
