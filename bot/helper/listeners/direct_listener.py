@@ -18,12 +18,18 @@ class DirectListener:
     @property
     def processed_bytes(self):
         if self.download_task:
-            return self._proc_bytes + int(self.download_task.get("completedLength", "0"))
+            return self._proc_bytes + int(
+                self.download_task.get("completedLength", "0")
+            )
         return self._proc_bytes
 
     @property
     def speed(self):
-        return int(self.download_task.get("downloadSpeed", "0")) if self.download_task else 0
+        return (
+            int(self.download_task.get("downloadSpeed", "0"))
+            if self.download_task
+            else 0
+        )
 
     async def download(self, contents):
         self.is_downloading = True

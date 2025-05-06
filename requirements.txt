@@ -22,7 +22,7 @@ par2cmdline-turbo
 pillow
 psutil
 pymongo
-pyrofork
+kurigram
 python-magic
 requests
 telegraph

@@ -7,6 +7,7 @@ from os import getcwd
 from pyrogram.filters import create
 from pyrogram.handlers import MessageHandler
 from time import time
+from re import findall
 
 from .. import user_data, excluded_extensions, auth_chats, sudo_users
 from ..core.config_manager import Config
@@ -290,9 +291,9 @@ Stop Duplicate is <b>{sd_msg}</b>"""
 
         buttons.data_button("FFmpeg Cmds", f"userset {user_id} menu FFMPEG_CMDS")
         if user_dict.get("FFMPEG_CMDS", False):
-            ffc = user_dict["FFMPEG_CMDS"]
+            ffc = "Exists"
         elif "FFMPEG_CMDS" not in user_dict and Config.FFMPEG_CMDS:
-            ffc = Config.FFMPEG_CMDS
+            ffc = "Exists"
         else:
             ffc = "None"
 
@@ -312,7 +313,7 @@ Excluded Extensions is <code>{ex_ex}</code>
 
 YT-DLP Options is <code>{ytopt}</code>
 
-FFMPEG Commands is <code>{ffc}</code>"""
+FFMPEG Commands is <b>{ffc}</b>"""
 
     return text, buttons.build_menu(1)
 
@@ -430,10 +431,20 @@ async def get_menu(option, message, user_id):
     if option in user_dict and key != "file":
         buttons.data_button("Reset", f"userset {user_id} reset {option}")
     buttons.data_button("Remove", f"userset {user_id} remove {option}")
-    if option in user_dict and user_dict[option]:
+    if option == "FFMPEG_CMDS":
+        ffc = None
+        if user_dict.get("FFMPEG_CMDS", False):
+            ffc = user_dict["FFMPEG_CMDS"]
+            buttons.data_button("Add one", f"userset {user_id} addone {option}")
+            buttons.data_button("Remove one", f"userset {user_id} rmone {option}")
+        elif "FFMPEG_CMDS" not in user_dict and Config.FFMPEG_CMDS:
+            ffc = Config.FFMPEG_CMDS
+        if ffc:
+            buttons.data_button("FFMPEG VARIABLES", f"userset {user_id} ffvar")
+    elif option in user_dict and user_dict[option]:
         if option == "THUMBNAIL":
-            buttons.data_button("View", f"userset {user_id} view THUMBNAIL")
-        if option in ["YT_DLP_OPTIONS", "FFMPEG_CMDS", "UPLOAD_PATHS"]:
+            buttons.data_button("View", f"userset {user_id} view {option}")
+        elif option in ["YT_DLP_OPTIONS", "UPLOAD_PATHS"]:
             buttons.data_button("Add one", f"userset {user_id} addone {option}")
             buttons.data_button("Remove one", f"userset {user_id} rmone {option}")
     if option in leech_options:
@@ -448,6 +459,75 @@ async def get_menu(option, message, user_id):
     buttons.data_button("Close", f"userset {user_id} close")
     text = f"Edit menu for: {option}"
     await edit_message(message, text, buttons.build_menu(2))
+
+
+async def set_ffmpeg_variable(_, message, key, value, index):
+    user_id = message.from_user.id
+    handler_dict[user_id] = False
+    txt = message.text
+    user_dict = user_data.setdefault(user_id, {})
+    ffvar_data = user_dict.setdefault("FFMPEG_VARIABLES", {})
+    ffvar_data = ffvar_data.setdefault(key, {})
+    ffvar_data = ffvar_data.setdefault(index, {})
+    ffvar_data[value] = txt
+    await delete_message(message)
+    await database.update_user_data(user_id)
+
+
+async def ffmpeg_variables(
+    client, query, message, user_id, key=None, value=None, index=None
+):
+    user_dict = user_data.get(user_id, {})
+    ffc = None
+    if user_dict.get("FFMPEG_CMDS", False):
+        ffc = user_dict["FFMPEG_CMDS"]
+    elif "FFMPEG_CMDS" not in user_dict and Config.FFMPEG_CMDS:
+        ffc = Config.FFMPEG_CMDS
+    if ffc:
+        buttons = ButtonMaker()
+        if key is None:
+            msg = "Choose which key you want to fill/edit varibales in it:"
+            for k, v in list(ffc.items()):
+                add = False
+                for l in v:
+                    if variables := findall(r"\{(.*?)\}", l):
+                        add = True
+                if add:
+                    buttons.data_button(k, f"userset {user_id} ffvar {k}")
+            buttons.data_button("Back", f"userset {user_id} menu FFMPEG_CMDS")
+            buttons.data_button("Close", f"userset {user_id} close")
+        elif key in ffc and value is None:
+            msg = f"Choose which variable you want to fill/edit: <u>{key}</u>\n\nCMDS:\n{ffc[key]}"
+            for ind, vl in enumerate(ffc[key]):
+                if variables := set(findall(r"\{(.*?)\}", vl)):
+                    for var in variables:
+                        buttons.data_button(
+                            var, f"userset {user_id} ffvar {key} {var} {ind}"
+                        )
+            buttons.data_button(
+                "Reset", f"userset {user_id} ffvar {key} ffmpegvarreset"
+            )
+            buttons.data_button("Back", f"userset {user_id} ffvar")
+            buttons.data_button("Close", f"userset {user_id} close")
+        elif key in ffc and value:
+            old_value = (
+                user_dict.get("FFMPEG_VARIABLES", {})
+                .get(key, {})
+                .get(index, {})
+                .get(value, "")
+            )
+            msg = f"Edit/Fill this FFmpeg Variable: <u>{key}</u>\n\nItem: {ffc[key][int(index)]}\n\nVariable: {value}"
+            if old_value:
+                msg += f"\n\nCurrent Value: {old_value}"
+            buttons.data_button("Back", f"userset {user_id} setevent")
+            buttons.data_button("Close", f"userset {user_id} close")
+        else:
+            return
+        await edit_message(message, msg, buttons.build_menu(2))
+        if key in ffc and value:
+            pfunc = partial(set_ffmpeg_variable, key=key, value=value, index=index)
+            await event_handler(client, query, pfunc)
+            await ffmpeg_variables(client, query, message, user_id, key)
 
 
 async def event_handler(client, query, pfunc, photo=False, document=False):
@@ -532,6 +612,19 @@ async def edit_user_settings(client, query):
             document=data[3] != "THUMBNAIL",
         )
         await get_menu(data[3], message, user_id)
+    elif data[2] == "ffvar":
+        await query.answer()
+        key = data[3] if len(data) > 3 else None
+        value = data[4] if len(data) > 4 else None
+        if value == "ffmpegvarreset":
+            user_dict = user_data.get(user_id, {})
+            ff_data = user_dict.get("FFMPEG_VARIABLES", {})
+            if key in ff_data:
+                del ff_data[key]
+                await database.update_user_data(user_id)
+            return
+        index = data[5] if len(data) > 5 else None
+        await ffmpeg_variables(client, query, message, user_id, key, value, index)
     elif data[2] in ["set", "addone", "rmone"]:
         await query.answer()
         buttons = ButtonMaker()

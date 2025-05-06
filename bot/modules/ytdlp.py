@@ -323,21 +323,12 @@ class YtDlp(TaskListener):
             self.multi = 0
 
         try:
-            if args["-ff"]:
-                if isinstance(args["-ff"], set):
-                    self.ffmpeg_cmds = args["-ff"]
-                else:
-                    self.ffmpeg_cmds = eval(args["-ff"])
-        except Exception as e:
-            self.ffmpeg_cmds = None
-            LOGGER.error(e)
-
-        try:
             opt = eval(args["-opt"]) if args["-opt"] else {}
         except Exception as e:
             LOGGER.error(e)
             opt = {}
 
+        self.ffmpeg_cmds = args["-ff"]
         self.select = args["-s"]
         self.name = args["-n"]
         self.up_dest = args["-up"]
