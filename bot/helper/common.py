@@ -243,7 +243,7 @@ class TaskConfig:
                                 ):
                                     cmds.append(vl.format(**ff_values))
                             else:
-                                cmds.extend(ffmpeg_dict[key])
+                                cmds.append(vl)
                 self.ffmpeg_cmds = cmds
 
         if not self.is_leech:
