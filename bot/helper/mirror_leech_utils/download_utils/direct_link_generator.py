@@ -255,9 +255,11 @@ def buzzheavier(url):
 
         if not d_url:
             raise DirectDownloadLinkException("ERROR: Failed to fetch direct link.")
-
-        parsed_url = urlparse(url)
-        return f"{parsed_url.scheme}://{parsed_url.netloc}{d_url}"
+        if d_url.startswith("http://") or d_url.startswith("https://"):
+            return d_url
+        else:
+            parsed_url = urlparse(url)
+            return f"{parsed_url.scheme}://{parsed_url.netloc}{d_url}"
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
     finally:
