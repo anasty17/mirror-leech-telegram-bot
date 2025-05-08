@@ -228,8 +228,8 @@ class TaskConfig:
             else:
                 cmds = []
                 for key in list(self.ffmpeg_cmds):
-                    if isinstance(key, list):
-                        cmds.extend(key)
+                    if isinstance(key, tuple):
+                        cmds.extend(list(key))
                     elif key in ffmpeg_dict.keys():
                         for ind, vl in enumerate(ffmpeg_dict[key]):
                             if variables := set(findall(r"\{(.*?)\}", vl)):

@@ -52,7 +52,7 @@ programming in Python.
 - Equal split size settings (global and user option)
 - Ability to leech split file parts in a media group (global and user option)
 - Download restricted messages (document or link) by tg private/public/super links (task option)
-- Choose transfer by bot or user session in case you have a premium plan (global, user option and task option)
+- Choose transfer by bot or user session incase you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
 - Upload with custom layout multiple thubnmail (global, user option and task option)
 - Topics support
@@ -83,7 +83,7 @@ programming in Python.
 - Transfer (download/upload/clone-server-side) without or with random service accounts (global and user option)
 - Ability to choose config, remote and path from list with or without buttons (global, user and task option)
 - Ability to set flags for each task or globally from config (global, user and task option)
-- Abitity to select specific files or folders to download/copy using buttons (task option)
+- Ability to select specific files or folders to download/copy using buttons (task option)
 - Rclone.conf (global and user option)
 - Rclone serve for combine remote to use it as index from all remotes (global option)
 - Upload destination (global, user and task option)
@@ -181,9 +181,9 @@ programming in Python.
 - Custom name for all links except torrents. For files you should add extension except yt-dlp links (global and user
   option)
 - Exclude files with specific extensions from being uploaded/cloned (global and user option)
-- View Link button. Extra button to open index link in broswer instead of direct download for file
+- View Link button. Extra button to open index link in browser instead of direct download for file
 - Queueing System for all tasks (global option)
-- Ability to zip/unzip multi links in same directory. Mostly helpful in unziping tg file parts (task option)
+- Ability to zip/unzip multi links in same directory. Mostly helpful in unzipping tg file parts (task option)
 - Bulk download from telegram txt file or text message contains links separated by new line (task option)
 - Join splitted files that have splitted before by split(linux pkg) (task option)
 - Sample video Generator (task option)
@@ -698,15 +698,15 @@ python3 generate_drive_token.py
 - `UPSTREAM_REPO` variable can be used for edit/add any file in repository.
 - You can add private/public repository link to grab/overwrite all files from it.
 - You can skip adding the privates files like token.pickle or accounts folder before deploying, simply
-  fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
+  fill `UPSTREAM_REPO` private one incase you want to grab all files including private files.
 - If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this
   private repository, so your private files will be overwritten from this repository. Also if you are using database for
   private files, then all files from database will override the private files that added before deploying or from
   private `UPSTREAM_REPO`.
-- If you filled `UPSTREAM_REPO` with the official repository link, then be carefull incase any change in
+- If you filled `UPSTREAM_REPO` with the official repository link, then be careful incase any change in
   requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to
   install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates.
-- In case you you filled `UPSTREAM_REPO` with your fork link be carefull also if you fetched the commits from the
+- In case you you filled `UPSTREAM_REPO` with your fork link be careful also if you fetched the commits from the
   official repository.
 - The changes in your `UPSTREAM_REPO` will take affect only after restart.
 
@@ -839,7 +839,7 @@ $emails = Get-ChildItem .\**.json |Get-Content -Raw |ConvertFrom-Json |Select -E
 grep -oPh '"client_email": "\K[^"]+' *.json > emails.txt
 ```
 
-- Unmount acounts folder
+- Unmount accounts folder
 
 ```
 cd ..

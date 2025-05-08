@@ -163,7 +163,7 @@ def arg_parser(items, arg_base):
                             arg_base[part].add(value)
                         else:
                             try:
-                                arg_base[part].add(eval(value))
+                                arg_base[part].add(tuple(eval(value)))
                             except:
                                 pass
                     else:
