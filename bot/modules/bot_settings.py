@@ -118,14 +118,14 @@ async def get_buttons(key=None, edit_type=None):
             msg = f"Send a valid value for {key}. Current value is '{nzb_options[key]}'.\nIf the value is list then separate them by space or ,\nExample: .exe,info or .exe .info\nTimeout: 60 sec"
         elif edit_type.startswith("nzbsevar"):
             index = 0 if key == "newser" else int(edit_type.replace("nzbsevar", ""))
-            buttons.data_button("Back", f"botset nzbser{index}")
-            if key != "newser":
-                buttons.data_button("Empty", f"botset emptyserkey {index} {key}")
-            buttons.data_button("Close", "botset close")
             if key == "newser":
+                buttons.data_button("Back", "botset nzbserver")
                 msg = "Send one server as dictionary {}, like in config.py without []. Timeout: 60 sec"
             else:
+                buttons.data_button("Empty", f"botset emptyserkey {index} {key}")
+                buttons.data_button("Back", f"botset nzbser{index}")
                 msg = f"Send a valid value for {key} in server {Config.USENET_SERVERS[index]['name']}. Current value is {Config.USENET_SERVERS[index][key]}. Timeout: 60 sec"
+            buttons.data_button("Close", "botset close")
     elif key == "var":
         conf_dict = Config.get_all()
         for k in list(conf_dict.keys())[start : 10 + start]:
@@ -770,7 +770,11 @@ async def edit_bot_settings(client, query):
         await query.answer()
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_nzb_server, pre_message=message, key=data[2], index=index)
-        rfunc = partial(update_buttons, message, data[1])
+        rfunc = partial(
+            update_buttons,
+            message,
+            f"nzbser{index}" if data[2] != "newser" else "nzbserver",
+        )
         await event_handler(client, query, pfunc, rfunc)
     elif data[1].startswith("nzbsevar") and state == "view":
         index = int(data[1].replace("nzbsevar", ""))
