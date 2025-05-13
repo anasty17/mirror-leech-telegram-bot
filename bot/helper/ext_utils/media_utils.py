@@ -105,7 +105,9 @@ async def get_document_type(path):
         is_video = False
         for stream in fields:
             if stream.get("codec_type") == "video":
-                is_video = True
+                codec_name = stream.get("codec_name", "").lower()
+                if codec_name not in {"mjpeg", "png", "bmp"}:
+                    is_video = True
             elif stream.get("codec_type") == "audio":
                 is_audio = True
     return is_video, is_audio, is_image
