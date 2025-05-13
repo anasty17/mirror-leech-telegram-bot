@@ -242,13 +242,6 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         MessageHandler(
-            restart_sessions,
-            filters=command(BotCommands.RestartSessionsCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
             ping,
             filters=command(BotCommands.PingCommand, case_sensitive=True)
             & CustomFilters.authorized,

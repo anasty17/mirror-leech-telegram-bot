@@ -62,46 +62,5 @@ add_aria2_callbacks()
 create_help_buttons()
 add_handlers()
 
-from pyrogram.filters import regex
-from pyrogram.handlers import CallbackQueryHandler
-
-from .core.handlers import add_handlers
-from .helper.ext_utils.bot_utils import new_task
-from .helper.telegram_helper.filters import CustomFilters
-from .helper.telegram_helper.message_utils import (
-    send_message,
-    edit_message,
-    delete_message,
-)
-
-
-@new_task
-async def restart_sessions_confirm(_, query):
-    data = query.data.split()
-    message = query.message
-    if data[1] == "confirm":
-        reply_to = message.reply_to_message
-        restart_message = await send_message(reply_to, "Restarting Session(s)...")
-        await delete_message(message)
-        await TgClient.reload()
-        add_handlers()
-        TgClient.bot.add_handler(
-            CallbackQueryHandler(
-                restart_sessions_confirm,
-                filters=regex("^sessionrestart") & CustomFilters.sudo,
-            )
-        )
-        await edit_message(restart_message, "Session(s) Restarted Successfully!")
-    else:
-        await delete_message(message)
-
-
-TgClient.bot.add_handler(
-    CallbackQueryHandler(
-        restart_sessions_confirm,
-        filters=regex("^sessionrestart") & CustomFilters.sudo,
-    )
-)
-
 LOGGER.info("Bot Started!")
 bot_loop.run_forever()
