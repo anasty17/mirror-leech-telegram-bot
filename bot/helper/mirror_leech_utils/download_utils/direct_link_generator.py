@@ -351,8 +351,7 @@ def devuploads(url):
     if not randpost:
         raise DirectDownloadLinkException("ERROR: Unable to find xd value")
     data["xd"] = randpost.text.strip()
-    proxy = "http://hsakalu2:hsakalu2@45.151.162.198:6600"
-    res = session.post(url, data=data, proxies={"http": proxy, "https": proxy})
+    res = session.post(url, data=data)
     html = HTML(res.text)
     if not html.xpath("//input[@name='orilink']/@value"):
         raise DirectDownloadLinkException("ERROR: Unable to find Direct Link")
