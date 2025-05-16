@@ -192,7 +192,7 @@ async def rss_sub(_, message, pre_event):
                         }
                     }
             LOGGER.info(
-                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv {stv}"
+                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv: {stv}"
             )
         except (IndexError, AttributeError) as e:
             emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
