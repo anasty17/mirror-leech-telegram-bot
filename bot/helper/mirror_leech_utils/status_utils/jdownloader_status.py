@@ -90,7 +90,7 @@ class JDownloaderStatus:
         return f"{get_readable_file_size(self._info.get('speed', 0))}/s"
 
     def name(self):
-        return self._info.get("name") or self.listener.name
+        return self._info.get("name").strip("/").split("/")[0] or self.listener.name
 
     def size(self):
         return get_readable_file_size(self._info.get("bytesTotal", 0))

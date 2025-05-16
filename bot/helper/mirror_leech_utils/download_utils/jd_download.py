@@ -157,7 +157,6 @@ async def add_jd_download(listener, path):
                         }
                     ],
                 )
-
             await sleep(1)
             while await jdownloader.device.linkgrabber.is_collecting():
                 pass

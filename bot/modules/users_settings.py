@@ -441,6 +441,7 @@ async def get_menu(option, message, user_id):
             ffc = Config.FFMPEG_CMDS
         if ffc:
             buttons.data_button("FFMPEG VARIABLES", f"userset {user_id} ffvar")
+            buttons.data_button("View", f"userset {user_id} view {option}")
     elif option in user_dict and user_dict[option]:
         if option == "THUMBNAIL":
             buttons.data_button("View", f"userset {user_id} view {option}")
@@ -677,7 +678,18 @@ async def edit_user_settings(client, query):
         await database.update_user_data(user_id)
     elif data[2] == "view":
         await query.answer()
-        await send_file(message, thumb_path, name)
+        if data[3] == "THUMBNAIL":
+            await send_file(message, thumb_path, name)
+        elif data[3] == "FFMPEG_CMDS":
+            ffc = None
+            if user_dict.get("FFMPEG_CMDS", False):
+                ffc = user_dict["FFMPEG_CMDS"]
+            elif "FFMPEG_CMDS" not in user_dict and Config.FFMPEG_CMDS:
+                ffc = Config.FFMPEG_CMDS
+            msg_ecd = str(ffc).encode()
+            with BytesIO(msg_ecd) as ofile:
+                ofile.name = "users_settings.txt"
+                await send_file(message, ofile)
     elif data[2] in ["gd", "rc"]:
         await query.answer()
         du = "rc" if data[2] == "gd" else "gd"
