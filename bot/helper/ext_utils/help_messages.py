@@ -282,7 +282,7 @@ MIRROR_HELP_DICT = {
     "main": mirror,
     "New-Name": new_name,
     "DL-Auth": "<b>Direct link authorization</b>: -au -ap\n\n/cmd link -au username -ap password",
-    "Headers": "<b>Direct link custom headers</b>: -h\n\n/cmd link -h key: value key1: value1",
+    "Headers": "<b>Direct link custom headers</b>: -h\n\n/cmd link -h key:value|key1:value1",
     "Extract/Zip": extract_zip,
     "Select-Files": "<b>Bittorrent/JDownloader/Sabnzbd File Selection</b>: -s\n\n/cmd link -s or by replying to file/link",
     "Torrent-Seed": seed,
