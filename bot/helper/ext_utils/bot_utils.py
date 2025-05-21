@@ -151,6 +151,8 @@ def arg_parser(items, arg_base):
                         if not sub_list:
                             break
                         check = " ".join(sub_list).strip()
+                        if part != "-ff":
+                            break
                         if check.startswith("[") and check.endswith("]"):
                             break
                         elif not check.startswith("["):

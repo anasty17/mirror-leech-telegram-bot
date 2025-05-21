@@ -144,7 +144,6 @@ async def add_jd_download(listener, path):
                             "links": listener.link,
                             "deepDecrypt": True,
                             "destinationFolder": path,
-                            "packageName": listener.name or None,
                             "overwritePackagizerRules": listener.join,
                         }
                     ],

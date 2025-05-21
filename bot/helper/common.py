@@ -584,10 +584,10 @@ class TaskConfig:
                 self.multi_tag,
                 self.options,
             ).new_event()
-        except:
+        except Exception as e:
             await send_message(
                 self.message,
-                "Reply to text file or to telegram message that have links separated by new line!",
+                f"Reply to text file or to telegram message that have links separated by new line! {e}",
             )
 
     async def proceed_extract(self, dl_path, gid):
@@ -608,6 +608,7 @@ class TaskConfig:
 
         if not self.files_to_proceed:
             return dl_path
+        t_path = dl_path
         sevenz = SevenZ(self)
         LOGGER.info(f"Extracting: {self.name}")
         async with task_dict_lock:
@@ -641,6 +642,8 @@ class TaskConfig:
                             await remove(del_path)
                         except:
                             self.is_cancelled = True
+        if self.proceed_count == 0:
+            LOGGER.info("No files able to extract!")
         return t_path if self.is_file and code == 0 else dl_path
 
     async def proceed_ffmpeg(self, dl_path, gid):
