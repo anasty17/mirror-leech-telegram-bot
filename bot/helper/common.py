@@ -321,7 +321,7 @@ class TaskConfig:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("LEECH_DUMP_CHAT")
-                or Config.LEECH_DUMP_CHAT
+                or (Config.LEECH_DUMP_CHAT if "LEECH_DUMP_CHAT" not in self.user_dict else None)
             )
             self.hybrid_leech = TgClient.IS_PREMIUM_USER and (
                 self.user_dict.get("HYBRID_LEECH")
