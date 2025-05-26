@@ -689,10 +689,34 @@ def uploadee(url):
 
 def terabox(url):
     try:
-        encoded_url = quote(url)
-        return f"https://teradlrobot.cheemsbackup.workers.dev/?url={encoded_url}"
+        encoded_url = quote(url, safe='')
+        api_url = f"https://wdzone-terabox-api.vercel.app/api?url={encoded_url}"
+
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(api_url, headers=headers) as resp:
+                if resp.status != 200:
+                    raise DirectDownloadLinkException(f"API returned status {resp.status}")
+                data = await resp.json()
+                print("API response:", data)
+                info_list = data.get("Extracted Info")
+                if isinstance(info_list, list) and info_list:
+                    download_link = info_list[0].get("Direct Download Link")
+                    if download_link and download_link.startswith("http"):
+                        return download_link
+
+                raise DirectDownloadLinkException(f"No usable download link found. Response: {data}")
+
     except Exception as e:
-        raise DirectDownloadLinkException("Failed to bypass Terabox URL") from e
+        raise DirectDownloadLinkException(f"Failed to get direct link: {e}")
+
 
 
 def filepress(url):
