@@ -21,12 +21,11 @@ par2cmdline-turbo
 pillow
 psutil
 pymongo
-kurigram
+pytdbot[tdjson]
 python-magic
 requests
 telegraph
 tenacity
-tgcrypto
 urllib3
 uvicorn
 uvloop
