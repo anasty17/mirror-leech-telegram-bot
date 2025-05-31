@@ -110,7 +110,7 @@ async def get_jd_download_directory():
     res = await jdownloader.device.config.get(
         "org.jdownloader.settings.GeneralSettings", None, "DefaultDownloadFolder"
     )
-    return f'/{res.strip("/")}/'
+    return f"/{res.strip('/')}/"
 
 
 async def add_jd_download(listener, path):

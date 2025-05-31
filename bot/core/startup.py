@@ -227,7 +227,6 @@ async def update_variables():
 
 
 async def load_configurations():
-
     if not await aiopath.exists(".netrc"):
         async with aiopen(".netrc", "w"):
             pass

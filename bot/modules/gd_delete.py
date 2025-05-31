@@ -24,6 +24,3 @@ async def delete_file(_, message):
         )
     reply_message = await send_message(message, msg)
     await auto_delete_message(message, reply_message)
-
-
-

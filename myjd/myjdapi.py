@@ -48,7 +48,6 @@ class Jd:
 
 
 class Config:
-
     def __init__(self, device):
         self.device = device
         self.url = "/config"
@@ -152,7 +151,6 @@ class Config:
 
 
 class DownloadController:
-
     def __init__(self, device):
         self.device = device
         self.url = "/downloadcontroller"
@@ -229,7 +227,6 @@ class Extension:
 
 
 class Linkgrabber:
-
     def __init__(self, device):
         self.device = device
         self.url = "/linkgrabberv2"
@@ -520,7 +517,6 @@ class Linkgrabber:
 
 
 class Downloads:
-
     def __init__(self, device):
         self.device = device
         self.url = "/downloadsV2"
@@ -669,7 +665,6 @@ class Downloads:
 
 
 class Captcha:
-
     def __init__(self, device):
         self.device = device
         self.url = "/captcha"
@@ -685,7 +680,6 @@ class Captcha:
 
 
 class Jddevice:
-
     def __init__(self, jd):
         """This functions initializates the device instance.
         It uses the provided dictionary to create the device.
@@ -713,7 +707,6 @@ class Jddevice:
 
 
 class clientSession(AsyncClient):
-
     @wraps(AsyncClient.request)
     async def request(self, method: str, url: str, **kwargs):
         kwargs.setdefault("timeout", 3)
@@ -722,7 +715,6 @@ class clientSession(AsyncClient):
 
 
 class MyJdApi:
-
     def __init__(self):
         self.__api_url = "http://127.0.0.1:3128"
         self._http_session = None

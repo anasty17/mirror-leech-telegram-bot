@@ -94,6 +94,3 @@ async def gdrive_search(_, message):
     user_id = message.from_user.id
     buttons = await list_buttons(user_id)
     await send_message(message, "Choose list options:", buttons)
-
-
-

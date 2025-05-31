@@ -87,7 +87,6 @@ async def get_telegraph_list(telegraph_content):
 
 
 def arg_parser(items, arg_base):
-
     if not items:
         return
 

@@ -321,7 +321,11 @@ class TaskConfig:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("LEECH_DUMP_CHAT")
-                or (Config.LEECH_DUMP_CHAT if "LEECH_DUMP_CHAT" not in self.user_dict else None)
+                or (
+                    Config.LEECH_DUMP_CHAT
+                    if "LEECH_DUMP_CHAT" not in self.user_dict
+                    else None
+                )
             )
             self.hybrid_leech = TgClient.IS_PREMIUM_USER and (
                 self.user_dict.get("HYBRID_LEECH")
@@ -625,7 +629,6 @@ class TaskConfig:
                     or is_archive(file_)
                     and not file_.strip().lower().endswith(".rar")
                 ):
-
                     self.proceed_count += 1
                     f_path = ospath.join(dirpath, file_)
                     t_path = get_base_name(f_path) if self.is_file else dirpath

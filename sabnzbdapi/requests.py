@@ -16,7 +16,6 @@ class SabnzbdSession(AsyncClient):
 
 
 class SabnzbdClient(JobFunctions):
-
     LOGGED_IN = False
 
     def __init__(

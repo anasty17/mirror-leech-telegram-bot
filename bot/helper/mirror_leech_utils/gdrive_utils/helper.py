@@ -210,7 +210,7 @@ class GoogleDriveHelper:
         file_id = file.get("id")
         if not Config.IS_TEAM_DRIVE:
             self.set_permission(file_id)
-        LOGGER.info(f'Created G-Drive Folder:\nName: {file.get("name")}\nID: {file_id}')
+        LOGGER.info(f"Created G-Drive Folder:\nName: {file.get('name')}\nID: {file_id}")
         return file_id
 
     def escapes(self, estr):

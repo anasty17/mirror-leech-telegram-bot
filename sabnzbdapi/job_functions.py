@@ -2,7 +2,6 @@ from sabnzbdapi.bound_methods import SubFunctions
 
 
 class JobFunctions(SubFunctions):
-
     async def add_uri(
         self,
         url: str = "",
@@ -14,7 +13,6 @@ class JobFunctions(SubFunctions):
         priority: int = 0,
         pp: int = 1,
     ):
-
         'return {"status": True, "nzo_ids": ["SABnzbd_nzo_kyt1f0"]}'
 
         if file:
