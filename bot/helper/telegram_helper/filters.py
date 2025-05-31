@@ -1,17 +1,24 @@
-from pyrogram.filters import create
+from re import compile as re_compile, I, S, escape
 
 from ... import user_data, auth_chats, sudo_users
 from ...core.config_manager import Config
+from ...core.telegram_client import TgClient
 
 
 class CustomFilters:
-    async def owner_filter(self, _, update):
+    def owner_filter(_, update, pattern=None):
+        if pattern:
+            match = pattern.match(update.text)
+            if not match:
+                return False
         user = update.from_user or update.sender_chat
         return user.id == Config.OWNER_ID
 
-    owner = create(owner_filter)
-
-    async def authorized_user(self, _, update):
+    def authorized_user(_, update, pattern=None):
+        if pattern:
+            match = pattern.match(update.text)
+            if not match:
+                return False
         user = update.from_user or update.sender_chat
         uid = user.id
         chat_id = update.chat.id
@@ -44,9 +51,11 @@ class CustomFilters:
             )
         )
 
-    authorized = create(authorized_user)
-
-    async def sudo_user(self, _, update):
+    def sudo_user(_, update, pattern=None):
+        if pattern:
+            match = pattern.match(update.text)
+            if not match:
+                return False
         user = update.from_user or update.sender_chat
         uid = user.id
         return bool(
@@ -56,4 +65,14 @@ class CustomFilters:
             or uid in sudo_users
         )
 
-    sudo = create(sudo_user)
+    def public_user(self, update, pattern=None):
+        if pattern:
+            match = pattern.match(update.text)
+            return bool(match)
+
+
+def match_cmd(cmd):
+    if not isinstance(cmd, list):
+        return re_compile(rf"^/{cmd}(?:@{TgClient.NAME})?(?:\s+.*)?$", flags=I | S)
+    pattern = "|".join(escape(c) for c in cmd)
+    return re_compile(rf"^/({pattern})(?:@{TgClient.NAME})?(?:\s+.*)?$", flags=I | S)

@@ -1,321 +1,315 @@
-from pyrogram.filters import command, regex
-from pyrogram.handlers import MessageHandler, CallbackQueryHandler, EditedMessageHandler
+from functools import partial
+from pytdbot.filters import create
 
 from ..modules import *
 from ..helper.telegram_helper.bot_commands import BotCommands
-from ..helper.telegram_helper.filters import CustomFilters
-from .mltb_client import TgClient
+from ..helper.telegram_helper.filters import CustomFilters, match_cmd
+from .telegram_client import TgClient
 
 
 def add_handlers():
     TgClient.bot.add_handler(
-        MessageHandler(
-            authorize,
-            filters=command(BotCommands.AuthorizeCommand, case_sensitive=True)
-            & CustomFilters.sudo,
+        "updateNewMessage",
+        authorize,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.AuthorizeCommand))),
+        inner_object=True,
+    )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        unauthorize,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.UnAuthorizeCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        add_sudo,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.AddSudoCommand))),
+        inner_object=True,
+    )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        remove_sudo,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.RmSudoCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        send_bot_settings,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.BotSetCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",
+            edit_bot_settings,
+            filters=regex("^botset") & CustomFilters.sudo,
+            inner_object=True,
         )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        cancel,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.CancelTaskCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        cancel_all_buttons,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.CancelAllCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",cancel_all_update, filters=regex("^canall")),inner_object=True,
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",cancel_multi, filters=regex("^stopm"),
+        inner_object=True,)
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        clone_node,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.CloneCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        aioexecute,
+        filters=create(partial(CustomFilters.owner_filter, pattern=match_cmd(BotCommands.AExecCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        execute,
+        filters=create(partial(CustomFilters.owner_filter, pattern=match_cmd(BotCommands.ExecCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        clear,
+        filters=create(partial(CustomFilters.owner_filter, pattern=match_cmd(BotCommands.ClearLocalsCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        select,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.SelectCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",confirm_selection, filters=regex("^sel")),inner_object=True,
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        remove_from_queue,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.ForceStartCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        count_node,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.CountCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        delete_file,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.DeleteCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        gdrive_search,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.ListCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",select_type, filters=regex("^list_types"),
+        inner_object=True,)
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",arg_usage, filters=regex("^help"),
+        inner_object=True,)
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        mirror,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.MirrorCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        qb_mirror,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.QbMirrorCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        jd_mirror,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.JdMirrorCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        nzb_mirror,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.NzbMirrorCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        leech,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.LeechCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        qb_leech,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.QbLeechCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        jd_leech,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.JdLeechCommand))),
+        inner_object=True,
+
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        nzb_leech,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.NzbLeechCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        get_rss_menu,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.RssCommand))),
+        inner_object=True,
+    )
+
+    TgClient.bot.add_handler("updateNewCallbackQuery",rss_listener, filters=regex("^rss"))
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        run_shell,
+        filters=create(partial(CustomFilters.owner_filter, pattern=match_cmd(BotCommands.ShellCommand))),
+        inner_object=True,
     )
     TgClient.bot.add_handler(
-        MessageHandler(
-            unauthorize,
-            filters=command(BotCommands.UnAuthorizeCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            add_sudo,
-            filters=command(BotCommands.AddSudoCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            remove_sudo,
-            filters=command(BotCommands.RmSudoCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            send_bot_settings,
-            filters=command(BotCommands.BotSetCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(
-            edit_bot_settings, filters=regex("^botset") & CustomFilters.sudo
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            cancel,
-            filters=command(BotCommands.CancelTaskCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            cancel_all_buttons,
-            filters=command(BotCommands.CancelAllCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(cancel_all_update, filters=regex("^canall"))
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(cancel_multi, filters=regex("^stopm"))
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            clone_node,
-            filters=command(BotCommands.CloneCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            aioexecute,
-            filters=command(BotCommands.AExecCommand, case_sensitive=True)
-            & CustomFilters.owner,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            execute,
-            filters=command(BotCommands.ExecCommand, case_sensitive=True)
-            & CustomFilters.owner,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            clear,
-            filters=command(BotCommands.ClearLocalsCommand, case_sensitive=True)
-            & CustomFilters.owner,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            select,
-            filters=command(BotCommands.SelectCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(confirm_selection, filters=regex("^sel"))
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            remove_from_queue,
-            filters=command(BotCommands.ForceStartCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            count_node,
-            filters=command(BotCommands.CountCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            delete_file,
-            filters=command(BotCommands.DeleteCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            gdrive_search,
-            filters=command(BotCommands.ListCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(select_type, filters=regex("^list_types"))
-    )
-    TgClient.bot.add_handler(CallbackQueryHandler(arg_usage, filters=regex("^help")))
-    TgClient.bot.add_handler(
-        MessageHandler(
-            mirror,
-            filters=command(BotCommands.MirrorCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            qb_mirror,
-            filters=command(BotCommands.QbMirrorCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            jd_mirror,
-            filters=command(BotCommands.JdMirrorCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            nzb_mirror,
-            filters=command(BotCommands.NzbMirrorCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            leech,
-            filters=command(BotCommands.LeechCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            qb_leech,
-            filters=command(BotCommands.QbLeechCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            jd_leech,
-            filters=command(BotCommands.JdLeechCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            nzb_leech,
-            filters=command(BotCommands.NzbLeechCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            get_rss_menu,
-            filters=command(BotCommands.RssCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(CallbackQueryHandler(rss_listener, filters=regex("^rss")))
-    TgClient.bot.add_handler(
-        MessageHandler(
+        "updateMessageEdited",
             run_shell,
-            filters=command(BotCommands.ShellCommand, case_sensitive=True)
-            & CustomFilters.owner,
+            filters=create(partial(CustomFilters.owner_filter, pattern=match_cmd(BotCommands.ShellCommand))),
+            inner_object=True,
         )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        start,
+        filters=create(partial(CustomFilters.public_user, pattern=match_cmd(BotCommands.StartCommand))),
+        inner_object=True,
     )
     TgClient.bot.add_handler(
-        EditedMessageHandler(
-            run_shell,
-            filters=command(BotCommands.ShellCommand, case_sensitive=True)
-            & CustomFilters.owner,
+        "updateNewMessage",
+        log,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.LogCommand))),
+        inner_object=True,
+    )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        restart_bot,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.RestartCommand))),
+        inner_object=True,
+    )
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",
+            confirm_restart, filters=regex("^botrestart") & CustomFilters.sudo,inner_object=True,
+
         )
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        ping,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.PingCommand))),
+        inner_object=True,
     )
     TgClient.bot.add_handler(
-        MessageHandler(
-            start, filters=command(BotCommands.StartCommand, case_sensitive=True)
-        )
+        "updateNewMessage",
+        bot_help,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.HelpCommand))),
+        inner_object=True,
     )
     TgClient.bot.add_handler(
-        MessageHandler(
-            log,
-            filters=command(BotCommands.LogCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
+        "updateNewMessage",
+        bot_stats,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.StatsCommand))),
+        inner_object=True,
     )
     TgClient.bot.add_handler(
-        MessageHandler(
-            restart_bot,
-            filters=command(BotCommands.RestartCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
+        "updateNewMessage",
+        task_status,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.StatusCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        CallbackQueryHandler(
-            confirm_restart, filters=regex("^botrestart") & CustomFilters.sudo
-        )
+        "updateNewCallbackQuery", status_pages, filters=regex("^status")),inner_object=True,
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        torrent_search,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.SearchCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        MessageHandler(
-            ping,
-            filters=command(BotCommands.PingCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
+        "updateNewCallbackQuery",torrent_search_update, filters=regex("^torser")),inner_object=True,
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        get_users_settings,
+        filters=create(partial(CustomFilters.sudo_user, pattern=match_cmd(BotCommands.UsersCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        MessageHandler(
-            bot_help,
-            filters=command(BotCommands.HelpCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
+        "updateNewMessage",
+        send_user_settings,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.UserSetCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        MessageHandler(
-            bot_stats,
-            filters=command(BotCommands.StatsCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
+        "updateNewCallbackQuery",edit_user_settings, filters=regex("^userset")), inner_object=True,
+
+    TgClient.bot.add_handler(
+        "updateNewMessage",
+        ytdl,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.YtdlCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        MessageHandler(
-            task_status,
-            filters=command(BotCommands.StatusCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
+        "updateNewMessage",
+        ytdl_leech,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.YtdlLeechCommand))),
+        inner_object=True,
     )
+
     TgClient.bot.add_handler(
-        CallbackQueryHandler(status_pages, filters=regex("^status"))
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            torrent_search,
-            filters=command(BotCommands.SearchCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(torrent_search_update, filters=regex("^torser"))
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            get_users_settings,
-            filters=command(BotCommands.UsersCommand, case_sensitive=True)
-            & CustomFilters.sudo,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            send_user_settings,
-            filters=command(BotCommands.UserSetCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(edit_user_settings, filters=regex("^userset"))
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            ytdl,
-            filters=command(BotCommands.YtdlCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            ytdl_leech,
-            filters=command(BotCommands.YtdlLeechCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
-    )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            hydra_search,
-            filters=command(BotCommands.NzbSearchCommand, case_sensitive=True)
-            & CustomFilters.authorized,
-        )
+        "updateNewMessage",
+        hydra_search,
+        filters=create(partial(CustomFilters.authorized_user, pattern=match_cmd(BotCommands.NzbSearchCommand))),
+        inner_object=True,
     )

@@ -1,4 +1,4 @@
-from pyrogram import Client, enums
+from pytdbot import Client
 from asyncio import Lock
 
 from .. import LOGGER
@@ -19,17 +19,16 @@ class TgClient:
         LOGGER.info("Creating client from BOT_TOKEN")
         cls.ID = Config.BOT_TOKEN.split(":", 1)[0]
         cls.bot = Client(
-            cls.ID,
-            Config.TELEGRAM_API,
-            Config.TELEGRAM_HASH,
-            proxy=Config.TG_PROXY,
-            bot_token=Config.BOT_TOKEN,
-            workdir="/usr/src/app",
-            parse_mode=enums.ParseMode.HTML,
-            max_concurrent_transmissions=10,
+            token=Config.BOT_TOKEN,
+            api_id=Config.TELEGRAM_API,
+            api_hash=Config.TELEGRAM_HASH,
+            default_parse_mode="html",
+            files_directory="/mltb/tdlib_bot",
+            workers=None,
         )
         await cls.bot.start()
-        cls.NAME = cls.bot.me.username
+        me = await cls.bot.getMe()
+        cls.NAME = me.usernames.editable_username
 
     @classmethod
     async def start_user(cls):
@@ -37,17 +36,17 @@ class TgClient:
             LOGGER.info("Creating client from USER_SESSION_STRING")
             try:
                 cls.user = Client(
-                    "user",
-                    Config.TELEGRAM_API,
-                    Config.TELEGRAM_HASH,
-                    proxy=Config.TG_PROXY,
-                    session_string=Config.USER_SESSION_STRING,
-                    parse_mode=enums.ParseMode.HTML,
-                    sleep_threshold=60,
-                    max_concurrent_transmissions=10,
+                    api_id=Config.TELEGRAM_API,
+                    api_hash=Config.TELEGRAM_HASH,
+                    default_parse_mode="html",
+                    files_directory="/mltb/tdlib_user",
+                    user_bot=True,
+                    workers=1,
                 )
                 await cls.user.start()
-                cls.IS_PREMIUM_USER = cls.user.me.is_premium
+                await cls.user.getChats()
+                me = await cls.bot.getMe()
+                cls.IS_PREMIUM_USER = me.is_premium
                 if cls.IS_PREMIUM_USER:
                     cls.MAX_SPLIT_SIZE = 4194304000
             except Exception as e:
@@ -63,11 +62,3 @@ class TgClient:
             if cls.user:
                 await cls.user.stop()
             LOGGER.info("Client(s) stopped")
-
-    @classmethod
-    async def reload(cls):
-        async with cls._lock:
-            await cls.bot.restart()
-            if cls.user:
-                await cls.user.restart()
-            LOGGER.info("Client(s) restarted")
