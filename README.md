@@ -252,13 +252,45 @@ pip3 install -r requirements-cli.txt
 </details>
 
 <details>
-  <summary><h5>2. Setting up config file</h5></summary>
+  <summary><h5>2. Automated Setup Script</h5></summary>
 
-```
-cp config_sample.py config.py
-```
+We provide a `setup.sh` script to automate most of the initial setup process.
 
-Fill up rest of the fields. Meaning of each field is discussed below.
+**How to run the script:**
+
+1. Make sure you have `git` and `pip` installed on your system.
+2. Download the script or clone the repository.
+3. Give the script execution permissions: `chmod +x setup.sh`
+4. Run the script: `./setup.sh`
+
+**What the script does:**
+
+* Clones the latest version of the `mirror-leech-telegram-bot` repository (if you haven't already).
+* Installs Docker and Docker Compose, which are used for running the bot.
+* Installs the necessary Python dependencies from `requirements-cli.txt`.
+* Creates a `config.py` file by copying `config_sample.py`.
+
+**Manual Configuration Still Required:**
+
+After the script completes, you will still need to perform the following manual configuration steps:
+
+* **Fill in `config.py`:** Open the `config.py` file and fill in all the required fields (like `BOT_TOKEN`, `OWNER_ID`, `TELEGRAM_API`, `TELEGRAM_HASH`, `DATABASE_URL`, etc.) and any optional fields relevant to your setup. Refer to the "Setting up config file" section below for details on each variable.
+* **Google OAuth API Credentials:** Set up your Google OAuth API credentials by following the instructions in the "Getting Google OAuth API credential file and token.pickle" section. This involves creating a project in Google Cloud Console, enabling the Drive API, and generating `credentials.json` (renamed from the downloaded file) and subsequently `token.pickle` by running `python3 generate_drive_token.py`.
+* **Rclone Configuration:** If you plan to use rclone for uploading/downloading to cloud storage providers other than Google Drive, you need to generate an `rclone.conf` file. Run `rclone config` in your terminal and follow the interactive setup. Ensure the generated `rclone.conf` is placed in the correct location (usually `~/.config/rclone/rclone.conf` or in the project root if configured that way).
+* **MongoDB Database:** Ensure you have a MongoDB instance running and accessible. The script does not create the database for you, but the bot will attempt to create the necessary collections when it first runs if they don't exist (assuming a valid `DATABASE_URL` is provided in `config.py`). Refer to the "Create Database" section for guidance.
+
+Once these manual steps are completed, you can proceed to build and run the bot using Docker as described in the "Build And Run" section.
+
+------
+
+</details>
+
+<details>
+  <summary><h5>3. Setting up config file</h5></summary>
+  <summary><h5>3. Setting up config file</h5></summary>
+
+After running the `setup.sh` script (or if you are setting up manually), you will have a `config.py` file (copied from `config_sample.py`).
+You need to fill up the fields in this file. The meaning of each field is discussed below.
 
 **1. Required Fields**
 
