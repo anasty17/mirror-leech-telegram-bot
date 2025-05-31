@@ -20,7 +20,7 @@ from .. import (
     sudo_users,
 )
 from ..helper.ext_utils.db_handler import database
-from .config_manager import Config
+from .config_manager import Config, HEROKU_ENV
 from .mltb_client import TgClient
 from .torrent_manager import TorrentManager
 
@@ -238,10 +238,22 @@ async def load_configurations():
         )
     ).wait()
 
-    if Config.BASE_URL:
+    if HEROKU_ENV:
+        if Config.PORT: # PORT is loaded onto Config instance by Config.load()
+            await create_subprocess_shell(
+                f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{Config.PORT}"
+            )
+            LOGGER.info(f"Starting web server on port {Config.PORT} for Heroku.")
+        else:
+            LOGGER.error("HEROKU_ENV is true, but PORT is not set. Cannot start Gunicorn web server.")
+    elif Config.BASE_URL and Config.BASE_URL_PORT: # Existing non-Heroku logic
         await create_subprocess_shell(
             f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{Config.BASE_URL_PORT}"
         )
+        LOGGER.info(f"Starting web server on {Config.BASE_URL_PORT} for local environment.")
+    elif Config.BASE_URL and not Config.BASE_URL_PORT:
+        LOGGER.warning("BASE_URL is set but BASE_URL_PORT is not. Cannot start Gunicorn web server for local environment.")
+
 
     if await aiopath.exists("cfg.zip"):
         if await aiopath.exists("/JDownloader/cfg"):

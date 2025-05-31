@@ -616,6 +616,114 @@ sudo ip6tables-save | sudo tee /etc/iptables/rules.v6
 </details>
 
 <details>
+  <summary><h2>Deploying to Heroku</h2></summary>
+
+This project includes modifications to support deployment to Heroku using Docker containers.
+
+### 1. Prerequisites
+
+*   A Heroku Account.
+*   Heroku CLI installed and authenticated (`heroku login`).
+*   Docker Desktop installed and running locally.
+
+### 2. Setup Steps
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/anasty17/mirror-leech-telegram-bot.git
+    cd mirror-leech-telegram-bot
+    ```
+2.  **Create a Heroku app:**
+    Replace `your-app-name` with your desired application name.
+    ```bash
+    heroku create your-app-name --stack container
+    ```
+
+### 3. Configuration (Heroku Config Vars)
+
+Configuration is managed via Heroku Config Vars, which are environment variables accessible by your application. You can set them in your Heroku app's dashboard under "Settings" -> "Reveal Config Vars", or via the Heroku CLI.
+
+*   **Crucial:** You **must** set `HEROKU_ENV` to `"True"` for the Heroku-specific configurations to apply:
+    ```bash
+    heroku config:set HEROKU_ENV="True" --app your-app-name
+    ```
+*   **Essential Variables:** The following variables must be set for the bot to function:
+    *   `BOT_TOKEN`: Your Telegram bot token.
+    *   `OWNER_ID`: Your Telegram user ID.
+    *   `TELEGRAM_API`: Your Telegram API ID from my.telegram.org.
+    *   `TELEGRAM_HASH`: Your Telegram API hash from my.telegram.org.
+    *   `DATABASE_URL`: Your MongoDB connection string (e.g., from MongoDB Atlas). This is critical for storing configurations and user data on Heroku.
+    *   Example:
+        ```bash
+        heroku config:set BOT_TOKEN="your_bot_token" --app your-app-name
+        heroku config:set DATABASE_URL="your_mongodb_connection_string" --app your-app-name
+        # ... and so on for other essential variables.
+        ```
+
+*   **`PORT` Variable:** Heroku sets the `PORT` environment variable automatically. The bot is configured to use this port for its web server when `HEROKU_ENV` is true. You do not need to set this manually.
+
+*   **`BASE_URL` Variable:** If your bot uses features that require exposing a public URL (like web file selection or certain webhooks), you should set `BASE_URL` to your Heroku app's URL (e.g., `https://your-app-name.herokuapp.com`).
+    ```bash
+    heroku config:set BASE_URL="https://your-app-name.herokuapp.com" --app your-app-name
+    ```
+    The `BASE_URL_PORT` variable is not needed when `HEROKU_ENV` is true, as the bot will use the Heroku-assigned `PORT`.
+
+*   **Complex Configurations (JSON Strings):**
+    Variables that expect list or dictionary values (e.g., `TG_PROXY`, `USENET_SERVERS`, `YT_DLP_OPTIONS`, `FFMPEG_CMDS`, `UPLOAD_PATHS`, `SEARCH_PLUGINS`) must be provided as valid JSON strings.
+    *   Example for `SEARCH_PLUGINS`:
+        ```bash
+        heroku config:set SEARCH_PLUGINS='["https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/piratebay.py","https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/limetorrents.py"]' --app your-app-name
+        ```
+    *   Example for `TG_PROXY` (a dictionary):
+        ```bash
+        heroku config:set TG_PROXY='{"scheme": "socks5", "hostname": "11.22.33.44", "port": 1234}' --app your-app-name
+        ```
+    *   **Important:** Ensure the JSON is well-formed and correctly escaped if setting via CLI, especially with spaces or special characters. Using the Heroku dashboard UI might be easier for complex JSON.
+
+*   **Full List of Variables:** Refer to `config_sample.py` for a comprehensive list of all available environment variables and their detailed descriptions. Not all variables need to be set; many have default values.
+
+### 4. Handling `token.pickle`, `rclone.conf`, and Other Private Files
+
+Sensitive files like `token.pickle` (for Google Drive authentication) and `rclone.conf` (for Rclone remotes) are listed in `.gitignore` and should not be committed to your repository.
+
+*   **MongoDB Storage:** The bot is designed to store these files and other configurations within the MongoDB database specified by `DATABASE_URL`.
+*   **Initial Setup:**
+    1.  Ensure `DATABASE_URL` is correctly configured in your Heroku app's Config Vars, pointing to your MongoDB instance (e.g., a free cluster on MongoDB Atlas).
+    2.  For the initial deployment, the bot needs to populate the database with these sensitive files/configurations. The recommended way is to:
+        *   Run the bot locally first, with your `config.py` (or environment variables) fully configured, and ensure `DATABASE_URL` points to your **production Heroku MongoDB instance**.
+        *   The bot's startup logic (`load_settings` in `bot/core/startup.py`) is designed to save local configurations (including the content of `config.py` itself and potentially other files if they are found and handled by specific setup code) to the database.
+        *   Once the database is populated, subsequent Heroku deployments will load these settings from the database.
+    3.  Alternatively, if you are familiar with MongoDB, you could manually insert the contents of `token.pickle` or `rclone.conf` into the `files` collection (or the relevant collection as per the bot's database structure). File contents are typically stored as binary data or base64 encoded strings. For example, `token.pickle` content would be stored in a document field named `token__pickle` (double underscore replacing the dot).
+
+### 5. Building and Deploying
+
+1.  **Build and Push Docker Image:**
+    This command builds your Docker image using the `Dockerfile` and pushes it to Heroku's container registry.
+    ```bash
+    heroku container:push web --app your-app-name
+    ```
+2.  **Release the Image:**
+    This command deploys the pushed image to your Heroku app.
+    ```bash
+    heroku container:release web --app your-app-name
+    ```
+    If you had a `release` process defined in your `Procfile` (e.g., for database migrations), it would run automatically after this step. This bot currently does not define a release process.
+
+### 6. Viewing Logs
+
+To monitor your bot's activity and troubleshoot issues, you can view its logs:
+```bash
+heroku logs --tail --app your-app-name
+```
+
+### 7. `update.py` Note
+
+The `update.py` script, which allows the bot to self-update from its upstream repository, is intentionally disabled in the `start.sh` script when `HEROKU_ENV` is true (implicitly, as `start.sh` was modified to comment it out for Heroku deployments). Updates on Heroku are managed by pushing new code to your Git repository (if you connected it to Heroku) or by pushing an updated Docker image, followed by a new release.
+
+------
+</details>
+
+<details>
   <summary><h1>Extras</h1></summary>
 
 <details>

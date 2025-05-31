@@ -1,16 +1,31 @@
-mltbenv/*
+# Python virtual environments
+mltbenv/
+.venv/
+
+# Python cache
+*.pyc
+__pycache__/
+
+# Configuration files (sensitive or local)
 config.py
 token.pickle
 rclone.conf
+accounts/ # Service account files
+tokens/ # Other token files potentially
+cfg.zip # JDownloader config backup
+
+# Credentials
 .netrc
+cookies.txt
+
+# Logs
 log.txt
-cfg.zip
-accounts/*
+*.log
+
+# Bot specific data / state / downloads
 thumbnails/*
-rclone/*
-tokens/*
+rclone/* # User specific rclone configs if any
 sabnzbd/*
 list_drives.txt
-cookies.txt
-downloads/*
-*.session
+downloads/
+*.session # Telegram session files

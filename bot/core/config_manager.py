@@ -1,8 +1,13 @@
+import os
 from importlib import import_module
 from ast import literal_eval
 
+HEROKU_ENV = os.environ.get('HEROKU_ENV', '').lower() == 'true'
 
 class Config:
+    # Define all possible config variables with their defaults
+    # These defaults will be used if not set in config.py (non-heroku)
+    # or if not set as env vars and no default specified in heroku_config.py get_config
     AS_DOCUMENT = False
     AUTHORIZED_CHATS = ""
     BASE_URL = ""
@@ -64,11 +69,19 @@ class Config:
     USE_SERVICE_ACCOUNTS = False
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
+    PORT = None # Added for Heroku
 
 
     @classmethod
     def _convert(cls, key, value):
-        expected_type = type(getattr(cls, key))
+        # Ensure key exists to get expected_type, otherwise default to type of value if not None else str
+        if hasattr(cls, key):
+            expected_type = type(getattr(cls, key))
+        elif value is not None:
+            expected_type = type(value)
+        else:
+            expected_type = str # Default assumption
+
         if value is None:
             return None
         if isinstance(value, expected_type):
@@ -122,42 +135,120 @@ class Config:
 
     @classmethod
     def load(cls):
-        settings = import_module("config")
-        for attr in dir(settings):
-            if (
-                not attr.startswith("__")
-                and not callable(getattr(settings, attr))
-                and hasattr(cls, attr)
-            ):
-                value = getattr(settings, attr)
-                if not value:
-                    continue
-                value = cls._convert(attr, value)
-                if isinstance(value, str):
-                    value = value.strip()
-                if attr == "DEFAULT_UPLOAD" and value != "gd":
-                    value = "rc"
-                elif attr in [
-                    "BASE_URL",
-                    "RCLONE_SERVE_URL",
-                    "INDEX_URL",
-                    "SEARCH_API_LINK",
-                ]:
-                    if value:
-                        value = value.strip("/")
-                elif attr == "USENET_SERVERS":
-                    try:
-                        if not value[0].get("host"):
+        if HEROKU_ENV:
+            from bot.heroku_config import (
+                BOT_TOKEN, OWNER_ID, TELEGRAM_API, TELEGRAM_HASH, USER_SESSION_STRING,
+                DATABASE_URL, CMD_SUFFIX, AUTHORIZED_CHATS, SUDO_USERS,
+                DEFAULT_UPLOAD, STATUS_UPDATE_INTERVAL, STATUS_LIMIT,
+                INCOMPLETE_TASK_NOTIFIER, NAME_SUBSTITUTE, EXCLUDED_EXTENSIONS,
+                FILELION_API, STREAMWISH_API, GDRIVE_ID, IS_TEAM_DRIVE,
+                USE_SERVICE_ACCOUNTS, STOP_DUPLICATE, INDEX_URL, RCLONE_PATH,
+                RCLONE_FLAGS, RCLONE_SERVE_URL, RCLONE_SERVE_PORT,
+                RCLONE_SERVE_USER, RCLONE_SERVE_PASS, JD_EMAIL, JD_PASS,
+                HYDRA_IP, HYDRA_API_KEY, UPSTREAM_REPO, UPSTREAM_BRANCH,
+                LEECH_SPLIT_SIZE, AS_DOCUMENT, EQUAL_SPLITS, MEDIA_GROUP,
+                USER_TRANSMISSION, HYBRID_LEECH, LEECH_FILENAME_PREFIX,
+                LEECH_DUMP_CHAT, THUMBNAIL_LAYOUT, TORRENT_TIMEOUT, BASE_URL,
+                BASE_URL_PORT, WEB_PINCODE, TG_PROXY, YT_DLP_OPTIONS, FFMPEG_CMDS,
+                UPLOAD_PATHS, USENET_SERVERS, QUEUE_ALL, QUEUE_DOWNLOAD,
+                QUEUE_UPLOAD, RSS_DELAY, RSS_CHAT, RSS_SIZE_LIMIT,
+                SEARCH_API_LINK, SEARCH_LIMIT, SEARCH_PLUGINS, PORT
+            )
+
+            heroku_configs = {
+                "BOT_TOKEN": BOT_TOKEN, "OWNER_ID": OWNER_ID, "TELEGRAM_API": TELEGRAM_API,
+                "TELEGRAM_HASH": TELEGRAM_HASH, "USER_SESSION_STRING": USER_SESSION_STRING,
+                "DATABASE_URL": DATABASE_URL, "CMD_SUFFIX": CMD_SUFFIX,
+                "AUTHORIZED_CHATS": AUTHORIZED_CHATS, "SUDO_USERS": SUDO_USERS,
+                "DEFAULT_UPLOAD": DEFAULT_UPLOAD, "STATUS_UPDATE_INTERVAL": STATUS_UPDATE_INTERVAL,
+                "STATUS_LIMIT": STATUS_LIMIT, "INCOMPLETE_TASK_NOTIFIER": INCOMPLETE_TASK_NOTIFIER,
+                "NAME_SUBSTITUTE": NAME_SUBSTITUTE, "EXCLUDED_EXTENSIONS": EXCLUDED_EXTENSIONS,
+                "FILELION_API": FILELION_API, "STREAMWISH_API": STREAMWISH_API,
+                "GDRIVE_ID": GDRIVE_ID, "IS_TEAM_DRIVE": IS_TEAM_DRIVE,
+                "USE_SERVICE_ACCOUNTS": USE_SERVICE_ACCOUNTS, "STOP_DUPLICATE": STOP_DUPLICATE,
+                "INDEX_URL": INDEX_URL, "RCLONE_PATH": RCLONE_PATH, "RCLONE_FLAGS": RCLONE_FLAGS,
+                "RCLONE_SERVE_URL": RCLONE_SERVE_URL, "RCLONE_SERVE_PORT": RCLONE_SERVE_PORT,
+                "RCLONE_SERVE_USER": RCLONE_SERVE_USER, "RCLONE_SERVE_PASS": RCLONE_SERVE_PASS,
+                "JD_EMAIL": JD_EMAIL, "JD_PASS": JD_PASS, "HYDRA_IP": HYDRA_IP,
+                "HYDRA_API_KEY": HYDRA_API_KEY, "UPSTREAM_REPO": UPSTREAM_REPO,
+                "UPSTREAM_BRANCH": UPSTREAM_BRANCH, "LEECH_SPLIT_SIZE": LEECH_SPLIT_SIZE,
+                "AS_DOCUMENT": AS_DOCUMENT, "EQUAL_SPLITS": EQUAL_SPLITS,
+                "MEDIA_GROUP": MEDIA_GROUP, "USER_TRANSMISSION": USER_TRANSMISSION,
+                "HYBRID_LEECH": HYBRID_LEECH, "LEECH_FILENAME_PREFIX": LEECH_FILENAME_PREFIX,
+                "LEECH_DUMP_CHAT": LEECH_DUMP_CHAT, "THUMBNAIL_LAYOUT": THUMBNAIL_LAYOUT,
+                "TORRENT_TIMEOUT": TORRENT_TIMEOUT, "BASE_URL": BASE_URL,
+                "BASE_URL_PORT": BASE_URL_PORT, "WEB_PINCODE": WEB_PINCODE,
+                "TG_PROXY": TG_PROXY, "YT_DLP_OPTIONS": YT_DLP_OPTIONS,
+                "FFMPEG_CMDS": FFMPEG_CMDS, "UPLOAD_PATHS": UPLOAD_PATHS,
+                "USENET_SERVERS": USENET_SERVERS, "QUEUE_ALL": QUEUE_ALL,
+                "QUEUE_DOWNLOAD": QUEUE_DOWNLOAD, "QUEUE_UPLOAD": QUEUE_UPLOAD,
+                "RSS_DELAY": RSS_DELAY, "RSS_CHAT": RSS_CHAT, "RSS_SIZE_LIMIT": RSS_SIZE_LIMIT,
+                "SEARCH_API_LINK": SEARCH_API_LINK, "SEARCH_LIMIT": SEARCH_LIMIT,
+                "SEARCH_PLUGINS": SEARCH_PLUGINS, "PORT": PORT
+            }
+
+            for key, value in heroku_configs.items():
+                if hasattr(cls, key):
+                    # Use _convert for type consistency if value is not None
+                    # If value is None, it means it wasn't set in env and no default in heroku_config's get_config
+                    # In this case, the class default attribute should prevail.
+                    if value is not None:
+                        converted_value = cls._convert(key, value)
+                        setattr(cls, key, converted_value)
+                    # If value is None from heroku_config, we keep the class default (e.g. PORT = None)
+                    # unless heroku_config provided a specific default like `default=0` for an int.
+                    # The heroku_config.get_config handles providing defaults if env var is missing.
+                    # So, if 'value' here is None, it means it was truly not set and had no default in get_config.
+        else:
+            # Original logic for non-Heroku environments
+            try:
+                settings = import_module("config")
+                for attr in dir(settings):
+                    if (
+                        not attr.startswith("__")
+                        and not callable(getattr(settings, attr))
+                        and hasattr(cls, attr)
+                    ):
+                        value = getattr(settings, attr)
+                        # if not value and value != False and value != 0: # Original check: `if not value:`
+                        # The original check `if not value:` would skip False, 0, empty strings/lists/dicts.
+                        # This should be fine as _convert handles types.
+                        # Let's refine to only skip if value is None, to allow False/0/empty collections from config.py
+                        if value is None:
                             continue
-                    except:
-                        continue
-                setattr(cls, attr, value)
+
+                        value = cls._convert(attr, value)
+                        if isinstance(value, str):
+                            value = value.strip()
+
+                        # Specific value adjustments from original logic
+                        if attr == "DEFAULT_UPLOAD" and value != "gd":
+                            value = "rc"
+                        elif attr in [
+                            "BASE_URL", "RCLONE_SERVE_URL", "INDEX_URL", "SEARCH_API_LINK",
+                        ] and value: # Ensure value is not None before stripping
+                            value = value.strip("/")
+                        elif attr == "USENET_SERVERS":
+                            try:
+                                if not value or not value[0].get("host"): # Check if list is empty or first host is missing
+                                    value = [] # Set to empty list if invalid
+                            except:
+                                value = [] # Set to empty list on error
+                        setattr(cls, attr, value)
+            except ImportError:
+                print("Warning: 'config.py' not found. Using default values defined in Config class.")
+                # Defaults defined in Config class will be used.
+                # Essential vars check below will still apply.
+
+        # Common validation for essential variables for both Heroku and local
         for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
             value = getattr(cls, key)
-            if isinstance(value, str):
-                value = value.strip()
-            if not value:
-                raise ValueError(f"{key} variable is missing!")
+            is_missing_str = isinstance(value, str) and not value.strip()
+            is_missing_int = isinstance(value, int) and value == 0 # Assuming 0 is invalid for ID/API
+            if value is None or is_missing_str or (key in ["OWNER_ID", "TELEGRAM_API"] and is_missing_int):
+                raise ValueError(f"{key} variable is missing or invalid!")
+
+                raise ValueError(f"{key} variable is missing or invalid!")
 
     @classmethod
     def load_dict(cls, config_dict):
