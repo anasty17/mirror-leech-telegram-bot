@@ -6,6 +6,8 @@ programming in Python.
 - **TELEGRAM CHANNEL:** https://t.me/mltb_official_channel
 - **TELEGRAM GROUP:** https://t.me/mltb_official_support
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://www.heroku.com/deploy?template=https://github.com/anasty17/mirror-leech-telegram-bot)
+
 <details>
   <summary><h1>Features</h1></summary>
 

@@ -1,0 +1,251 @@
+{
+  "name": "Mirror Leech Telegram Bot",
+  "description": "A Telegram bot to mirror/leech files to Google Drive, Telegram, or other cloud storage.",
+  "repository": "https://github.com/anasty17/mirror-leech-telegram-bot",
+  "logo": "https://raw.githubusercontent.com/anasty17/mirror-leech-telegram-bot/master/docs/images/mltb.png",
+  "keywords": ["telegram", "bot", "mirror", "leech", "gdrive", "rclone", "qBittorrent", "aria2c", "sabnzbd", "jdownloader", "telegram-bot", "google-drive"],
+  "stack": "container",
+  "env": {
+    "HEROKU_ENV": {
+      "description": "Set to 'True' to enable Heroku specific configurations. This is essential for Heroku deployment.",
+      "value": "True",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Your Telegram bot token from @BotFather.",
+      "value": "",
+      "required": true
+    },
+    "OWNER_ID": {
+      "description": "Your Telegram User ID (must be an integer). This is the main admin of the bot.",
+      "value": "",
+      "required": true
+    },
+    "TELEGRAM_API": {
+      "description": "Your Telegram API ID from my.telegram.org (must be an integer).",
+      "value": "",
+      "required": true
+    },
+    "TELEGRAM_HASH": {
+      "description": "Your Telegram API Hash from my.telegram.org.",
+      "value": "",
+      "required": true
+    },
+    "DATABASE_URL": {
+      "description": "MongoDB connection string URI (e.g., from MongoDB Atlas). Essential for storing settings, user data, and files like token.pickle/rclone.conf.",
+      "value": "",
+      "required": true
+    },
+    "BASE_URL": {
+      "description": "The base URL of your Heroku app (e.g., https://your-app-name.herokuapp.com). Used for web file selection, rclone serve, and other callbacks. Automatically set by Heroku if this field is omitted for 'Deploy to Heroku' button, but good to be aware of.",
+      "value": "",
+      "required": false
+    },
+    "CMD_SUFFIX": {
+      "description": "(Optional) Suffix to be added to all bot commands (e.g., if you have multiple bots).",
+      "value": "",
+      "required": false
+    },
+    "AUTHORIZED_CHATS": {
+      "description": "(Optional) Space-separated list of chat IDs (e.g., -100123456789 12345678) or chat_id|thread_id authorized to use the bot.",
+      "value": "",
+      "required": false
+    },
+    "SUDO_USERS": {
+      "description": "(Optional) Space-separated list of Telegram User IDs who have sudo (admin-like) access to the bot.",
+      "value": "",
+      "required": false
+    },
+    "DEFAULT_UPLOAD": {
+      "description": "(Optional) Default upload mode: 'rc' for rclone, 'gd' for Google Drive. Default is 'rc'.",
+      "value": "rc",
+      "required": false
+    },
+    "STATUS_UPDATE_INTERVAL": {
+      "description": "(Optional) Interval in seconds for status message updates. Default is 10.",
+      "value": "10",
+      "required": false
+    },
+    "STATUS_LIMIT": {
+      "description": "(Optional) Limit the number of tasks shown in status messages with buttons. Default is 4.",
+      "value": "4",
+      "required": false
+    },
+    "EXCLUDED_EXTENSIONS": {
+        "description": "(Optional) Space separated file extensions to exclude from upload/clone (e.g., .zip .iso).",
+        "value": "",
+        "required": false
+    },
+    "INCOMPLETE_TASK_NOTIFIER": {
+        "description": "(Optional) Set to 'True' to get incomplete task messages after restart (requires Database). Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "USE_SERVICE_ACCOUNTS": {
+        "description": "(Optional) Set to 'True' to use Google Service Accounts for GDrive operations. Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "GDRIVE_ID": {
+        "description": "(Optional) Google Drive Folder/TeamDrive ID for uploads if DEFAULT_UPLOAD is 'gd'.",
+        "value": "",
+        "required": false
+    },
+    "IS_TEAM_DRIVE": {
+        "description": "(Optional) Set to 'True' if GDRIVE_ID is a Team Drive. Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "INDEX_URL": {
+        "description": "(Optional) Index URL for Google Drive (if GDRIVE_ID is used and you have an index setup).",
+        "value": "",
+        "required": false
+    },
+    "STOP_DUPLICATE": {
+        "description": "(Optional) Set to 'True' to prevent uploading duplicate files/folders to GDrive (checks by name). Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "RCLONE_PATH": {
+        "description": "(Optional) Default rclone path (e.g., remote:path) if DEFAULT_UPLOAD is 'rc'.",
+        "value": "",
+        "required": false
+    },
+    "RCLONE_FLAGS": {
+        "description": "(Optional) Additional rclone flags, separated by '|' (e.g., --drive-chunk-size:64M|--retries:5). Do not use quotes around values.",
+        "value": "",
+        "required": false
+    },
+    "LEECH_SPLIT_SIZE": {
+        "description": "(Optional) Split size for Telegram leech in bytes. Bot defaults: 2GB (non-premium), 4GB (premium).",
+        "value": "",
+        "required": false
+    },
+    "AS_DOCUMENT": {
+        "description": "(Optional) Set to 'True' to upload to Telegram as document by default. Default is 'False' (media).",
+        "value": "False",
+        "required": false
+    },
+    "EQUAL_SPLITS": {
+        "description": "(Optional) Set to 'True' to split files into equal parts for leech. Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "MEDIA_GROUP": {
+        "description": "(Optional) Set to 'True' to upload leeched split file parts in a media group. Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "USER_TRANSMISSION": {
+        "description": "(Optional) Set to 'True' to use user session for Telegram uploads/downloads (requires USER_SESSION_STRING and premium). Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "HYBRID_LEECH": {
+        "description": "(Optional) Set to 'True' for hybrid user/bot session leech (requires USER_SESSION_STRING and premium). Default is 'False'.",
+        "value": "False",
+        "required": false
+    },
+    "LEECH_FILENAME_PREFIX": {
+        "description": "(Optional) Prefix for filenames of leeched files.",
+        "value": "",
+        "required": false
+    },
+    "LEECH_DUMP_CHAT": {
+        "description": "(Optional) Chat ID (e.g., -100xxxx or username or 'pm') for leech dumps. For topics: chat_id|thread_id.",
+        "value": "",
+        "required": false
+    },
+    "TORRENT_TIMEOUT": {
+        "description": "(Optional) Timeout for dead torrents in seconds. Bot default is 0 (disabled).",
+        "value": "",
+        "required": false
+    },
+    "UPSTREAM_REPO": {
+      "description": "(Optional) Your fork's GitHub repository URL for updates. Updates via this method are disabled on Heroku by default in start.sh. Format: https://username:token@github.com/username/repo",
+      "value": "",
+      "required": false
+    },
+    "UPSTREAM_BRANCH": {
+      "description": "(Optional) Branch for UPSTREAM_REPO. Default is 'master'.",
+      "value": "master",
+      "required": false
+    },
+    "USER_SESSION_STRING": {
+        "description": "(Optional) Pyrogram user session string. Needed for USER_TRANSMISSION, HYBRID_LEECH, or RSS via user account. Generate using 'python3 generate_string_session.py'.",
+        "value": "",
+        "required": false
+    },
+    "TG_PROXY": {
+        "description": "(Optional) Telegram proxy settings as a JSON string. E.g., {\"scheme\": \"socks5\", \"hostname\": \"1.2.3.4\", \"port\": 1080, \"username\": \"user\", \"password\": \"pass\"}",
+        "value": "{}",
+        "required": false
+    },
+    "YT_DLP_OPTIONS": {
+        "description": "(Optional) yt-dlp options as a JSON string. E.g., {\"format\": \"bestvideo+bestaudio/best\", \"writesubtitles\": true}",
+        "value": "{}",
+        "required": false
+    },
+    "FFMPEG_CMDS": {
+        "description": "(Optional) Predefined FFmpeg commands as a JSON string dictionary. E.g., {\"convert_mkv_mp4\": \"-i mltb.mkv -c copy mltb.mp4\"}",
+        "value": "{}",
+        "required": false
+    },
+    "UPLOAD_PATHS": {
+        "description": "(Optional) Saved named upload paths as a JSON string dictionary. E.g., {\"my_gdrive\": \"gdrive_id_here\", \"my_rclone\": \"remote:path\"}",
+        "value": "{}",
+        "required": false
+    },
+    "SEARCH_PLUGINS": {
+        "description": "(Optional) qBittorrent search plugins as a JSON string array of URLs. Defaults to a predefined list if empty or invalid JSON.",
+        "value": "",
+        "required": false
+    },
+    "USENET_SERVERS": {
+        "description": "(Optional) Sabnzbd Usenet server configurations as a JSON string array of objects. Defaults to a predefined structure if empty or invalid JSON.",
+        "value": "",
+        "required": false
+    },
+    "FILELION_API": {"description": "(Optional) FileLion API key.", "value": "", "required": false},
+    "STREAMWISH_API": {"description": "(Optional) Streamwish API key.", "value": "", "required": false},
+    "NAME_SUBSTITUTE": {"description": "(Optional) Name substitution patterns for renaming files. Ex: original/replacement/s|another/removed", "value": "", "required": false},
+    "RCLONE_SERVE_URL": {"description": "(Optional) Public URL for rclone serve (if used, e.g. https://my-rclone-serve.herokuapp.com).", "value": "", "required": false},
+    "RCLONE_SERVE_PORT": {"description": "(Optional) Port for rclone serve. Default 8080. (Note: Heroku uses $PORT for main web, this is for rclone's own serve).", "value": "8080", "required": false},
+    "RCLONE_SERVE_USER": {"description": "(Optional) Username for rclone serve authentication.", "value": "", "required": false},
+    "RCLONE_SERVE_PASS": {"description": "(Optional) Password for rclone serve authentication.", "value": "", "required": false},
+    "JD_EMAIL": {"description": "(Optional) JDownloader email for My JDownloader integration.", "value": "", "required": false},
+    "JD_PASS": {"description": "(Optional) JDownloader password for My JDownloader integration.", "value": "", "required": false},
+    "HYDRA_IP": {"description": "(Optional) NZBHydra2 IP address for NZB searching.", "value": "", "required": false},
+    "HYDRA_API_KEY": {"description": "(Optional) NZBHydra2 API key for NZB searching.", "value": "", "required": false},
+    "WEB_PINCODE": {"description": "(Optional) Set to 'True' to require a pincode for web file selection (if BASE_URL is used). Default 'False'.", "value": "False", "required": false},
+    "QUEUE_ALL": {"description": "(Optional) Max parallel download/upload tasks globally. Bot default 0 (no limit).", "value": "", "required": false},
+    "QUEUE_DOWNLOAD": {"description": "(Optional) Max parallel download tasks. Bot default 0 (no limit).", "value": "", "required": false},
+    "QUEUE_UPLOAD": {"description": "(Optional) Max parallel upload tasks. Bot default 0 (no limit).", "value": "", "required": false},
+    "RSS_DELAY": {"description": "(Optional) RSS refresh interval in seconds. Default 600.", "value": "600", "required": false},
+    "RSS_CHAT": {"description": "(Optional) Chat ID for RSS notifications (user ID or channel/group ID).", "value": "", "required": false},
+    "RSS_SIZE_LIMIT": {"description": "(Optional) RSS item size limit in bytes. Default 0 (no limit).", "value": "0", "required": false},
+    "SEARCH_API_LINK": {"description": "(Optional) Torrent search API link (if using a separate search API).", "value": "", "required": false},
+    "SEARCH_LIMIT": {"description": "(Optional) Torrent search limit per site when using built-in search. Default 0 (API's own default).", "value": "0", "required": false},
+    "THUMBNAIL_LAYOUT": {"description": "(Optional) Thumbnail layout for uploads (e.g., '2x2', '3x2'). Affects how multiple thumbnails are stitched.", "value": "", "required": false}
+  },
+  "addons": [
+    {
+      "plan": "mongolab:sandbox",
+      "as": "DATABASE",
+      "options": {
+        "version": "5.0"
+      }
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/container"
+    }
+  ]
+}
