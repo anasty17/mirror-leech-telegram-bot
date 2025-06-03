@@ -1,4 +1,5 @@
 from re import compile as re_compile, I, S, escape
+from pytdbot.types import Message
 
 from ... import user_data, auth_chats, sudo_users
 from ...core.config_manager import Config
@@ -6,23 +7,22 @@ from ...core.telegram_client import TgClient
 
 
 class CustomFilters:
-    def owner_filter(_, update, pattern=None):
-        if pattern:
-            match = pattern.match(update.text)
-            if not match:
-                return False
-        user = update.from_user or update.sender_chat
-        return user.id == Config.OWNER_ID
 
-    def authorized_user(_, update, pattern=None):
+    def owner_filter(_, message, pattern=None):
         if pattern:
-            match = pattern.match(update.text)
+            match = pattern.match(message.text)
             if not match:
                 return False
-        user = update.from_user or update.sender_chat
-        uid = user.id
-        chat_id = update.chat.id
-        thread_id = update.message_thread_id if update.topic_message else None
+        return message.from_id == Config.OWNER_ID
+
+    def authorized_user(_, message, pattern=None):
+        if pattern:
+            match = pattern.match(message.text)
+            if not match:
+                return False
+        uid = message.from_id
+        chat_id = message.chat_id
+        thread_id = message.message_thread_id if message.is_topic_message else None
         return bool(
             uid == Config.OWNER_ID
             or (
@@ -51,13 +51,15 @@ class CustomFilters:
             )
         )
 
-    def sudo_user(_, update, pattern=None):
+    def sudo_user(_, event, pattern=None):
+        if isinstance(event, Message):
+            uid = event.from_id
+        else:
+            uid = event.sender_user_id
         if pattern:
-            match = pattern.match(update.text)
+            match = pattern.match(event.text)
             if not match:
                 return False
-        user = update.from_user or update.sender_chat
-        uid = user.id
         return bool(
             uid == Config.OWNER_ID
             or uid in user_data
@@ -65,9 +67,9 @@ class CustomFilters:
             or uid in sudo_users
         )
 
-    def public_user(self, update, pattern=None):
+    def public_user(self, message, pattern=None):
         if pattern:
-            match = pattern.match(update.text)
+            match = pattern.match(message.text)
             return bool(match)
 
 

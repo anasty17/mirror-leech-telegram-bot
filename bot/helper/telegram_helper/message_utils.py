@@ -1,7 +1,7 @@
 from asyncio import sleep
-from pyrogram.errors import FloodWait, FloodPremiumWait
 from re import match as re_match
 from time import time
+from pytdbot.types import Error
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals, DOWNLOAD_DIR
 from ...core.config_manager import Config
@@ -12,81 +12,79 @@ from ..ext_utils.status_utils import get_readable_message
 
 
 async def send_message(message, text, buttons=None, block=True):
-    try:
-        return await message.reply(
-            text=text,
-            quote=True,
-            disable_web_page_preview=True,
-            disable_notification=True,
-            reply_markup=buttons,
-        )
-    except FloodWait as f:
+    res = await message.reply_text(
+        text=text,
+        disable_web_page_preview=True,
+        disable_notification=True,
+        reply_markup=buttons,
+    )
+    if isinstance(res, Error):
+        """except FloodWait as f:
         LOGGER.warning(str(f))
         if not block:
             return str(f)
         await sleep(f.value * 1.2)
-        return await send_message(message, text, buttons)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
+        return await send_message(message, text, buttons)"""
+        LOGGER.error(res["message"])
+        return res["message"]
+    return res
 
 
 async def edit_message(message, text, buttons=None, block=True):
-    try:
-        return await message.edit(
-            text=text,
-            disable_web_page_preview=True,
-            reply_markup=buttons,
-        )
-    except FloodWait as f:
+    res = await message.edit_text(
+        text=text,
+        disable_web_page_preview=True,
+        reply_markup=buttons,
+    )
+    if isinstance(res, Error):
+        """except FloodWait as f:
         LOGGER.warning(str(f))
         if not block:
             return str(f)
         await sleep(f.value * 1.2)
-        return await edit_message(message, text, buttons)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
+        return await edit_message(message, text, buttons)"""
+        LOGGER.error(res["message"])
+        return res["message"]
+    return res
 
 
 async def send_file(message, file, caption=""):
-    try:
-        return await message.reply_document(
-            document=file, quote=True, caption=caption, disable_notification=True
-        )
-    except FloodWait as f:
+    res = await message.reply_document(
+        document=file, caption=caption, disable_notification=True
+    )
+    if isinstance(res, Error):
+        """except FloodWait as f:
         LOGGER.warning(str(f))
         await sleep(f.value * 1.2)
-        return await send_file(message, file, caption)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
+        return await send_file(message, file, caption)"""
+        LOGGER.error(res["message"])
+        return res["message"]
+    return res
 
 
 async def send_rss(text, chat_id, thread_id):
-    try:
-        app = TgClient.user or TgClient.bot
-        return await app.send_message(
-            chat_id=chat_id,
-            text=text,
-            disable_web_page_preview=True,
-            message_thread_id=thread_id,
-            disable_notification=True,
-        )
-    except (FloodWait, FloodPremiumWait) as f:
+    app = TgClient.user or TgClient.bot
+    res = await app.sendTextMessage(
+        chat_id=chat_id,
+        text=text,
+        disable_web_page_preview=True,
+        message_thread_id=thread_id,
+        disable_notification=True,
+    )
+    if isinstance(res, Error):
+        """except (FloodWait, FloodPremiumWait) as f:
         LOGGER.warning(str(f))
         await sleep(f.value * 1.2)
-        return await send_rss(text)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
+        return await send_rss(text)"""
+        LOGGER.error(res["message"])
+        return res["message"]
+    return res
 
 
 async def delete_message(message):
-    try:
-        await message.delete()
-    except Exception as e:
-        LOGGER.error(str(e))
+    res = await message.delete()
+    if isinstance(res, Error):
+        LOGGER.error(res["message"])
 
 
 async def auto_delete_message(cmd_message=None, bot_message=None):
@@ -121,7 +119,7 @@ async def get_tg_link_message(link):
             r"tg:\/\/openmessage\?user_id=([0-9]+)&message_id=([0-9-]+)", link
         )
         if not TgClient.user:
-            raise TgLinkException("USER_SESSION_STRING required for this private link!")
+            raise TgLinkException("USER_SESSION required for this private link!")
 
     chat = msg[1]
     msg_id = msg[2]
@@ -149,28 +147,21 @@ async def get_tg_link_message(link):
         chat = int(chat) if private else int(f"-100{chat}")
 
     if not private:
-        try:
-            message = await TgClient.bot.get_messages(chat_id=chat, message_ids=msg_id)
-            if message.empty:
-                private = True
-        except Exception as e:
+        message = await TgClient.bot.getMessage(chat_id=chat, message_id=msg_id)
+        if isinstance(message, Error):
             private = True
             if not TgClient.user:
-                raise e
+                raise TgLinkException(message["message"])
 
     if not private:
         return (links, "bot") if links else (message, "bot")
     elif TgClient.user:
-        try:
-            user_message = await TgClient.user.get_messages(
-                chat_id=chat, message_ids=msg_id
-            )
-        except Exception as e:
+        user_message = await TgClient.user.getMessage(chat_id=chat, message_id=msg_id)
+        if isinstance(message, Error):
             raise TgLinkException(
-                f"You don't have access to this chat!. ERROR: {e}"
-            ) from e
-        if not user_message.empty:
-            return (links, "user") if links else (user_message, "user")
+                f"You don't have access to this chat!. ERROR: {user_message["message"]}"
+            )
+        return (links, "user") if links else (user_message, "user")
     else:
         raise TgLinkException("Private: Please report!")
 

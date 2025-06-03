@@ -1,4 +1,9 @@
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pytdbot.types import (
+    ReplyMarkupInlineKeyboard,
+    InlineKeyboardButton,
+    InlineKeyboardButtonTypeCallback,
+    InlineKeyboardButtonTypeUrl,
+)
 
 
 class ButtonMaker:
@@ -9,22 +14,36 @@ class ButtonMaker:
 
     def url_button(self, key, link, position=None):
         if not position:
-            self._button.append(InlineKeyboardButton(text=key, url=link))
-        elif position == "header":
-            self._header_button.append(InlineKeyboardButton(text=key, url=link))
-        elif position == "footer":
-            self._footer_button.append(InlineKeyboardButton(text=key, url=link))
-
-    def data_button(self, key, data, position=None):
-        if not position:
-            self._button.append(InlineKeyboardButton(text=key, callback_data=data))
+            self._button.append(
+                InlineKeyboardButton(text=key, type=InlineKeyboardButtonTypeUrl(link))
+            )
         elif position == "header":
             self._header_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
+                InlineKeyboardButton(text=key, type=InlineKeyboardButtonTypeUrl(link))
             )
         elif position == "footer":
             self._footer_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
+                InlineKeyboardButton(text=key, type=InlineKeyboardButtonTypeUrl(link))
+            )
+
+    def data_button(self, key, data, position=None):
+        if not position:
+            self._button.append(
+                InlineKeyboardButton(
+                    text=key, type=InlineKeyboardButtonTypeCallback(data.encode())
+                )
+            )
+        elif position == "header":
+            self._header_button.append(
+                InlineKeyboardButton(
+                    text=key, type=InlineKeyboardButtonTypeCallback(data.encode())
+                )
+            )
+        elif position == "footer":
+            self._footer_button.append(
+                InlineKeyboardButton(
+                    text=key, type=InlineKeyboardButtonTypeCallback(data.encode())
+                )
             )
 
     def build_menu(self, b_cols=1, h_cols=8, f_cols=8):
@@ -49,7 +68,7 @@ class ButtonMaker:
                 ]
             else:
                 menu.append(self._footer_button)
-        return InlineKeyboardMarkup(menu)
+        return ReplyMarkupInlineKeyboard(menu)
 
     def reset(self):
         self._button = []
