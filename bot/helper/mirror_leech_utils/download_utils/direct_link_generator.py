@@ -36,6 +36,8 @@ def direct_link_generator(link):
         return devuploads(link)
     elif "lulacloud.com" in domain:
         return lulacloud(link)
+    elif "uploadhaven" in domain:
+        return uploadhaven(link)
     elif "fuckingfast.co" in domain:
         return fuckingfast_dl(link)
     elif "mediafire.com" in domain:
