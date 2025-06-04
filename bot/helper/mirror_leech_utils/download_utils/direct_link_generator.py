@@ -23,7 +23,6 @@ user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 )
 
-
 def direct_link_generator(link):
     """direct links generator"""
     domain = urlparse(link).hostname
@@ -347,6 +346,27 @@ def devuploads(url):
         direct_link = html.xpath("//input[@name='orilink']/@value")
         return direct_link[0]
 
+def uploadhaven(url):
+    """
+    Generate a direct download link for uploadhaven.com URLs.
+    @param url: URL from uploadhaven.com
+    @return: Direct download link
+    """
+    try:
+        res = get(url,headers={'Referer':'http://steamunlocked.net/'})
+        html = HTML(res.text)
+        if not html.xpath('//form[@method="POST"]//input'):
+            raise DirectDownloadLinkException("ERROR: Unable to find link data")        
+        data = {i.get("name"): i.get("value") for i in html.xpath('//form[@method="POST"]//input')}
+        sleep(15)
+        res = post(url, data=data, headers={'Referer': url}, cookies=res.cookies)
+        html = HTML(res.text)
+        if not html.xpath('//div[@class="alert alert-success mb-0"]//a'):
+            raise DirectDownloadLinkException("ERROR: Unable to find link data")
+        a = html.xpath('//div[@class="alert alert-success mb-0"]//a')[0]
+        return a.get('href')
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
 
 def mediafire(url, session=None):
     if "/folder/" in url:
