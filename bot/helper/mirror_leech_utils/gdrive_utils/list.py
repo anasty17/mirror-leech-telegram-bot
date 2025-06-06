@@ -3,10 +3,10 @@ from asyncio import wait_for, Event, gather
 from functools import partial
 from logging import getLogger
 from natsort import natsorted
-from pyrogram.filters import regex, user
-from pyrogram.handlers import CallbackQueryHandler
 from tenacity import RetryError
 from time import time
+from pytdbot.filters import create
+from re import match
 
 from ....core.config_manager import Config
 from ...ext_utils.bot_utils import update_user_ldata, new_task
@@ -28,8 +28,8 @@ LIST_LIMIT = 6
 @new_task
 async def id_updates(_, query, obj):
     await query.answer()
-    message = query.message
-    data = query.data.split()
+    message = await query.getMessage()
+    data = query.text.split()
     if data[1] == "cancel":
         obj.id = "Task has been cancelled!"
         obj.listener.is_cancelled = True
@@ -137,11 +137,14 @@ class GoogleDriveList(GoogleDriveHelper):
 
     async def _event_handler(self):
         pfunc = partial(id_updates, obj=self)
-        handler = self.listener.client.add_handler(
-            CallbackQueryHandler(
-                pfunc, filters=regex("^gdq") & user(self.listener.user_id)
+        self.listener.client.add_handler(
+            "updateNewCallbackQuery",
+            pfunc,
+            filters=create(
+                lambda _, e: match("^gdq ", e.text)
+                and self.listener.user_id == e.sender_user_id
             ),
-            group=-1,
+            position=1,
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
@@ -150,7 +153,7 @@ class GoogleDriveList(GoogleDriveHelper):
             self.listener.is_cancelled = True
             self.event.set()
         finally:
-            self.listener.client.remove_handler(*handler)
+            self.listener.client.remove_handler(pfunc)
 
     async def _send_list_message(self, msg, button):
         if not self.listener.is_cancelled:

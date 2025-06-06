@@ -8,20 +8,23 @@ from ..helper.telegram_helper.message_utils import delete_message, send_message
 @new_task
 async def count_node(_, message):
     args = message.text.split()
-    user = message.from_user or message.sender_chat
-    if username := user.username:
+    user = await message.getUser()
+    if username := user.usernames.editable_username:
         tag = f"@{username}"
+    elif hasattr(user, "first_name"):
+        tag = f'<a href="tg://user?id={user.id}">{user.first_name}</a>'
     else:
-        tag = message.from_user.mention
+        tag = "None"
 
     link = args[1] if len(args) > 1 else ""
-    if len(link) == 0 and (reply_to := message.reply_to_message):
+    if len(link) == 0 and message.reply_to:
+        reply_to = await message.getRepliedMessage()
         link = reply_to.text.split(maxsplit=1)[0].strip()
 
     if is_gdrive_link(link):
         msg = await send_message(message, f"Counting: <code>{link}</code>")
         name, mime_type, size, files, folders = await sync_to_async(
-            GoogleDriveCount().count, link, user.id
+            GoogleDriveCount().count, link, message.from_id
         )
         if mime_type is None:
             await send_message(message, name)
@@ -40,6 +43,3 @@ async def count_node(_, message):
         )
 
     await send_message(message, msg)
-
-
-

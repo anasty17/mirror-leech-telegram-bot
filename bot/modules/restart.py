@@ -31,7 +31,7 @@ async def restart_bot(_, message):
 async def send_incomplete_task_message(cid, msg_id, msg):
     try:
         if msg.startswith("Restarted Successfully!"):
-            await TgClient.bot.edit_message_text(
+            await TgClient.bot.editTextMessage(
                 chat_id=cid,
                 message_id=msg_id,
                 text=msg,
@@ -39,7 +39,7 @@ async def send_incomplete_task_message(cid, msg_id, msg):
             )
             await remove(".restartmsg")
         else:
-            await TgClient.bot.send_message(
+            await TgClient.bot.sendMessage(
                 chat_id=cid,
                 text=msg,
                 disable_web_page_preview=True,
@@ -72,7 +72,7 @@ async def restart_notification():
 
     if await aiopath.isfile(".restartmsg"):
         try:
-            await TgClient.bot.edit_message_text(
+            await TgClient.bot.editTextMessage(
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
         except:
@@ -83,14 +83,13 @@ async def restart_notification():
 @new_task
 async def confirm_restart(_, query):
     await query.answer()
-    data = query.data.split()
-    message = query.message
+    data = query.text.split()
+    message = await query.getMessage()
+    reply_to = message.getRepliedMessage()
     await delete_message(message)
     if data[1] == "confirm":
-        reply_to = message.reply_to_message
         intervals["stopAll"] = True
         restart_message = await send_message(reply_to, "Restarting...")
-        await delete_message(message)
         await TgClient.stop()
         if scheduler.running:
             scheduler.shutdown(wait=False)
@@ -135,5 +134,3 @@ async def confirm_restart(_, query):
         async with aiopen(".restartmsg", "w") as f:
             await f.write(f"{restart_message.chat.id}\n{restart_message.id}\n")
         osexecl(executable, executable, "-m", "bot")
-    else:
-        await delete_message(message)

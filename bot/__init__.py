@@ -18,7 +18,6 @@ from os import cpu_count
 
 getLogger("requests").setLevel(WARNING)
 getLogger("urllib3").setLevel(WARNING)
-getLogger("pyrogram").setLevel(ERROR)
 getLogger("httpx").setLevel(WARNING)
 getLogger("pymongo").setLevel(WARNING)
 getLogger("aiohttp").setLevel(WARNING)

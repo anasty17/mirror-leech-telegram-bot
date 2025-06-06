@@ -14,11 +14,10 @@ async def authorize(_, message):
         else:
             chat_id = int(msg[1].strip())
     elif (
-        reply_to := message.reply_to_message
-    ) and reply_to.id != message.message_thread_id:
-        chat_id = (
-            reply_to.from_user.id if reply_to.from_user else reply_to.sender_chat.id
-        )
+        reply_to := message.reply_to
+    ) and reply_to.message_id != message.message_thread_id:
+        reply = await message.getRepliedMessage()
+        chat_id = reply.from_id
     else:
         if message.is_topic_message:
             thread_id = message.message_thread_id
@@ -55,15 +54,14 @@ async def unauthorize(_, message):
         else:
             chat_id = int(msg[1].strip())
     elif (
-        reply_to := message.reply_to_message
-    ) and reply_to.id != message.message_thread_id:
-        chat_id = (
-            reply_to.from_user.id if reply_to.from_user else reply_to.sender_chat.id
-        )
+        reply_to := message.reply_to
+    ) and reply_to.message_id != message.message_thread_id:
+        reply = await message.getRepliedMessage()
+        chat_id = reply.from_id
     else:
         if message.is_topic_message:
             thread_id = message.message_thread_id
-        chat_id = message.chat.id
+        chat_id = message.chat_id
     if chat_id in user_data and user_data[chat_id].get("AUTH"):
         if thread_id is not None and thread_id in user_data[chat_id].get(
             "thread_ids", []
@@ -84,8 +82,9 @@ async def add_sudo(_, message):
     msg = message.text.split()
     if len(msg) > 1:
         id_ = int(msg[1].strip())
-    elif reply_to := message.reply_to_message:
-        id_ = reply_to.from_user.id if reply_to.from_user else reply_to.sender_chat.id
+    elif message.reply_to:
+        reply = await message.getRepliedMessage()
+        id_ = reply.from_id
     if id_:
         if id_ in user_data and user_data[id_].get("SUDO"):
             msg = "Already Sudo!"
@@ -104,8 +103,9 @@ async def remove_sudo(_, message):
     msg = message.text.split()
     if len(msg) > 1:
         id_ = int(msg[1].strip())
-    elif reply_to := message.reply_to_message:
-        id_ = reply_to.from_user.id if reply_to.from_user else reply_to.sender_chat.id
+    elif message.reply_to:
+        reply = await message.getRepliedMessage()
+        id_ = reply.from_id
     if id_ and id_ not in user_data or user_data[id_].get("SUDO"):
         update_user_ldata(id_, "SUDO", False)
         await database.update_user_data(id_)

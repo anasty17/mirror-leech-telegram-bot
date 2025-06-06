@@ -221,7 +221,7 @@ async def plugin_buttons(user_id):
 
 @new_task
 async def torrent_search(_, message):
-    user_id = message.from_user.id
+    user_id = message.from_id
     buttons = ButtonMaker()
     key = message.text.split()
     if SITES is None and not Config.SEARCH_PLUGINS:
@@ -252,9 +252,10 @@ async def torrent_search(_, message):
 
 @new_task
 async def torrent_search_update(_, query):
-    user_id = query.from_user.id
-    message = query.message
-    key = message.reply_to_message.text.split(maxsplit=1)
+    user_id = query.sender_user_id
+    message = await query.getMessage()
+    reply_to = await message.getRepliedMessage()
+    key = reply_to.text.split(maxsplit=1)
     key = key[1].strip() if len(key) > 1 else None
     data = query.data.split()
     if user_id != int(data[1]):

@@ -1,10 +1,10 @@
 from httpx import AsyncClient
 from asyncio import wait_for, Event
 from functools import partial
-from pyrogram.filters import regex, user
-from pyrogram.handlers import CallbackQueryHandler
 from time import time
 from yt_dlp import YoutubeDL
+from pytdbot.filters import create
+from re import match
 
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
 from ..core.config_manager import Config
@@ -28,8 +28,8 @@ from ..helper.telegram_helper.message_utils import (
 
 @new_task
 async def select_format(_, query, obj):
-    data = query.data.split()
-    message = query.message
+    data = query.text.split()
+    message = await query.getMessage()
     await query.answer()
 
     if data[1] == "dict":
@@ -76,11 +76,14 @@ class YtSelection:
 
     async def _event_handler(self):
         pfunc = partial(select_format, obj=self)
-        handler = self.listener.client.add_handler(
-            CallbackQueryHandler(
-                pfunc, filters=regex("^ytq") & user(self.listener.user_id)
+        self.listener.client.add_handler(
+            "updateNewCallbackQuery",
+            pfunc,
+            filters=create(
+                lambda _, e: match("^ytq ", e.text)
+                and self.listener.user_id == e.sender_user_id
             ),
-            group=-1,
+            position=1,
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
@@ -90,7 +93,7 @@ class YtSelection:
             self.listener.is_cancelled = True
             self.event.set()
         finally:
-            self.listener.client.remove_handler(*handler)
+            self.listener.client.remove_handler(pfunc)
 
     async def get_quality(self, result):
         buttons = ButtonMaker()
@@ -265,12 +268,14 @@ class YtDlp(TaskListener):
         bulk=None,
         multi_tag=None,
         options="",
+        user=None,
     ):
         if same_dir is None:
             same_dir = {}
         if bulk is None:
             bulk = []
         self.message = message
+        self.user = user
         self.client = client
         self.multi_tag = multi_tag
         self.options = options
@@ -281,6 +286,9 @@ class YtDlp(TaskListener):
         self.is_leech = is_leech
 
     async def new_event(self):
+        if not self.user:
+            self.user = await self.message.getUser()
+        await self.check_chat_type()
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
         qual = ""
@@ -407,7 +415,8 @@ class YtDlp(TaskListener):
 
         opt = opt or self.user_dict.get("YT_DLP_OPTIONS") or Config.YT_DLP_OPTIONS
 
-        if not self.link and (reply_to := self.message.reply_to_message):
+        if not self.link and self.message.reply_to:
+            reply_to = await self.message.getRepliedMessage()
             self.link = reply_to.text.split("\n", 1)[0].strip()
 
         if not is_url(self.link):

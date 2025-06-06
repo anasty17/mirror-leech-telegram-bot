@@ -1,18 +1,17 @@
 from aiofiles import open as aiopen
 from aiofiles.os import remove, rename, path as aiopath
-from aioshutil import rmtree
+from aioshutil import rmtree, move
+from functools import partial
+from io import BytesIO
+from os import getcwd
+from pytdbot.filters import create
+from time import time
 from asyncio import (
     create_subprocess_exec,
     create_subprocess_shell,
     sleep,
     gather,
 )
-from functools import partial
-from io import BytesIO
-from os import getcwd
-from pyrogram.filters import create
-from pyrogram.handlers import MessageHandler
-from time import time
 
 from .. import (
     LOGGER,
@@ -239,7 +238,7 @@ async def update_buttons(message, key=None, edit_type=None):
 
 @new_task
 async def edit_variable(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     value = message.text
     if value.lower() == "true":
         value = True
@@ -332,7 +331,7 @@ async def edit_variable(_, message, pre_message, key):
 
 @new_task
 async def edit_aria(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     value = message.text
     if key == "newkey":
         key, value = [x.strip() for x in value.split(":", 1)]
@@ -348,7 +347,7 @@ async def edit_aria(_, message, pre_message, key):
 
 @new_task
 async def edit_qbit(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     value = message.text
     if value.lower() == "true":
         value = True
@@ -367,7 +366,7 @@ async def edit_qbit(_, message, pre_message, key):
 
 @new_task
 async def edit_nzb(_, message, pre_message, key):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     value = message.text
     if value.isdigit():
         value = int(value)
@@ -387,7 +386,7 @@ async def edit_nzb(_, message, pre_message, key):
 
 @new_task
 async def edit_nzb_server(_, message, pre_message, key, index=0):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     value = message.text
     if key == "newser":
         if value.startswith("{") and value.endswith("}"):
@@ -438,8 +437,8 @@ async def sync_jdownloader():
 
 @new_task
 async def update_private_file(_, message, pre_message):
-    handler_dict[message.chat.id] = False
-    if not message.media and (file_name := message.text):
+    handler_dict[message.chat_id] = False
+    if not message.remote_file_id and (file_name := message.text):
         if await aiopath.isfile(file_name) and file_name != "config.py":
             await remove(file_name)
         if file_name == "accounts.zip":
@@ -454,12 +453,13 @@ async def update_private_file(_, message, pre_message):
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
         await delete_message(message)
-    elif doc := message.document:
+    elif doc := message.content.document:
         file_name = doc.file_name
         fpath = f"{getcwd()}/{file_name}"
         if await aiopath.exists(fpath):
             await remove(fpath)
-        await message.download(file_name=fpath)
+        res = await message.download(synchronous=True)
+        await move(res.path, fpath)
         if file_name == "accounts.zip":
             if await aiopath.exists("accounts"):
                 await rmtree("accounts", ignore_errors=True)
@@ -514,37 +514,41 @@ async def update_private_file(_, message, pre_message):
 
 
 async def event_handler(client, query, pfunc, rfunc, document=False):
-    chat_id = query.message.chat.id
+    chat_id = query.chat_id
     handler_dict[chat_id] = True
     start_time = time()
 
-    async def event_filter(_, __, event):
-        user = event.from_user or event.sender_chat
+    async def event_filter(_, event):
         return bool(
-            user.id == query.from_user.id
-            and event.chat.id == chat_id
-            and (event.text or event.document and document)
+            event.from_id == query.sender_user_id
+            and event.chat_id == chat_id
+            and (event.text or event.content.document and document)
         )
 
-    handler = client.add_handler(
-        MessageHandler(pfunc, filters=create(event_filter)), group=-1
+    client.add_handler(
+        "updateNewMessage",
+        pfunc,
+        filters=create(event_filter),
+        position=1,
+        inner_object=True,
     )
     while handler_dict[chat_id]:
         await sleep(0.5)
         if time() - start_time > 60:
             handler_dict[chat_id] = False
             await rfunc()
-    client.remove_handler(*handler)
+    client.remove_handler(pfunc)
 
 
 @new_task
 async def edit_bot_settings(client, query):
-    data = query.data.split()
-    message = query.message
-    handler_dict[message.chat.id] = False
+    data = query.text.split()
+    message = await query.getMessage()
+    handler_dict[message.chat_id] = False
     if data[1] == "close":
         await query.answer()
-        await delete_message(message.reply_to_message)
+        reply = message.getRepliedMessage()
+        await delete_message(reply)
         await delete_message(message)
     elif data[1] == "back":
         await query.answer()
@@ -820,13 +824,14 @@ async def edit_bot_settings(client, query):
                     && git push origin {Config.UPSTREAM_BRANCH} -qf"
                 )
             ).wait()
-        await delete_message(message.reply_to_message)
+        reply = message.getRepliedMessage()
+        await delete_message(reply)
         await delete_message(message)
 
 
 @new_task
 async def send_bot_settings(_, message):
-    handler_dict[message.chat.id] = False
+    handler_dict[message.chat_id] = False
     msg, button = await get_buttons()
     globals()["start"] = 0
     await send_message(message, msg, button)

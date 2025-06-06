@@ -16,16 +16,18 @@ from ... import LOGGER, cpu_no, DOWNLOAD_DIR
 from .bot_utils import cmd_exec, sync_to_async
 from .files_utils import get_mime_type, is_archive, is_archive_split
 from .status_utils import time_to_seconds
+from pytdbot.types import Message
 
 
-async def create_thumb(msg, _id=""):
+async def create_thumb(msg: Message, _id=""):
     if not _id:
         _id = time()
         path = f"{DOWNLOAD_DIR}thumbnails"
     else:
         path = "thumbnails"
     await makedirs(path, exist_ok=True)
-    photo_dir = await msg.download()
+    res = await msg.download(synchronous=True)
+    photo_dir = res.path
     output = ospath.join(path, f"{_id}.jpg")
     await sync_to_async(Image.open(photo_dir).convert("RGB").save, output, "JPEG")
     await remove(photo_dir)

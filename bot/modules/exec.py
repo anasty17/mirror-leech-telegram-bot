@@ -13,23 +13,23 @@ from ..helper.telegram_helper.message_utils import send_file, send_message
 namespaces = {}
 
 
-def namespace_of(message):
-    if message.chat.id not in namespaces:
-        namespaces[message.chat.id] = {
+async def namespace_of(message):
+    if message.chat_id not in namespaces:
+        user = await message.getUser()
+        chat = await message.getChat()
+        namespaces[message.chat_id] = {
             "__builtins__": globals()["__builtins__"],
             "bot": TgClient.bot,
             "message": message,
-            "user": message.from_user or message.sender_chat,
-            "chat": message.chat,
+            "user": user,
+            "chat": chat,
         }
 
-    return namespaces[message.chat.id]
+    return namespaces[message.chat_id]
 
 
 def log_input(message):
-    LOGGER.info(
-        f"IN: {message.text} (user={message.from_user.id if message.from_user else message.sender_chat.id}, chat={message.chat.id})"
-    )
+    LOGGER.info(f"IN: {message.text} (user={message.from_id}, chat={message.chat_id})")
 
 
 async def send(msg, message):
@@ -62,7 +62,7 @@ async def do(func, message):
     log_input(message)
     content = message.text.split(maxsplit=1)[-1]
     body = cleanup_code(content)
-    env = namespace_of(message)
+    env = await namespace_of(message)
 
     chdir(getcwd())
     async with aiopen(ospath.join(getcwd(), "bot/modules/temp.txt"), "w") as temp:
@@ -109,6 +109,6 @@ async def do(func, message):
 async def clear(_, message):
     log_input(message)
     global namespaces
-    if message.chat.id in namespaces:
-        del namespaces[message.chat.id]
+    if message.chat_id in namespaces:
+        del namespaces[message.chat_id]
     await send("Locals Cleared.", message)

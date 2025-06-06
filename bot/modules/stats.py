@@ -16,6 +16,7 @@ from .. import bot_start_time
 from ..helper.ext_utils.status_utils import get_readable_file_size, get_readable_time
 from ..helper.ext_utils.bot_utils import cmd_exec, new_task
 from ..helper.telegram_helper.message_utils import send_message
+from pytdbot.types import Message, UpdateNewCallbackQuery
 
 commands = {
     "aria2": (["aria2c", "--version"], r"aria2 version ([\d.]+)"),
@@ -34,8 +35,15 @@ async def bot_stats(_, message):
     total, used, free, disk = disk_usage("/")
     swap = swap_memory()
     memory = virtual_memory()
+    if await aiopath.exists(".git"):
+        last_commit = await cmd_exec(
+            "git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True
+        )
+        last_commit = last_commit[0]
+    else:
+        last_commit = "No UPSTREAM_REPO"
     stats = f"""
-<b>Commit Date:</b> {commands["commit"]}
+<b>Commit Date:</b> {last_commit}
 
 <b>Bot Uptime:</b> {get_readable_time(time() - bot_start_time)}
 <b>OS Uptime:</b> {get_readable_time(time() - boot_time())}
@@ -87,11 +95,3 @@ async def get_packages_version():
     versions = await gather(*tasks)
     for tool, version in zip(commands.keys(), versions):
         commands[tool] = version
-    if await aiopath.exists(".git"):
-        last_commit = await cmd_exec(
-            "git log -1 --date=short --pretty=format:'%cd <b>From</b> %cr'", True
-        )
-        last_commit = last_commit[0]
-    else:
-        last_commit = "No UPSTREAM_REPO"
-    commands["commit"] = last_commit

@@ -54,12 +54,14 @@ class Mirror(TaskListener):
         bulk=None,
         multi_tag=None,
         options="",
+        user=None,
     ):
         if same_dir is None:
             same_dir = {}
         if bulk is None:
             bulk = []
         self.message = message
+        self.user = user
         self.client = client
         self.multi_tag = multi_tag
         self.options = options
@@ -72,6 +74,9 @@ class Mirror(TaskListener):
         self.is_nzb = is_nzb
 
     async def new_event(self):
+        if not self.user:
+            self.user = await self.message.getUser()
+        await self.check_chat_type()
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
 
@@ -213,7 +218,8 @@ class Mirror(TaskListener):
 
         path = f"{DOWNLOAD_DIR}{self.mid}{self.folder_name}"
 
-        if not self.link and (reply_to := self.message.reply_to_message):
+        if not self.link and self.message.reply_to:
+            reply_to = await self.message.getRepliedMessage()
             if reply_to.text:
                 self.link = reply_to.text.split("\n", 1)[0].strip()
         if is_telegram_link(self.link):
@@ -230,13 +236,9 @@ class Mirror(TaskListener):
             self.options = " ".join(input_list[1:])
             b_msg.append(f"{self.bulk[0]} -i {len(self.bulk)} {self.options}")
             nextmsg = await send_message(self.message, " ".join(b_msg))
-            nextmsg = await self.client.get_messages(
-                chat_id=self.message.chat.id, message_ids=nextmsg.id
+            nextmsg = await self.client.getMessage(
+                chat_id=self.message.chat.id, message_id=nextmsg.id
             )
-            if self.message.from_user:
-                nextmsg.from_user = self.user
-            else:
-                nextmsg.sender_chat = self.user
             await Mirror(
                 self.client,
                 nextmsg,
@@ -248,19 +250,20 @@ class Mirror(TaskListener):
                 self.bulk,
                 self.multi_tag,
                 self.options,
+                self.user,
             ).new_event()
             return
 
         if reply_to:
             file_ = (
-                reply_to.document
-                or reply_to.photo
-                or reply_to.video
-                or reply_to.audio
-                or reply_to.voice
-                or reply_to.video_note
-                or reply_to.sticker
-                or reply_to.animation
+                reply_to.content.document
+                or reply_to.content.photo
+                or reply_to.content.video
+                or reply_to.content.audio
+                or reply_to.content.voice_note
+                or reply_to.content.video_note
+                or reply_to.content.sticker
+                or reply_to.content.animation
                 or None
             )
 
@@ -269,11 +272,12 @@ class Mirror(TaskListener):
                     self.link = reply_text.split("\n", 1)[0].strip()
                 else:
                     reply_to = None
-            elif reply_to.document and (
+            elif reply_to.content.document and (
                 file_.mime_type == "application/x-bittorrent"
                 or file_.file_name.endswith((".torrent", ".dlc", ".nzb"))
             ):
-                self.link = await reply_to.download()
+                res = await reply_to.download(synchronous=True)
+                self.link = res.path
                 file_ = None
 
         if (

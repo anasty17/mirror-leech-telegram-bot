@@ -10,10 +10,7 @@ from .. import (
 )
 from ..core.config_manager import Config
 from ..core.torrent_manager import TorrentManager
-from ..helper.ext_utils.bot_utils import (
-    bt_selection_buttons,
-    new_task,
-)
+from ..helper.ext_utils.bot_utils import bt_selection_buttons, new_task
 from ..helper.ext_utils.status_utils import get_task_by_gid, MirrorStatus
 from ..helper.telegram_helper.message_utils import (
     send_message,
@@ -27,7 +24,7 @@ async def select(_, message):
     if not Config.BASE_URL:
         await send_message(message, "Base URL not defined!")
         return
-    user_id = message.from_user.id
+    user_id = message.from_id
     msg = message.text.split()
     if len(msg) > 1:
         gid = msg[1]
@@ -35,9 +32,9 @@ async def select(_, message):
         if task is None:
             await send_message(message, f"GID: <code>{gid}</code> Not Found.")
             return
-    elif reply_to_id := message.reply_to_message_id:
+    elif reply_to := message.reply_to:
         async with task_dict_lock:
-            task = task_dict.get(reply_to_id)
+            task = task_dict.get(reply_to.message_id)
         if task is None:
             await send_message(message, "This is not an active task!")
             return
@@ -101,9 +98,9 @@ async def select(_, message):
 
 @new_task
 async def confirm_selection(_, query):
-    user_id = query.from_user.id
-    data = query.data.split()
-    message = query.message
+    user_id = query.sender_user_id
+    data = query.text.split()
+    message = await query.getMessage()
     task = await get_task_by_gid(data[2])
     if task is None:
         await query.answer("This task has been cancelled!", show_alert=True)

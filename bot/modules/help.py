@@ -5,14 +5,18 @@ from ..helper.ext_utils.help_messages import (
     CLONE_HELP_DICT,
 )
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..helper.telegram_helper.message_utils import edit_message, delete_message, send_message
+from ..helper.telegram_helper.message_utils import (
+    edit_message,
+    delete_message,
+    send_message,
+)
 from ..helper.ext_utils.help_messages import help_string
 
 
 @new_task
 async def arg_usage(_, query):
-    data = query.data.split()
-    message = query.message
+    data = query.text.split()
+    message = await query.getMessage()
     if data[1] == "close":
         await delete_message(message)
     elif data[1] == "back":

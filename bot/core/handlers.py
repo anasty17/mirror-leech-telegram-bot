@@ -453,16 +453,6 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         "updateNewCallbackQuery",
-        select_type,
-        filters=create(lambda _, e: match("^list_types ", e.text)),
-    )
-    TgClient.bot.add_handler(
-        "updateNewCallbackQuery",
-        arg_usage,
-        filters=create(lambda _, e: match("^help ", e.text)),
-    )
-    TgClient.bot.add_handler(
-        "updateNewCallbackQuery",
         edit_bot_settings,
         filters=create(
             partial(CustomFilters.sudo_user, pattern=re_compile("^botset "))
@@ -509,4 +499,14 @@ def add_handlers():
         "updateNewCallbackQuery",
         confirm_selection,
         filters=create(lambda _, e: match("^sel ", e.text)),
+    )
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",
+        select_type,
+        filters=create(lambda _, e: match("^list_types ", e.text)),
+    )
+    TgClient.bot.add_handler(
+        "updateNewCallbackQuery",
+        arg_usage,
+        filters=create(lambda _, e: match("^help ", e.text)),
     )

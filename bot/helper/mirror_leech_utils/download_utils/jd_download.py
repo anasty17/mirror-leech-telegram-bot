@@ -1,13 +1,13 @@
 from asyncio import wait_for, Event, sleep
 from functools import partial
-from pyrogram.filters import regex, user
-from pyrogram.handlers import CallbackQueryHandler
 from time import time
 from aiofiles.os import path as aiopath, remove
 from aiofiles import open as aiopen
 from base64 import b64encode
 from secrets import token_urlsafe
 from myjd.exception import MYJDException
+from pytdbot.filters import create
+from re import match
 
 from .... import (
     task_dict,
@@ -33,8 +33,8 @@ from ...telegram_helper.message_utils import (
 
 @new_task
 async def configureDownload(_, query, obj):
-    data = query.data.split()
-    message = query.message
+    data = query.text.split()
+    message = await query.getMessage()
     await query.answer()
     if data[1] == "sdone":
         obj.event.set()
@@ -53,11 +53,14 @@ class JDownloaderHelper:
 
     async def _event_handler(self):
         pfunc = partial(configureDownload, obj=self)
-        handler = self.listener.client.add_handler(
-            CallbackQueryHandler(
-                pfunc, filters=regex("^jdq") & user(self.listener.user_id)
+        self.listener.client.add_handler(
+            "updateNewCallbackQuery",
+            pfunc,
+            filters=create(
+                lambda _, e: match("^jdq ", e.text)
+                and self.listener.user_id == e.sender_user_id
             ),
-            group=-1,
+            position=1,
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
@@ -66,7 +69,7 @@ class JDownloaderHelper:
             self.listener.is_cancelled = True
             self.event.set()
         finally:
-            self.listener.client.remove_handler(*handler)
+            self.listener.client.remove_handler(pfunc)
 
     async def wait_for_configurations(self):
         buttons = ButtonMaker()

@@ -4,9 +4,9 @@ from asyncio import wait_for, Event, gather
 from configparser import RawConfigParser
 from functools import partial
 from json import loads
-from pyrogram.filters import regex, user
-from pyrogram.handlers import CallbackQueryHandler
 from time import time
+from pytdbot.filters import create
+from re import match
 
 from .... import LOGGER
 from ....core.config_manager import Config
@@ -26,8 +26,8 @@ LIST_LIMIT = 6
 @new_task
 async def path_updates(_, query, obj):
     await query.answer()
-    message = query.message
-    data = query.data.split()
+    message = await query.getMessage()
+    data = query.text.split()
     if data[1] == "cancel":
         obj.remote = "Task has been cancelled!"
         obj.path = ""
@@ -156,11 +156,14 @@ class RcloneList:
 
     async def _event_handler(self):
         pfunc = partial(path_updates, obj=self)
-        handler = self.listener.client.add_handler(
-            CallbackQueryHandler(
-                pfunc, filters=regex("^rcq") & user(self.listener.user_id)
+        self.listener.client.add_handler(
+            "updateNewCallbackQuery",
+            pfunc,
+            filters=create(
+                lambda _, e: match("^rcq ", e.text)
+                and self.listener.user_id == e.sender_user_id
             ),
-            group=-1,
+            position=1,
         )
         try:
             await wait_for(self.event.wait(), timeout=self._timeout)
@@ -170,7 +173,7 @@ class RcloneList:
             self.listener.is_cancelled = True
             self.event.set()
         finally:
-            self.listener.client.remove_handler(*handler)
+            self.listener.client.remove_handler(pfunc)
 
     async def _send_list_message(self, msg, button):
         if not self.listener.is_cancelled:

@@ -15,7 +15,7 @@ async def start(_, message):
     )
     buttons.url_button("Code Owner", "https://t.me/anas_tayyar")
     reply_markup = buttons.build_menu(2)
-    if await CustomFilters.authorized(_, message):
+    if await CustomFilters.authorized_user(_, message):
         start_string = f"""
 This bot can mirror from links|tgfiles|torrents|nzb|rclone-cloud to any rclone cloud, Google Drive or to telegram.
 Type /{BotCommands.HelpCommand} to get a list of available commands

@@ -19,12 +19,12 @@ async def send_message(message, text, buttons=None, block=True):
         reply_markup=buttons,
     )
     if isinstance(res, Error):
-        """except FloodWait as f:
-        LOGGER.warning(str(f))
-        if not block:
-            return str(f)
-        await sleep(f.value * 1.2)
-        return await send_message(message, text, buttons)"""
+        if res["message"].startswith("Too Many Requests: retry after"):
+            LOGGER.warning(res["message"])
+            if block:
+                wait_for = int(res["message"].rsplit(" ", 1)[-1])
+                await sleep(wait_for * 1.2)
+                return await send_message(message, text, buttons)
         LOGGER.error(res["message"])
         return res["message"]
     return res
@@ -37,12 +37,12 @@ async def edit_message(message, text, buttons=None, block=True):
         reply_markup=buttons,
     )
     if isinstance(res, Error):
-        """except FloodWait as f:
-        LOGGER.warning(str(f))
-        if not block:
-            return str(f)
-        await sleep(f.value * 1.2)
-        return await edit_message(message, text, buttons)"""
+        if res["message"].startswith("Too Many Requests: retry after"):
+            LOGGER.warning(res["message"])
+            if block:
+                wait_for = int(res["message"].rsplit(" ", 1)[-1])
+                await sleep(wait_for * 1.2)
+                return await edit_message(message, text, buttons)
         LOGGER.error(res["message"])
         return res["message"]
     return res
@@ -53,10 +53,11 @@ async def send_file(message, file, caption=""):
         document=file, caption=caption, disable_notification=True
     )
     if isinstance(res, Error):
-        """except FloodWait as f:
-        LOGGER.warning(str(f))
-        await sleep(f.value * 1.2)
-        return await send_file(message, file, caption)"""
+        if res["message"].startswith("Too Many Requests: retry after"):
+            LOGGER.warning(res["message"])
+            wait_for = int(res["message"].rsplit(" ", 1)[-1])
+            await sleep(wait_for * 1.2)
+            return await send_file(message, file, caption)
         LOGGER.error(res["message"])
         return res["message"]
     return res
@@ -72,10 +73,11 @@ async def send_rss(text, chat_id, thread_id):
         disable_notification=True,
     )
     if isinstance(res, Error):
-        """except (FloodWait, FloodPremiumWait) as f:
-        LOGGER.warning(str(f))
-        await sleep(f.value * 1.2)
-        return await send_rss(text)"""
+        if res["message"].startswith("Too Many Requests: retry after"):
+            LOGGER.warning(res["message"])
+            wait_for = int(res["message"].rsplit(" ", 1)[-1])
+            await sleep(wait_for * 1.2)
+            return await send_rss(text)
         LOGGER.error(res["message"])
         return res["message"]
     return res
@@ -167,8 +169,8 @@ async def get_tg_link_message(link):
 
 
 async def temp_download(msg):
-    path = f"{DOWNLOAD_DIR}temp"
-    return await msg.download(file_name=f"{path}/")
+    res = await msg.download(synchronous=True)
+    return res.path
 
 
 async def update_status_message(sid, force=False):

@@ -51,11 +51,8 @@ class CustomFilters:
             )
         )
 
-    def sudo_user(_, event, pattern=None):
-        if isinstance(event, Message):
-            uid = event.from_id
-        else:
-            uid = event.sender_user_id
+    def sudo_user(self, event, pattern=None):
+        uid = event.from_id if isinstance(event, Message) else event.sender_user_id
         if pattern:
             match = pattern.match(event.text)
             if not match:

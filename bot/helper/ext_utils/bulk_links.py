@@ -19,7 +19,8 @@ def get_links_from_message(text: str) -> list:
 
 async def get_links_from_file(message) -> list:
     links_list = []
-    text_file_dir = await message.download()
+    res = await message.download(synchronous=True)
+    text_file_dir = res.path
     async with aiopen(text_file_dir, "r+") as f:
         lines = await f.readlines()
         links_list.extend(line.strip() for line in lines if len(line) != 0)
@@ -31,8 +32,9 @@ async def extract_bulk_links(message, bulk_start: str, bulk_end: str) -> list:
     bulk_start = int(bulk_start)
     bulk_end = int(bulk_end)
     links_list = []
-    if reply_to := message.reply_to_message:
-        if (file_ := reply_to.document) and (file_.mime_type == "text/plain"):
+    if message.reply_to:
+        reply_to = await message.getRepliedMessage()
+        if (file_ := reply_to.content.document) and (file_.mime_type == "text/plain"):
             links_list = await get_links_from_file(reply_to)
         elif text := reply_to.text:
             links_list = get_links_from_message(text)

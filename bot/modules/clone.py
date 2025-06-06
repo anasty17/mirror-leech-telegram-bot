@@ -47,10 +47,12 @@ class Clone(TaskListener):
         bulk=None,
         multi_tag=None,
         options="",
+        user=None,
     ):
         if bulk is None:
             bulk = []
         self.message = message
+        self.user = user
         self.client = client
         self.multi_tag = multi_tag
         self.options = options
@@ -60,6 +62,9 @@ class Clone(TaskListener):
         self.is_clone = True
 
     async def new_event(self):
+        if not self.user:
+            self.user = await self.message.getUser()
+        await self.check_chat_type()
         text = self.message.text.split("\n")
         input_list = text[0].split(" ")
 
@@ -103,7 +108,8 @@ class Clone(TaskListener):
 
         await self.get_tag(text)
 
-        if not self.link and (reply_to := self.message.reply_to_message):
+        if not self.link and self.message.reply_to:
+            reply_to = await self.message.getRepliedMessage()
             self.link = reply_to.text.split("\n", 1)[0].strip()
 
         await self.run_multi(input_list, Clone)

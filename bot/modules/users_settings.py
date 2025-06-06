@@ -4,10 +4,10 @@ from functools import partial
 from html import escape
 from io import BytesIO
 from os import getcwd
-from pyrogram.filters import create
-from pyrogram.handlers import MessageHandler
 from time import time
 from re import findall
+from pytdbot.filters import create
+from aioshutil import move
 
 from .. import user_data, excluded_extensions, auth_chats, sudo_users
 from ..core.config_manager import Config
@@ -43,7 +43,7 @@ gdrive_options = ["TOKEN_PICKLE", "GDRIVE_ID", "INDEX_URL"]
 
 async def get_user_settings(from_user, stype="main"):
     user_id = from_user.id
-    name = from_user.mention
+    name = f'<a href="tg://user?id={user_id}">{from_user.first_name}</a>'
     buttons = ButtonMaker()
     rclone_conf = f"rclone/{user_id}.conf"
     token_pickle = f"tokens/{user_id}.pickle"
@@ -318,23 +318,23 @@ FFMPEG Commands is <b>{ffc}</b>"""
     return text, buttons.build_menu(1)
 
 
-async def update_user_settings(query, stype="main"):
-    handler_dict[query.from_user.id] = False
-    msg, button = await get_user_settings(query.from_user, stype)
-    await edit_message(query.message, msg, button)
+async def update_user_settings(query, message, from_user, stype="main"):
+    handler_dict[query.sender_user_id] = False
+    msg, button = await get_user_settings(from_user, stype)
+    await edit_message(message, msg, button)
 
 
 @new_task
 async def send_user_settings(_, message):
-    from_user = message.from_user
-    handler_dict[from_user.id] = False
+    from_user = message.getUser()
+    handler_dict[message.from_id] = False
     msg, button = await get_user_settings(from_user)
     await send_message(message, msg, button)
 
 
 @new_task
 async def add_file(_, message, ftype):
-    user_id = message.from_user.id
+    user_id = message.from_id
     handler_dict[user_id] = False
     if ftype == "THUMBNAIL":
         des_dir = await create_thumb(message, user_id)
@@ -342,12 +342,14 @@ async def add_file(_, message, ftype):
         rpath = f"{getcwd()}/rclone/"
         await makedirs(rpath, exist_ok=True)
         des_dir = f"{rpath}{user_id}.conf"
-        await message.download(file_name=des_dir)
+        res = await message.download(synchronous=True)
+        await move(res.path, des_dir)
     elif ftype == "TOKEN_PICKLE":
         tpath = f"{getcwd()}/tokens/"
         await makedirs(tpath, exist_ok=True)
         des_dir = f"{tpath}{user_id}.pickle"
-        await message.download(file_name=des_dir)
+        res = await message.download(synchronous=True)
+        await move(res.path, des_dir)
     update_user_ldata(user_id, ftype, des_dir)
     await delete_message(message)
     await database.update_user_doc(user_id, ftype, des_dir)
@@ -355,7 +357,7 @@ async def add_file(_, message, ftype):
 
 @new_task
 async def add_one(_, message, option):
-    user_id = message.from_user.id
+    user_id = message.from_id
     handler_dict[user_id] = False
     user_dict = user_data.get(user_id, {})
     value = message.text
@@ -378,7 +380,7 @@ async def add_one(_, message, option):
 
 @new_task
 async def remove_one(_, message, option):
-    user_id = message.from_user.id
+    user_id = message.from_id
     handler_dict[user_id] = False
     user_dict = user_data.get(user_id, {})
     names = message.text.split("/")
@@ -391,7 +393,7 @@ async def remove_one(_, message, option):
 
 @new_task
 async def set_option(_, message, option):
-    user_id = message.from_user.id
+    user_id = message.from_id
     handler_dict[user_id] = False
     value = message.text
     if option == "LEECH_SPLIT_SIZE":
@@ -463,7 +465,7 @@ async def get_menu(option, message, user_id):
 
 
 async def set_ffmpeg_variable(_, message, key, value, index):
-    user_id = message.from_user.id
+    user_id = message.from_id
     handler_dict[user_id] = False
     txt = message.text
     user_dict = user_data.setdefault(user_id, {})
@@ -532,40 +534,42 @@ async def ffmpeg_variables(
 
 
 async def event_handler(client, query, pfunc, photo=False, document=False):
-    user_id = query.from_user.id
+    user_id = query.from_id
     handler_dict[user_id] = True
     start_time = time()
 
     async def event_filter(_, __, event):
         if photo:
-            mtype = event.photo
+            mtype = event.content.photo
         elif document:
-            mtype = event.document
+            mtype = event.content.document
         else:
             mtype = event.text
-        user = event.from_user or event.sender_chat
         return bool(
-            user.id == user_id and event.chat.id == query.message.chat.id and mtype
+            event.from_id == user_id and event.chat_id == query.chat_id and mtype
         )
 
-    handler = client.add_handler(
-        MessageHandler(pfunc, filters=create(event_filter)), group=-1
+    client.add_handler(
+        "updateNewMessage",
+        pfunc,
+        filters=create(event_filter),
+        position=1,
+        inner_object=True,
     )
-
     while handler_dict[user_id]:
         await sleep(0.5)
         if time() - start_time > 60:
             handler_dict[user_id] = False
-    client.remove_handler(*handler)
+    client.remove_handler(pfunc)
 
 
 @new_task
 async def edit_user_settings(client, query):
-    from_user = query.from_user
-    user_id = from_user.id
-    name = from_user.mention
-    message = query.message
-    data = query.data.split()
+    user_id = query.sender_user_id
+    from_user = await client.getUser(user_id)
+    name = f'<a href="tg://user?id={user_id}">{from_user.first_name}</a>'
+    message = await query.getMessage()
+    data = query.text.split()
     handler_dict[user_id] = False
     thumb_path = f"thumbnails/{user_id}.jpg"
     rclone_conf = f"rclone/{user_id}.conf"
@@ -577,7 +581,7 @@ async def edit_user_settings(client, query):
         await query.answer()
     elif data[2] in ["leech", "gdrive", "rclone"]:
         await query.answer()
-        await update_user_settings(query, data[2])
+        await update_user_settings(query, message, from_user, data[2])
     elif data[2] == "menu":
         await query.answer()
         await get_menu(data[3], message, user_id)
@@ -590,7 +594,7 @@ async def edit_user_settings(client, query):
             back_to = "main"
         else:
             back_to = "leech"
-        await update_user_settings(query, stype=back_to)
+        await update_user_settings(query, message, from_user, stype=back_to)
         await database.update_user_data(user_id)
     elif data[2] == "file":
         await query.answer()
@@ -674,7 +678,11 @@ async def edit_user_settings(client, query):
                     "TOKEN_PICKLE",
                 ]:
                     del user_dict[k]
-            await update_user_settings(query)
+            await update_user_settings(
+                query,
+                message,
+                from_user,
+            )
         await database.update_user_data(user_id)
     elif data[2] == "view":
         await query.answer()
@@ -694,14 +702,23 @@ async def edit_user_settings(client, query):
         await query.answer()
         du = "rc" if data[2] == "gd" else "gd"
         update_user_ldata(user_id, "DEFAULT_UPLOAD", du)
-        await update_user_settings(query)
+        await update_user_settings(
+            query,
+            message,
+            from_user,
+        )
         await database.update_user_data(user_id)
     elif data[2] == "back":
         await query.answer()
-        await update_user_settings(query)
+        await update_user_settings(
+            query,
+            message,
+            from_user,
+        )
     else:
         await query.answer()
-        await delete_message(message.reply_to_message)
+        reply_to = await message.getRepliedMessage()
+        await delete_message(reply_to)
         await delete_message(message)
 
 

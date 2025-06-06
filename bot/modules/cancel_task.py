@@ -1,8 +1,8 @@
 from asyncio import sleep
 
 from .. import task_dict, task_dict_lock, user_data, multi_tags
-from ..core.telegram_client import Config
 from ..helper.ext_utils.bot_utils import new_task
+from ..core.telegram_client import Config
 from ..helper.ext_utils.status_utils import (
     get_task_by_gid,
     get_all_tasks,
@@ -21,7 +21,7 @@ from ..helper.telegram_helper.message_utils import (
 
 @new_task
 async def cancel(_, message):
-    user_id = message.from_user.id if message.from_user else message.sender_chat.id
+    user_id = message.from_id
     msg = message.text.split()
     if len(msg) > 1:
         gid = msg[1]
@@ -33,9 +33,9 @@ async def cancel(_, message):
             if task is None:
                 await send_message(message, f"GID: <code>{gid}</code> Not Found.")
                 return
-    elif reply_to_id := message.reply_to_message_id:
+    elif reply_to := message.reply_to:
         async with task_dict_lock:
-            task = task_dict.get(reply_to_id)
+            task = task_dict.get(reply_to.message_id)
         if task is None:
             await send_message(message, "This is not an active task!")
             return
@@ -59,9 +59,9 @@ async def cancel(_, message):
 
 @new_task
 async def cancel_multi(_, query):
-    data = query.data.split()
-    user_id = query.from_user.id
-    if user_id != int(data[1]) and not await CustomFilters.sudo("", query):
+    data = query.text.split()
+    user_id = query.sender_user_id
+    if user_id != int(data[1]) and not await CustomFilters.sudo_user(_, query):
         await query.answer("Not Yours!", show_alert=True)
         return
     tag = int(data[2])
@@ -133,20 +133,20 @@ async def cancel_all_buttons(_, message):
     if count == 0:
         await send_message(message, "No active tasks!")
         return
-    is_sudo = await CustomFilters.sudo("", message)
-    button = create_cancel_buttons(is_sudo, message.from_user.id)
+    is_sudo = await CustomFilters.sudo_user(_, message)
+    button = create_cancel_buttons(is_sudo, message.from_id)
     can_msg = await send_message(message, "Choose tasks to cancel!", button)
     await auto_delete_message(message, can_msg)
 
 
 @new_task
 async def cancel_all_update(_, query):
-    data = query.data.split()
-    message = query.message
-    reply_to = message.reply_to_message
+    data = query.text.split()
+    message = await query.getMessage()
+    reply_to = await message.getRepliedMessage()
     user_id = int(data[3]) if len(data) > 3 else ""
-    is_sudo = await CustomFilters.sudo("", query)
-    if not is_sudo and user_id and user_id != query.from_user.id:
+    is_sudo = await CustomFilters.sudo_user(_, query)
+    if not is_sudo and user_id and user_id != query.sender_user_id:
         await query.answer("Not Yours!", show_alert=True)
     else:
         await query.answer()
