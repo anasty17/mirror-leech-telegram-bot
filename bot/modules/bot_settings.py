@@ -473,6 +473,14 @@ async def update_private_file(_, message, pre_message):
             await (
                 await create_subprocess_exec("chmod", "-R", "777", "accounts")
             ).wait()
+        elif file_name == "tdlib_user.zip":
+            if await aiopath.exists("tdlib_user"):
+                await rmtree("tdlib_user", ignore_errors=True)
+            await (
+                await create_subprocess_exec(
+                    "7z", "x", "-o.", "-aoa", "tdlib_user.zip"
+                )
+            ).wait()
         elif file_name == "list_drives.txt":
             drives_ids.clear()
             drives_names.clear()

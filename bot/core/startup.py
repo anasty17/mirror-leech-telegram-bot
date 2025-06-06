@@ -263,3 +263,13 @@ async def load_configurations():
 
     if not await aiopath.exists("accounts"):
         Config.USE_SERVICE_ACCOUNTS = False
+    
+    if await aiopath.exists("tdlib_user.zip"):
+        if await aiopath.exists("tdlib_user"):
+            await rmtree("tdlib_user", ignore_errors=True)
+        await (
+            await create_subprocess_exec(
+                "7z", "x", "tdlib_user.zip", "-o.", "-aoa"
+            )
+        ).wait()
+        await remove("tdlib_user.zip")
