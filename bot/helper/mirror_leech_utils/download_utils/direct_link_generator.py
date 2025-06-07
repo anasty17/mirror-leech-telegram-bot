@@ -742,7 +742,7 @@ def terabox(url):
             if download_link and download_link.startswith("http"):
                 return download_link
 
-        raise DirectDownloadLinkException(f"No usable download link found. Response: {data}")
+        raise DirectDownloadLinkException(f"No usable download link found.")
 
     except Exception as e:
         raise DirectDownloadLinkException(f"Failed to get direct link: {e}")
