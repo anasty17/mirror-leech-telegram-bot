@@ -149,6 +149,8 @@ def direct_link_generator(link):
             "1024terabox.com",
             "teraboxshare.com",
             "terafileshare.com",
+            "terabox.club",
+            "
         ]
     ):
         return terabox(link)
@@ -725,10 +727,7 @@ def terabox(url):
         resp = requests.get(api_url, headers=headers)
         if resp.status_code != 200:
             raise DirectDownloadLinkException(f"API returned status {resp.status_code}")
-        
         data = resp.json()
-        print("API response:", data)
-
         info_list = data.get("Extracted Info")
         if isinstance(info_list, list) and info_list:
             download_link = info_list[0].get("Direct Download Link")
