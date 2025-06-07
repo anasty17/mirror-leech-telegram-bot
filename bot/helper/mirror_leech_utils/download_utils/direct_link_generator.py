@@ -727,7 +727,7 @@ def terabox(url):
             raise DirectDownloadLinkException(f"API returned status {resp.status_code}")
         
         data = resp.json()
-        print("API response:", data)  # Debug output
+        print("API response:", data)
 
         info_list = data.get("Extracted Info")
         if isinstance(info_list, list) and info_list:
