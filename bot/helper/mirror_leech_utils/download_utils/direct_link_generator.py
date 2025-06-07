@@ -713,6 +713,15 @@ def uploadee(url):
 
 def terabox(url):
     try:
+
+
+        def find_key(data: dict, keyword: str) -> str:
+            for key in data:
+                if keyword.lower() in key.lower():
+                    return key
+            return None
+
+
         encoded_url = quote(url, safe='')
         api_url = f"https://wdzone-terabox-api.vercel.app/api?url={encoded_url}"
 
@@ -720,6 +729,7 @@ def terabox(url):
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
+
                 "Chrome/120.0.0.0 Safari/537.36"
             )
         }
@@ -735,6 +745,30 @@ def terabox(url):
                 return download_link
 
         raise DirectDownloadLinkException(f"No usable download link found. Response: {data}")
+
+    except Exception as e:
+        raise DirectDownloadLinkException(f"Failed to get direct link: {e}")
+
+
+                "Chrome/135.0.0.0 Safari/537.36"
+            )
+        }
+
+        resp = get(api_url, headers=headers)
+        if resp.status_code != 200:
+            raise DirectDownloadLinkException(f"API returned status {resp.status_code}")
+
+        data = resp.json()
+        info_key = find_key(data, "Extracted Info")
+        info_list = data.get(info_key, [])
+
+        if isinstance(info_list, list) and info_list:
+            link_key = find_key(info_list[0], "Direct Download Link")
+            download_link = info_list[0].get(link_key)
+            if download_link and download_link.startswith("http"):
+                return download_link
+
+        raise DirectDownloadLinkException(f"No usable download link found.")
 
     except Exception as e:
         raise DirectDownloadLinkException(f"Failed to get direct link: {e}")
