@@ -2,7 +2,7 @@ from re import match as re_match
 
 
 def is_magnet(url: str):
-    return bool(re_match(r"magnet:\?xt=urn:(btih|btmh):[a-zA-Z0-9]*\s*", url))
+    return bool(re_match(r"^magnet:\?.*xt=urn:(btih|btmh):([a-zA-Z0-9]{32,40}|[a-z2-7]{32}).*", url))
 
 
 def is_url(url: str):
