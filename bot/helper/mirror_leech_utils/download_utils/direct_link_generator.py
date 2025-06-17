@@ -409,19 +409,19 @@ def mediafile(url):
     """
     try:
         res = get(url, allow_redirects=True)
-        match = re.search(r"href='([^']+)'", res.text)
+        match = search(r"href='([^']+)'", res.text)
         if not match:
             raise DirectDownloadLinkException("ERROR: Unable to find link data")        
         download_url = match.group(1)
         sleep(60)
         res = get(download_url, headers={'Referer': url}, cookies=res.cookies)
-        postvalue = re.search(r'showFileInformation(.*);', res.text)
+        postvalue = search(r'showFileInformation(.*);', res.text)
         if not postvalue:
             raise DirectDownloadLinkException("ERROR: Unable to find post value")       
         postid = postvalue.group(1).replace('(','').replace(')','')
         response = post('https://mediafile.cc/account/ajax/file_details',data={"u": postid}, headers={"X-Requested-With": "XMLHttpRequest"})
         html = response.json()['html']
-        return [i for i in re.findall(r'https://[^\s"\']+', html) if 'download_token' in i][1]
+        return [i for i in findall(r'https://[^\s"\']+', html) if 'download_token' in i][1]
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
 
