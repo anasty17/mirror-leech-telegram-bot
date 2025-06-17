@@ -40,6 +40,8 @@ def direct_link_generator(link):
         return uploadhaven(link)
     elif "fuckingfast.co" in domain:
         return fuckingfast_dl(link)
+    elif "mediafile.cc" in domain:
+        return mediafile(link)
     elif "mediafire.com" in domain:
         return mediafire(link)
     elif "osdn.net" in domain:
