@@ -796,13 +796,9 @@ def filepress(url):
     try:
         url = get(f"https://filebee.xyz/file/{url.split('/')[-1]}").url        
         raw = urlparse(url)
-        res = get(f"https://{raw.netloc}/api/file/get/{url.split('/')[-1]}", headers={'Referer': f"https://{raw.hostname}/"})        
-        download_options = res.json()['data']['downloadOptions']
-        method = "indexDownlaod" if download_options['indexDownlaod'] else "publicDownlaod"
-        
         json_data = {
             "id": raw.path.split("/")[-1],
-            "method": method,
+            "method": "publicDownlaod",
         }
         api = f"{raw.scheme}://{raw.hostname}/api/file/downlaod/"
         res2 = post(
@@ -812,7 +808,7 @@ def filepress(url):
         ).json()
         json_data2 = {
             "id": res2["data"],
-            "method": method,
+            "method": "publicDownlaod",
         }
         api2 = f"{raw.scheme}://{raw.hostname}/api/file/downlaod2/"
         res = post(
@@ -825,7 +821,7 @@ def filepress(url):
 
     if "data" not in res:
         raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
-    return res['data'][0] if method == "indexDownlaod" else f'https://drive.google.com/uc?id={res["data"]}&export=download'
+    return f'https://drive.google.com/uc?id={res["data"]}&export=download'
 
 
 def sharer_scraper(url):
