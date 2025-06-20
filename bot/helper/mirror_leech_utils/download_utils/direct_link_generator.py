@@ -186,9 +186,7 @@ def direct_link_generator(link):
     ):
         return linkBox(link)
     elif is_share_link(link):
-        if "gdtot" in domain:
-            return gdtot(link)
-        elif "filepress" in domain:
+        if "filepress" in domain:
             return filepress(link)
         else:
             return sharer_scraper(link)
@@ -795,77 +793,35 @@ def terabox(url):
 
 
 def filepress(url):
-    with create_scraper() as session:
-        try:
-            url = session.get(url).url
-            raw = urlparse(url)
-            json_data = {
-                "id": raw.path.split("/")[-1],
-                "method": "publicDownlaod",
-            }
-            api = f"{raw.scheme}://{raw.hostname}/api/file/downlaod/"
-            res2 = session.post(
-                api,
-                headers={"Referer": f"{raw.scheme}://{raw.hostname}"},
-                json=json_data,
-            ).json()
-            json_data2 = {
-                "id": res2["data"],
-                "method": "publicUserDownlaod",
-            }
-            api2 = "https://new2.filepress.store/api/file/downlaod2/"
-            res = session.post(
-                api2,
-                headers={"Referer": f"{raw.scheme}://{raw.hostname}"},
-                json=json_data2,
-            ).json()
-        except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+    try:
+        url = get(f"https://filebee.xyz/file/{url.split('/')[-1]}").url        
+        raw = urlparse(url)
+        json_data = {
+            "id": raw.path.split("/")[-1],
+            "method": "publicDownlaod",
+        }
+        api = f"{raw.scheme}://{raw.hostname}/api/file/downlaod/"
+        res2 = post(
+            api,
+            headers={"Referer": f"{raw.scheme}://{raw.hostname}"},
+            json=json_data,
+        ).json()
+        json_data2 = {
+            "id": res2["data"],
+            "method": "publicDownlaod",
+        }
+        api2 = f"{raw.scheme}://{raw.hostname}/api/file/downlaod2/"
+        res = post(
+            api2,
+            headers={"Referer": f"{raw.scheme}://{raw.hostname}"},
+            json=json_data2,
+        ).json()
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
+
     if "data" not in res:
         raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
     return f'https://drive.google.com/uc?id={res["data"]}&export=download'
-
-
-def gdtot(url):
-    cget = create_scraper().request
-    try:
-        res = cget("GET", f'https://gdtot.pro/file/{url.split("/")[-1]}')
-    except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
-    token_url = HTML(res.text).xpath(
-        "//a[contains(@class,'inline-flex items-center justify-center')]/@href"
-    )
-    if not token_url:
-        try:
-            url = cget("GET", url).url
-            p_url = urlparse(url)
-            res = cget(
-                "GET", f"{p_url.scheme}://{p_url.hostname}/ddl/{url.split('/')[-1]}"
-            )
-        except Exception as e:
-            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
-        if (
-            drive_link := findall(r"myDl\('(.*?)'\)", res.text)
-        ) and "drive.google.com" in drive_link[0]:
-            return drive_link[0]
-        else:
-            raise DirectDownloadLinkException(
-                "ERROR: Drive Link not found, Try in your broswer"
-            )
-    token_url = token_url[0]
-    try:
-        token_page = cget("GET", token_url)
-    except Exception as e:
-        raise DirectDownloadLinkException(
-            f"ERROR: {e.__class__.__name__} with {token_url}"
-        ) from e
-    path = findall(r'\("(.*?)"\)', token_page.text)
-    if not path:
-        raise DirectDownloadLinkException("ERROR: Cannot bypass this")
-    path = path[0]
-    raw = urlparse(token_url)
-    final_url = f"{raw.scheme}://{raw.hostname}{path}"
-    return sharer_scraper(final_url)
 
 
 def sharer_scraper(url):
