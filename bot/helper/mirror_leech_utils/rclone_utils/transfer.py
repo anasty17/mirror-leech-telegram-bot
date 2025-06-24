@@ -79,7 +79,7 @@ class RcloneTransferHelper:
                     self._speed,
                     self._eta,
                 ) = data[0]
-            await sleep(0.05)
+            await sleep(0.5)
 
     def _switch_service_account(self):
         if self._sa_index == self._sa_number - 1:
@@ -310,17 +310,16 @@ class RcloneTransferHelper:
                 fremote = f"sa{self._sa_index:03}"
                 LOGGER.info(f"Upload with service account {fremote}")
 
-        method = "move"
         cmd = self._get_updated_command(
-            fconfig_path, path, f"{fremote}:{rc_path}", method
+            fconfig_path, path, f"{fremote}:{rc_path}", "move"
         )
         if remote_type == "drive" and not self._listener.rc_flags:
             cmd.extend(
                 (
                     "--drive-chunk-size",
-                    "128M",
+                    "64M",
                     "--drive-upload-cutoff",
-                    "128M",
+                    "64M",
                     "--tpslimit",
                     "1",
                     "--tpslimit-burst",

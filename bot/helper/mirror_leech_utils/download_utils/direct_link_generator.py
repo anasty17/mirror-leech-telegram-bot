@@ -23,6 +23,7 @@ user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
 )
 
+
 def direct_link_generator(link):
     """direct links generator"""
     domain = urlparse(link).hostname
@@ -236,9 +237,10 @@ def buzzheavier(url):
     @param link: URL from buzzheavier
     @return: Direct download link
     """
-    pattern = r'^https?://buzzheavier\.com/[a-zA-Z0-9]+$'
+    pattern = r"^https?://buzzheavier\.com/[a-zA-Z0-9]+$"
     if not match(pattern, url):
         return url
+
     def _bhscraper(url, folder=False):
         session = Session()
         if "/download" not in url:
@@ -262,10 +264,12 @@ def buzzheavier(url):
             return d_url
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
-        
+
     with Session() as session:
         tree = HTML(session.get(url).text)
-        if link := tree.xpath("//a[contains(@class, 'link-button') and contains(@class, 'gay-button')]/@hx-get"):
+        if link := tree.xpath(
+            "//a[contains(@class, 'link-button') and contains(@class, 'gay-button')]/@hx-get"
+        ):
             return _bhscraper("https://buzzheavier.com" + link[0])
         elif folders := tree.xpath("//tbody[@id='tbody']/tr"):
             details = {"contents": [], "title": "", "total_size": 0}
@@ -279,8 +283,8 @@ def buzzheavier(url):
                         "path": "",
                         "filename": filename,
                         "url": url,
-                        }            
-                    details["contents"].append(item) 
+                    }
+                    details["contents"].append(item)
                     size = speed_string_to_bytes(size)
                     details["total_size"] += size
                 except:
@@ -377,6 +381,7 @@ def devuploads(url):
         direct_link = html.xpath("//input[@name='orilink']/@value")
         return direct_link[0]
 
+
 def uploadhaven(url):
     """
     Generate a direct download link for uploadhaven.com URLs.
@@ -384,20 +389,24 @@ def uploadhaven(url):
     @return: Direct download link
     """
     try:
-        res = get(url,headers={'Referer':'http://steamunlocked.net/'})
+        res = get(url, headers={"Referer": "http://steamunlocked.net/"})
         html = HTML(res.text)
         if not html.xpath('//form[@method="POST"]//input'):
-            raise DirectDownloadLinkException("ERROR: Unable to find link data")        
-        data = {i.get("name"): i.get("value") for i in html.xpath('//form[@method="POST"]//input')}
+            raise DirectDownloadLinkException("ERROR: Unable to find link data")
+        data = {
+            i.get("name"): i.get("value")
+            for i in html.xpath('//form[@method="POST"]//input')
+        }
         sleep(15)
-        res = post(url, data=data, headers={'Referer': url}, cookies=res.cookies)
+        res = post(url, data=data, headers={"Referer": url}, cookies=res.cookies)
         html = HTML(res.text)
         if not html.xpath('//div[@class="alert alert-success mb-0"]//a'):
             raise DirectDownloadLinkException("ERROR: Unable to find link data")
         a = html.xpath('//div[@class="alert alert-success mb-0"]//a')[0]
-        return a.get('href')
+        return a.get("href")
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
+
 
 def mediafile(url):
     """
@@ -409,19 +418,26 @@ def mediafile(url):
         res = get(url, allow_redirects=True)
         match = search(r"href='([^']+)'", res.text)
         if not match:
-            raise DirectDownloadLinkException("ERROR: Unable to find link data")        
+            raise DirectDownloadLinkException("ERROR: Unable to find link data")
         download_url = match.group(1)
         sleep(60)
-        res = get(download_url, headers={'Referer': url}, cookies=res.cookies)
-        postvalue = search(r'showFileInformation(.*);', res.text)
+        res = get(download_url, headers={"Referer": url}, cookies=res.cookies)
+        postvalue = search(r"showFileInformation(.*);", res.text)
         if not postvalue:
-            raise DirectDownloadLinkException("ERROR: Unable to find post value")       
-        postid = postvalue.group(1).replace('(','').replace(')','')
-        response = post('https://mediafile.cc/account/ajax/file_details',data={"u": postid}, headers={"X-Requested-With": "XMLHttpRequest"})
-        html = response.json()['html']
-        return [i for i in findall(r'https://[^\s"\']+', html) if 'download_token' in i][1]
+            raise DirectDownloadLinkException("ERROR: Unable to find post value")
+        postid = postvalue.group(1).replace("(", "").replace(")", "")
+        response = post(
+            "https://mediafile.cc/account/ajax/file_details",
+            data={"u": postid},
+            headers={"X-Requested-With": "XMLHttpRequest"},
+        )
+        html = response.json()["html"]
+        return [
+            i for i in findall(r'https://[^\s"\']+', html) if "download_token" in i
+        ][1]
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
+
 
 def mediafire(url, session=None):
     if "/folder/" in url:
@@ -779,7 +795,7 @@ def terabox(url):
                 "path": "",
                 "filename": data["📂 Title"],
                 "url": data["🔽 Direct Download Link"],
-                }       
+            }
             details["contents"].append(item)
             size = (data["📏 Size"]).replace(" ", "")
             size = speed_string_to_bytes(size)
@@ -794,7 +810,7 @@ def terabox(url):
 
 def filepress(url):
     try:
-        url = get(f"https://filebee.xyz/file/{url.split('/')[-1]}").url        
+        url = get(f"https://filebee.xyz/file/{url.split('/')[-1]}").url
         raw = urlparse(url)
         json_data = {
             "id": raw.path.split("/")[-1],
