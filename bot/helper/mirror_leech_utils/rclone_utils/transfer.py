@@ -208,8 +208,6 @@ class RcloneTransferHelper:
             "--config",
             config_path,
             epath,
-            "-v",
-            "--log-systemd",
         ]
         res, err, code = await cmd_exec(cmd)
 
@@ -316,10 +314,6 @@ class RcloneTransferHelper:
         if remote_type == "drive" and not self._listener.rc_flags:
             cmd.extend(
                 (
-                    "--drive-chunk-size",
-                    "64M",
-                    "--drive-upload-cutoff",
-                    "64M",
                     "--tpslimit",
                     "1",
                     "--tpslimit-burst",
@@ -349,8 +343,6 @@ class RcloneTransferHelper:
                 "--config",
                 oconfig_path,
                 destination,
-                "-v",
-                "--log-systemd",
             ]
             res, err, code = await cmd_exec(cmd)
 
@@ -428,8 +420,6 @@ class RcloneTransferHelper:
                     "--config",
                     config_path,
                     destination,
-                    "-v",
-                    "--log-systemd",
                 ]
                 res, err, code = await cmd_exec(cmd)
 
@@ -478,8 +468,6 @@ class RcloneTransferHelper:
             "--low-level-retries",
             "1",
             "-M",
-            "-v",
-            "--log-systemd",
         ]
         if self._rclone_select:
             cmd.extend(("--files-from", self._listener.link))

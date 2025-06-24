@@ -38,8 +38,6 @@ async def add_rclone_download(listener, path):
         "--config",
         config_path,
         f"{remote}:{rpath}",
-        "-v",
-        "--log-systemd",
     ]
     cmd2 = [
         "rclone",
@@ -49,8 +47,6 @@ async def add_rclone_download(listener, path):
         "--config",
         config_path,
         f"{remote}:{rpath}",
-        "-v",
-        "--log-systemd",
     ]
     if rclone_select:
         cmd2.extend(("--files-from", listener.link))
