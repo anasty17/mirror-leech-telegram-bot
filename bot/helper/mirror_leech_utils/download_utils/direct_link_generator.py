@@ -594,7 +594,7 @@ def onedrive(link):
         data = f"--{boundary}\r\nContent-Disposition: form-data;name=data\r\nPrefer: Migration=EnableRedirect;FailOnMigratedFiles\r\nX-HTTP-Method-Override: GET\r\nContent-Type: application/json\r\n\r\n--{boundary}--"
         try:
             resp = session.get(
-                f'https://api.onedrive.com/v1.0/drives/{folder_id.split("!", 1)[0]}/items/{folder_id}?$select=id,@content.downloadUrl&ump=1&authKey={authkey}',
+                f"https://api.onedrive.com/v1.0/drives/{folder_id.split('!', 1)[0]}/items/{folder_id}?$select=id,@content.downloadUrl&ump=1&authKey={authkey}",
                 headers=headers,
                 data=data,
             ).json()
@@ -836,8 +836,8 @@ def filepress(url):
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
 
     if "data" not in res:
-        raise DirectDownloadLinkException(f'ERROR: {res["statusText"]}')
-    return f'https://drive.google.com/uc?id={res["data"]}&export=download'
+        raise DirectDownloadLinkException(f"ERROR: {res['statusText']}")
+    return f"https://drive.google.com/uc?id={res['data']}&export=download"
 
 
 def sharer_scraper(url):
@@ -940,7 +940,7 @@ def shrdsk(url):
     with create_scraper() as session:
         try:
             _json = session.get(
-                f'https://us-central1-affiliate2apk.cloudfunctions.net/get_data?shortid={url.split("/")[-1]}',
+                f"https://us-central1-affiliate2apk.cloudfunctions.net/get_data?shortid={url.split('/')[-1]}",
             ).json()
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e

@@ -1,5 +1,4 @@
 class SubFunctions:
-
     async def check_login(self):
         res = await self.get_config("servers")
         return res["config"] or False

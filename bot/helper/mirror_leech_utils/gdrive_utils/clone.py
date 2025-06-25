@@ -71,7 +71,7 @@ class GoogleDriveClone(GoogleDriveHelper):
                 self.listener.size = self.proc_bytes
             else:
                 file = self._copy_file(meta.get("id"), self.listener.up_dest)
-                msg += f'<b>Name: </b><code>{file.get("name")}</code>'
+                msg += f"<b>Name: </b><code>{file.get('name')}</code>"
                 durl = self.G_DRIVE_BASE_DOWNLOAD_URL.format(file.get("id"))
                 if mime_type is None:
                     mime_type = "File"

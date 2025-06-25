@@ -289,7 +289,6 @@ async def get_multiple_frames_thumbnail(video_file, layout, keep_screenshots):
 
 
 class FFMpeg:
-
     def __init__(self, listener):
         self._listener = listener
         self._processed_bytes = 0
@@ -394,7 +393,7 @@ class FFMpeg:
                     prefix = ""
             else:
                 prefix = f"ffmpeg{index}."
-            output = f"{dir}/{prefix}{output_file.replace("mltb", base_name)}{ext}"
+            output = f"{dir}/{prefix}{output_file.replace('mltb', base_name)}{ext}"
             outputs.append(output)
             ffmpeg[index] = output
         if self._listener.is_cancelled:
