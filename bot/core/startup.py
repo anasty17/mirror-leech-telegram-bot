@@ -221,7 +221,7 @@ async def update_variables():
                 drives_ids.append(temp[1])
                 drives_names.append(temp[0].replace("_", " "))
                 if len(temp) > 2:
-                    index_urls.append(temp[2])
+                    index_urls.append(temp[2].strip("/"))
                 else:
                     index_urls.append("")
 
