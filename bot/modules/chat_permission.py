@@ -74,7 +74,7 @@ async def unauthorize(_, message):
         await database.update_user_data(chat_id)
         msg = "Unauthorized"
     else:
-        msg = "Already Unauthorized!"
+        msg = "Already Unauthorized! Authorized Chats added from config must be removed from config."
     await send_message(message, msg)
 
 
@@ -106,10 +106,13 @@ async def remove_sudo(_, message):
         id_ = int(msg[1].strip())
     elif reply_to := message.reply_to_message:
         id_ = reply_to.from_user.id if reply_to.from_user else reply_to.sender_chat.id
-    if id_ and id_ not in user_data or user_data[id_].get("SUDO"):
-        update_user_ldata(id_, "SUDO", False)
-        await database.update_user_data(id_)
-        msg = "Demoted"
+    if id_:
+        if id_ in user_data and user_data[id_].get("SUDO"):
+            update_user_ldata(id_, "SUDO", False)
+            await database.update_user_data(id_)
+            msg = "Demoted"
+        else:
+            msg = "Already Not Sudo! Sudo users added from config must be removed from config."
     else:
         msg = "Give ID or Reply To message of whom you want to remove from Sudo"
     await send_message(message, msg)
