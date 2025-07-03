@@ -90,8 +90,8 @@ async def clean_download(path):
 
 
 def clean_all():
-    aria2.remove_all(True)
-    qbittorrent_client.torrents_delete(torrent_hashes="all")
+    aria2 and aria2.remove_all(True)
+    qbittorrent_client and qbittorrent_client.torrents_delete(torrent_hashes="all")
     try:
         LOGGER.info("Cleaning Download Directory")
         rmtree(DOWNLOAD_DIR, ignore_errors=True)

@@ -28,6 +28,19 @@ from uvloop import install
 # from faulthandler import enable as faulthandler_enable
 # faulthandler_enable()
 
+# Load core files & init project using
+
+# default modules will be here
+# Available modules: ['aria2c', 'tgLeech', 'ytDlp', 'rclone', 'sabnzbd', 'qBit', 'jD', 'nZB', 'rclone']
+# telegram leech can not disable
+ENABLED_MODULES = ['aria2c', 'tgLeech', 'ytDlp', 'rclone']
+_module_list_env = environ.get("ENABLED_MODULES", None)
+if _module_list_env is not None and _module_list_env != "":
+    ENABLED_MODULES = environ.get("ENABLED_MODULES").split()
+if "tgLeech" not in ENABLED_MODULES:
+    ENABLED_MODULES.append("tgLeech")
+
+load_dotenv("config.env", override=True)
 install()
 setdefaulttimeout(600)
 
@@ -48,9 +61,6 @@ basicConfig(
 )
 
 LOGGER = getLogger(__name__)
-
-load_dotenv("config.env", override=True)
-
 Intervals = {"status": {}, "qb": "", "jd": "", "nzb": "", "stopAll": False}
 QbTorrents = {}
 jd_downloads = {}
@@ -106,13 +116,13 @@ if DATABASE_URL:
         old_config = db.settings.deployConfig.find_one({"_id": bot_id})
         if old_config is None:
             db.settings.deployConfig.replace_one(
-                {"_id": bot_id}, current_config, upsert=True
+                    {"_id": bot_id}, current_config, upsert=True
             )
         else:
             del old_config["_id"]
         if old_config and old_config != current_config:
             db.settings.deployConfig.replace_one(
-                {"_id": bot_id}, current_config, upsert=True
+                    {"_id": bot_id}, current_config, upsert=True
             )
         elif config_dict := db.settings.config.find_one({"_id": bot_id}):
             del config_dict["_id"]
@@ -156,8 +166,8 @@ if not ospath.exists(".netrc"):
     with open(".netrc", "w"):
         pass
 run(
-    "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
-    shell=True,
+        "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh",
+        shell=True,
 )
 
 OWNER_ID = environ.get("OWNER_ID", "")
@@ -184,12 +194,12 @@ if len(USER_SESSION_STRING) != 0:
     log_info("Creating client from USER_SESSION_STRING")
     try:
         user = tgClient(
-            "user",
-            TELEGRAM_API,
-            TELEGRAM_HASH,
-            session_string=USER_SESSION_STRING,
-            parse_mode=enums.ParseMode.HTML,
-            max_concurrent_transmissions=10,
+                "user",
+                TELEGRAM_API,
+                TELEGRAM_HASH,
+                session_string=USER_SESSION_STRING,
+                parse_mode=enums.ParseMode.HTML,
+                max_concurrent_transmissions=10,
         ).start()
         IS_PREMIUM_USER = user.me.is_premium
     except:
@@ -293,9 +303,9 @@ MAX_SPLIT_SIZE = 4194304000 if IS_PREMIUM_USER else 2097152000
 
 LEECH_SPLIT_SIZE = environ.get("LEECH_SPLIT_SIZE", "")
 if (
-    len(LEECH_SPLIT_SIZE) == 0
-    or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE
-    or LEECH_SPLIT_SIZE == "2097152000"
+        len(LEECH_SPLIT_SIZE) == 0
+        or int(LEECH_SPLIT_SIZE) > MAX_SPLIT_SIZE
+        or LEECH_SPLIT_SIZE == "2097152000"
 ):
     LEECH_SPLIT_SIZE = MAX_SPLIT_SIZE
 else:
@@ -485,8 +495,8 @@ if ospath.exists("list_drives.txt"):
 
 if BASE_URL:
     Popen(
-        f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
-        shell=True,
+            f"gunicorn web.wserver:app --bind 0.0.0.0:{BASE_URL_PORT} --worker-class gevent",
+            shell=True,
     )
 
 if ospath.exists("accounts.zip"):
@@ -497,26 +507,29 @@ if ospath.exists("accounts.zip"):
     remove("accounts.zip")
 if not ospath.exists("accounts"):
     config_dict["USE_SERVICE_ACCOUNTS"] = False
-
-qbittorrent_client = qbClient(
-    host="localhost",
-    port=8090,
-    VERIFY_WEBUI_CERTIFICATE=False,
-    REQUESTS_ARGS={"timeout": (30, 60)},
-    HTTPADAPTER_ARGS={
-        "pool_maxsize": 500,
-        "max_retries": 10,
-        "pool_block": True,
-    },
-)
-
-sabnzbd_client = sabnzbdClient(
-    host="http://localhost",
-    api_key="mltb",
-    port="8070",
-)
-
-
+['aria2c', 'tgLeech', 'ytDlp', 'rclone', 'sabnzbd', 'qBit', 'jD', 'nZB', 'rclone']
+qbittorrent_client = None
+if "qBit" in ENABLED_MODULES:
+    
+    qbittorrent_client = qbClient(
+            host="localhost",
+            port=8090,
+            VERIFY_WEBUI_CERTIFICATE=False,
+            REQUESTS_ARGS={"timeout": (30, 60)},
+            HTTPADAPTER_ARGS={
+                "pool_maxsize": 500,
+                "max_retries": 10,
+                "pool_block": True,
+            },
+    )
+if "nZB" in ENABLED_MODULES:
+    sabnzbd_client = sabnzbdClient(
+            host="http://localhost",
+            api_key="mltb",
+            port="8070",
+    )
+else:
+    sabnzbd_client = None
 aria2c_global = [
     "bt-max-open-files",
     "download-result",
@@ -535,16 +548,16 @@ aria2c_global = [
 
 log_info("Creating client from BOT_TOKEN")
 bot = tgClient(
-    "bot",
-    TELEGRAM_API,
-    TELEGRAM_HASH,
-    bot_token=BOT_TOKEN,
-    workers=1000,
-    parse_mode=enums.ParseMode.HTML,
-    max_concurrent_transmissions=10,
+        "bot",
+        TELEGRAM_API,
+        TELEGRAM_HASH,
+        bot_token=BOT_TOKEN,
+        workers=1000,
+        parse_mode=enums.ParseMode.HTML,
+        max_concurrent_transmissions=10,
 ).start()
 bot_name = bot.me.username
-
+# bot_loop = None
 scheduler = AsyncIOScheduler(timezone=str(get_localzone()), event_loop=bot_loop)
 
 
@@ -559,21 +572,21 @@ def get_qb_options():
     else:
         qb_opt = {**qbit_options}
         qbittorrent_client.app_set_preferences(qb_opt)
-
-
-get_qb_options()
-
-aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
-if not aria2_options:
-    aria2_options = aria2.client.get_global_option()
-else:
-    a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
-    aria2.set_global_options(a2c_glo)
-
+if "qBit" in ENABLED_MODULES:
+    get_qb_options()
+aria2 = None
+if "aria2" in ENABLED_MODULES:
+    aria2 = ariaAPI(ariaClient(host="http://localhost", port=6800, secret=""))
+    if not aria2_options:
+        aria2_options = aria2.client.get_global_option()
+    else:
+        a2c_glo = {op: aria2_options[op] for op in aria2c_global if op in aria2_options}
+        aria2.set_global_options(a2c_glo)
 
 async def get_nzb_options():
     global nzb_options
-    nzb_options = (await sabnzbd_client.get_config())["config"]["misc"]
+    if "nZB" in ENABLED_MODULES:
+        nzb_options = (await sabnzbd_client.get_config())["config"]["misc"]
 
 
 bot_loop.run_until_complete(get_nzb_options())

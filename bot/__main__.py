@@ -1,3 +1,5 @@
+from functools import partial
+
 from aiofiles import open as aiopen
 from aiofiles.os import path as aiopath, remove
 from asyncio import gather, create_subprocess_exec
@@ -18,7 +20,7 @@ from sys import executable
 from time import time
 
 from bot import (
-    bot,
+    ENABLED_MODULES, bot,
     botStartTime,
     LOGGER,
     Intervals,
@@ -249,18 +251,25 @@ async def restart_notification():
             pass
         await remove(".restartmsg")
 
-
+async def enabled_then_exec(module_name, func, *args, **kwargs):
+    if module_name in ENABLED_MODULES:
+        if "wait" not in kwargs:
+            kwargs["wait"] = True
+        return sync_to_async(func, *args, **kwargs)
+    
 async def main():
+    
     if DATABASE_URL:
         await DbManager().db_load()
-    jdownloader.initiate()
+    if "jDownloader" in ENABLED_MODULES:
+        jdownloader.initiate()
     await gather(
         sync_to_async(clean_all),
-        torrent_search.initiate_search_tools(),
+        enabled_then_exec('qBit', torrent_search.initiate_search_tools),
         restart_notification(),
         telegraph.create_account(),
         rclone_serve_booter(),
-        sync_to_async(start_aria2_listener, wait=False),
+        enabled_then_exec('aria2c',  sync_to_async, start_aria2_listener, wait=False),
     )
     create_help_buttons()
 

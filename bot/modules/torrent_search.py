@@ -27,9 +27,15 @@ async def initiate_search_tools():
             await sync_to_async(qbittorrent_client.search_uninstall_plugin, names=names)
         await sync_to_async(qbittorrent_client.search_install_plugin, SEARCH_PLUGINS)
     elif qb_plugins:
+        def clean_plugin():
+            if qbittorrent_client and qbittorrent_client.search_uninstall_plugin:
+                return qbittorrent_client.search_uninstall_plugin()
+            return None
+
+        globals()["PLUGINS"] = list(map(clean_plugin, qb_plugins))
         for plugin in qb_plugins:
             await sync_to_async(
-                qbittorrent_client.search_uninstall_plugin, names=plugin["name"]
+                clean_plugin, names=plugin["name"]
             )
         globals()["PLUGINS"] = []
 
