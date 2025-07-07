@@ -79,7 +79,7 @@ class RcloneTransferHelper:
                     self._speed,
                     self._eta,
                 ) = data[0]
-            await sleep(0.5)
+            await sleep(0.05)
 
     def _switch_service_account(self):
         if self._sa_index == self._sa_number - 1:
