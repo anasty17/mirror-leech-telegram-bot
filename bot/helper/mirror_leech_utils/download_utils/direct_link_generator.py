@@ -8,7 +8,7 @@ from re import findall, match, search
 from requests import Session, post, get
 from requests.adapters import HTTPAdapter
 from time import sleep
-from urllib.parse import parse_qs, urlparse, quote
+from urllib.parse import parse_qs, urlparse, quote, unquote
 from urllib3.util.retry import Retry
 from uuid import uuid4
 from base64 import b64decode, b64encode
@@ -92,6 +92,61 @@ def direct_link_generator(link):
     elif any(
         x in domain
         for x in [
+            "dood.am",
+            "doods.am",
+            "poophd.pro",
+            "poop.onl",
+            "poop.direct",
+            "dood.am",
+            "poop.vin",
+            "poop.direct",
+            "poophd.net",
+            "poophd.com",
+            "dood.lu",
+            "dood.is",
+            "poop.li",
+            "hek.al",
+            "doods.at",
+            "doodf.com",
+            "dood.tips",
+            "dood.fans",
+            "dood.page",
+            "vco.li",
+            "poophd.pro",
+            "poop.direct",
+            "poophd.me",
+            "poops.video",
+            "poophd.pm",
+            "p8p.tube",
+            "p8p.pro",
+            "poopx.pro",
+            "poop.asia",
+            "poop.blue",
+            "poop.ee",
+            "poop.name",
+            "poops.id",
+            "poopki.com",
+            "poop18.com",
+            "poop.top",
+            "pooo.st",
+            "vidbe.st",
+            "poopstream.net",
+            "poopstream.cloud",
+            "dood.ac",
+            "mp4.bio",
+            "mp4cash.com",
+            "videq.cloud",
+            "videq.stream",
+            "streamable.cloud",
+            "vide.cx",
+            "vid.skin",
+            "dood.meme",
+        ]
+    ):
+        return poop(link)
+    elif any(
+        x in domain
+        for x in [
             "dood.watch",
             "doodstream.com",
             "dood.to",
@@ -115,9 +170,19 @@ def direct_link_generator(link):
             "ds2video.com",
             "do0od.com",
             "d000d.com",
+            "d0000d.com",
+            "dooood.com",
+            "dood.li",
+            "dood.work",
+            "dooodster.com",
+            "vidply.com",
+            "do7go.com",
+            "doply.net",
+            "vide0.net",
+            "videyz.lol",
         ]
     ):
-        return doods(link)
+        return dood(link)
     elif any(
         x in domain
         for x in [
@@ -1918,3 +1983,44 @@ def swisstransfer(link):
         "total_size": total_size,
         "header": "User-Agent:Mozilla/5.0",
     }
+
+def dood(url):
+    ep = "https://stream.nggx.xyz/dood?url="
+    with Session() as session:
+        req = session.get(f"{ep}{url}&json=1").json()
+        if req.get("success") != True:
+            raise DirectDownloadLinkException("ERROR: Gagal mendapatkan data dari Dood, silahkan periksa kembali link anda")
+        details = {"contents": [], "title": "", "total_size": 0}
+        for data in req.get("data"):
+            item = {
+                "path": "",
+                "filename": data["media_title"],
+                "url": unquote(data["video_url"]),
+            }
+            details["contents"].append(item)
+            if data.get("size_bytes"):
+                details["total_size"] += int(data["size_bytes"])
+        if "folder_name" in req:
+            details["title"] = req["folder_name"]
+        else:
+            details["title"] = data["media_title"]
+        return details
+
+def poop(url):
+    ep = "https://stream.nggx.xyz/poop?url="
+    with Session() as session:
+        req = session.get(f"{ep}{url}&json=1").json()
+        if req.get("status") != "success":
+            raise DirectDownloadLinkException("ERROR: Gagal mendapatkan data dari Poop, silahkan periksa kembali link anda")
+        details = {"contents": [], "title": "", "total_size": 0}
+        for data in req.get("data"):
+            item = {
+                "path": "",
+                "filename": data["filename"],
+                "url": unquote(data["video_url"]),
+            }
+            details["contents"].append(item)
+            if data.get("size_bytes"):
+                details["total_size"] += int(data["size_bytes"])
+        details["title"] = data["filename"]
+        return details
