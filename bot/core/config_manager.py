@@ -1,5 +1,6 @@
 from importlib import import_module
 from ast import literal_eval
+import os
 
 
 class Config:
@@ -124,17 +125,56 @@ class Config:
 
     @classmethod
     def load(cls):
-        settings = import_module("config")
-        for attr in dir(settings):
-            if (
-                not attr.startswith("__")
-                and not callable(getattr(settings, attr))
-                and hasattr(cls, attr)
-            ):
-                value = getattr(settings, attr)
-                if not value:
+        try:
+            # Try to load from config module first
+            settings = import_module("config")
+            for attr in dir(settings):
+                if not attr.startswith("__") and not callable(getattr(settings, attr)) and hasattr(cls, attr):
+                    value = getattr(settings, attr)
+                    if not value:
+                        continue
+                    value = cls._convert(attr, value)
+                    if isinstance(value, str):
+                        value = value.strip()
+                    if attr == "DEFAULT_UPLOAD" and value != "gd":
+                        value = "rc"
+                    elif attr in [
+                        "BASE_URL",
+                        "RCLONE_SERVE_URL",
+                        "INDEX_URL",
+                        "SEARCH_API_LINK",
+                    ]:
+                        if value:
+                            value = value.strip("/")
+                    elif attr == "USENET_SERVERS":
+                        try:
+                            if not value[0].get("host"):
+                                continue
+                        except:
+                            continue
+                    setattr(cls, attr, value)
+        except ModuleNotFoundError:
+            # if config not found, load from env
+            print("Config module not found, loading from environment variables...")
+            cls._load_from_env()
+
+        for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
+            value = getattr(cls, key)
+            if isinstance(value, str):
+                value = value.strip()
+            if not value:
+                raise ValueError(f"{key} variable is missing!")
+
+    @classmethod
+    def _load_from_env(cls):
+        """Load configuration from environment variables"""
+        for attr in dir(cls):
+            if not attr.startswith("__") and not callable(getattr(cls, attr)) and hasattr(cls, attr):
+                env_value = os.getenv(attr)
+                if env_value is None:
                     continue
-                value = cls._convert(attr, value)
+
+                value = cls._convert(attr, env_value)
                 if isinstance(value, str):
                     value = value.strip()
                 if attr == "DEFAULT_UPLOAD" and value != "gd":
@@ -154,12 +194,6 @@ class Config:
                     except:
                         continue
                 setattr(cls, attr, value)
-        for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
-            value = getattr(cls, key)
-            if isinstance(value, str):
-                value = value.strip()
-            if not value:
-                raise ValueError(f"{key} variable is missing!")
 
     @classmethod
     def load_dict(cls, config_dict):
