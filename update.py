@@ -10,10 +10,11 @@ from logging import (
     getLogger,
     ERROR,
 )
-from os import path, remove
+from os import path, remove, getenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from subprocess import run as srun
+from typing import Dict, Any
 
 getLogger("pymongo").setLevel(ERROR)
 
@@ -30,13 +31,29 @@ basicConfig(
     level=INFO,
 )
 
-settings = import_module("config")
-config_file = {
-    key: value.strip() if isinstance(value, str) else value
-    for key, value in vars(settings).items()
-    if not key.startswith("__")
-}
 
+def load_config() -> Dict[str, Any]:
+    """Load configuration from config module or environment variables."""
+    try:
+        # Try to load from config module first
+        settings = import_module("config")
+        config_file = {key: value.strip() if isinstance(value, str) else value for key, value in vars(settings).items() if not key.startswith("__")}
+        return config_file
+    except ModuleNotFoundError:
+        # Fallback to environment variables
+        log_info("Config module not found, loading from environment variables...")
+        return {
+            "BOT_TOKEN": getenv("BOT_TOKEN", ""),
+            "DATABASE_URL": getenv("DATABASE_URL", ""),
+            "UPSTREAM_REPO": getenv("UPSTREAM_REPO", ""),
+            "UPSTREAM_BRANCH": getenv("UPSTREAM_BRANCH", "master"),
+        }
+
+
+# Load configuration
+config_file = load_config()
+
+# Validate BOT_TOKEN
 BOT_TOKEN = config_file.get("BOT_TOKEN", "")
 if not BOT_TOKEN:
     log_error("BOT_TOKEN variable is missing! Exiting now")
