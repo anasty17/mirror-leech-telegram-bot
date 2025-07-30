@@ -26,14 +26,14 @@ def add_handlers():
         MessageHandler(
             add_sudo,
             filters=command(BotCommands.AddSudoCommand, case_sensitive=True)
-            & CustomFilters.sudo,
+            & CustomFilters.owner,
         )
     )
     TgClient.bot.add_handler(
         MessageHandler(
             remove_sudo,
             filters=command(BotCommands.RmSudoCommand, case_sensitive=True)
-            & CustomFilters.sudo,
+            & CustomFilters.owner,
         )
     )
     TgClient.bot.add_handler(
