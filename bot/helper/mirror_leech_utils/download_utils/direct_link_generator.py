@@ -433,7 +433,6 @@ def mediafile(url):
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {str(e)}") from e
 
-
 def mediafire(url, session=None):
     if "/folder/" in url:
         return mediafireFolder(url)
@@ -447,26 +446,13 @@ def mediafire(url, session=None):
     ):
         return final_link[0]
 
-    def _decode_url(html, session):
-        enc_url = html.xpath('//a[@id="downloadButton"]')
-        if enc_url:
-            final_link = enc_url[0].attrib.get('href')
-            scrambled = enc_url[0].attrib.get('data-scrambled-url')
-
-            if final_link and scrambled:
-                try:
-                    final_link = b64decode(scrambled).decode("utf-8")
-                    return final_link
-                except Exception as e:
-                    raise ValueError(f"Failed to decode final link. {e.__class__.__name__}") from e
-            elif final_link.startswith("http"):
-                return final_link
-            elif final_link.startswith("//"):
-                return mediafire(f"https:{final_link}", session=session)
-            else:
-                raise ValueError("No download link found")
-        else:
-            raise ValueError("Download button not found in the HTML content. It may have been blocked by Cloudflare's anti-bot protection.")
+    def _repair_download(url, session):
+        try:
+            html = HTML(session.get(url).text)
+            if new_link := html.xpath('//a[@id="continue-btn"]/@href'):
+                return mediafire(f"https://mediafire.com/{new_link[0]}")
+        except Exception as e:
+            raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
 
     if session is None:
         session = create_scraper()
@@ -494,14 +480,20 @@ def mediafire(url, session=None):
         if html.xpath("//div[@class='passwordPrompt']"):
             session.close()
             raise DirectDownloadLinkException("ERROR: Wrong password.")
-    try:
-        final_link = _decode_url(html, session)
-    except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: {str(e)}")
+    if not (final_link := html.xpath('//a[@aria-label="Download file"]/@href')):
+        if repair_link := html.xpath("//a[@class='retry']/@href"):
+            return _repair_download(repair_link[0], session)
+        raise DirectDownloadLinkException(
+            "ERROR: No links found in this page Try Again"
+        )
+    if final_link[0].startswith("//"):
+        final_url = f"https://{final_link[0][2:]}"
+        if _password:
+            final_url += f"::{_password}"
+        return mediafire(final_url, session)
     session.close()
-    return final_link
-
-
+    return final_link[0]
+    
 def osdn(url):
     with create_scraper() as session:
         try:
