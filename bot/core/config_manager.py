@@ -154,7 +154,6 @@ class Config:
         if attr in {
             "BASE_URL",
             "RCLONE_SERVE_URL",
-            "INDEX_URL",
             "SEARCH_API_LINK",
         }:
             return converted_value.strip("/") if converted_value else ""
