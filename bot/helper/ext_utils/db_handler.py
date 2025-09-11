@@ -21,7 +21,10 @@ class DbManager:
             if self._conn is not None:
                 await self._conn.close()
             self._conn = AsyncMongoClient(
-                Config.DATABASE_URL, server_api=ServerApi("1")
+                Config.DATABASE_URL,
+                server_api=ServerApi("1"),
+                serverSelectionTimeoutMS=60000,
+                serverSelectionTimeoutMS=60000,
             )
             self.db = self._conn.mltb
             self._return = False

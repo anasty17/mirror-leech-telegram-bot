@@ -20,7 +20,7 @@ natsort
 par2cmdline-turbo
 pillow
 psutil
-pymongo
+pymongo==4.14.1
 kurigram
 python-magic
 requests
