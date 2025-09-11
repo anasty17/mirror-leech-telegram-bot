@@ -23,7 +23,7 @@ class DbManager:
             self._conn = AsyncMongoClient(
                 Config.DATABASE_URL,
                 server_api=ServerApi("1"),
-                serverSelectionTimeoutMS=60000,
+                connectTimeoutMS=60000,
                 serverSelectionTimeoutMS=60000,
             )
             self.db = self._conn.mltb
