@@ -221,7 +221,9 @@ class TaskConfig:
         if self.ffmpeg_cmds and not isinstance(self.ffmpeg_cmds, list):
             if self.user_dict.get("FFMPEG_CMDS", None):
                 ffmpeg_dict = deepcopy(self.user_dict["FFMPEG_CMDS"])
-            elif "FFMPEG_CMDS" not in self.user_dict and Config.FFMPEG_CMDS:
+            elif (
+                "FFMPEG_CMDS" not in self.user_dict or not self.user_dict["FFMPEG_CMDS"]
+            ) and Config.FFMPEG_CMDS:
                 ffmpeg_dict = deepcopy(Config.FFMPEG_CMDS)
             else:
                 ffmpeg_dict = None
@@ -263,21 +265,20 @@ class TaskConfig:
                 self.up_dest = self.user_dict.get("GDRIVE_ID") or Config.GDRIVE_ID
             if not self.up_dest:
                 raise ValueError("No Upload Destination!")
-            if is_gdrive_id(self.up_dest):
-                if not self.up_dest.startswith(
-                    ("mtp:", "tp:", "sa:")
-                ) and self.user_dict.get("USER_TOKENS", False):
-                    self.up_dest = f"mtp:{self.up_dest}"
-            elif is_rclone_path(self.up_dest):
-                if not self.up_dest.startswith("mrcc:") and self.user_dict.get(
-                    "USER_TOKENS", False
-                ):
-                    self.up_dest = f"mrcc:{self.up_dest}"
-                self.up_dest = self.up_dest.strip("/")
-            else:
-                raise ValueError("Wrong Upload Destination!")
-
             if self.up_dest not in ["rcl", "gdl"]:
+                if is_gdrive_id(self.up_dest):
+                    if not self.up_dest.startswith(
+                        ("mtp:", "tp:", "sa:")
+                    ) and self.user_dict.get("USER_TOKENS", False):
+                        self.up_dest = f"mtp:{self.up_dest}"
+                elif is_rclone_path(self.up_dest):
+                    if not self.up_dest.startswith("mrcc:") and self.user_dict.get(
+                        "USER_TOKENS", False
+                    ):
+                        self.up_dest = f"mrcc:{self.up_dest}"
+                    self.up_dest = self.up_dest.strip("/")
+                else:
+                    raise ValueError("Wrong Upload Destination!")
                 await self.is_token_exists(self.up_dest, "up")
 
             if self.up_dest == "rcl":
@@ -321,7 +322,11 @@ class TaskConfig:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("LEECH_DUMP_CHAT")
-                or (Config.LEECH_DUMP_CHAT if "LEECH_DUMP_CHAT" not in self.user_dict else None)
+                or (
+                    Config.LEECH_DUMP_CHAT
+                    if "LEECH_DUMP_CHAT" not in self.user_dict
+                    else None
+                )
             )
             self.hybrid_leech = TgClient.IS_PREMIUM_USER and (
                 self.user_dict.get("HYBRID_LEECH")
@@ -673,10 +678,17 @@ class TaskConfig:
                 input_indexes = [
                     index for index, value in enumerate(cmd) if value == "-i"
                 ]
-                for index in input_indexes:
-                    if cmd[index + 1].startswith("mltb"):
-                        input_file = cmd[index + 1]
-                        break
+                input_file = next(
+                    (
+                        cmd[index + 1]
+                        for index in input_indexes
+                        if cmd[index + 1].startswith("mltb")
+                    ),
+                    "",
+                )
+                if not input_file:
+                    LOGGER.error("Wrong FFmpeg cmd!")
+                    return dl_path
                 if input_file.strip().endswith(".video"):
                     ext = "video"
                 elif input_file.strip().endswith(".audio"):
