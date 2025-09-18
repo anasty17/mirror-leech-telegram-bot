@@ -214,11 +214,13 @@ class TaskConfig:
         if self.user_dict.get("UPLOAD_PATHS", False):
             if self.up_dest in self.user_dict["UPLOAD_PATHS"]:
                 self.up_dest = self.user_dict["UPLOAD_PATHS"][self.up_dest]
-        elif "UPLOAD_PATHS" not in self.user_dict and Config.UPLOAD_PATHS:
+        elif (
+            "UPLOAD_PATHS" not in self.user_dict or not self.user_dict["UPLOAD_PATHS"]
+        ) and Config.UPLOAD_PATHS:
             if self.up_dest in Config.UPLOAD_PATHS:
                 self.up_dest = Config.UPLOAD_PATHS[self.up_dest]
 
-        if self.ffmpeg_cmds and not isinstance(self.ffmpeg_cmds, list):
+        if self.ffmpeg_cmds:
             if self.user_dict.get("FFMPEG_CMDS", None):
                 ffmpeg_dict = deepcopy(self.user_dict["FFMPEG_CMDS"])
             elif (
@@ -227,14 +229,12 @@ class TaskConfig:
                 ffmpeg_dict = deepcopy(Config.FFMPEG_CMDS)
             else:
                 ffmpeg_dict = None
-            if ffmpeg_dict is None:
-                self.ffmpeg_cmds = ffmpeg_dict
-            else:
-                cmds = []
-                for key in list(self.ffmpeg_cmds):
-                    if isinstance(key, tuple):
-                        cmds.extend(list(key))
-                    elif key in ffmpeg_dict.keys():
+            cmds = []
+            for key in list(self.ffmpeg_cmds):
+                if isinstance(key, tuple):
+                    cmds.extend(list(key))
+                elif ffmpeg_dict is not None:
+                    if key in ffmpeg_dict.keys():
                         for ind, vl in enumerate(ffmpeg_dict[key]):
                             if variables := set(findall(r"\{(.*?)\}", vl)):
                                 ff_values = (
@@ -248,7 +248,7 @@ class TaskConfig:
                                     cmds.append(vl.format(**ff_values))
                             else:
                                 cmds.append(vl)
-                self.ffmpeg_cmds = cmds
+            self.ffmpeg_cmds = cmds
 
         if not self.is_leech:
             self.stop_duplicate = (

@@ -17,13 +17,11 @@ from .links_utils import is_gdrive_id
 
 async def stop_duplicate_check(listener):
     if (
-        isinstance(listener.up_dest, int)
-        or listener.is_leech
-        or listener.select
-        or not is_gdrive_id(listener.up_dest)
-        or (listener.up_dest.startswith("mtp:") and listener.stop_duplicate)
+        listener.is_leech
         or not listener.stop_duplicate
         or listener.same_dir
+        or listener.select
+        or not is_gdrive_id(listener.up_dest)
     ):
         return False, None
 
