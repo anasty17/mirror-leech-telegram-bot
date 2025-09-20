@@ -726,16 +726,17 @@ class TaskConfig:
                         await cpu_eater_lock.acquire()
                         self.progress = True
                     LOGGER.info(f"Running ffmpeg cmd for: {file_path}")
+                    var_cmd = cmd.copy()
                     for index in input_indexes:
                         if cmd[index + 1].startswith("mltb"):
-                            cmd[index + 1] = file_path
+                            var_cmd[index + 1] = file_path
                         elif is_telegram_link(cmd[index + 1]):
                             msg = (await get_tg_link_message(cmd[index + 1]))[0]
                             file_dir = await temp_download(msg)
                             inputs[index + 1] = file_dir
-                            cmd[index + 1] = file_dir
+                            var_cmd[index + 1] = file_dir
                     self.subsize = self.size
-                    res = await ffmpeg.ffmpeg_cmds(cmd, file_path)
+                    res = await ffmpeg.ffmpeg_cmds(var_cmd, file_path)
                     if res:
                         if delete_files:
                             await remove(file_path)
@@ -779,7 +780,14 @@ class TaskConfig:
                             ] and not f_path.strip().lower().endswith(ext):
                                 continue
                             self.proceed_count += 1
-                            var_cmd[index + 1] = f_path
+                            for index in input_indexes:
+                                if cmd[index + 1].startswith("mltb"):
+                                    var_cmd[index + 1] = f_path
+                                elif is_telegram_link(cmd[index + 1]):
+                                    msg = (await get_tg_link_message(cmd[index + 1]))[0]
+                                    file_dir = await temp_download(msg)
+                                    inputs[index + 1] = file_dir
+                                    var_cmd[index + 1] = file_dir
                             if not checked:
                                 checked = True
                                 async with task_dict_lock:
