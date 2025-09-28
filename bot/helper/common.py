@@ -476,7 +476,7 @@ class TaskConfig:
                 self.tag = " ".join(user_info[:-1])
             else:
                 self.tag, id_ = text[1].split("Tag: ")[1].split()
-            self.user = self.message.from_user = await self.client.get_users(id_)
+            self.user = self.message.from_user = await self.client.get_users(int(id_))
             self.user_id = self.user.id
             self.user_dict = user_data.get(self.user_id, {})
             try:
