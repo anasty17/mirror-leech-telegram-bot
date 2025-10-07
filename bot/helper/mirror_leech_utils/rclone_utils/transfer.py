@@ -184,8 +184,6 @@ class RcloneTransferHelper:
             cmd.extend(
                 (
                     "--drive-acknowledge-abuse",
-                    "--drive-chunk-size",
-                    "128M",
                     "--tpslimit",
                     "1",
                     "--tpslimit-burst",
@@ -208,8 +206,6 @@ class RcloneTransferHelper:
             "--config",
             config_path,
             epath,
-            "-v",
-            "--log-systemd",
         ]
         res, err, code = await cmd_exec(cmd)
 
@@ -310,17 +306,16 @@ class RcloneTransferHelper:
                 fremote = f"sa{self._sa_index:03}"
                 LOGGER.info(f"Upload with service account {fremote}")
 
-        method = "move"
         cmd = self._get_updated_command(
-            fconfig_path, path, f"{fremote}:{rc_path}", method
+            fconfig_path, path, f"{fremote}:{rc_path}", "move"
         )
         if remote_type == "drive" and not self._listener.rc_flags:
             cmd.extend(
                 (
                     "--drive-chunk-size",
-                    "128M",
+                    "64M",
                     "--drive-upload-cutoff",
-                    "128M",
+                    "64M",
                     "--tpslimit",
                     "1",
                     "--tpslimit-burst",
@@ -350,8 +345,6 @@ class RcloneTransferHelper:
                 "--config",
                 oconfig_path,
                 destination,
-                "-v",
-                "--log-systemd",
             ]
             res, err, code = await cmd_exec(cmd)
 
@@ -429,8 +422,6 @@ class RcloneTransferHelper:
                     "--config",
                     config_path,
                     destination,
-                    "-v",
-                    "--log-systemd",
                 ]
                 res, err, code = await cmd_exec(cmd)
 
@@ -479,8 +470,6 @@ class RcloneTransferHelper:
             "--low-level-retries",
             "1",
             "-M",
-            "-v",
-            "--log-systemd",
         ]
         if self._rclone_select:
             cmd.extend(("--files-from", self._listener.link))

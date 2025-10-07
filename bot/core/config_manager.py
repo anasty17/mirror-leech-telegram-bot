@@ -1,5 +1,8 @@
 from importlib import import_module
 from ast import literal_eval
+from os import getenv
+
+from bot import LOGGER
 
 
 class Config:
@@ -63,16 +66,20 @@ class Config:
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
 
-
     @classmethod
-    def _convert(cls, key, value):
+    def _convert(cls, key: str, value):
+        if not hasattr(cls, key):
+            raise KeyError(f"{key} is not a valid configuration key.")
+
         expected_type = type(getattr(cls, key))
+
         if value is None:
             return None
+
         if isinstance(value, expected_type):
             return value
 
-        if expected_type == bool:
+        if expected_type is bool:
             return str(value).strip().lower() in {"true", "1", "yes"}
 
         if expected_type in [list, dict]:
@@ -81,16 +88,21 @@ class Config:
                     f"{key} should be {expected_type.__name__}, got {type(value).__name__}"
                 )
 
+            if not value:
+                return expected_type()
+
             try:
                 evaluated = literal_eval(value)
-                if isinstance(evaluated, expected_type):
-                    return evaluated
-                else:
-                    raise TypeError
+                if not isinstance(evaluated, expected_type):
+                    raise TypeError(
+                        f"Expected {expected_type.__name__}, got {type(evaluated).__name__}"
+                    )
+                return evaluated
             except (ValueError, SyntaxError, TypeError) as e:
                 raise TypeError(
                     f"{key} should be {expected_type.__name__}, got invalid string: {value}"
                 ) from e
+
         try:
             return expected_type(value)
         except (ValueError, TypeError) as exc:
@@ -99,16 +111,16 @@ class Config:
             ) from exc
 
     @classmethod
-    def get(cls, key):
-        return getattr(cls, key) if hasattr(cls, key) else None
+    def get(cls, key: str):
+        return getattr(cls, key, None)
 
     @classmethod
-    def set(cls, key, value):
-        if hasattr(cls, key):
-            value = cls._convert(key, value)
-            setattr(cls, key, value)
-        else:
+    def set(cls, key: str, value) -> None:
+        if not hasattr(cls, key):
             raise KeyError(f"{key} is not a valid configuration key.")
+
+        converted_value = cls._convert(key, value)
+        setattr(cls, key, converted_value)
 
     @classmethod
     def get_all(cls):
@@ -119,38 +131,76 @@ class Config:
         }
 
     @classmethod
-    def load(cls):
-        settings = import_module("config")
+    def _is_valid_config_attr(cls, attr: str) -> bool:
+        if attr.startswith("__") or callable(getattr(cls, attr, None)):
+            return False
+        return hasattr(cls, attr)
+
+    @classmethod
+    def _process_config_value(cls, attr: str, value):
+        if not value:
+            return None
+
+        converted_value = cls._convert(attr, value)
+
+        if isinstance(converted_value, str):
+            converted_value = converted_value.strip()
+
+        if attr == "DEFAULT_UPLOAD" and converted_value != "gd":
+            return "rc"
+
+        if attr in {
+            "BASE_URL",
+            "RCLONE_SERVE_URL",
+            "SEARCH_API_LINK",
+        }:
+            return converted_value.strip("/") if converted_value else ""
+
+        if attr == "USENET_SERVERS" and (
+            not converted_value or not converted_value[0].get("host")
+        ):
+            return None
+
+        return converted_value
+
+    @classmethod
+    def _load_from_module(cls) -> bool:
+        try:
+            settings = import_module("config")
+        except ModuleNotFoundError:
+            return False
+
         for attr in dir(settings):
-            if (
-                not attr.startswith("__")
-                and not callable(getattr(settings, attr))
-                and hasattr(cls, attr)
-            ):
-                value = getattr(settings, attr)
-                if not value:
-                    continue
-                value = cls._convert(attr, value)
-                if isinstance(value, str):
-                    value = value.strip()
-                if attr == "DEFAULT_UPLOAD" and value != "gd":
-                    value = "rc"
-                elif attr in [
-                    "BASE_URL",
-                    "RCLONE_SERVE_URL",
-                    "INDEX_URL",
-                    "SEARCH_API_LINK",
-                ]:
-                    if value:
-                        value = value.strip("/")
-                elif attr == "USENET_SERVERS":
-                    try:
-                        if not value[0].get("host"):
-                            continue
-                    except:
-                        continue
-                setattr(cls, attr, value)
-        for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
+            if not cls._is_valid_config_attr(attr):
+                continue
+
+            raw_value = getattr(settings, attr)
+            processed_value = cls._process_config_value(attr, raw_value)
+
+            if processed_value is not None:
+                setattr(cls, attr, processed_value)
+
+        return True
+
+    @classmethod
+    def _load_from_env(cls) -> None:
+        for attr in dir(cls):
+            if not cls._is_valid_config_attr(attr):
+                continue
+
+            env_value = getenv(attr)
+            if env_value is None:
+                continue
+
+            processed_value = cls._process_config_value(attr, env_value)
+            if processed_value is not None:
+                setattr(cls, attr, processed_value)
+
+    @classmethod
+    def _validate_required_config(cls) -> None:
+        required_keys = ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]
+
+        for key in required_keys:
             value = getattr(cls, key)
             if isinstance(value, str):
                 value = value.strip()
@@ -158,30 +208,27 @@ class Config:
                 raise ValueError(f"{key} variable is missing!")
 
     @classmethod
-    def load_dict(cls, config_dict):
+    def load(cls) -> None:
+        if not cls._load_from_module():
+            LOGGER.info(
+                "Config module not found, loading from environment variables..."
+            )
+            cls._load_from_env()
+
+        cls._validate_required_config()
+
+    @classmethod
+    def load_dict(cls, config_dict) -> None:
         for key, value in config_dict.items():
-            if hasattr(cls, key):
-                value = cls._convert(key, value)
-                if key == "DEFAULT_UPLOAD" and value != "gd":
-                    value = "rc"
-                elif key in [
-                    "BASE_URL",
-                    "RCLONE_SERVE_URL",
-                    "INDEX_URL",
-                    "SEARCH_API_LINK",
-                ]:
-                    if value:
-                        value = value.strip("/")
-                elif key == "USENET_SERVERS":
-                    try:
-                        if not value[0].get("host"):
-                            value = []
-                    except:
-                        value = []
-                setattr(cls, key, value)
-        for key in ["BOT_TOKEN", "OWNER_ID", "TELEGRAM_API", "TELEGRAM_HASH"]:
-            value = getattr(cls, key)
-            if isinstance(value, str):
-                value = value.strip()
-            if not value:
-                raise ValueError(f"{key} variable is missing!")
+            if not hasattr(cls, key):
+                continue
+
+            processed_value = cls._process_config_value(key, value)
+
+            if key == "USENET_SERVERS" and processed_value is None:
+                processed_value = []
+
+            if processed_value is not None:
+                setattr(cls, key, processed_value)
+
+        cls._validate_required_config()

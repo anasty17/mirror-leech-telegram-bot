@@ -1,4 +1,3 @@
-from contextlib import suppress
 from aiofiles.os import remove, path as aiopath
 from asyncio import sleep, TimeoutError
 from time import time
@@ -175,12 +174,14 @@ async def _on_download_error(api, data):
     await sleep(1)
     LOGGER.info(f"onDownloadError: {gid}")
     error = "None"
-    with suppress(TimeoutError, ClientError, Exception):
+    try:
         download = await api.tellStatus(gid)
         options = await api.getOption(gid)
         error = download.get("errorMessage", "")
         LOGGER.info(f"Download Error: {error}")
-    if options.get("follow-torrent", "") == "false":
+        if options.get("follow-torrent", "") == "false":
+            return
+    except (TimeoutError, ClientError, Exception) as e:
         return
     if task := await get_task_by_gid(gid):
         await task.listener.on_download_error(error)

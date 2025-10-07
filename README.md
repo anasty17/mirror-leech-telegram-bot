@@ -54,7 +54,7 @@ programming in Python.
 - Download restricted messages (document or link) by tg private/public/super links (task option)
 - Choose transfer by bot or user session incase you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
-- Upload with custom layout multiple thubnmail (global, user option and task option)
+- Upload with custom layout multiple thumbnail (global, user option and task option)
 - Topics support
 
 </details>
@@ -340,7 +340,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `IS_TEAM_DRIVE` (`Bool`): Set `True` if uploading to TeamDrive using google-api-python-client. Default is `False`.
 
-- `INDEX_URL` (`Str`): Refer to <https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index>.
+- `INDEX_URL` (`Str`): Refer to <https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index>. Example: https://xxx.xx.workers.dev/0: (If you have multiple ID config -- replace 0: with the desired id index) or https://xxx.xx.workers.dev without index if you only have one ID in config which is the basic config.
 
 - `STOP_DUPLICATE` (`Bool`): Bot will check file/folder name in Drive incase uploading to `GDRIVE_ID`. If it's present in Drive then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature is not perfect). Default is `False`.
 

@@ -35,7 +35,7 @@ def add_handlers():
         add_sudo,
         filters=create(
             partial(
-                CustomFilters.sudo_user, pattern=match_cmd(BotCommands.AddSudoCommand)
+                CustomFilters.owner_filter, pattern=match_cmd(BotCommands.AddSudoCommand)
             )
         ),
         inner_object=True,
@@ -45,7 +45,7 @@ def add_handlers():
         remove_sudo,
         filters=create(
             partial(
-                CustomFilters.sudo_user, pattern=match_cmd(BotCommands.RmSudoCommand)
+                CustomFilters.owner_filter, pattern=match_cmd(BotCommands.RmSudoCommand)
             )
         ),
         inner_object=True,
