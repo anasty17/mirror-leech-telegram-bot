@@ -3,6 +3,7 @@ from pytdbot.filters import create
 from re import compile as re_compile, match
 
 from ..modules import *
+from ..helper.telegram_helper.progress import tdlib_file_update
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters, match_cmd
 from .telegram_client import TgClient
@@ -35,7 +36,8 @@ def add_handlers():
         add_sudo,
         filters=create(
             partial(
-                CustomFilters.owner_filter, pattern=match_cmd(BotCommands.AddSudoCommand)
+                CustomFilters.owner_filter,
+                pattern=match_cmd(BotCommands.AddSudoCommand),
             )
         ),
         inner_object=True,
@@ -50,7 +52,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         send_bot_settings,
@@ -72,7 +73,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         cancel_all_buttons,
@@ -95,7 +95,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         aioexecute,
@@ -106,7 +105,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         execute,
@@ -117,7 +115,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         clear,
@@ -129,7 +126,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         select,
@@ -152,7 +148,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         count_node,
@@ -164,7 +159,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         delete_file,
@@ -176,7 +170,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         gdrive_search,
@@ -199,7 +192,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         qb_mirror,
@@ -211,7 +203,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         jd_mirror,
@@ -223,7 +214,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         nzb_mirror,
@@ -235,7 +225,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         leech,
@@ -247,7 +236,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         qb_leech,
@@ -259,7 +247,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         jd_leech,
@@ -271,7 +258,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         nzb_leech,
@@ -283,7 +269,6 @@ def add_handlers():
         ),
         inner_object=True,
     )
-
     TgClient.bot.add_handler(
         "updateNewMessage",
         get_rss_menu,
@@ -465,6 +450,7 @@ def add_handlers():
             partial(CustomFilters.sudo_user, pattern=re_compile("^botrestart "))
         ),
     )
+    TgClient.bot.add_handler("UpdateFile", tdlib_file_update)
     TgClient.bot.add_handler(
         "updateNewCallbackQuery",
         cancel_all_update,

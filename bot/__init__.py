@@ -10,7 +10,6 @@ from logging import (
     INFO,
     basicConfig,
     WARNING,
-    ERROR,
 )
 from sabnzbdapi import SabnzbdClient
 from time import time
