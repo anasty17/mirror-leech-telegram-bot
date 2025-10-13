@@ -1,6 +1,5 @@
-from asyncio import Lock, sleep
+from asyncio import Lock
 from time import time
-from pyrogram.errors import FloodWait, FloodPremiumWait
 
 from .... import (
     LOGGER,
@@ -12,6 +11,7 @@ from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...mirror_leech_utils.status_utils.telegram_status import TelegramStatus
 from ...telegram_helper.message_utils import send_status_message
+from ...telegram_helper.progress import tracker
 
 global_lock = Lock()
 GLOBAL_GID = set()
@@ -22,7 +22,7 @@ class TelegramDownloadHelper:
         self._processed_bytes = 0
         self._start_time = 1
         self._listener = listener
-        self._id = ""
+        self._gid = ""
         self.session = ""
 
     @property
@@ -33,13 +33,12 @@ class TelegramDownloadHelper:
     def processed_bytes(self):
         return self._processed_bytes
 
-    async def _on_download_start(self, file_id, from_queue):
+    async def _on_download_start(self, from_queue):
         async with global_lock:
-            GLOBAL_GID.add(file_id)
-        self._id = file_id
+            GLOBAL_GID.add(self._gid)
         async with task_dict_lock:
             task_dict[self._listener.mid] = TelegramStatus(
-                self._listener, self, file_id[:12], "dl"
+                self._listener, self, self._gid[:12], "dl"
             )
         if not from_queue:
             await self._listener.on_download_start()
@@ -49,87 +48,91 @@ class TelegramDownloadHelper:
         else:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
-    async def _on_download_progress(self, current, _):
+    async def _on_download_progress(self, file_id, progress_dict):
         if self._listener.is_cancelled:
             if self.session == "user":
-                TgClient.user.stop_transmission()
+                await TgClient.user.cancelDownloadFile(file_id=file_id)
             else:
-                TgClient.bot.stop_transmission()
-        self._processed_bytes = current
+                await TgClient.bot.cancelDownloadFile(file_id=file_id)
+            await tracker.cancel_progress(file_id=file_id)
+        self._processed_bytes = progress_dict["transferred"]
 
     async def _on_download_error(self, error):
         async with global_lock:
-            if self._id in GLOBAL_GID:
-                GLOBAL_GID.remove(self._id)
+            if self._gid in GLOBAL_GID:
+                GLOBAL_GID.remove(self._gid)
         await self._listener.on_download_error(error)
 
     async def _on_download_complete(self):
         async with global_lock:
-            if self._id in GLOBAL_GID:
-                GLOBAL_GID.remove(self._id)
+            if self._gid in GLOBAL_GID:
+                GLOBAL_GID.remove(self._gid)
         await self._listener.on_download_complete()
 
     async def _download(self, message, path):
-        try:
-            download = await message.download(
-                file_name=path, progress=self._on_download_progress
-            )
-            if self._listener.is_cancelled:
-                return
-        except (FloodWait, FloodPremiumWait) as f:
-            LOGGER.warning(str(f))
-            await sleep(f.value)
-            await self._download(message, path)
+        download = await message.download(synchronous=True)
+        if download.is_error:
+            LOGGER.error(download["message"])
+            await self._on_download_error(download["message"])
             return
-        except Exception as e:
-            LOGGER.error(str(e))
-            await self._on_download_error(str(e))
+        if self._listener.is_cancelled:
             return
-        if download is not None:
+        if download.is_downloading_completed:
+            # path
             await self._on_download_complete()
-        elif not self._listener.is_cancelled:
-            await self._on_download_error("Internal error occurred")
 
     async def add_download(self, message, path, session):
         self.session = session
         if not self.session:
             if self._listener.user_transmission and self._listener.is_super_chat:
                 self.session = "user"
-                message = await TgClient.user.get_messages(
-                    chat_id=message.chat.id, message_ids=message.id
+                message = await TgClient.user.getMessage(
+                    chat_id=message.chat_id, message_ids=message.id
                 )
             else:
                 self.session = "bot"
-        media = (
-            message.document
-            or message.photo
-            or message.video
-            or message.audio
-            or message.voice
-            or message.video_note
-            or message.sticker
-            or message.animation
-            or None
-        )
-
+        content_type = message.content.getType()
+        if content_type == "messageDocument":
+            media = message.content.document
+            media_file = media.document
+        elif content_type == "messagePhoto":
+            media = message.content.photo.sizes[-1].photo
+            media_file = media
+        elif content_type == "messageVideo":
+            media = message.content.video
+            media_file = media.video
+        elif content_type == "messageAudio":
+            media = message.content.audio
+            media_file = media.audio
+        elif content_type == "messageVoiceNote":
+            media = message.content.voice_note
+            media_file = media.voice
+        elif content_type == "messageVideoNote":
+            media = message.content.video_note
+            media_file = media.video
+        elif content_type == "messageSticker":
+            media = message.content.sticker
+            media_file = media.sticker
+        elif content_type == "messageAnimation":
+            media = message.content.animation
+            media_file = media.animation
+        else:
+            media = None
         if media is not None:
+            self._gid = message.remote_unique_file_id
             async with global_lock:
-                download = media.file_unique_id not in GLOBAL_GID
-
+                download = self._gid not in GLOBAL_GID
             if download:
                 if not self._listener.name:
-                    if hasattr(media, "file_name") and media.file_name:
-                        if "/" in media.file_name:
-                            self._listener.name = media.file_name.rsplit("/", 1)[-1]
-                            path = path + self._listener.name
-                        else:
-                            self._listener.name = media.file_name
+                    if content_type in ["messagePhoto", "messageSticker"]:
+                        self._listener.name = (
+                            f"{time()}." + "jpeg"
+                            if content_type == "messagePhoto"
+                            else "webm"
+                        )
                     else:
-                        self._listener.name = "None"
-                else:
-                    path = path + self._listener.name
-                self._listener.size = media.file_size
-                gid = media.file_unique_id
+                        self._listener.name = media.file_name
+                self._listener.size = media_file.size or media_file.expected_size
 
                 msg, button = await stop_duplicate_check(self._listener)
                 if msg:
@@ -141,27 +144,32 @@ class TelegramDownloadHelper:
                     LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
                     async with task_dict_lock:
                         task_dict[self._listener.mid] = QueueStatus(
-                            self._listener, gid, "dl"
+                            self._listener, self._gid[:12], "dl"
                         )
                     await self._listener.on_download_start()
                     if self._listener.multi <= 1:
                         await send_status_message(self._listener.message)
                     await event.wait()
+                    if self._listener.is_cancelled:
+                        return
                     if self.session == "bot":
-                        message = await self._listener.client.get_messages(
-                            chat_id=message.chat.id, message_ids=message.id
+                        message = await self._listener.client.getMessage(
+                            chat_id=message.chat_id, message_ids=message.id
                         )
                     else:
-                        message = await TgClient.user.get_messages(
-                            chat_id=message.chat.id, message_ids=message.id
+                        message = await TgClient.user.getMessage(
+                            chat_id=message.chat_id, message_ids=message.id
                         )
-                    if self._listener.is_cancelled:
-                        async with global_lock:
-                            if self._id in GLOBAL_GID:
-                                GLOBAL_GID.remove(self._id)
+                    if message.is_error:
+                        await self._on_download_error(message["message"])
                         return
                 self._start_time = time()
-                await self._on_download_start(gid, add_to_queue)
+                await self._on_download_start(add_to_queue)
+                await tracker.add_to_progress(
+                    media_file.id,
+                    transfer_type="download",
+                    callback=self._on_download_progress,
+                )
                 await self._download(message, path)
             else:
                 await self._on_download_error("File already being downloaded!")

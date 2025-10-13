@@ -115,6 +115,7 @@ class TaskConfig:
         self.progress = True
         self.ffmpeg_cmds = None
         self.chat_thread_id = None
+        self.message_link = None
         self.subproc = None
         self.thumb = None
         self.excluded_extensions = []

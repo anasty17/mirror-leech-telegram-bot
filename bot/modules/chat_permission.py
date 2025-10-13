@@ -19,9 +19,9 @@ async def authorize(_, message):
         reply = await message.getRepliedMessage()
         chat_id = reply.from_id
     else:
-        if message.is_topic_message:
+        if message.topic_id:
             thread_id = message.message_thread_id
-        chat_id = message.chat.id
+        chat_id = message.chat_id
     if chat_id in user_data and user_data[chat_id].get("AUTH"):
         if (
             thread_id is not None
@@ -59,7 +59,7 @@ async def unauthorize(_, message):
         reply = await message.getRepliedMessage()
         chat_id = reply.from_id
     else:
-        if message.is_topic_message:
+        if message.topic_id:
             thread_id = message.message_thread_id
         chat_id = message.chat_id
     if chat_id in user_data and user_data[chat_id].get("AUTH"):

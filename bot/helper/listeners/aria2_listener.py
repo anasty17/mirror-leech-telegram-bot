@@ -157,7 +157,7 @@ async def _on_bt_download_complete(api, data):
                 task_dict[task.listener.mid] = Aria2Status(task.listener, gid, True)
                 task_dict[task.listener.mid].start_time = time()
             LOGGER.info(f"Seeding started: {aria2_name(download)} - Gid: {gid}")
-            await update_status_message(task.listener.message.chat.id)
+            await update_status_message(task.listener.message.chat_id)
         else:
             await TorrentManager.aria2_remove(download)
 

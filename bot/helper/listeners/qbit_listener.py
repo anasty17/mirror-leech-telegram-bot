@@ -100,7 +100,7 @@ async def _on_download_complete(tor):
                     qb_torrents[tag]["seeding"] = True
                 else:
                     return
-            await update_status_message(task.listener.message.chat.id)
+            await update_status_message(task.listener.message.chat_id)
             LOGGER.info(f"Seeding started: {tor.name} - Hash: {ext_hash}")
         else:
             await _remove_torrent(ext_hash, tag)

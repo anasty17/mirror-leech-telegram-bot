@@ -85,9 +85,12 @@ class TaskListener(TaskConfig):
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
         ):
-            await database.add_incomplete_task(
-                self.message.chat.id, self.message.link, self.tag
+            msg_link = await self.message.getMessageLink(
+                in_message_thread=bool(self.message.topic_id)
             )
+            link = msg_link.link
+            self.message_link = link
+            await database.add_incomplete_task(self.message.chat_id, link, self.tag)
 
     async def on_download_complete(self):
         await sleep(2)
@@ -280,7 +283,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.message.chat_id),
                 tg.upload(),
             )
             del tg
@@ -290,7 +293,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = GoogleDriveStatus(self, drive, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.message.chat_id),
                 sync_to_async(drive.upload),
             )
             del drive
@@ -300,7 +303,7 @@ class TaskListener(TaskConfig):
             async with task_dict_lock:
                 task_dict[self.mid] = RcloneStatus(self, RCTransfer, gid, "up")
             await gather(
-                update_status_message(self.message.chat.id),
+                update_status_message(self.message.chat_id),
                 RCTransfer.upload(up_path),
             )
             del RCTransfer
@@ -314,7 +317,7 @@ class TaskListener(TaskConfig):
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
         ):
-            await database.rm_complete_task(self.message.link)
+            await database.rm_complete_task(self.message_link)
         msg = f"<b>Name: </b><code>{escape(self.name)}</code>\n\n<b>Size: </b>{get_readable_file_size(self.size)}"
         LOGGER.info(f"Task Done: {self.name}")
         if self.is_leech:
@@ -390,7 +393,7 @@ class TaskListener(TaskConfig):
         if count == 0:
             await self.clean()
         else:
-            await update_status_message(self.message.chat.id)
+            await update_status_message(self.message.chat_id)
 
         async with queue_dict_lock:
             if self.mid in non_queued_up:
@@ -409,14 +412,14 @@ class TaskListener(TaskConfig):
         if count == 0:
             await self.clean()
         else:
-            await update_status_message(self.message.chat.id)
+            await update_status_message(self.message.chat_id)
 
         if (
             self.is_super_chat
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
         ):
-            await database.rm_complete_task(self.message.link)
+            await database.rm_complete_task(self.message_link)
 
         async with queue_dict_lock:
             if self.mid in queued_dl:
@@ -447,14 +450,14 @@ class TaskListener(TaskConfig):
         if count == 0:
             await self.clean()
         else:
-            await update_status_message(self.message.chat.id)
+            await update_status_message(self.message.chat_id)
 
         if (
             self.is_super_chat
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
         ):
-            await database.rm_complete_task(self.message.link)
+            await database.rm_complete_task(self.message_link)
 
         async with queue_dict_lock:
             if self.mid in queued_dl:

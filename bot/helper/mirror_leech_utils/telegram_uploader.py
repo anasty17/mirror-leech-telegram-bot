@@ -90,7 +90,7 @@ class TelegramUploader:
     async def _msg_to_reply(self):
         if self._listener.up_dest:
             msg = (
-                self._listener.message.link
+                self._listener.message_link
                 if self._listener.is_super_chat
                 else self._listener.message.text.lstrip("/")
             )
@@ -117,11 +117,11 @@ class TelegramUploader:
                 return False
         elif self._user_session:
             self._sent_msg = await TgClient.user.get_messages(
-                chat_id=self._listener.message.chat.id, message_ids=self._listener.mid
+                chat_id=self._listener.message.chat_id, message_ids=self._listener.mid
             )
             if self._sent_msg is None:
                 self._sent_msg = await TgClient.user.send_message(
-                    chat_id=self._listener.message.chat.id,
+                    chat_id=self._listener.message.chat_id,
                     text="Deleted Cmd Message! Don't delete the cmd message again!",
                     disable_web_page_preview=True,
                     disable_notification=True,
@@ -258,12 +258,12 @@ class TelegramUploader:
                         self._user_session = f_size > 2097152000
                         if self._user_session:
                             self._sent_msg = await TgClient.user.get_messages(
-                                chat_id=self._sent_msg.chat.id,
+                                chat_id=self._sent_msg.chat_id,
                                 message_ids=self._sent_msg.id,
                             )
                         else:
                             self._sent_msg = await self._listener.client.get_messages(
-                                chat_id=self._sent_msg.chat.id,
+                                chat_id=self._sent_msg.chat_id,
                                 message_ids=self._sent_msg.id,
                             )
                     self._last_msg_in_group = False
@@ -440,11 +440,11 @@ class TelegramUploader:
                     pname = match.group(0)
                     if pname in self._media_dict[key].keys():
                         self._media_dict[key][pname].append(
-                            [self._sent_msg.chat.id, self._sent_msg.id]
+                            [self._sent_msg.chat_id, self._sent_msg.id]
                         )
                     else:
                         self._media_dict[key][pname] = [
-                            [self._sent_msg.chat.id, self._sent_msg.id]
+                            [self._sent_msg.chat_id, self._sent_msg.id]
                         ]
                     msgs = self._media_dict[key][pname]
                     if len(msgs) == 10:

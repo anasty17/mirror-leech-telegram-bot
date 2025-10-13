@@ -1,9 +1,8 @@
 from asyncio import sleep
 from re import match as re_match
 from time import time
-from pytdbot.types import Error
 
-from ... import LOGGER, status_dict, task_dict_lock, intervals, DOWNLOAD_DIR
+from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config
 from ...core.telegram_client import TgClient
 from ..ext_utils.bot_utils import SetInterval
@@ -18,11 +17,11 @@ async def send_message(message, text, buttons=None, block=True):
         disable_notification=True,
         reply_markup=buttons,
     )
-    if isinstance(res, Error):
+    if res.is_error:
         if res["message"].startswith("Too Many Requests: retry after"):
             LOGGER.warning(res["message"])
             if block:
-                wait_for = int(res["message"].rsplit(" ", 1)[-1])
+                wait_for = res.limited_seconds
                 await sleep(wait_for * 1.2)
                 return await send_message(message, text, buttons)
         LOGGER.error(res["message"])
@@ -36,11 +35,11 @@ async def edit_message(message, text, buttons=None, block=True):
         disable_web_page_preview=True,
         reply_markup=buttons,
     )
-    if isinstance(res, Error):
+    if res.is_error:
         if res["message"].startswith("Too Many Requests: retry after"):
             LOGGER.warning(res["message"])
             if block:
-                wait_for = int(res["message"].rsplit(" ", 1)[-1])
+                wait_for = res.limited_seconds
                 await sleep(wait_for * 1.2)
                 return await edit_message(message, text, buttons)
         LOGGER.error(res["message"])
@@ -52,10 +51,10 @@ async def send_file(message, file, caption=""):
     res = await message.reply_document(
         document=file, caption=caption, disable_notification=True
     )
-    if isinstance(res, Error):
+    if res.is_error:
         if res["message"].startswith("Too Many Requests: retry after"):
             LOGGER.warning(res["message"])
-            wait_for = int(res["message"].rsplit(" ", 1)[-1])
+            wait_for = res.limited_seconds
             await sleep(wait_for * 1.2)
             return await send_file(message, file, caption)
         LOGGER.error(res["message"])
@@ -72,10 +71,10 @@ async def send_rss(text, chat_id, thread_id):
         message_thread_id=thread_id,
         disable_notification=True,
     )
-    if isinstance(res, Error):
+    if res.is_error:
         if res["message"].startswith("Too Many Requests: retry after"):
             LOGGER.warning(res["message"])
-            wait_for = int(res["message"].rsplit(" ", 1)[-1])
+            wait_for = res.limited_seconds
             await sleep(wait_for * 1.2)
             return await send_rss(text)
         LOGGER.error(res["message"])
@@ -85,7 +84,7 @@ async def send_rss(text, chat_id, thread_id):
 
 async def delete_message(message):
     res = await message.delete()
-    if isinstance(res, Error):
+    if res.is_error:
         LOGGER.error(res["message"])
 
 
@@ -150,7 +149,7 @@ async def get_tg_link_message(link):
 
     if not private:
         message = await TgClient.bot.getMessage(chat_id=chat, message_id=msg_id)
-        if isinstance(message, Error):
+        if message.is_error:
             private = True
             if not TgClient.user:
                 raise TgLinkException(message["message"])
@@ -159,7 +158,7 @@ async def get_tg_link_message(link):
         return (links, "bot") if links else (message, "bot")
     elif TgClient.user:
         user_message = await TgClient.user.getMessage(chat_id=chat, message_id=msg_id)
-        if isinstance(message, Error):
+        if message.is_error:
             raise TgLinkException(
                 f"You don't have access to this chat!. ERROR: {user_message["message"]}"
             )
@@ -220,7 +219,7 @@ async def update_status_message(sid, force=False):
 async def send_status_message(msg, user_id=0):
     if intervals["stopAll"]:
         return
-    sid = user_id or msg.chat.id
+    sid = user_id or msg.chat_id
     is_user = bool(user_id)
     async with task_dict_lock:
         if sid in status_dict:
