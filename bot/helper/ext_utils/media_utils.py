@@ -5,8 +5,10 @@ from asyncio import (
     gather,
     wait_for,
     sleep,
+    TimeoutError,
 )
 from asyncio.subprocess import PIPE
+from json import JSONDecodeError, loads as json_loads
 from os import path as ospath
 from re import search as re_search, escape
 from time import time
@@ -34,23 +36,34 @@ async def create_thumb(msg, _id=""):
 
 async def get_media_info(path):
     try:
-        result = await cmd_exec(
-            [
-                "ffprobe",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-print_format",
-                "json",
-                "-show_format",
-                path,
-            ]
+        process = await create_subprocess_exec(
+            "ffprobe",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-print_format",
+            "json",
+            "-show_format",
+            path,
+            stdout=PIPE,
+            stderr=PIPE,
         )
-    except Exception as e:
-        LOGGER.error(f"Get Media Info: {e}. Mostly File not found! - File: {path}")
-        return 0, None, None
-    if result[0] and result[2] == 0:
-        fields = eval(result[0]).get("format")
+        try:
+            stdout, stderr = await wait_for(process.communicate(), timeout=60)
+        except TimeoutError:
+            LOGGER.error(f"ffprobe timed out while getting media info for {path}")
+            process.kill()
+            return 0, None, None
+
+        if process.returncode != 0:
+            LOGGER.error(f"ffprobe error while getting media info for {path}: {stderr.decode(errors='ignore').strip()}")
+            return 0, None, None
+
+        result = stdout.decode().strip()
+        try:
+            fields = json_loads(result).get("format")
+        except JSONDecodeError:
+            fields = None
         if fields is None:
             LOGGER.error(f"get_media_info: {result}")
             return 0, None, None
@@ -59,7 +72,9 @@ async def get_media_info(path):
         artist = tags.get("artist") or tags.get("ARTIST") or tags.get("Artist")
         title = tags.get("title") or tags.get("TITLE") or tags.get("Title")
         return duration, artist, title
-    return 0, None, None
+    except Exception as e:
+        LOGGER.error(f"Exception in get_media_info for {path}: {e}")
+        return 0, None, None
 
 
 async def get_document_type(path):
@@ -74,31 +89,34 @@ async def get_document_type(path):
     if mime_type.startswith("image"):
         return False, False, True
     try:
-        result = await cmd_exec(
-            [
-                "ffprobe",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-print_format",
-                "json",
-                "-show_streams",
-                path,
-            ]
+        process = await create_subprocess_exec(
+            "ffprobe",
+            "-hide_banner",
+            "-loglevel",
+            "error",
+            "-print_format",
+            "json",
+            "-show_streams",
+            path,
+            stdout=PIPE,
+            stderr=PIPE,
         )
-        if result[1] and mime_type.startswith("video"):
-            is_video = True
-    except Exception as e:
-        LOGGER.error(f"Get Document Type: {e}. Mostly File not found! - File: {path}")
-        if mime_type.startswith("audio"):
-            return False, True, False
-        if not mime_type.startswith("video") and not mime_type.endswith("octet-stream"):
-            return is_video, is_audio, is_image
-        if mime_type.startswith("video"):
-            is_video = True
-        return is_video, is_audio, is_image
-    if result[0] and result[2] == 0:
-        fields = eval(result[0]).get("streams")
+        try:
+            stdout, stderr = await wait_for(process.communicate(), timeout=60)
+        except TimeoutError:
+            LOGGER.error(f"ffprobe timed out while getting document type for {path}")
+            process.kill()
+            return False, False, False
+
+        if process.returncode != 0:
+            LOGGER.error(f"ffprobe error while getting document type for {path}: {stderr.decode(errors='ignore').strip()}")
+            return False, False, False
+
+        result = stdout.decode().strip()
+        try:
+            fields = json_loads(result).get("streams")
+        except JSONDecodeError:
+            fields = None
         if fields is None:
             LOGGER.error(f"get_document_type: {result}")
             return is_video, is_audio, is_image
@@ -110,7 +128,10 @@ async def get_document_type(path):
                     is_video = True
             elif stream.get("codec_type") == "audio":
                 is_audio = True
-    return is_video, is_audio, is_image
+        return is_video, is_audio, is_image
+    except Exception as e:
+        LOGGER.error(f"Exception in get_document_type for {path}: {e}")
+        return False, False, False
 
 
 async def take_ss(video_file, ss_nb) -> bool:
@@ -331,43 +352,79 @@ class FFMpeg:
         self._last_processed_bytes = 0
 
     async def _ffmpeg_progress(self):
+        last_update = time()
         while not (
             self._listener.subproc.returncode is not None
             or self._listener.is_cancelled
             or self._listener.subproc.stdout.at_eof()
         ):
+            if time() - last_update > 15:
+                LOGGER.error(f"FFmpeg stuck for {self._listener.name}. Killing process.")
+                self._listener.subproc.kill()
+                # await self._listener.on_download_error("FFmpeg process hanged!")
+                return
+
             try:
-                line = await wait_for(self._listener.subproc.stdout.readline(), 60)
-            except:
-                break
+                line = await wait_for(self._listener.subproc.stdout.readline(), 1)
+            except TimeoutError:
+                continue
+
             line = line.decode().strip()
-            if not line:
-                break
-            if "=" in line:
-                key, value = line.split("=", 1)
-                if value != "N/A":
-                    if key == "total_size":
-                        self._processed_bytes = int(value) + self._last_processed_bytes
-                        self._speed_raw = self._processed_bytes / (
-                            time() - self._start_time
-                        )
-                    elif key == "speed":
-                        self._time_rate = max(0.1, float(value.strip("x")))
-                    elif key == "out_time":
-                        self._processed_time = (
-                            time_to_seconds(value) + self._last_processed_time
-                        )
-                        try:
-                            self._progress_raw = (
-                                self._processed_time * 100
-                            ) / self._total_time
-                            self._eta_raw = (
-                                self._total_time - self._processed_time
-                            ) / self._time_rate
-                        except:
-                            self._progress_raw = 0
-                            self._eta_raw = 0
+            if line:
+                last_update = time()
+                if "=" in line:
+                    key, value = line.split("=", 1)
+                    if value != "N/A":
+                        if key == "total_size":
+                            self._processed_bytes = int(value) + self._last_processed_bytes
+                            self._speed_raw = self._processed_bytes / (
+                                time() - self._start_time
+                            )
+                        elif key == "speed":
+                            self._time_rate = max(0.1, float(value.strip("x")))
+                        elif key == "out_time":
+                            self._processed_time = (
+                                time_to_seconds(value) + self._last_processed_time
+                            )
+                            try:
+                                self._progress_raw = (
+                                    self._processed_time * 100
+                                ) / self._total_time
+                                self._eta_raw = (
+                                    self._total_time - self._processed_time
+                                ) / self._time_rate
+                            except:
+                                self._progress_raw = 0
+                                self._eta_raw = 0
             await sleep(0.05)
+
+    async def run_command(self, cmd, f_path):
+        self.clear()
+        self._total_time = (await get_media_info(f_path))[0]
+
+        cmd.insert(1, "-progress")
+        cmd.insert(2, "pipe:1")
+
+        if self._listener.is_cancelled:
+            return False
+
+        self._listener.subproc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
+        await self._ffmpeg_progress()
+        _, stderr = await self._listener.subproc.communicate()
+        code = self._listener.subproc.returncode
+
+        if self._listener.is_cancelled:
+            return False
+
+        if code == 0:
+            return cmd[-1]
+        else:
+            try:
+                stderr = stderr.decode(errors='ignore').strip()
+            except:
+                stderr = "Unable to decode the error!"
+            LOGGER.error(f"{stderr}. Something went wrong while running ffmpeg cmd. Path: {f_path}")
+            return False
 
     async def ffmpeg_cmds(self, ffmpeg, f_path):
         self.clear()
@@ -414,7 +471,7 @@ class FFMpeg:
             return False
         else:
             try:
-                stderr = stderr.decode().strip()
+                stderr = stderr.decode(errors='ignore').strip()
             except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
@@ -495,7 +552,7 @@ class FFMpeg:
             if not retry:
                 return await self.convert_video(video_file, ext, True)
             try:
-                stderr = stderr.decode().strip()
+                stderr = stderr.decode(errors='ignore').strip()
             except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
@@ -538,7 +595,7 @@ class FFMpeg:
             return False
         else:
             try:
-                stderr = stderr.decode().strip()
+                stderr = stderr.decode(errors='ignore').strip()
             except:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
@@ -619,7 +676,7 @@ class FFMpeg:
             return output_file
         else:
             try:
-                stderr = stderr.decode().strip()
+                stderr = stderr.decode(errors='ignore').strip()
             except Exception:
                 stderr = "Unable to decode the error!"
             LOGGER.error(
@@ -628,104 +685,3 @@ class FFMpeg:
             if await aiopath.exists(output_file):
                 await remove(output_file)
             return False
-
-    async def split(self, f_path, file_, parts, split_size):
-        self.clear()
-        multi_streams = True
-        self._total_time = duration = (await get_media_info(f_path))[0]
-        base_name, extension = ospath.splitext(file_)
-        split_size -= 3000000
-        start_time = 0
-        i = 1
-        while i <= parts or start_time < duration - 4:
-            out_path = f_path.replace(file_, f"{base_name}.part{i:03}{extension}")
-            cmd = [
-                "ffmpeg",
-                "-hide_banner",
-                "-loglevel",
-                "error",
-                "-progress",
-                "pipe:1",
-                "-ss",
-                str(start_time),
-                "-i",
-                f_path,
-                "-fs",
-                str(split_size),
-                "-map",
-                "0",
-                "-map_chapters",
-                "-1",
-                "-async",
-                "1",
-                "-strict",
-                "-2",
-                "-c",
-                "copy",
-                "-threads",
-                f"{max(1, cpu_no // 2)}",
-                out_path,
-            ]
-            if not multi_streams:
-                del cmd[12]
-                del cmd[12]
-            if self._listener.is_cancelled:
-                return False
-            self._listener.subproc = await create_subprocess_exec(
-                *cmd, stdout=PIPE, stderr=PIPE
-            )
-            await self._ffmpeg_progress()
-            _, stderr = await self._listener.subproc.communicate()
-            code = self._listener.subproc.returncode
-            if self._listener.is_cancelled:
-                return False
-            if code == -9:
-                self._listener.is_cancelled = True
-                return False
-            elif code != 0:
-                try:
-                    stderr = stderr.decode().strip()
-                except:
-                    stderr = "Unable to decode the error!"
-                try:
-                    await remove(out_path)
-                except:
-                    pass
-                if multi_streams:
-                    LOGGER.warning(
-                        f"{stderr}. Retrying without map, -map 0 not working in all situations. Path: {f_path}"
-                    )
-                    multi_streams = False
-                    continue
-                else:
-                    LOGGER.warning(
-                        f"{stderr}. Unable to split this video, if it's size less than {self._listener.max_split_size} will be uploaded as it is. Path: {f_path}"
-                    )
-                return False
-            out_size = await aiopath.getsize(out_path)
-            if out_size > self._listener.max_split_size:
-                split_size -= (out_size - self._listener.max_split_size) + 5000000
-                LOGGER.warning(
-                    f"Part size is {out_size}. Trying again with lower split size!. Path: {f_path}"
-                )
-                await remove(out_path)
-                continue
-            lpd = (await get_media_info(out_path))[0]
-            if lpd == 0:
-                LOGGER.error(
-                    f"Something went wrong while splitting, mostly file is corrupted. Path: {f_path}"
-                )
-                break
-            elif duration == lpd:
-                LOGGER.warning(
-                    f"This file has been splitted with default stream and audio, so you will only see one part with less size from orginal one because it doesn't have all streams and audios. This happens mostly with MKV videos. Path: {f_path}"
-                )
-                break
-            elif lpd <= 3:
-                await remove(out_path)
-                break
-            self._last_processed_time += lpd
-            self._last_processed_bytes += out_size
-            start_time += lpd - 3
-            i += 1
-        return True

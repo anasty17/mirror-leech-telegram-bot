@@ -1,6 +1,7 @@
 from asyncio import sleep
 from pyrogram.errors import FloodWait, FloodPremiumWait
 from re import match as re_match
+from tenacity import retry, wait_exponential, stop_after_attempt, retry_if_exception_type
 from time import time
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals, DOWNLOAD_DIR
@@ -31,21 +32,24 @@ async def send_message(message, text, buttons=None, block=True):
         return str(e)
 
 
-async def edit_message(message, text, buttons=None, block=True):
+@retry(
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    stop=stop_after_attempt(3),
+    retry=retry_if_exception_type((FloodWait, FloodPremiumWait)),
+    reraise=True,
+)
+async def edit_message(message, text, buttons=None):
     try:
         return await message.edit(
             text=text,
             disable_web_page_preview=True,
             reply_markup=buttons,
         )
-    except FloodWait as f:
+    except (FloodWait, FloodPremiumWait) as f:
         LOGGER.warning(str(f))
-        if not block:
-            return str(f)
-        await sleep(f.value * 1.2)
-        return await edit_message(message, text, buttons)
+        raise f
     except Exception as e:
-        LOGGER.error(str(e))
+        LOGGER.error(f"Failed to edit message: {e}", exc_info=True)
         return str(e)
 
 

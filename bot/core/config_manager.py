@@ -31,6 +31,7 @@ class Config:
     HYBRID_LEECH = False
     HYDRA_IP = ""
     HYDRA_API_KEY = ""
+    PREFERRED_LANGUAGES = "tel, hin, eng"
     NAME_SUBSTITUTE = ""
     OWNER_ID = 0
     QUEUE_ALL = 0
@@ -65,6 +66,7 @@ class Config:
     USER_SESSION_STRING = ""
     USER_TRANSMISSION = False
     USE_SERVICE_ACCOUNTS = False
+    USE_USER_SESSION_FOR_BIG_FILES = False
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
 
