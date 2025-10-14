@@ -1,5 +1,6 @@
-from asyncio import Lock
+from asyncio import Lock, sleep
 from time import time
+from aioshutil import move
 
 from .... import (
     LOGGER,
@@ -72,13 +73,18 @@ class TelegramDownloadHelper:
     async def _download(self, message, path):
         download = await message.download(synchronous=True)
         if download.is_error:
+            if wait_for := download.limited_seconds:
+                LOGGER.warning(download["message"])
+                await sleep(wait_for * 1.2)
+                return await self._download(message, path)
             LOGGER.error(download["message"])
             await self._on_download_error(download["message"])
             return
         if self._listener.is_cancelled:
             return
         if download.is_downloading_completed:
-            # path
+            current_path = download.path
+            await move(current_path, path)
             await self._on_download_complete()
 
     async def add_download(self, message, path, session):
@@ -87,7 +93,7 @@ class TelegramDownloadHelper:
             if self._listener.user_transmission and self._listener.is_super_chat:
                 self.session = "user"
                 message = await TgClient.user.getMessage(
-                    chat_id=message.chat_id, message_ids=message.id
+                    chat_id=message.chat_id, message_id=message.id
                 )
             else:
                 self.session = "bot"
@@ -132,6 +138,7 @@ class TelegramDownloadHelper:
                         )
                     else:
                         self._listener.name = media.file_name
+                path = path + self._listener.name
                 self._listener.size = media_file.size or media_file.expected_size
 
                 msg, button = await stop_duplicate_check(self._listener)
@@ -154,11 +161,11 @@ class TelegramDownloadHelper:
                         return
                     if self.session == "bot":
                         message = await self._listener.client.getMessage(
-                            chat_id=message.chat_id, message_ids=message.id
+                            chat_id=message.chat_id, message_id=message.id
                         )
                     else:
                         message = await TgClient.user.getMessage(
-                            chat_id=message.chat_id, message_ids=message.id
+                            chat_id=message.chat_id, message_id=message.id
                         )
                     if message.is_error:
                         await self._on_download_error(message["message"])

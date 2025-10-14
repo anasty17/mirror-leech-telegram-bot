@@ -18,10 +18,9 @@ async def send_message(message, text, buttons=None, block=True):
         reply_markup=buttons,
     )
     if res.is_error:
-        if res["message"].startswith("Too Many Requests: retry after"):
+        if wait_for := res.limited_seconds:
             LOGGER.warning(res["message"])
             if block:
-                wait_for = res.limited_seconds
                 await sleep(wait_for * 1.2)
                 return await send_message(message, text, buttons)
         LOGGER.error(res["message"])
@@ -36,10 +35,9 @@ async def edit_message(message, text, buttons=None, block=True):
         reply_markup=buttons,
     )
     if res.is_error:
-        if res["message"].startswith("Too Many Requests: retry after"):
+        if wait_for := res.limited_seconds:
             LOGGER.warning(res["message"])
             if block:
-                wait_for = res.limited_seconds
                 await sleep(wait_for * 1.2)
                 return await edit_message(message, text, buttons)
         LOGGER.error(res["message"])
@@ -52,9 +50,8 @@ async def send_file(message, file, caption=""):
         document=file, caption=caption, disable_notification=True
     )
     if res.is_error:
-        if res["message"].startswith("Too Many Requests: retry after"):
+        if wait_for := res.limited_seconds:
             LOGGER.warning(res["message"])
-            wait_for = res.limited_seconds
             await sleep(wait_for * 1.2)
             return await send_file(message, file, caption)
         LOGGER.error(res["message"])
@@ -72,9 +69,8 @@ async def send_rss(text, chat_id, thread_id):
         disable_notification=True,
     )
     if res.is_error:
-        if res["message"].startswith("Too Many Requests: retry after"):
+        if wait_for := res.limited_seconds:
             LOGGER.warning(res["message"])
-            wait_for = res.limited_seconds
             await sleep(wait_for * 1.2)
             return await send_rss(text)
         LOGGER.error(res["message"])
@@ -158,7 +154,7 @@ async def get_tg_link_message(link):
         return (links, "bot") if links else (message, "bot")
     elif TgClient.user:
         user_message = await TgClient.user.getMessage(chat_id=chat, message_id=msg_id)
-        if message.is_error:
+        if user_message.is_error:
             raise TgLinkException(
                 f"You don't have access to this chat!. ERROR: {user_message["message"]}"
             )
