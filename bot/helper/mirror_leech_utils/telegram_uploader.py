@@ -13,27 +13,19 @@ from pytdbot.types import (
     InputMessagePhoto,
     InputFileRemote,
     InputFileLocal,
-    InputMessageReplyToMessage,
-    MessageSendOptions,
+    InputThumbnail,
 )
 from aiofiles.os import (
     remove,
     path as aiopath,
     rename,
 )
-from tenacity import (
-    retry,
-    wait_exponential,
-    stop_after_attempt,
-    retry_if_exception_type,
-    RetryError,
-)
 
 from ...core.config_manager import Config
 from ...core.telegram_client import TgClient
 from ..ext_utils.bot_utils import sync_to_async
 from ..ext_utils.files_utils import is_archive, get_base_name
-from ..telegram_helper.message_utils import delete_message
+from ..telegram_helper.message_utils import delete_message, send_album
 from ..telegram_helper.progress import tracker
 from ..ext_utils.media_utils import (
     get_media_info,
@@ -48,6 +40,7 @@ LOGGER = getLogger(__name__)
 
 class TelegramUploader:
     def __init__(self, listener, path):
+        self._last_uploaded = 0
         self._processed_bytes = 0
         self._listener = listener
         self._path = path
@@ -66,6 +59,7 @@ class TelegramUploader:
         self._sent_msg = None
         self._user_session = self._listener.user_transmission
         self._error = ""
+        self._f_size = 0
 
     async def _upload_progress(
         self,
@@ -78,7 +72,9 @@ class TelegramUploader:
             else:
                 await TgClient.bot.cancelDownloadFile(file_id=file_id)
             await tracker.cancel_progress(file_id=file_id)
-        self._processed_bytes = progress_dict["transferred"]
+        chunk_size = progress_dict["transferred"] - self._last_uploaded
+        self._last_uploaded = progress_dict["transferred"]
+        self._processed_bytes += chunk_size
 
     async def _user_settings(self):
         self._media_group = self._listener.user_dict.get("MEDIA_GROUP") or (
@@ -195,17 +191,7 @@ class TelegramUploader:
         ]
         for i in range(0, len(inputs), 10):
             batch = inputs[i : i + 10]
-            self._sent_msg = (
-                await TgClient.bot.sendMessageAlbum(
-                    chat_id=self._sent_msg.chat_id,
-                    message_thread_id=self._sent_msg.message_thread_id,
-                    reply_to=InputMessageReplyToMessage(
-                        message_id=self._sent_msg.id, quote=True
-                    ),
-                    options=MessageSendOptions(disable_notification=True),
-                    input_message_contents=batch,
-                )
-            ).messages[-1]
+            self._sent_msg = (await send_album(self._sent_msg, batch)).messages[-1]
 
     async def _send_media_group(self, subkey, key, msgs):
         for index, msg in enumerate(msgs):
@@ -219,15 +205,7 @@ class TelegramUploader:
                 )
         replied_to = await msgs[0].getRepliedMessage()
         msgs_list = (
-            await TgClient.bot.sendMessageAlbum(
-                chat_id=replied_to.chat_id,
-                message_thread_id=replied_to.message_thread_id,
-                reply_to=InputMessageReplyToMessage(
-                    message_id=replied_to.id, quote=True
-                ),
-                options=MessageSendOptions(disable_notification=True),
-                input_message_contents=self._get_input_media(subkey, key),
-            )
+            await send_album(replied_to, self._get_input_media(subkey, key))
         ).messages
         for msg in msgs:
             msg_link = await msg.getMessageLink(in_message_thread=bool(msg.topic_id))
@@ -262,9 +240,9 @@ class TelegramUploader:
                     LOGGER.error(f"{self._up_path} not exists! Continue uploading!")
                     continue
                 try:
-                    f_size = await aiopath.getsize(self._up_path)
+                    self._f_size = await aiopath.getsize(self._up_path)
                     self._total_files += 1
-                    if f_size == 0:
+                    if self._f_size == 0:
                         LOGGER.error(
                             f"{self._up_path} size is zero, telegram don't upload zero size files"
                         )
@@ -284,7 +262,7 @@ class TelegramUploader:
                                     if len(msgs) > 1:
                                         await self._send_media_group(subkey, key, msgs)
                     if self._listener.hybrid_leech and self._listener.user_transmission:
-                        self._user_session = f_size > 2097152000
+                        self._user_session = self._f_size > 2097152000
                         if self._user_session:
                             self._sent_msg = await TgClient.user.getMessage(
                                 chat_id=self._sent_msg.chat_id,
@@ -308,11 +286,6 @@ class TelegramUploader:
                         self._msgs_dict[self._sent_msg.link] = file_
                     await sleep(1)
                 except Exception as err:
-                    if isinstance(err, RetryError):
-                        LOGGER.info(
-                            f"Total Attempts: {err.last_attempt.attempt_number}"
-                        )
-                        err = err.last_attempt.exception()
                     LOGGER.error(f"{err}. Path: {self._up_path}")
                     self._error = str(err)
                     self._corrupted += 1
@@ -349,11 +322,6 @@ class TelegramUploader:
         )
         return
 
-    @retry(
-        wait=wait_exponential(multiplier=2, min=4, max=8),
-        stop=stop_after_attempt(3),
-        retry=retry_if_exception_type(Exception),
-    )
     async def _upload_file(self, cap_mono, file, o_path, force_document=False):
         if (
             self._thumb is not None
@@ -388,13 +356,10 @@ class TelegramUploader:
                 if thumb == "none":
                     thumb = None
                 self._sent_msg = await self._sent_msg.reply_document(
-                    document=self._up_path,
-                    quote=True,
-                    thumb=thumb,
+                    document=InputFileLocal(path=self._up_path),
+                    thumb=InputThumbnail(InputFileLocal(path=thumb)),
                     caption=cap_mono,
-                    force_document=True,
                     disable_notification=True,
-                    progress=self._upload_progress,
                 )
             elif is_video:
                 key = "videos"
@@ -418,16 +383,14 @@ class TelegramUploader:
                 if thumb == "none":
                     thumb = None
                 self._sent_msg = await self._sent_msg.reply_video(
-                    video=self._up_path,
-                    quote=True,
+                    video=InputFileLocal(path=self._up_path),
                     caption=cap_mono,
                     duration=duration,
                     width=width,
                     height=height,
-                    thumb=thumb,
+                    thumb=InputThumbnail(InputFileLocal(path=thumb)),
                     supports_streaming=True,
                     disable_notification=True,
-                    progress=self._upload_progress,
                 )
             elif is_audio:
                 key = "audios"
@@ -437,34 +400,30 @@ class TelegramUploader:
                 if thumb == "none":
                     thumb = None
                 self._sent_msg = await self._sent_msg.reply_audio(
-                    audio=self._up_path,
-                    quote=True,
+                    audio=InputFileLocal(path=self._up_path),
                     caption=cap_mono,
                     duration=duration,
                     performer=artist,
                     title=title,
-                    thumb=thumb,
+                    thumb=InputThumbnail(InputFileLocal(path=thumb)),
                     disable_notification=True,
-                    progress=self._upload_progress,
                 )
             else:
                 key = "photos"
                 if self._listener.is_cancelled:
                     return
                 self._sent_msg = await self._sent_msg.reply_photo(
-                    photo=self._up_path,
-                    quote=True,
+                    photo=InputFileLocal(path=self._up_path),
                     caption=cap_mono,
                     disable_notification=True,
-                    progress=self._upload_progress,
                 )
-
+            content_type = self._sent_msg.content.getType()
             if (
                 not self._listener.is_cancelled
                 and self._media_group
-                and (self._sent_msg.video or self._sent_msg.document)
+                and content_type in ["messageDocument", "messageVideo"]
             ):
-                key = "documents" if self._sent_msg.document else "videos"
+                key = "documents" if content_type == "messageDocument" else "videos"
                 if match := re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", o_path):
                     pname = match.group(0)
                     if pname in self._media_dict[key].keys():

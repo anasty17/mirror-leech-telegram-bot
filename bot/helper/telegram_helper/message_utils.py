@@ -1,6 +1,7 @@
 from asyncio import sleep
 from re import match as re_match
 from time import time
+from pytdbot.types import InputMessageReplyToMessage, MessageSendOptions
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config
@@ -56,6 +57,24 @@ async def send_file(message, file, caption=""):
             return await send_file(message, file, caption)
         LOGGER.error(res["message"])
         return res["message"]
+    return res
+
+
+async def send_album(message, contents):
+    res = await TgClient.bot.sendMessageAlbum(
+        chat_id=message.chat_id,
+        message_thread_id=message.message_thread_id,
+        reply_to=InputMessageReplyToMessage(message_id=message.id),
+        options=MessageSendOptions(disable_notification=True),
+        input_message_contents=contents,
+    )
+    if res.is_error:
+        if wait_for := res.limited_seconds:
+            LOGGER.warning(res["message"])
+            await sleep(wait_for * 1.2)
+            return await send_album(message, contents)
+        LOGGER.error(res["message"])
+        return [message]
     return res
 
 
