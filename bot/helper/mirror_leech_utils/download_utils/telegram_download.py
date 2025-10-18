@@ -39,7 +39,7 @@ class TelegramDownloadHelper:
             GLOBAL_GID.add(self._gid)
         async with task_dict_lock:
             task_dict[self._listener.mid] = TelegramStatus(
-                self._listener, self, self._gid[:12], "dl"
+                self._listener, self, self._gid, "dl"
             )
         if not from_queue:
             await self._listener.on_download_start()
@@ -49,13 +49,13 @@ class TelegramDownloadHelper:
         else:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
-    async def _on_download_progress(self, file_id, progress_dict):
+    async def _on_download_progress(self, file_id, progress_dict, _):
         if self._listener.is_cancelled:
             if self.session == "user":
                 await TgClient.user.cancelDownloadFile(file_id=file_id)
             else:
                 await TgClient.bot.cancelDownloadFile(file_id=file_id)
-            await tracker.cancel_progress(file_id=file_id)
+            await tracker.cancel_progress(file_id)
         self._processed_bytes = progress_dict["transferred"]
 
     async def _on_download_error(self, error):
@@ -151,7 +151,7 @@ class TelegramDownloadHelper:
                     LOGGER.info(f"Added to Queue/Download: {self._listener.name}")
                     async with task_dict_lock:
                         task_dict[self._listener.mid] = QueueStatus(
-                            self._listener, self._gid[:12], "dl"
+                            self._listener, self._gid, "dl"
                         )
                     await self._listener.on_download_start()
                     if self._listener.multi <= 1:
@@ -173,8 +173,7 @@ class TelegramDownloadHelper:
                 self._start_time = time()
                 await self._on_download_start(add_to_queue)
                 await tracker.add_to_progress(
-                    media_file.id,
-                    transfer_type="download",
+                    media_file.remote.id,
                     callback=self._on_download_progress,
                 )
                 await self._download(message, path)

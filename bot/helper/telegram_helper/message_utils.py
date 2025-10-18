@@ -1,7 +1,10 @@
 from asyncio import sleep
 from re import match as re_match
 from time import time
-from pytdbot.types import InputMessageReplyToMessage, MessageSendOptions
+from pytdbot.types import (
+    InputMessageReplyToMessage,
+    MessageSendOptions,
+)
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config
@@ -57,6 +60,22 @@ async def send_file(message, file, caption=""):
             return await send_file(message, file, caption)
         LOGGER.error(res["message"])
         return res["message"]
+    return res
+
+
+async def send_message_with_content(message, content):
+    res = await message._client.sendMessage(
+        chat_id=message.chat_id,
+        message_thread_id=message.message_thread_id,
+        reply_to=InputMessageReplyToMessage(message_id=message.id),
+        options=MessageSendOptions(disable_notification=True),
+        input_message_content=content,
+    )
+    if res.is_error:
+        if wait_for := res.limited_seconds:
+            LOGGER.warning(res["message"])
+            await sleep(wait_for * 1.2)
+            return await send_message_with_content(message, content)
     return res
 
 

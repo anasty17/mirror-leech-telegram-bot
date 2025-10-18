@@ -12,75 +12,72 @@ class ProgressTracker:
 
     async def update_progress(
         self,
-        file_id: int,
-        transfer_type: str,
-        transferred: int,
-        total: int,
-        is_active: bool,
-        completed: bool,
+        key,
+        transferred,
+        total,
+        is_active,
+        is_completed,
     ):
-        if completed:
-            await self.cancel_progress(file_id)
-            return
-        async with self.locks[file_id]:
-            if file_id not in self.progress_dict:
+        async with self.locks[key]:
+            if key not in self.progress_dict:
                 return
-            self.progress_dict[file_id] = {
-                "transfer_type": transfer_type,
+            self.progress_dict[key] = {
                 "transferred": transferred,
                 "total": total,
                 "is_active": is_active,
-                "completed": completed,
+                "is_completed": is_completed,
             }
 
-        if callback := self.callbacks.get(file_id):
+        if callback := self.callbacks.get(key):
             try:
-                if hasattr(callback, "__await__"):
-                    await callback(file_id, self.progress_dict[file_id])
-                else:
-                    callback(file_id, self.progress_dict[file_id])
+                await callback(key, self.progress_dict[key], is_completed)
             except Exception as e:
-                LOGGER.error(f"Callback error for file {file_id}: {e}")
+                LOGGER.error(f"Callback error for file {key}: {e}")
+        if is_completed:
+            await self.cancel_progress(key)
 
-    async def add_to_progress(self, file_id: int, transfer_type: str, callback=None):
-        async with self.locks[file_id]:
-            self.progress_dict[file_id] = {"transfer_type": transfer_type}
-            if callback and callable(callback):
-                self.callbacks[file_id] = callback
+    async def add_to_progress(self, key, callback):
+        async with self.locks[key]:
+            self.progress_dict[key] = {}
+            if callable(callback):
+                self.callbacks[key] = callback
 
-    async def cancel_progress(self, file_id: int):
-        lock = self.locks.get(file_id)
+    async def cancel_progress(self, key):
+        lock = self.locks.get(key)
         if not lock:
-            self.progress_dict.pop(file_id, None)
-            self.callbacks.pop(file_id, None)
+            self.progress_dict.pop(key, None)
+            self.callbacks.pop(key, None)
             return
         async with lock:
-            self.progress_dict.pop(file_id, None)
-            self.callbacks.pop(file_id, None)
-        self.locks.pop(file_id, None)
+            self.progress_dict.pop(key, None)
+            self.callbacks.pop(key, None)
+        self.locks.pop(key, None)
 
 
 async def tdlib_file_update(_, update):
     file = update.file
-    file_id = file.id
-    async with tracker.locks[file_id]:
-        if file_id not in tracker.progress_dict:
-            return
-        transfer_type = tracker.progress_dict[file_id]["transfer_type"]
-    if transfer_type == "download":
-        local_file = file.local
-        is_active = local_file.is_downloading_active
-        completed = local_file.is_downloading_completed
-        transferred = local_file.downloaded_size
+    local_file = file.local
+    remote_file = file.remote
+    if local_file.path.startswith("/mltb/downloads/"):
+        key = local_file.path
+        transfer_type = "upload"
     else:
-        remote_file = file.remote
+        key = remote_file.id
+        transfer_type = "download"
+    async with tracker.locks[key]:
+        if key not in tracker.progress_dict:
+            return
+    if transfer_type == "upload":
         is_active = remote_file.is_uploading_active
-        completed = remote_file.is_uploading_completed
+        is_completed = remote_file.is_uploading_completed
         transferred = remote_file.uploaded_size
+    else:
+        key = remote_file.id
+        is_active = local_file.is_downloading_active
+        is_completed = local_file.is_downloading_completed
+        transferred = local_file.downloaded_size
     total = file.size or file.expected_size
-    await tracker.update_progress(
-        file_id, transfer_type, transferred, total, is_active, completed
-    )
+    await tracker.update_progress(key, transferred, total, is_active, is_completed)
 
 
 tracker = ProgressTracker()

@@ -20,3 +20,9 @@ class TgLinkException(Exception):
     """No Access granted for this chat"""
 
     pass
+
+
+class TgUploadException(Exception):
+    """Error while uploading to Telegram except floodwait"""
+
+    pass
