@@ -1,10 +1,10 @@
-asyncio
+aioaria2
+aioqbt
 aiofiles
 aioshutil
 anytree
 apscheduler
-aioaria2
-aioqbt
+asyncio
 cloudscraper
 dnspython
 fastapi
@@ -17,11 +17,12 @@ httpx
 jinja2
 lxml
 natsort
+orjson
 par2cmdline-turbo
 pillow
 psutil
 pymongo
-pytdbot[tdjson]
+pytdbot
 python-magic
 requests
 telegraph

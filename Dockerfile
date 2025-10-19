@@ -1,4 +1,4 @@
-FROM anasty17/mltb:latest
+FROM anasty17/mltb:dev
 
 WORKDIR /mltb
 RUN chmod 777 /mltb

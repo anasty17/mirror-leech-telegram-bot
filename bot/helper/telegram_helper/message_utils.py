@@ -1,10 +1,7 @@
 from asyncio import sleep
 from re import match as re_match
 from time import time
-from pytdbot.types import (
-    InputMessageReplyToMessage,
-    MessageSendOptions,
-)
+from pytdbot.types import InputMessageReplyToMessage, MessageSendOptions
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config

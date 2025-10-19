@@ -288,7 +288,11 @@ class TelegramUploader:
                         and (self._listener.is_super_chat or self._listener.up_dest)
                         and not self._is_private
                     ):
-                        self._msgs_dict[self._sent_msg.link] = file_
+                        msg_link = await self._sent_msg.getMessageLink(
+                            in_message_thread=bool(self._sent_msg.topic_id)
+                        )
+                        link = msg_link.link
+                        self._msgs_dict[link] = file_
                     await sleep(1)
                 except Exception as err:
                     LOGGER.error(f"{err}. Path: {self._up_path}")

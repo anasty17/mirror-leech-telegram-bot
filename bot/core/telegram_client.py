@@ -22,6 +22,7 @@ class TgClient:
             token=Config.BOT_TOKEN,
             api_id=Config.TELEGRAM_API,
             api_hash=Config.TELEGRAM_HASH,
+            lib_path="tdlib/lib/libtdjson.so",
             default_parse_mode="html",
             files_directory="/mltb/tdlib_bot",
             workers=None,
@@ -38,10 +39,10 @@ class TgClient:
                 cls.user = Client(
                     api_id=Config.TELEGRAM_API,
                     api_hash=Config.TELEGRAM_HASH,
+                    lib_path="tdlib/lib/libtdjson.so",
                     default_parse_mode="html",
                     files_directory="/mltb/tdlib_user",
                     user_bot=True,
-                    workers=1,
                 )
                 await cls.user.start()
                 await cls.user.getChats()
