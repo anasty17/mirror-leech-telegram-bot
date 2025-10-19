@@ -34,7 +34,10 @@ async def extract_bulk_links(message, bulk_start: str, bulk_end: str) -> list:
     links_list = []
     if message.reply_to:
         reply_to = await message.getRepliedMessage()
-        if (file_ := reply_to.content.document) and (file_.mime_type == "text/plain"):
+        if (
+            reply_to.content.getType() == "messageDocument"
+            and reply_to.content.document.mime_type == "text/plain"
+        ):
             links_list = await get_links_from_file(reply_to)
         elif text := reply_to.text:
             links_list = get_links_from_message(text)

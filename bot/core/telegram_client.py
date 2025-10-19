@@ -1,5 +1,6 @@
 from pytdbot import Client
 from asyncio import Lock
+from aiofiles.os import path
 
 from .. import LOGGER
 from .config_manager import Config
@@ -25,6 +26,7 @@ class TgClient:
             lib_path="tdlib/lib/libtdjson.so",
             default_parse_mode="html",
             files_directory="/mltb/tdlib_bot",
+            use_file_database=False,
             workers=None,
         )
         await cls.bot.start()
@@ -33,8 +35,8 @@ class TgClient:
 
     @classmethod
     async def start_user(cls):
-        if Config.USER_SESSION_STRING:
-            LOGGER.info("Creating client from USER_SESSION_STRING")
+        if await path.exists("tdlib_user"):
+            LOGGER.info("Creating client from USER DATABASE")
             try:
                 cls.user = Client(
                     api_id=Config.TELEGRAM_API,
@@ -42,6 +44,7 @@ class TgClient:
                     lib_path="tdlib/lib/libtdjson.so",
                     default_parse_mode="html",
                     files_directory="/mltb/tdlib_user",
+                    use_file_database=False,
                     user_bot=True,
                 )
                 await cls.user.start()
@@ -51,7 +54,7 @@ class TgClient:
                 if cls.IS_PREMIUM_USER:
                     cls.MAX_SPLIT_SIZE = 4194304000
             except Exception as e:
-                LOGGER.error(f"Failed to start client from USER_SESSION_STRING. {e}")
+                LOGGER.error(f"Failed to start client from USER DATABASE. {e}")
                 cls.IS_PREMIUM_USER = False
                 cls.user = None
 

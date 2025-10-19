@@ -86,7 +86,6 @@ async def get_buttons(key=None, edit_type=None):
             if key in [
                 "CMD_SUFFIX",
                 "OWNER_ID",
-                "USER_SESSION_STRING",
                 "TELEGRAM_HASH",
                 "TELEGRAM_API",
                 "BOT_TOKEN",
@@ -438,6 +437,7 @@ async def sync_jdownloader():
 @new_task
 async def update_private_file(_, message, pre_message):
     handler_dict[message.chat_id] = False
+    content_type = message.content.getType()
     if not message.remote_file_id and (file_name := message.text):
         if await aiopath.isfile(file_name) and file_name != "config.py":
             await remove(file_name)
@@ -453,8 +453,8 @@ async def update_private_file(_, message, pre_message):
             await (await create_subprocess_exec("chmod", "600", ".netrc")).wait()
             await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
         await delete_message(message)
-    elif doc := message.content.document:
-        file_name = doc.file_name
+    elif content_type == "messageDocument":
+        file_name = message.content.document.file_name
         fpath = f"{getcwd()}/{file_name}"
         if await aiopath.exists(fpath):
             await remove(fpath)
@@ -522,7 +522,7 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
         return bool(
             event.from_id == query.sender_user_id
             and event.chat_id == chat_id
-            and (event.text or event.content.document and document)
+            and (event.text or event.content.getType() == "messageDocument" and document)
         )
 
     client.add_handler(

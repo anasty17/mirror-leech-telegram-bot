@@ -155,7 +155,7 @@ class Mirror(TaskListener):
         ratio = None
         seed_time = None
         reply_to = None
-        file_ = None
+        is_tg_file = False
         session = ""
 
         try:
@@ -255,37 +255,39 @@ class Mirror(TaskListener):
             return
 
         if reply_to:
-            file_ = (
-                reply_to.content.document
-                or reply_to.content.photo
-                or reply_to.content.video
-                or reply_to.content.audio
-                or reply_to.content.voice_note
-                or reply_to.content.video_note
-                or reply_to.content.sticker
-                or reply_to.content.animation
-                or None
-            )
+            content_type = reply_to.content.getType()
+            is_tg_file = content_type in [
+                "messageDocument",
+                "messagePhoto",
+                "messageVideo",
+                "messageAudio",
+                "messageVoiceNote",
+                "messageSticker",
+                "messageAnimation",
+                "messageVideoNote",
+            ]
 
-            if file_ is None:
+            if not is_tg_file:
                 if reply_text := reply_to.text:
                     self.link = reply_text.split("\n", 1)[0].strip()
                 else:
                     reply_to = None
-            elif reply_to.content.document and (
-                file_.mime_type == "application/x-bittorrent"
-                or file_.file_name.endswith((".torrent", ".dlc", ".nzb"))
+            elif content_type == "messageDocument" and (
+                reply_to.content.document.mime_type == "application/x-bittorrent"
+                or reply_to.content.document.file_name.endswith(
+                    (".torrent", ".dlc", ".nzb")
+                )
             ):
                 res = await reply_to.download(synchronous=True)
                 self.link = res.path
-                file_ = None
+                is_tg_file = False
 
         if (
             not self.link
-            and file_ is None
+            and not is_tg_file
             or is_telegram_link(self.link)
             and reply_to is None
-            or file_ is None
+            or not is_tg_file
             and not is_url(self.link)
             and not is_magnet(self.link)
             and not await aiopath.exists(self.link)
@@ -317,7 +319,7 @@ class Mirror(TaskListener):
             and not is_rclone_path(self.link)
             and not is_gdrive_link(self.link)
             and not self.link.endswith(".torrent")
-            and file_ is None
+            and not is_tg_file
             and not is_gdrive_id(self.link)
         ):
             content_type = await get_content_type(self.link)
@@ -341,7 +343,7 @@ class Mirror(TaskListener):
                     await self.remove_from_same_dir()
                     return
 
-        if file_ is not None:
+        if is_tg_file:
             await TelegramDownloadHelper(self).add_download(
                 reply_to, f"{path}/", session
             )

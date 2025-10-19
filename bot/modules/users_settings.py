@@ -542,7 +542,7 @@ async def event_handler(client, query, pfunc, photo=False, document=False):
         if photo:
             mtype = event.content.photo
         elif document:
-            mtype = event.content.document
+            mtype = event.content.getType == "messageDocument"
         else:
             mtype = event.text
         return bool(

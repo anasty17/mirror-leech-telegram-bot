@@ -12,14 +12,14 @@ async def main():
         api_id=api_id,
         api_hash=api_hash,
         files_directory=f"{getcwd()}/tdlib_user",
-        database_encryption_key="mltbmltb",
+        use_file_database=False,
         td_verbosity=1,
         user_bot=True,
     )
 
     @client.on_updateAuthorizationState()
-    async def handle_auth(client, _):
-        match client.authorization_state:
+    async def handle_auth(_, update):
+        match update.authorization_state:
             case "authorizationStateReady":
                 print("LOGIN SUCCESSFUL")
                 await client.stop()
