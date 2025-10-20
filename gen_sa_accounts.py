@@ -1,17 +1,18 @@
-import errno
-import os
-import pickle
-import sys
 from argparse import ArgumentParser
 from base64 import b64decode
+from errno import EEXIST
 from glob import glob
+from json import loads
+from os import mkdir, path as ospath
+from pickle import dump, load
+from random import choice
+from sys import exit
+from time import sleep
+
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from json import loads
-from random import choice
-from time import sleep
 
 SCOPES = [
     "https://www.googleapis.com/auth/drive",
@@ -21,9 +22,9 @@ SCOPES = [
 project_create_ops = []
 current_key_dump = []
 sleep_time = 30
+CHARS = "-abcdefghijklmnopqrstuvwxyz1234567890"
 
 
-# Create count SAs in project
 def _create_accounts(service, project, count):
     batch = service.new_batch_http_request(callback=_def_batch_resp)
     for _ in range(count):
@@ -39,10 +40,12 @@ def _create_accounts(service, project, count):
                 },
             )
         )
-    batch.execute()
+    try:
+        batch.execute()
+    except HttpError as e:
+        print("Error creating accounts:", e)
 
 
-# Create accounts needed to fill project
 def _create_remaining_accounts(iam, project):
     print(f"Creating accounts in {project}")
     sa_count = len(_list_sas(iam, project))
@@ -51,37 +54,35 @@ def _create_remaining_accounts(iam, project):
         sa_count = len(_list_sas(iam, project))
 
 
-# Generate a random id
 def _generate_id(prefix="saf-"):
-    chars = "-abcdefghijklmnopqrstuvwxyz1234567890"
-    return prefix + "".join(choice(chars) for _ in range(25)) + choice(chars[1:])
+    return prefix + "".join(choice(CHARS) for _ in range(25)) + choice(CHARS[1:])
 
 
-# List projects using service
 def _get_projects(service):
-    return [i["projectId"] for i in service.projects().list().execute()["projects"]]
+    try:
+        return [i["projectId"] for i in service.projects().list().execute()["projects"]]
+    except HttpError as e:
+        print("Error fetching projects:", e)
+        return []
 
 
-# Default batch callback handler
 def _def_batch_resp(id, resp, exception):
     if exception is not None:
         if str(exception).startswith("<HttpError 429"):
             sleep(sleep_time / 100)
         else:
-            print(exception)
+            print("Batch error:", exception)
 
 
-# Project Creation Batch Handler
 def _pc_resp(id, resp, exception):
     global project_create_ops
     if exception is not None:
-        print(exception)
+        print("Project creation error:", exception)
     else:
         for i in resp.values():
             project_create_ops.append(i)
 
 
-# Project Creation
 def _create_projects(cloud, count):
     global project_create_ops
     batch = cloud.new_batch_http_request(callback=_pc_resp)
@@ -90,38 +91,52 @@ def _create_projects(cloud, count):
         new_proj = _generate_id()
         new_projs.append(new_proj)
         batch.add(cloud.projects().create(body={"project_id": new_proj}))
-    batch.execute()
+    try:
+        batch.execute()
+    except HttpError as e:
+        print("Error creating projects:", e)
+        return []
 
-    for i in project_create_ops:
+    for op in project_create_ops:
         while True:
-            resp = cloud.operations().get(name=i).execute()
-            if "done" in resp and resp["done"]:
+            try:
+                resp = cloud.operations().get(name=op).execute()
+                if resp.get("done"):
+                    break
+            except HttpError as e:
+                print("Error fetching operation status:", e)
                 break
             sleep(3)
     return new_projs
 
 
-# Enable services ste for projects in projects
 def _enable_services(service, projects, ste):
     batch = service.new_batch_http_request(callback=_def_batch_resp)
-    for i in projects:
-        for j in ste:
-            batch.add(service.services().enable(name=f"projects/{i}/services/{j}"))
-    batch.execute()
+    for project in projects:
+        for s in ste:
+            batch.add(
+                service.services().enable(name=f"projects/{project}/services/{s}")
+            )
+    try:
+        batch.execute()
+    except HttpError as e:
+        print("Error enabling services:", e)
 
 
-# List SAs in project
 def _list_sas(iam, project):
-    resp = (
-        iam.projects()
-        .serviceAccounts()
-        .list(name=f"projects/{project}", pageSize=100)
-        .execute()
-    )
-    return resp["accounts"] if "accounts" in resp else []
+    try:
+        resp = (
+            iam.projects()
+            .serviceAccounts()
+            .list(name=f"projects/{project}", pageSize=100)
+            .execute()
+        )
+        return resp.get("accounts", [])
+    except HttpError as e:
+        print("Error listing service accounts:", e)
+        return []
 
 
-# Create Keys Batch Handler
 def _batch_keys_resp(id, resp, exception):
     global current_key_dump
     if exception is not None:
@@ -130,53 +145,62 @@ def _batch_keys_resp(id, resp, exception):
     elif current_key_dump is None:
         sleep(sleep_time / 100)
     else:
-        current_key_dump.append(
-            (
-                resp["name"][resp["name"].rfind("/") :],
-                b64decode(resp["privateKeyData"]).decode("utf-8"),
-            )
-        )
+        try:
+            key_name = resp["name"][resp["name"].rfind("/") :]
+            key_data = b64decode(resp["privateKeyData"]).decode("utf-8")
+            current_key_dump.append((key_name, key_data))
+        except Exception as e:
+            print("Error processing key response:", e)
 
 
-# Create Keys
-def _create_sa_keys(iam, projects, path):
+def _create_sa_keys(iam, projects, path_dir):
     global current_key_dump
-    for i in projects:
+    for project in projects:
         current_key_dump = []
-        print(f"Downloading keys from {i}")
+        print(f"Downloading keys from {project}")
         while current_key_dump is None or len(current_key_dump) != 100:
             batch = iam.new_batch_http_request(callback=_batch_keys_resp)
-            total_sas = _list_sas(iam, i)
-            for j in total_sas:
+            total_sas = _list_sas(iam, project)
+            for sa in total_sas:
                 batch.add(
                     iam.projects()
                     .serviceAccounts()
                     .keys()
                     .create(
-                        name=f"projects/{i}/serviceAccounts/{j['uniqueId']}",
+                        name=f"projects/{project}/serviceAccounts/{sa['uniqueId']}",
                         body={
                             "privateKeyType": "TYPE_GOOGLE_CREDENTIALS_FILE",
                             "keyAlgorithm": "KEY_ALG_RSA_2048",
                         },
                     )
                 )
-            batch.execute()
+            try:
+                batch.execute()
+            except HttpError as e:
+                print("Error creating SA keys:", e)
+                current_key_dump = None
+
             if current_key_dump is None:
-                print(f"Redownloading keys from {i}")
+                print(f"Redownloading keys from {project}")
                 current_key_dump = []
             else:
-                for index, j in enumerate(current_key_dump):
-                    with open(f"{path}/{index}.json", "w+") as f:
-                        f.write(j[1])
+                for index, key in enumerate(current_key_dump):
+                    try:
+                        with open(f"{path_dir}/{index}.json", "w+") as f:
+                            f.write(key[1])
+                    except IOError as e:
+                        print(f"Error writing key file {index}.json:", e)
 
 
-# Delete Service Accounts
 def _delete_sas(iam, project):
     sas = _list_sas(iam, project)
     batch = iam.new_batch_http_request(callback=_def_batch_resp)
-    for i in sas:
-        batch.add(iam.projects().serviceAccounts().delete(name=i["name"]))
-    batch.execute()
+    for account in sas:
+        batch.add(iam.projects().serviceAccounts().delete(name=account["name"]))
+    try:
+        batch.execute()
+    except HttpError as e:
+        print("Error deleting service accounts:", e)
 
 
 def serviceaccountfactory(
@@ -194,108 +218,118 @@ def serviceaccountfactory(
     download_keys=None,
 ):
     selected_projects = []
-    proj_id = loads(open(credentials, "r").read())["installed"]["project_id"]
+    try:
+        proj_id = loads(open(credentials, "r").read())["installed"]["project_id"]
+    except Exception as e:
+        exit("Error reading credentials file: " + str(e))
+
     creds = None
-    if os.path.exists(token):
-        with open(token, "rb") as t:
-            creds = pickle.load(t)
+    if path and not path:
+        path = "accounts"
+    if path and not path.endswith("/"):
+        path = path.rstrip("/")
+
+    if path and not path == "accounts":
+        try:
+            mkdir(path)
+        except OSError as e:
+            if e.errno != EEXIST:
+                print("Error creating output directory:", e)
+                exit(1)
+
+    if ospath.exists(token):
+        try:
+            with open(token, "rb") as t:
+                creds = load(t)
+        except Exception as e:
+            print("Error loading token file:", e)
     if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
+        try:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(credentials, SCOPES)
+                creds = flow.run_local_server(port=0, open_browser=False)
+            with open(token, "wb") as t:
+                dump(creds, t)
+        except Exception as e:
+            exit("Error obtaining credentials: " + str(e))
 
-            creds = flow.run_local_server(port=0, open_browser=False)
-
-        with open(token, "wb") as t:
-            pickle.dump(creds, t)
-
-    cloud = build("cloudresourcemanager", "v1", credentials=creds)
-    iam = build("iam", "v1", credentials=creds)
-    serviceusage = build("serviceusage", "v1", credentials=creds)
+    try:
+        cloud = build("cloudresourcemanager", "v1", credentials=creds)
+        iam = build("iam", "v1", credentials=creds)
+        serviceusage = build("serviceusage", "v1", credentials=creds)
+    except Exception as e:
+        exit("Error building service clients: " + str(e))
 
     projs = None
     while projs is None:
         try:
             projs = _get_projects(cloud)
-        except HttpError as e:
-            if (
-                loads(e.content.decode("utf-8"))["error"]["status"]
-                == "PERMISSION_DENIED"
-            ):
-                try:
-                    serviceusage.services().enable(
-                        name=f"projects/{proj_id}/services/cloudresourcemanager.googleapis.com"
-                    ).execute()
-                except HttpError as e:
-                    print(e._get_reason())
-                    input("Press Enter to retry.")
+        except HttpError:
+            try:
+                serviceusage.services().enable(
+                    name=f"projects/{proj_id}/services/cloudresourcemanager.googleapis.com"
+                ).execute()
+            except HttpError as ee:
+                print("Error enabling cloudresourcemanager:", ee)
+                input("Press Enter to retry.")
     if list_projects:
         return _get_projects(cloud)
     if list_sas:
         return _list_sas(iam, list_sas)
     if create_projects:
-        print(f"creat projects: {create_projects}")
+        print(f"Creating projects: {create_projects}")
         if create_projects > 0:
             current_count = len(_get_projects(cloud))
             if current_count + create_projects <= max_projects:
-                print("Creating %d projects" % (create_projects))
+                print("Creating %d projects" % create_projects)
                 nprjs = _create_projects(cloud, create_projects)
                 selected_projects = nprjs
             else:
-                sys.exit(
-                    "No, you cannot create %d new project (s).\n"
-                    "Please reduce value of --quick-setup.\n"
-                    "Remember that you can totally create %d projects (%d already).\n"
-                    "Please do not delete existing projects unless you know what you are doing"
+                exit(
+                    "Cannot create %d new project(s).\n"
+                    "Please reduce the value or delete existing projects.\n"
+                    "Max projects allowed: %d, already in use: %d"
                     % (create_projects, max_projects, current_count)
                 )
         else:
-            print(
-                "Will overwrite all service accounts in existing projects.\n"
-                "So make sure you have some projects already."
-            )
+            print("Overwriting all service accounts in existing projects.")
             input("Press Enter to continue...")
 
     if enable_services:
-        ste = [enable_services]
+        target = [enable_services]
         if enable_services == "~":
-            ste = selected_projects
+            target = selected_projects
         elif enable_services == "*":
-            ste = _get_projects(cloud)
-        services = [f"{i}.googleapis.com" for i in services]
+            target = _get_projects(cloud)
+        service_list = [f"{s}.googleapis.com" for s in services]
         print("Enabling services")
-        _enable_services(serviceusage, ste, services)
+        _enable_services(serviceusage, target, service_list)
     if create_sas:
-        stc = [create_sas]
+        target = [create_sas]
         if create_sas == "~":
-            stc = selected_projects
+            target = selected_projects
         elif create_sas == "*":
-            stc = _get_projects(cloud)
-        for i in stc:
-            _create_remaining_accounts(iam, i)
+            target = _get_projects(cloud)
+        for proj in target:
+            _create_remaining_accounts(iam, proj)
     if download_keys:
-        try:
-            os.mkdir(path)
-        except OSError as e:
-            if e.errno != errno.EEXIST:
-                raise
-        std = [download_keys]
+        target = [download_keys]
         if download_keys == "~":
-            std = selected_projects
+            target = selected_projects
         elif download_keys == "*":
-            std = _get_projects(cloud)
-        _create_sa_keys(iam, std, path)
+            target = _get_projects(cloud)
+        _create_sa_keys(iam, target, path)
     if delete_sas:
-        std = []
-        std.append(delete_sas)
+        target = [delete_sas]
         if delete_sas == "~":
-            std = selected_projects
+            target = selected_projects
         elif delete_sas == "*":
-            std = _get_projects(cloud)
-        for i in std:
-            print(f"Deleting service accounts in {i}")
-            _delete_sas(iam, i)
+            target = _get_projects(cloud)
+        for proj in target:
+            print(f"Deleting service accounts in {proj}")
+            _delete_sas(iam, proj)
 
 
 if __name__ == "__main__":
@@ -306,13 +340,11 @@ if __name__ == "__main__":
         default="accounts",
         help="Specify an alternate directory to output the credential files.",
     )
-    parse.add_argument(
-        "--token", default="token_sa.pickle", help="Specify the pickle token file path."
-    )
+    parse.add_argument("--token", default="token_sa.pickle", help="Token file path.")
     parse.add_argument(
         "--credentials",
         default="credentials.json",
-        help="Specify the credentials file path.",
+        help="Credentials file path.",
     )
     parse.add_argument(
         "--list-projects",
@@ -330,7 +362,7 @@ if __name__ == "__main__":
         "--max-projects",
         type=int,
         default=12,
-        help="Max amount of project allowed. Default: 12",
+        help="Max projects allowed. Default: 12",
     )
     parse.add_argument(
         "--enable-services",
@@ -341,7 +373,7 @@ if __name__ == "__main__":
         "--services",
         nargs="+",
         default=["iam", "drive"],
-        help="Specify a different set of services to enable. Overrides the default.",
+        help="Specify a different set of services to enable.",
     )
     parse.add_argument(
         "--create-sas", default=None, help="Create service accounts in a project."
@@ -352,42 +384,45 @@ if __name__ == "__main__":
     parse.add_argument(
         "--download-keys",
         default=None,
-        help="Download keys for all the service accounts in a project.",
+        help="Download keys for service accounts in a project.",
     )
     parse.add_argument(
         "--quick-setup",
         default=None,
         type=int,
-        help="Create projects, enable services, create service accounts and download keys. ",
+        help="Create projects, enable services, create SAs and download keys.",
     )
     parse.add_argument(
         "--new-only",
         default=False,
         action="store_true",
-        help="Do not use exisiting projects.",
+        help="Do not use existing projects.",
     )
     args = parse.parse_args()
-    # If credentials file is invalid, search for one.
-    if not os.path.exists(args.credentials):
+
+    if not ospath.exists(args.credentials):
         options = glob("*.json")
         print(
-            "No credentials found at %s. Please enable the Drive API in:\n"
-            "https://developers.google.com/drive/api/v3/quickstart/python\n"
-            "and save the json file as credentials.json" % args.credentials
+            "No credentials found at %s. Please enable the Drive API and save the JSON as %s."
+            % (args.credentials, args.credentials)
         )
         if not options:
-            exit(-1)
+            exit("No available credential files found.")
         else:
-            print("Select a credentials file below.")
-            inp_options = [str(i) for i in list(range(1, len(options) + 1))] + options
-            for i in range(len(options)):
-                print("  %d) %s" % (i + 1, options[i]))
-            inp = None
+            print("Select a credentials file:")
+            for idx, opt in enumerate(options):
+                print(f"  {idx + 1}) {opt}")
             while True:
                 inp = input("> ")
-                if inp in inp_options:
-                    break
-            args.credentials = inp if inp in options else options[int(inp) - 1]
+                try:
+                    choice_idx = int(inp) - 1
+                    if 0 <= choice_idx < len(options):
+                        args.credentials = options[choice_idx]
+                        break
+                except ValueError:
+                    if inp in options:
+                        args.credentials = inp
+                        break
             print(
                 f"Use --credentials {args.credentials} next time to use this credentials file."
             )
@@ -416,14 +451,14 @@ if __name__ == "__main__":
         if args.list_projects:
             if resp:
                 print("Projects (%d):" % len(resp))
-                for i in resp:
-                    print(f"  {i}")
+                for proj in resp:
+                    print(f"  {proj}")
             else:
-                print("No projects.")
+                print("No projects found.")
         elif args.list_sas:
             if resp:
                 print("Service accounts in %s (%d):" % (args.list_sas, len(resp)))
-                for i in resp:
-                    print(f"  {i['email']} ({i['uniqueId']})")
+                for sa in resp:
+                    print(f"  {sa['email']} ({sa['uniqueId']})")
             else:
-                print("No service accounts.")
+                print("No service accounts found.")
