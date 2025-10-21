@@ -685,7 +685,7 @@ class Captcha:
 class Jddevice:
 
     def __init__(self, jd):
-        """This functions initializates the device instance.
+        """This functions initializes the device instance.
         It uses the provided dictionary to create the device.
 
         :param device_dict: Device dictionary

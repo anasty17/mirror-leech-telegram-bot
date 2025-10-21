@@ -90,7 +90,7 @@ async def rss_sub(_, message, pre_event):
         if len(args) < 2:
             await send_message(
                 message,
-                f"{item}. Wrong Input format. Read help message before adding new subcription!",
+                f"{item}. Wrong Input format. Read help message before adding new subscription!",
             )
             continue
         title = args[0].strip()
@@ -333,7 +333,7 @@ async def rss_get(_, message, pre_event):
     if len(args) < 2:
         await send_message(
             message,
-            f"{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subcription!",
+            f"{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subscription!",
         )
         await update_rss_menu(pre_event)
         return

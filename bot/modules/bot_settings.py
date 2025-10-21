@@ -558,7 +558,7 @@ async def edit_bot_settings(client, query):
             )
             return
         await query.answer(
-            "Syncronization Started. JDownloader will get restarted. It takes up to 10 sec!",
+            "Synchronization Started. JDownloader will get restarted. It takes up to 10 sec!",
             show_alert=True,
         )
         await sync_jdownloader()
@@ -644,14 +644,14 @@ async def edit_bot_settings(client, query):
         await database.update_nzb_config()
     elif data[1] == "syncnzb":
         await query.answer(
-            "Syncronization Started. It takes up to 2 sec!", show_alert=True
+            "Synchronization Started. It takes up to 2 sec!", show_alert=True
         )
         nzb_options.clear()
         await update_nzb_options()
         await database.update_nzb_config()
     elif data[1] == "syncqbit":
         await query.answer(
-            "Syncronization Started. It takes up to 2 sec!", show_alert=True
+            "Synchronization Started. It takes up to 2 sec!", show_alert=True
         )
         qbit_options.clear()
         await update_qb_options()
