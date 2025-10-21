@@ -279,7 +279,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
             ex_ex = "None"
 
         ns_msg = "Added" if user_dict.get("NAME_SUBSTITUTE", False) else "None"
-        buttons.data_button("Name Subtitute", f"userset {user_id} menu NAME_SUBSTITUTE")
+        buttons.data_button("Name Substitute", f"userset {user_id} menu NAME_SUBSTITUTE")
 
         buttons.data_button("YT-DLP Options", f"userset {user_id} menu YT_DLP_OPTIONS")
         if user_dict.get("YT_DLP_OPTIONS", False):
@@ -489,7 +489,7 @@ async def ffmpeg_variables(
     if ffc:
         buttons = ButtonMaker()
         if key is None:
-            msg = "Choose which key you want to fill/edit varibales in it:"
+            msg = "Choose which key you want to fill/edit variables in it:"
             for k, v in list(ffc.items()):
                 add = False
                 for l in v:

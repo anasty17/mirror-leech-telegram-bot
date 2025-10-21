@@ -11,7 +11,7 @@ class NotSupportedExtractionArchive(Exception):
 
 
 class RssShutdownException(Exception):
-    """This exception should be raised when shutdown is called to stop the montior"""
+    """This exception should be raised when shutdown is called to stop the monitor"""
 
     pass
 
