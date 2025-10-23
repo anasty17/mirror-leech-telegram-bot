@@ -493,7 +493,7 @@ def mediafire(url, session=None):
         return mediafire(final_url, session)
     session.close()
     return final_link[0]
-    
+
 def osdn(url):
     with create_scraper() as session:
         try:
@@ -870,7 +870,7 @@ def sharer_scraper(url):
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
     if "url" not in res:
         raise DirectDownloadLinkException(
-            "ERROR: Drive Link not found, Try in your broswer"
+            "ERROR: Drive Link not found, Try in your browser"
         )
     if "drive.google.com" in res["url"] or "drive.usercontent.google.com" in res["url"]:
         return res["url"]
@@ -885,7 +885,7 @@ def sharer_scraper(url):
         return drive_link[0]
     else:
         raise DirectDownloadLinkException(
-            "ERROR: Drive Link not found, Try in your broswer"
+            "ERROR: Drive Link not found, Try in your browser"
         )
 
 
