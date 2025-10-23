@@ -19,7 +19,7 @@ class TgClient:
     async def start_bot(cls):
         LOGGER.info("Creating client from BOT_TOKEN")
         cls.ID = Config.BOT_TOKEN.split(":", 1)[0]
-        is_amd64 = await path.exists("/tdlib")
+        is_amd64 = not (await path.exists("/tdlib"))
         cls.bot = Client(
             token=Config.BOT_TOKEN,
             api_id=Config.TELEGRAM_API,
@@ -27,6 +27,7 @@ class TgClient:
             lib_path=None if is_amd64 else "/tdlib/lib/libtdjson.so",
             default_parse_mode="html",
             files_directory="/mltb/tdlib_bot",
+            database_encryption_key = "mltbmltb",
             use_file_database=False,
             workers=None,
         )
@@ -39,7 +40,7 @@ class TgClient:
         if not await path.exists("tdlib_user"):
             return
         LOGGER.info("Creating client from USER DATABASE")
-        is_amd64 = await path.exists("/tdlib")
+        is_amd64 = not (await path.exists("/tdlib"))
         try:
             cls.user = Client(
                 api_id=Config.TELEGRAM_API,
@@ -48,7 +49,6 @@ class TgClient:
                 default_parse_mode="html",
                 files_directory="/mltb/tdlib_user",
                 use_file_database=False,
-                user_bot=True,
             )
             await cls.user.start()
             await cls.user.getChats()
