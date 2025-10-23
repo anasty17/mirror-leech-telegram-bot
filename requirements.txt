@@ -22,7 +22,7 @@ par2cmdline-turbo
 pillow
 psutil
 pymongo
-pytdbot
+pytdbot[tdjson]
 python-magic
 requests
 telegraph
