@@ -11,7 +11,7 @@ from aioshutil import move
 
 from .. import user_data, excluded_extensions, auth_chats, sudo_users
 from ..core.config_manager import Config
-from ..core.telegram_client import TgClient
+from ..core.telegram_client import TgManager
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.media_utils import create_thumb
 from ..helper.telegram_helper.button_build import ButtonMaker
@@ -119,7 +119,7 @@ async def get_user_settings(from_user, stype="main"):
             )
             media_group = "Disabled"
         if (
-            TgClient.IS_PREMIUM_USER
+            TgManager.IS_PREMIUM_USER
             and user_dict.get("USER_TRANSMISSION", False)
             or "USER_TRANSMISSION" not in user_dict
             and Config.USER_TRANSMISSION
@@ -128,7 +128,7 @@ async def get_user_settings(from_user, stype="main"):
                 "Leech by Bot", f"userset {user_id} tog USER_TRANSMISSION f"
             )
             leech_method = "user"
-        elif TgClient.IS_PREMIUM_USER:
+        elif TgManager.IS_PREMIUM_USER:
             leech_method = "bot"
             buttons.data_button(
                 "Leech by User", f"userset {user_id} tog USER_TRANSMISSION t"
@@ -137,7 +137,7 @@ async def get_user_settings(from_user, stype="main"):
             leech_method = "bot"
 
         if (
-            TgClient.IS_PREMIUM_USER
+            TgManager.IS_PREMIUM_USER
             and user_dict.get("HYBRID_LEECH", False)
             or "HYBRID_LEECH" not in user_dict
             and Config.HYBRID_LEECH
@@ -146,7 +146,7 @@ async def get_user_settings(from_user, stype="main"):
             buttons.data_button(
                 "Disable Hybride Leech", f"userset {user_id} tog HYBRID_LEECH f"
             )
-        elif TgClient.IS_PREMIUM_USER:
+        elif TgManager.IS_PREMIUM_USER:
             hybrid_leech = "Disabled"
             buttons.data_button(
                 "Enable HYBRID Leech", f"userset {user_id} tog HYBRID_LEECH t"
@@ -401,7 +401,7 @@ async def set_option(_, message, option):
     if option == "LEECH_SPLIT_SIZE":
         if not value.isdigit():
             value = get_size_bytes(value)
-        value = min(int(value), TgClient.MAX_SPLIT_SIZE)
+        value = min(int(value), TgManager.MAX_SPLIT_SIZE)
     elif option == "EXCLUDED_EXTENSIONS":
         fx = value.split()
         value = ["aria2", "!qB"]

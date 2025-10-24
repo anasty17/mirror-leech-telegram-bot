@@ -23,7 +23,7 @@ from pytdbot.types import (
 )
 
 from ...core.config_manager import Config
-from ...core.telegram_client import TgClient
+from ...core.telegram_client import TgManager
 from ..ext_utils.bot_utils import sync_to_async
 from ..ext_utils.files_utils import is_archive, get_base_name
 from ..telegram_helper.progress import tracker
@@ -103,7 +103,7 @@ class TelegramUploader:
                 else self._listener.message.text.lstrip("/")
             )
             if self._user_session:
-                self._sent_msg = await TgClient.user.sendTextMessage(
+                self._sent_msg = await TgManager.user.sendTextMessage(
                     chat_id=self._listener.up_dest,
                     text=msg,
                     disable_web_page_preview=True,
@@ -125,11 +125,11 @@ class TelegramUploader:
                 await self._listener.on_upload_error(self._sent_msg["message"])
                 return False
         elif self._user_session:
-            self._sent_msg = await TgClient.user.getMessage(
+            self._sent_msg = await TgManager.user.getMessage(
                 chat_id=self._listener.message.chat_id, message_id=self._listener.mid
             )
             if self._sent_msg.is_error:
-                self._sent_msg = await TgClient.user.sendTextMessage(
+                self._sent_msg = await TgManager.user.sendTextMessage(
                     chat_id=self._listener.message.chat_id,
                     text="Deleted Cmd Message! Don't delete the cmd message again!",
                     disable_web_page_preview=True,
@@ -205,7 +205,7 @@ class TelegramUploader:
                     chat_id=msg[0], message_id=msg[1]
                 )
             else:
-                msgs[index] = await TgClient.user.getMessage(
+                msgs[index] = await TgManager.user.getMessage(
                     chat_id=msg[0], message_id=msg[1]
                 )
         replied_to = await msgs[0].getRepliedMessage()
@@ -269,7 +269,7 @@ class TelegramUploader:
                     if self._listener.hybrid_leech and self._listener.user_transmission:
                         self._user_session = self._f_size > 2097152000
                         if self._user_session:
-                            self._sent_msg = await TgClient.user.getMessage(
+                            self._sent_msg = await TgManager.user.getMessage(
                                 chat_id=self._sent_msg.chat_id,
                                 message_id=self._sent_msg.id,
                             )

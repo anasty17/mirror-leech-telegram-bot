@@ -21,7 +21,7 @@ from .. import (
 )
 from ..helper.ext_utils.db_handler import database
 from .config_manager import Config
-from .telegram_client import TgClient
+from .telegram_client import TgManager
 from .torrent_manager import TorrentManager
 
 
@@ -157,33 +157,33 @@ async def save_settings():
         return
     config_dict = Config.get_all()
     await database.db.settings.config.replace_one(
-        {"_id": TgClient.ID}, config_dict, upsert=True
+        {"_id": TgManager.ID}, config_dict, upsert=True
     )
-    if await database.db.settings.aria2c.find_one({"_id": TgClient.ID}) is None:
+    if await database.db.settings.aria2c.find_one({"_id": TgManager.ID}) is None:
         await database.db.settings.aria2c.update_one(
-            {"_id": TgClient.ID}, {"$set": aria2_options}, upsert=True
+            {"_id": TgManager.ID}, {"$set": aria2_options}, upsert=True
         )
-    if await database.db.settings.qbittorrent.find_one({"_id": TgClient.ID}) is None:
+    if await database.db.settings.qbittorrent.find_one({"_id": TgManager.ID}) is None:
         await database.save_qbit_settings()
-    if await database.db.settings.nzb.find_one({"_id": TgClient.ID}) is None:
+    if await database.db.settings.nzb.find_one({"_id": TgManager.ID}) is None:
         async with aiopen("sabnzbd/SABnzbd.ini", "rb+") as pf:
             nzb_conf = await pf.read()
         await database.db.settings.nzb.update_one(
-            {"_id": TgClient.ID}, {"$set": {"SABnzbd__ini": nzb_conf}}, upsert=True
+            {"_id": TgManager.ID}, {"$set": {"SABnzbd__ini": nzb_conf}}, upsert=True
         )
 
 
 async def update_variables():
     if (
-        Config.LEECH_SPLIT_SIZE > TgClient.MAX_SPLIT_SIZE
+        Config.LEECH_SPLIT_SIZE > TgManager.MAX_SPLIT_SIZE
         or Config.LEECH_SPLIT_SIZE == 2097152000
         or not Config.LEECH_SPLIT_SIZE
     ):
-        Config.LEECH_SPLIT_SIZE = TgClient.MAX_SPLIT_SIZE
+        Config.LEECH_SPLIT_SIZE = TgManager.MAX_SPLIT_SIZE
 
-    Config.HYBRID_LEECH = bool(Config.HYBRID_LEECH and TgClient.IS_PREMIUM_USER)
+    Config.HYBRID_LEECH = bool(Config.HYBRID_LEECH and TgManager.IS_PREMIUM_USER)
     Config.USER_TRANSMISSION = bool(
-        Config.USER_TRANSMISSION and TgClient.IS_PREMIUM_USER
+        Config.USER_TRANSMISSION and TgManager.IS_PREMIUM_USER
     )
 
     if Config.AUTHORIZED_CHATS:

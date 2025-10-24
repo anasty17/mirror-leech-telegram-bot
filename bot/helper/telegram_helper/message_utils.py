@@ -5,7 +5,7 @@ from pytdbot.types import InputMessageReplyToMessage, MessageSendOptions
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config
-from ...core.telegram_client import TgClient
+from ...core.telegram_client import TgManager
 from ..ext_utils.bot_utils import SetInterval
 from ..ext_utils.exceptions import TgLinkException
 from ..ext_utils.status_utils import get_readable_message
@@ -77,7 +77,7 @@ async def send_message_with_content(message, content):
 
 
 async def send_album(message, contents):
-    res = await TgClient.bot.sendMessageAlbum(
+    res = await TgManager.bot.sendMessageAlbum(
         chat_id=message.chat_id,
         message_thread_id=message.message_thread_id,
         reply_to=InputMessageReplyToMessage(message_id=message.id),
@@ -95,7 +95,7 @@ async def send_album(message, contents):
 
 
 async def send_rss(text, chat_id, thread_id):
-    app = TgClient.user or TgClient.bot
+    app = TgManager.user or TgManager.bot
     res = await app.sendTextMessage(
         chat_id=chat_id,
         text=text,
@@ -150,7 +150,7 @@ async def get_tg_link_message(link):
         msg = re_match(
             r"tg:\/\/openmessage\?user_id=([0-9]+)&message_id=([0-9-]+)", link
         )
-        if not TgClient.user:
+        if not TgManager.user:
             raise TgLinkException("USER_SESSION required for this private link!")
 
     chat = msg[1]
@@ -179,16 +179,16 @@ async def get_tg_link_message(link):
         chat = int(chat) if private else int(f"-100{chat}")
 
     if not private:
-        message = await TgClient.bot.getMessage(chat_id=chat, message_id=msg_id)
+        message = await TgManager.bot.getMessage(chat_id=chat, message_id=msg_id)
         if message.is_error:
             private = True
-            if not TgClient.user:
+            if not TgManager.user:
                 raise TgLinkException(message["message"])
 
     if not private:
         return (links, "bot") if links else (message, "bot")
-    elif TgClient.user:
-        user_message = await TgClient.user.getMessage(chat_id=chat, message_id=msg_id)
+    elif TgManager.user:
+        user_message = await TgManager.user.getMessage(chat_id=chat, message_id=msg_id)
         if user_message.is_error:
             raise TgLinkException(
                 f"You don't have access to this chat!. ERROR: {user_message["message"]}"

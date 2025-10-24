@@ -1,5 +1,5 @@
 from . import LOGGER, bot_loop
-from .core.telegram_client import TgClient
+from .core.telegram_client import TgManager
 from .core.config_manager import Config
 
 Config.load()
@@ -19,7 +19,7 @@ async def main():
 
     await load_settings()
 
-    await gather(TgClient.start_bot(), TgClient.start_user())
+    await TgManager.start_clients()
     await gather(load_configurations(), update_variables())
 
     from .core.torrent_manager import TorrentManager

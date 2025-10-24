@@ -22,7 +22,8 @@ par2cmdline-turbo
 pillow
 psutil
 pymongo
-pytdbot[tdjson]
+pytdbot[tdjson]; platform_machine == "x86_64"
+pytdbot; platform_machine != "x86_64"
 python-magic
 requests
 telegraph

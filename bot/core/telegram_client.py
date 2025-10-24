@@ -1,12 +1,12 @@
 from pytdbot import Client
-from asyncio import Lock
+from asyncio import Lock, sleep
 from aiofiles.os import path
 
 from .. import LOGGER
 from .config_manager import Config
 
 
-class TgClient:
+class TgManager:
     _lock = Lock()
     bot = None
     user = None
@@ -16,7 +16,7 @@ class TgClient:
     MAX_SPLIT_SIZE = 2097152000
 
     @classmethod
-    async def start_bot(cls):
+    async def start_clients(cls):
         LOGGER.info("Creating client from BOT_TOKEN")
         cls.ID = Config.BOT_TOKEN.split(":", 1)[0]
         is_amd64 = not (await path.exists("/tdlib"))
@@ -27,39 +27,35 @@ class TgClient:
             lib_path=None if is_amd64 else "/tdlib/lib/libtdjson.so",
             default_parse_mode="html",
             files_directory="/mltb/tdlib_bot",
-            database_encryption_key = "mltbmltb",
+            database_encryption_key="mltbmltb",
             use_file_database=False,
             workers=None,
         )
         await cls.bot.start()
+        while cls.bot.authorization_state != "authorizationStateReady":
+            await sleep(0.5)
         me = await cls.bot.getMe()
         cls.NAME = me.usernames.editable_username
-
-    @classmethod
-    async def start_user(cls):
         if not await path.exists("tdlib_user"):
             return
         LOGGER.info("Creating client from USER DATABASE")
-        is_amd64 = not (await path.exists("/tdlib"))
-        try:
-            cls.user = Client(
-                api_id=Config.TELEGRAM_API,
-                api_hash=Config.TELEGRAM_HASH,
-                lib_path=None if is_amd64 else "/tdlib/lib/libtdjson.so",
-                default_parse_mode="html",
-                files_directory="/mltb/tdlib_user",
-                use_file_database=False,
-            )
-            await cls.user.start()
-            await cls.user.getChats()
-            me = await cls.bot.getMe()
-            cls.IS_PREMIUM_USER = me.is_premium
-            if cls.IS_PREMIUM_USER:
-                cls.MAX_SPLIT_SIZE = 4194304000
-        except Exception as e:
-            LOGGER.error(f"Failed to start client from USER DATABASE. {e}")
-            cls.IS_PREMIUM_USER = False
-            cls.user = None
+        cls.user = Client(
+            api_id=Config.TELEGRAM_API,
+            api_hash=Config.TELEGRAM_HASH,
+            lib_path=None if is_amd64 else "/tdlib/lib/libtdjson.so",
+            default_parse_mode="html",
+            files_directory="/mltb/tdlib_user",
+            database_encryption_key="mltbmltb",
+            use_file_database=False,
+            workers=1,
+            user_bot=True,
+        )
+        await cls.bot.client_manager.add_client(cls.user, True)
+        await cls.user.getChats()
+        me = await cls.user.getMe()
+        cls.IS_PREMIUM_USER = me.is_premium
+        if cls.IS_PREMIUM_USER:
+            cls.MAX_SPLIT_SIZE = 4194304000
 
     @classmethod
     async def stop(cls):

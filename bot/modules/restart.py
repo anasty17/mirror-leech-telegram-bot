@@ -13,7 +13,7 @@ from ..helper.telegram_helper.message_utils import (
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.files_utils import clean_all
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..core.telegram_client import TgClient
+from ..core.telegram_client import TgManager
 from ..core.config_manager import Config
 from ..core.jdownloader_booter import jdownloader
 from ..core.torrent_manager import TorrentManager
@@ -31,7 +31,7 @@ async def restart_bot(_, message):
 async def send_incomplete_task_message(cid, msg_id, msg):
     try:
         if msg.startswith("Restarted Successfully!"):
-            await TgClient.bot.editTextMessage(
+            await TgManager.bot.editTextMessage(
                 chat_id=cid,
                 message_id=msg_id,
                 text=msg,
@@ -39,7 +39,7 @@ async def send_incomplete_task_message(cid, msg_id, msg):
             )
             await remove(".restartmsg")
         else:
-            await TgClient.bot.sendMessage(
+            await TgManager.bot.sendMessage(
                 chat_id=cid,
                 text=msg,
                 disable_web_page_preview=True,
@@ -72,7 +72,7 @@ async def restart_notification():
 
     if await aiopath.isfile(".restartmsg"):
         try:
-            await TgClient.bot.editTextMessage(
+            await TgManager.bot.editTextMessage(
                 chat_id=chat_id, message_id=msg_id, text="Restarted Successfully!"
             )
         except:
@@ -90,7 +90,7 @@ async def confirm_restart(_, query):
     if data[1] == "confirm":
         intervals["stopAll"] = True
         restart_message = await send_message(reply_to, "Restarting...")
-        await TgClient.stop()
+        await TgManager.stop()
         if scheduler.running:
             scheduler.shutdown(wait=False)
         if qb := intervals["qb"]:

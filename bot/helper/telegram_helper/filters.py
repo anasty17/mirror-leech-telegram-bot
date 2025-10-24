@@ -3,7 +3,7 @@ from pytdbot.types import Message
 
 from ... import user_data, auth_chats, sudo_users
 from ...core.config_manager import Config
-from ...core.telegram_client import TgClient
+from ...core.telegram_client import TgManager
 
 
 class CustomFilters:
@@ -72,6 +72,6 @@ class CustomFilters:
 
 def match_cmd(cmd):
     if not isinstance(cmd, list):
-        return re_compile(rf"^/{cmd}(?:@{TgClient.NAME})?(?:\s+.*)?$", flags=I | S)
+        return re_compile(rf"^/{cmd}(?:@{TgManager.NAME})?(?:\s+.*)?$", flags=I | S)
     pattern = "|".join(escape(c) for c in cmd)
-    return re_compile(rf"^/({pattern})(?:@{TgClient.NAME})?(?:\s+.*)?$", flags=I | S)
+    return re_compile(rf"^/({pattern})(?:@{TgManager.NAME})?(?:\s+.*)?$", flags=I | S)

@@ -21,7 +21,7 @@ from .. import (
     DOWNLOAD_DIR,
 )
 from ..core.config_manager import Config
-from ..core.telegram_client import TgClient
+from ..core.telegram_client import TgManager
 from .ext_utils.bot_utils import new_task, sync_to_async, get_size_bytes
 from .ext_utils.bulk_links import extract_bulk_links
 from .mirror_leech_utils.gdrive_utils.list import GoogleDriveList
@@ -209,7 +209,7 @@ class TaskConfig:
                 if not is_gdrive_id(self.link):
                     raise ValueError(self.link)
 
-        self.user_transmission = TgClient.IS_PREMIUM_USER and (
+        self.user_transmission = TgManager.IS_PREMIUM_USER and (
             self.user_dict.get("USER_TRANSMISSION")
             or Config.USER_TRANSMISSION
             and "USER_TRANSMISSION" not in self.user_dict
@@ -332,7 +332,7 @@ class TaskConfig:
                     else None
                 )
             )
-            self.hybrid_leech = TgClient.IS_PREMIUM_USER and (
+            self.hybrid_leech = TgManager.IS_PREMIUM_USER and (
                 self.user_dict.get("HYBRID_LEECH")
                 or Config.HYBRID_LEECH
                 and "HYBRID_LEECH" not in self.user_dict
@@ -341,7 +341,7 @@ class TaskConfig:
                 self.user_transmission = False
                 self.hybrid_leech = False
             if self.user_trans:
-                self.user_transmission = TgClient.IS_PREMIUM_USER
+                self.user_transmission = TgManager.IS_PREMIUM_USER
             if self.up_dest:
                 if not isinstance(self.up_dest, int):
                     if self.up_dest.startswith("b:"):
@@ -350,10 +350,10 @@ class TaskConfig:
                         self.hybrid_leech = False
                     elif self.up_dest.startswith("u:"):
                         self.up_dest = self.up_dest.replace("u:", "", 1)
-                        self.user_transmission = TgClient.IS_PREMIUM_USER
+                        self.user_transmission = TgManager.IS_PREMIUM_USER
                     elif self.up_dest.startswith("h:"):
                         self.up_dest = self.up_dest.replace("h:", "", 1)
-                        self.user_transmission = TgClient.IS_PREMIUM_USER
+                        self.user_transmission = TgManager.IS_PREMIUM_USER
                         self.hybrid_leech = self.user_transmission
                     if "|" in self.up_dest:
                         self.up_dest, self.chat_thread_id = list(
@@ -369,14 +369,14 @@ class TaskConfig:
 
                 if self.user_transmission:
                     try:
-                        chat = await TgClient.user.get_chat(self.up_dest)
+                        chat = await TgManager.user.get_chat(self.up_dest)
                     except:
                         chat = None
                     if chat is None:
                         self.user_transmission = False
                         self.hybrid_leech = False
                     else:
-                        uploader_id = TgClient.user.me.id
+                        uploader_id = TgManager.user.me.id
                         if chat.type.name not in ["SUPERGROUP", "CHANNEL", "GROUP"]:
                             self.user_transmission = False
                             self.hybrid_leech = False
@@ -442,7 +442,7 @@ class TaskConfig:
                 and "EQUAL_SPLITS" not in self.user_dict
             )
             self.max_split_size = (
-                TgClient.MAX_SPLIT_SIZE if self.user_transmission else 2097152000
+                TgManager.MAX_SPLIT_SIZE if self.user_transmission else 2097152000
             )
             self.split_size = min(self.split_size, self.max_split_size)
 

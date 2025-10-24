@@ -7,7 +7,7 @@ from .... import (
     task_dict,
     task_dict_lock,
 )
-from ....core.telegram_client import TgClient
+from ....core.telegram_client import TgManager
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...mirror_leech_utils.status_utils.telegram_status import TelegramStatus
@@ -52,9 +52,9 @@ class TelegramDownloadHelper:
     async def _on_download_progress(self, file_id, progress_dict, _):
         if self._listener.is_cancelled:
             if self.session == "user":
-                await TgClient.user.cancelDownloadFile(file_id=file_id)
+                await TgManager.user.cancelDownloadFile(file_id=file_id)
             else:
-                await TgClient.bot.cancelDownloadFile(file_id=file_id)
+                await TgManager.bot.cancelDownloadFile(file_id=file_id)
             await tracker.cancel_progress(file_id)
         self._processed_bytes = progress_dict["transferred"]
 
@@ -92,7 +92,7 @@ class TelegramDownloadHelper:
         if not self.session:
             if self._listener.user_transmission and self._listener.is_super_chat:
                 self.session = "user"
-                message = await TgClient.user.getMessage(
+                message = await TgManager.user.getMessage(
                     chat_id=message.chat_id, message_id=message.id
                 )
             else:
@@ -164,7 +164,7 @@ class TelegramDownloadHelper:
                             chat_id=message.chat_id, message_id=message.id
                         )
                     else:
-                        message = await TgClient.user.getMessage(
+                        message = await TgManager.user.getMessage(
                             chat_id=message.chat_id, message_id=message.id
                         )
                     if message.is_error:

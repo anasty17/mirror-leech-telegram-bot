@@ -34,7 +34,7 @@ from ..helper.ext_utils.bot_utils import (
     new_task,
 )
 from ..core.config_manager import Config
-from ..core.telegram_client import TgClient
+from ..core.telegram_client import TgManager
 from ..core.torrent_manager import TorrentManager
 from ..core.startup import update_qb_options, update_nzb_options, update_variables
 from ..helper.ext_utils.db_handler import database
@@ -56,7 +56,7 @@ start = 0
 state = "view"
 handler_dict = {}
 DEFAULT_VALUES = {
-    "LEECH_SPLIT_SIZE": TgClient.MAX_SPLIT_SIZE,
+    "LEECH_SPLIT_SIZE": TgManager.MAX_SPLIT_SIZE,
     "RSS_DELAY": 600,
     "STATUS_UPDATE_INTERVAL": 15,
     "SEARCH_LIMIT": 0,
@@ -257,7 +257,7 @@ async def edit_variable(_, message, pre_message, key):
         await TorrentManager.change_aria2_option("bt-stop-timeout", value)
         value = int(value)
     elif key == "LEECH_SPLIT_SIZE":
-        value = min(int(value), TgClient.MAX_SPLIT_SIZE)
+        value = min(int(value), TgManager.MAX_SPLIT_SIZE)
     elif key == "BASE_URL_PORT":
         value = int(value)
         if Config.BASE_URL:
@@ -522,7 +522,9 @@ async def event_handler(client, query, pfunc, rfunc, document=False):
         return bool(
             event.from_id == query.sender_user_id
             and event.chat_id == chat_id
-            and (event.text or event.content.getType() == "messageDocument" and document)
+            and (
+                event.text or event.content.getType() == "messageDocument" and document
+            )
         )
 
     client.add_handler(
