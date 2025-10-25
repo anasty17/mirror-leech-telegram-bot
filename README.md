@@ -260,6 +260,8 @@ cp config_sample.py config.py
 
 Fill up rest of the fields. Meaning of each field is discussed below.
 
+**NOTE**: To `Download/Upload` using your telegram account (`PREMIUM REQUIRED FOR UPLOAD ONLY`) and to send rss (`PREMIUM NOT REQUIRED`), mount the repo folder and generate new session using this command `python3 generate_user_database.py`. You can't use it in private message. Use it in superGroup.
+
 **1. Required Fields**
 
 - `BOT_TOKEN` (`Str`):  The Telegram Bot Token that you got from [@BotFather](https://t.me/BotFather).
@@ -383,6 +385,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 - `LEECH_DUMP_CHAT` (`Int`|`Str`): ID or USERNAME or PM(private message) to where files would be uploaded. Add `-100` before channel/superGroup id. To use only specific topic write it in this format `chat_id|thread_id`. Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or pm or @xxxxxxx or @xxxxxxx|10.
 
 - `THUMBNAIL_LAYOUT` (`Str`): Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.
+
 
 **7. qBittorrent/Aria2c/Sabnzbd**
 

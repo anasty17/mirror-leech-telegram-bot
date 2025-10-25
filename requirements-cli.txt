@@ -4,4 +4,5 @@ progress
 progressbar2
 httplib2shim
 google_auth_oauthlib
-pytdbot[tdjson]
+pytdbot==0.9.7
+tdjson==1.8.55
