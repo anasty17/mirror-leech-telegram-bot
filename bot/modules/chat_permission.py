@@ -7,26 +7,28 @@ from ..helper.telegram_helper.message_utils import send_message
 @new_task
 async def authorize(_, message):
     msg = message.text.split()
-    thread_id = None
+    topic_id = (
+        message.topic_id.message_thread_id
+        if message.topic_id and message.topic_id.getType() == "messageTopicThread"
+        else 0
+    )
     if len(msg) > 1:
         if "|" in msg:
             chat_id, thread_id = list(map(int, msg[1].split("|")))
         else:
             chat_id = int(msg[1].strip())
-    elif (
-        reply_to := message.reply_to
-    ) and reply_to.message_id != message.message_thread_id:
+    elif (reply_to := message.reply_to) and reply_to.message_id != topic_id:
         reply = await message.getRepliedMessage()
         chat_id = reply.from_id
     else:
-        if message.topic_id:
-            thread_id = message.message_thread_id
+        if topic_id:
+            thread_id = topic_id
         chat_id = message.chat_id
     if chat_id in user_data and user_data[chat_id].get("AUTH"):
         if (
-            thread_id is not None
+            thread_id
             and thread_id in user_data[chat_id].get("thread_ids", [])
-            or thread_id is None
+            or not thread_id
         ):
             msg = "Already Authorized!"
         else:
@@ -37,7 +39,7 @@ async def authorize(_, message):
             msg = "Authorized"
     else:
         update_user_ldata(chat_id, "AUTH", True)
-        if thread_id is not None:
+        if thread_id:
             update_user_ldata(chat_id, "thread_ids", [thread_id])
         await database.update_user_data(chat_id)
         msg = "Authorized"
@@ -47,23 +49,25 @@ async def authorize(_, message):
 @new_task
 async def unauthorize(_, message):
     msg = message.text.split()
-    thread_id = None
+    topic_id = (
+        message.topic_id.message_thread_id
+        if message.topic_id and message.topic_id.getType() == "messageTopicThread"
+        else 0
+    )
     if len(msg) > 1:
         if "|" in msg:
             chat_id, thread_id = list(map(int, msg[1].split("|")))
         else:
             chat_id = int(msg[1].strip())
-    elif (
-        reply_to := message.reply_to
-    ) and reply_to.message_id != message.message_thread_id:
+    elif (reply_to := message.reply_to) and reply_to.message_id != topic_id:
         reply = await message.getRepliedMessage()
         chat_id = reply.from_id
     else:
-        if message.topic_id:
-            thread_id = message.message_thread_id
+        if topic_id:
+            thread_id = topic_id
         chat_id = message.chat_id
     if chat_id in user_data and user_data[chat_id].get("AUTH"):
-        if thread_id is not None and thread_id in user_data[chat_id].get(
+        if thread_id and thread_id in user_data[chat_id].get(
             "thread_ids", []
         ):
             user_data[chat_id]["thread_ids"].remove(thread_id)

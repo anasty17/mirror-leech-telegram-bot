@@ -20,6 +20,7 @@ from pytdbot.types import (
     InputFileRemote,
     InputFileLocal,
     InputThumbnail,
+    MessageTopicThread,
 )
 
 from ...core.config_manager import Config
@@ -107,7 +108,7 @@ class TelegramUploader:
                     chat_id=self._listener.up_dest,
                     text=msg,
                     disable_web_page_preview=True,
-                    message_thread_id=self._listener.chat_thread_id,
+                    topic_id=MessageTopicThread(self._listener.chat_thread_id),
                     disable_notification=True,
                 )
             else:
@@ -115,7 +116,7 @@ class TelegramUploader:
                     chat_id=self._listener.up_dest,
                     text=msg,
                     disable_web_page_preview=True,
-                    message_thread_id=self._listener.chat_thread_id,
+                    topic_id=MessageTopicThread(self._listener.chat_thread_id),
                     disable_notification=True,
                 )
                 if not self._sent_msg.is_error:
