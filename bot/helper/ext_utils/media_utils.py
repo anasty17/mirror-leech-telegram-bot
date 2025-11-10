@@ -16,10 +16,18 @@ from ... import LOGGER, cpu_no, DOWNLOAD_DIR
 from .bot_utils import cmd_exec, sync_to_async
 from .files_utils import get_mime_type, is_archive, is_archive_split
 from .status_utils import time_to_seconds
-from pytdbot.types import Message
 
 
-async def create_thumb(msg: Message, _id=""):
+def optimize_thumbnail(photo_dir, max_size=204799):
+    if ospath.getsize(photo_dir) > max_size:
+        quality = 95
+        while ospath.getsize(photo_dir) > max_size:
+            img = Image.open(photo_dir)
+            img.save(photo_dir, "JPEG", quality=quality, optimize=True)
+            quality -= 5
+
+
+async def create_thumb(msg, _id=""):
     if not _id:
         _id = time()
         path = f"{DOWNLOAD_DIR}thumbnails"

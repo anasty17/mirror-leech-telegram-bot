@@ -111,7 +111,7 @@ async def confirm_selection(_, query):
     elif data[1] == "pin":
         await query.answer(data[3], show_alert=True)
     elif data[1] == "done":
-        await query.answer()
+        await query.answer(text="")
         id_ = data[3]
         if hasattr(task, "seeding"):
             if task.listener.is_qbit:

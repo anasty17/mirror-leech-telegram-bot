@@ -35,7 +35,7 @@ from ...telegram_helper.message_utils import (
 async def configureDownload(_, query, obj):
     data = query.text.split()
     message = await query.getMessage()
-    await query.answer()
+    await query.answer(text="")
     if data[1] == "sdone":
         obj.event.set()
     elif data[1] == "cancel":

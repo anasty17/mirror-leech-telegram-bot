@@ -82,7 +82,7 @@ async def get_download_status(download):
 async def status_pages(_, query):
     data = query.text.split()
     key = int(data[1])
-    await query.answer()
+    await query.answer(text="")
     if data[2] == "ref":
         await update_status_message(key, force=True)
     elif data[2] in ["nex", "pre"]:

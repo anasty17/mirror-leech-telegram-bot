@@ -25,7 +25,7 @@ LIST_LIMIT = 6
 
 @new_task
 async def path_updates(_, query, obj):
-    await query.answer()
+    await query.answer(text="")
     message = await query.getMessage()
     data = query.text.split()
     if data[1] == "cancel":

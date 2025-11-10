@@ -328,7 +328,7 @@ async def update_user_settings(query, message, from_user, stype="main"):
 
 @new_task
 async def send_user_settings(_, message):
-    from_user = message.getUser()
+    from_user = await message.getUser()
     handler_dict[message.from_id] = False
     msg, button = await get_user_settings(from_user)
     await send_message(message, msg, button)
@@ -580,15 +580,15 @@ async def edit_user_settings(client, query):
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
     elif data[2] == "setevent":
-        await query.answer()
+        await query.answer(text="")
     elif data[2] in ["leech", "gdrive", "rclone"]:
-        await query.answer()
+        await query.answer(text="")
         await update_user_settings(query, message, from_user, data[2])
     elif data[2] == "menu":
-        await query.answer()
+        await query.answer(text="")
         await get_menu(data[3], message, user_id)
     elif data[2] == "tog":
-        await query.answer()
+        await query.answer(text="")
         update_user_ldata(user_id, data[3], data[4] == "t")
         if data[3] == "STOP_DUPLICATE":
             back_to = "gdrive"
@@ -599,7 +599,7 @@ async def edit_user_settings(client, query):
         await update_user_settings(query, message, from_user, stype=back_to)
         await database.update_user_data(user_id)
     elif data[2] == "file":
-        await query.answer()
+        await query.answer(text="")
         buttons = ButtonMaker()
         if data[3] == "THUMBNAIL":
             text = "Send a photo to save it as custom thumbnail. Timeout: 60 sec"
@@ -620,7 +620,7 @@ async def edit_user_settings(client, query):
         )
         await get_menu(data[3], message, user_id)
     elif data[2] == "ffvar":
-        await query.answer()
+        await query.answer(text="")
         key = data[3] if len(data) > 3 else None
         value = data[4] if len(data) > 4 else None
         if value == "ffmpegvarreset":
@@ -633,7 +633,7 @@ async def edit_user_settings(client, query):
         index = data[5] if len(data) > 5 else None
         await ffmpeg_variables(client, query, message, user_id, key, value, index)
     elif data[2] in ["set", "addone", "rmone"]:
-        await query.answer()
+        await query.answer(text="")
         buttons = ButtonMaker()
         if data[2] == "set":
             text = user_settings_text[data[3]]
@@ -687,7 +687,7 @@ async def edit_user_settings(client, query):
             )
         await database.update_user_data(user_id)
     elif data[2] == "view":
-        await query.answer()
+        await query.answer(text="")
         if data[3] == "THUMBNAIL":
             await send_file(message, thumb_path, name)
         elif data[3] == "FFMPEG_CMDS":
@@ -701,7 +701,7 @@ async def edit_user_settings(client, query):
                 ofile.name = "users_settings.txt"
                 await send_file(message, ofile)
     elif data[2] in ["gd", "rc"]:
-        await query.answer()
+        await query.answer(text="")
         du = "rc" if data[2] == "gd" else "gd"
         update_user_ldata(user_id, "DEFAULT_UPLOAD", du)
         await update_user_settings(
@@ -711,14 +711,14 @@ async def edit_user_settings(client, query):
         )
         await database.update_user_data(user_id)
     elif data[2] == "back":
-        await query.answer()
+        await query.answer(text="")
         await update_user_settings(
             query,
             message,
             from_user,
         )
     else:
-        await query.answer()
+        await query.answer(text="")
         reply_to = await message.getRepliedMessage()
         await delete_message(reply_to)
         await delete_message(message)

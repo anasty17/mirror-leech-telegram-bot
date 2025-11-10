@@ -1,6 +1,7 @@
 from asyncio import Lock, sleep
 from time import time
 from aioshutil import move
+from aiofiles.os import makedirs
 
 from .... import (
     LOGGER,
@@ -49,13 +50,13 @@ class TelegramDownloadHelper:
         else:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
-    async def _on_download_progress(self, file_id, progress_dict, _):
+    async def _download_progress(self, key, progress_dict, _, file_id):
         if self._listener.is_cancelled:
             if self.session == "user":
                 await TgManager.user.cancelDownloadFile(file_id=file_id)
             else:
                 await TgManager.bot.cancelDownloadFile(file_id=file_id)
-            await tracker.cancel_progress(file_id)
+            await tracker.cancel_progress(key)
         self._processed_bytes = progress_dict["transferred"]
 
     async def _on_download_error(self, error):
@@ -70,13 +71,13 @@ class TelegramDownloadHelper:
                 GLOBAL_GID.remove(self._gid)
         await self._listener.on_download_complete()
 
-    async def _download(self, message, path):
+    async def _download(self, message, dl_path):
         download = await message.download(synchronous=True)
         if download.is_error:
             if wait_for := download.limited_seconds:
                 LOGGER.warning(download["message"])
                 await sleep(wait_for * 1.2)
-                return await self._download(message, path)
+                return await self._download(message, dl_path)
             LOGGER.error(download["message"])
             await self._on_download_error(download["message"])
             return
@@ -84,10 +85,11 @@ class TelegramDownloadHelper:
             return
         if download.is_downloading_completed:
             current_path = download.path
-            await move(current_path, path)
+            await makedirs(dl_path.rsplit("/", 1)[0], exist_ok=True)
+            await move(current_path, dl_path)
             await self._on_download_complete()
 
-    async def add_download(self, message, path, session):
+    async def add_download(self, message, dl_path, session):
         self.session = session
         if not self.session:
             if self._listener.user_transmission and self._listener.is_super_chat:
@@ -97,6 +99,7 @@ class TelegramDownloadHelper:
                 )
             else:
                 self.session = "bot"
+        LOGGER.info(self.session)
         content_type = message.content.getType()
         if content_type == "messageDocument":
             media = message.content.document
@@ -138,7 +141,7 @@ class TelegramDownloadHelper:
                         )
                     else:
                         self._listener.name = media.file_name
-                path = path + self._listener.name
+                dl_path = dl_path + self._listener.name
                 self._listener.size = media_file.size or media_file.expected_size
 
                 msg, button = await stop_duplicate_check(self._listener)
@@ -174,9 +177,9 @@ class TelegramDownloadHelper:
                 await self._on_download_start(add_to_queue)
                 await tracker.add_to_progress(
                     media_file.remote.id,
-                    callback=self._on_download_progress,
+                    callback=self._download_progress,
                 )
-                await self._download(message, path)
+                await self._download(message, dl_path)
             else:
                 await self._on_download_error("File already being downloaded!")
         else:

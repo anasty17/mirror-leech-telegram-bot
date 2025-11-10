@@ -261,15 +261,15 @@ async def torrent_search_update(_, query):
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
     elif data[2].startswith("api"):
-        await query.answer()
+        await query.answer(text="")
         button = api_buttons(user_id, data[2])
         await edit_message(message, "Choose site:", button)
     elif data[2] == "plugin":
-        await query.answer()
+        await query.answer(text="")
         button = await plugin_buttons(user_id)
         await edit_message(message, "Choose site:", button)
     elif data[2] != "cancel":
-        await query.answer()
+        await query.answer(text="")
         site = data[2]
         method = data[3]
         if method.startswith("api"):
@@ -294,5 +294,5 @@ async def torrent_search_update(_, query):
             )
         await search(key, site, message, method)
     else:
-        await query.answer()
+        await query.answer(text="")
         await edit_message(message, "Search has been canceled!")

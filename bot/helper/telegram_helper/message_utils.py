@@ -1,7 +1,11 @@
 from asyncio import sleep
 from re import match as re_match
 from time import time
-from pytdbot.types import InputMessageReplyToMessage, MessageSendOptions, MessageTopicThread
+from pytdbot.types import (
+    InputMessageReplyToMessage,
+    MessageSendOptions,
+    MessageTopicThread,
+)
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
 from ...core.config_manager import Config
@@ -228,7 +232,7 @@ async def update_status_message(sid, force=False):
                 obj.cancel()
                 del intervals["status"][sid]
             return
-        if text != status_dict[sid]["message"].text:
+        if text != status_dict[sid]["text"]:
             message = await edit_message(
                 status_dict[sid]["message"], text, buttons, block=False
             )
@@ -243,7 +247,7 @@ async def update_status_message(sid, force=False):
                         f"Status with id: {sid} haven't been updated. Error: {message}"
                     )
                 return
-            status_dict[sid]["message"].text = text
+            status_dict[sid]["text"] = text
             status_dict[sid]["time"] = time()
 
 
@@ -274,8 +278,7 @@ async def send_status_message(msg, user_id=0):
                 )
                 return
             await delete_message(old_message)
-            message.text = text
-            status_dict[sid].update({"message": message, "time": time()})
+            status_dict[sid].update({"message": message, "text": text, "time": time()})
         else:
             text, buttons = await get_readable_message(sid, is_user)
             if text is None:
@@ -286,9 +289,9 @@ async def send_status_message(msg, user_id=0):
                     f"Status with id: {sid} haven't been sent. Error: {message}"
                 )
                 return
-            message.text = text
             status_dict[sid] = {
                 "message": message,
+                "text": text,
                 "time": time(),
                 "page_no": 1,
                 "page_step": 1,

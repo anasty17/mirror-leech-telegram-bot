@@ -17,6 +17,7 @@ class ProgressTracker:
         total,
         is_active,
         is_completed,
+        file_id,
     ):
         async with self.locks[key]:
             if key not in self.progress_dict:
@@ -27,10 +28,11 @@ class ProgressTracker:
                 "is_active": is_active,
                 "is_completed": is_completed,
             }
+            callback = self.callbacks.get(key)
 
-        if callback := self.callbacks.get(key):
+        if callback:
             try:
-                await callback(key, self.progress_dict[key], is_completed)
+                await callback(key, self.progress_dict[key], is_completed, file_id)
             except Exception as e:
                 LOGGER.error(f"Callback error for file {key}: {e}")
         if is_completed:
@@ -61,7 +63,9 @@ async def tdlib_file_update(_, update):
     if local_file.path.startswith("/mltb/downloads/"):
         key = local_file.path
         transfer_type = "upload"
+        file_id = None
     else:
+        file_id = file.id
         key = remote_file.id
         transfer_type = "download"
     async with tracker.locks[key]:
@@ -77,7 +81,7 @@ async def tdlib_file_update(_, update):
         is_completed = local_file.is_downloading_completed
         transferred = local_file.downloaded_size
     total = file.size or file.expected_size
-    await tracker.update_progress(key, transferred, total, is_active, is_completed)
+    await tracker.update_progress(key, transferred, total, is_active, is_completed, file_id)
 
 
 tracker = ProgressTracker()

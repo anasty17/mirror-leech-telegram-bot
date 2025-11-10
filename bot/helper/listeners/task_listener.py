@@ -85,9 +85,7 @@ class TaskListener(TaskConfig):
             and Config.INCOMPLETE_TASK_NOTIFIER
             and Config.DATABASE_URL
         ):
-            msg_link = await self.message.getMessageLink(
-                in_message_thread=bool(self.message.topic_id)
-            )
+            msg_link = await self.message.getMessageLink()
             link = msg_link.link
             self.message_link = link
             await database.add_incomplete_task(self.message.chat_id, link, self.tag)

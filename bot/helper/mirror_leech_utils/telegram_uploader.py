@@ -35,6 +35,7 @@ from ..ext_utils.media_utils import (
     get_video_thumbnail,
     get_audio_thumbnail,
     get_multiple_frames_thumbnail,
+    optimize_thumbnail,
 )
 from ..telegram_helper.message_utils import (
     delete_message,
@@ -70,7 +71,7 @@ class TelegramUploader:
         self._event = Event()
         self._temp_message = None
 
-    async def _upload_progress(self, key, progress_dict, is_completed):
+    async def _upload_progress(self, key, progress_dict, is_completed, _):
         if is_completed:
             self._event.set()
         if self._listener.is_cancelled:
@@ -214,7 +215,7 @@ class TelegramUploader:
             await send_album(replied_to, self._get_input_media(subkey, key))
         ).messages
         for msg in msgs:
-            msg_link = await msg.getMessageLink(in_message_thread=bool(msg.topic_id))
+            msg_link = await msg.getMessageLink()
             link = msg_link.link
             if link in self._msgs_dict:
                 del self._msgs_dict[link]
@@ -222,7 +223,7 @@ class TelegramUploader:
         del self._media_dict[key][subkey]
         if self._listener.is_super_chat or self._listener.up_dest:
             for m in msgs_list:
-                msg_link = await m.getMessageLink(in_message_thread=bool(msg.topic_id))
+                msg_link = await m.getMessageLink()
                 link = msg_link.link
                 self._msgs_dict[link] = m.caption
         self._sent_msg = msgs_list[-1]
@@ -289,9 +290,7 @@ class TelegramUploader:
                         and (self._listener.is_super_chat or self._listener.up_dest)
                         and not self._is_private
                     ):
-                        msg_link = await self._sent_msg.getMessageLink(
-                            in_message_thread=bool(self._sent_msg.topic_id)
-                        )
+                        msg_link = await self._sent_msg.getMessageLink()
                         link = msg_link.link
                         self._msgs_dict[link] = file_
                     await sleep(1)
@@ -437,6 +436,10 @@ class TelegramUploader:
                     photo=InputFileLocal(path=self._up_path),
                     caption=caption,
                 )
+            await tracker.add_to_progress(
+                self._up_path,
+                callback=self._upload_progress,
+            )
             self._temp_message = await send_message_with_content(
                 self._sent_msg, content
             )

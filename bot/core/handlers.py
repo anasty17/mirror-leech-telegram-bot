@@ -290,16 +290,6 @@ def add_handlers():
         inner_object=True,
     )
     TgManager.bot.add_handler(
-        "updateMessageEdited",
-        run_shell,
-        filters=create(
-            partial(
-                CustomFilters.owner_filter, pattern=match_cmd(BotCommands.ShellCommand)
-            )
-        ),
-        inner_object=True,
-    )
-    TgManager.bot.add_handler(
         "updateNewMessage",
         start,
         filters=create(
@@ -450,7 +440,9 @@ def add_handlers():
             partial(CustomFilters.sudo_user, pattern=re_compile("^botrestart "))
         ),
     )
-    TgManager.bot.add_handler("UpdateFile", tdlib_file_update)
+    TgManager.bot.add_handler("updateFile", tdlib_file_update)
+    if TgManager.user:
+        TgManager.user.add_handler("updateFile", tdlib_file_update)
     TgManager.bot.add_handler(
         "updateNewCallbackQuery",
         cancel_all_update,

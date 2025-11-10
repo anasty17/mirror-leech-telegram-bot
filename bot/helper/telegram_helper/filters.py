@@ -8,23 +8,23 @@ from ...core.telegram_client import TgManager
 
 class CustomFilters:
 
-    def owner_filter(_, message, pattern=None):
+    def owner_filter(_, event, pattern=None):
         if pattern:
-            match = pattern.match(message.text)
+            match = pattern.match(event.text)
             if not match:
                 return False
-        return message.from_id == Config.OWNER_ID
+        return event.from_id == Config.OWNER_ID
 
-    def authorized_user(_, message, pattern=None):
+    def authorized_user(_, event, pattern=None):
         if pattern:
-            match = pattern.match(message.text)
+            match = pattern.match(event.text)
             if not match:
                 return False
-        uid = message.from_id
-        chat_id = message.chat_id
+        uid = event.from_id
+        chat_id = event.chat_id
         thread_id = (
-            message.topic_id.message_thread_id
-            if message.topic_id and message.topic_id.getType() == "messageTopicThread"
+            event.topic_id.message_thread_id
+            if event.topic_id and event.topic_id.getType() == "messageTopicThread"
             else None
         )
         return bool(
@@ -68,9 +68,9 @@ class CustomFilters:
             or uid in sudo_users
         )
 
-    def public_user(self, message, pattern=None):
+    def public_user(self, event, pattern=None):
         if pattern:
-            match = pattern.match(message.text)
+            match = pattern.match(event.text)
             return bool(match)
 
 

@@ -82,10 +82,10 @@ async def restart_notification():
 
 @new_task
 async def confirm_restart(_, query):
-    await query.answer()
+    await query.answer(text="")
     data = query.text.split()
     message = await query.getMessage()
-    reply_to = message.getRepliedMessage()
+    reply_to = await message.getRepliedMessage()
     await delete_message(message)
     if data[1] == "confirm":
         intervals["stopAll"] = True

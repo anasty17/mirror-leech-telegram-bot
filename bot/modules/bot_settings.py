@@ -548,12 +548,12 @@ async def edit_bot_settings(client, query):
     message = await query.getMessage()
     handler_dict[message.chat_id] = False
     if data[1] == "close":
-        await query.answer()
-        reply = message.getRepliedMessage()
+        await query.answer(text="")
+        reply = await message.getRepliedMessage()
         await delete_message(reply)
         await delete_message(message)
     elif data[1] == "back":
-        await query.answer()
+        await query.answer(text="")
         globals()["start"] = 0
         await update_buttons(message, None)
     elif data[1] == "syncjd":
@@ -573,10 +573,10 @@ async def edit_bot_settings(client, query):
     ):
         if data[1] == "nzbserver":
             globals()["start"] = 0
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
-        await query.answer()
+        await query.answer(text="")
         value = ""
         if data[2] in DEFAULT_VALUES:
             value = DEFAULT_VALUES[data[2]]
@@ -643,7 +643,7 @@ async def edit_bot_settings(client, query):
         ]:
             await rclone_serve_booter()
     elif data[1] == "resetnzb":
-        await query.answer()
+        await query.answer(text="")
         res = await sabnzbd_client.set_config_default(data[2])
         nzb_options[data[2]] = res["config"]["misc"][data[2]]
         await update_buttons(message, "nzb")
@@ -663,19 +663,19 @@ async def edit_bot_settings(client, query):
         await update_qb_options()
         await database.save_qbit_settings()
     elif data[1] == "emptyaria":
-        await query.answer()
+        await query.answer(text="")
         aria2_options[data[2]] = ""
         await update_buttons(message, "aria")
         await TorrentManager.change_aria2_option(data[2], "")
         await database.update_aria2(data[2], "")
     elif data[1] == "emptyqbit":
-        await query.answer()
+        await query.answer(text="")
         await TorrentManager.qbittorrent.app.set_preferences({data[2]: value})
         qbit_options[data[2]] = ""
         await update_buttons(message, "qbit")
         await database.update_qbittorrent(data[2], "")
     elif data[1] == "emptynzb":
-        await query.answer()
+        await query.answer(text="")
         res = await sabnzbd_client.set_config("misc", data[2], "")
         nzb_options[data[2]] = res["config"]["misc"][data[2]]
         await update_buttons(message, "nzb")
@@ -689,13 +689,13 @@ async def edit_bot_settings(client, query):
         await update_buttons(message, "nzbserver")
         await database.update_config({"USENET_SERVERS": Config.USENET_SERVERS})
     elif data[1] == "private":
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[1])
         pfunc = partial(update_private_file, pre_message=message)
         rfunc = partial(update_buttons, message)
         await event_handler(client, query, pfunc, rfunc, True)
     elif data[1] == "botvar" and state == "edit":
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_variable, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "var")
@@ -703,7 +703,7 @@ async def edit_bot_settings(client, query):
     elif data[1] == "botvar" and state == "view":
         value = f"{Config.get(data[2])}"
         if len(value) > 200:
-            await query.answer()
+            await query.answer(text="")
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
                 await send_file(message, out_file)
@@ -712,7 +712,7 @@ async def edit_bot_settings(client, query):
             value = None
         await query.answer(f"{value}", show_alert=True)
     elif data[1] == "ariavar" and (state == "edit" or data[2] == "newkey"):
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_aria, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "aria")
@@ -720,7 +720,7 @@ async def edit_bot_settings(client, query):
     elif data[1] == "ariavar" and state == "view":
         value = f"{aria2_options[data[2]]}"
         if len(value) > 200:
-            await query.answer()
+            await query.answer(text="")
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
                 await send_file(message, out_file)
@@ -729,7 +729,7 @@ async def edit_bot_settings(client, query):
             value = None
         await query.answer(f"{value}", show_alert=True)
     elif data[1] == "qbitvar" and state == "edit":
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_qbit, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "qbit")
@@ -737,7 +737,7 @@ async def edit_bot_settings(client, query):
     elif data[1] == "qbitvar" and state == "view":
         value = f"{qbit_options[data[2]]}"
         if len(value) > 200:
-            await query.answer()
+            await query.answer(text="")
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
                 await send_file(message, out_file)
@@ -746,7 +746,7 @@ async def edit_bot_settings(client, query):
             value = None
         await query.answer(f"{value}", show_alert=True)
     elif data[1] == "nzbvar" and state == "edit":
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_nzb, pre_message=message, key=data[2])
         rfunc = partial(update_buttons, message, "nzb")
@@ -754,7 +754,7 @@ async def edit_bot_settings(client, query):
     elif data[1] == "nzbvar" and state == "view":
         value = f"{nzb_options[data[2]]}"
         if len(value) > 200:
-            await query.answer()
+            await query.answer(text="")
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
                 await send_file(message, out_file)
@@ -763,7 +763,7 @@ async def edit_bot_settings(client, query):
             value = None
         await query.answer(f"{value}", show_alert=True)
     elif data[1] == "emptyserkey":
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, f"nzbser{data[2]}")
         index = int(data[2])
         res = await sabnzbd_client.add_server(
@@ -773,7 +773,7 @@ async def edit_bot_settings(client, query):
         await database.update_config({"USENET_SERVERS": Config.USENET_SERVERS})
     elif data[1].startswith("nzbsevar") and (state == "edit" or data[2] == "newser"):
         index = 0 if data[2] == "newser" else int(data[1].replace("nzbsevar", ""))
-        await query.answer()
+        await query.answer(text="")
         await update_buttons(message, data[2], data[1])
         pfunc = partial(edit_nzb_server, pre_message=message, key=data[2], index=index)
         rfunc = partial(
@@ -786,7 +786,7 @@ async def edit_bot_settings(client, query):
         index = int(data[1].replace("nzbsevar", ""))
         value = f"{Config.USENET_SERVERS[index][data[2]]}"
         if len(value) > 200:
-            await query.answer()
+            await query.answer(text="")
             with BytesIO(str.encode(value)) as out_file:
                 out_file.name = f"{data[2]}.txt"
                 await send_file(message, out_file)
@@ -795,20 +795,20 @@ async def edit_bot_settings(client, query):
             value = None
         await query.answer(f"{value}", show_alert=True)
     elif data[1] == "edit":
-        await query.answer()
+        await query.answer(text="")
         globals()["state"] = "edit"
         await update_buttons(message, data[2])
     elif data[1] == "view":
-        await query.answer()
+        await query.answer(text="")
         globals()["state"] = "view"
         await update_buttons(message, data[2])
     elif data[1] == "start":
-        await query.answer()
+        await query.answer(text="")
         if start != int(data[3]):
             globals()["start"] = int(data[3])
             await update_buttons(message, data[2])
     elif data[1] == "push":
-        await query.answer()
+        await query.answer(text="")
         filename = data[2].rsplit(".zip", 1)[0]
         if await aiopath.exists(filename):
             await (
@@ -826,7 +826,7 @@ async def edit_bot_settings(client, query):
                     && git push origin {Config.UPSTREAM_BRANCH} -qf"
                 )
             ).wait()
-        reply = message.getRepliedMessage()
+        reply = await message.getRepliedMessage()
         await delete_message(reply)
         await delete_message(message)
 
