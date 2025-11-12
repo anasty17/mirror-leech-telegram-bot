@@ -9,7 +9,7 @@ async def authorize(_, message):
     msg = message.text.split()
     topic_id = (
         message.topic_id.message_thread_id
-        if message.topic_id and message.topic_id.getType() == "messageTopicThread"
+        if message.topic_id and message.topic_id.getType() == "messageTopicForum"
         else 0
     )
     if len(msg) > 1:
@@ -51,7 +51,7 @@ async def unauthorize(_, message):
     msg = message.text.split()
     topic_id = (
         message.topic_id.message_thread_id
-        if message.topic_id and message.topic_id.getType() == "messageTopicThread"
+        if message.topic_id and message.topic_id.getType() == "messageTopicForum"
         else 0
     )
     if len(msg) > 1:

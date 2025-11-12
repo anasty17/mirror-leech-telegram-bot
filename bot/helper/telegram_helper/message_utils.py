@@ -4,7 +4,7 @@ from time import time
 from pytdbot.types import (
     InputMessageReplyToMessage,
     MessageSendOptions,
-    MessageTopicThread,
+    MessageTopicForum,
 )
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
@@ -104,7 +104,7 @@ async def send_rss(text, chat_id, thread_id):
         chat_id=chat_id,
         text=text,
         disable_web_page_preview=True,
-        topic_id=MessageTopicThread(thread_id),
+        topic_id=MessageTopicForum(thread_id),
         disable_notification=True,
     )
     if res.is_error:

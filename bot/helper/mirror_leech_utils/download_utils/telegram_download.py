@@ -99,7 +99,6 @@ class TelegramDownloadHelper:
                 )
             else:
                 self.session = "bot"
-        LOGGER.info(self.session)
         content_type = message.content.getType()
         if content_type == "messageDocument":
             media = message.content.document

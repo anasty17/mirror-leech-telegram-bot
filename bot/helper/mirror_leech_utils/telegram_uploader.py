@@ -20,7 +20,7 @@ from pytdbot.types import (
     InputFileRemote,
     InputFileLocal,
     InputThumbnail,
-    MessageTopicThread,
+    MessageTopicForum,
 )
 
 from ...core.config_manager import Config
@@ -109,7 +109,7 @@ class TelegramUploader:
                     chat_id=self._listener.up_dest,
                     text=msg,
                     disable_web_page_preview=True,
-                    topic_id=MessageTopicThread(self._listener.chat_thread_id),
+                    topic_id=MessageTopicForum(self._listener.chat_thread_id),
                     disable_notification=True,
                 )
             else:
@@ -117,7 +117,7 @@ class TelegramUploader:
                     chat_id=self._listener.up_dest,
                     text=msg,
                     disable_web_page_preview=True,
-                    topic_id=MessageTopicThread(self._listener.chat_thread_id),
+                    topic_id=MessageTopicForum(self._listener.chat_thread_id),
                     disable_notification=True,
                 )
                 if not self._sent_msg.is_error:
@@ -290,7 +290,13 @@ class TelegramUploader:
                         and (self._listener.is_super_chat or self._listener.up_dest)
                         and not self._is_private
                     ):
-                        msg_link = await self._sent_msg.getMessageLink()
+                        msg_link = await self._sent_msg.getMessageLink(
+                            in_message_thread=bool(
+                                self._sent_msg.topic_id
+                                and self._sent_msg.topic_id.getType()
+                                == "messageTopicForum"
+                            )
+                        )
                         link = msg_link.link
                         self._msgs_dict[link] = file_
                     await sleep(1)

@@ -30,6 +30,7 @@ class TgManager:
             database_encryption_key="mltbmltb",
             use_file_database=False,
             workers=None,
+            td_verbosity=1,
         )
         await cls.bot.start()
         while cls.bot.authorization_state != "authorizationStateReady":
@@ -47,7 +48,8 @@ class TgManager:
             files_directory="/mltb/tdlib_user",
             database_encryption_key="mltbmltb",
             use_file_database=False,
-            workers=1,
+            workers=None,
+            td_verbosity=1,
             user_bot=True,
         )
         await cls.bot.client_manager.add_client(cls.user, True)

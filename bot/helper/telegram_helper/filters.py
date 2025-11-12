@@ -24,7 +24,7 @@ class CustomFilters:
         chat_id = event.chat_id
         thread_id = (
             event.topic_id.message_thread_id
-            if event.topic_id and event.topic_id.getType() == "messageTopicThread"
+            if event.topic_id and event.topic_id.getType() == "messageTopicForum"
             else None
         )
         return bool(
