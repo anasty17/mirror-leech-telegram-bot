@@ -50,7 +50,7 @@ class TelegramDownloadHelper:
         else:
             LOGGER.info(f"Start Queued Download from Telegram: {self._listener.name}")
 
-    async def _download_progress(self, key, progress_dict, _, file_id):
+    async def _download_progress(self, key, progress_dict, file_id):
         if self._listener.is_cancelled:
             if self.session == "user":
                 await TgManager.user.cancelDownloadFile(file_id=file_id)
@@ -189,6 +189,6 @@ class TelegramDownloadHelper:
     async def cancel_task(self):
         self._listener.is_cancelled = True
         LOGGER.info(
-            f"Cancelling download on user request: name: {self._listener.name} id: {self._id}"
+            f"Cancelling download on user request: name: {self._listener.name} id: {self._gid}"
         )
         await self._on_download_error("Stopped by user!")

@@ -1,6 +1,6 @@
 from PIL import Image
 from aioshutil import rmtree
-from asyncio import sleep, Event
+from asyncio import sleep
 from logging import getLogger
 from natsort import natsorted
 from os import walk, path as ospath
@@ -68,17 +68,16 @@ class TelegramUploader:
         self._user_session = self._listener.user_transmission
         self._error = ""
         self._f_size = 0
-        self._event = Event()
+        self._future = None
         self._temp_message = None
 
-    async def _upload_progress(self, key, progress_dict, is_completed, _):
-        if is_completed:
-            self._event.set()
+    async def _upload_progress(self, key, progress_dict, _):
         if self._listener.is_cancelled:
             if self._temp_message is not None:
                 await self._temp_message.delete()
+            if self._future is not None:
+                self._future.cancel()
             await tracker.cancel_progress(key)
-            self._event.set()
         chunk_size = progress_dict["transferred"] - self._last_uploaded
         self._last_uploaded = progress_dict["transferred"]
         self._processed_bytes += chunk_size
@@ -451,10 +450,17 @@ class TelegramUploader:
             )
             if self._temp_message.is_error:
                 raise TgUploadException(self._temp_message)
-            await self._event.wait()
+            self._future = self._temp_message._client._create_request_future(
+                None, f"{self._temp_message.chat_id}:{self._temp_message.id}"
+            )
+            try:
+                self._sent_msg = await self._future
+            finally:
+                self._future = None
             if self._listener.is_cancelled:
                 return
-            self._sent_msg = self._temp_message
+            if self._sent_msg.is_error:
+                raise TgUploadException(self._sent_msg)
             self._temp_message = None
             content_type = self._sent_msg.content.getType()
             if self._media_group and content_type in [

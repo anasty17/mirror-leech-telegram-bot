@@ -32,7 +32,7 @@ class ProgressTracker:
 
         if callback:
             try:
-                await callback(key, self.progress_dict[key], is_completed, file_id)
+                await callback(key, self.progress_dict[key], file_id)
             except Exception as e:
                 LOGGER.error(f"Callback error for file {key}: {e}")
         if is_completed:
@@ -81,7 +81,9 @@ async def tdlib_file_update(_, update):
         is_completed = local_file.is_downloading_completed
         transferred = local_file.downloaded_size
     total = file.size or file.expected_size
-    await tracker.update_progress(key, transferred, total, is_active, is_completed, file_id)
+    await tracker.update_progress(
+        key, transferred, total, is_active, is_completed, file_id
+    )
 
 
 tracker = ProgressTracker()

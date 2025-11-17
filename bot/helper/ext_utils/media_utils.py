@@ -155,7 +155,7 @@ async def take_ss(video_file, ss_nb) -> bool:
             cap_time += interval
             cmds.append(cmd_exec(cmd))
         try:
-            resutls = await wait_for(gather(*cmds), timeout=60)
+            resutls = await wait_for(gather(*cmds), timeout=120)
             if resutls[0][2] != 0:
                 LOGGER.error(
                     f"Error while creating screenshots from video. Path: {video_file}. stderr: {resutls[0][1]}"
@@ -193,7 +193,7 @@ async def get_audio_thumbnail(audio_file):
         output,
     ]
     try:
-        _, err, code = await wait_for(cmd_exec(cmd), timeout=60)
+        _, err, code = await wait_for(cmd_exec(cmd), timeout=120)
         if code != 0 or not await aiopath.exists(output):
             LOGGER.error(
                 f"Error while extracting thumbnail from audio. Name: {audio_file} stderr: {err}"
@@ -236,7 +236,7 @@ async def get_video_thumbnail(video_file, duration):
         output,
     ]
     try:
-        _, err, code = await wait_for(cmd_exec(cmd), timeout=60)
+        _, err, code = await wait_for(cmd_exec(cmd), timeout=120)
         if code != 0 or not await aiopath.exists(output):
             LOGGER.error(
                 f"Error while extracting thumbnail from video. Name: {video_file} stderr: {err}"
@@ -281,7 +281,7 @@ async def get_multiple_frames_thumbnail(video_file, layout, keep_screenshots):
         output,
     ]
     try:
-        _, err, code = await wait_for(cmd_exec(cmd), timeout=60)
+        _, err, code = await wait_for(cmd_exec(cmd), timeout=120)
         if code != 0 or not await aiopath.exists(output):
             LOGGER.error(
                 f"Error while combining thumbnails for video. Name: {video_file} stderr: {err}"
