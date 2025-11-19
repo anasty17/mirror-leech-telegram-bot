@@ -347,7 +347,6 @@ class TelegramUploader:
         self._is_corrupted = False
         try:
             is_video, is_audio, is_image = await get_document_type(self._up_path)
-
             if not is_image and thumb is None:
                 file_name = ospath.splitext(file)[0]
                 thumb_path = f"{self._path}/yt-dlp-thumb/{file_name}.jpg"
@@ -364,14 +363,16 @@ class TelegramUploader:
                 key = "documents"
                 if is_video and thumb is None:
                     thumb = await get_video_thumbnail(self._up_path, None)
-
                 if self._listener.is_cancelled:
                     return
                 if thumb == "none":
                     thumb = None
                 caption = await self._sent_msg._client.parseText(cap_mono)
+                th_w, th_h = await sync_to_async(optimize_thumbnail, thumb)
                 thumbnail = (
-                    InputThumbnail(InputFileLocal(path=thumb)) if thumb else None
+                    InputThumbnail(InputFileLocal(path=thumb), width=th_w, height=th_h)
+                    if thumb
+                    else None
                 )
                 content = InputMessageDocument(
                     document=InputFileLocal(path=self._up_path),
@@ -401,8 +402,11 @@ class TelegramUploader:
                 if thumb == "none":
                     thumb = None
                 caption = await self._sent_msg._client.parseText(cap_mono)
+                th_w, th_h = await sync_to_async(optimize_thumbnail, thumb)
                 thumbnail = (
-                    InputThumbnail(InputFileLocal(path=thumb)) if thumb else None
+                    InputThumbnail(InputFileLocal(path=thumb), width=th_w, height=th_h)
+                    if thumb
+                    else None
                 )
                 content = InputMessageVideo(
                     video=InputFileLocal(path=self._up_path),
@@ -421,8 +425,11 @@ class TelegramUploader:
                 if thumb == "none":
                     thumb = None
                 caption = await self._sent_msg._client.parseText(cap_mono)
+                th_w, th_h = await sync_to_async(optimize_thumbnail, thumb)
                 thumbnail = (
-                    InputThumbnail(InputFileLocal(path=thumb)) if thumb else None
+                    InputThumbnail(InputFileLocal(path=thumb), width=th_w, height=th_h)
+                    if thumb
+                    else None
                 )
                 content = InputMessageAudio(
                     audio=InputFileLocal(path=self._up_path),
@@ -508,6 +515,8 @@ class TelegramUploader:
 
     @property
     def processed_bytes(self):
+        if self._processed_bytes == 0:
+            self._start_time = time()
         return self._processed_bytes
 
     async def cancel_task(self):

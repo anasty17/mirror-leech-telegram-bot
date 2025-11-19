@@ -18,13 +18,23 @@ from .files_utils import get_mime_type, is_archive, is_archive_split
 from .status_utils import time_to_seconds
 
 
-def optimize_thumbnail(photo_dir, max_size=204799):
-    if ospath.getsize(photo_dir) > max_size:
+def optimize_thumbnail(photo_path, max_size=204799, max_dim=320):
+    with Image.open(photo_path) as img:
+        w, h = img.size
+        if w > max_dim or h > max_dim:
+            scale = max_dim / float(w) if w >= h else max_dim / float(h)
+            new_w = int(w * scale)
+            new_h = int(h * scale)
+            img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+            img.save(photo_path, optimize=True)
+            return new_w, new_h
+        return w, h
+    """if ospath.getsize(photo_path) > max_size:
         quality = 95
-        while ospath.getsize(photo_dir) > max_size:
-            img = Image.open(photo_dir)
-            img.save(photo_dir, "JPEG", quality=quality, optimize=True)
-            quality -= 5
+        while ospath.getsize(photo_path) > max_size:
+            img = Image.open(photo_path)
+            img.save(photo_path, "JPEG", quality=quality, optimize=True)
+            quality -= 5"""
 
 
 async def create_thumb(msg, _id=""):

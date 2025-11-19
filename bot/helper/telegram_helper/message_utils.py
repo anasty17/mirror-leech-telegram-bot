@@ -5,6 +5,7 @@ from pytdbot.types import (
     InputMessageReplyToMessage,
     MessageSendOptions,
     MessageTopicForum,
+    InputFileLocal,
 )
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals
@@ -52,7 +53,7 @@ async def edit_message(message, text, buttons=None, block=True):
 
 async def send_file(message, file, caption=""):
     res = await message.reply_document(
-        document=file, caption=caption, disable_notification=True
+        document=InputFileLocal(file), caption=caption, disable_notification=True
     )
     if res.is_error:
         if wait_for := res.limited_seconds:

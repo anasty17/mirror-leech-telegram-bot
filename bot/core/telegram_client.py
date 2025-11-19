@@ -73,7 +73,7 @@ class TgManager:
             await cls.user.setAutoDownloadSettings(
                 AutoDownloadSettings(), NetworkTypeOther()
             )
-
+            await cls.user.downloadFile()
     @classmethod
     async def stop(cls):
         async with cls._lock:
