@@ -515,8 +515,6 @@ class TelegramUploader:
 
     @property
     def processed_bytes(self):
-        if self._processed_bytes == 0:
-            self._start_time = time()
         return self._processed_bytes
 
     async def cancel_task(self):

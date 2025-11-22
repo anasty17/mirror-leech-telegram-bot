@@ -71,17 +71,41 @@ class TelegramDownloadHelper:
                 GLOBAL_GID.remove(self._gid)
         await self._listener.on_download_complete()
 
+    async def _download_chunk(self, message, offset, limit):
+        while True:
+            download = await message.download(
+                offset=offset,
+                limit=limit,
+                synchronous=True,
+            )
+            if download.is_error:
+                if wait_for := download.limited_seconds:
+                    LOGGER.warning(download["message"])
+                    await sleep(wait_for * 1.2)
+                    return await self._download_chunk(message, offset, limit)
+            if self._listener.is_cancelled:
+                return 0
+            if offset == 0 and limit == 0:
+                return download
+            offset += limit
+            if self._listener.size - limit < offset:
+                offset = 0
+                limit = 0
+
     async def _download(self, message, dl_path):
-        download = await message.download(synchronous=True)
+        if self.session == "user" and TgManager.IS_PREMIUM_USER:
+            limit = 150 * 1024 * 1024 if self._listener.size > 150 * 1024 * 1024 else 0
+        elif self._listener.size > 20 * 1024 * 1024:
+            limit = 20 * 1024 * 1024
+        else:
+            limit = 0
+        self._start_time = time()
+        download = await self._download_chunk(message, 0, limit)
+        if self._listener.is_cancelled:
+            return
         if download.is_error:
-            if wait_for := download.limited_seconds:
-                LOGGER.warning(download["message"])
-                await sleep(wait_for * 1.2)
-                return await self._download(message, dl_path)
             LOGGER.error(download["message"])
             await self._on_download_error(download["message"])
-            return
-        if self._listener.is_cancelled:
             return
         if download.is_downloading_completed:
             current_path = download.path
@@ -172,7 +196,6 @@ class TelegramDownloadHelper:
                     if message.is_error:
                         await self._on_download_error(message["message"])
                         return
-                self._start_time = time()
                 await self._on_download_start(add_to_queue)
                 await tracker.add_to_progress(
                     media_file.remote.id,
