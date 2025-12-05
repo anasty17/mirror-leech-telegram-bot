@@ -4,7 +4,6 @@ from asyncio import (
     create_subprocess_exec,
     gather,
     wait_for,
-    sleep,
 )
 from asyncio.subprocess import PIPE
 from os import path as ospath
@@ -367,7 +366,6 @@ class FFMpeg:
                         except:
                             self._progress_raw = 0
                             self._eta_raw = 0
-            await sleep(0.05)
 
     async def ffmpeg_cmds(self, ffmpeg, f_path):
         self.clear()
