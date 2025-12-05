@@ -167,9 +167,9 @@ class Mirror(TaskListener):
 
         if not isinstance(is_bulk, bool):
             dargs = is_bulk.split(":")
-            bulk_start = dargs[0] or 0
+            bulk_start = dargs[0] or "0"
             if len(dargs) == 2:
-                bulk_end = dargs[1] or 0
+                bulk_end = dargs[1] or "0"
             is_bulk = True
 
         if not is_bulk:

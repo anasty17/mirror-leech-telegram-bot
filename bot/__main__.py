@@ -1,5 +1,5 @@
 from . import LOGGER, bot_loop
-from .core.mltb_client import TgClient
+from .core.telegram_manager import TgClient
 from .core.config_manager import Config
 
 Config.load()

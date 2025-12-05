@@ -11,7 +11,7 @@ from re import findall
 
 from .. import user_data, excluded_extensions, auth_chats, sudo_users
 from ..core.config_manager import Config
-from ..core.mltb_client import TgClient
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.media_utils import create_thumb
 from ..helper.telegram_helper.button_build import ButtonMaker

@@ -13,7 +13,7 @@ from ..helper.telegram_helper.message_utils import (
 from ..helper.ext_utils.db_handler import database
 from ..helper.ext_utils.files_utils import clean_all
 from ..helper.telegram_helper.button_build import ButtonMaker
-from ..core.mltb_client import TgClient
+from ..core.telegram_manager import TgClient
 from ..core.config_manager import Config
 from ..core.jdownloader_booter import jdownloader
 from ..core.torrent_manager import TorrentManager

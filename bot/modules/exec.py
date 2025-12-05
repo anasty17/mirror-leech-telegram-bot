@@ -6,7 +6,7 @@ from textwrap import indent
 from traceback import format_exc
 
 from .. import LOGGER
-from ..core.mltb_client import TgClient
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import sync_to_async, new_task
 from ..helper.telegram_helper.message_utils import send_file, send_message
 

@@ -6,7 +6,7 @@ from pymongo.server_api import ServerApi
 from pymongo.errors import PyMongoError
 
 from ... import LOGGER, user_data, rss_dict, qbit_options
-from ...core.mltb_client import TgClient
+from ...core.telegram_manager import TgClient
 from ...core.config_manager import Config
 
 

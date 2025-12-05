@@ -1,5 +1,5 @@
 from ..telegram_helper.bot_commands import BotCommands
-from ...core.mltb_client import TgClient
+from ...core.telegram_manager import TgClient
 
 mirror = """<b>Send link along with command line or </b>
 

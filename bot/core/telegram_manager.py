@@ -24,7 +24,7 @@ class TgClient:
             Config.TELEGRAM_HASH,
             proxy=Config.TG_PROXY,
             bot_token=Config.BOT_TOKEN,
-            workdir="/usr/src/app",
+            workdir="/app",
             parse_mode=enums.ParseMode.HTML,
             max_concurrent_transmissions=10,
         )

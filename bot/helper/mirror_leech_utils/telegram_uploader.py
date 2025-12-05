@@ -26,7 +26,7 @@ from tenacity import (
 )
 
 from ...core.config_manager import Config
-from ...core.mltb_client import TgClient
+from ...core.telegram_manager import TgClient
 from ..ext_utils.bot_utils import sync_to_async
 from ..ext_utils.files_utils import is_archive, get_base_name
 from ..telegram_helper.message_utils import delete_message

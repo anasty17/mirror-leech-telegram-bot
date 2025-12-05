@@ -21,7 +21,7 @@ from .. import (
 )
 from ..helper.ext_utils.db_handler import database
 from .config_manager import Config
-from .mltb_client import TgClient
+from .telegram_manager import TgClient
 from .torrent_manager import TorrentManager
 
 

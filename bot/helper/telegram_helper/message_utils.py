@@ -5,7 +5,7 @@ from time import time
 
 from ... import LOGGER, status_dict, task_dict_lock, intervals, DOWNLOAD_DIR
 from ...core.config_manager import Config
-from ...core.mltb_client import TgClient
+from ...core.telegram_manager import TgClient
 from ..ext_utils.bot_utils import SetInterval
 from ..ext_utils.exceptions import TgLinkException
 from ..ext_utils.status_utils import get_readable_message
