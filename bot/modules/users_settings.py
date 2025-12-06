@@ -245,7 +245,7 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         upload_paths = user_dict.get("UPLOAD_PATHS", {})
         if not upload_paths and "UPLOAD_PATHS" not in user_dict and Config.UPLOAD_PATHS:
             upload_paths = Config.UPLOAD_PATHS
-        else:
+        if not upload_paths:
             upload_paths = "None"
 
         buttons.data_button("Upload Paths", f"userset {user_id} menu UPLOAD_PATHS")
@@ -279,7 +279,9 @@ Stop Duplicate is <b>{sd_msg}</b>"""
             ex_ex = "None"
 
         ns_msg = "Added" if user_dict.get("NAME_SUBSTITUTE", False) else "None"
-        buttons.data_button("Name Substitute", f"userset {user_id} menu NAME_SUBSTITUTE")
+        buttons.data_button(
+            "Name Substitute", f"userset {user_id} menu NAME_SUBSTITUTE"
+        )
 
         buttons.data_button("YT-DLP Options", f"userset {user_id} menu YT_DLP_OPTIONS")
         if user_dict.get("YT_DLP_OPTIONS", False):
