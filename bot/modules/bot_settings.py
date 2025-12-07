@@ -584,6 +584,8 @@ async def edit_bot_settings(client, query):
                     intervals["status"][key] = SetInterval(
                         value, update_status_message, key
                     )
+        elif data[2] == "RSS_SIZE_LIMIT":
+            value = 0
         elif data[2] == "EXCLUDED_EXTENSIONS":
             excluded_extensions.clear()
             excluded_extensions.extend(["aria2", "!qB"])

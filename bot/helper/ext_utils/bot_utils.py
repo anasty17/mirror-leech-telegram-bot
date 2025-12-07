@@ -144,7 +144,10 @@ def arg_parser(items, arg_base):
             else:
                 sub_list = []
                 for j in range(i + 1, total):
-                    if items[j] in arg_base and part != "-c" != items[j]:
+                    if items[j] in arg_base:
+                        if part == "-c" and items[j] == "-c":
+                            sub_list.append(items[j])
+                            continue
                         if part in bool_arg_set and not sub_list:
                             arg_base[part] = True
                             break
