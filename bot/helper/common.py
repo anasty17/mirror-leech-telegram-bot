@@ -19,6 +19,7 @@ from .. import (
     cpu_eater_lock,
     intervals,
     DOWNLOAD_DIR,
+    cores,
 )
 from ..core.config_manager import Config
 from ..core.telegram_manager import TgClient
@@ -120,7 +121,11 @@ class TaskConfig:
         self.thumb = None
         self.excluded_extensions = []
         self.files_to_proceed = []
-        self.is_super_chat = self.message.chat.type.name in ["SUPERGROUP", "CHANNEL", "FORUM"]
+        self.is_super_chat = self.message.chat.type.name in [
+            "SUPERGROUP",
+            "CHANNEL",
+            "FORUM",
+        ]
 
     def get_token_path(self, dest):
         if dest.startswith("mtp:"):
@@ -663,6 +668,9 @@ class TaskConfig:
             for ffmpeg_cmd in cmds:
                 self.proceed_count = 0
                 cmd = [
+                    "taskset",
+                    "-c",
+                    f"{cores}",
                     "ffmpeg",
                     "-hide_banner",
                     "-loglevel",
