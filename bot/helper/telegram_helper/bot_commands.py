@@ -31,6 +31,7 @@ class BotCommands:
     PingCommand = f"ping{i}"
     RestartCommand = f"restart{i}"
     StatsCommand = f"stats{i}"
+    WorkerStatusCommand = [f"workerstatus{i}", f"ws{i}"]
     HelpCommand = f"help{i}"
     LogCommand = f"log{i}"
     ShellCommand = f"shell{i}"

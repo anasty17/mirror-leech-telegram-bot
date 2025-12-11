@@ -1,5 +1,5 @@
 from aiofiles.os import path as aiopath, listdir, remove
-from asyncio import sleep, gather
+from asyncio import sleep, gather, Event
 from html import escape
 from requests import utils as rutils
 
@@ -17,7 +17,9 @@ from ... import (
     DOWNLOAD_DIR,
 )
 from ...core.config_manager import Config
+from ...core.telegram_manager import TgClient
 from ...core.torrent_manager import TorrentManager
+from ...core.upload_dispatcher import TaskPriority
 from ..common import TaskConfig
 from ..ext_utils.bot_utils import sync_to_async
 from ..ext_utils.db_handler import database
@@ -39,6 +41,7 @@ from ..mirror_leech_utils.status_utils.gdrive_status import GoogleDriveStatus
 from ..mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ..mirror_leech_utils.status_utils.rclone_status import RcloneStatus
 from ..mirror_leech_utils.status_utils.telegram_status import TelegramStatus
+from ..mirror_leech_utils.status_utils.worker_pool_status import WorkerPoolStatus
 from ..mirror_leech_utils.telegram_uploader import TelegramUploader
 from ..telegram_helper.button_build import ButtonMaker
 from ..telegram_helper.message_utils import (
@@ -276,14 +279,105 @@ class TaskListener(TaskConfig):
 
         if self.is_leech:
             LOGGER.info(f"Leech Name: {self.name}")
-            tg = TelegramUploader(self, up_dir)
-            async with task_dict_lock:
-                task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
-            await gather(
-                update_status_message(self.message.chat.id),
-                tg.upload(),
+            
+            # Hybrid upload routing decision
+            # - Files >2GB with premium user session: use user session for 4GB limit
+            # - Files <=2GB with workers: use worker pool for parallelization
+            # - Fallback: single-session upload via main bot
+            BOT_UPLOAD_LIMIT = 2097152000  # 2GB
+            
+            use_workers = TgClient.is_worker_pool_active()
+            use_user_session = (
+                self.user_transmission 
+                and TgClient.IS_PREMIUM_USER 
+                and self.size > BOT_UPLOAD_LIMIT
             )
-            del tg
+            
+            if use_workers and not use_user_session:
+                # Use worker pool for files <=2GB (parallel uploads)
+                LOGGER.info(f"Using worker pool for upload: {self.name} ({self.size / (1024**2):.1f} MB)")
+                
+                # Create completion event
+                completion_event = Event()
+                upload_failed = False
+                
+                # Store original callbacks to wrap them
+                original_on_complete = self.on_upload_complete
+                original_on_error = self.on_upload_error
+                
+                async def wrapped_on_complete(*args, **kwargs):
+                    completion_event.set()
+                    return await original_on_complete(*args, **kwargs)
+                
+                async def wrapped_on_error(*args, **kwargs):
+                    nonlocal upload_failed
+                    upload_failed = True
+                    completion_event.set()
+                    return await original_on_error(*args, **kwargs)
+                
+                # Temporarily replace callbacks
+                self.on_upload_complete = wrapped_on_complete
+                self.on_upload_error = wrapped_on_error
+                
+                # Create status tracker
+                status_tracker = WorkerPoolStatus(self, gid, str(self.mid))
+                
+                async with task_dict_lock:
+                    task_dict[self.mid] = status_tracker
+                
+                try:
+                    # Submit to dispatcher
+                    task = await TgClient.dispatcher.submit(
+                        task_id=str(self.mid),
+                        listener=self,
+                        file_path=up_dir,
+                        chat_id=self.up_dest or self.message.chat.id,
+                        priority=TaskPriority.NORMAL,
+                        file_size=self.size,
+                    )
+                    
+                    await update_status_message(self.message.chat.id)
+                    
+                    # Wait for upload to complete (callbacks will signal)
+                    await completion_event.wait()
+                        
+                except Exception as e:
+                    LOGGER.error(f"Worker pool upload failed: {e}")
+                    upload_failed = True
+                    
+                finally:
+                    # Restore original callbacks
+                    self.on_upload_complete = original_on_complete
+                    self.on_upload_error = original_on_error
+                
+                # Fallback to single-session if worker pool failed
+                if upload_failed and not self.is_cancelled:
+                    LOGGER.warning(f"Falling back to single-session upload: {self.name}")
+                    tg = TelegramUploader(self, up_dir)
+                    async with task_dict_lock:
+                        task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
+                    await gather(
+                        update_status_message(self.message.chat.id),
+                        tg.upload(),
+                    )
+                    del tg
+            else:
+                # Use single-session upload:
+                # - User session for large files (>2GB) with premium
+                # - Main bot fallback when no workers
+                if use_user_session:
+                    LOGGER.info(f"Using premium user session for large file: {self.name} ({self.size / (1024**2):.1f} MB)")
+                else:
+                    LOGGER.info(f"Using single-session upload: {self.name}")
+                    
+                tg = TelegramUploader(self, up_dir)
+                async with task_dict_lock:
+                    task_dict[self.mid] = TelegramStatus(self, tg, gid, "up")
+                await gather(
+                    update_status_message(self.message.chat.id),
+                    tg.upload(),
+                )
+                del tg
         elif is_gdrive_id(self.up_dest):
             LOGGER.info(f"Gdrive Upload Name: {self.name}")
             drive = GoogleDriveUpload(self, up_path)

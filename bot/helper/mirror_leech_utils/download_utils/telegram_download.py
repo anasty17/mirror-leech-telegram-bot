@@ -1,4 +1,4 @@
-from asyncio import Lock, sleep
+from asyncio import Lock, sleep, Event, wait_for, TimeoutError
 from time import time
 from pyrogram.errors import FloodWait, FloodPremiumWait
 
@@ -8,6 +8,7 @@ from .... import (
     task_dict_lock,
 )
 from ....core.telegram_manager import TgClient
+from ....core.download_dispatcher import DownloadPriority
 from ...ext_utils.task_manager import check_running_tasks, stop_duplicate_check
 from ...mirror_leech_utils.status_utils.queue_status import QueueStatus
 from ...mirror_leech_utils.status_utils.telegram_status import TelegramStatus
@@ -70,6 +71,76 @@ class TelegramDownloadHelper:
         await self._listener.on_download_complete()
 
     async def _download(self, message, path):
+        # Attempt worker pool download if available
+        # WorkerDownloader will probe message access and fail fast if inaccessible
+        if TgClient.is_worker_pool_active() and TgClient.download_dispatcher:
+            try:
+                LOGGER.info(f"Using worker pool for Telegram download: {self._listener.name}")
+                await self._download_with_worker(message, path)
+            except Exception as e:
+                LOGGER.warning(f"Worker download failed, falling back to main bot: {e}")
+                await self._download_with_main_bot(message, path)
+        else:
+            await self._download_with_main_bot(message, path)
+    
+    async def _download_with_worker(self, message, path):
+        """Download using worker pool dispatcher."""
+        completion_event = Event()
+        download_failed = False
+        
+        # Wrap callbacks for worker completion
+        original_on_complete = self._listener.on_download_complete
+        original_on_error = self._listener.on_download_error
+        
+        async def wrap_complete():
+            # Clean up GLOBAL_GID tracking
+            async with global_lock:
+                if self._id in GLOBAL_GID:
+                    GLOBAL_GID.remove(self._id)
+            completion_event.set()
+            await original_on_complete()
+        
+        async def wrap_error(error):
+            nonlocal download_failed
+            download_failed = True
+            async with global_lock:
+                if self._id in GLOBAL_GID:
+                    GLOBAL_GID.remove(self._id)
+            completion_event.set()        
+        self._listener.on_download_complete = wrap_complete
+        self._listener.on_download_error = wrap_error
+        
+        # Store reference to this helper for progress updates
+        self._listener._download_helper = self
+        
+        try:
+            # Submit to download dispatcher
+            task = await TgClient.download_dispatcher.submit(
+                task_id=str(self._listener.mid),
+                listener=self._listener,
+                message=message,
+                file_path=path,
+                priority=DownloadPriority.NORMAL,
+                file_size=self._listener.size,
+            )
+            
+            # Wait for completion (callbacks will signal)
+            await completion_event.wait()
+            
+            # If download failed via worker, raise exception to trigger fallback
+            if download_failed:
+                raise Exception("Worker download failed, triggering fallback")
+                
+        finally:
+            # Restore original callbacks
+            self._listener.on_download_complete = original_on_complete
+            self._listener.on_download_error = original_on_error
+            # Clean up helper reference
+            if hasattr(self._listener, '_download_helper'):
+                delattr(self._listener, '_download_helper')
+    
+    async def _download_with_main_bot(self, message, path):
+        """Download using main bot (original logic)."""
         try:
             download = await message.download(
                 file_name=path, progress=self._on_download_progress
@@ -79,7 +150,7 @@ class TelegramDownloadHelper:
         except (FloodWait, FloodPremiumWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value)
-            await self._download(message, path)
+            await self._download_with_main_bot(message, path)
             return
         except Exception as e:
             LOGGER.error(str(e))

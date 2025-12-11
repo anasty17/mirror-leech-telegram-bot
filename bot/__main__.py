@@ -20,6 +20,10 @@ async def main():
     await load_settings()
 
     await gather(TgClient.start_bot(), TgClient.start_user())
+    
+    # Initialize worker pool for parallel uploads (if configured)
+    await TgClient.start_workers()
+    
     await gather(load_configurations(), update_variables())
 
     from .core.torrent_manager import TorrentManager

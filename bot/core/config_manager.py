@@ -67,6 +67,12 @@ class Config:
     USE_SERVICE_ACCOUNTS = False
     WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
+    WORKER_BOT_TOKENS = []
+    WORKER_POOL_SIZE = 0
+    WORKER_HEALTH_INTERVAL = 30
+    WORKER_MAX_RETRIES = 3
+    WORKER_SCHEDULING = "least_loaded"
+    WORKER_BANDWIDTH_LIMIT = 0
 
     @classmethod
     def _convert(cls, key: str, value):

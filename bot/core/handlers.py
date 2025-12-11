@@ -263,6 +263,18 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         MessageHandler(
+            worker_status,
+            filters=command(BotCommands.WorkerStatusCommand, case_sensitive=True)
+            & CustomFilters.sudo,
+        )
+    )
+    TgClient.bot.add_handler(
+        CallbackQueryHandler(
+            worker_status_callback, filters=regex("^workerstatus")
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
             task_status,
             filters=command(BotCommands.StatusCommand, case_sensitive=True)
             & CustomFilters.authorized,

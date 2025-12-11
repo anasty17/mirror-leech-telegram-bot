@@ -1,9 +1,12 @@
 from pyrogram import Client, enums
 from asyncio import Lock
 
-from .. import LOGGER
 from .config_manager import Config
-
+from .worker_pool import WorkerPool
+from .upload_dispatcher import UploadDispatcher
+from .download_dispatcher import DownloadDispatcher
+from .. import LOGGER
+from ..helper.ext_utils.health_monitor import HealthMonitor
 
 class TgClient:
     _lock = Lock()
@@ -13,6 +16,10 @@ class TgClient:
     ID = 0
     IS_PREMIUM_USER = False
     MAX_SPLIT_SIZE = 2097152000
+    worker_pool = None
+    dispatcher = None
+    download_dispatcher = None
+    health_monitor = None
 
     @classmethod
     async def start_bot(cls):
@@ -56,13 +63,68 @@ class TgClient:
                 cls.user = None
 
     @classmethod
+    async def start_workers(cls):
+        """Initialize worker bot pool if configured."""
+        tokens = Config.WORKER_BOT_TOKENS
+        if not tokens:
+            LOGGER.info("No worker tokens configured - using single-session mode")
+            return
+        
+        # Parse tokens if string (comma-separated)
+        if isinstance(tokens, str):
+            tokens = [t.strip() for t in tokens.split(",") if t.strip()]
+        
+        if not tokens:
+            return
+        
+        # Initialize worker pool
+        cls.worker_pool = WorkerPool(Config)
+        count = await cls.worker_pool.initialize(tokens)
+        
+        if count == 0:
+            LOGGER.warning("No workers initialized - falling back to single-session mode")
+            cls.worker_pool = None
+            return
+        
+        # Pre-warm connections for faster first transfer
+        await cls.worker_pool.warm_connections()
+        
+        # Initialize upload dispatcher
+        cls.dispatcher = UploadDispatcher(cls.worker_pool, Config)
+        await cls.dispatcher.start()
+        
+        # Initialize download dispatcher
+        cls.download_dispatcher = DownloadDispatcher(cls.worker_pool, Config)
+        await cls.download_dispatcher.start()
+        
+        # Initialize health monitor
+        cls.health_monitor = HealthMonitor(
+            cls.worker_pool,
+            cls.dispatcher,
+            interval=Config.WORKER_HEALTH_INTERVAL
+        )
+        await cls.health_monitor.start()
+        
+        LOGGER.info(f"Worker pool ready: {count} workers, connections warmed, dispatcher running")
+
+    @classmethod
     async def stop(cls):
         async with cls._lock:
+            # Graceful shutdown of worker infrastructure first
+            if cls.health_monitor:
+                await cls.health_monitor.stop()
+            if cls.dispatcher:
+                await cls.dispatcher.stop()
+            if cls.download_dispatcher:
+                await cls.download_dispatcher.stop()
+            if cls.worker_pool:
+                await cls.worker_pool.shutdown()
+            # Then stop primary clients
             if cls.bot:
                 await cls.bot.stop()
             if cls.user:
                 await cls.user.stop()
-            LOGGER.info("Client(s) stopped")
+            LOGGER.info("All clients stopped")
 
     @classmethod
     async def reload(cls):
@@ -71,3 +133,13 @@ class TgClient:
             if cls.user:
                 await cls.user.restart()
             LOGGER.info("Client(s) restarted")
+    
+    @classmethod
+    def is_worker_pool_active(cls) -> bool:
+        """Check if worker pool is available for uploads."""
+        return (
+            cls.worker_pool is not None 
+            and cls.worker_pool.is_initialized
+            and cls.worker_pool.available_count > 0
+        )
+

@@ -32,6 +32,7 @@ from .shell import run_shell
 from .stats import bot_stats, get_packages_version
 from .status import task_status, status_pages
 from .users_settings import get_users_settings, edit_user_settings, send_user_settings
+from .worker_status import worker_status, worker_status_callback
 from .ytdlp import ytdl, ytdl_leech
 
 __all__ = [
@@ -86,6 +87,8 @@ __all__ = [
     "get_users_settings",
     "edit_user_settings",
     "send_user_settings",
+    "worker_status",
+    "worker_status_callback",
     "ytdl",
     "ytdl_leech",
 ]
