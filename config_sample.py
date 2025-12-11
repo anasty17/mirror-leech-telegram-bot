@@ -74,6 +74,13 @@ HYBRID_LEECH = False
 LEECH_FILENAME_PREFIX = ""
 LEECH_DUMP_CHAT = ""
 THUMBNAIL_LAYOUT = ""
+# Telegram Worker Pool (parallel uploads/downloads)
+WORKER_BOT_TOKENS = []
+WORKER_POOL_SIZE = 0
+WORKER_HEALTH_INTERVAL = 30
+WORKER_MAX_RETRIES = 3
+WORKER_SCHEDULING = "adaptive"
+WORKER_BANDWIDTH_LIMIT = 0
 # qBittorrent/Aria2c
 TORRENT_TIMEOUT = 0
 BASE_URL = ""
@@ -109,15 +116,3 @@ SEARCH_PLUGINS = [
     "https://raw.githubusercontent.com/msagca/qbittorrent_plugins/main/uniondht.py",
     "https://raw.githubusercontent.com/khensolomon/leyts/master/yts.py",
 ]
-# Multi-Worker Bot Configuration
-WORKER_BOT_TOKENS = []  # List of additional bot tokens for parallel uploads/downloads
-# Example: ["bot_token_1", "bot_token_2", "bot_token_3"]
-WORKER_POOL_SIZE = 0    # 0 = auto (same as token count)
-WORKER_HEALTH_INTERVAL = 30  # Health check interval (seconds)
-WORKER_MAX_RETRIES = 3  # Max retries per task before failure
-WORKER_SCHEDULING = "adaptive"  # Options: adaptive, least_loaded, round_robin, bandwidth_aware
-# - adaptive: Uses real-time speed data to route to fastest worker (RECOMMENDED)
-# - least_loaded: Routes to worker with fewest completed tasks
-# - round_robin: Evenly distributes across workers
-# - bandwidth_aware: Routes based on historical upload speed
-WORKER_BANDWIDTH_LIMIT = 0  # Per-worker bandwidth limit in bytes/sec (0 = unlimited)

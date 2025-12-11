@@ -55,6 +55,7 @@ programming in Python.
 - Choose transfer by bot or user session incase you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
 - Upload with custom layout multiple thubnmail (global, user option and task option)
+- Parallel Telegram uploads/downloads across a worker bot pool with automatic fallback to main/premium session
 - Topics support
 
 </details>
@@ -101,6 +102,7 @@ programming in Python.
   30 (global and user option)
 - Steps buttons for how much next/previous buttons should step backward/forward (global and user option)
 - Status for each user (no auto refresh)
+- Worker pool dashboard via `/workerstatus` command
 
 </details>
 
@@ -387,6 +389,17 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 - `LEECH_DUMP_CHAT` (`Int`|`Str`): ID or USERNAME or PM(private message) to where files would be uploaded. Add `-100` before channel/superGroup id. To use only specific topic write it in this format `chat_id|thread_id`. Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or pm or @xxxxxxx or @xxxxxxx|10.
 
 - `THUMBNAIL_LAYOUT` (`Str`): Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.
+
+**Worker Pool (parallel Telegram uploads/downloads)**
+
+- `WORKER_BOT_TOKENS` (`List[str]`): Additional bot tokens used as workers for parallel Telegram transfers. Keep your main bot token in `BOT_TOKEN` for commands; add extra tokens here for uploads/downloads.
+- `WORKER_POOL_SIZE` (`Int`): Maximum number of worker sessions to start. `0` (default) auto-uses the number of provided tokens.
+- `WORKER_SCHEDULING` (`Str`): Worker selection strategy: `adaptive` (recommended), `least_loaded`, `round_robin`, or `bandwidth_aware`.
+- `WORKER_HEALTH_INTERVAL` (`Int`): Seconds between worker pool health checks and stuck-worker recovery.
+- `WORKER_MAX_RETRIES` (`Int`): Max retries per worker task before failing.
+- `WORKER_BANDWIDTH_LIMIT` (`Int`): Per-worker bandwidth cap in bytes/second. Set `0` to disable throttling.
+
+> Enabling worker pool: create extra bot tokens via @BotFather, place them in `WORKER_BOT_TOKENS`, deploy/restart, and monitor with `/workerstatus`. The main bot stays in charge of commands; workers handle transfers.
 
 **7. qBittorrent/Aria2c/Sabnzbd**
 
