@@ -9,7 +9,13 @@ from pyrogram.handlers import MessageHandler
 from time import time
 from re import findall
 
-from .. import user_data, excluded_extensions, auth_chats, sudo_users
+from .. import (
+    user_data,
+    excluded_extensions,
+    auth_chats,
+    sudo_users,
+    included_extensions,
+)
 from ..core.config_manager import Config
 from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.db_handler import database
@@ -278,6 +284,16 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         else:
             ex_ex = "None"
 
+        buttons.data_button(
+            "Included Extensions", f"userset {user_id} menu INCLUDED_EXTENSIONS"
+        )
+        if user_dict.get("INCLUDED_EXTENSIONS", False):
+            inc_ex = user_dict["INCLUDED_EXTENSIONS"]
+        elif "INCLUDED_EXTENSIONS" not in user_dict:
+            inc_ex = included_extensions
+        else:
+            inc_ex = "None"
+
         ns_msg = "Added" if user_dict.get("NAME_SUBSTITUTE", False) else "None"
         buttons.data_button(
             "Name Substitute", f"userset {user_id} menu NAME_SUBSTITUTE"
@@ -312,6 +328,8 @@ Upload Paths is <code>{upload_paths}</code>
 Name substitution is <code>{ns_msg}</code>
 
 Excluded Extensions is <code>{ex_ex}</code>
+
+Included Extensions is <code>{inc_ex}</code>
 
 YT-DLP Options is <code>{ytopt}</code>
 
@@ -403,6 +421,12 @@ async def set_option(_, message, option):
     elif option == "EXCLUDED_EXTENSIONS":
         fx = value.split()
         value = ["aria2", "!qB"]
+        for x in fx:
+            x = x.lstrip(".")
+            value.append(x.strip().lower())
+    elif option == "INCLUDED_EXTENSIONS":
+        fx = value.split()
+        value = []
         for x in fx:
             x = x.lstrip(".")
             value.append(x.strip().lower())

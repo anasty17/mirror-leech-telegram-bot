@@ -28,6 +28,7 @@ from ..ext_utils.files_utils import (
     join_files,
     create_recursive_symlink,
     remove_excluded_files,
+    remove_non_included_files,
     move_and_merge,
 )
 from ..ext_utils.links_utils import is_gdrive_id
@@ -171,7 +172,14 @@ class TaskListener(TaskConfig):
             up_dir = self.dir
             up_path = dl_path
 
-        await remove_excluded_files(self.up_dir or self.dir, self.excluded_extensions)
+        if not self.included_extensions:
+            await remove_excluded_files(
+                self.up_dir or self.dir, self.excluded_extensions
+            )
+        else:
+            await remove_non_included_files(
+                self.up_dir or self.dir, self.included_extensions
+            )
 
         if not Config.QUEUE_ALL:
             async with queue_dict_lock:
@@ -190,7 +198,10 @@ class TaskListener(TaskConfig):
             self.name = up_path.replace(f"{up_dir}/", "").split("/", 1)[0]
             self.size = await get_path_size(up_dir)
             self.clear()
-            await remove_excluded_files(up_dir, self.excluded_extensions)
+            if not self.included_extensions:
+                await remove_excluded_files(up_dir, self.excluded_extensions)
+            else:
+                await remove_non_included_files(up_dir, self.included_extensions)
 
         if self.ffmpeg_cmds:
             up_path = await self.proceed_ffmpeg(

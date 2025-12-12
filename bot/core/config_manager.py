@@ -16,6 +16,7 @@ class Config:
     DEFAULT_UPLOAD = "rc"
     EQUAL_SPLITS = False
     EXCLUDED_EXTENSIONS = ""
+    INCLUDED_EXTENSIONS = ""
     FFMPEG_CMDS = {}
     FILELION_API = ""
     GDRIVE_ID = ""

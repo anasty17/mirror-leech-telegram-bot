@@ -295,6 +295,8 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 
 - `EXCLUDED_EXTENSIONS` (`Str`): File extensions that won't upload/clone. Separate them by spaces.
 
+- `INCLUDED_EXTENSIONS` (`Str`): File extensions to be uploaded/cloned. `EXCLUDED_EXTENSIONS` will be ignore if you filled this ! Separate them by spaces.
+
 - `INCOMPLETE_TASK_NOTIFIER` (`Bool`): Get incomplete task messages after restart. Require database and superGroup. Default
 is `False`.
 

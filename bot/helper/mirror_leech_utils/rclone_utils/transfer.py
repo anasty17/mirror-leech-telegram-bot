@@ -33,7 +33,6 @@ class RcloneTransferHelper:
         self._sa_index = 0
         self._sa_number = 0
         self._use_service_accounts = Config.USE_SERVICE_ACCOUNTS
-        self._rclone_select = False
 
     @property
     def transferred_size(self):
@@ -446,11 +445,10 @@ class RcloneTransferHelper:
         destination,
         method,
     ):
+        rclone_select = False
         if source.split(":")[-1].startswith("rclone_select"):
             source = f"{source.split(":")[0]}:"
-            self._rclone_select = True
-        else:
-            ext = "*.{" + ",".join(self._listener.excluded_extensions) + "}"
+            rclone_select = True
         cmd = [
             "rclone",
             method,
@@ -468,9 +466,13 @@ class RcloneTransferHelper:
             "1",
             "-M",
         ]
-        if self._rclone_select:
+        if rclone_select:
             cmd.extend(("--files-from", self._listener.link))
+        elif self._listener.included_extensions:
+            ext = "*.{" + ",".join(self._listener.included_extensions) + "}"
+            cmd.extend(("--include", ext))
         else:
+            ext = "*.{" + ",".join(self._listener.excluded_extensions) + "}"
             cmd.extend(("--exclude", ext))
         if rcflags := self._listener.rc_flags:
             rcflags = rcflags.split("|")

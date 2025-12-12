@@ -216,6 +216,16 @@ async def remove_excluded_files(fpath, ee):
                 await remove(ospath.join(root, f))
 
 
+async def remove_non_included_files(fpath, ie):
+    for root, _, files in await sync_to_async(walk, fpath):
+        if root.strip().endswith("/yt-dlp-thumb"):
+            continue
+        for f in files:
+            if f.strip().lower().endswith(tuple(ie)):
+                continue
+            await remove(ospath.join(root, f))
+
+
 async def move_and_merge(source, destination, mid):
     if not await aiopath.exists(destination):
         await aiomakedirs(destination, exist_ok=True)
