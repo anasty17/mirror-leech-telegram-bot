@@ -1096,13 +1096,14 @@ def gofile(url):
             raise e
 
     def __fetch_links(session, _id, folderPath=""):
-        _url = f"https://api.gofile.io/contents/{_id}?wt=4fd6sg89d7s6&cache=true"
+        _url = f"https://api.gofile.io/contents/{_id}?cache=true"
         headers = {
             "User-Agent": user_agent,
             "Accept-Encoding": "gzip, deflate, br",
             "Accept": "*/*",
             "Connection": "keep-alive",
             "Authorization": "Bearer" + " " + token,
+            "X-Website-Token" : "4fd6sg89d7s6"
         }
         if _password:
             _url += f"&password={_password}"
@@ -1159,7 +1160,7 @@ def gofile(url):
             token = __get_token(session)
         except Exception as e:
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
-        details["header"] = [f"Cookie: accountToken={token}"]
+        details["header"] = f"Cookie: accountToken={token}"
         try:
             __fetch_links(session, _id)
         except Exception as e:
@@ -1168,7 +1169,6 @@ def gofile(url):
     if len(details["contents"]) == 1:
         return (details["contents"][0]["url"], details["header"])
     return details
-
 
 def mediafireFolder(url):
     if "::" in url:
