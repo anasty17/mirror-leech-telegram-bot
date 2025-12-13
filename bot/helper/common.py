@@ -115,6 +115,7 @@ class TaskConfig:
         self.is_file = False
         self.bot_trans = False
         self.user_trans = False
+        self.is_rss = False
         self.progress = True
         self.ffmpeg_cmds = None
         self.chat_thread_id = None
@@ -505,6 +506,7 @@ class TaskConfig:
 
     async def get_tag(self, text: list):
         if len(text) > 1 and text[1].startswith("Tag: "):
+            self.is_rss = True
             user_info = text[1].split("Tag: ")
             if len(user_info) >= 3:
                 id_ = user_info[-1]

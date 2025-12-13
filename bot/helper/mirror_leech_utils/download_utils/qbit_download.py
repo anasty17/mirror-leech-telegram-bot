@@ -125,7 +125,7 @@ async def add_qb_torrent(listener, path, ratio, seed_time):
             SBUTTONS = bt_selection_buttons(ext_hash)
             msg = "Your download paused. Choose files then press Done Selecting button to start downloading."
             await send_message(listener.message, msg, SBUTTONS)
-        elif listener.multi <= 1:
+        elif listener.multi <= 1 and not listener.is_rss:
             await send_status_message(listener.message)
 
         if event is not None:
