@@ -703,13 +703,21 @@ async def rss_monitor():
                             raise
                         continue
                 rss_d = feed_parse(html)
-                try:
-                    last_link = rss_d.entries[0]["links"][1]["href"]
-                except IndexError:
-                    last_link = rss_d.entries[0]["link"]
-                finally:
-                    all_paused = False
-                last_title = rss_d.entries[0]["title"]
+                if not rss_d.entries:
+                    LOGGER.warning(
+                        f"No entries found for > Feed Title: {title} - Feed Link: {data['link']}"
+                    )
+                    continue
+                entry0 = rss_d.entries[0]
+                links = entry0.get("links", [])
+                if len(links) > 1:
+                    last_link = links[1].get("href")
+                elif links:
+                    last_link = links[0].get("href")
+                else:
+                    last_link = entry0.get("link")
+                last_title = entry0.get("title")
+                all_paused = False
                 if data["last_feed"] == last_link or data["last_title"] == last_title:
                     continue
                 feed_count = 0
