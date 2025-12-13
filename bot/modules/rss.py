@@ -580,13 +580,13 @@ Timeout: 60 sec. Argument -c for command and arguments
             await update_rss_menu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
-                for title in list(rss_dict[int(data[2])].keys()):
-                    rss_dict[int(data[2])][title]["paused"] = True
+                for info in rss_dict[int(data[2])].values():
+                    info["paused"] = True
             await database.rss_update(int(data[2]))
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
-                for title in list(rss_dict[int(data[2])].keys()):
-                    rss_dict[int(data[2])][title]["paused"] = False
+                for info in rss_dict[int(data[2])].values():
+                    info["paused"] = False
             if scheduler.state == 2:
                 scheduler.resume()
             await database.rss_update(int(data[2]))
@@ -603,22 +603,23 @@ Timeout: 60 sec. Argument -c for command and arguments
             await update_rss_menu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
-                for user in list(rss_dict.keys()):
-                    for title in list(rss_dict[user].keys()):
-                        rss_dict[int(data[2])][title]["paused"] = True
+                for user_feeds in rss_dict.values():
+                    for feed in user_feeds.values():
+                        feed["paused"] = True
             if scheduler.running:
                 scheduler.pause()
             await database.rss_update_all()
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
-                for user in list(rss_dict.keys()):
-                    for title in list(rss_dict[user].keys()):
-                        rss_dict[int(data[2])][title]["paused"] = False
+                for user_feeds in rss_dict.values():
+                    for feed in user_feeds.values():
+                        feed["paused"] = False
             if scheduler.state == 2:
                 scheduler.resume()
             elif not scheduler.running:
                 add_job()
                 scheduler.start()
+                await update_rss_menu(query)
             await database.rss_update_all()
     elif data[1] == "deluser":
         if len(rss_dict) == 0:
