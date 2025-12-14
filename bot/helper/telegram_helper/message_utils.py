@@ -16,7 +16,6 @@ async def send_message(message, text, buttons=None, block=True):
         return await message.reply(
             text=text,
             quote=True,
-            disable_web_page_preview=True,
             disable_notification=True,
             reply_markup=buttons,
         )
@@ -35,7 +34,6 @@ async def edit_message(message, text, buttons=None, block=True):
     try:
         return await message.edit(
             text=text,
-            disable_web_page_preview=True,
             reply_markup=buttons,
         )
     except FloodWait as f:
@@ -69,7 +67,6 @@ async def send_rss(text, chat_id, thread_id):
         return await app.send_message(
             chat_id=chat_id,
             text=text,
-            disable_web_page_preview=True,
             message_thread_id=thread_id,
             disable_notification=True,
         )

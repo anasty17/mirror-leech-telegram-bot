@@ -35,14 +35,12 @@ async def send_incomplete_task_message(cid, msg_id, msg):
                 chat_id=cid,
                 message_id=msg_id,
                 text=msg,
-                disable_web_page_preview=True,
             )
             await remove(".restartmsg")
         else:
             await TgClient.bot.send_message(
                 chat_id=cid,
                 text=msg,
-                disable_web_page_preview=True,
                 disable_notification=True,
             )
     except Exception as e:
