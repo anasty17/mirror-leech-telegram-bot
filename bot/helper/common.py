@@ -402,9 +402,9 @@ class TaskConfig:
                             ):
                                 self.user_transmission = False
                                 self.hybrid_leech = False
-                            LOGGER.warning(
-                                "Enable manage chat and delete messages to account of the user session from administration settings!"
-                            )
+                                LOGGER.warning(
+                                    "Enable manage chat and delete messages to account of the user session from administration settings!"
+                                )
                         else:
                             LOGGER.warning(
                                 "Promote the account of the user session to admin in the chat to get the benefit of user transmission!"
