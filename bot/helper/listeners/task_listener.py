@@ -374,11 +374,12 @@ class TaskListener(TaskConfig):
                         INDEX_URL = self.user_dict.get("INDEX_URL", "") or ""
                     elif Config.INDEX_URL:
                         INDEX_URL = Config.INDEX_URL
-                    if INDEX_URL:
-                        share_url = f"{INDEX_URL}findpath?id={dir_id}"
+                    if INDEX_URL and self.name:
+                        safe_name = rutils.quote(self.name.strip("/"))
+                        share_url = f"{INDEX_URL}/{safe_name}"
                         buttons.url_button("⚡ Index Link", share_url)
                         if mime_type.startswith(("image", "video", "audio")):
-                            share_urls = f"{INDEX_URL}findpath?id={dir_id}&view=true"
+                            share_urls = f"{share_url}?a=view"
                             buttons.url_button("🌐 View Link", share_urls)
                 button = buttons.build_menu(2)
             else:
