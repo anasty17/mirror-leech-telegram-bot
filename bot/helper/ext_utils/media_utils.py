@@ -464,11 +464,11 @@ class FFMpeg:
                 output,
             ]
             if ext == "mp4":
-                cmd[14:14] = ["-c:s", "mov_text"]
+                cmd[17:17] = ["-c:s", "mov_text"]
             elif ext == "mkv":
-                cmd[14:14] = ["-c:s", "ass"]
+                cmd[17:17] = ["-c:s", "ass"]
             else:
-                cmd[14:14] = ["-c:s", "copy"]
+                cmd[17:17] = ["-c:s", "copy"]
         else:
             cmd = [
                 "taskset",
@@ -692,8 +692,8 @@ class FFMpeg:
                 out_path,
             ]
             if not multi_streams:
-                del cmd[12]
-                del cmd[12]
+                del cmd[15]
+                del cmd[15]
             if self._listener.is_cancelled:
                 return False
             self._listener.subproc = await create_subprocess_exec(
