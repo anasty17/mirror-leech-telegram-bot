@@ -216,6 +216,7 @@ class TaskListener(TaskConfig):
             self.clear()
 
         if self.name_sub:
+            LOGGER.info(f"Start Name Substitution {up_path}")
             up_path = await self.substitute(up_path)
             if self.is_cancelled:
                 return

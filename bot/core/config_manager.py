@@ -32,7 +32,7 @@ class Config:
     HYBRID_LEECH = False
     HYDRA_IP = ""
     HYDRA_API_KEY = ""
-    NAME_SUBSTITUTE = ""
+    NAME_SUBSTITUTE = r""
     OWNER_ID = 0
     QUEUE_ALL = 0
     QUEUE_DOWNLOAD = 0

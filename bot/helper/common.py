@@ -862,6 +862,8 @@ class TaskConfig:
             for substitution in substitutions:
                 sen = False
                 pattern = substitution[0]
+                if pattern.startswith('"') and pattern.endswith('"'):
+                    pattern = pattern.strip('"')
                 if len(substitution) > 1:
                     if len(substitution) > 2:
                         sen = substitution[2] == "s"
@@ -873,7 +875,7 @@ class TaskConfig:
                 else:
                     res = ""
                 try:
-                    name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
+                    name = sub(pattern, res, name, flags=I if sen else 0)
                 except Exception as e:
                     LOGGER.error(
                         f"Substitute Error: pattern: {pattern} res: {res}. Error: {e}"

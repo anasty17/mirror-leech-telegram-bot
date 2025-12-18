@@ -294,7 +294,12 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         else:
             inc_ex = "None"
 
-        ns_msg = "Added" if user_dict.get("NAME_SUBSTITUTE", False) else "None"
+        if user_dict.get("NAME_SUBSTITUTE", False):
+            ns_msg = "Added"
+        elif "NAME_SUBSTITUTE" not in user_dict and Config.NAME_SUBSTITUTE:
+            ns_msg = "Added"
+        else:
+            ns_msg = "None"
         buttons.data_button(
             "Name Substitute", f"userset {user_id} menu NAME_SUBSTITUTE"
         )
