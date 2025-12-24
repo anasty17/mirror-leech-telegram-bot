@@ -578,7 +578,17 @@ async def edit_bot_settings(client, query):
         await update_buttons(message, data[1])
     elif data[1] == "resetvar":
         await query.answer()
-        value = ""
+        expected_type = type(getattr(Config, data[2]))
+        if expected_type == bool:
+            value = False
+        elif expected_type == int:
+            value = 0
+        elif expected_type == str:
+            value = ""
+        elif expected_type == list:
+            value = []
+        elif expected_type == dict:
+            value = {}
         if data[2] in DEFAULT_VALUES:
             value = DEFAULT_VALUES[data[2]]
             if (
@@ -591,8 +601,6 @@ async def edit_bot_settings(client, query):
                     intervals["status"][key] = SetInterval(
                         value, update_status_message, key
                     )
-        elif data[2] == "RSS_SIZE_LIMIT":
-            value = 0
         elif data[2] == "EXCLUDED_EXTENSIONS":
             excluded_extensions.clear()
             excluded_extensions.extend(["aria2", "!qB"])
