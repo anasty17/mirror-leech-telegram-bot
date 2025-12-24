@@ -10,6 +10,7 @@ from tenacity import (
     RetryError,
 )
 
+from .... import intervals
 from ....core.config_manager import Config
 from ...ext_utils.bot_utils import async_to_sync, SetInterval
 from ...ext_utils.files_utils import get_mime_type
@@ -108,6 +109,11 @@ class GoogleDriveUpload(GoogleDriveHelper):
         new_id = None
         for item in list_dirs:
             current_file_name = ospath.join(input_directory, item)
+            if not ospath.exists(current_file_name):
+                if intervals["stopAll"]:
+                    return
+                LOGGER.error(f"{current_file_name} not exists! Continue uploading!")
+                continue
             if ospath.isdir(current_file_name):
                 current_dir_id = self.create_directory(item, dest_id)
                 new_id = self._upload_dir(current_file_name, current_dir_id)

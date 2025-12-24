@@ -25,6 +25,7 @@ from tenacity import (
     RetryError,
 )
 
+from ... import intervals
 from ...core.config_manager import Config
 from ...core.telegram_manager import TgClient
 from ..ext_utils.bot_utils import sync_to_async
@@ -227,6 +228,8 @@ class TelegramUploader:
                 self._error = ""
                 self._up_path = f_path = ospath.join(dirpath, file_)
                 if not await aiopath.exists(self._up_path):
+                    if intervals["stopAll"]:
+                        return
                     LOGGER.error(f"{self._up_path} not exists! Continue uploading!")
                     continue
                 try:
