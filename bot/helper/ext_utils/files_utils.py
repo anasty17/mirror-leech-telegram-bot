@@ -333,6 +333,14 @@ class SevenZ:
             except:
                 break
             line = line.decode().strip()
+            if "%" in line:
+                perc = line.split("%", 1)[0]
+                if perc.isdigit():
+                    self._percentage = f"{perc}%"
+                    self._processed_bytes = (int(perc) / 100) * self._listener.subsize
+                else:
+                    self._percentage = "0%"
+                continue
             if match := re_search(pattern, line):
                 self._listener.subsize = int(match[1] or match[2] or match[3])
         s = b""
