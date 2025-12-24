@@ -16,6 +16,7 @@ from .. import (
     task_dict_lock,
     task_dict,
     excluded_extensions,
+    included_extensions,
     cpu_eater_lock,
     intervals,
     DOWNLOAD_DIR,
@@ -114,12 +115,14 @@ class TaskConfig:
         self.is_file = False
         self.bot_trans = False
         self.user_trans = False
+        self.is_rss = False
         self.progress = True
         self.ffmpeg_cmds = None
         self.chat_thread_id = None
         self.subproc = None
         self.thumb = None
         self.excluded_extensions = []
+        self.included_extensions = []
         self.files_to_proceed = []
         self.is_super_chat = self.message.chat.type.name in [
             "SUPERGROUP",
@@ -179,6 +182,9 @@ class TaskConfig:
             excluded_extensions
             if "EXCLUDED_EXTENSIONS" not in self.user_dict
             else ["aria2", "!qB"]
+        )
+        self.included_extensions = self.user_dict.get("INCLUDED_EXTENSIONS") or (
+            included_extensions if "INCLUDED_EXTENSIONS" not in self.user_dict else []
         )
         if not self.rc_flags:
             if self.user_dict.get("RCLONE_FLAGS"):
@@ -374,21 +380,37 @@ class TaskConfig:
                     except:
                         chat = None
                     if chat is None:
+                        LOGGER.warning(
+                            "Account of user session can't find the the destination chat!"
+                        )
                         self.user_transmission = False
                         self.hybrid_leech = False
                     else:
-                        uploader_id = TgClient.user.me.id
-                        if chat.type.name not in ["SUPERGROUP", "CHANNEL", "GROUP"]:
+                        if chat.type.name not in [
+                            "SUPERGROUP",
+                            "CHANNEL",
+                            "GROUP",
+                            "FORUM",
+                        ]:
                             self.user_transmission = False
                             self.hybrid_leech = False
-                        else:
-                            member = await chat.get_member(uploader_id)
+                        elif chat.is_admin:
+                            member = await chat.get_member(TgClient.user.me.id)
                             if (
                                 not member.privileges.can_manage_chat
                                 or not member.privileges.can_delete_messages
                             ):
                                 self.user_transmission = False
                                 self.hybrid_leech = False
+                                LOGGER.warning(
+                                    "Enable manage chat and delete messages to account of the user session from administration settings!"
+                                )
+                        else:
+                            LOGGER.warning(
+                                "Promote the account of the user session to admin in the chat to get the benefit of user transmission!"
+                            )
+                            self.user_transmission = False
+                            self.hybrid_leech = False
 
                 if not self.user_transmission or self.hybrid_leech:
                     try:
@@ -401,19 +423,28 @@ class TaskConfig:
                         else:
                             raise ValueError("Chat not found!")
                     else:
-                        uploader_id = self.client.me.id
-                        if chat.type.name in ["SUPERGROUP", "CHANNEL", "GROUP"]:
-                            member = await chat.get_member(uploader_id)
-                            if (
-                                not member.privileges.can_manage_chat
-                                or not member.privileges.can_delete_messages
-                            ):
-                                if not self.user_transmission:
-                                    raise ValueError(
-                                        "You don't have enough privileges in this chat!"
-                                    )
-                                else:
-                                    self.hybrid_leech = False
+                        if chat.type.name in [
+                            "SUPERGROUP",
+                            "CHANNEL",
+                            "GROUP",
+                            "FORUM",
+                        ]:
+                            if not chat.is_admin:
+                                raise ValueError(
+                                    "Bot is not admin in the destination chat!"
+                                )
+                            else:
+                                member = await chat.get_member(self.client.me.id)
+                                if (
+                                    not member.privileges.can_manage_chat
+                                    or not member.privileges.can_delete_messages
+                                ):
+                                    if not self.user_transmission:
+                                        raise ValueError(
+                                            "You don't have enough privileges in this chat! Enable manage chat and delete messages for this bot!"
+                                        )
+                                    else:
+                                        self.hybrid_leech = False
                         else:
                             try:
                                 await self.client.send_chat_action(
@@ -475,6 +506,7 @@ class TaskConfig:
 
     async def get_tag(self, text: list):
         if len(text) > 1 and text[1].startswith("Tag: "):
+            self.is_rss = True
             user_info = text[1].split("Tag: ")
             if len(user_info) >= 3:
                 id_ = user_info[-1]
@@ -830,6 +862,8 @@ class TaskConfig:
             for substitution in substitutions:
                 sen = False
                 pattern = substitution[0]
+                if pattern.startswith('"') and pattern.endswith('"'):
+                    pattern = pattern.strip('"')
                 if len(substitution) > 1:
                     if len(substitution) > 2:
                         sen = substitution[2] == "s"
@@ -841,7 +875,7 @@ class TaskConfig:
                 else:
                     res = ""
                 try:
-                    name = sub(rf"{pattern}", res, name, flags=I if sen else 0)
+                    name = sub(pattern, res, name, flags=I if sen else 0)
                 except Exception as e:
                     LOGGER.error(
                         f"Substitute Error: pattern: {pattern} res: {res}. Error: {e}"

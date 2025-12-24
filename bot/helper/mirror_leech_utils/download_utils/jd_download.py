@@ -159,8 +159,10 @@ async def add_jd_download(listener, path):
                     ],
                 )
             await sleep(1)
+            LOGGER.info(f"JDownloader Collecting Data: {listener.link}")
             while await jdownloader.device.linkgrabber.is_collecting():
-                pass
+                await sleep(0.5)
+            LOGGER.info(f"JDownloader Finished Collecting Data: {listener.link}")
             start_time = time()
             online_packages = []
             corrupted_packages = []
