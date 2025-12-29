@@ -26,7 +26,7 @@ class DbManager:
                 connectTimeoutMS=60000,
                 serverSelectionTimeoutMS=60000,
             )
-            self.db = self._conn.mltb
+            self.db = self._conn[Config.DATABASE_NAME]
             self._return = False
         except PyMongoError as e:
             LOGGER.error(f"Error in DB connection: {e}")
