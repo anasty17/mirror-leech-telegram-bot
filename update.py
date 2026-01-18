@@ -35,25 +35,26 @@ basicConfig(
 def load_config() -> Dict[str, Any]:
     """Load configuration from config module or environment variables."""
     try:
-        # Try to load from config module first
+
         settings = import_module("config")
-        config_file = {key: value.strip() if isinstance(value, str) else value for key, value in vars(settings).items() if not key.startswith("__")}
-        return config_file
+        return {
+            key: value.strip() if isinstance(value, str) else value
+            for key, value in vars(settings).items()
+            if not key.startswith("__")
+        }
     except ModuleNotFoundError:
-        # Fallback to environment variables
         log_info("Config module not found, loading from environment variables...")
         return {
             "BOT_TOKEN": getenv("BOT_TOKEN", ""),
             "DATABASE_URL": getenv("DATABASE_URL", ""),
+            "DATABASE_NAME": getenv("DATABASE_NAME", "mltb"),
             "UPSTREAM_REPO": getenv("UPSTREAM_REPO", ""),
             "UPSTREAM_BRANCH": getenv("UPSTREAM_BRANCH", "master"),
         }
 
 
-# Load configuration
 config_file = load_config()
 
-# Validate BOT_TOKEN
 BOT_TOKEN = config_file.get("BOT_TOKEN", "")
 if not BOT_TOKEN:
     log_error("BOT_TOKEN variable is missing! Exiting now")

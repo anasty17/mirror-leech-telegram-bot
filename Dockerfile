@@ -10,4 +10,6 @@ RUN mltbenv/bin/pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN sed -i 's/\r$//' *.sh
+
 CMD ["bash", "start.sh"]
