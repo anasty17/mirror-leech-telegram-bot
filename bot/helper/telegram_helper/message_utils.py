@@ -72,7 +72,7 @@ async def send_rss(text, chat_id, thread_id):
     except (FloodWait, FloodPremiumWait) as f:
         LOGGER.warning(str(f))
         await sleep(f.value * 1.2)
-        return await send_rss(text)
+        return await send_rss(text, chat_id, thread_id)
     except Exception as e:
         LOGGER.error(str(e))
         return str(e)
