@@ -66,6 +66,7 @@ class TaskConfig:
         self.user = self.message.from_user or self.message.sender_chat
         self.user_id = self.user.id
         self.user_dict = user_data.get(self.user_id, {})
+        self.clone_dump_chats = {}
         self.dir = f"{DOWNLOAD_DIR}{self.mid}"
         self.up_dir = ""
         self.link = ""
@@ -498,6 +499,40 @@ class TaskConfig:
                 )
             )
 
+            self.clone_dump_chats = self.user_dict.get("CLONE_DUMP_CHATS", {}) or (
+                Config.CLONE_DUMP_CHATS
+                if "CLONE_DUMP_CHATS" not in self.user_dict and Config.CLONE_DUMP_CHATS
+                else {}
+            )
+            if self.clone_dump_chats:
+                if isinstance(self.clone_dump_chats, int):
+                    self.clone_dump_chats = [self.clone_dump_chats]
+                elif isinstance(self.clone_dump_chats, str):
+                    if self.clone_dump_chats.startswith(
+                        "["
+                    ) and self.clone_dump_chats.endswith("]"):
+                        self.clone_dump_chats = eval(self.clone_dump_chats)
+                    else:
+                        self.clone_dump_chats = [self.clone_dump_chats]
+                temp_dict = {}
+                for ch in self.clone_dump_chats:
+                    if isinstance(ch, str) and "|" in ch:
+                        ci, ti = map(
+                            lambda x: int(x) if x.lstrip("-").isdigit() else x,
+                            ch.split("|", 1),
+                        )
+                        if isinstance(ci, str) and ci.lower() == "pm":
+                            ci = self.user_id
+                        temp_dict[ci] = {"thread_id": ti, "last_sent_msg": None}
+                    elif isinstance(ch, str):
+                        if ci.lower() == "pm":
+                            ci = self.user_id
+                        else:
+                            ci = int(ch) if ch.lstrip("-").isdigit() else ch
+                        temp_dict[ci] = {"thread_id": None, "last_sent_msg": None}
+                    else:
+                        temp_dict[ci] = {"thread_id": None, "last_sent_msg": None}
+                self.clone_dump_chats = temp_dict
             if self.thumb != "none" and is_telegram_link(self.thumb):
                 msg = (await get_tg_link_message(self.thumb))[0]
                 self.thumb = (

@@ -349,7 +349,7 @@ PASSWORD_ERROR_MESSAGE = """
 
 user_settings_text = {
     "LEECH_SPLIT_SIZE": f"Send Leech split size in bytes or use gb or mb. Example: 40000000 or 2.5gb or 1000mb. IS_PREMIUM_USER: {TgClient.IS_PREMIUM_USER}. Timeout: 60 sec",
-    "LEECH_DUMP_CHAT": """"Send leech destination ID/USERNAME/PM. 
+    "LEECH_DUMP_CHAT": """Send leech destination ID/USERNAME/PM.
 * b:id/@username/pm (b: means leech by bot) (id or username of the chat or write pm means private message so bot will send the files in private to you) when you should use b:(leech by bot)? When your default settings is leech by user and you want to leech by bot for specific task.
 * u:id/@username(u: means leech by user) This incase OWNER added USER_STRING_SESSION.
 * h:id/@username(hybrid leech) h: to upload files by bot and user based on file size.
@@ -390,6 +390,7 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
 4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
 5. FFmpeg Variables in last cmd which is metadata ({title}, {title2}, etc...), you can edit them in usetting
 6. Telegram link for small size inputs like photo to set watermark.""",
+    "CLONE_DUMP_CHATS": "Send List/Int/Str Chat_id/username|thread_id. Example: -100xxxx555|5 or @dumpchat|8 or @mltb_dump or pm or List like: [-100xxx885552|6, '@username', 65585541254, 'pm']",
 }
 
 

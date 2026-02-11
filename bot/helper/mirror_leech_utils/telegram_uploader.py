@@ -7,15 +7,16 @@ from os import walk, path as ospath
 from time import time
 from re import match as re_match, sub as re_sub
 from pyrogram.errors import FloodWait, RPCError, FloodPremiumWait, BadRequest
-from aiofiles.os import (
-    remove,
-    path as aiopath,
-    rename,
-)
 from pyrogram.types import (
     InputMediaVideo,
     InputMediaDocument,
     InputMediaPhoto,
+    ReplyParameters,
+)
+from aiofiles.os import (
+    remove,
+    path as aiopath,
+    rename,
 )
 from tenacity import (
     retry,
@@ -63,6 +64,8 @@ class TelegramUploader:
         self._sent_msg = None
         self._user_session = self._listener.user_transmission
         self._error = ""
+        self._base_msg = None
+        self._files_links = False
 
     async def _upload_progress(self, current, _):
         if self._listener.is_cancelled:
@@ -75,7 +78,7 @@ class TelegramUploader:
         self._processed_bytes += chunk_size
 
     async def _user_settings(self):
-        self._media_group = self._listener.user_dict.get("MEDIA_GROUP") or (
+        self._media_group = self._listener.user_dict.get("MEDIA_GROUP", False) or (
             Config.MEDIA_GROUP
             if "MEDIA_GROUP" not in self._listener.user_dict
             else False
@@ -84,6 +87,11 @@ class TelegramUploader:
             Config.LEECH_FILENAME_PREFIX
             if "LEECH_FILENAME_PREFIX" not in self._listener.user_dict
             else ""
+        )
+        self._files_links = self._listener.user_dict.get("FILES_LINKS", False) or (
+            Config.FILES_LINKS
+            if "FILES_LINKS" not in self._listener.user_dict
+            else False
         )
         if self._thumb != "none" and not await aiopath.exists(self._thumb):
             self._thumb = None
@@ -126,6 +134,7 @@ class TelegramUploader:
                 )
         else:
             self._sent_msg = self._listener.message
+        self.base_msg_id = self._sent_msg.id
         return True
 
     async def _prepare_file(self, file_, dirpath):
@@ -205,10 +214,32 @@ class TelegramUploader:
                 del self._msgs_dict[msg.link]
             await delete_message(msg)
         del self._media_dict[key][subkey]
-        if self._listener.is_super_chat or self._listener.up_dest:
+        if self._files_links and (
+            self._listener.is_super_chat or self._listener.up_dest
+        ):
             for m in msgs_list:
                 self._msgs_dict[m.link] = m.caption
         self._sent_msg = msgs_list[-1]
+        """for ch, ch_data in list(self._listener.clone_dump_chats.items()):
+            if ch_data["last_sent_msg"]:
+                reply_parameters = ReplyParameters(ch_data["last_sent_msg"])
+            else:
+                reply_parameters = None
+            try:
+                res = await TgClient.bot.forward_media_group(
+                    ch,
+                    self._sent_msg.chat.id,
+                    self._sent_msg.id,
+                    ch_data["thread_id"],
+                    True,
+                    hide_sender_name=True,
+                    reply_parameters=reply_parameters,
+                )
+                self._listener.clone_dump_chats[ch]["last_sent_msg"] = res[-1].id
+            except Exception as e:
+                LOGGER.error(
+                    f"Can't forward message to clone dump chat: {ch}. Error: {e}"
+                )"""
 
     async def upload(self):
         await self._user_settings()
@@ -267,10 +298,38 @@ class TelegramUploader:
                     self._last_msg_in_group = False
                     self._last_uploaded = 0
                     await self._upload_file(cap_mono, file_, f_path)
+                    if not self._sent_msg.media_group_id:
+                        for ch, ch_data in list(
+                            self._listener.clone_dump_chats.items()
+                        ):
+                            if ch_data["last_sent_msg"]:
+                                reply_parameters = ReplyParameters(
+                                    ch_data["last_sent_msg"]
+                                )
+                            else:
+                                reply_parameters = None
+                            try:
+                                res = await TgClient.bot.forward_messages(
+                                    ch,
+                                    self._sent_msg.chat.id,
+                                    self._sent_msg.id,
+                                    ch_data["thread_id"],
+                                    True,
+                                    hide_sender_name=True,
+                                    reply_parameters=reply_parameters,
+                                )
+                                self._listener.clone_dump_chats[ch][
+                                    "last_sent_msg"
+                                ] = res.id
+                            except Exception as e:
+                                LOGGER.error(
+                                    f"Can't forward message to clone dump chat: {ch}. Error: {e}"
+                                )
                     if self._listener.is_cancelled:
                         return
                     if (
-                        not self._is_corrupted
+                        self._files_links
+                        and not self._is_corrupted
                         and (self._listener.is_super_chat or self._listener.up_dest)
                         and not self._is_private
                     ):
@@ -433,6 +492,7 @@ class TelegramUploader:
             ):
                 key = "documents" if self._sent_msg.document else "videos"
                 if match := re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", o_path):
+
                     pname = match.group(0)
                     if pname in self._media_dict[key].keys():
                         self._media_dict[key][pname].append(
@@ -447,13 +507,15 @@ class TelegramUploader:
                         await self._send_media_group(pname, key, msgs)
                     else:
                         self._last_msg_in_group = True
-
             if (
                 self._thumb is None
                 and thumb is not None
                 and await aiopath.exists(thumb)
             ):
                 await remove(thumb)
+            if self._base_msg and not self._last_msg_in_group:
+                await delete_message(self._base_msg)
+                self._base_msg = None
         except (FloodWait, FloodPremiumWait) as f:
             LOGGER.warning(str(f))
             await sleep(f.value * 1.3)

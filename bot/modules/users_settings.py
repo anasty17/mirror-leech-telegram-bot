@@ -42,6 +42,7 @@ leech_options = [
     "LEECH_DUMP_CHAT",
     "LEECH_FILENAME_PREFIX",
     "THUMBNAIL_LAYOUT",
+    "CLONE_DUMP_CHATS"
 ]
 rclone_options = ["RCLONE_CONFIG", "RCLONE_PATH", "RCLONE_FLAGS"]
 gdrive_options = ["TOKEN_PICKLE", "GDRIVE_ID", "INDEX_URL"]
@@ -160,6 +161,20 @@ async def get_user_settings(from_user, stype="main"):
         else:
             hybrid_leech = "Disabled"
 
+        if (
+            user_dict.get("FILES_LINKS", False)
+            or "FILES_LINKS" not in user_dict
+            and Config.FILES_LINKS
+        ):
+            fl = "Enabled"
+            buttons.data_button(
+                "Disable FILES LINKS", f"userset {user_id} tog FILES_LINKS f"
+            )
+        else:
+            fl = "Disabled"
+            buttons.data_button(
+                "Enable FILES LINKS", f"userset {user_id} tog FILES_LINKS t"
+            )
         buttons.data_button(
             "Thumbnail Layout", f"userset {user_id} menu THUMBNAIL_LAYOUT"
         )
@@ -169,7 +184,15 @@ async def get_user_settings(from_user, stype="main"):
             thumb_layout = Config.THUMBNAIL_LAYOUT
         else:
             thumb_layout = "None"
-
+        buttons.data_button(
+            "Clone Dump Chats", f"userset {user_id} menu CLONE_DUMP_CHATS"
+        )
+        if user_dict.get("CLONE_DUMP_CHATS", False):
+            cdc = user_dict["CLONE_DUMP_CHATS"]
+        elif "CLONE_DUMP_CHATS" not in user_dict and Config.CLONE_DUMP_CHATS:
+            cdc = Config.CLONE_DUMP_CHATS
+        else:
+            cdc = "None"
         buttons.data_button("Back", f"userset {user_id} back")
         buttons.data_button("Close", f"userset {user_id} close")
 
@@ -181,9 +204,11 @@ Equal Splits is <b>{equal_splits}</b>
 Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>
+Clone Dump Chats is <code>{cdc}</code>
 Leech by <b>{leech_method}</b> session
 HYBRID Leech is <b>{hybrid_leech}</b>
 Thumbnail Layout is <b>{thumb_layout}</b>
+Files Links is <b>{fl}</b>
 """
     elif stype == "rclone":
         buttons.data_button("Rclone Config", f"userset {user_id} menu RCLONE_CONFIG")
@@ -340,7 +365,7 @@ YT-DLP Options is <code>{ytopt}</code>
 
 FFMPEG Commands is <b>{ffc}</b>"""
 
-    return text, buttons.build_menu(1)
+    return text, buttons.build_menu(2)
 
 
 async def update_user_settings(query, stype="main"):
@@ -636,7 +661,7 @@ async def edit_user_settings(client, query):
             text = "Send token.pickle. Timeout: 60 sec"
         buttons.data_button("Back", f"userset {user_id} setevent")
         buttons.data_button("Close", f"userset {user_id} close")
-        await edit_message(message, text, buttons.build_menu(1))
+        await edit_message(message, text, buttons.build_menu(2))
         pfunc = partial(add_file, ftype=data[3])
         await event_handler(
             client,
@@ -673,7 +698,7 @@ async def edit_user_settings(client, query):
             func = remove_one
         buttons.data_button("Back", f"userset {user_id} setevent")
         buttons.data_button("Close", f"userset {user_id} close")
-        await edit_message(message, text, buttons.build_menu(1))
+        await edit_message(message, text, buttons.build_menu(2))
         pfunc = partial(func, option=data[3])
         await event_handler(client, query, pfunc)
         await get_menu(data[3], message, user_id)

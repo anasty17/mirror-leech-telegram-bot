@@ -212,24 +212,24 @@ def serviceaccountfactory(
     create_projects=None,
     max_projects=12,
     enable_services=None,
-    services=["iam", "drive"],
+    services=None,
     create_sas=None,
     delete_sas=None,
     download_keys=None,
 ):
+    if services is None:
+        services = ["iam", "drive"]
     selected_projects = []
     try:
         proj_id = loads(open(credentials, "r").read())["installed"]["project_id"]
     except Exception as e:
-        exit("Error reading credentials file: " + str(e))
+        exit(f"Error reading credentials file: {str(e)}")
 
     creds = None
-    if path and not path:
-        path = "accounts"
     if path and not path.endswith("/"):
         path = path.rstrip("/")
 
-    if path and not path == "accounts":
+    if path and path != "accounts":
         try:
             mkdir(path)
         except OSError as e:
@@ -253,14 +253,14 @@ def serviceaccountfactory(
             with open(token, "wb") as t:
                 dump(creds, t)
         except Exception as e:
-            exit("Error obtaining credentials: " + str(e))
+            exit(f"Error obtaining credentials: {str(e)}")
 
     try:
         cloud = build("cloudresourcemanager", "v1", credentials=creds)
         iam = build("iam", "v1", credentials=creds)
         serviceusage = build("serviceusage", "v1", credentials=creds)
     except Exception as e:
-        exit("Error building service clients: " + str(e))
+        exit(f"Error building service clients: {str(e)}")
 
     projs = None
     while projs is None:
@@ -403,8 +403,7 @@ if __name__ == "__main__":
     if not ospath.exists(args.credentials):
         options = glob("*.json")
         print(
-            "No credentials found at %s. Please enable the Drive API and save the JSON as %s."
-            % (args.credentials, args.credentials)
+            f"No credentials found at {args.credentials}. Please enable the Drive API and save the JSON as {args.credentials}."
         )
         if not options:
             exit("No available credential files found.")
