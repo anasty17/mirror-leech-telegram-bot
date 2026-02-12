@@ -11,7 +11,6 @@ from pyrogram.types import (
     InputMediaVideo,
     InputMediaDocument,
     InputMediaPhoto,
-    ReplyParameters,
 )
 from aiofiles.os import (
     remove,
@@ -122,6 +121,8 @@ class TelegramUploader:
             except Exception as e:
                 await self._listener.on_upload_error(str(e))
                 return False
+            finally:
+                self._base_msg = self._sent_msg
         elif self._user_session:
             self._sent_msg = await TgClient.user.get_messages(
                 chat_id=self._listener.message.chat.id, message_ids=self._listener.mid
@@ -134,7 +135,6 @@ class TelegramUploader:
                 )
         else:
             self._sent_msg = self._listener.message
-        self._base_msg = self._sent_msg
         return True
 
     async def _prepare_file(self, file_, dirpath):
@@ -223,26 +223,6 @@ class TelegramUploader:
         if self._base_msg:
             await delete_message(self._base_msg)
             self._base_msg = None
-        """for ch, ch_data in list(self._listener.clone_dump_chats.items()):
-            if ch_data["last_sent_msg"]:
-                reply_param = ReplyParameters(message_id=ch_data["last_sent_msg"])
-            else:
-                reply_param = None
-            try:
-                res = await TgClient.bot.forward_media_group(
-                    ch,
-                    self._sent_msg.chat.id,
-                    self._sent_msg.id,
-                    ch_data["thread_id"],
-                    True,
-                    hide_sender_name=True,
-                    reply_parameters=reply_param,
-                )
-                self._listener.clone_dump_chats[ch]["last_sent_msg"] = res[-1].id
-            except Exception as e:
-                LOGGER.error(
-                    f"Can't forward message to clone dump chat: {ch}. Error: {e}"
-                )"""
 
     async def upload(self):
         await self._user_settings()
@@ -305,21 +285,14 @@ class TelegramUploader:
                         for ch, ch_data in list(
                             self._listener.clone_dump_chats.items()
                         ):
-                            if ch_data["last_sent_msg"]:
-                                reply_param = ReplyParameters(
-                                    message_id=ch_data["last_sent_msg"]
-                                )
-                            else:
-                                reply_param = None
                             try:
-                                res = await TgClient.bot.forward_messages(
-                                    ch,
-                                    self._sent_msg.chat.id,
-                                    self._sent_msg.id,
-                                    ch_data["thread_id"],
-                                    True,
-                                    hide_sender_name=True,
-                                    reply_parameters=reply_param,
+                                res = await TgClient.bot.copy_message(
+                                    chat_id=ch,
+                                    from_chat_id=self._sent_msg.chat.id,
+                                    message_id=self._sent_msg.id,
+                                    message_thread_id=ch_data["thread_id"],
+                                    disable_notification=True,
+                                    reply_to_message_id=ch_data["last_sent_msg"],
                                 )
                                 self._listener.clone_dump_chats[ch][
                                     "last_sent_msg"
