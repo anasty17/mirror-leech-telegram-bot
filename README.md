@@ -392,6 +392,8 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `THUMBNAIL_LAYOUT` (`Str`): Thumbnail layout (widthxheight, 2x2, 3x3, 2x4, 4x4, ...) of how many photo arranged for the thumbnail.
 
+- `FILES_LINKS` (`Bool`): Enable files link after leech complete, those link(s) will be sent in the same chat where you sent the leech cmd. Default is `False`.
+
 **7. qBittorrent/Aria2c/Sabnzbd**
 
 - `TORRENT_TIMEOUT` (`Int`): Timeout of dead torrents downloading with qBittorrent and Aria2c in seconds.
