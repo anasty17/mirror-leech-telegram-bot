@@ -521,17 +521,15 @@ class TaskConfig:
                             lambda x: int(x) if x.lstrip("-").isdigit() else x,
                             ch.split("|", 1),
                         )
-                        if isinstance(ci, str) and ci.lower() == "pm":
-                            ci = self.user_id
                         temp_dict[ci] = {"thread_id": ti, "last_sent_msg": None}
                     elif isinstance(ch, str):
-                        if ci.lower() == "pm":
+                        if ch.lower() == "pm":
                             ci = self.user_id
                         else:
                             ci = int(ch) if ch.lstrip("-").isdigit() else ch
                         temp_dict[ci] = {"thread_id": None, "last_sent_msg": None}
                     else:
-                        temp_dict[ci] = {"thread_id": None, "last_sent_msg": None}
+                        temp_dict[ch] = {"thread_id": None, "last_sent_msg": None}
                 self.clone_dump_chats = temp_dict
             if self.thumb != "none" and is_telegram_link(self.thumb):
                 msg = (await get_tg_link_message(self.thumb))[0]

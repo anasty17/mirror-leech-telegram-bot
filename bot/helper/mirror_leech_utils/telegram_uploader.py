@@ -134,7 +134,7 @@ class TelegramUploader:
                 )
         else:
             self._sent_msg = self._listener.message
-        self.base_msg_id = self._sent_msg.id
+        self._base_msg = self._sent_msg
         return True
 
     async def _prepare_file(self, file_, dirpath):
@@ -220,11 +220,14 @@ class TelegramUploader:
             for m in msgs_list:
                 self._msgs_dict[m.link] = m.caption
         self._sent_msg = msgs_list[-1]
+        if self._base_msg:
+            await delete_message(self._base_msg)
+            self._base_msg = None
         """for ch, ch_data in list(self._listener.clone_dump_chats.items()):
             if ch_data["last_sent_msg"]:
-                reply_parameters = ReplyParameters(ch_data["last_sent_msg"])
+                reply_param = ReplyParameters(message_id=ch_data["last_sent_msg"])
             else:
-                reply_parameters = None
+                reply_param = None
             try:
                 res = await TgClient.bot.forward_media_group(
                     ch,
@@ -233,7 +236,7 @@ class TelegramUploader:
                     ch_data["thread_id"],
                     True,
                     hide_sender_name=True,
-                    reply_parameters=reply_parameters,
+                    reply_parameters=reply_param,
                 )
                 self._listener.clone_dump_chats[ch]["last_sent_msg"] = res[-1].id
             except Exception as e:
@@ -303,11 +306,11 @@ class TelegramUploader:
                             self._listener.clone_dump_chats.items()
                         ):
                             if ch_data["last_sent_msg"]:
-                                reply_parameters = ReplyParameters(
-                                    ch_data["last_sent_msg"]
+                                reply_param = ReplyParameters(
+                                    message_id=ch_data["last_sent_msg"]
                                 )
                             else:
-                                reply_parameters = None
+                                reply_param = None
                             try:
                                 res = await TgClient.bot.forward_messages(
                                     ch,
@@ -316,7 +319,7 @@ class TelegramUploader:
                                     ch_data["thread_id"],
                                     True,
                                     hide_sender_name=True,
-                                    reply_parameters=reply_parameters,
+                                    reply_parameters=reply_param,
                                 )
                                 self._listener.clone_dump_chats[ch][
                                     "last_sent_msg"
@@ -359,6 +362,9 @@ class TelegramUploader:
                         LOGGER.info(
                             f"While sending media group at the end of task. Error: {e}"
                         )
+        if self._base_msg:
+            await delete_message(self._base_msg)
+            self._base_msg = None
         if self._listener.is_cancelled:
             return
         if self._total_files == 0:
