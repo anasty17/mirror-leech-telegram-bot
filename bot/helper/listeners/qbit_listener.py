@@ -173,13 +173,6 @@ async def _qb_listener():
                     elif (
                         int(tor_info.completion_on.timestamp()) != -1
                         and not qb_torrents[tag]["uploaded"]
-                        and state
-                        in [
-                            "queuedUP",
-                            "stalledUP",
-                            "uploading",
-                            "forcedUP",
-                        ]
                     ):
                         qb_torrents[tag]["uploaded"] = True
                         await _on_download_complete(tor_info)

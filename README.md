@@ -374,6 +374,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 **6. Leech**
 
 - `LEECH_SPLIT_SIZE` (`Int`): Size of split in bytes. Default is `2GB`. Default is `4GB` if your account is premium.
+
 - `AS_DOCUMENT` (`Bool`): Default type of Telegram file upload. Default is `False` mean as media.
 
 - `EQUAL_SPLITS` (`Bool`): Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`.
