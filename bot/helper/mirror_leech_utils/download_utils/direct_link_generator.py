@@ -7,7 +7,7 @@ from os import path as ospath
 from re import findall, match, search
 from requests import Session, post, get
 from requests.adapters import HTTPAdapter
-from time import sleep
+from time import sleep, time
 from urllib.parse import parse_qs, urlparse, quote
 from urllib3.util.retry import Retry
 from uuid import uuid4
@@ -1100,13 +1100,17 @@ def gofile(url):
 
     def __fetch_links(session, _id, folderPath=""):
         _url = f"https://api.gofile.io/contents/{_id}?cache=true"
+        time_slot = int(time()) // 14400
+        raw = f"{user_agent}::en-US::{token}::{time_slot}::gf2026x"
+        wt = sha256(raw.encode()).hexdigest()
         headers = {
             "User-Agent": user_agent,
             "Accept-Encoding": "gzip, deflate, br",
             "Accept": "*/*",
             "Connection": "keep-alive",
             "Authorization": "Bearer" + " " + token,
-            "X-Website-Token": "4fd6sg89d7s6",
+            "X-Website-Token": wt,
+            "X-BL": "en-US"
         }
         if _password:
             _url += f"&password={_password}"
