@@ -43,12 +43,15 @@ class DbManager:
     async def update_deploy_config(self):
         if self._return:
             return
-        settings = import_module("config")
-        config_file = {
-            key: value.strip() if isinstance(value, str) else value
-            for key, value in vars(settings).items()
-            if not key.startswith("__")
-        }
+        try:
+            settings = import_module("config")
+            config_file = {
+                key: value.strip() if isinstance(value, str) else value
+                for key, value in vars(settings).items()
+                if not key.startswith("__")
+            }
+        except ModuleNotFoundError:
+            return
         await self.db.settings.deployConfig.replace_one(
             {"_id": TgClient.ID}, config_file, upsert=True
         )

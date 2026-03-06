@@ -73,20 +73,23 @@ async def load_settings():
     await database.connect()
     if database.db is not None:
         BOT_ID = Config.BOT_TOKEN.split(":", 1)[0]
-        settings = import_module("config")
-        config_file = {
-            key: value.strip() if isinstance(value, str) else value
-            for key, value in vars(settings).items()
-            if not key.startswith("__")
-        }
+        try:
+            settings = import_module("config")
+            config_file = {
+                key: value.strip() if isinstance(value, str) else value
+                for key, value in vars(settings).items()
+                if not key.startswith("__")
+            }
+        except ModuleNotFoundError:
+            config_file = {}
         old_config = await database.db.settings.deployConfig.find_one(
             {"_id": BOT_ID}, {"_id": 0}
         )
-        if old_config is None:
+        if old_config is None and config_file:
             await database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
             )
-        if old_config and old_config != config_file:
+        if old_config and config_file and old_config != config_file:
             LOGGER.info("Replacing existing deploy config in Database")
             await database.db.settings.deployConfig.replace_one(
                 {"_id": BOT_ID}, config_file, upsert=True
