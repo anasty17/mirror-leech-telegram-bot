@@ -784,29 +784,36 @@ def uploadee(url):
 
 
 def terabox(url):
+    
     if "/file/" in url:
         return url
-    api_url = f"https://wdzone-terabox-api.vercel.app/api?url={quote(url)}"
+    
+    api_url = "https://teraboxdl.site/api/proxy"
+    headers = {"Referer": "https://teraboxdl.site/", "User-Agent": user_agent}
+    payload = {"url": url}
+
     try:
         with Session() as session:
-            req = session.get(api_url, headers={"User-Agent": user_agent}).json()
+            req = session.post(api_url, json=payload, headers=headers, timeout=30).json()
     except Exception as e:
         raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}") from e
 
     details = {"contents": [], "title": "", "total_size": 0}
-    if "✅ Status" not in req:
+
+    if req.get("errno") != 0 or not req.get("list"):
         raise DirectDownloadLinkException("ERROR: File not found!")
-    for data in req["📜 Extracted Info"]:
+
+    for data in req["list"]:
         item = {
-            "path": "",
-            "filename": data["📂 Title"],
-            "url": data["🔽 Direct Download Link"],
+            "path": data.get("path", ""),
+            "filename": data["server_filename"],
+            "url": data["direct_link"],
         }
         details["contents"].append(item)
-        size = (data["📏 Size"]).replace(" ", "")
-        size = speed_string_to_bytes(size)
-        details["total_size"] += size
-    details["title"] = req["📜 Extracted Info"][0]["📂 Title"]
+        details["total_size"] += data.get("size", 0)
+
+    details["title"] = req["list"][0]["server_filename"]
+
     if len(details["contents"]) == 1:
         return details["contents"][0]["url"]
     return details
