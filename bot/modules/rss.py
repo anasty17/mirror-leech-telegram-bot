@@ -139,29 +139,33 @@ async def rss_sub(_, message, pre_event):
                 res = await client.get(feed_link)
             html = res.text
             rss_d = feed_parse(html)
-            last_title = rss_d.entries[0]["title"]
-            if rss_d.entries[0].get("size"):
-                size = int(rss_d.entries[0]["size"])
-            elif rss_d.entries[0].get("summary"):
-                summary = rss_d.entries[0]["summary"]
-                matches = size_regex.findall(summary)
-                sizes = [match[0] for match in matches]
-                size = get_size_bytes(sizes[0])
-            else:
-                size = 0
+            last_link = ""
+            last_title = ""
+            size = 0
+            feed_title = rss_d.feed.get("title", "Unknown")
+            if rss_d.entries:
+                last_title = rss_d.entries[0]["title"]
+                if rss_d.entries[0].get("size"):
+                    size = int(rss_d.entries[0]["size"])
+                elif rss_d.entries[0].get("summary"):
+                    summary = rss_d.entries[0]["summary"]
+                    matches = size_regex.findall(summary)
+                    sizes = [match[0] for match in matches]
+                    size = get_size_bytes(sizes[0])
+                try:
+                    last_link = rss_d.entries[0]["links"][1]["href"]
+                except IndexError:
+                    last_link = rss_d.entries[0]["link"]
             msg += "<b>Subscribed!</b>"
             msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
-            msg += f"\n<b>latest record for </b>{rss_d.feed.title}:"
-            msg += (
-                f"\nName: <code>{last_title.replace('>', '').replace('<', '')}</code>"
-            )
-            try:
-                last_link = rss_d.entries[0]["links"][1]["href"]
-            except IndexError:
-                last_link = rss_d.entries[0]["link"]
-            msg += f"\n<b>Link: </b><code>{last_link}</code>"
-            if size:
-                msg += f"\nSize: {get_readable_file_size(size)}"
+            if rss_d.entries:
+                msg += f"\n<b>latest record for </b>{feed_title}:"
+                msg += f"\nName: <code>{last_title.replace('>', '').replace('<', '')}</code>"
+                msg += f"\n<b>Link: </b><code>{last_link}</code>"
+                if size:
+                    msg += f"\nSize: {get_readable_file_size(size)}"
+            else:
+                msg += f"\n<b>Note:</b> Feed is currently empty, will be monitored for new items."
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
             msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
             async with rss_dict_lock:
