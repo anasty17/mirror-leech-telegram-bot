@@ -12,6 +12,7 @@ from re import compile, I
 
 from .. import scheduler, rss_dict, LOGGER
 from ..core.config_manager import Config
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import new_task, arg_parser, get_size_bytes
 from ..helper.ext_utils.status_utils import get_readable_file_size
 from ..helper.ext_utils.db_handler import database
@@ -26,6 +27,7 @@ from ..helper.telegram_helper.message_utils import (
     send_file,
     delete_message,
 )
+
 
 rss_dict_lock = Lock()
 handler_dict = {}
@@ -44,6 +46,119 @@ Title2 -c none -inf none -stv false
 Title3 -c mirror -rcf xxx -up xxx -z pswd -stv false
 Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
 Timeout: 60 sec. Argument -c for command and arguments"""
+
+
+def _find_command_filters(flt):
+    """Recursively extract CommandFilter instances from a composite filter tree."""
+    # Check if this filter has .commands (it's a CommandFilter)
+    if hasattr(flt, "commands"):
+        yield flt
+    # Traverse AndFilter / OrFilter composites
+    for attr in ("base", "other"):
+        if child := getattr(flt, attr, None):
+            yield from _find_command_filters(child)
+
+
+def _build_command_map() -> dict:
+    """Build a mapping from command name -> handler callback by inspecting
+    the bot's registered message handlers.
+
+    This stays in sync automatically — any handler registered via
+    add_handler() is discovered here.
+    """
+    from pyrogram.handlers import MessageHandler
+
+    mapping = {}
+    for group in TgClient.bot.dispatcher.groups.values():
+        for handler in group:
+            if not isinstance(handler, MessageHandler):
+                continue
+            if handler.filters is None:
+                continue
+            for cmd_filter in _find_command_filters(handler.filters):
+                for cmd in cmd_filter.commands:
+                    mapping[cmd] = handler.callback
+    return mapping
+
+
+_command_map: dict | None = None
+
+
+def _get_command_map() -> dict:
+    global _command_map
+    if _command_map is None:
+        _command_map = _build_command_map()
+    return _command_map
+
+
+def _resolve_command(command_str: str):
+    """Resolve a command string like 'ql -doc' into its handler function.
+
+    Returns the handler function, or None if not recognized.
+    Handles commands with or without CMD_SUFFIX.
+    """
+    cmd_name = command_str.strip().lstrip("/").split(maxsplit=1)[0]
+    mapping = _get_command_map()
+    handler = mapping.get(cmd_name)
+    if handler is None and Config.CMD_SUFFIX:
+        # Try with suffix appended (e.g. user stored "ql" but commands are "qlbot")
+        handler = mapping.get(cmd_name + Config.CMD_SUFFIX)
+    if handler is None:
+        LOGGER.warning(f"RSS: Unknown command '{cmd_name}' (from '{command_str}')")
+    return handler
+
+
+async def _start_rss_download(
+    url: str,
+    command: str,
+    user_id: int,
+    rss_chat_id,
+    rss_topic_id,
+    item_title: str,
+) -> None:
+    """Send a notification to RSS_CHAT and start the download directly."""
+    handler = _resolve_command(command)
+    if handler is None:
+        LOGGER.error(f"RSS: Cannot start download, unknown command: {command}")
+        return
+
+    # Build the command text that the handler will parse.
+    # command is like "ql -doc" or "mirror -up remote:path".
+    # The handler expects message.text = "/cmd url [args]"
+    cmd_text = f"/{command.strip().lstrip('/')}"
+    # Insert URL after the command name
+    parts = cmd_text.split(maxsplit=1)
+    if len(parts) > 1:
+        cmd_text = f"{parts[0]} {url} {parts[1]}"
+    else:
+        cmd_text = f"{parts[0]} {url}"
+
+    # Resolve the user who subscribed to this feed
+    try:
+        user = await TgClient.bot.get_users(user_id)
+    except Exception as e:
+        LOGGER.error(
+            f"RSS: Failed to get user {user_id}, "
+            f"cannot start download for '{item_title}': {e}"
+        )
+        return
+
+    # Send notification to RSS_CHAT — this also provides the Message object
+    # that the download pipeline uses for posting status/results
+    notify_text = f"<b>RSS Download Started</b>\n<code>{escape_html(item_title)}</code>"
+    msg = await send_rss(notify_text, rss_chat_id, rss_topic_id)
+    if isinstance(msg, str):
+        LOGGER.error(f"RSS: Failed to send to RSS_CHAT: {msg}")
+        return
+
+    # Mutate the message to carry the command text and user identity
+    msg.text = cmd_text
+    msg.from_user = user
+    msg._rss_trigger = True
+
+    # Invoke the same handler function used by the bot's message handlers
+    # (e.g., mirror, leech, qb_leech, ytdl, etc.)
+    await handler(TgClient.bot, msg)
 
 
 # ======================== Helper Functions ========================
@@ -881,23 +996,27 @@ async def _process_feed_entry(
     if not check_filters(item_title, data):
         return True
 
-    # Build and send message
+    # Handle feed item
     if command := data["command"]:
+        # Auto-download mode: start download directly
         if size and Config.RSS_SIZE_LIMIT and Config.RSS_SIZE_LIMIT < size:
             return True
-        cmd = command.split(maxsplit=1)
-        cmd.insert(1, url)
-        feed_msg = " ".join(cmd)
-        if not feed_msg.startswith("/"):
-            feed_msg = f"/{feed_msg}"
+        await _start_rss_download(
+            url=url,
+            command=command,
+            user_id=user,
+            rss_chat_id=rss_chat_id,
+            rss_topic_id=rss_topic_id,
+            item_title=item_title,
+        )
     else:
+        # Info-only mode: just post item details to RSS_CHAT
         feed_msg = f"<b>Name: </b><code>{escape_html(item_title)}</code>"
         feed_msg += f"\n\n<b>Link: </b><code>{url}</code>"
         if size:
             feed_msg += f"\n<b>Size: </b>{get_readable_file_size(size)}"
-
-    feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
-    await send_rss(feed_msg, rss_chat_id, rss_topic_id)
+        feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
+        await send_rss(feed_msg, rss_chat_id, rss_topic_id)
     return True
 
 
@@ -952,7 +1071,7 @@ async def _process_feed(
 async def rss_monitor() -> None:
     chat = Config.RSS_CHAT
     if not chat:
-        LOGGER.warning("RSS_CHAT not added! Shutting down rss scheduler...")
+        LOGGER.warning("RSS_CHAT not configured! Shutting down rss scheduler...")
         scheduler.shutdown(wait=False)
         return
 
