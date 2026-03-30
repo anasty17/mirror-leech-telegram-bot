@@ -337,6 +337,14 @@ Stop Duplicate is <b>{sd_msg}</b>"""
         else:
             ytopt = "None"
 
+        buttons.data_button("Gallery-DL Options", f"userset {user_id} menu GALLERY_DL_OPTIONS")
+        if user_dict.get("GALLERY_DL_OPTIONS", False):
+            gdlopt = user_dict["GALLERY_DL_OPTIONS"]
+        elif "GALLERY_DL_OPTIONS" not in user_dict and Config.GALLERY_DL_OPTIONS:
+            gdlopt = Config.GALLERY_DL_OPTIONS
+        else:
+            gdlopt = "None"
+
         buttons.data_button("FFmpeg Cmds", f"userset {user_id} menu FFMPEG_CMDS")
         if user_dict.get("FFMPEG_CMDS", False):
             ffc = "Exists"
@@ -362,6 +370,8 @@ Excluded Extensions is <code>{ex_ex}</code>
 Included Extensions is <code>{inc_ex}</code>
 
 YT-DLP Options is <code>{ytopt}</code>
+
+Gallery-DL Options is <code>{gdlopt}</code>
 
 FFMPEG Commands is <b>{ffc}</b>"""
 
@@ -462,7 +472,7 @@ async def set_option(_, message, option):
             value.append(x.strip().lower())
     elif option == "INDEX_URL":
         value = value
-    elif option in ["UPLOAD_PATHS", "FFMPEG_CMDS", "YT_DLP_OPTIONS"]:
+    elif option in ["UPLOAD_PATHS", "FFMPEG_CMDS", "YT_DLP_OPTIONS", "GALLERY_DL_OPTIONS"]:
         if value.startswith("{") and value.endswith("}"):
             try:
                 value = eval(value)
@@ -503,7 +513,7 @@ async def get_menu(option, message, user_id):
     elif option in user_dict and user_dict[option]:
         if option == "THUMBNAIL":
             buttons.data_button("View", f"userset {user_id} view {option}")
-        elif option in ["YT_DLP_OPTIONS", "UPLOAD_PATHS"]:
+        elif option in ["YT_DLP_OPTIONS", "UPLOAD_PATHS", "GALLERY_DL_OPTIONS"]:
             buttons.data_button("Add one", f"userset {user_id} addone {option}")
             buttons.data_button("Remove one", f"userset {user_id} rmone {option}")
     if option in leech_options:

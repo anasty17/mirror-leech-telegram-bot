@@ -314,6 +314,22 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         MessageHandler(
+            gallery_dl,
+            filters=command(BotCommands.GallerydlCommand, case_sensitive=True)
+            & CustomFilters.authorized,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
+            gallery_dl_leech,
+            filters=command(
+                BotCommands.GallerydlLeechCommand, case_sensitive=True
+            )
+            & CustomFilters.authorized,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
             hydra_search,
             filters=command(BotCommands.NzbSearchCommand, case_sensitive=True)
             & CustomFilters.authorized,

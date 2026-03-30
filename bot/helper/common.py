@@ -93,6 +93,7 @@ class TaskConfig:
         self.is_jd = False
         self.is_clone = False
         self.is_ytdlp = False
+        self.is_gallerydl = False
         self.equal_splits = False
         self.user_transmission = False
         self.hybrid_leech = False
@@ -210,12 +211,12 @@ class TaskConfig:
                         self.link = f"mtp:{self.link}"
                     await self.is_token_exists(self.link, "dl")
         elif self.link == "rcl":
-            if not self.is_ytdlp and not self.is_jd:
+            if not self.is_ytdlp and not self.is_jd and not self.is_gallerydl:
                 self.link = await RcloneList(self).get_rclone_path("rcd")
                 if not is_rclone_path(self.link):
                     raise ValueError(self.link)
         elif self.link == "gdl":
-            if not self.is_ytdlp and not self.is_jd:
+            if not self.is_ytdlp and not self.is_jd and not self.is_gallerydl:
                 self.link = await GoogleDriveList(self).get_target_id("gdd")
                 if not is_gdrive_id(self.link):
                     raise ValueError(self.link)
