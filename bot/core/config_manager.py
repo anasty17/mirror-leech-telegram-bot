@@ -22,6 +22,7 @@ class Config:
     FFMPEG_CMDS = {}
     FILELION_API = ""
     FILES_LINKS = False
+    GALLERY_DL_OPTIONS = {}
     GDRIVE_ID = ""
     INCOMPLETE_TASK_NOTIFIER = False
     INDEX_URL = ""
