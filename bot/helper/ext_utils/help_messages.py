@@ -21,6 +21,36 @@ yt = """<b>Send link along with command line</b>:
 Check here all supported <a href='https://github.com/yt-dlp/yt-dlp/blob/master/supportedsites.md'>SITES</a>
 Check all yt-dlp api options from this <a href='https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#L212'>FILE</a> or use this <a href='https://t.me/mltb_official_channel/177'>script</a> to convert cli arguments to api options."""
 
+gdl = """<b>Send link along with command line</b>:
+
+/cmd link
+<b>By replying to link</b>:
+/cmd -n new name -z password -opt {"key": "value"}
+
+Check here all supported <a href='https://github.com/mikf/gallery-dl/blob/master/docs/supportedsites.md'>SITES</a>
+Check gallery-dl configuration options from this <a href='https://github.com/mikf/gallery-dl/blob/master/docs/configuration.rst'>FILE</a>."""
+
+gdl_opt = """<b>Options</b>: -opt
+
+/cmd link -opt {"cookies": "cookies.txt", "proxy": "http://proxy:8080", "postprocessors": [{"name": "ugoira", "extension": "webm", "ffmpeg-args": ["-c:v", "libvpx-vp9"]}], "image-range": "1-50", "extractor": {"pixiv": {"username": "user", "password": "pass"}, "twitter": {"cookies": {"auth_token": "abc"}}}}
+
+Supported options include:
+- <b>cookies</b>: path to cookies file or dict of site cookies
+- <b>proxy</b>: proxy URL
+- <b>username/password</b>: authentication credentials (dict with site keys)
+- <b>api-key</b>: API keys for sites (dict with site keys)
+- <b>oauth</b>: OAuth tokens (dict with site keys)
+- <b>extractor</b>: site-specific extractor options (dict)
+- <b>downloader</b>: downloader options (dict)
+- <b>postprocessors</b>: list of post-processor configs (e.g. ugoira)
+- <b>image-range/chapter-range</b>: download range filter
+- <b>image-filter/chapter-filter</b>: filter expression
+- <b>filename</b>: custom filename format
+- <b>directory</b>: custom directory format
+- <b>archive</b>: path to archive DB to skip duplicates
+- <b>sleep/sleep-request</b>: delay between requests
+- <b>config-files</b>: path(s) to gallery-dl JSON config files"""
+
 clone = """Send Gdrive|Gdot|Filepress|Filebee|Appdrive|Gdflix link or rclone path along with command or by replying to the link/rc_path by command.
 Use -sync to use sync method in rclone. Example: /cmd rcl/rclone_path -up rcl/rclone_path/rc -sync"""
 
@@ -278,6 +308,29 @@ YT_HELP_DICT = {
     "FFmpeg-Cmds": ffmpeg_cmds,
 }
 
+GDL_HELP_DICT = {
+    "main": gdl,
+    "New-Name": f"{new_name}\nNote: Don't add file extension",
+    "Zip": zip_arg,
+    "Options": gdl_opt,
+    "Multi-Link": multi_link,
+    "Same-Directory": same_dir,
+    "Thumb": thumb,
+    "Split-Size": split_size,
+    "Upload-Destination": upload,
+    "Rclone-Flags": rcf,
+    "Bulk": bulk,
+    "Sample-Video": sample_video,
+    "Screenshot": screenshot,
+    "Convert-Media": convert_media,
+    "Force-Start": force_start,
+    "Name-Substitute": name_sub,
+    "TG-Transmission": transmission,
+    "Thumb-Layout": thumbnail_layout,
+    "Leech-Type": leech_as,
+    "FFmpeg-Cmds": ffmpeg_cmds,
+}
+
 MIRROR_HELP_DICT = {
     "main": mirror,
     "New-Name": new_name,
@@ -390,6 +443,10 @@ Here I will explain how to use mltb.* which is reference to files you want to wo
 4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
 5. FFmpeg Variables in last cmd which is metadata ({title}, {title2}, etc...), you can edit them in usetting
 6. Telegram link for small size inputs like photo to set watermark.""",
+    "GALLERY_DL_OPTIONS": """Send dict of Gallery-DL Options. Timeout: 60 sec
+Format: {key: value, key: value, key: value}.
+Example: {"cookies": "cookies.txt", "proxy": "http://proxy:8080", "image-range": "1-50", "extractor": {"pixiv": {"username": "user", "password": "pass"}}}
+Check gallery-dl configuration options from this <a href='https://github.com/mikf/gallery-dl/blob/master/docs/configuration.rst'>FILE</a>.""",
     "CLONE_DUMP_CHATS": "Send List/Int/Str Chat_id/username|thread_id. Example: -100xxxx555|5 or @dumpchat|8 or @mltb_dump or pm or List like: [-100xxx885552|6, '@username', 65585541254, 'pm']",
 }
 
@@ -401,11 +458,13 @@ NOTE: Try each command without any argument to see more detalis.
 /{BotCommands.JdMirrorCommand[0]} or /{BotCommands.JdMirrorCommand[1]}: Start Mirroring to cloud using JDownloader.
 /{BotCommands.NzbMirrorCommand[0]} or /{BotCommands.NzbMirrorCommand[1]}: Start Mirroring to cloud using Sabnzbd.
 /{BotCommands.YtdlCommand[0]} or /{BotCommands.YtdlCommand[1]}: Mirror yt-dlp supported link.
+/{BotCommands.GallerydlCommand[0]} or /{BotCommands.GallerydlCommand[1]}: Mirror gallery-dl supported link.
 /{BotCommands.LeechCommand[0]} or /{BotCommands.LeechCommand[1]}: Start leeching to Telegram.
 /{BotCommands.QbLeechCommand[0]} or /{BotCommands.QbLeechCommand[1]}: Start leeching using qBittorrent.
 /{BotCommands.JdLeechCommand[0]} or /{BotCommands.JdLeechCommand[1]}: Start leeching using JDownloader.
 /{BotCommands.NzbLeechCommand[0]} or /{BotCommands.NzbLeechCommand[1]}: Start leeching using Sabnzbd.
 /{BotCommands.YtdlLeechCommand[0]} or /{BotCommands.YtdlLeechCommand[1]}: Leech yt-dlp supported link.
+/{BotCommands.GallerydlLeechCommand[0]} or /{BotCommands.GallerydlLeechCommand[1]}: Leech gallery-dl supported link.
 /{BotCommands.CloneCommand} [drive_url]: Copy file/folder to Google Drive.
 /{BotCommands.CountCommand} [drive_url]: Count file/folder of Google Drive.
 /{BotCommands.DeleteCommand} [drive_url]: Delete file/folder from Google Drive (Only Owner & Sudo).

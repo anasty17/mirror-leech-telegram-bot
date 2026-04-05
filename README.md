@@ -117,6 +117,15 @@ programming in Python.
 </details>
 
 <details>
+  <summary><h5>Gallery-dl</h5></summary>
+
+- Mirror and leech from gallery-dl supported sites
+- Supports custom gallery-dl options globally, per user, and per task
+- Supports cookies and config files for authenticated or advanced downloads
+
+</details>
+
+<details>
   <summary><h5>JDownloader</h5></summary>
 
 - Synchronize Settings (global option)
