@@ -1,6 +1,7 @@
 from ..helper.ext_utils.bot_utils import COMMAND_USAGE, new_task
 from ..helper.ext_utils.help_messages import (
     YT_HELP_DICT,
+    GDL_HELP_DICT,
     MIRROR_HELP_DICT,
     CLONE_HELP_DICT,
 )
@@ -22,6 +23,8 @@ async def arg_usage(_, query):
             )
         elif data[2] == "y":
             await edit_message(message, COMMAND_USAGE["yt"][0], COMMAND_USAGE["yt"][1])
+        elif data[2] == "g":
+            await edit_message(message, COMMAND_USAGE["gdl"][0], COMMAND_USAGE["gdl"][1])
         elif data[2] == "c":
             await edit_message(
                 message, COMMAND_USAGE["clone"][0], COMMAND_USAGE["clone"][1]
@@ -36,6 +39,11 @@ async def arg_usage(_, query):
         buttons.data_button("Back", "help back y")
         button = buttons.build_menu()
         await edit_message(message, YT_HELP_DICT[data[2]], button)
+    elif data[1] == "gdl":
+        buttons = ButtonMaker()
+        buttons.data_button("Back", "help back g")
+        button = buttons.build_menu()
+        await edit_message(message, GDL_HELP_DICT[data[2]], button)
     elif data[1] == "clone":
         buttons = ButtonMaker()
         buttons.data_button("Back", "help back c")

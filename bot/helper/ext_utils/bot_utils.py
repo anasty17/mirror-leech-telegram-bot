@@ -15,6 +15,7 @@ from ..telegram_helper.button_build import ButtonMaker
 from .telegraph_helper import telegraph
 from .help_messages import (
     YT_HELP_DICT,
+    GDL_HELP_DICT,
     MIRROR_HELP_DICT,
     CLONE_HELP_DICT,
 )
@@ -51,6 +52,7 @@ def _build_command_usage(help_dict, command_key):
 def create_help_buttons():
     _build_command_usage(MIRROR_HELP_DICT, "mirror")
     _build_command_usage(YT_HELP_DICT, "yt")
+    _build_command_usage(GDL_HELP_DICT, "gdl")
     _build_command_usage(CLONE_HELP_DICT, "clone")
 
 
