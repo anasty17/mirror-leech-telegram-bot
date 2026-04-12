@@ -12,6 +12,7 @@ from re import compile, I
 
 from .. import scheduler, rss_dict, LOGGER
 from ..core.config_manager import Config
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import new_task, arg_parser, get_size_bytes
 from ..helper.ext_utils.status_utils import get_readable_file_size
 from ..helper.ext_utils.db_handler import database
@@ -36,6 +37,95 @@ headers = {
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
 }
+
+
+def _find_command_filters(flt):
+    """Recursively extract CommandFilter instances from a composite filter tree."""
+    if hasattr(flt, "commands"):
+        yield flt
+    for attr in ("base", "other"):
+        if child := getattr(flt, attr, None):
+            yield from _find_command_filters(child)
+
+
+def _build_command_map():
+    """Build a mapping from command name -> handler callback by inspecting
+    the bot's registered message handlers."""
+    mapping = {}
+    for group in TgClient.bot.dispatcher.groups.values():
+        for handler in group:
+            if not isinstance(handler, MessageHandler):
+                continue
+            if handler.filters is None:
+                continue
+            for cmd_filter in _find_command_filters(handler.filters):
+                for cmd in cmd_filter.commands:
+                    mapping[cmd] = handler.callback
+    return mapping
+
+
+_command_map = None
+
+
+def _get_command_map():
+    global _command_map
+    if _command_map is None:
+        _command_map = _build_command_map()
+    return _command_map
+
+
+def _resolve_command(command_str):
+    """Resolve a command string like 'ql -doc' into its handler function.
+
+    Returns the handler function, or None if not recognized.
+    Handles commands with or without CMD_SUFFIX.
+    """
+    cmd_name = command_str.strip().lstrip("/").split(maxsplit=1)[0]
+    mapping = _get_command_map()
+    handler = mapping.get(cmd_name)
+    if handler is None and Config.CMD_SUFFIX:
+        handler = mapping.get(cmd_name + Config.CMD_SUFFIX)
+    if handler is None:
+        LOGGER.warning(f"RSS: Unknown command '{cmd_name}' (from '{command_str}')")
+    return handler
+
+
+async def _start_rss_download(
+    url, command, user_id, rss_chat_id, rss_topic_id, item_title
+):
+    """Send a notification to RSS_CHAT and start the download directly."""
+    handler = _resolve_command(command)
+    if handler is None:
+        LOGGER.error(f"RSS: Cannot start download, unknown command: {command}")
+        return
+
+    cmd_text = f"/{command.strip().lstrip('/')}"
+    parts = cmd_text.split(maxsplit=1)
+    if len(parts) > 1:
+        cmd_text = f"{parts[0]} {url} {parts[1]}"
+    else:
+        cmd_text = f"{parts[0]} {url}"
+
+    try:
+        user = await TgClient.bot.get_users(user_id)
+    except Exception as e:
+        LOGGER.error(
+            f"RSS: Failed to get user {user_id}, "
+            f"cannot start download for '{item_title}': {e}"
+        )
+        return
+
+    notify_text = f"<b>RSS Download Started</b>\n<code>{item_title.replace('>', '').replace('<', '')}</code>"
+    msg = await send_rss(notify_text, rss_chat_id, rss_topic_id)
+    if isinstance(msg, str):
+        LOGGER.error(f"RSS: Failed to send to RSS_CHAT: {msg}")
+        return
+
+    msg.text = cmd_text
+    msg.from_user = user
+    msg._rss_trigger = True
+
+    await handler(TgClient.bot, msg)
 
 
 async def rss_menu(event):
@@ -165,7 +255,7 @@ async def rss_sub(_, message, pre_event):
                 if size:
                     msg += f"\nSize: {get_readable_file_size(size)}"
             else:
-                msg += f"\n<b>Note:</b> Feed is currently empty, will be monitored for new items."
+                msg += "\n<b>Note:</b> Feed is currently empty, will be monitored for new items."
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
             msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
             async with rss_dict_lock:
@@ -788,20 +878,21 @@ async def rss_monitor():
                         ):
                             feed_count += 1
                             continue
-                        cmd = command.split(maxsplit=1)
-                        cmd.insert(1, url)
-                        feed_msg = " ".join(cmd)
-                        if not feed_msg.startswith("/"):
-                            feed_msg = f"/{feed_msg}"
+                        await _start_rss_download(
+                            url=url,
+                            command=command,
+                            user_id=user,
+                            rss_chat_id=rss_chat_id,
+                            rss_topic_id=rss_topic_id,
+                            item_title=item_title,
+                        )
                     else:
                         feed_msg = f"<b>Name: </b><code>{item_title.replace('>', '').replace('<', '')}</code>"
                         feed_msg += f"\n\n<b>Link: </b><code>{url}</code>"
                         if size:
                             feed_msg += f"\n<b>Size: </b>{get_readable_file_size(size)}"
-                    feed_msg += (
-                        f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
-                    )
-                    await send_rss(feed_msg, rss_chat_id, rss_topic_id)
+                        feed_msg += f"\n<b>Tag: </b><code>{data['tag']}</code> <code>{user}</code>"
+                        await send_rss(feed_msg, rss_chat_id, rss_topic_id)
                     feed_count += 1
                 async with rss_dict_lock:
                     if user not in rss_dict or not rss_dict[user].get(title, False):
