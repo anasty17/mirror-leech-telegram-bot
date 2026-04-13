@@ -115,8 +115,7 @@ async def _start_rss_download(
         )
         return
 
-    notify_text = f"<b>RSS Download Started</b>\n<code>{item_title.replace('>', '').replace('<', '')}</code>"
-    msg = await send_rss(notify_text, rss_chat_id, rss_topic_id)
+    msg = await send_rss(cmd_text, rss_chat_id, rss_topic_id)
     if isinstance(msg, str):
         LOGGER.error(f"RSS: Failed to send to RSS_CHAT: {msg}")
         return
