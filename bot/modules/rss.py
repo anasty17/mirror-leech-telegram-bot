@@ -143,13 +143,32 @@ async def rss_menu(event):
         buttons.data_button("Resume All", f"rss allresume {user_id}")
         buttons.data_button("Unsubscribe All", f"rss allunsub {user_id}")
         buttons.data_button("Delete User", f"rss deluser {user_id}")
+        buttons.data_button("Use This Chat", f"rss setchat {user_id}")
         if scheduler.running:
             buttons.data_button("Shutdown Rss", f"rss shutdown {user_id}")
         else:
             buttons.data_button("Start Rss", f"rss start {user_id}")
     buttons.data_button("Close", f"rss close {user_id}")
     button = buttons.build_menu(2)
-    msg = f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}"
+    chat = Config.RSS_CHAT
+    if chat:
+        if isinstance(chat, int):
+            rss_id = chat
+        elif "|" in chat:
+            rss_id = chat.split("|", 1)[0]
+            rss_id = int(rss_id) if rss_id.lstrip("-").isdigit() else rss_id
+        elif chat.lstrip("-").isdigit():
+            rss_id = int(chat)
+        else:
+            rss_id = chat
+        event_chat = getattr(event, "chat", None) or event.message.chat
+        if event_chat.id == rss_id:
+            chat_display = "This Chat"
+        else:
+            chat_display = f"<code>{chat}</code>"
+    else:
+        chat_display = "<b>Not Set!</b>"
+    msg = f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}\nRSS Chat: {chat_display}"
     return msg, button
 
 
@@ -750,6 +769,23 @@ Timeout: 60 sec. Argument -c for command and arguments
             await update_rss_menu(query)
         else:
             await query.answer(text="Already Running!", show_alert=True)
+    elif data[1] == "setchat":
+        chat_id = message.chat.id
+        topic_msg = getattr(message, "topic_message", False)
+        thread_id = message.message_thread_id if topic_msg else None
+        if thread_id:
+            chat_value = f"{chat_id}|{thread_id}"
+        else:
+            chat_value = str(chat_id)
+        old_value = Config.RSS_CHAT
+        Config.set("RSS_CHAT", chat_value)
+        await database.update_config({"RSS_CHAT": chat_value})
+        await query.answer(text=f"RSS_CHAT set to {chat_value}", show_alert=True)
+        if not scheduler.running:
+            add_job()
+            scheduler.start()
+        if str(old_value) != chat_value:
+            await update_rss_menu(query)
 
 
 async def rss_monitor():
