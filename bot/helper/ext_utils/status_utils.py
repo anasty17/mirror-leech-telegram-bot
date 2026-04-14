@@ -5,6 +5,7 @@ from asyncio import iscoroutinefunction, gather
 
 from ... import task_dict, task_dict_lock, bot_start_time, status_dict, DOWNLOAD_DIR
 from ...core.config_manager import Config
+from pyrogram.types import InlineKeyboardButton
 from ..telegram_helper.button_build import ButtonMaker
 from ..telegram_helper.bot_commands import BotCommands
 
@@ -174,6 +175,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         status_dict[sid]["page_no"] = page_no
     start_position = (page_no - 1) * STATUS_LIMIT
 
+    task_gids = []
     for index, task in enumerate(
         tasks[start_position : STATUS_LIMIT + start_position], start=1
     ):
@@ -227,6 +229,10 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"\n<b>Size: </b>{task.size()}"
         msg += f"\n<code>/{BotCommands.CancelTaskCommand[1]} {task.gid()}</code>\n\n"
+        task_name = task.name()
+        if len(task_name) > 25:
+            task_name = task_name[:25] + "…"
+        task_gids.append((task_name, task.gid()))
 
     if len(msg) == 0:
         if status == "All":
@@ -249,6 +255,17 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
                 buttons.data_button(label, f"status {sid} st {status_value}")
     buttons.data_button("♻️", f"status {sid} ref", position="header")
     button = buttons.build_menu(8)
+    if task_gids:
+        cancel_rows = [
+            [
+                InlineKeyboardButton(
+                    text=f"❌ {name}",
+                    callback_data=f"status {sid} cancel {gid}",
+                )
+            ]
+            for name, gid in task_gids
+        ]
+        button.inline_keyboard.extend(cancel_rows)
     msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
     msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - bot_start_time)}"
     return msg, button
