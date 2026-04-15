@@ -443,8 +443,9 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `RSS_SIZE_LIMIT` (`INT`): Item size limit in bytes. Default is `0`.
 
-- `RSS_CHAT` (`Int`|`Str`): Chat `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID` where RSS download results and notifications are posted. The bot must be a member of this chat. Can be a group, supergroup, or user chat. No channel/linked-group setup or `USER_SESSION_STRING` is required. When a command is configured for a subscription (e.g., `-c ql -doc`), downloads start automatically and results are posted here. Without a command, only feed info (name, link, size) is posted.
-    - **RSS NOTES**: `RSS_CHAT` is required, otherwise the RSS monitor will not work. If `DATABASE_URL` is not added you will miss feeds while the bot is offline.
+- `RSS_CHAT`: The RSS monitor requires a chat to post results and notifications. The bot must be a member of this chat. When a command is configured for a subscription (e.g., `-c ql -doc`), downloads start automatically and results are posted here. Without a command, only feed info (name, link, size) is posted.
+    - **Setup**: Run `/rss` in the desired chat and click **Use This Chat** (sudo only). This auto-detects the chat ID and topic. For channels, set the chat ID manually via config/env/bot settings using the format: `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID`.
+    - **Note**: Without `DATABASE_URL`, feeds received while the bot is offline will be missed.
 
 **11. Queue System**
 
