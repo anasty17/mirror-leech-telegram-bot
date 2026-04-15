@@ -415,7 +415,7 @@ class FFMpeg:
                     prefix = ""
             else:
                 prefix = f"ffmpeg{index}."
-            output = f"{dir}/{prefix}{output_file.replace("mltb", base_name)}{ext}"
+            output = f"{dir}/{prefix}{output_file.replace('mltb', base_name)}{ext}"
             outputs.append(output)
             ffmpeg[index] = output
         if self._listener.is_cancelled:
