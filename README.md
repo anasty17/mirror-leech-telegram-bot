@@ -52,9 +52,9 @@ programming in Python.
 - Equal split size settings (global and user option)
 - Ability to leech split file parts in a media group (global and user option)
 - Download restricted messages (document or link) by tg private/public/super links (task option)
-- Choose transfer by bot or user session incase you have a premium plan (global, user option and task option)
+- Choose transfer by bot or user session in case you have a premium plan (global, user option and task option)
 - Mix upload between user and bot session with respect to file size (global, user option and task option)
-- Upload with custom layout multiple thubnmail (global, user option and task option)
+- Upload with custom layout multiple thumbnail (global, user option and task option)
 - Topics support
 
 </details>
@@ -142,9 +142,9 @@ programming in Python.
 - Store bot settings
 - Store user settings including thumbnails and all private files
 - Store RSS data
-- Store incompleted task messages
+- Store incomplete task messages
 - Store JDownloader settings
-- Store config.py file on first build and incase any change occurred to it, then next build it will define variables
+- Store config.py file on first build and in case any change occurred to it, then next build it will define variables
   from config.py instead of database
 
 </details>
@@ -161,7 +161,7 @@ programming in Python.
   <summary><h5>Archives</h5></summary>
 
 - Extract splits with or without password
-- Zip file/folder with or without password and splits incase of leech
+- Zip file/folder with or without password and splits in case of leech
 - Using 7z package to extract with or without password all supported types
 
 </details>
@@ -194,7 +194,7 @@ programming in Python.
 - Queueing System for all tasks (global option)
 - Ability to zip/unzip multi links in same directory. Mostly helpful in unzipping tg file parts (task option)
 - Bulk download from telegram txt file or text message contains links separated by new line (task option)
-- Join splitted files that have splitted before by split(linux pkg) (task option)
+- Join split files that were split before by split(linux pkg) (task option)
 - Sample video Generator (task option)
 - Screenshots Generator (task option)
 - Ability to cancel upload/clone/archive/extract/split/queue (task option)
@@ -244,7 +244,7 @@ sudo apt install python3 python3-pip
 
 Install Docker by following the [official Docker docs](https://docs.docker.com/engine/install/debian/)
 
-- For Arch and it's derivatives:
+- For Arch and its derivatives:
 
 ```
 sudo pacman -S docker python
@@ -290,7 +290,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 
 - `DATABASE_NAME` (`Str`): Name of the Mongo database. Default is `mltb`.
 
-- `CMD_SUFFIX` (`Str`|`Int`): Commands index number. This number will added at the end all commands.
+- `CMD_SUFFIX` (`Str`|`Int`): Commands index number. This number will be added to the end of all commands.
 
 - `AUTHORIZED_CHATS` (`Str`): Fill user_id and chat_id of groups/users you want to authorize. To auth only specific topic(s) write it in this format `chat_id|thread_id` Ex:-100XXXXXXXXXXX or -100XXXXXXXXXXX|10 or -100XXXXXXXXXXX|10|12. Separate them by spaces.
 
@@ -306,7 +306,7 @@ Fill up rest of the fields. Meaning of each field is discussed below.
 
 - `EXCLUDED_EXTENSIONS` (`Str`): File extensions that won't upload/clone. Separate them by spaces.
 
-- `INCLUDED_EXTENSIONS` (`Str`): File extensions to be uploaded/cloned. `EXCLUDED_EXTENSIONS` will be ignore if you filled this ! Separate them by spaces.
+- `INCLUDED_EXTENSIONS` (`Str`): File extensions to be uploaded/cloned. `EXCLUDED_EXTENSIONS` will be ignored if you filled this! Separate them by spaces.
 
 - `INCOMPLETE_TASK_NOTIFIER` (`Bool`): Get incomplete task messages after restart. Require database and superGroup. Default
 is `False`.
@@ -336,7 +336,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
   - Here I will explain how to use mltb.* which is reference to files you want to work on.
   1. First cmd: the input is mltb.mkv so this cmd will work only on mkv videos and the output is mltb.mkv also so all outputs is mkv. `-del` will delete the original media after complete run of the cmd.
   2. Second cmd: the input is mltb.video so this cmd will work on all videos and the output is only mltb so the extension is same as input files.
-  3. Third cmd: the input in mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
+  3. Third cmd: the input is mltb.m4a so this cmd will work only on m4a audios and the output is mltb.mp3 so the output extension is mp3.
   4. Fourth cmd: the input is mltb.audio so this cmd will work on all audios and the output is mltb.mp3 so the output extension is mp3.
   5. FFmpeg Variables in last cmd which is metadata ({title}, {title2}, etc...), you can edit them in usetting
   6. Telegram link for small size inputs like photo to set watermark.
@@ -361,7 +361,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `INDEX_URL` (`Str`): Refer to <https://gitlab.com/ParveenBhadooOfficial/Google-Drive-Index>. Example: https://xxx.xx.workers.dev/0: (If you have multiple ID config -- replace 0: with the desired id index) or https://xxx.xx.workers.dev without index if you only have one ID in config which is the basic config.
 
-- `STOP_DUPLICATE` (`Bool`): Bot will check file/folder name in Drive incase uploading to `GDRIVE_ID`. If it's present in Drive then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature is not perfect). Default is `False`.
+- `STOP_DUPLICATE` (`Bool`): Bot will check file/folder name in Drive in case of uploading to `GDRIVE_ID`. If it's present in Drive then downloading or cloning will be stopped. (**NOTE**: Item will be checked using name and not hash, so this feature is not perfect). Default is `False`.
 
 **4. Rclone**
 
@@ -392,7 +392,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `EQUAL_SPLITS` (`Bool`): Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`.
 
-- `MEDIA_GROUP` (`Bool`): View Uploaded splitted file parts in media group. Default is `False`.
+- `MEDIA_GROUP` (`Bool`): View Uploaded split file parts in media group. Default is `False`.
 
 - `USER_TRANSMISSION` (`Bool`): Upload/Download by user session. Only in superChat. Default is `False`.
 
@@ -417,7 +417,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 - `BASE_URL_PORT` (`Int`): Which is the **BASE_URL** Port. Default is `80`.
 
 - `WEB_PINCODE` (`Bool`): Whether to ask for pincode before selecting files from torrent in web or not. Default is `False`.
-    - **Qbittorrent NOTE**: If your facing ram issues then set limit for `MaxConnections`, decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit` from qbittorrent.conf or bsetting command.
+    - **Qbittorrent NOTE**: If you're facing RAM issues then set limit for `MaxConnections`, decrease `AsyncIOThreadsCount`, set limit of `DiskWriteCacheSize` to `32` and decrease `MemoryWorkingSetLimit` from qbittorrent.conf or bsetting command.
     - Open port 8090 in your vps to access webui from any device. username: mltb, password: mltbmltb
 
 **8. JDownloader**
@@ -441,7 +441,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `RSS_DELAY` (`Int`): Time in seconds for rss refresh interval. Recommended `600` second at least. Default is `600` in sec.
 
-- `RSS_SIZE_LIMIT` (`INT`): Item size limit in bytes. Default is `0`.
+- `RSS_SIZE_LIMIT` (`Int`): Item size limit in bytes. Default is `0`.
 
 - `RSS_CHAT`: The RSS monitor requires a chat to post results and notifications. The bot must be a member of this chat. When a command is configured for a subscription (e.g., `-c ql -doc`), downloads start automatically and results are posted here. Without a command, only feed info (name, link, size) is posted.
     - **Setup**: Run `/rss` in the desired chat and click **Use This Chat** (sudo only). This auto-detects the chat ID and topic. For channels, set the chat ID manually via config/env/bot settings using the format: `ID or USERNAME or ID|TOPIC_ID or USERNAME|TOPIC_ID`.
@@ -639,10 +639,7 @@ forcestart - or /fs to start task from queue
 del - Delete file/folder from GDrive
 log - Get the Bot Log
 auth - Authorize user or chat
-unauth - Unauthorize uer or chat
-addsudo - Add sudo user
-rmsudo - Remove sudo user
-users - Show users settings
+unauth - Unauthorize user or chat
 shell - Run commands in Shell
 aexec - Execute async function
 exec - Execute sync function
@@ -703,7 +700,7 @@ python3 generate_drive_token.py
 <details>
   <summary><h5>Upload</h5></summary>
 
-- `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In additional to those variables `DEFAULT_UPLOAD` to
+- `RCLONE_PATH` is like `GDRIVE_ID` a default path for mirror. In addition to those variables `DEFAULT_UPLOAD` to
   choose the default tool whether it's rclone or google-api-python-client.
 - If `DEFAULT_UPLOAD` = 'rc' then you must fill `RCLONE_PATH` with path as default one or with `rcl` to select
   destination path on each new task.
@@ -725,17 +722,17 @@ python3 generate_drive_token.py
 - `UPSTREAM_REPO` variable can be used for edit/add any file in repository.
 - You can add private/public repository link to grab/overwrite all files from it.
 - You can skip adding the private files like token.pickle or accounts folder before deploying, simply
-  fill `UPSTREAM_REPO` private one incase you want to grab all files including private files.
+  fill `UPSTREAM_REPO` private one in case you want to grab all files including private files.
 - If you added private files while deploying and you have added private `UPSTREAM_REPO` and your private files in this
   private repository, so your private files will be overwritten from this repository. Also if you are using database for
   private files, then all files from database will override the private files that added before deploying or from
   private `UPSTREAM_REPO`.
 - If you filled `UPSTREAM_REPO` with the official repository link, then be careful in case any change in
   requirements.txt your bot will not start after restart. In this case you need to deploy again with updated code to
-  install the new requirements or simply by changing the `UPSTREAM_REPO` to you fork link with that old updates.
-- In case you you filled `UPSTREAM_REPO` with your fork link be careful also if you fetched the commits from the
+  install the new requirements or simply by changing the `UPSTREAM_REPO` to your fork link with that old updates.
+- In case you filled `UPSTREAM_REPO` with your fork link be careful also if you fetched the commits from the
   official repository.
-- The changes in your `UPSTREAM_REPO` will take affect only after restart.
+- The changes in your `UPSTREAM_REPO` will take effect only after restart.
 
 ------
 
@@ -776,7 +773,7 @@ python3 generate_drive_token.py
 Let us create only the Service Accounts that we need.
 
 **Warning**: Abuse of this feature is not the aim of this project and we do **NOT** recommend that you make a lot of
-projects, just one project and 100 SAs allow you plenty of use, its also possible that over abuse might get your
+projects, just one project and 100 SAs allow you plenty of use, it's also possible that over abuse might get your
 projects banned by Google.
 
 > **NOTE**: If you have created SAs in past from this script, you can also just re download the keys by running:
@@ -797,7 +794,7 @@ python3 gen_sa_accounts.py --download-keys $PROJECTID
 Choose one of these methods
 
 <details>
-  <summary><h5>1. Create Service Accounts in existed Project (Recommended Method)</h5></summary>
+  <summary><h5>1. Create Service Accounts in existing Project (Recommended Method)</h5></summary>
 
 - List your projects ids
 
@@ -853,7 +850,7 @@ Choose one of these methods
 cd accounts
 ```
 
-- Grab emails form all accounts to emails.txt file that would be created in accounts folder
+- Grab emails from all accounts to emails.txt file that would be created in accounts folder
 - `For Windows using PowerShell`
 
 ```
@@ -873,7 +870,7 @@ cd ..
 ```
 
 Then add emails from emails.txt to Google Group, after that add this Google Group to your Shared Drive and promote it to
-manager and delete email.txt file from accounts folder
+manager and delete emails.txt file from accounts folder
 
 </details>
 
@@ -898,11 +895,11 @@ python3 add_to_team_drive.py -d SharedTeamDriveSrcID
 1. Go to `https://mongodb.com/` and sign-up.
 2. Create Shared Cluster.
 3. Press on `Database` under `Deployment` Header, your created cluster will be there.
-5. Press on connect, choose `Allow Access From Anywhere` and press on `Add IP Address` without editing the ip, then
+4. Press on connect, choose `Allow Access From Anywhere` and press on `Add IP Address` without editing the ip, then
    create user.
-6. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` *
+5. After creating user press on `Choose a connection`, then press on `Connect your application`. Choose `Driver` *
    *python** and `version` **3.12 or later**.
-7. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
+6. Copy your `connection string` and replace `<password>` with the password of your user, then press close.
 
 ------
 
