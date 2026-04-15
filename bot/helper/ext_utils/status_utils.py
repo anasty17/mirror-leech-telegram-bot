@@ -229,10 +229,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"\n<b>Size: </b>{task.size()}"
         msg += f"\n<code>/{BotCommands.CancelTaskCommand[1]} {task.gid()}</code>\n\n"
-        task_name = task.name()
-        if len(task_name) > 25:
-            task_name = task_name[:25] + "…"
-        task_gids.append((task_name, task.gid()))
+        task_gids.append((index + start_position, task.gid()))
 
     if len(msg) == 0:
         if status == "All":
@@ -256,16 +253,15 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
     buttons.data_button("♻️", f"status {sid} ref", position="header")
     button = buttons.build_menu(8)
     if task_gids:
-        cancel_rows = [
-            [
-                InlineKeyboardButton(
-                    text=f"❌ {name}",
-                    callback_data=f"status {sid} cancel {gid}",
-                )
-            ]
-            for name, gid in task_gids
+        cancel_buttons = [
+            InlineKeyboardButton(
+                text=f"❌ {num}",
+                callback_data=f"status {sid} cancel {gid}",
+            )
+            for num, gid in task_gids
         ]
-        button.inline_keyboard.extend(cancel_rows)
+        for i in range(0, len(cancel_buttons), 4):
+            button.inline_keyboard.append(cancel_buttons[i : i + 4])
     msg += f"<b>CPU:</b> {cpu_percent()}% | <b>FREE:</b> {get_readable_file_size(disk_usage(DOWNLOAD_DIR).free)}"
     msg += f"\n<b>RAM:</b> {virtual_memory().percent}% | <b>UPTIME:</b> {get_readable_time(time() - bot_start_time)}"
     return msg, button
