@@ -18,6 +18,7 @@ from ...ext_utils.exceptions import DirectDownloadLinkException
 from ...ext_utils.help_messages import PASSWORD_ERROR_MESSAGE
 from ...ext_utils.links_utils import is_share_link
 from ...ext_utils.status_utils import speed_string_to_bytes
+from .url_shortener_bypass import bypass_shortener, is_url_shortener
 
 user_agent = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0"
@@ -29,6 +30,14 @@ def direct_link_generator(link):
     domain = urlparse(link).hostname
     if not domain:
         raise DirectDownloadLinkException("ERROR: Invalid URL")
+    elif is_url_shortener(domain):
+        resolved = bypass_shortener(link)
+        try:
+            return direct_link_generator(resolved)
+        except DirectDownloadLinkException as e:
+            if str(e).startswith("ERROR: No Direct link function found"):
+                return resolved
+            raise
     elif "yadi.sk" in link or "disk.yandex." in link:
         return yandex_disk(link)
     elif "buzzheavier.com" in domain:
