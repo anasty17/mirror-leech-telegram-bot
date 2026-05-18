@@ -55,7 +55,7 @@ def _ouo(link):
     parsed = urlparse(normalized)
     short_id = parsed.path.rsplit("/", 1)[-1]
     if not short_id:
-        raise DirectDownloadLinkException("ERROR: ouo: id segment kosong")
+        raise DirectDownloadLinkException("ERROR: ouo: empty id segment")
 
     base = f"{parsed.scheme}://{parsed.netloc}"
     go_url = f"{base}/go/{short_id}"
@@ -66,12 +66,12 @@ def _ouo(link):
             r1 = s.get(normalized, allow_redirects=True)
             if r1.status_code == 403:
                 raise DirectDownloadLinkException(
-                    "ERROR: ouo.io memblokir request (403)"
+                    "ERROR: ouo.io blocked the request (403)"
                 )
             tok1 = _extract_csrf(r1.text)
             if not tok1:
                 raise DirectDownloadLinkException(
-                    f"ERROR: ouo: _token tidak ditemukan di halaman awal (status={r1.status_code})"
+                    f"ERROR: ouo: _token not found on initial page (status={r1.status_code})"
                 )
 
             r2 = s.post(
@@ -82,7 +82,7 @@ def _ouo(link):
             )
             if r2.status_code == 403:
                 raise DirectDownloadLinkException(
-                    "ERROR: ouo.io memblokir request (403)"
+                    "ERROR: ouo.io blocked the request (403)"
                 )
             if r2.status_code != 200:
                 raise DirectDownloadLinkException(
@@ -91,7 +91,7 @@ def _ouo(link):
             tok2 = _extract_csrf(r2.text)
             if not tok2:
                 raise DirectDownloadLinkException(
-                    "ERROR: ouo: _token tidak ditemukan di halaman /go/"
+                    "ERROR: ouo: _token not found on /go/ page"
                 )
 
             r3 = s.post(
@@ -109,4 +109,4 @@ def _ouo(link):
     except DirectDownloadLinkException:
         raise
     except Exception as e:
-        raise DirectDownloadLinkException(f"ERROR: ouo bypass gagal: {e}") from e
+        raise DirectDownloadLinkException(f"ERROR: ouo bypass failed: {e}") from e
