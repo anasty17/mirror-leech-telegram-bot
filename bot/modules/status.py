@@ -1,3 +1,4 @@
+from html import escape
 from psutil import cpu_percent, virtual_memory, disk_usage
 from time import time
 from asyncio import gather, iscoroutinefunction
@@ -34,6 +35,22 @@ from ..helper.telegram_helper.message_utils import (
 from ..helper.telegram_helper.button_build import ButtonMaker
 
 
+async def _show_cancel_confirm(query, key, gid, task):
+    button = ButtonMaker()
+    button.data_button("Yes", f"status {key} canyes {gid}")
+    button.data_button("No", f"status {key} canno")
+    name = escape(task.name())
+    msg = (
+        f"<b>Cancel this task?</b>\n\n"
+        f"<code>{name}</code>\n"
+        f"<b>Gid:</b> <code>{gid}</code>"
+    )
+    async with task_dict_lock:
+        if key in status_dict:
+            status_dict[key]["confirm_gid"] = gid
+    await edit_message(query.message, msg, button.build_menu(2))
+
+
 async def _handle_cancel(query, data, key):
     gid = data[3] if len(data) > 3 else ""
     if not gid:
@@ -48,8 +65,38 @@ async def _handle_cancel(query, data, key):
         await query.answer("Not Yours!", show_alert=True)
         return
     await query.answer()
+    await _show_cancel_confirm(query, key, gid, task)
+
+
+async def _handle_cancel_confirm(query, data, key):
+    gid = data[3] if len(data) > 3 else ""
+    if not gid:
+        await query.answer("Invalid request!", show_alert=True)
+        return
+    user_id = query.from_user.id
+    task = await get_task_by_gid(gid)
+    async with task_dict_lock:
+        if key in status_dict:
+            status_dict[key].pop("confirm_gid", None)
+    if task is None:
+        await query.answer("Task not found or already finished!", show_alert=True)
+        await update_status_message(key, force=True)
+        return
+    if task.listener.user_id != user_id and not await CustomFilters.sudo("", query):
+        await query.answer("Not Yours!", show_alert=True)
+        await update_status_message(key, force=True)
+        return
+    await query.answer("Cancelling...")
     obj = task.task()
     await obj.cancel_task()
+    await update_status_message(key, force=True)
+
+
+async def _handle_cancel_abort(query, key):
+    async with task_dict_lock:
+        if key in status_dict:
+            status_dict[key].pop("confirm_gid", None)
+    await query.answer()
     await update_status_message(key, force=True)
 
 
@@ -105,6 +152,12 @@ async def status_pages(_, query):
     key = int(data[1])
     if data[2] == "cancel":
         await _handle_cancel(query, data, key)
+        return
+    if data[2] == "canyes":
+        await _handle_cancel_confirm(query, data, key)
+        return
+    if data[2] == "canno":
+        await _handle_cancel_abort(query, key)
         return
     await query.answer()
     if data[2] == "ref":
