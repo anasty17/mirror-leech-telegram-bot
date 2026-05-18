@@ -188,6 +188,8 @@ async def update_status_message(sid, force=False):
                 obj.cancel()
                 del intervals["status"][sid]
             return
+        if status_dict[sid].get("confirm_gid"):
+            return
         if not force and time() - status_dict[sid]["time"] < 3:
             return
         status_dict[sid]["time"] = time()
