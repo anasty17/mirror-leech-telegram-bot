@@ -174,7 +174,13 @@ class GoFileUploader:
                         return
                     first_link = first_link or link
                     if self._listener.files_links:
-                        files_dict[link] = ospath.basename(file_path)
+                        file_name = ospath.basename(file_path)
+                        relative_dir = ospath.relpath(ospath.dirname(file_path), self._path)
+                        if relative_dir == ".":
+                            entry = file_name
+                        else:
+                            entry = f"{file_name} ({relative_dir})"
+                        files_dict[link] = entry
         except Exception as exc:
             LOGGER.error(f"GoFile session error: {exc}")
             await self._listener.on_upload_error(f"GoFile: {exc}")
