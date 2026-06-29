@@ -101,6 +101,7 @@ class TaskConfig:
         self.is_torbox = False
         self.is_buzzheavier = False
         self.is_gofile = False
+        self.direct_upload = ""
         self.equal_splits = False
         self.user_transmission = False
         self.hybrid_leech = False
@@ -276,6 +277,7 @@ class TaskConfig:
         default_upload = (
             self.user_dict.get("DEFAULT_UPLOAD", "") or Config.DEFAULT_UPLOAD
         )
+        direct_uploads = {"cb", "lb", "pd", "vf", "imgur", "ic", "ibb", "kf"}
         if (
             default_upload == "bh"
             or self.up_dest == "bh"
@@ -303,8 +305,10 @@ class TaskConfig:
             self.is_buzzheavier = True
         elif default_upload == "gf" or self.up_dest == "gf":
             self.is_gofile = True
+        elif default_upload in direct_uploads or self.up_dest in direct_uploads:
+            self.direct_upload = self.up_dest or default_upload
 
-        if not self.is_leech and not self.is_buzzheavier and not self.is_gofile:
+        if not self.is_leech and not self.is_buzzheavier and not self.is_gofile and not self.direct_upload:
             self.stop_duplicate = (
                 self.user_dict.get("STOP_DUPLICATE")
                 or "STOP_DUPLICATE" not in self.user_dict
@@ -314,9 +318,9 @@ class TaskConfig:
                 self.up_dest = self.user_dict.get("RCLONE_PATH") or Config.RCLONE_PATH
             elif (not self.up_dest and default_upload == "gd") or self.up_dest == "gd":
                 self.up_dest = self.user_dict.get("GDRIVE_ID") or Config.GDRIVE_ID
-            if not self.up_dest:
+            if not self.up_dest and not self.direct_upload:
                 raise ValueError("No Upload Destination!")
-            if self.up_dest not in ["rcl", "gdl"]:
+            if self.up_dest and not self.direct_upload and self.up_dest not in ["rcl", "gdl"]:
                 if is_gdrive_id(self.up_dest):
                     if not self.up_dest.startswith(
                         ("mt:", "tp:", "sa:")
@@ -369,7 +373,7 @@ class TaskConfig:
                     self.link
                 ) != self.get_config_path(self.up_dest):
                     raise ValueError("You must use the same config to clone!")
-        elif not self.is_buzzheavier and not self.is_gofile:
+        elif not self.is_buzzheavier and not self.is_gofile and not self.direct_upload:
             self.up_dest = (
                 self.up_dest
                 or self.user_dict.get("LEECH_DUMP_CHAT")

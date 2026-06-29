@@ -96,13 +96,13 @@ Note: Only mb and gb are supported or write in bytes without unit!"""
 
 upload = """<b>Upload Destination</b>: -up
 
-/cmd link -up rc/gd/rcl/gdl/bh/gf (rcl: to select rclone config, remote & path | gdl: To select token.pickle, gdrive id | gf: upload to GoFile) using buttons
+/cmd link -up rc/gd/rcl/gdl/bh/gf/cb/lb/pd/vf/imgur/ic/ibb/kf (rcl: to select rclone config, remote & path | gdl: To select token.pickle, gdrive id | gf: upload to GoFile | cb: Catbox | lb: Litterbox | pd: PixelDrain | vf: VikingFile | imgur: Imgur | ic: ImgChest | ibb: ImgBB | kf: KrakenFiles) using buttons
 You can directly add the upload path: -up remote:dir/subdir or -up Gdrive_id or -up id/username (telegram) or -up id/username|topic_id (telegram)
 If DEFAULT_UPLOAD is `rc` then you can pass up: `gd` to upload using gdrive tools to GDRIVE_ID.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `rc` to upload to RCLONE_PATH.
 If DEFAULT_UPLOAD is `bh` or `gf` then you can pass up: `rc` to upload to RCLONE_PATH.
 If DEFAULT_UPLOAD is `gd` then you can pass up: `bh` to upload to BUZZHEAVIER or `gf` to upload to GoFile.
-GoFile uses GOFILE_API_KEY when configured; otherwise guest upload is used.
+GoFile uses GOFILE_API_KEY when configured; otherwise guest upload is used. Direct host upload supports cb/lb/pd/vf/imgur/ic/ibb/kf; set DEFAULT_UPLOAD or use -up with one of these codes.
 
 If you want to add path or gdrive manually from your config/token (UPLOADED FROM USETTING) add mt: for rclone and mt: before the path/gdrive_id without space.
 /cmd link -up mt:main:dump or -up mt:gdrive_id or -up mt:bh:folder_id <strong>OR you can simply edit upload using owner/user|token/config from usetting without adding mt: before the upload path/id</strong>

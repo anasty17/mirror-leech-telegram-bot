@@ -16,6 +16,14 @@ class Config:
     BUZZHEAVIER_ACCOUNT_ID = ""
     BUZZHEAVIER_FOLDER_ID = ""
     GOFILE_API_KEY = ""
+    CATBOX_USER_HASH = ""
+    LITTERBOX_TIME = "1h"
+    PIXELDRAIN_API_KEY = ""
+    VIKINGFILE_USER_HASH = ""
+    IMGUR_CLIENT_ID = ""
+    IMGCHEST_API_KEY = ""
+    IMGBB_API_KEY = ""
+    KRAKENFILES_API_KEY = ""
     CMD_SUFFIX = ""
     CLONE_DUMP_CHATS = ""
     DATABASE_URL = ""
@@ -158,7 +166,7 @@ class Config:
         if isinstance(converted_value, str):
             converted_value = converted_value.strip()
 
-        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
+        if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf", "cb", "lb", "pd", "vf", "imgur", "ic", "ibb", "kf"}:
             return "rc"
 
         if attr in {
