@@ -8,6 +8,7 @@ from ...core.config_manager import Config
 SHORTENER_HOSTS = {
     "spoome": "spoo.me",
     "xgd": "x.gd",
+    "tly": "t.ly",
     "cleanuri": "CleanURI",
     "isgd": "is.gd",
 }
@@ -24,6 +25,22 @@ def normalize_url(url):
 
 def _response_text(response):
     return response.text[:500].strip()
+
+
+def _make_client():
+    proxy = (Config.URL_SHORTENER_PROXY or "").strip()
+    kwargs = {
+        "timeout": _TIMEOUT,
+        "follow_redirects": False,
+    }
+
+    if not proxy:
+        return AsyncClient(**kwargs)
+
+    try:
+        return AsyncClient(proxy=proxy, **kwargs)
+    except TypeError:
+        return AsyncClient(proxies=proxy, **kwargs)
 
 
 async def _json(response, host):
@@ -46,7 +63,7 @@ async def shorten_url(url, host=None):
 
     url = normalize_url(url)
 
-    async with AsyncClient(timeout=_TIMEOUT, follow_redirects=False) as client:
+    async with _make_client() as client:
         if host == "spoome":
             response = await client.post(
                 "https://spoo.me/",
@@ -57,12 +74,46 @@ async def shorten_url(url, host=None):
             short_url = data.get("short_url") or data.get("shortUrl")
 
         elif host == "xgd":
-            response = await client.get(f"https://x.gd/api.php?url={quote(url, safe='')}")
+            response = await client.get(
+                f"https://x.gd/api.php?url={quote(url, safe='')}"
+            )
             if response.status_code >= 400:
                 raise RuntimeError(
                     f"x.gd failed [{response.status_code}]: {_response_text(response)}"
                 )
             short_url = response.text.strip()
+
+        elif host == "tly":
+            token = (Config.TLY_API_TOKEN or "").strip()
+            if not token:
+                raise RuntimeError("TLY_API_TOKEN is required for t.ly")
+
+            response = await client.post(
+                "https://api.t.ly/api/v1/link/shorten",
+                json={
+                    "long_url": url,
+                    "domain": "https://t.ly/",
+                    "format": "json",
+                    "include_qr_code": False,
+                },
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                },
+            )
+            data = await _json(response, "t.ly")
+            nested_data = data.get("data") if isinstance(data.get("data"), dict) else {}
+            short_url = (
+                data.get("short_url")
+                or data.get("shortUrl")
+                or data.get("short_link")
+                or data.get("url")
+                or nested_data.get("short_url")
+                or nested_data.get("shortUrl")
+                or nested_data.get("short_link")
+                or nested_data.get("url")
+            )
 
         elif host == "cleanuri":
             response = await client.post(
