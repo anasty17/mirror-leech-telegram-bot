@@ -22,6 +22,8 @@ class Config:
     DATABASE_NAME = "mltb"
     DEFAULT_UPLOAD = "rc"
     URL_SHORTENER = "spoome"
+    URL_SHORTENER_PROXY = ""
+    TLY_API_TOKEN = ""
     EQUAL_SPLITS = False
     EXCLUDED_EXTENSIONS = ""
     INCLUDED_EXTENSIONS = ""
@@ -163,7 +165,7 @@ class Config:
             return "rc"
 
         if attr == "URL_SHORTENER" and converted_value not in {
-            "spoome", "xgd", "cleanuri", "isgd"
+            "spoome", "xgd", "tly", "cleanuri", "isgd"
         }:
             return "spoome"
 
