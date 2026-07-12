@@ -194,10 +194,16 @@ class BuzzHeavierUploader:
 
     async def upload(self):
         try:
+            client_headers = {}
+            if self._account_id:
+                # Only send the Authorization header when uploading to a user's
+                # own account (mt:bh). Anonymous uploads must omit it entirely,
+                # otherwise httpx rejects the trailing-space "Bearer " value.
+                client_headers["Authorization"] = f"Bearer {self._account_id}"
             self._client = AsyncClient(
                 timeout=_HTTP_TIMEOUT,
                 limits=Limits(max_connections=4, max_keepalive_connections=0),
-                headers={"Authorization": f"Bearer {self._account_id}"},
+                headers=client_headers,
             )
             if await aiopath.isfile(self._path):
                 mime_type = await sync_to_async(get_mime_type, self._path)
