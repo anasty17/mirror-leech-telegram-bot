@@ -51,6 +51,8 @@ from ..telegram_helper.message_utils import (
     delete_status,
     update_status_message,
 )
+from ..ext_utils.telegraph_helper import telegraph
+from ..ext_utils.telegraph_index import build_telegraph_index_html
 
 
 class TaskListener(TaskConfig):
@@ -348,7 +350,7 @@ class TaskListener(TaskConfig):
         return
 
     async def on_upload_complete(
-        self, link, files, folders, mime_type, rclone_path="", dir_id=""
+        self, link, files, folders, mime_type, rclone_path="", dir_id="", bh_file_links=None
     ):
         if (
             self.is_super_chat
@@ -382,7 +384,21 @@ class TaskListener(TaskConfig):
                 msg += f"\n<b>Files: </b>{files}"
             if self.is_buzzheavier:
                 buttons = ButtonMaker()
-                buttons.url_button("☁️ Cloud Link", link)
+                # Aggregate multiple BuzzHeavier files into a single Telegraph
+                # index page instead of spamming many Cloud Link buttons.
+                # Single file (incl. anon) keeps the direct Cloud Link.
+                index_html = build_telegraph_index_html(bh_file_links or [])
+                if index_html:
+                    try:
+                        page = await telegraph.create_page(
+                            (self.name or "BuzzHeavier Files")[:256], index_html
+                        )
+                        if page:
+                            buttons.url_button("📋 File Index", page.get("url") or page)
+                    except Exception as e:
+                        LOGGER.error(f"BuzzHeavier Telegraph index failed: {e}")
+                if link:
+                    buttons.url_button("☁️ Cloud Link", link)
                 button = buttons.build_menu()
             elif (
                 link

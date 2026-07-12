@@ -29,6 +29,7 @@ class BuzzHeavierUploader:
         self._folders = 0
         self._root_id_cache = None
         self._client = None
+        self._file_links = []  # (filename, url, size) for every uploaded file
         self._account_id = (Config.BUZZHEAVIER_ACCOUNT_ID or "").strip()
         self.user_settings()
 
@@ -166,6 +167,7 @@ class BuzzHeavierUploader:
             raise RuntimeError("Missing file id")
 
         self._files += 1
+        self._file_links.append((file_name, f"https://buzzheavier.com/{file_id}", file_size))
 
         return f"https://buzzheavier.com/{file_id}"
 
@@ -237,6 +239,7 @@ class BuzzHeavierUploader:
                 self._files,
                 self._folders,
                 mime_type,
+                bh_file_links=self._file_links,
             )
         except CancelledError:
             return
