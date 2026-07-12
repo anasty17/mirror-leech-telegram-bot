@@ -134,10 +134,14 @@ class BuzzHeavierUploader:
         file_name = ospath.basename(file_path)
         file_size = await aiopath.getsize(file_path)
         chunk_size = self._get_chunk_size(file_size)
-        if not parent_id:
-            parent_id = await self._get_root_id()
-
-        url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
+        if parent_id:
+            # Authenticated upload (own account via mt:bh) needs a parent id.
+            parent_id = await self._get_root_id() if not parent_id else parent_id
+            url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
+        else:
+            # Anonymous upload: PUT directly to the public endpoint without a
+            # parent folder id (Buzzheavier's anon API does not expose /api/fs).
+            url = f"{_UPLOAD_BASE}/{file_name}"
 
         headers = {
             "Content-Type": "application/octet-stream",
@@ -200,6 +204,14 @@ class BuzzHeavierUploader:
                 link = await self._upload_file(self._path, self._listener.up_dest)
 
             else:
+                if not self._account_id:
+                    # Anonymous uploads go to the public endpoint which does not
+                    # support nested folder structures. Only single-file anon
+                    # uploads are allowed; use mt:bh (your own account) for folders.
+                    raise ValueError(
+                        "Anonymous Buzzheavier uploads support files only. "
+                        "Use `-up mt:bh` (your account) to upload folders."
+                    )
                 mime_type = "Folder"
                 root_name = ospath.basename(ospath.abspath(self._path))
 

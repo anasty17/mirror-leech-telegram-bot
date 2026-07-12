@@ -296,10 +296,9 @@ class TaskConfig:
                 raise ValueError(
                     "BUZZHEAVIER_ACCOUNT_ID is required to be filled in user settings to upload to your own account!"
                 )
-            elif not Config.BUZZHEAVIER_ACCOUNT_ID:
-                raise ValueError(
-                    "BUZZHEAVIER_ACCOUNT_ID is required to be filled in config to upload to Buzzheavier!"
-                )
+            # Anonymous uploads (plain `bh` / `bh:folder_id`) are allowed without
+            # a config account_id. Only `mt:bh` (upload to the user's own account)
+            # requires BUZZHEAVIER_ACCOUNT_ID, which is enforced above.
             self.is_buzzheavier = True
         elif default_upload == "gf" or self.up_dest == "gf":
             self.is_gofile = True
