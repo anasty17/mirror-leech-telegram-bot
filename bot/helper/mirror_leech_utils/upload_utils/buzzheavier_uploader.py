@@ -171,13 +171,27 @@ class BuzzHeavierUploader:
 
         return f"https://buzzheavier.com/{file_id}"
 
-    async def _upload_dir(self, directory, parent_id):
+    async def _upload_dir(self, directory, parent_id, anon: bool = False):
         entries = await sync_to_async(lambda: list(walk(directory)))
 
         for root, _, files in entries:
 
             if self._listener.is_cancelled:
                 return
+
+            if anon:
+                # Anonymous uploads have no folder support on BuzzHeavier's
+                # public API, so flatten: every file goes straight to the root
+                # endpoint (parent_id=""). Folder structure is dropped.
+                for file in sorted(files):
+                    path = ospath.join(root, file)
+                    if await aiopath.isfile(path):
+                        try:
+                            await self._upload_file(path, "")
+                        except Exception as e:
+                            LOGGER.error(f"Upload error: {e}")
+                            continue
+                continue
 
             if root != directory:
                 folder_name = ospath.basename(root)
@@ -213,23 +227,24 @@ class BuzzHeavierUploader:
 
             else:
                 if not self._account_id:
-                    # Anonymous uploads go to the public endpoint which does not
-                    # support nested folder structures. Only single-file anon
-                    # uploads are allowed; use mt:bh (your own account) for folders.
-                    raise ValueError(
-                        "Anonymous Buzzheavier uploads support files only. "
-                        "Use `-up mt:bh` (your account) to upload folders."
+                    # Anonymous uploads have no folder support on BuzzHeavier's
+                    # public API, so flatten all files to the root endpoint and
+                    # let the Telegraph index (built in task_listener when >=2
+                    # files) aggregate them. Single file still gets a Cloud Link.
+                    mime_type = await sync_to_async(get_mime_type, self._path)
+                    await self._upload_dir(self._path, "", anon=True)
+                    link = self._file_links[0][1] if self._file_links else ""
+                else:
+                    mime_type = "Folder"
+                    root_name = ospath.basename(ospath.abspath(self._path))
+
+                    root_id = await self._create_directory(
+                        root_name, self._listener.up_dest
                     )
-                mime_type = "Folder"
-                root_name = ospath.basename(ospath.abspath(self._path))
 
-                root_id = await self._create_directory(
-                    root_name, self._listener.up_dest
-                )
+                    await self._upload_dir(self._path, root_id)
 
-                await self._upload_dir(self._path, root_id)
-
-                link = f"https://buzzheavier.com/{root_id}"
+                    link = f"https://buzzheavier.com/{root_id}"
 
             if self._listener.is_cancelled:
                 return
