@@ -227,11 +227,21 @@ class BuzzHeavierUploader:
 
             else:
                 if not self._account_id:
+                    if not Config.BUZZHEAVIER_ANON_FOLDER:
+                        # Respect the config toggle: by default anonymous
+                        # folder uploads are rejected (matches upstream
+                        # behaviour). Set BUZZHEAVIER_ANON_FOLDER=True to allow
+                        # them (flattened to the public endpoint).
+                        raise ValueError(
+                            "Anonymous BuzzHeavier uploads support files only. "
+                            "Use `-up mt:bh` (your account) to upload folders, or "
+                            "enable BUZZHEAVIER_ANON_FOLDER to allow anonymous folders."
+                        )
                     # Anonymous uploads have no folder support on BuzzHeavier's
                     # public API, so flatten all files to the root endpoint and
                     # let the Telegraph index (built in task_listener when >=2
                     # files) aggregate them. Single file still gets a Cloud Link.
-                    mime_type = await sync_to_async(get_mime_type, self._path)
+                    mime_type = "Folder"
                     await self._upload_dir(self._path, "", anon=True)
                     link = self._file_links[0][1] if self._file_links else ""
                 else:
