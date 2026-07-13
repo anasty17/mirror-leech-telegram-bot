@@ -385,20 +385,23 @@ class TaskListener(TaskConfig):
             if self.is_buzzheavier:
                 buttons = ButtonMaker()
                 # Aggregate multiple BuzzHeavier files into a single Telegraph
-                # index page instead of spamming many Cloud Link buttons.
-                # Single file (incl. anon) keeps the direct Cloud Link.
+                # index page. The ☁️ Cloud Link button points to that Telegraph
+                # page (so all files live behind one button), exactly like a
+                # single-file upload. Single file (incl. anon) keeps the
+                # direct Cloud Link to the file/folder.
                 index_html = build_telegraph_index_html(bh_file_links or [])
+                cloud_url = link
                 if index_html:
                     try:
                         page = await telegraph.create_page(
                             (self.name or "BuzzHeavier Files")[:256], index_html
                         )
                         if page:
-                            buttons.url_button("📋 File Index", page.get("url") or page)
+                            cloud_url = page.get("url") or page or link
                     except Exception as e:
                         LOGGER.error(f"BuzzHeavier Telegraph index failed: {e}")
-                if link:
-                    buttons.url_button("☁️ Cloud Link", link)
+                if cloud_url:
+                    buttons.url_button("☁️ Cloud Link", cloud_url)
                 button = buttons.build_menu()
             elif (
                 link
