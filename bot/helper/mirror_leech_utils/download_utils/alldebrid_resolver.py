@@ -481,7 +481,7 @@ async def _unlock_alldebrid_link(link: str) -> dict[str, Any]:
         "POST",
         f"{_API_BASE_V4}/link/unlock",
         params=params,
-        data=[("link", link)],
+        data={"link": link},
     )
 
 
