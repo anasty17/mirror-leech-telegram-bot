@@ -1,7 +1,7 @@
-import aiohttp
 import asyncio
 from os import path as ospath
 from typing import Any, Awaitable, Callable
+from httpx import AsyncClient, HTTPError
 
 from bot import LOGGER
 from bot.core.config_manager import Config
@@ -60,28 +60,17 @@ async def _api(
     files: Any = None,
 ) -> Any:
     try:
-        headers = _headers()
-        timeout = aiohttp.ClientTimeout(total=_TIMEOUT)
-        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as client:
-            kwargs = {"params": params or {}}
-            if data is not None:
-                kwargs["data"] = data
-            if files is not None:
-                form = aiohttp.FormData()
-                if isinstance(files, dict):
-                    for fk, fv in files.items():
-                        if isinstance(fv, tuple):
-                            fn, fc, ft = fv
-                            form.add_field(fk, fc, filename=fn, content_type=ft)
-                        else:
-                            form.add_field(fk, fv)
-                else:
-                    form = files
-                kwargs["data"] = form
-            async with client.request(method, f"{_API_BASE}{endpoint}", **kwargs) as res:
-                res.raise_for_status()
-                payload = await res.json()
-    except aiohttp.ClientError as exc:
+        async with AsyncClient(timeout=_TIMEOUT, headers=_headers()) as client:
+            res = await client.request(
+                method,
+                f"{_API_BASE}{endpoint}",
+                params=params or {},
+                data=data,
+                files=files,
+            )
+            res.raise_for_status()
+            payload = res.json()
+    except HTTPError as exc:
         raise DirectDownloadLinkException(
             f"ERROR: TorBox network error: {exc}"
         ) from exc

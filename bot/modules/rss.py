@@ -1,4 +1,4 @@
-import aiohttp
+from httpx import AsyncClient
 from apscheduler.triggers.interval import IntervalTrigger
 from asyncio import Lock, sleep
 from datetime import datetime, timedelta
@@ -240,73 +240,71 @@ async def rss_sub(_, message, pre_event):
             cmd = None
             stv = False
         try:
-            async with aiohttp.ClientSession(
-                headers=headers,
-                connector=aiohttp.TCPConnector(ssl=False),
-                timeout=aiohttp.ClientTimeout(total=60),
+            async with AsyncClient(
+                headers=headers, follow_redirects=True, timeout=60, verify=False
             ) as client:
-                async with client.get(feed_link, allow_redirects=True) as res:
-                    html = res.text
-                    rss_d = feed_parse(html)
-                    last_link = ""
-                    last_title = ""
-                    size = 0
-                    feed_title = rss_d.feed.get("title", "Unknown")
-                    if rss_d.entries:
-                        last_title = rss_d.entries[0]["title"]
-                        if rss_d.entries[0].get("size"):
-                            size = int(rss_d.entries[0]["size"])
-                        elif rss_d.entries[0].get("summary"):
-                            summary = rss_d.entries[0]["summary"]
-                            matches = size_regex.findall(summary)
-                            sizes = [match[0] for match in matches]
-                            size = get_size_bytes(sizes[0])
-                        try:
-                            last_link = rss_d.entries[0]["links"][1]["href"]
-                        except IndexError:
-                            last_link = rss_d.entries[0]["link"]
-                    msg += "<b>Subscribed!</b>"
-                    msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
-                    if rss_d.entries:
-                        msg += f"\n<b>latest record for </b>{feed_title}:"
-                        msg += f"\nName: <code>{last_title.replace('>', '').replace('<', '')}</code>"
-                        msg += f"\n<b>Link: </b><code>{last_link}</code>"
-                        if size:
-                            msg += f"\nSize: {get_readable_file_size(size)}"
-                    else:
-                        msg += "\n<b>Note:</b> Feed is currently empty, will be monitored for new items."
-                    msg += f"\n<b>Command: </b><code>{cmd}</code>"
-                    msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
-                    async with rss_dict_lock:
-                        if rss_dict.get(user_id, False):
-                            rss_dict[user_id][title] = {
-                                "link": feed_link,
-                                "last_feed": last_link,
-                                "last_title": last_title,
-                                "inf": inf_lists,
-                                "exf": exf_lists,
-                                "paused": False,
-                                "command": cmd,
-                                "sensitive": stv,
-                                "tag": tag,
-                            }
-                        else:
-                            rss_dict[user_id] = {
-                                title: {
-                                    "link": feed_link,
-                                    "last_feed": last_link,
-                                    "last_title": last_title,
-                                    "inf": inf_lists,
-                                    "exf": exf_lists,
-                                    "paused": False,
-                                    "command": cmd,
-                                    "sensitive": stv,
-                                    "tag": tag,
-                                }
-                            }
-                    LOGGER.info(
-                        f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv: {stv}"
-                    )
+                res = await client.get(feed_link)
+            html = res.text
+            rss_d = feed_parse(html)
+            last_link = ""
+            last_title = ""
+            size = 0
+            feed_title = rss_d.feed.get("title", "Unknown")
+            if rss_d.entries:
+                last_title = rss_d.entries[0]["title"]
+                if rss_d.entries[0].get("size"):
+                    size = int(rss_d.entries[0]["size"])
+                elif rss_d.entries[0].get("summary"):
+                    summary = rss_d.entries[0]["summary"]
+                    matches = size_regex.findall(summary)
+                    sizes = [match[0] for match in matches]
+                    size = get_size_bytes(sizes[0])
+                try:
+                    last_link = rss_d.entries[0]["links"][1]["href"]
+                except IndexError:
+                    last_link = rss_d.entries[0]["link"]
+            msg += "<b>Subscribed!</b>"
+            msg += f"\n<b>Title: </b><code>{title}</code>\n<b>Feed Url: </b>{feed_link}"
+            if rss_d.entries:
+                msg += f"\n<b>latest record for </b>{feed_title}:"
+                msg += f"\nName: <code>{last_title.replace('>', '').replace('<', '')}</code>"
+                msg += f"\n<b>Link: </b><code>{last_link}</code>"
+                if size:
+                    msg += f"\nSize: {get_readable_file_size(size)}"
+            else:
+                msg += "\n<b>Note:</b> Feed is currently empty, will be monitored for new items."
+            msg += f"\n<b>Command: </b><code>{cmd}</code>"
+            msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
+            async with rss_dict_lock:
+                if rss_dict.get(user_id, False):
+                    rss_dict[user_id][title] = {
+                        "link": feed_link,
+                        "last_feed": last_link,
+                        "last_title": last_title,
+                        "inf": inf_lists,
+                        "exf": exf_lists,
+                        "paused": False,
+                        "command": cmd,
+                        "sensitive": stv,
+                        "tag": tag,
+                    }
+                else:
+                    rss_dict[user_id] = {
+                        title: {
+                            "link": feed_link,
+                            "last_feed": last_link,
+                            "last_title": last_title,
+                            "inf": inf_lists,
+                            "exf": exf_lists,
+                            "paused": False,
+                            "command": cmd,
+                            "sensitive": stv,
+                            "tag": tag,
+                        }
+                    }
+            LOGGER.info(
+                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv: {stv}"
+            )
         except (IndexError, AttributeError) as e:
             emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
             await send_message(message, emsg + "\nError: " + str(e))
@@ -459,30 +457,28 @@ async def rss_get(_, message, pre_event):
                 msg = await send_message(
                     message, f"Getting the last <b>{count}</b> item(s) from {title}"
                 )
-                async with aiohttp.ClientSession(
-                    headers=headers,
-                    connector=aiohttp.TCPConnector(ssl=False),
-                    timeout=aiohttp.ClientTimeout(total=60),
+                async with AsyncClient(
+                    headers=headers, follow_redirects=True, timeout=60, verify=False
                 ) as client:
-                    async with client.get(data["link"], allow_redirects=True) as res:
-                        html = res.text
-                        rss_d = feed_parse(html)
-                        item_info = ""
-                        for item_num in range(count):
-                            try:
-                                link = rss_d.entries[item_num]["links"][1]["href"]
-                            except IndexError:
-                                link = rss_d.entries[item_num]["link"]
-                            item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
-                            item_info += f"<b>Link: </b><code>{link}</code>\n\n"
-                        item_info_ecd = item_info.encode()
-                        if len(item_info_ecd) > 4000:
-                            with BytesIO(item_info_ecd) as out_file:
-                                out_file.name = f"rssGet {title} items_no. {count}.txt"
-                                await send_file(message, out_file)
-                            await delete_message(msg)
-                        else:
-                            await edit_message(msg, item_info)
+                    res = await client.get(data["link"])
+                html = res.text
+                rss_d = feed_parse(html)
+                item_info = ""
+                for item_num in range(count):
+                    try:
+                        link = rss_d.entries[item_num]["links"][1]["href"]
+                    except IndexError:
+                        link = rss_d.entries[item_num]["link"]
+                    item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
+                    item_info += f"<b>Link: </b><code>{link}</code>\n\n"
+                item_info_ecd = item_info.encode()
+                if len(item_info_ecd) > 4000:
+                    with BytesIO(item_info_ecd) as out_file:
+                        out_file.name = f"rssGet {title} items_no. {count}.txt"
+                        await send_file(message, out_file)
+                    await delete_message(msg)
+                else:
+                    await edit_message(msg, item_info)
             except IndexError as e:
                 LOGGER.error(str(e))
                 await edit_message(
@@ -818,14 +814,15 @@ async def rss_monitor():
                 tries = 0
                 while True:
                     try:
-                        async with aiohttp.ClientSession(
+                        async with AsyncClient(
                             headers=headers,
-                            connector=aiohttp.TCPConnector(ssl=False),
-                            timeout=aiohttp.ClientTimeout(total=60),
+                            follow_redirects=True,
+                            timeout=60,
+                            verify=False,
                         ) as client:
-                            async with client.get(data["link"], allow_redirects=True) as res:
-                                html = res.text
-                                break
+                            res = await client.get(data["link"])
+                        html = res.text
+                        break
                     except:
                         tries += 1
                         if tries > 3:

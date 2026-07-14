@@ -5,7 +5,7 @@ import traceback
 from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from asyncio import CancelledError
-import aiohttp
+from httpx import AsyncClient, Limits, Timeout, HTTPError
 
 from ...ext_utils.bot_utils import sync_to_async
 from ...ext_utils.files_utils import get_mime_type
@@ -15,6 +15,7 @@ LOGGER = getLogger(__name__)
 
 _UPLOAD_BASE = "https://w.buzzheavier.com"
 
+_HTTP_TIMEOUT = Timeout(connect=30.0, read=600.0, write=600.0, pool=30.0)
 
 
 class BuzzHeavierUploader:
@@ -28,7 +29,6 @@ class BuzzHeavierUploader:
         self._folders = 0
         self._root_id_cache = None
         self._client = None
-        self._file_links = []  # (filename, url, size) for every uploaded file
         self._account_id = (Config.BUZZHEAVIER_ACCOUNT_ID or "").strip()
         self.user_settings()
 
@@ -94,10 +94,10 @@ class BuzzHeavierUploader:
             "https://buzzheavier.com/api/fs",
         )
 
-        if resp.status != 200:
-            raise RuntimeError(f"Root fetch failed: {(await resp.text())[:200]}")
+        if resp.status_code != 200:
+            raise RuntimeError(f"Root fetch failed: {resp.text[:200]}")
 
-        data = await resp.json()
+        data = resp.json()
         root_id = (data.get("data") or {}).get("id")
 
         if not root_id:
@@ -115,33 +115,29 @@ class BuzzHeavierUploader:
             json={"name": name},
         )
 
-        if resp.status not in (200, 201):
-            if resp.status == 409:
+        if resp.status_code not in (200, 201):
+            if resp.status_code == 409:
                 res = await self._client.get(
                     f"https://buzzheavier.com/api/fs/{parent_id}"
                 )
-                if res.status == 200:
+                if res.status_code == 200:
                     data = res.json()
                     for item in (data.get("data") or {}).get("children", []):
                         if item.get("name") == name and item.get("isDirectory"):
                             return item.get("id")
-            raise RuntimeError(f"Create dir failed: {await resp.text()}")
+            raise RuntimeError(f"Create dir failed: {resp.text}")
 
-        data = await resp.json()
+        data = resp.json()
         return (data.get("data") or {}).get("id")
 
     async def _upload_file(self, file_path, parent_id):
         file_name = ospath.basename(file_path)
         file_size = await aiopath.getsize(file_path)
         chunk_size = self._get_chunk_size(file_size)
-        if parent_id:
-            # Authenticated upload (own account via mt:bh) needs a parent id.
-            parent_id = await self._get_root_id() if not parent_id else parent_id
-            url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
-        else:
-            # Anonymous upload: PUT directly to the public endpoint without a
-            # parent folder id (Buzzheavier's anon API does not expose /api/fs).
-            url = f"{_UPLOAD_BASE}/{file_name}"
+        if not parent_id:
+            parent_id = await self._get_root_id()
+
+        url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
 
         headers = {
             "Content-Type": "application/octet-stream",
@@ -156,8 +152,8 @@ class BuzzHeavierUploader:
             headers=headers,
         )
 
-        if resp.status not in (200, 201):
-            raise RuntimeError(f"Upload failed: {(await resp.text())[:200]}")
+        if resp.status_code not in (200, 201):
+            raise RuntimeError(f"Upload failed: {resp.text[:200]}")
 
         payload = resp.json()
         file_id = (payload.get("data") or {}).get("id")
@@ -166,31 +162,16 @@ class BuzzHeavierUploader:
             raise RuntimeError("Missing file id")
 
         self._files += 1
-        self._file_links.append((file_name, f"https://buzzheavier.com/{file_id}", file_size))
 
         return f"https://buzzheavier.com/{file_id}"
 
-    async def _upload_dir(self, directory, parent_id, anon: bool = False):
+    async def _upload_dir(self, directory, parent_id):
         entries = await sync_to_async(lambda: list(walk(directory)))
 
         for root, _, files in entries:
 
             if self._listener.is_cancelled:
                 return
-
-            if anon:
-                # Anonymous uploads have no folder support on BuzzHeavier's
-                # public API, so flatten: every file goes straight to the root
-                # endpoint (parent_id=""). Folder structure is dropped.
-                for file in sorted(files):
-                    path = ospath.join(root, file)
-                    if await aiopath.isfile(path):
-                        try:
-                            await self._upload_file(path, "")
-                        except Exception as e:
-                            LOGGER.error(f"Upload error: {e}")
-                            continue
-                continue
 
             if root != directory:
                 folder_name = ospath.basename(root)
@@ -209,53 +190,26 @@ class BuzzHeavierUploader:
 
     async def upload(self):
         try:
-            client_headers = {}
-            if self._account_id:
-                # Only send the Authorization header when uploading to a user's
-                # own account (mt:bh). Anonymous uploads must omit it entirely,
-                # otherwise httpx rejects the trailing-space "Bearer " value.
-                client_headers["Authorization"] = f"Bearer {self._account_id}"
-            self._client = aiohttp.ClientSession(
-                timeout=aiohttp.ClientTimeout(
-                    connect=30.0, read=600.0, write=600.0, pool=30.0
-                ),
-                connector=aiohttp.TCPConnector(limit=4),
-                headers=client_headers,
+            self._client = AsyncClient(
+                timeout=_HTTP_TIMEOUT,
+                limits=Limits(max_connections=4, max_keepalive_connections=0),
+                headers={"Authorization": f"Bearer {self._account_id}"},
             )
             if await aiopath.isfile(self._path):
                 mime_type = await sync_to_async(get_mime_type, self._path)
                 link = await self._upload_file(self._path, self._listener.up_dest)
 
             else:
-                if not self._account_id:
-                    if not Config.BUZZHEAVIER_ANON_FOLDER:
-                        # Respect the config toggle: by default anonymous
-                        # folder uploads are rejected (matches upstream
-                        # behaviour). Set BUZZHEAVIER_ANON_FOLDER=True to allow
-                        # them (flattened to the public endpoint).
-                        raise ValueError(
-                            "Anonymous BuzzHeavier uploads support files only. "
-                            "Use `-up mt:bh` (your account) to upload folders, or "
-                            "enable BUZZHEAVIER_ANON_FOLDER to allow anonymous folders."
-                        )
-                    # Anonymous uploads have no folder support on BuzzHeavier's
-                    # public API, so flatten all files to the root endpoint and
-                    # let the Telegraph index (built in task_listener when >=2
-                    # files) aggregate them. Single file still gets a Cloud Link.
-                    mime_type = "Folder"
-                    await self._upload_dir(self._path, "", anon=True)
-                    link = self._file_links[0][1] if self._file_links else ""
-                else:
-                    mime_type = "Folder"
-                    root_name = ospath.basename(ospath.abspath(self._path))
+                mime_type = "Folder"
+                root_name = ospath.basename(ospath.abspath(self._path))
 
-                    root_id = await self._create_directory(
-                        root_name, self._listener.up_dest
-                    )
+                root_id = await self._create_directory(
+                    root_name, self._listener.up_dest
+                )
 
-                    await self._upload_dir(self._path, root_id)
+                await self._upload_dir(self._path, root_id)
 
-                    link = f"https://buzzheavier.com/{root_id}"
+                link = f"https://buzzheavier.com/{root_id}"
 
             if self._listener.is_cancelled:
                 return
@@ -265,11 +219,10 @@ class BuzzHeavierUploader:
                 self._files,
                 self._folders,
                 mime_type,
-                bh_file_links=self._file_links,
             )
         except CancelledError:
             return
-        except Exception as e:
+        except (Exception, HTTPError) as e:
             LOGGER.error(str(e))
             traceback.print_exc()
             await self._listener.on_upload_error(str(e))

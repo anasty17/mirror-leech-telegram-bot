@@ -25,7 +25,7 @@ import urllib.parse
 from typing import Any, Awaitable, Callable, Optional
 from urllib.parse import urlparse
 
-import aiohttp
+from httpx import AsyncClient, HTTPError
 
 from bot import LOGGER
 from bot.core.config_manager import Config
@@ -109,24 +109,16 @@ async def _call_api(
     """
     headers = {"User-Agent": _USER_AGENT}
     try:
-        timeout = aiohttp.ClientTimeout(total=_TIMEOUT)
-        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
+        async with AsyncClient(timeout=_TIMEOUT, headers=headers) as client:
             request_kwargs: dict[str, Any] = {"params": params or {}}
             if data is not None:
                 request_kwargs["data"] = data
             if files is not None:
-                form = aiohttp.FormData()
-                for fkey, fval in files.items():
-                    if isinstance(fval, tuple):
-                        fname, fcontent, ftype = fval
-                        form.add_field(fkey, fcontent, filename=fname, content_type=ftype)
-                    else:
-                        form.add_field(fkey, fval)
-                request_kwargs["data"] = form
-            async with session.request(method, url, **request_kwargs) as response:
-                response.raise_for_status()
-                payload = await response.json()
-    except aiohttp.ClientError as exc:
+                request_kwargs["files"] = files
+            response = await client.request(method, url, **request_kwargs)
+            response.raise_for_status()
+            payload = response.json()
+    except HTTPError as exc:
         raise DirectDownloadLinkException(
             f"ERROR: AllDebrid network error: {exc}"
         ) from exc
@@ -330,15 +322,17 @@ def _flatten_files(
 
 
 async def _post_form(url: str, fields: list[tuple[str, Any]]) -> dict[str, Any]:
-    """POST to the AllDebrid API with a multi-value form payload.
+    """POST to the AllDebrid API with a form payload.
 
-    ``httpx`` accepts ``data`` as a list of ``(key, value)`` tuples,
-    which lets us emit repeated keys like ``magnets[]`` without
-    aiohttp's ``FormData`` helper.
+    NOTE: httpx on Python 3.14 mis-detects a *list of tuples* request body
+    as a sync stream and raises "Attempted to send a sync request with an
+    AsyncClient instance". Convert the fields to a plain dict (single value
+    per key) which httpx sends correctly on 3.14.
     """
     api_key = _ensure_api_key()
     params = {"agent": _AGENT, "apikey": api_key}
-    return await _call_api("POST", url, params=params, data=fields)
+    data = dict(fields)
+    return await _call_api("POST", url, params=params, data=data)
 
 
 async def upload_magnet(magnet: str) -> dict[str, Any]:

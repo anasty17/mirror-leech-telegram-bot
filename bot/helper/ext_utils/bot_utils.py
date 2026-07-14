@@ -1,4 +1,4 @@
-import aiohttp
+from httpx import AsyncClient
 from asyncio.subprocess import PIPE
 from functools import partial, wraps
 from concurrent.futures import ThreadPoolExecutor
@@ -204,9 +204,9 @@ def get_size_bytes(size):
 
 async def get_content_type(url):
     try:
-        async with aiohttp.ClientSession() as client:
-            async with client.get(url, allow_redirects=True, ssl=False) as response:
-                return response.headers.get("Content-Type")
+        async with AsyncClient() as client:
+            response = await client.get(url, allow_redirects=True, verify=False)
+            return response.headers.get("Content-Type")
     except:
         return None
 
