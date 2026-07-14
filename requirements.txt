@@ -13,7 +13,7 @@ google-api-python-client
 google-auth-httplib2
 google-auth-oauthlib
 gunicorn
-httpx
+httpx==0.27.2
 jinja2
 lxml
 natsort
