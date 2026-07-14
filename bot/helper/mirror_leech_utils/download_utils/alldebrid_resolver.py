@@ -25,7 +25,7 @@ import urllib.parse
 from typing import Any, Awaitable, Callable, Optional
 from urllib.parse import urlparse
 
-from httpx import AsyncClient, HTTPError
+import aiohttp
 
 from bot import LOGGER
 from bot.core.config_manager import Config
@@ -109,16 +109,24 @@ async def _call_api(
     """
     headers = {"User-Agent": _USER_AGENT}
     try:
-        async with AsyncClient(timeout=_TIMEOUT, headers=headers) as client:
+        timeout = aiohttp.ClientTimeout(total=_TIMEOUT)
+        async with aiohttp.ClientSession(headers=headers, timeout=timeout) as session:
             request_kwargs: dict[str, Any] = {"params": params or {}}
             if data is not None:
                 request_kwargs["data"] = data
             if files is not None:
-                request_kwargs["files"] = files
-            response = await client.request(method, url, **request_kwargs)
-            response.raise_for_status()
-            payload = response.json()
-    except HTTPError as exc:
+                form = aiohttp.FormData()
+                for fkey, fval in files.items():
+                    if isinstance(fval, tuple):
+                        fname, fcontent, ftype = fval
+                        form.add_field(fkey, fcontent, filename=fname, content_type=ftype)
+                    else:
+                        form.add_field(fkey, fval)
+                request_kwargs["data"] = form
+            async with session.request(method, url, **request_kwargs) as response:
+                response.raise_for_status()
+                payload = await response.json()
+    except aiohttp.ClientError as exc:
         raise DirectDownloadLinkException(
             f"ERROR: AllDebrid network error: {exc}"
         ) from exc

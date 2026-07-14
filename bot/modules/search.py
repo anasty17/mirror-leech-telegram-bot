@@ -1,4 +1,4 @@
-from httpx import AsyncClient
+import aiohttp
 from html import escape
 from urllib.parse import quote
 
@@ -28,9 +28,9 @@ async def initiate_search_tools():
     if Config.SEARCH_API_LINK:
         global SITES
         try:
-            async with AsyncClient() as client:
-                response = await client.get(f"{Config.SEARCH_API_LINK}/api/v1/sites")
-                data = response.json()
+            async with aiohttp.ClientSession() as client:
+                async with client.get(f"{Config.SEARCH_API_LINK}/api/v1/sites") as response:
+                    data = await response.json()
             SITES = {
                 str(site): str(site).capitalize() for site in data["supported_sites"]
             }
@@ -63,9 +63,9 @@ async def search(key, site, message, method):
             else:
                 api = f"{Config.SEARCH_API_LINK}/api/v1/recent?site={site}&limit={Config.SEARCH_LIMIT}"
         try:
-            async with AsyncClient() as client:
-                response = await client.get(api)
-                search_results = response.json()
+            async with aiohttp.ClientSession() as client:
+                async with client.get(api) as response:
+                    search_results = await response.json()
             if "error" in search_results or search_results["total"] == 0:
                 await edit_message(
                     message,

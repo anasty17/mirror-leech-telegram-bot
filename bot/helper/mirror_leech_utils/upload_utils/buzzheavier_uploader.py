@@ -5,7 +5,7 @@ import traceback
 from aiofiles.os import path as aiopath
 from aiofiles import open as aiopen
 from asyncio import CancelledError
-from httpx import AsyncClient, Limits, Timeout, HTTPError
+import aiohttp
 
 from ...ext_utils.bot_utils import sync_to_async
 from ...ext_utils.files_utils import get_mime_type
@@ -15,7 +15,6 @@ LOGGER = getLogger(__name__)
 
 _UPLOAD_BASE = "https://w.buzzheavier.com"
 
-_HTTP_TIMEOUT = Timeout(connect=30.0, read=600.0, write=600.0, pool=30.0)
 
 
 class BuzzHeavierUploader:
@@ -95,10 +94,10 @@ class BuzzHeavierUploader:
             "https://buzzheavier.com/api/fs",
         )
 
-        if resp.status_code != 200:
-            raise RuntimeError(f"Root fetch failed: {resp.text[:200]}")
+        if resp.status != 200:
+            raise RuntimeError(f"Root fetch failed: {(await resp.text())[:200]}")
 
-        data = resp.json()
+        data = await resp.json()
         root_id = (data.get("data") or {}).get("id")
 
         if not root_id:
@@ -116,19 +115,19 @@ class BuzzHeavierUploader:
             json={"name": name},
         )
 
-        if resp.status_code not in (200, 201):
-            if resp.status_code == 409:
+        if resp.status not in (200, 201):
+            if resp.status == 409:
                 res = await self._client.get(
                     f"https://buzzheavier.com/api/fs/{parent_id}"
                 )
-                if res.status_code == 200:
+                if res.status == 200:
                     data = res.json()
                     for item in (data.get("data") or {}).get("children", []):
                         if item.get("name") == name and item.get("isDirectory"):
                             return item.get("id")
-            raise RuntimeError(f"Create dir failed: {resp.text}")
+            raise RuntimeError(f"Create dir failed: {await resp.text()}")
 
-        data = resp.json()
+        data = await resp.json()
         return (data.get("data") or {}).get("id")
 
     async def _upload_file(self, file_path, parent_id):
@@ -157,8 +156,8 @@ class BuzzHeavierUploader:
             headers=headers,
         )
 
-        if resp.status_code not in (200, 201):
-            raise RuntimeError(f"Upload failed: {resp.text[:200]}")
+        if resp.status not in (200, 201):
+            raise RuntimeError(f"Upload failed: {(await resp.text())[:200]}")
 
         payload = resp.json()
         file_id = (payload.get("data") or {}).get("id")
@@ -216,9 +215,11 @@ class BuzzHeavierUploader:
                 # own account (mt:bh). Anonymous uploads must omit it entirely,
                 # otherwise httpx rejects the trailing-space "Bearer " value.
                 client_headers["Authorization"] = f"Bearer {self._account_id}"
-            self._client = AsyncClient(
-                timeout=_HTTP_TIMEOUT,
-                limits=Limits(max_connections=4, max_keepalive_connections=0),
+            self._client = aiohttp.ClientSession(
+                timeout=aiohttp.ClientTimeout(
+                    connect=30.0, read=600.0, write=600.0, pool=30.0
+                ),
+                connector=aiohttp.TCPConnector(limit=4),
                 headers=client_headers,
             )
             if await aiopath.isfile(self._path):
@@ -268,7 +269,7 @@ class BuzzHeavierUploader:
             )
         except CancelledError:
             return
-        except (Exception, HTTPError) as e:
+        except Exception as e:
             LOGGER.error(str(e))
             traceback.print_exc()
             await self._listener.on_upload_error(str(e))

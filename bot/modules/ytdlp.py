@@ -1,4 +1,4 @@
-from httpx import AsyncClient
+import aiohttp
 from asyncio import wait_for, Event
 from functools import partial
 from pyrogram.filters import regex, user
@@ -240,7 +240,7 @@ def extract_info(link, options):
 
 async def _mdisk(link, name):
     key = link.split("/")[-1]
-    async with AsyncClient(verify=False) as client:
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(ssl=False)) as client:
         resp = await client.get(
             f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
         )
