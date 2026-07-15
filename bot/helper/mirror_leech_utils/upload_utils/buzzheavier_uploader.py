@@ -26,6 +26,7 @@ class BuzzHeavierUploader:
         self._processed_bytes = 0
         self._start_time = time()
         self._files = 0
+        self._file_links = []  # (filename, url, size) for every uploaded file
         self._folders = 0
         self._root_id_cache = None
         self._client = None
@@ -134,10 +135,14 @@ class BuzzHeavierUploader:
         file_name = ospath.basename(file_path)
         file_size = await aiopath.getsize(file_path)
         chunk_size = self._get_chunk_size(file_size)
-        if not parent_id:
-            parent_id = await self._get_root_id()
-
-        url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
+        if parent_id:
+            # Authenticated upload (own account via mt:bh) needs a parent id.
+            parent_id = await self._get_root_id() if not parent_id else parent_id
+            url = f"{_UPLOAD_BASE}/{parent_id}/{file_name}"
+        else:
+            # Anonymous upload: PUT directly to the public endpoint without a
+            # parent folder id (Buzzheavier's anon API does not expose /api/fs).
+            url = f"{_UPLOAD_BASE}/{file_name}"
 
         headers = {
             "Content-Type": "application/octet-stream",
@@ -162,6 +167,7 @@ class BuzzHeavierUploader:
             raise RuntimeError("Missing file id")
 
         self._files += 1
+        self._file_links.append((file_name, f"https://buzzheavier.com/{file_id}", file_size))
 
         return f"https://buzzheavier.com/{file_id}"
 
@@ -190,16 +196,30 @@ class BuzzHeavierUploader:
 
     async def upload(self):
         try:
+            client_headers = {}
+            if self._account_id:
+                # Only send the Authorization header when uploading to a user's
+                # own account (mt:bh). Anonymous uploads must omit it entirely,
+                # otherwise httpx rejects the trailing-space "Bearer " value.
+                client_headers["Authorization"] = f"Bearer {self._account_id}"
             self._client = AsyncClient(
                 timeout=_HTTP_TIMEOUT,
                 limits=Limits(max_connections=4, max_keepalive_connections=0),
-                headers={"Authorization": f"Bearer {self._account_id}"},
+                headers=client_headers,
             )
             if await aiopath.isfile(self._path):
                 mime_type = await sync_to_async(get_mime_type, self._path)
                 link = await self._upload_file(self._path, self._listener.up_dest)
 
             else:
+                if not self._account_id:
+                    # Anonymous uploads go to the public endpoint which does not
+                    # support nested folder structures. Only single-file anon
+                    # uploads are allowed; use mt:bh (your own account) for folders.
+                    raise ValueError(
+                        "Anonymous Buzzheavier uploads support files only. "
+                        "Use `-up mt:bh` (your account) to upload folders."
+                    )
                 mime_type = "Folder"
                 root_name = ospath.basename(ospath.abspath(self._path))
 
@@ -219,6 +239,7 @@ class BuzzHeavierUploader:
                 self._files,
                 self._folders,
                 mime_type,
+                bh_file_links=self._file_links,
             )
         except CancelledError:
             return
