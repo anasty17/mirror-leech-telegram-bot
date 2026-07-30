@@ -44,3 +44,4 @@ class BotCommands:
     SelectCommand = f"sel{i}"
     RssCommand = f"rss{i}"
     NzbSearchCommand = f"nzbsearch{i}"
+    BypassCommand = [f"bypass{i}", f"bp{i}"]

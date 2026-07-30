@@ -122,6 +122,13 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         MessageHandler(
+            bypass_scrape_cmd,
+            filters=command(BotCommands.BypassCommand, case_sensitive=True)
+            & CustomFilters.authorized,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
             delete_file,
             filters=command(BotCommands.DeleteCommand, case_sensitive=True)
             & CustomFilters.authorized,

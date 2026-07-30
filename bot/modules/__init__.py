@@ -1,4 +1,5 @@
 from .bot_settings import send_bot_settings, edit_bot_settings
+from .bypass import bypass_scrape_cmd
 from .cancel_task import cancel, cancel_multi, cancel_all_buttons, cancel_all_update
 from .chat_permission import authorize, unauthorize, add_sudo, remove_sudo
 from .clone import clone_node
@@ -47,6 +48,7 @@ __all__ = [
     "add_sudo",
     "remove_sudo",
     "clone_node",
+    "bypass_scrape_cmd",
     "aioexecute",
     "execute",
     "hydra_search",
