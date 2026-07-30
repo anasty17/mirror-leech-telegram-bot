@@ -54,6 +54,7 @@ class TelegramUploader:
         self._msgs_dict = {}
         self._corrupted = 0
         self._media_dict = {"videos": {}, "documents": {}}
+        self._album_msgs = []
         self._last_msg_in_group = False
         self._up_path = ""
         self._lprefix = ""
@@ -194,18 +195,94 @@ class TelegramUploader:
                 )
             )[-1]
 
+    @property
+    def _group_client(self):
+        if self._listener.hybrid_leech or not self._user_session:
+            return self._listener.client
+        return TgClient.user
+
+    async def _get_message(self, chat_id, message_id):
+        return await self._group_client.get_messages(
+            chat_id=chat_id, message_ids=message_id
+        )
+
+    async def _copy_group_to_clone_dumps(self, from_chat_id, message_id):
+        """Copy a whole album to the clone dump chats.
+
+        ``copy_media_group`` takes no ``message_thread_id``, so topics are
+        targeted by replying inside them, falling back to the topic root.
+        """
+        for ch, ch_data in list(self._listener.clone_dump_chats.items()):
+            try:
+                res = await TgClient.bot.copy_media_group(
+                    chat_id=ch,
+                    from_chat_id=from_chat_id,
+                    message_id=message_id,
+                    disable_notification=True,
+                    reply_to_message_id=ch_data["last_sent_msg"]
+                    or ch_data["thread_id"],
+                )
+                self._listener.clone_dump_chats[ch]["last_sent_msg"] = res[-1].id
+            except Exception as e:
+                LOGGER.error(
+                    f"Can't forward message to clone dump chat: {ch}. Error: {e}"
+                )
+
+    async def _send_album(self):
+        """Group the pending photos/videos of this task into one album."""
+        msgs = self._album_msgs
+        self._album_msgs = []
+        if len(msgs) < 2:
+            return
+        media = []
+        for index, msg in enumerate(msgs):
+            msgs[index] = msg = await self._get_message(msg[0], msg[1])
+            if msg.photo:
+                media.append(
+                    InputMediaPhoto(media=msg.photo.file_id, caption=msg.caption)
+                )
+            elif msg.video:
+                media.append(
+                    InputMediaVideo(media=msg.video.file_id, caption=msg.caption)
+                )
+        if len(media) != len(msgs):
+            # telegram reclassified something on its way out, leave them alone
+            LOGGER.info("Skipping album, not every message is a photo or video")
+            return
+        msgs_list = await self._group_client.send_media_group(
+            chat_id=msgs[0].chat.id,
+            media=media,
+            reply_to_message_id=msgs[0].reply_to_message_id,
+            disable_notification=True,
+        )
+        for msg in msgs:
+            if msg.link in self._msgs_dict:
+                del self._msgs_dict[msg.link]
+            await delete_message(msg)
+        if self._files_links and (
+            self._listener.is_super_chat or self._listener.up_dest
+        ):
+            for m in msgs_list:
+                self._msgs_dict[m.link] = m.caption
+        await self._copy_group_to_clone_dumps(msgs_list[-1].chat.id, msgs_list[-1].id)
+        self._sent_msg = msgs_list[-1]
+        if self._listener.hybrid_leech and self._user_session:
+            # the album was sent by the bot client, rebind so the next reply
+            # keeps using the session the current file needs
+            self._sent_msg = await TgClient.user.get_messages(
+                chat_id=self._sent_msg.chat.id, message_ids=self._sent_msg.id
+            )
+        if self._base_msg:
+            await delete_message(self._base_msg)
+            self._base_msg = None
+
     async def _send_media_group(self, subkey, key, msgs):
         for index, msg in enumerate(msgs):
-            if self._listener.hybrid_leech or not self._user_session:
-                msgs[index] = await self._listener.client.get_messages(
-                    chat_id=msg[0], message_ids=msg[1]
-                )
-            else:
-                msgs[index] = await TgClient.user.get_messages(
-                    chat_id=msg[0], message_ids=msg[1]
-                )
-        msgs_list = await msgs[0].reply_to_message.reply_media_group(
+            msgs[index] = await self._get_message(msg[0], msg[1])
+        msgs_list = await self._group_client.send_media_group(
+            chat_id=msgs[0].chat.id,
             media=self._get_input_media(subkey, key),
+            reply_to_message_id=msgs[0].reply_to_message_id,
             disable_notification=True,
         )
         for msg in msgs:
@@ -218,6 +295,7 @@ class TelegramUploader:
         ):
             for m in msgs_list:
                 self._msgs_dict[m.link] = m.caption
+        await self._copy_group_to_clone_dumps(msgs_list[-1].chat.id, msgs_list[-1].id)
         self._sent_msg = msgs_list[-1]
         if self._base_msg:
             await delete_message(self._base_msg)
@@ -233,6 +311,7 @@ class TelegramUploader:
             if dirpath.strip().endswith("/yt-dlp-thumb"):
                 continue
             if dirpath.strip().endswith("_mltbss"):
+                await self._send_album()
                 await self._send_screenshots(dirpath, files)
                 await rmtree(dirpath, ignore_errors=True)
                 continue
@@ -281,26 +360,6 @@ class TelegramUploader:
                     self._last_msg_in_group = False
                     self._last_uploaded = 0
                     await self._upload_file(cap_mono, file_, f_path)
-                    if self._sent_msg and self._sent_msg.media_group_id:
-                        for ch, ch_data in list(
-                            self._listener.clone_dump_chats.items()
-                        ):
-                            try:
-                                res = await TgClient.bot.copy_message(
-                                    chat_id=ch,
-                                    from_chat_id=self._sent_msg.chat.id,
-                                    message_id=self._sent_msg.id,
-                                    message_thread_id=ch_data["thread_id"],
-                                    disable_notification=True,
-                                    reply_to_message_id=ch_data["last_sent_msg"],
-                                )
-                                self._listener.clone_dump_chats[ch][
-                                    "last_sent_msg"
-                                ] = res.id
-                            except Exception as e:
-                                LOGGER.error(
-                                    f"Can't forward message to clone dump chat: {ch}. Error: {e}"
-                                )
                     if self._listener.is_cancelled:
                         return
                     if (
@@ -325,6 +384,10 @@ class TelegramUploader:
                     self._up_path
                 ):
                     await remove(self._up_path)
+        try:
+            await self._send_album()
+        except Exception as e:
+            LOGGER.info(f"While sending album at the end of task. Error: {e}")
         for key, value in list(self._media_dict.items()):
             for subkey, msgs in list(value.items()):
                 if len(msgs) > 1:
@@ -394,6 +457,7 @@ class TelegramUploader:
                     return
                 if thumb == "none":
                     thumb = None
+                await self._send_album()
                 self._sent_msg = await self._sent_msg.reply_document(
                     document=self._up_path,
                     thumb=thumb,
@@ -441,6 +505,7 @@ class TelegramUploader:
                     return
                 if thumb == "none":
                     thumb = None
+                await self._send_album()
                 self._sent_msg = await self._sent_msg.reply_audio(
                     audio=self._up_path,
                     caption=cap_mono,
@@ -462,12 +527,18 @@ class TelegramUploader:
                     progress=self._upload_progress,
                 )
 
-            if (
+            if not self._listener.is_cancelled and (
+                self._sent_msg.photo or self._sent_msg.video
+            ):
+                self._album_msgs.append([self._sent_msg.chat.id, self._sent_msg.id])
+                if len(self._album_msgs) == 10:
+                    await self._send_album()
+            elif (
                 not self._listener.is_cancelled
                 and self._media_group
-                and (self._sent_msg.video or self._sent_msg.document)
+                and self._sent_msg.document
             ):
-                key = "documents" if self._sent_msg.document else "videos"
+                key = "documents"
                 if match := re_match(r".+(?=\.0*\d+$)|.+(?=\.part\d+\..+$)", o_path):
 
                     pname = match.group(0)
@@ -490,7 +561,11 @@ class TelegramUploader:
                 and await aiopath.exists(thumb)
             ):
                 await remove(thumb)
-            if self._base_msg and not self._last_msg_in_group:
+            if (
+                self._base_msg
+                and not self._last_msg_in_group
+                and not self._album_msgs
+            ):
                 await delete_message(self._base_msg)
                 self._base_msg = None
         except (FloodWait, FloodPremiumWait) as f:
