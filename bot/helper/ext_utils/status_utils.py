@@ -3,6 +3,7 @@ from psutil import virtual_memory, cpu_percent, disk_usage
 from time import time
 from asyncio import iscoroutinefunction, gather
 from pyrogram.types import InlineKeyboardButton
+from pyrogram.enums import ButtonStyle
 
 from ... import task_dict, task_dict_lock, bot_start_time, status_dict, DOWNLOAD_DIR
 from ...core.config_manager import Config
@@ -228,7 +229,7 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"\n<b>Size: </b>{task.size()}"
         msg += f"\n<b>Gid: </b><code>{task.gid()}</code>\n\n"
-        task_gids.append((index + start_position, task.gid()))
+        task_gids.append((index + start_position, task.listener.mid))
 
     if len(msg) == 0:
         if status == "All":
@@ -249,15 +250,16 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         for label, status_value in list(STATUSES.items()):
             if status_value != status:
                 buttons.data_button(label, f"status {sid} st {status_value}")
-    buttons.data_button("♻️", f"status {sid} ref", position="header")
+    buttons.data_button("♻️", f"status {sid} ref", position="header", style="green")
     button = buttons.build_menu(8)
     if task_gids:
         cancel_buttons = [
             InlineKeyboardButton(
-                text=f"❌ {num}",
-                callback_data=f"status {sid} cancel {gid}",
+                text=f"{num}",
+                callback_data=f"status {sid} canconf {mid}",
+                style=ButtonStyle.DANGER
             )
-            for num, gid in task_gids
+            for num, mid in task_gids
         ]
         for i in range(0, len(cancel_buttons), 4):
             button.inline_keyboard.append(cancel_buttons[i : i + 4])
