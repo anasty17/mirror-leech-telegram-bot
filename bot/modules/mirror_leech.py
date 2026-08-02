@@ -19,6 +19,7 @@ from ..helper.ext_utils.links_utils import (
     is_rclone_path,
     is_telegram_link,
     is_gdrive_id,
+    is_tldv_link,
 )
 from ..helper.listeners.task_listener import TaskListener
 from ..helper.mirror_leech_utils.download_utils.aria2_download import (
@@ -36,6 +37,9 @@ from ..helper.mirror_leech_utils.download_utils.torbox_resolver import (
 )
 from ..helper.mirror_leech_utils.download_utils.direct_downloader import (
     add_direct_download,
+)
+from ..helper.mirror_leech_utils.download_utils.tldv_downloader import (
+    add_tldv_download,
 )
 from ..helper.mirror_leech_utils.download_utils.direct_link_generator import (
     direct_link_generator,
@@ -488,6 +492,8 @@ class Mirror(TaskListener):
             await add_rclone_download(self, f"{path}/")
         elif is_gdrive_link(self.link) or is_gdrive_id(self.link):
             await add_gd_download(self, path)
+        elif is_tldv_link(self.link):
+            await add_tldv_download(self, path, headers)
         else:
             ussr = args["-au"]
             pssw = args["-ap"]

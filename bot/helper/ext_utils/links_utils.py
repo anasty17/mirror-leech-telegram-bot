@@ -55,3 +55,12 @@ def is_gdrive_id(id_: str):
             id_,
         )
     )
+
+
+def is_tldv_link(url: str):
+    return bool(
+        re_match(
+            r"^https?://(?:app\.)?tldv\.io/(?:app/meetings|watch)/[a-zA-Z0-9]+",
+            url,
+        )
+    )

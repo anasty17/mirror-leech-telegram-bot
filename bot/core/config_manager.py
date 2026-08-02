@@ -16,6 +16,7 @@ class Config:
     BUZZHEAVIER_ACCOUNT_ID = ""
     BUZZHEAVIER_FOLDER_ID = ""
     GOFILE_API_KEY = ""
+    TLDV_TOKEN = ""
     CMD_SUFFIX = ""
     CLONE_DUMP_CHATS = ""
     DATABASE_URL = ""
