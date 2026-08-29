@@ -1,6 +1,7 @@
 from aioshutil import rmtree as aiormtree, move
 from asyncio import create_subprocess_exec, wait_for
 from asyncio.subprocess import PIPE
+from shlex import quote as shlex_quote
 from magic import Magic
 from os import walk, path as ospath, readlink
 from re import split as re_split, I, search as re_search, escape
@@ -296,13 +297,13 @@ async def join_files(opath):
     results = []
     exists = False
     for file_ in files:
-        if re_search(r"\.0+2$", file_) and await sync_to_async(
+        if re_search(r".+\.0+2$", file_) and await sync_to_async(
             get_mime_type, f"{opath}/{file_}"
         ) not in ["application/x-7z-compressed", "application/zip"]:
             exists = True
             final_name = file_.rsplit(".", 1)[0]
             fpath = f"{opath}/{final_name}"
-            cmd = f'cat "{fpath}."* > "{fpath}"'
+            cmd = f"cat {shlex_quote(fpath)}.* > {shlex_quote(fpath)}"
             _, stderr, code = await cmd_exec(cmd, True)
             if code != 0:
                 LOGGER.error(f"Failed to join {final_name}, stderr: {stderr}")
@@ -310,7 +311,6 @@ async def join_files(opath):
                     await remove(fpath)
             else:
                 results.append(final_name)
-
     if not exists:
         LOGGER.warning("No files to join!")
     elif results:

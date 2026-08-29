@@ -80,47 +80,34 @@ class Config:
     YT_DLP_OPTIONS = {}
 
     @classmethod
-    def _convert(cls, key: str, value):
+    def _convert(cls, key, value):
         if not hasattr(cls, key):
             raise KeyError(f"{key} is not a valid configuration key.")
-
         expected_type = type(getattr(cls, key))
-
-        if value is None:
-            return None
-
-        if isinstance(value, expected_type):
+        if value and isinstance(value, expected_type):
             return value
-
         if expected_type is bool:
             return str(value).strip().lower() in {"true", "1", "yes"}
-
-        if expected_type in [list, dict]:
-            if not isinstance(value, str):
-                raise TypeError(
-                    f"{key} should be {expected_type.__name__}, got {type(value).__name__}"
-                )
-
+        if expected_type in (list, dict):
             if not value:
                 return expected_type()
-
-            try:
-                evaluated = literal_eval(value)
-                if not isinstance(evaluated, expected_type):
-                    raise TypeError(
-                        f"Expected {expected_type.__name__}, got {type(evaluated).__name__}"
-                    )
-                return evaluated
-            except (ValueError, SyntaxError, TypeError) as e:
+            if isinstance(value, str):
+                try:
+                    value = literal_eval(value)
+                except (ValueError, SyntaxError) as exc:
+                    raise TypeError(f"Invalid value for {key}: {value!r}") from exc
+            if not isinstance(value, expected_type):
                 raise TypeError(
-                    f"{key} should be {expected_type.__name__}, got invalid string: {value}"
-                ) from e
-
+                    f"{key} should be {expected_type.__name__}, "
+                    f"got {type(value).__name__}"
+                )
+            return value
         try:
             return expected_type(value)
         except (ValueError, TypeError) as exc:
             raise TypeError(
-                f"Invalid type for {key}: expected {expected_type}, got {type(value)}"
+                f"Invalid type for {key}: expected {expected_type.__name__}, "
+                f"got {type(value).__name__}"
             ) from exc
 
     @classmethod
@@ -151,29 +138,21 @@ class Config:
 
     @classmethod
     def _process_config_value(cls, attr: str, value):
-        if not value:
-            return None
-
         converted_value = cls._convert(attr, value)
-
         if isinstance(converted_value, str):
             converted_value = converted_value.strip()
-
         if attr == "DEFAULT_UPLOAD" and converted_value not in {"gd", "bh", "gf"}:
             return "rc"
-
         if attr in {
             "BASE_URL",
             "RCLONE_SERVE_URL",
             "SEARCH_API_LINK",
         }:
             return converted_value.strip("/") if converted_value else ""
-
         if attr == "USENET_SERVERS" and (
             not converted_value or not converted_value[0].get("host")
         ):
-            return None
-
+            return []
         return converted_value
 
     @classmethod
@@ -182,16 +161,12 @@ class Config:
             settings = import_module("config")
         except ModuleNotFoundError:
             return False
-
         for attr in dir(settings):
             if not cls._is_valid_config_attr(attr):
                 continue
-
             raw_value = getattr(settings, attr)
             processed_value = cls._process_config_value(attr, raw_value)
-
-            if processed_value is not None:
-                setattr(cls, attr, processed_value)
+            setattr(cls, attr, processed_value)
 
         return True
 
@@ -206,8 +181,7 @@ class Config:
                 continue
 
             processed_value = cls._process_config_value(attr, env_value)
-            if processed_value is not None:
-                setattr(cls, attr, processed_value)
+            setattr(cls, attr, processed_value)
 
     @classmethod
     def _validate_required_config(cls) -> None:
@@ -235,13 +209,6 @@ class Config:
         for key, value in config_dict.items():
             if not hasattr(cls, key):
                 continue
-
             processed_value = cls._process_config_value(key, value)
-
-            if key == "USENET_SERVERS" and processed_value is None:
-                processed_value = []
-
-            if processed_value is not None:
-                setattr(cls, key, processed_value)
-
+            setattr(cls, key, processed_value)
         cls._validate_required_config()
