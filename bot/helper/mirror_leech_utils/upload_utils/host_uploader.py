@@ -490,7 +490,22 @@ class HostUploader:
         returned_post_id = data.get("id") or post_id
         if not returned_post_id:
             raise RuntimeError(f"ImgChest response missing post id: {payload}")
-        return returned_post_id, f"https://imgchest.com/p/{returned_post_id}"
+        images = data.get("images") or []
+        file_name = ospath.basename(file_path)
+        image_link = None
+        for image in reversed(images):
+            if image.get("original_name") == file_name and image.get("link"):
+                image_link = image["link"]
+                break
+        if not image_link and images:
+            image_link = images[-1].get("link")
+        if not image_link:
+            raise RuntimeError(f"ImgChest response missing image link: {payload}")
+        return (
+            returned_post_id,
+            f"https://imgchest.com/p/{returned_post_id}",
+            image_link,
+        )
 
     async def _upload_imgbb(self, client, file_path):
         api_key = (getattr(Config, "IMGBB_API_KEY", "") or "").strip()
@@ -559,7 +574,7 @@ class HostUploader:
         return files, subfolders
 
     async def _make_collection(self, client, links):
-        if not self._is_folder or not links:
+        if not self._is_folder or len(links) < 2:
             return None
         if self._host == "cb":
             return await self._create_catbox_album(client, links)
@@ -619,10 +634,15 @@ class HostUploader:
                                     "ic only supports image uploads; skipped: "
                                     f"{ospath.basename(file_path)}"
                                 )
-                            imgchest_post_id, link = await self._upload_imgchest(
+                            (
+                                imgchest_post_id,
+                                imgchest_post_link,
+                                link,
+                            ) = await self._upload_imgchest(
                                 client, file_path, imgchest_post_id
                             )
-                            collection_link = link if self._is_folder else None
+                            if self._is_folder and uploaded_links:
+                                collection_link = imgchest_post_link
                         else:
                             link = await self._upload_one(client, file_path)
                     except (HTTPError, RuntimeError) as exc:
@@ -639,12 +659,11 @@ class HostUploader:
                         return
 
                     uploaded_links.append(link)
-                    if self._host != "ic":
-                        files_dict[link] = (
-                            ospath.relpath(file_path, self._path)
-                            if self._is_folder
-                            else ospath.basename(file_path)
-                        )
+                    files_dict[link] = (
+                        ospath.relpath(file_path, self._path)
+                        if self._is_folder
+                        else ospath.basename(file_path)
+                    )
 
                 if uploaded_links and not collection_link:
                     try:
@@ -671,9 +690,14 @@ class HostUploader:
         if self._listener.is_cancelled:
             return
 
-        if self._is_folder and not collection_link:
+        if self._is_folder and successful > 1 and not collection_link:
             await self._send_file_links(files_dict)
-        elif self._is_folder and self._listener.files_links and files_dict:
+        elif (
+            self._is_folder
+            and successful > 1
+            and self._listener.files_links
+            and files_dict
+        ):
             await self._send_file_links(files_dict)
 
         cloud_link = collection_link or uploaded_links[0]
