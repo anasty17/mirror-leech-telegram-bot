@@ -1,13 +1,13 @@
-"""Centralized presentation settings for the customized FileHub build.
+"""Centralized presentation settings for the customized FileHub build."""
 
-Keep user-facing names and project links here so modules do not hard-code
-branding details. Runtime secrets and deployment credentials must remain in
-Config / environment variables, not in this module.
-"""
+from .config_manager import Config
 
-APP_NAME = "FileHub"
-APP_TAGLINE = "Unified download, processing and cloud transfer bot"
-REPOSITORY_URL = "https://github.com/RecklessEvadingDriver/mirror-leech-telegram-bot"
+APP_NAME = Config.APP_NAME or "FileHub"
+APP_TAGLINE = Config.APP_TAGLINE or "Unified download, processing and cloud transfer bot"
+REPOSITORY_URL = (
+    Config.REPOSITORY_URL
+    or "https://github.com/RecklessEvadingDriver/mirror-leech-telegram-bot"
+)
 
 FEATURE_SUMMARY = (
     "Direct links • Telegram files • Torrents • NZB • yt-dlp • gallery-dl • "
