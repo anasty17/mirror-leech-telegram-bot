@@ -148,8 +148,9 @@ async def cancel_all_update(_, query):
     is_sudo = await CustomFilters.sudo("", query)
     if not is_sudo and user_id and user_id != query.from_user.id:
         await query.answer("Not Yours!", show_alert=True)
-    else:
-        await query.answer()
+        return
+
+    await query.answer()
     if data[1] == "close":
         await delete_message(reply_to)
         await delete_message(message)
