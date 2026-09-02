@@ -1,4 +1,5 @@
 from googleapiclient.errors import HttpError
+from json import loads as json_loads
 from logging import getLogger
 from os import path as ospath
 from tenacity import (
@@ -16,6 +17,14 @@ from ...mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 LOGGER = getLogger(__name__)
 
 
+def _error_reason(err):
+    try:
+        payload = json_loads(err.content)
+        return payload.get("error", {}).get("errors", [{}])[0].get("reason")
+    except (TypeError, ValueError, IndexError, AttributeError):
+        return None
+
+
 class GoogleDriveClone(GoogleDriveHelper):
     def __init__(self, listener):
         self.listener = listener
@@ -28,6 +37,10 @@ class GoogleDriveClone(GoogleDriveHelper):
         if self.listener.up_dest.startswith("mt:") or self.listener.link.startswith(
             "mt:"
         ):
+            if not self._trusted_user_token(self.listener.user_id):
+                raise PermissionError(
+                    "Per-user Google token.pickle credentials are restricted to owner/sudo users."
+                )
             self.token_path = f"tokens/{self.listener.user_id}.pickle"
             self.listener.up_dest = self.listener.up_dest.replace("mt:", "", 1)
             self.use_sa = False
@@ -144,7 +157,7 @@ class GoogleDriveClone(GoogleDriveHelper):
             )
         except HttpError as err:
             if err.resp.get("content-type", "").startswith("application/json"):
-                reason = eval(err.content).get("error").get("errors")[0].get("reason")
+                reason = _error_reason(err)
                 if reason not in [
                     "userRateLimitExceeded",
                     "dailyLimitExceeded",
@@ -159,11 +172,10 @@ class GoogleDriveClone(GoogleDriveHelper):
                             f"Reached maximum number of service accounts switching, which is {self.sa_count}"
                         )
                         raise err
-                    else:
-                        if self.listener.is_cancelled:
-                            return
-                        self.switch_service_account()
-                        return self._copy_file(file_id, dest_id)
+                    if self.listener.is_cancelled:
+                        return
+                    self.switch_service_account()
+                    return self._copy_file(file_id, dest_id)
                 else:
                     LOGGER.error(f"Got: {reason}")
                     raise err
