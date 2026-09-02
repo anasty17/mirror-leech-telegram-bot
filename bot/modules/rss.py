@@ -40,7 +40,6 @@ headers = {
 
 
 def _find_command_filters(flt):
-    """Recursively extract CommandFilter instances from a composite filter tree."""
     if hasattr(flt, "commands"):
         yield flt
     for attr in ("base", "other"):
@@ -49,14 +48,10 @@ def _find_command_filters(flt):
 
 
 def _build_command_map():
-    """Build a mapping from command name -> handler callback by inspecting
-    the bot's registered message handlers."""
     mapping = {}
     for group in TgClient.bot.dispatcher.groups.values():
         for handler in group:
-            if not isinstance(handler, MessageHandler):
-                continue
-            if handler.filters is None:
+            if not isinstance(handler, MessageHandler) or handler.filters is None:
                 continue
             for cmd_filter in _find_command_filters(handler.filters):
                 for cmd in cmd_filter.commands:
@@ -75,11 +70,6 @@ def _get_command_map():
 
 
 def _resolve_command(command_str):
-    """Resolve a command string like 'ql -doc' into its handler function.
-
-    Returns the handler function, or None if not recognized.
-    Handles commands with or without CMD_SUFFIX.
-    """
     cmd_name = command_str.strip().lstrip("/").split(maxsplit=1)[0]
     mapping = _get_command_map()
     handler = mapping.get(cmd_name)
@@ -90,40 +80,26 @@ def _resolve_command(command_str):
     return handler
 
 
-async def _start_rss_download(
-    url, command, user_id, rss_chat_id, rss_topic_id, item_title
-):
-    """Send a notification to RSS_CHAT and start the download directly."""
+async def _start_rss_download(url, command, user_id, rss_chat_id, rss_topic_id, item_title):
     handler = _resolve_command(command)
     if handler is None:
         LOGGER.error(f"RSS: Cannot start download, unknown command: {command}")
         return
-
     cmd_text = f"/{command.strip().lstrip('/')}"
     parts = cmd_text.split(maxsplit=1)
-    if len(parts) > 1:
-        cmd_text = f"{parts[0]} {url} {parts[1]}"
-    else:
-        cmd_text = f"{parts[0]} {url}"
-
+    cmd_text = f"{parts[0]} {url} {parts[1]}" if len(parts) > 1 else f"{parts[0]} {url}"
     try:
         user = await TgClient.bot.get_users(user_id)
     except Exception as e:
-        LOGGER.error(
-            f"RSS: Failed to get user {user_id}, "
-            f"cannot start download for '{item_title}': {e}"
-        )
+        LOGGER.error(f"RSS: Failed to get user {user_id}, cannot start download for '{item_title}': {e}")
         return
-
     msg = await send_rss(cmd_text, rss_chat_id, rss_topic_id)
     if isinstance(msg, str):
         LOGGER.error(f"RSS: Failed to send to RSS_CHAT: {msg}")
         return
-
     msg.text = cmd_text
     msg.from_user = user
     msg._rss_trigger = True
-
     await handler(TgClient.bot, msg)
 
 
@@ -161,14 +137,10 @@ async def rss_menu(event):
         else:
             rss_id = chat
         event_chat = getattr(event, "chat", None) or event.message.chat
-        if event_chat.id == rss_id:
-            chat_display = "This Chat"
-        else:
-            chat_display = f"<code>{chat}</code>"
+        chat_display = "This Chat" if event_chat.id == rss_id else f"<code>{chat}</code>"
     else:
         chat_display = "<b>Not Set!</b>"
-    msg = f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}\nRSS Chat: {chat_display}"
-    return msg, button
+    return f"Rss Menu | Users: {len(rss_dict)} | Running: {scheduler.running}\nRSS Chat: {chat_display}", button
 
 
 async def update_rss_menu(query):
@@ -186,66 +158,41 @@ async def get_rss_menu(_, message):
 async def rss_sub(_, message, pre_event):
     user_id = message.from_user.id
     handler_dict[user_id] = False
-    if username := message.from_user.username:
-        tag = f"@{username}"
-    else:
-        tag = message.from_user.mention
+    tag = f"@{message.from_user.username}" if message.from_user.username else message.from_user.mention
     msg = ""
     items = message.text.split("\n")
     for index, item in enumerate(items, start=1):
         args = item.split()
         if len(args) < 2:
-            await send_message(
-                message,
-                f"{item}. Wrong Input format. Read help message before adding new subscription!",
-            )
+            await send_message(message, f"{item}. Wrong Input format. Read help message before adding new subscription!")
             continue
         title = args[0].strip()
         if (user_feeds := rss_dict.get(user_id, False)) and title in user_feeds:
-            await send_message(
-                message, f"This title {title} already subscribed! Choose another title!"
-            )
+            await send_message(message, f"This title {title} already subscribed! Choose another title!")
             continue
         feed_link = args[1].strip()
         if feed_link.startswith(("-inf", "-exf", "-c")):
-            await send_message(
-                message,
-                f"Wrong input in line {index}! Add Title! Read the example!",
-            )
+            await send_message(message, f"Wrong input in line {index}! Add Title! Read the example!")
             continue
-        inf_lists = []
-        exf_lists = []
+        inf_lists, exf_lists = [], []
         if len(args) > 2:
             arg_base = {"-c": None, "-inf": None, "-exf": None, "-stv": None}
             arg_parser(args[2:], arg_base)
-            cmd = arg_base["-c"]
-            inf = arg_base["-inf"]
-            exf = arg_base["-exf"]
-            stv = arg_base["-stv"]
+            cmd, inf, exf, stv = arg_base["-c"], arg_base["-inf"], arg_base["-exf"], arg_base["-stv"]
             if stv is not None:
                 stv = stv.lower() == "true"
             if inf is not None:
-                filters_list = inf.split("|")
-                for x in filters_list:
-                    y = x.split(" or ")
-                    inf_lists.append(y)
+                inf_lists = [x.split(" or ") for x in inf.split("|")]
             if exf is not None:
-                filters_list = exf.split("|")
-                for x in filters_list:
-                    y = x.split(" or ")
-                    exf_lists.append(y)
+                exf_lists = [x.split(" or ") for x in exf.split("|")]
         else:
-            inf = None
-            exf = None
-            cmd = None
+            inf = exf = cmd = None
             stv = False
         try:
-            async with AsyncClient(
-                headers=headers, follow_redirects=True, timeout=60, verify=False
-            ) as client:
+            async with AsyncClient(headers=headers, follow_redirects=True, timeout=60) as client:
                 res = await client.get(feed_link)
-            html = res.text
-            rss_d = feed_parse(html)
+                res.raise_for_status()
+            rss_d = feed_parse(res.text)
             last_link = ""
             last_title = ""
             size = 0
@@ -255,10 +202,8 @@ async def rss_sub(_, message, pre_event):
                 if rss_d.entries[0].get("size"):
                     size = int(rss_d.entries[0]["size"])
                 elif rss_d.entries[0].get("summary"):
-                    summary = rss_d.entries[0]["summary"]
-                    matches = size_regex.findall(summary)
-                    sizes = [match[0] for match in matches]
-                    size = get_size_bytes(sizes[0])
+                    sizes = [match[0] for match in size_regex.findall(rss_d.entries[0]["summary"])]
+                    size = get_size_bytes(sizes[0]) if sizes else 0
                 try:
                     last_link = rss_d.entries[0]["links"][1]["href"]
                 except IndexError:
@@ -276,38 +221,20 @@ async def rss_sub(_, message, pre_event):
             msg += f"\n<b>Command: </b><code>{cmd}</code>"
             msg += f"\n<b>Filters:-</b>\ninf: <code>{inf}</code>\nexf: <code>{exf}</code>\n<b>sensitive: </b>{stv}"
             async with rss_dict_lock:
-                if rss_dict.get(user_id, False):
-                    rss_dict[user_id][title] = {
-                        "link": feed_link,
-                        "last_feed": last_link,
-                        "last_title": last_title,
-                        "inf": inf_lists,
-                        "exf": exf_lists,
-                        "paused": False,
-                        "command": cmd,
-                        "sensitive": stv,
-                        "tag": tag,
-                    }
-                else:
-                    rss_dict[user_id] = {
-                        title: {
-                            "link": feed_link,
-                            "last_feed": last_link,
-                            "last_title": last_title,
-                            "inf": inf_lists,
-                            "exf": exf_lists,
-                            "paused": False,
-                            "command": cmd,
-                            "sensitive": stv,
-                            "tag": tag,
-                        }
-                    }
-            LOGGER.info(
-                f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link} - c: {cmd} - inf: {inf} - exf: {exf} - stv: {stv}"
-            )
+                rss_dict.setdefault(user_id, {})[title] = {
+                    "link": feed_link,
+                    "last_feed": last_link,
+                    "last_title": last_title,
+                    "inf": inf_lists,
+                    "exf": exf_lists,
+                    "paused": False,
+                    "command": cmd,
+                    "sensitive": stv,
+                    "tag": tag,
+                }
+            LOGGER.info(f"Rss Feed Added: id: {user_id} - title: {title} - link: {feed_link}")
         except (IndexError, AttributeError) as e:
-            emsg = f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!"
-            await send_message(message, emsg + "\nError: " + str(e))
+            await send_message(message, f"The link: {feed_link} doesn't seem to be a RSS feed or it's region-blocked!\nError: {e}")
         except Exception as e:
             await send_message(message, str(e))
     if msg:
@@ -324,14 +251,10 @@ async def rss_sub(_, message, pre_event):
 
 async def get_user_id(title):
     async with rss_dict_lock:
-        return next(
-            (
-                (True, user_id)
-                for user_id, feed in rss_dict.items()
-                if feed["title"] == title
-            ),
-            (False, False),
-        )
+        for user_id, feeds in rss_dict.items():
+            if title in feeds:
+                return True, user_id
+    return False, False
 
 
 @new_task
@@ -343,15 +266,18 @@ async def rss_update(_, message, pre_event, state):
     updated = []
     for title in titles:
         title = title.strip()
-        if not (res := rss_dict[user_id].get(title, False)):
-            if is_sudo:
-                res, user_id = await get_user_id(title)
-            if not res:
-                user_id = message.from_user.id
-                await send_message(message, f"{title} not found!")
-                continue
+        res = rss_dict.get(user_id, {}).get(title)
+        if not res and is_sudo:
+            found, target_user = await get_user_id(title)
+            if found:
+                user_id = target_user
+                res = rss_dict[user_id][title]
+        if not res:
+            user_id = message.from_user.id
+            await send_message(message, f"{title} not found!")
+            continue
         istate = rss_dict[user_id][title].get("paused", False)
-        if istate and state == "pause" or not istate and state == "resume":
+        if (istate and state == "pause") or (not istate and state == "resume"):
             await send_message(message, f"{title} already {state}d!")
             continue
         async with rss_dict_lock:
@@ -370,18 +296,15 @@ async def rss_update(_, message, pre_event, state):
                 scheduler.start()
         if is_sudo and Config.DATABASE_URL and user_id != message.from_user.id:
             await database.rss_update(user_id)
-        if not rss_dict[user_id]:
+        if not rss_dict.get(user_id):
             async with rss_dict_lock:
-                del rss_dict[user_id]
+                rss_dict.pop(user_id, None)
             await database.rss_delete(user_id)
             if not rss_dict:
                 await database.trunc_table("rss")
     if updated:
         LOGGER.info(f"Rss link with Title(s): {updated} has been {state}d!")
-        await send_message(
-            message,
-            f"Rss links with Title(s): <code>{updated}</code> has been {state}d!",
-        )
+        await send_message(message, f"Rss links with Title(s): <code>{updated}</code> has been {state}d!")
         if rss_dict.get(user_id):
             await database.rss_update(user_id)
     await update_rss_menu(pre_event)
@@ -393,47 +316,37 @@ async def rss_list(query, start, all_users=False):
     if all_users:
         list_feed = f"<b>All subscriptions | Page: {int(start / 5)} </b>"
         async with rss_dict_lock:
-            keysCount = sum(len(v.keys()) for v in rss_dict.values())
-            index = 0
-            for titles in rss_dict.values():
-                for index, (title, data) in enumerate(
-                    list(titles.items())[start : 5 + start]
-                ):
-                    list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n"
-                    list_feed += f"<b>Feed Url:</b> <code>{data['link']}</code>\n"
-                    list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
-                    list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
-                    list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
-                    list_feed += f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
-                    list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
-                    list_feed += f"<b>User:</b> {data['tag'].replace('@', '', 1)}"
-                    index += 1
-                    if index == 5:
-                        break
+            flat = [(title, data) for feeds in rss_dict.values() for title, data in feeds.items()]
+            keys_count = len(flat)
+            for title, data in flat[start:start + 5]:
+                list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n"
+                list_feed += f"<b>Feed Url:</b> <code>{data['link']}</code>\n"
+                list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
+                list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
+                list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
+                list_feed += f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
+                list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
+                list_feed += f"<b>User:</b> {data['tag'].replace('@', '', 1)}"
     else:
+        feeds = rss_dict.get(user_id, {})
         list_feed = f"<b>Your subscriptions | Page: {int(start / 5)} </b>"
         async with rss_dict_lock:
-            keysCount = len(rss_dict.get(user_id, {}).keys())
-            for title, data in list(rss_dict[user_id].items())[start : 5 + start]:
+            keys_count = len(feeds)
+            for title, data in list(feeds.items())[start:start + 5]:
                 list_feed += f"\n\n<b>Title:</b> <code>{title}</code>\n<b>Feed Url: </b><code>{data['link']}</code>\n"
                 list_feed += f"<b>Command:</b> <code>{data['command']}</code>\n"
                 list_feed += f"<b>Inf:</b> <code>{data['inf']}</code>\n"
                 list_feed += f"<b>Exf:</b> <code>{data['exf']}</code>\n"
-                list_feed += (
-                    f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
-                )
+                list_feed += f"<b>Sensitive:</b> <code>{data.get('sensitive', False)}</code>\n"
                 list_feed += f"<b>Paused:</b> <code>{data['paused']}</code>\n"
     buttons.data_button("Back", f"rss back {user_id}")
     buttons.data_button("Close", f"rss close {user_id}")
-    if keysCount > 5:
-        for x in range(0, keysCount, 5):
-            buttons.data_button(
-                f"{int(x / 5)}", f"rss list {user_id} {x}", position="footer"
-            )
+    if keys_count > 5:
+        for x in range(0, keys_count, 5):
+            buttons.data_button(f"{int(x / 5)}", f"rss list {user_id} {x}", position="footer")
     button = buttons.build_menu(2)
-    if query.message.text.html == list_feed:
-        return
-    await edit_message(query.message, list_feed, button)
+    if query.message.text.html != list_feed:
+        await edit_message(query.message, list_feed, button)
 
 
 @new_task
@@ -442,27 +355,19 @@ async def rss_get(_, message, pre_event):
     handler_dict[user_id] = False
     args = message.text.split()
     if len(args) < 2:
-        await send_message(
-            message,
-            f"{args}. Wrong Input format. You should add number of the items you want to get. Read help message before adding new subscription!",
-        )
+        await send_message(message, f"{args}. Wrong Input format. You should add number of the items you want to get.")
         await update_rss_menu(pre_event)
         return
     try:
-        title = args[0]
-        count = int(args[1])
-        data = rss_dict[user_id].get(title, False)
+        title, count = args[0], int(args[1])
+        data = rss_dict.get(user_id, {}).get(title)
         if data and count > 0:
+            msg = await send_message(message, f"Getting the last <b>{count}</b> item(s) from {title}")
             try:
-                msg = await send_message(
-                    message, f"Getting the last <b>{count}</b> item(s) from {title}"
-                )
-                async with AsyncClient(
-                    headers=headers, follow_redirects=True, timeout=60, verify=False
-                ) as client:
+                async with AsyncClient(headers=headers, follow_redirects=True, timeout=60) as client:
                     res = await client.get(data["link"])
-                html = res.text
-                rss_d = feed_parse(html)
+                    res.raise_for_status()
+                rss_d = feed_parse(res.text)
                 item_info = ""
                 for item_num in range(count):
                     try:
@@ -471,9 +376,9 @@ async def rss_get(_, message, pre_event):
                         link = rss_d.entries[item_num]["link"]
                     item_info += f"<b>Name: </b><code>{rss_d.entries[item_num]['title'].replace('>', '').replace('<', '')}</code>\n"
                     item_info += f"<b>Link: </b><code>{link}</code>\n\n"
-                item_info_ecd = item_info.encode()
-                if len(item_info_ecd) > 4000:
-                    with BytesIO(item_info_ecd) as out_file:
+                encoded = item_info.encode()
+                if len(encoded) > 4000:
+                    with BytesIO(encoded) as out_file:
                         out_file.name = f"rssGet {title} items_no. {count}.txt"
                         await send_file(message, out_file)
                     await delete_message(msg)
@@ -481,9 +386,7 @@ async def rss_get(_, message, pre_event):
                     await edit_message(msg, item_info)
             except IndexError as e:
                 LOGGER.error(str(e))
-                await edit_message(
-                    msg, "Parse depth exceeded. Try again with a lower value."
-                )
+                await edit_message(msg, "Parse depth exceeded. Try again with a lower value.")
             except Exception as e:
                 LOGGER.error(str(e))
                 await edit_message(msg, str(e))
@@ -503,47 +406,25 @@ async def rss_edit(_, message, pre_event):
     updated = False
     for item in items:
         args = item.split()
-        title = args[0].strip()
         if len(args) < 2:
-            await send_message(
-                message,
-                f"{item}. Wrong Input format. Read help message before editing!",
-            )
+            await send_message(message, f"{item}. Wrong Input format. Read help message before editing!")
             continue
-        elif not rss_dict[user_id].get(title, False):
+        title = args[0].strip()
+        if title not in rss_dict.get(user_id, {}):
             await send_message(message, "Enter a valid title. Title not found!")
             continue
         updated = True
-        inf_lists = []
-        exf_lists = []
         arg_base = {"-c": None, "-inf": None, "-exf": None, "-stv": None}
         arg_parser(args[1:], arg_base)
-        cmd = arg_base["-c"]
-        inf = arg_base["-inf"]
-        exf = arg_base["-exf"]
-        stv = arg_base["-stv"]
         async with rss_dict_lock:
-            if stv is not None:
-                stv = stv.lower() == "true"
-                rss_dict[user_id][title]["sensitive"] = stv
-            if cmd is not None:
-                if cmd.lower() == "none":
-                    cmd = None
-                rss_dict[user_id][title]["command"] = cmd
-            if inf is not None:
-                if inf.lower() != "none":
-                    filters_list = inf.split("|")
-                    for x in filters_list:
-                        y = x.split(" or ")
-                        inf_lists.append(y)
-                rss_dict[user_id][title]["inf"] = inf_lists
-            if exf is not None:
-                if exf.lower() != "none":
-                    filters_list = exf.split("|")
-                    for x in filters_list:
-                        y = x.split(" or ")
-                        exf_lists.append(y)
-                rss_dict[user_id][title]["exf"] = exf_lists
+            if arg_base["-stv"] is not None:
+                rss_dict[user_id][title]["sensitive"] = arg_base["-stv"].lower() == "true"
+            if arg_base["-c"] is not None:
+                rss_dict[user_id][title]["command"] = None if arg_base["-c"].lower() == "none" else arg_base["-c"]
+            if arg_base["-inf"] is not None:
+                rss_dict[user_id][title]["inf"] = [] if arg_base["-inf"].lower() == "none" else [x.split(" or ") for x in arg_base["-inf"].split("|")]
+            if arg_base["-exf"] is not None:
+                rss_dict[user_id][title]["exf"] = [] if arg_base["-exf"].lower() == "none" else [x.split(" or ") for x in arg_base["-exf"].split("|")]
     if updated:
         await database.rss_update(user_id)
     await update_rss_menu(pre_event)
@@ -552,11 +433,10 @@ async def rss_edit(_, message, pre_event):
 @new_task
 async def rss_delete(_, message, pre_event):
     handler_dict[message.from_user.id] = False
-    users = message.text.split()
-    for user in users:
+    for user in message.text.split():
         user = int(user)
         async with rss_dict_lock:
-            del rss_dict[user]
+            rss_dict.pop(user, None)
         await database.rss_delete(user)
     await update_rss_menu(pre_event)
 
@@ -568,9 +448,7 @@ async def event_handler(client, query, pfunc):
 
     async def event_filter(_, __, event):
         user = event.from_user or event.sender_chat
-        return bool(
-            user.id == user_id and event.chat.id == query.message.chat.id and event.text
-        )
+        return bool(user.id == user_id and event.chat.id == query.message.chat.id and event.text)
 
     handler = client.add_handler(MessageHandler(pfunc, create(event_filter)), group=-1)
     while handler_dict[user_id]:
@@ -587,10 +465,9 @@ async def rss_listener(client, query):
     message = query.message
     data = query.data.split()
     if int(data[2]) != user_id and not await CustomFilters.sudo("", query):
-        await query.answer(
-            text="You don't have permission to use these buttons!", show_alert=True
-        )
-    elif data[1] == "close":
+        await query.answer(text="You don't have permission to use these buttons!", show_alert=True)
+        return
+    if data[1] == "close":
         await query.answer()
         handler_dict[user_id] = False
         await delete_message(message.reply_to_message)
@@ -605,38 +482,29 @@ async def rss_listener(client, query):
         buttons = ButtonMaker()
         buttons.data_button("Back", f"rss back {user_id}")
         buttons.data_button("Close", f"rss close {user_id}")
-        button = buttons.build_menu(2)
-        await edit_message(message, RSS_HELP_MESSAGE, button)
-        pfunc = partial(rss_sub, pre_event=query)
-        await event_handler(client, query, pfunc)
+        await edit_message(message, RSS_HELP_MESSAGE, buttons.build_menu(2))
+        await event_handler(client, query, partial(rss_sub, pre_event=query))
     elif data[1] == "list":
         handler_dict[user_id] = False
-        if len(rss_dict.get(int(data[2]), {})) == 0:
+        if not rss_dict.get(int(data[2]), {}):
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
-            start = int(data[3])
-            await rss_list(query, start)
+            await rss_list(query, int(data[3]))
     elif data[1] == "get":
         handler_dict[user_id] = False
-        if len(rss_dict.get(int(data[2]), {})) == 0:
+        if not rss_dict.get(int(data[2]), {}):
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
             buttons = ButtonMaker()
             buttons.data_button("Back", f"rss back {user_id}")
             buttons.data_button("Close", f"rss close {user_id}")
-            button = buttons.build_menu(2)
-            await edit_message(
-                message,
-                "Send one title with value separated by space get last X items.\nTitle Value\nTimeout: 60 sec.",
-                button,
-            )
-            pfunc = partial(rss_get, pre_event=query)
-            await event_handler(client, query, pfunc)
+            await edit_message(message, "Send one title with value separated by space get last X items.\nTitle Value\nTimeout: 60 sec.", buttons.build_menu(2))
+            await event_handler(client, query, partial(rss_get, pre_event=query))
     elif data[1] in ["unsubscribe", "pause", "resume"]:
         handler_dict[user_id] = False
-        if len(rss_dict.get(int(data[2]), {})) == 0:
+        if not rss_dict.get(int(data[2]), {}):
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
@@ -646,64 +514,54 @@ async def rss_listener(client, query):
                 buttons.data_button("Pause AllMyFeeds", f"rss uallpause {user_id}")
             elif data[1] == "resume":
                 buttons.data_button("Resume AllMyFeeds", f"rss uallresume {user_id}")
-            elif data[1] == "unsubscribe":
+            else:
                 buttons.data_button("Unsub AllMyFeeds", f"rss uallunsub {user_id}")
             buttons.data_button("Close", f"rss close {user_id}")
-            button = buttons.build_menu(2)
-            await edit_message(
-                message,
-                f"Send one or more rss titles separated by space to {data[1]}.\nTimeout: 60 sec.",
-                button,
-            )
-            pfunc = partial(rss_update, pre_event=query, state=data[1])
-            await event_handler(client, query, pfunc)
+            await edit_message(message, f"Send one or more rss titles separated by space to {data[1]}.\nTimeout: 60 sec.", buttons.build_menu(2))
+            await event_handler(client, query, partial(rss_update, pre_event=query, state=data[1]))
     elif data[1] == "edit":
         handler_dict[user_id] = False
-        if len(rss_dict.get(int(data[2]), {})) == 0:
+        if not rss_dict.get(int(data[2]), {}):
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
             buttons = ButtonMaker()
             buttons.data_button("Back", f"rss back {user_id}")
             buttons.data_button("Close", f"rss close {user_id}")
-            button = buttons.build_menu(2)
             msg = """Send one or more rss titles with new filters or command separated by new line.
 Examples:
 Title1 -c mirror -up remote:path/subdir -exf none -inf 1080 or 720 -stv true
 Title2 -c none -inf none -stv false
 Title3 -c mirror -rcf xxx -up xxx -z pswd -stv false
-Note: Only what you provide will be edited, the rest will be the same like example 2: exf will stay same as it is.
-Timeout: 60 sec. Argument -c for command and arguments
-            """
-            await edit_message(message, msg, button)
-            pfunc = partial(rss_edit, pre_event=query)
-            await event_handler(client, query, pfunc)
+Timeout: 60 sec."""
+            await edit_message(message, msg, buttons.build_menu(2))
+            await event_handler(client, query, partial(rss_edit, pre_event=query))
     elif data[1].startswith("uall"):
         handler_dict[user_id] = False
-        if len(rss_dict.get(int(data[2]), {})) == 0:
+        if not rss_dict.get(int(data[2]), {}):
             await query.answer(text="No subscriptions!", show_alert=True)
             return
         await query.answer()
+        target = int(data[2])
         if data[1].endswith("unsub"):
             async with rss_dict_lock:
-                del rss_dict[int(data[2])]
-            await database.rss_delete(int(data[2]))
-            await update_rss_menu(query)
+                rss_dict.pop(target, None)
+            await database.rss_delete(target)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
-                for info in rss_dict[int(data[2])].values():
+                for info in rss_dict[target].values():
                     info["paused"] = True
-            await database.rss_update(int(data[2]))
+            await database.rss_update(target)
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
-                for info in rss_dict[int(data[2])].values():
+                for info in rss_dict[target].values():
                     info["paused"] = False
             if scheduler.state == 2:
                 scheduler.resume()
-            await database.rss_update(int(data[2]))
+            await database.rss_update(target)
         await update_rss_menu(query)
     elif data[1].startswith("all"):
-        if len(rss_dict) == 0:
+        if not rss_dict:
             await query.answer(text="No subscriptions!", show_alert=True)
             return
         await query.answer()
@@ -711,47 +569,42 @@ Timeout: 60 sec. Argument -c for command and arguments
             async with rss_dict_lock:
                 rss_dict.clear()
             await database.trunc_table("rss")
-            await update_rss_menu(query)
         elif data[1].endswith("pause"):
             async with rss_dict_lock:
-                for user_feeds in rss_dict.values():
-                    for feed in user_feeds.values():
+                for feeds in rss_dict.values():
+                    for feed in feeds.values():
                         feed["paused"] = True
             if scheduler.running:
                 scheduler.pause()
             await database.rss_update_all()
         elif data[1].endswith("resume"):
             async with rss_dict_lock:
-                for user_feeds in rss_dict.values():
-                    for feed in user_feeds.values():
+                for feeds in rss_dict.values():
+                    for feed in feeds.values():
                         feed["paused"] = False
             if scheduler.state == 2:
                 scheduler.resume()
             elif not scheduler.running:
                 add_job()
                 scheduler.start()
-                await update_rss_menu(query)
             await database.rss_update_all()
+        await update_rss_menu(query)
     elif data[1] == "deluser":
-        if len(rss_dict) == 0:
+        if not rss_dict:
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
             buttons = ButtonMaker()
             buttons.data_button("Back", f"rss back {user_id}")
             buttons.data_button("Close", f"rss close {user_id}")
-            button = buttons.build_menu(2)
-            msg = "Send one or more user_id separated by space to delete their resources.\nTimeout: 60 sec."
-            await edit_message(message, msg, button)
-            pfunc = partial(rss_delete, pre_event=query)
-            await event_handler(client, query, pfunc)
+            await edit_message(message, "Send one or more user_id separated by space to delete their resources.\nTimeout: 60 sec.", buttons.build_menu(2))
+            await event_handler(client, query, partial(rss_delete, pre_event=query))
     elif data[1] == "listall":
         if not rss_dict:
             await query.answer(text="No subscriptions!", show_alert=True)
         else:
             await query.answer()
-            start = int(data[3])
-            await rss_list(query, start, all_users=True)
+            await rss_list(query, int(data[3]), all_users=True)
     elif data[1] == "shutdown":
         if scheduler.running:
             await query.answer()
@@ -770,8 +623,7 @@ Timeout: 60 sec. Argument -c for command and arguments
             await query.answer(text="Already Running!", show_alert=True)
     elif data[1] == "setchat":
         chat_id = message.chat.id
-        topic_msg = getattr(message, "topic_message", False)
-        thread_id = message.message_thread_id if topic_msg else None
+        thread_id = message.message_thread_id if getattr(message, "topic_message", False) else None
         chat_value = f"{chat_id}|{thread_id}" if thread_id else str(chat_id)
         old_value = Config.RSS_CHAT
         Config.set("RSS_CHAT", chat_value)
@@ -790,7 +642,7 @@ async def rss_monitor():
         LOGGER.warning("RSS_CHAT not added! Shutting down rss scheduler...")
         scheduler.shutdown(wait=False)
         return
-    if len(rss_dict) == 0:
+    if not rss_dict:
         scheduler.pause()
         return
     all_paused = True
@@ -798,12 +650,7 @@ async def rss_monitor():
     if isinstance(chat, int):
         rss_chat_id = chat
     elif "|" in chat:
-        rss_chat_id, rss_topic_id = list(
-            map(
-                lambda x: int(x) if x.lstrip("-").isdigit() else x,
-                chat.split("|", 1),
-            )
-        )
+        rss_chat_id, rss_topic_id = [int(x) if x.lstrip("-").isdigit() else x for x in chat.split("|", 1)]
     elif chat.lstrip("-").isdigit():
         rss_chat_id = int(chat)
     for user, items in list(rss_dict.items()):
@@ -811,37 +658,27 @@ async def rss_monitor():
             try:
                 if data["paused"]:
                     continue
-                tries = 0
-                while True:
+                last_error = None
+                for attempt in range(4):
                     try:
-                        async with AsyncClient(
-                            headers=headers,
-                            follow_redirects=True,
-                            timeout=60,
-                            verify=False,
-                        ) as client:
+                        async with AsyncClient(headers=headers, follow_redirects=True, timeout=60) as client:
                             res = await client.get(data["link"])
-                        html = res.text
+                            res.raise_for_status()
                         break
-                    except:
-                        tries += 1
-                        if tries > 3:
+                    except Exception as exc:
+                        last_error = exc
+                        if attempt == 3:
                             raise
-                        continue
-                rss_d = feed_parse(html)
+                        await sleep(1)
+                else:
+                    raise last_error
+                rss_d = feed_parse(res.text)
                 if not rss_d.entries:
-                    LOGGER.warning(
-                        f"No entries found for > Feed Title: {title} - Feed Link: {data['link']}"
-                    )
+                    LOGGER.warning(f"No entries found for > Feed Title: {title} - Feed Link: {data['link']}")
                     continue
                 entry0 = rss_d.entries[0]
                 links = entry0.get("links", [])
-                if len(links) > 1:
-                    last_link = links[1].get("href")
-                elif links:
-                    last_link = links[0].get("href")
-                else:
-                    last_link = entry0.get("link")
+                last_link = links[1].get("href") if len(links) > 1 else links[0].get("href") if links else entry0.get("link")
                 last_title = entry0.get("title")
                 all_paused = False
                 if data["last_feed"] == last_link or data["last_title"] == last_title:
@@ -850,73 +687,51 @@ async def rss_monitor():
                 while True:
                     try:
                         await sleep(10)
-                    except:
-                        raise RssShutdownException("Rss Monitor Stopped!")
+                    except Exception as exc:
+                        raise RssShutdownException("Rss Monitor Stopped!") from exc
                     try:
-                        item_title = rss_d.entries[feed_count]["title"]
+                        entry = rss_d.entries[feed_count]
+                        item_title = entry["title"]
                         try:
-                            url = rss_d.entries[feed_count]["links"][1]["href"]
+                            url = entry["links"][1]["href"]
                         except IndexError:
-                            url = rss_d.entries[feed_count]["link"]
+                            url = entry["link"]
                         if data["last_feed"] == url or data["last_title"] == item_title:
                             break
-                        if rss_d.entries[feed_count].get("size"):
-                            size = int(rss_d.entries[feed_count]["size"])
-                        elif rss_d.entries[feed_count].get("summary"):
-                            summary = rss_d.entries[feed_count]["summary"]
-                            matches = size_regex.findall(summary)
-                            sizes = [match[0] for match in matches]
-                            size = get_size_bytes(sizes[0])
+                        if entry.get("size"):
+                            size = int(entry["size"])
+                        elif entry.get("summary"):
+                            sizes = [match[0] for match in size_regex.findall(entry["summary"])]
+                            size = get_size_bytes(sizes[0]) if sizes else 0
                         else:
                             size = 0
                     except IndexError:
-                        LOGGER.warning(
-                            f"Reached Max index no. {feed_count} for this feed: {title}. Maybe you need to use less RSS_DELAY to not miss some torrents"
-                        )
+                        LOGGER.warning(f"Reached Max index no. {feed_count} for this feed: {title}")
                         break
-                    parse = True
+                    parse_item = True
                     for flist in data["inf"]:
-                        if (
-                            data.get("sensitive", False)
-                            and all(x.lower() not in item_title.lower() for x in flist)
-                        ) or (
-                            not data.get("sensitive", False)
-                            and all(x not in item_title for x in flist)
-                        ):
-                            parse = False
+                        haystack = item_title.lower() if data.get("sensitive", False) else item_title
+                        needles = [x.lower() for x in flist] if data.get("sensitive", False) else flist
+                        if all(x not in haystack for x in needles):
+                            parse_item = False
                             feed_count += 1
                             break
-                    if not parse:
+                    if not parse_item:
                         continue
                     for flist in data["exf"]:
-                        if (
-                            data.get("sensitive", False)
-                            and any(x.lower() in item_title.lower() for x in flist)
-                        ) or (
-                            not data.get("sensitive", False)
-                            and any(x in item_title for x in flist)
-                        ):
-                            parse = False
+                        haystack = item_title.lower() if data.get("sensitive", False) else item_title
+                        needles = [x.lower() for x in flist] if data.get("sensitive", False) else flist
+                        if any(x in haystack for x in needles):
+                            parse_item = False
                             feed_count += 1
                             break
-                    if not parse:
+                    if not parse_item:
                         continue
                     if command := data["command"]:
-                        if (
-                            size
-                            and Config.RSS_SIZE_LIMIT
-                            and Config.RSS_SIZE_LIMIT < size
-                        ):
+                        if size and Config.RSS_SIZE_LIMIT and Config.RSS_SIZE_LIMIT < size:
                             feed_count += 1
                             continue
-                        await _start_rss_download(
-                            url=url,
-                            command=command,
-                            user_id=user,
-                            rss_chat_id=rss_chat_id,
-                            rss_topic_id=rss_topic_id,
-                            item_title=item_title,
-                        )
+                        await _start_rss_download(url, command, user, rss_chat_id, rss_topic_id, item_title)
                     else:
                         feed_msg = f"<b>Name: </b><code>{item_title.replace('>', '').replace('<', '')}</code>"
                         feed_msg += f"\n\n<b>Link: </b><code>{url}</code>"
@@ -926,11 +741,9 @@ async def rss_monitor():
                         await send_rss(feed_msg, rss_chat_id, rss_topic_id)
                     feed_count += 1
                 async with rss_dict_lock:
-                    if user not in rss_dict or not rss_dict[user].get(title, False):
+                    if user not in rss_dict or title not in rss_dict[user]:
                         continue
-                    rss_dict[user][title].update(
-                        {"last_feed": last_link, "last_title": last_title}
-                    )
+                    rss_dict[user][title].update({"last_feed": last_link, "last_title": last_title})
                 await database.rss_update(user)
                 LOGGER.info(f"Feed Name: {title}")
                 LOGGER.info(f"Last item: {last_link}")
