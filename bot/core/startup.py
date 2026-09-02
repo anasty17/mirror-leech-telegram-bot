@@ -1,8 +1,9 @@
 from aiofiles.os import path as aiopath, remove, makedirs
 from aiofiles import open as aiopen
 from aioshutil import rmtree
-from asyncio import create_subprocess_exec, create_subprocess_shell, sleep
+from asyncio import create_subprocess_exec, sleep
 from importlib import import_module
+from os import chmod
 
 from .. import (
     aria2_options,
@@ -31,7 +32,7 @@ async def update_qb_options():
     if not qbit_options:
         opt = await TorrentManager.qbittorrent.app.preferences()
         qbit_options.update(opt)
-        del qbit_options["listen_port"]
+        qbit_options.pop("listen_port", None)
         for k in list(qbit_options.keys()):
             if k.startswith("rss"):
                 del qbit_options[k]
@@ -52,16 +53,21 @@ async def update_aria2_options():
         await TorrentManager.aria2.changeGlobalOption(aria2_options)
 
 
-async def update_nzb_options():
+async def update_nzb_options(max_attempts=20, retry_delay=0.5):
     LOGGER.info("Get SABnzbd options from server")
-    while True:
+    last_error = None
+    for attempt in range(1, max_attempts + 1):
         try:
             no = (await sabnzbd_client.get_config())["config"]["misc"]
             nzb_options.update(no)
-        except:
-            await sleep(0.5)
-            continue
-        break
+            return
+        except Exception as exc:
+            last_error = exc
+            if attempt < max_attempts:
+                await sleep(retry_delay)
+    raise RuntimeError(
+        f"Unable to load SABnzbd options after {max_attempts} attempts: {last_error}"
+    ) from last_error
 
 
 async def load_settings():
@@ -76,7 +82,7 @@ async def load_settings():
     if database.db is None:
         return
 
-    BOT_ID = Config.BOT_TOKEN.split(":", 1)[0]
+    bot_id = Config.BOT_TOKEN.split(":", 1)[0]
 
     try:
         settings = import_module("config")
@@ -89,26 +95,26 @@ async def load_settings():
         config_file = {}
 
     old_config = await database.db.settings.deployConfig.find_one(
-        {"_id": BOT_ID}, {"_id": 0}
+        {"_id": bot_id}, {"_id": 0}
     )
     if old_config is None and config_file:
         await database.db.settings.deployConfig.replace_one(
-            {"_id": BOT_ID}, config_file, upsert=True
+            {"_id": bot_id}, config_file, upsert=True
         )
     elif old_config and config_file and old_config != config_file:
         LOGGER.info("Replacing existing deploy config in Database")
         await database.db.settings.deployConfig.replace_one(
-            {"_id": BOT_ID}, config_file, upsert=True
+            {"_id": bot_id}, config_file, upsert=True
         )
     else:
         config_dict = await database.db.settings.config.find_one(
-            {"_id": BOT_ID}, {"_id": 0}
+            {"_id": bot_id}, {"_id": 0}
         )
         if config_dict:
             Config.load_dict(config_dict)
 
     if pf_dict := await database.db.settings.files.find_one(
-        {"_id": BOT_ID}, {"_id": 0}
+        {"_id": bot_id}, {"_id": 0}
     ):
         for key, value in pf_dict.items():
             if value:
@@ -117,16 +123,16 @@ async def load_settings():
                     await f.write(value)
 
     if a2c_options := await database.db.settings.aria2c.find_one(
-        {"_id": BOT_ID}, {"_id": 0}
+        {"_id": bot_id}, {"_id": 0}
     ):
         aria2_options.update(a2c_options)
 
     if qbit_opt := await database.db.settings.qbittorrent.find_one(
-        {"_id": BOT_ID}, {"_id": 0}
+        {"_id": bot_id}, {"_id": 0}
     ):
         qbit_options.update(qbit_opt)
 
-    if nzb_opt := await database.db.settings.nzb.find_one({"_id": BOT_ID}, {"_id": 0}):
+    if nzb_opt := await database.db.settings.nzb.find_one({"_id": bot_id}, {"_id": 0}):
         if await aiopath.exists("sabnzbd/SABnzbd.ini.bak"):
             await remove("sabnzbd/SABnzbd.ini.bak")
         ((key, value),) = nzb_opt.items()
@@ -138,6 +144,7 @@ async def load_settings():
         for p in ["thumbnails", "tokens", "rclone"]:
             if not await aiopath.exists(p):
                 await makedirs(p)
+            chmod(p, 0o700)
         rows = database.db.users.find({})
         async for row in rows:
             uid = row["_id"]
@@ -152,16 +159,18 @@ async def load_settings():
             if row.get("RCLONE_CONFIG"):
                 async with aiopen(rclone_config_path, "wb+") as f:
                     await f.write(row["RCLONE_CONFIG"])
+                chmod(rclone_config_path, 0o600)
                 row["RCLONE_CONFIG"] = rclone_config_path
             if row.get("TOKEN_PICKLE"):
                 async with aiopen(token_path, "wb+") as f:
                     await f.write(row["TOKEN_PICKLE"])
+                chmod(token_path, 0o600)
                 row["TOKEN_PICKLE"] = token_path
             user_data[uid] = row
         LOGGER.info("Users data has been imported from Database")
 
-    if await database.db.rss[BOT_ID].find_one():
-        rows = database.db.rss[BOT_ID].find({})
+    if await database.db.rss[bot_id].find_one():
+        rows = database.db.rss[bot_id].find({})
         async for row in rows:
             user_id = row["_id"]
             del row["_id"]
@@ -200,33 +209,31 @@ async def update_variables():
 
     Config.HYBRID_LEECH = bool(Config.HYBRID_LEECH and TgClient.IS_PREMIUM_USER)
 
+    auth_chats.clear()
+    sudo_users.clear()
+    excluded_extensions.clear()
+    included_extensions.clear()
+    drives_names.clear()
+    drives_ids.clear()
+    index_urls.clear()
+
     if Config.AUTHORIZED_CHATS:
-        aid = Config.AUTHORIZED_CHATS.split()
-        for id_ in aid:
+        for id_ in Config.AUTHORIZED_CHATS.split():
             chat_id, *thread_ids = id_.split("|")
             chat_id = int(chat_id.strip())
-            if thread_ids:
-                thread_ids = list(map(lambda x: int(x.strip()), thread_ids))
-                auth_chats[chat_id] = thread_ids
-            else:
-                auth_chats[chat_id] = []
+            auth_chats[chat_id] = [int(x.strip()) for x in thread_ids] if thread_ids else []
 
     if Config.SUDO_USERS:
-        aid = Config.SUDO_USERS.split()
-        for id_ in aid:
+        for id_ in Config.SUDO_USERS.split():
             sudo_users.append(int(id_.strip()))
 
     if Config.EXCLUDED_EXTENSIONS:
-        fx = Config.EXCLUDED_EXTENSIONS.split()
-        for x in fx:
-            x = x.lstrip(".")
-            excluded_extensions.append(x.strip().lower())
+        for x in Config.EXCLUDED_EXTENSIONS.split():
+            excluded_extensions.append(x.lstrip(".").strip().lower())
 
     if Config.INCLUDED_EXTENSIONS:
-        fx = Config.INCLUDED_EXTENSIONS.split()
-        for x in fx:
-            x = x.lstrip(".")
-            included_extensions.append(x.strip().lower())
+        for x in Config.INCLUDED_EXTENSIONS.split():
+            included_extensions.append(x.lstrip(".").strip().lower())
 
     if Config.GDRIVE_ID:
         drives_names.append("Main")
@@ -236,49 +243,66 @@ async def update_variables():
     if await aiopath.exists("list_drives.txt"):
         async with aiopen("list_drives.txt", "r+") as f:
             lines = await f.readlines()
-            for line in lines:
-                temp = line.split()
+            for line_no, line in enumerate(lines, start=1):
+                stripped = line.strip()
+                if not stripped or stripped.startswith("#"):
+                    continue
+                temp = stripped.split()
+                if len(temp) < 2:
+                    LOGGER.warning(
+                        f"Skipping malformed list_drives.txt line {line_no}: {stripped}"
+                    )
+                    continue
                 drives_ids.append(temp[1])
                 drives_names.append(temp[0].replace("_", " "))
-                if len(temp) > 2:
-                    index_urls.append(temp[2])
-                else:
-                    index_urls.append("")
+                index_urls.append(temp[2] if len(temp) > 2 else "")
 
 
 async def load_configurations():
-
     if not await aiopath.exists(".netrc"):
         async with aiopen(".netrc", "w"):
             pass
-
-    await (
-        await create_subprocess_shell(
-            "chmod 600 .netrc && cp .netrc /root/.netrc && chmod +x aria-nox-nzb.sh && ./aria-nox-nzb.sh"
-        )
-    ).wait()
+    chmod(".netrc", 0o600)
+    await (await create_subprocess_exec("cp", ".netrc", "/root/.netrc")).wait()
+    chmod("/root/.netrc", 0o600)
+    await (await create_subprocess_exec("chmod", "+x", "aria-nox-nzb.sh")).wait()
+    aria_proc = await create_subprocess_exec("bash", "aria-nox-nzb.sh")
+    aria_code = await aria_proc.wait()
+    if aria_code != 0:
+        raise RuntimeError(f"aria-nox-nzb.sh failed with exit code {aria_code}")
 
     if Config.BASE_URL:
-        await create_subprocess_shell(
-            f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{Config.BASE_URL_PORT}"
+        await create_subprocess_exec(
+            "gunicorn",
+            "-k",
+            "uvicorn.workers.UvicornWorker",
+            "-w",
+            "1",
+            "web.wserver:app",
+            "--bind",
+            f"0.0.0.0:{Config.BASE_URL_PORT}",
         )
 
     if await aiopath.exists("cfg.zip"):
         if await aiopath.exists("/JDownloader/cfg"):
             await rmtree("/JDownloader/cfg", ignore_errors=True)
-        await (
+        code = await (
             await create_subprocess_exec("7z", "x", "cfg.zip", "-o/JDownloader")
         ).wait()
+        if code != 0:
+            raise RuntimeError(f"Failed to extract cfg.zip (exit {code})")
 
     if await aiopath.exists("accounts.zip"):
         if await aiopath.exists("accounts"):
             await rmtree("accounts")
-        await (
+        code = await (
             await create_subprocess_exec(
                 "7z", "x", "-o.", "-aoa", "accounts.zip", "accounts/*.json"
             )
         ).wait()
-        await (await create_subprocess_exec("chmod", "-R", "777", "accounts")).wait()
+        if code != 0:
+            raise RuntimeError(f"Failed to extract accounts.zip (exit {code})")
+        await (await create_subprocess_exec("chmod", "-R", "700", "accounts")).wait()
         await remove("accounts.zip")
 
     if not await aiopath.exists("accounts"):
