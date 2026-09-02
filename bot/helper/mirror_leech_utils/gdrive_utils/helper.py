@@ -16,6 +16,7 @@ from tenacity import (
     retry_if_exception_type,
 )
 
+from .... import user_data
 from ....core.config_manager import Config
 from ...ext_utils.links_utils import is_gdrive_id
 
@@ -52,7 +53,7 @@ class GoogleDriveHelper:
     def speed(self):
         try:
             return self.proc_bytes / self.total_time
-        except:
+        except Exception:
             return 0
 
     @property
@@ -74,6 +75,8 @@ class GoogleDriveHelper:
         if self.use_sa:
             json_files = listdir("accounts")
             self.sa_number = len(json_files)
+            if not self.sa_number:
+                raise RuntimeError("No service-account files are available")
             self.sa_index = randrange(self.sa_number)
             LOGGER.info(f"Authorizing with {json_files[self.sa_index]} service account")
             credentials = service_account.Credentials.from_service_account_file(
@@ -84,9 +87,8 @@ class GoogleDriveHelper:
             with open(self.token_path, "rb") as f:
                 credentials = pload(f)
         else:
-            LOGGER.error("token.pickle not found!")
+            raise FileNotFoundError(f"Google Drive credential file not found: {self.token_path}")
         authorized_http = AuthorizedHttp(credentials, http=build_http())
-        authorized_http.http.disable_ssl_certificate_validation = True
         return build("drive", "v3", http=authorized_http, cache_discovery=False)
 
     def switch_service_account(self):
@@ -98,8 +100,18 @@ class GoogleDriveHelper:
         LOGGER.info(f"Switching to {self.sa_index} index")
         self.service = self.authorize()
 
+    @staticmethod
+    def _trusted_user_token(user_id):
+        if user_id == Config.OWNER_ID:
+            return True
+        return bool(user_data.get(user_id, {}).get("SUDO"))
+
     def get_id_from_url(self, link, user_id=""):
         if user_id and link.startswith("mt:"):
+            if not self._trusted_user_token(user_id):
+                raise PermissionError(
+                    "Per-user Google token.pickle credentials are restricted to owner/sudo users."
+                )
             self.use_sa = False
             self.token_path = f"tokens/{user_id}.pickle"
             link = link.replace("mt:", "", 1)
@@ -219,26 +231,6 @@ class GoogleDriveHelper:
         for char in chars:
             estr = estr.replace(char, f"\\{char}")
         return estr.strip()
-
-    """
-    def get_recursive_list(self, file, rootId):
-        rtnlist = []
-        if not rootId:
-            rootId = file.get('teamDriveId')
-        if rootId == "root":
-            rootId = self.service.files().get(
-                fileId='root', fields='id').execute().get('id')
-        x = file.get("name")
-        y = file.get("id")
-        while (y != rootId):
-            rtnlist.append(x)
-            file = self.service.files().get(fileId=file.get("parents")[0], supportsAllDrives=True,
-                                            fields='id, name, parents').execute()
-            x = file.get("name")
-            y = file.get("id")
-        rtnlist.reverse()
-        return rtnlist
-    """
 
     async def cancel_task(self):
         self.listener.is_cancelled = True

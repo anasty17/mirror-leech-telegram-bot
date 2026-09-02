@@ -1,3 +1,6 @@
+from ast import literal_eval
+from hashlib import sha256
+from hmac import new as hmac_new
 from httpx import AsyncClient
 from asyncio.subprocess import PIPE
 from functools import partial, wraps
@@ -56,9 +59,16 @@ def create_help_buttons():
     _build_command_usage(CLONE_HELP_DICT, "clone")
 
 
+def _selection_pin(id_):
+    secret = (Config.BOT_TOKEN or "").encode()
+    if not secret:
+        raise RuntimeError("BOT_TOKEN is required to sign file-selector links")
+    return hmac_new(secret, id_.encode(), sha256).hexdigest()[:12]
+
+
 def bt_selection_buttons(id_):
     gid = id_[:12] if len(id_) > 25 else id_
-    pin = "".join([n for n in id_ if n.isdigit()][:4])
+    pin = _selection_pin(id_)
     buttons = ButtonMaker()
     if Config.WEB_PINCODE:
         buttons.url_button("Select Files", f"{Config.BASE_URL}/app/files?gid={id_}")
@@ -116,6 +126,7 @@ def arg_parser(items, arg_base):
         "-ut",
         "-bt",
         "-ad",
+        "-bh",
         "-tb",
     }
 
@@ -143,6 +154,7 @@ def arg_parser(items, arg_base):
                     "-ut",
                     "-bt",
                     "-ad",
+                    "-bh",
                     "-tb",
                 ]
             ):
@@ -174,8 +186,10 @@ def arg_parser(items, arg_base):
                             arg_base[part].add(value)
                         else:
                             try:
-                                arg_base[part].add(tuple(eval(value)))
-                            except:
+                                parsed = literal_eval(value)
+                                if isinstance(parsed, (list, tuple)):
+                                    arg_base[part].add(tuple(parsed))
+                            except (ValueError, SyntaxError):
                                 pass
                     else:
                         arg_base[part] = value
@@ -204,10 +218,10 @@ def get_size_bytes(size):
 
 async def get_content_type(url):
     try:
-        async with AsyncClient() as client:
-            response = await client.get(url, allow_redirects=True, verify=False)
+        async with AsyncClient(timeout=30.0, follow_redirects=True) as client:
+            response = await client.get(url)
             return response.headers.get("Content-Type")
-    except:
+    except Exception:
         return None
 
 

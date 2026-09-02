@@ -12,9 +12,25 @@ from logging import (
     WARNING,
     ERROR,
 )
+from requests import Session as RequestsSession
 from sabnzbdapi import SabnzbdClient
 from time import time
 from os import cpu_count
+
+
+# Legacy direct-link resolvers use the requests convenience functions in many
+# places. Enforce a process-wide default timeout so a dead host cannot pin a
+# worker forever. Callers that explicitly provide a timeout keep their value.
+_REQUESTS_DEFAULT_TIMEOUT = (15, 60)
+_original_requests_session_request = RequestsSession.request
+
+
+def _request_with_default_timeout(self, method, url, **kwargs):
+    kwargs.setdefault("timeout", _REQUESTS_DEFAULT_TIMEOUT)
+    return _original_requests_session_request(self, method, url, **kwargs)
+
+
+RequestsSession.request = _request_with_default_timeout
 
 getLogger("requests").setLevel(WARNING)
 getLogger("urllib3").setLevel(WARNING)

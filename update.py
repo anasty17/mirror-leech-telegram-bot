@@ -35,7 +35,6 @@ basicConfig(
 def load_config() -> Dict[str, Any]:
     """Load configuration from config module or environment variables."""
     try:
-
         settings = import_module("config")
         return {
             key: value.strip() if isinstance(value, str) else value
@@ -53,6 +52,11 @@ def load_config() -> Dict[str, Any]:
         }
 
 
+def _run_git(*args: str):
+    """Run git without a shell so config values cannot become shell commands."""
+    return srun(["git", *args], check=False)
+
+
 config_file = load_config()
 
 BOT_TOKEN = config_file.get("BOT_TOKEN", "")
@@ -61,7 +65,6 @@ if not BOT_TOKEN:
     exit(1)
 
 BOT_ID = BOT_TOKEN.split(":", 1)[0]
-
 DATABASE_NAME = config_file.get("DATABASE_NAME", "mltb")
 
 if DATABASE_URL := config_file.get("DATABASE_URL", "").strip():
@@ -71,39 +74,49 @@ if DATABASE_URL := config_file.get("DATABASE_URL", "").strip():
         old_config = db.settings.deployConfig.find_one({"_id": BOT_ID}, {"_id": 0})
         config_dict = db.settings.config.find_one({"_id": BOT_ID})
         if (
-            old_config is not None and old_config == config_file or old_config is None
-        ) and config_dict is not None:
-            config_file["UPSTREAM_REPO"] = config_dict["UPSTREAM_REPO"]
-            config_file["UPSTREAM_BRANCH"] = config_dict["UPSTREAM_BRANCH"]
+            (old_config is not None and old_config == config_file or old_config is None)
+            and config_dict is not None
+        ):
+            config_file["UPSTREAM_REPO"] = config_dict.get(
+                "UPSTREAM_REPO", config_file.get("UPSTREAM_REPO", "")
+            )
+            config_file["UPSTREAM_BRANCH"] = config_dict.get(
+                "UPSTREAM_BRANCH", config_file.get("UPSTREAM_BRANCH", "master")
+            )
         conn.close()
     except Exception as e:
         log_error(f"Database ERROR: {e}")
 
-UPSTREAM_REPO = config_file.get("UPSTREAM_REPO", "").strip()
-
-UPSTREAM_BRANCH = config_file.get("UPSTREAM_BRANCH", "").strip() or "master"
+UPSTREAM_REPO = str(config_file.get("UPSTREAM_REPO", "") or "").strip()
+UPSTREAM_BRANCH = str(config_file.get("UPSTREAM_BRANCH", "") or "").strip() or "master"
 
 if UPSTREAM_REPO:
-    if path.exists(".git"):
-        srun(["rm", "-rf", ".git"])
+    try:
+        if path.exists(".git"):
+            srun(["rm", "-rf", ".git"], check=False)
 
-    update = srun(
-        [
-            f"git init -q \
-                     && git config --global user.email e.anastayyar@gmail.com \
-                     && git config --global user.name mltb \
-                     && git add . \
-                     && git commit -sm update -q \
-                     && git remote add origin {UPSTREAM_REPO} \
-                     && git fetch origin -q \
-                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"
-        ],
-        shell=True,
-    )
+        commands = [
+            ("init", "-q"),
+            ("config", "user.email", "filehub@localhost"),
+            ("config", "user.name", "FileHub"),
+            ("add", "."),
+            ("commit", "-m", "update", "-q"),
+            ("remote", "add", "origin", UPSTREAM_REPO),
+            ("fetch", "origin", "--depth=1", UPSTREAM_BRANCH, "-q"),
+            ("reset", "--hard", "FETCH_HEAD", "-q"),
+        ]
 
-    if update.returncode == 0:
-        log_info("Successfully updated with latest commit from UPSTREAM_REPO")
-    else:
-        log_error(
-            "Something went wrong while updating, check UPSTREAM_REPO if valid or not!"
-        )
+        update_ok = True
+        for command in commands:
+            if _run_git(*command).returncode != 0:
+                update_ok = False
+                break
+
+        if update_ok:
+            log_info("Successfully updated with latest commit from UPSTREAM_REPO")
+        else:
+            log_error(
+                "Something went wrong while updating; check UPSTREAM_REPO and UPSTREAM_BRANCH."
+            )
+    except Exception as e:
+        log_error(f"Updater ERROR: {e}")

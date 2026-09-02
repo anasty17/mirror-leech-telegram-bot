@@ -3,6 +3,10 @@ BOT_TOKEN = ""
 OWNER_ID = 0
 TELEGRAM_API = 0
 TELEGRAM_HASH = ""
+# BRANDING
+APP_NAME = "FileHub"
+APP_TAGLINE = "Unified download, processing and cloud transfer bot"
+REPOSITORY_URL = "https://github.com/RecklessEvadingDriver/mirror-leech-telegram-bot"
 # OPTIONAL CONFIG
 TG_PROXY = {}
 USER_SESSION_STRING = ""

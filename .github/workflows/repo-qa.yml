@@ -1,0 +1,71 @@
+name: Repository QA
+
+on:
+  push:
+    branches: [filehub-dev]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-qa:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install QA tools
+        run: python -m pip install --upgrade pip ruff pyyaml bandit pip-audit
+
+      - name: Compile every Python file
+        run: python -m compileall -q bot web tests *.py
+
+      - name: Check critical Python errors
+        run: ruff check . --select E9,F63,F7,F82
+
+      - name: Validate shell syntax
+        if: always()
+        run: |
+          find . -type f -name '*.sh' -print0 | xargs -0 -r -n1 bash -n
+
+      - name: Validate YAML syntax
+        if: always()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import yaml
+          paths = (
+              list(Path('.').glob('*.yml'))
+              + list(Path('.').glob('*.yaml'))
+              + list(Path('.github').rglob('*.yml'))
+              + list(Path('.github').rglob('*.yaml'))
+          )
+          for path in paths:
+              with path.open('r', encoding='utf-8') as handle:
+                  yaml.safe_load(handle)
+              print(f'OK {path}')
+          PY
+
+      - name: Validate Docker Compose configuration
+        if: always()
+        run: docker compose config --quiet
+
+      - name: Check sample configuration compiles
+        if: always()
+        run: python -m py_compile config_sample.py
+
+      - name: Security scan (medium/high)
+        if: always()
+        continue-on-error: true
+        run: bandit -r bot web update.py -q -ll
+
+      - name: Dependency vulnerability audit
+        if: always()
+        continue-on-error: true
+        run: pip-audit -r requirements.txt
