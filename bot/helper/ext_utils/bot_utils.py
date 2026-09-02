@@ -116,6 +116,7 @@ def arg_parser(items, arg_base):
         "-ut",
         "-bt",
         "-ad",
+        "-bh",
         "-tb",
     }
 
@@ -143,6 +144,7 @@ def arg_parser(items, arg_base):
                     "-ut",
                     "-bt",
                     "-ad",
+                    "-bh",
                     "-tb",
                 ]
             ):
