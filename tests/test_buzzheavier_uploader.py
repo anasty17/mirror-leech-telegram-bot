@@ -1,22 +1,24 @@
-"""Tests for the BuzzHeavier uploader."""
+"""Unit tests for the current BuzzHeavier uploader implementation."""
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import os
 import sys
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 
 @pytest.fixture
 def buzzheavier_module(monkeypatch):
-    """Import BuzzHeavier uploader with stubbed bot package."""
+    project_root = Path(__file__).resolve().parent.parent
+
     bot_pkg = ModuleType("bot")
-    bot_pkg.__path__ = []  # mark as package so submodule imports work
+    bot_pkg.__path__ = []
     config_pkg = ModuleType("bot.core")
     config_pkg.__path__ = []
     config_manager = ModuleType("bot.core.config_manager")
@@ -25,36 +27,75 @@ def buzzheavier_module(monkeypatch):
         BUZZHEAVIER_ACCOUNT_ID = ""
 
     config_manager.Config = Config
+
     helper_pkg = ModuleType("bot.helper")
     helper_pkg.__path__ = []
+    ext_utils_pkg = ModuleType("bot.helper.ext_utils")
+    ext_utils_pkg.__path__ = []
+
+    bot_utils = ModuleType("bot.helper.ext_utils.bot_utils")
+
+    async def sync_to_async(func, *args, **kwargs):
+        return func(*args, **kwargs)
+
+    bot_utils.sync_to_async = sync_to_async
+
+    files_utils = ModuleType("bot.helper.ext_utils.files_utils")
+    files_utils.get_mime_type = lambda _: "application/octet-stream"
+
     mlu_pkg = ModuleType("bot.helper.mirror_leech_utils")
-    # Real on-disk path so importlib can locate
-    # ``buzzheavier_uploader`` relative to the package.
-    mlu_pkg.__path__ = [
-        str(Path(__file__).resolve().parent.parent / "bot" / "helper" / "mirror_leech_utils")
+    mlu_pkg.__path__ = []
+    upload_utils_pkg = ModuleType(
+        "bot.helper.mirror_leech_utils.upload_utils"
+    )
+    upload_utils_pkg.__path__ = [
+        str(
+            project_root
+            / "bot"
+            / "helper"
+            / "mirror_leech_utils"
+            / "upload_utils"
+        )
     ]
 
     monkeypatch.setitem(sys.modules, "bot", bot_pkg)
     monkeypatch.setitem(sys.modules, "bot.core", config_pkg)
     monkeypatch.setitem(sys.modules, "bot.core.config_manager", config_manager)
     monkeypatch.setitem(sys.modules, "bot.helper", helper_pkg)
+    monkeypatch.setitem(sys.modules, "bot.helper.ext_utils", ext_utils_pkg)
+    monkeypatch.setitem(sys.modules, "bot.helper.ext_utils.bot_utils", bot_utils)
+    monkeypatch.setitem(sys.modules, "bot.helper.ext_utils.files_utils", files_utils)
     monkeypatch.setitem(sys.modules, "bot.helper.mirror_leech_utils", mlu_pkg)
+    monkeypatch.setitem(
+        sys.modules,
+        "bot.helper.mirror_leech_utils.upload_utils",
+        upload_utils_pkg,
+    )
 
-    sys.modules.pop(
-        "bot.helper.mirror_leech_utils.buzzheavier_uploader", None
+    module_name = (
+        "bot.helper.mirror_leech_utils.upload_utils.buzzheavier_uploader"
     )
-    return importlib.import_module(
-        "bot.helper.mirror_leech_utils.buzzheavier_uploader"
-    )
+    sys.modules.pop(module_name, None)
+    return importlib.import_module(module_name)
 
 
 def _make_listener():
     return SimpleNamespace(
         is_cancelled=False,
         size=0,
+        up_dest="bh",
+        user_dict={},
         on_upload_complete=AsyncMock(),
         on_upload_error=AsyncMock(),
     )
+
+
+class _FakeClient:
+    def __init__(self, *args, **kwargs):
+        self.closed = False
+
+    async def aclose(self):
+        self.closed = True
 
 
 @pytest.mark.asyncio
@@ -62,103 +103,86 @@ async def test_upload_walks_directory(buzzheavier_module, tmp_path, monkeypatch)
     file_a = tmp_path / "a.bin"
     file_b = tmp_path / "sub" / "b.bin"
     file_b.parent.mkdir()
-    file_a.write_bytes(b"a" * 1024)
-    file_b.write_bytes(b"b" * 2048)
+    file_a.write_bytes(b"a" * 16)
+    file_b.write_bytes(b"b" * 16)
 
     listener = _make_listener()
-    listener.size = file_a.stat().st_size + file_b.stat().st_size
-
     uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
 
-    upload_calls: list[str] = []
+    monkeypatch.setattr(buzzheavier_module, "AsyncClient", _FakeClient)
+    monkeypatch.setattr(
+        uploader, "_create_directory", AsyncMock(return_value="root-id")
+    )
 
-    async def fake_upload_one(self, client, file_path):
-        upload_calls.append(os.path.basename(file_path))
-        self._processed_bytes += os.path.getsize(file_path)
+    uploaded = []
+
+    async def fake_upload_file(file_path, parent_id):
+        uploaded.append((os.path.basename(file_path), parent_id))
+        uploader._files += 1
         return f"https://buzzheavier.com/{os.path.basename(file_path)}"
 
-    monkeypatch.setattr(
-        buzzheavier_module.BuzzHeavierUploader,
-        "_upload_one",
-        fake_upload_one,
-    )
+    monkeypatch.setattr(uploader, "_upload_file", fake_upload_file)
 
     await uploader.upload()
 
-    assert sorted(upload_calls) == ["a.bin", "b.bin"]
-    listener.on_upload_complete.assert_awaited()
+    assert sorted(name for name, _ in uploaded) == ["a.bin", "b.bin"]
+    listener.on_upload_error.assert_not_awaited()
+    listener.on_upload_complete.assert_awaited_once()
     args = listener.on_upload_complete.await_args.args
-    # link, files_dict, total_files, mime_type
-    assert args[0].startswith("https://buzzheavier.com/")
-    assert len(args[1]) == 2
-    assert args[2] == 2
-    assert args[3] == "BuzzHeavier"
+    assert args[0] == "https://buzzheavier.com/root-id"
+    assert args[1] == 2
+    assert args[3] == "Folder"
 
 
 @pytest.mark.asyncio
-async def test_upload_handles_empty_path(buzzheavier_module, tmp_path):
+async def test_upload_reports_setup_error(buzzheavier_module, tmp_path, monkeypatch):
     listener = _make_listener()
-    uploader = buzzheavier_module.BuzzHeavierUploader(
-        listener, str(tmp_path)
+    uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
+    monkeypatch.setattr(buzzheavier_module, "AsyncClient", _FakeClient)
+    monkeypatch.setattr(
+        uploader,
+        "_create_directory",
+        AsyncMock(side_effect=RuntimeError("create failed")),
     )
+
     await uploader.upload()
-    listener.on_upload_error.assert_awaited()
+
+    listener.on_upload_error.assert_awaited_once()
     listener.on_upload_complete.assert_not_awaited()
 
 
 @pytest.mark.asyncio
-async def test_upload_aborts_when_cancelled(
-    buzzheavier_module, tmp_path, monkeypatch
+async def test_stream_file_aborts_when_cancelled(
+    buzzheavier_module, tmp_path
 ):
     file_a = tmp_path / "a.bin"
-    file_a.write_bytes(b"a" * 16)
+    file_a.write_bytes(b"a" * 32)
     listener = _make_listener()
-    listener.size = file_a.stat().st_size
+    listener.is_cancelled = True
+    uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(file_a))
 
-    uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
-
-    async def fake_upload_one(self, client, file_path):
-        # Simulate cancellation mid-loop after the first file.
-        listener.is_cancelled = True
-        return f"https://buzzheavier.com/{os.path.basename(file_path)}"
-
-    monkeypatch.setattr(
-        buzzheavier_module.BuzzHeavierUploader,
-        "_upload_one",
-        fake_upload_one,
-    )
-
-    # Add a second file so the cancelled branch runs on iteration 2.
-    (tmp_path / "b.bin").write_bytes(b"b" * 16)
-    await uploader.upload()
-
-    listener.on_upload_error.assert_awaited()
-    listener.on_upload_complete.assert_not_awaited()
+    with pytest.raises(asyncio.CancelledError):
+        await anext(uploader._stream_file(str(file_a), 8))
 
 
 def test_status_interface_exposed(buzzheavier_module, tmp_path):
     listener = _make_listener()
     uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
-    # Properties used by BuzzHeavierStatus.
-    assert hasattr(uploader, "processed_bytes")
-    assert isinstance(uploader.processed_bytes, int)
-    assert hasattr(uploader, "speed")
-    # Speed is computed lazily; first call returns 0.0 because
-    # processed_bytes is still 0.
-    assert uploader.speed == 0.0
+    assert uploader.processed_bytes == 0
+    assert isinstance(uploader.speed, (int, float))
 
 
-def test_auth_headers_uses_config(buzzheavier_module, monkeypatch):
+def test_config_account_id_is_used(buzzheavier_module, tmp_path, monkeypatch):
     monkeypatch.setattr(
         buzzheavier_module.Config, "BUZZHEAVIER_ACCOUNT_ID", "abc-123"
     )
-    headers = buzzheavier_module._auth_headers()
-    assert headers["Authorization"] == "Bearer abc-123"
+    listener = _make_listener()
+    uploader = buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
+    assert uploader._account_id == "abc-123"
 
 
-def test_auth_headers_empty_when_unset(buzzheavier_module, monkeypatch):
-    monkeypatch.setattr(
-        buzzheavier_module.Config, "BUZZHEAVIER_ACCOUNT_ID", ""
-    )
-    headers = buzzheavier_module._auth_headers()
-    assert "Authorization" not in headers
+def test_mt_destination_requires_user_account(buzzheavier_module, tmp_path):
+    listener = _make_listener()
+    listener.up_dest = "mt:bh"
+    with pytest.raises(ValueError, match="BUZZHEAVIER_ACCOUNT_ID"):
+        buzzheavier_module.BuzzHeavierUploader(listener, str(tmp_path))
