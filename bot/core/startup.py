@@ -1,3 +1,4 @@
+from ast import literal_eval
 from aiofiles.os import path as aiopath, remove, makedirs
 from aiofiles import open as aiopen
 from aioshutil import rmtree
@@ -27,6 +28,22 @@ from .telegram_manager import TgClient
 from .torrent_manager import TorrentManager
 
 
+def _normalize_clone_dump_chats(value):
+    if not value:
+        return {}
+    if isinstance(value, (int, list, tuple, dict)):
+        return value
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.startswith("[") and stripped.endswith("]"):
+            parsed = literal_eval(stripped)
+            if not isinstance(parsed, (list, tuple)):
+                raise ValueError("CLONE_DUMP_CHATS list syntax must produce a list/tuple")
+            return list(parsed)
+        return stripped
+    raise ValueError("Unsupported CLONE_DUMP_CHATS value")
+
+
 async def update_qb_options():
     LOGGER.info("Get qBittorrent options from server")
     if not qbit_options:
@@ -36,12 +53,13 @@ async def update_qb_options():
         for k in list(qbit_options.keys()):
             if k.startswith("rss"):
                 del qbit_options[k]
-        qbit_options["web_ui_password"] = "mltbmltb"
-        await TorrentManager.qbittorrent.app.set_preferences(
-            {"web_ui_password": "mltbmltb"}
-        )
+        # Preserve qBittorrent's own credential state. Do not install a
+        # predictable repository-wide WebUI password.
+        qbit_options.pop("web_ui_password", None)
     else:
-        await TorrentManager.qbittorrent.app.set_preferences(qbit_options)
+        safe_options = dict(qbit_options)
+        safe_options.pop("web_ui_password", None)
+        await TorrentManager.qbittorrent.app.set_preferences(safe_options)
 
 
 async def update_aria2_options():
@@ -130,6 +148,7 @@ async def load_settings():
     if qbit_opt := await database.db.settings.qbittorrent.find_one(
         {"_id": bot_id}, {"_id": 0}
     ):
+        qbit_opt.pop("web_ui_password", None)
         qbit_options.update(qbit_opt)
 
     if nzb_opt := await database.db.settings.nzb.find_one({"_id": bot_id}, {"_id": 0}):
@@ -149,6 +168,16 @@ async def load_settings():
         async for row in rows:
             uid = row["_id"]
             del row["_id"]
+            if "CLONE_DUMP_CHATS" in row:
+                try:
+                    row["CLONE_DUMP_CHATS"] = _normalize_clone_dump_chats(
+                        row["CLONE_DUMP_CHATS"]
+                    )
+                except (ValueError, SyntaxError) as exc:
+                    LOGGER.warning(
+                        f"Ignoring invalid CLONE_DUMP_CHATS for user {uid}: {exc}"
+                    )
+                    row["CLONE_DUMP_CHATS"] = {}
             thumb_path = f"thumbnails/{uid}.jpg"
             rclone_config_path = f"rclone/{uid}.conf"
             token_path = f"tokens/{uid}.pickle"
@@ -208,6 +237,12 @@ async def update_variables():
         Config.LEECH_SPLIT_SIZE = TgClient.MAX_SPLIT_SIZE
 
     Config.HYBRID_LEECH = bool(Config.HYBRID_LEECH and TgClient.IS_PREMIUM_USER)
+
+    try:
+        Config.CLONE_DUMP_CHATS = _normalize_clone_dump_chats(Config.CLONE_DUMP_CHATS)
+    except (ValueError, SyntaxError) as exc:
+        LOGGER.warning(f"Ignoring invalid CLONE_DUMP_CHATS config: {exc}")
+        Config.CLONE_DUMP_CHATS = {}
 
     auth_chats.clear()
     sudo_users.clear()
