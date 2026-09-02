@@ -1,3 +1,4 @@
+from ast import literal_eval
 from gallery_dl import extractor
 
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
@@ -91,8 +92,10 @@ class GalleryDL(TaskListener):
             self.multi = 0
 
         try:
-            opt = eval(args["-opt"]) if args["-opt"] else {}
-        except Exception as e:
+            opt = literal_eval(args["-opt"]) if args["-opt"] else {}
+            if not isinstance(opt, dict):
+                raise ValueError("gallery-dl options must be a dictionary")
+        except (ValueError, SyntaxError) as e:
             LOGGER.error(e)
             opt = {}
 
