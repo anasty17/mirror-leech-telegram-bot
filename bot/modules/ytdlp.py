@@ -1,3 +1,4 @@
+from ast import literal_eval
 from httpx import AsyncClient
 from asyncio import wait_for, Event
 from functools import partial
@@ -240,7 +241,7 @@ def extract_info(link, options):
 
 async def _mdisk(link, name):
     key = link.split("/")[-1]
-    async with AsyncClient(verify=False) as client:
+    async with AsyncClient(timeout=30.0) as client:
         resp = await client.get(
             f"https://diskuploader.entertainvideo.com/v1/file/cdnurl?param={key}"
         )
@@ -323,7 +324,9 @@ class YtDlp(TaskListener):
             self.multi = 0
 
         try:
-            opt = eval(args["-opt"]) if args["-opt"] else {}
+            opt = literal_eval(args["-opt"]) if args["-opt"] else {}
+            if not isinstance(opt, dict):
+                raise ValueError("YT-DLP options must be a dictionary")
         except Exception as e:
             LOGGER.error(e)
             opt = {}
@@ -349,7 +352,7 @@ class YtDlp(TaskListener):
         self.thumbnail_layout = args["-tl"]
         self.as_doc = args["-doc"]
         self.as_med = args["-med"]
-        self.folder_name = f"/{args["-m"]}".rstrip("/") if len(args["-m"]) > 0 else ""
+        self.folder_name = f"/{args['-m']}".rstrip("/") if len(args["-m"]) > 0 else ""
         self.bot_trans = args["-bt"]
         self.user_trans = args["-ut"]
 
