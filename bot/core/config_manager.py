@@ -6,6 +6,9 @@ from bot import LOGGER
 
 
 class Config:
+    APP_NAME = "FileHub"
+    APP_TAGLINE = "Unified download, processing and cloud transfer bot"
+    REPOSITORY_URL = "https://github.com/RecklessEvadingDriver/mirror-leech-telegram-bot"
     ALLDEBRID_API_KEY = ""
     TORBOX_API_KEY = ""
     AS_DOCUMENT = False
