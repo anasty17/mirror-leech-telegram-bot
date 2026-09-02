@@ -40,7 +40,7 @@ class JDownloader(MyJdApi):
         jdata = {
             "autoconnectenabledv2": True,
             "password": Config.JD_PASS,
-            "devicename": f"{self._device_name}",
+            "devicename": self._device_name,
             "email": Config.JD_EMAIL,
         }
         remote_data = {
@@ -62,13 +62,11 @@ class JDownloader(MyJdApi):
             "/JDownloader/cfg/org.jdownloader.api.myjdownloader.MyJDownloaderSettings.json",
             "w",
         ) as sf:
-            sf.truncate(0)
             dump(jdata, sf)
         with open(
             "/JDownloader/cfg/org.jdownloader.api.RemoteAPIConfig.json",
             "w",
         ) as rf:
-            rf.truncate(0)
             dump(remote_data, rf)
         if not await path.exists("/JDownloader/JDownloader.jar"):
             pattern = r"JDownloader\.jar\.backup.\d$"
@@ -78,14 +76,22 @@ class JDownloader(MyJdApi):
                         f"/JDownloader/{filename}", "/JDownloader/JDownloader.jar"
                     )
                     break
-            await rmtree("/JDownloader/update")
-            await rmtree("/JDownloader/tmp")
-        cmd = "java -Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8 -Djava.awt.headless=true -jar /JDownloader/JDownloader.jar"
+            await rmtree("/JDownloader/update", ignore_errors=True)
+            await rmtree("/JDownloader/tmp", ignore_errors=True)
+        cmd = [
+            "java",
+            "-Dsun.jnu.encoding=UTF-8",
+            "-Dfile.encoding=UTF-8",
+            "-Djava.awt.headless=true",
+            "-jar",
+            "/JDownloader/JDownloader.jar",
+        ]
         self.is_connected = True
-        _, __, code = await cmd_exec(cmd, shell=True)
+        _, stderr, code = await cmd_exec(cmd)
         self.is_connected = False
-        if code != -9:
-            await self.boot()
+        if code not in (-9, -15, 0):
+            self.error = f"JDownloader exited with code {code}"
+            LOGGER.error(f"{self.error}: {stderr}")
 
 
 jdownloader = JDownloader()
