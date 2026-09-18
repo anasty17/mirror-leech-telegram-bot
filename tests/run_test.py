@@ -3,21 +3,12 @@ import sys
 import unittest
 from types import ModuleType
 
-# 1. Stub third-party dependencies that may not be installed in the host python
-sys.modules["aiofiles"] = ModuleType("aiofiles")
-
-aiofiles_os = ModuleType("aiofiles.os")
-aiofiles_os.makedirs = lambda *args, **kwargs: None
-aiofiles_os.remove = lambda *args, **kwargs: None
-sys.modules["aiofiles.os"] = aiofiles_os
-
+# Stub only dependencies that are intentionally not part of the lightweight
+# development requirements. httpx/aiofiles are real test dependencies and
+# must not be replaced globally because that leaks into other test modules.
 aioshutil_mod = ModuleType("aioshutil")
 aioshutil_mod.rmtree = lambda *args, **kwargs: None
 sys.modules["aioshutil"] = aioshutil_mod
-
-httpx_mod = ModuleType("httpx")
-httpx_mod.AsyncClient = ModuleType("httpx.AsyncClient")
-sys.modules["httpx"] = httpx_mod
 
 # 2. Setup paths
 project_root = os.getcwd()

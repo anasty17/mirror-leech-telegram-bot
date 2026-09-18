@@ -62,12 +62,8 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(cancel_all_update, filters=regex("^canall"))
-    )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(cancel_multi, filters=regex("^stopm"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(cancel_all_update, filters=regex("^canall")))
+    TgClient.bot.add_handler(CallbackQueryHandler(cancel_multi, filters=regex("^stopm")))
     TgClient.bot.add_handler(
         MessageHandler(
             clone_node,
@@ -103,9 +99,7 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(confirm_selection, filters=regex("^sel"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(confirm_selection, filters=regex("^sel")))
     TgClient.bot.add_handler(
         MessageHandler(
             remove_from_queue,
@@ -134,9 +128,7 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(select_type, filters=regex("^list_types"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(select_type, filters=regex("^list_types")))
     TgClient.bot.add_handler(CallbackQueryHandler(arg_usage, filters=regex("^help")))
     TgClient.bot.add_handler(
         MessageHandler(
@@ -216,11 +208,7 @@ def add_handlers():
             & CustomFilters.owner,
         )
     )
-    TgClient.bot.add_handler(
-        MessageHandler(
-            start, filters=command(BotCommands.StartCommand, case_sensitive=True)
-        )
-    )
+    TgClient.bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand, case_sensitive=True)))
     TgClient.bot.add_handler(
         MessageHandler(
             log,
@@ -268,9 +256,7 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(status_pages, filters=regex("^status"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(status_pages, filters=regex("^status")))
     TgClient.bot.add_handler(
         MessageHandler(
             torrent_search,
@@ -278,9 +264,7 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(torrent_search_update, filters=regex("^torser"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(torrent_search_update, filters=regex("^torser")))
     TgClient.bot.add_handler(
         MessageHandler(
             get_users_settings,
@@ -295,9 +279,7 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
-    TgClient.bot.add_handler(
-        CallbackQueryHandler(edit_user_settings, filters=regex("^userset"))
-    )
+    TgClient.bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex("^userset")))
     TgClient.bot.add_handler(
         MessageHandler(
             ytdl,
@@ -322,9 +304,7 @@ def add_handlers():
     TgClient.bot.add_handler(
         MessageHandler(
             gallery_dl_leech,
-            filters=command(
-                BotCommands.GallerydlLeechCommand, case_sensitive=True
-            )
+            filters=command(BotCommands.GallerydlLeechCommand, case_sensitive=True)
             & CustomFilters.authorized,
         )
     )
@@ -335,3 +315,19 @@ def add_handlers():
             & CustomFilters.authorized,
         )
     )
+
+    # FileHub platform commands
+    for handler, bot_command in (
+        (filehub_dashboard, BotCommands.DashboardCommand),
+        (filehub_doctor, BotCommands.DoctorCommand),
+        (filehub_history, BotCommands.HistoryCommand),
+        (filehub_quota, BotCommands.QuotaCommand),
+        (filehub_workers, BotCommands.WorkersCommand),
+        (filehub_workflows, BotCommands.WorkflowsCommand),
+    ):
+        TgClient.bot.add_handler(
+            MessageHandler(
+                handler,
+                filters=command(bot_command, case_sensitive=True) & CustomFilters.authorized,
+            )
+        )

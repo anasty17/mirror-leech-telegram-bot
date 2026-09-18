@@ -1,5 +1,6 @@
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
+from json import loads as json_loads
 from logging import getLogger
 from time import time
 from os import path as ospath, listdir, remove
@@ -20,6 +21,14 @@ from ...mirror_leech_utils.gdrive_utils.helper import GoogleDriveHelper
 LOGGER = getLogger(__name__)
 
 
+def _error_reason(err):
+    try:
+        payload = json_loads(err.content)
+        return payload.get("error", {}).get("errors", [{}])[0].get("reason") or ""
+    except (TypeError, ValueError, IndexError, AttributeError):
+        return ""
+
+
 class GoogleDriveUpload(GoogleDriveHelper):
     def __init__(self, listener, path):
         self.listener = listener
@@ -31,6 +40,10 @@ class GoogleDriveUpload(GoogleDriveHelper):
 
     def user_setting(self):
         if self.listener.up_dest.startswith("mt:"):
+            if not self._trusted_user_token(self.listener.user_id):
+                raise PermissionError(
+                    "Per-user Google token.pickle credentials are restricted to owner/sudo users."
+                )
             self.token_path = f"tokens/{self.listener.user_id}.pickle"
             self.listener.up_dest = self.listener.up_dest.replace("mt:", "", 1)
             self.use_sa = False
@@ -42,10 +55,13 @@ class GoogleDriveUpload(GoogleDriveHelper):
             self.use_sa = True
 
     def upload(self):
-        self.user_setting()
-        self.service = self.authorize()
-        LOGGER.info(f"Uploading: {self._path}")
+        mime_type = None
+        dir_id = None
+        link = None
         try:
+            self.user_setting()
+            self.service = self.authorize()
+            LOGGER.info(f"Uploading: {self._path}")
             if ospath.isfile(self._path):
                 mime_type = get_mime_type(self._path)
                 link = self._upload_file(
@@ -83,12 +99,12 @@ class GoogleDriveUpload(GoogleDriveHelper):
             self._is_errored = True
         finally:
             if self.listener.is_cancelled and not self._is_errored:
-                if mime_type == "Folder" and dir_id:
+                if mime_type == "Folder" and dir_id and self.service:
                     LOGGER.info("Deleting uploaded data from Drive...")
                     self.service.files().delete(
                         fileId=dir_id, supportsAllDrives=True
                     ).execute()
-            elif not self._is_errored:
+            elif not self._is_errored and link:
                 async_to_sync(
                     self.listener.on_upload_complete,
                     link,
@@ -132,7 +148,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
     def _upload_file(self, file_path, file_name, mime_type, dest_id, in_dir=True):
         file_metadata = {
             "name": file_name,
-            "description": "Uploaded by Mirror-leech-telegram-bot",
+            "description": "Uploaded by FileHub",
             "mimeType": mime_type,
         }
         if dest_id is not None:
@@ -181,9 +197,7 @@ class GoogleDriveUpload(GoogleDriveHelper):
                     retries += 1
                     continue
                 if err.resp.get("content-type", "").startswith("application/json"):
-                    reason = (
-                        eval(err.content).get("error").get("errors")[0].get("reason")
-                    )
+                    reason = _error_reason(err)
                     if reason not in [
                         "userRateLimitExceeded",
                         "dailyLimitExceeded",
@@ -195,27 +209,25 @@ class GoogleDriveUpload(GoogleDriveHelper):
                                 f"Reached maximum number of service accounts switching, which is {self.sa_count}"
                             )
                             raise err
-                        else:
-                            if self.listener.is_cancelled:
-                                return
-                            self.switch_service_account()
-                            LOGGER.info(f"Got: {reason}, Trying Again...")
-                            self.proc_bytes -= self.file_processed_bytes
-                            return self._upload_file(
-                                file_path,
-                                file_name,
-                                mime_type,
-                                dest_id,
-                                in_dir,
-                            )
-                    else:
-                        LOGGER.error(f"Got: {reason}")
-                        raise err
+                        if self.listener.is_cancelled:
+                            return
+                        self.switch_service_account()
+                        LOGGER.info(f"Got: {reason}, Trying Again...")
+                        self.proc_bytes -= self.file_processed_bytes
+                        return self._upload_file(
+                            file_path,
+                            file_name,
+                            mime_type,
+                            dest_id,
+                            in_dir,
+                        )
+                    LOGGER.error(f"Got: {reason}")
+                    raise err
         if self.listener.is_cancelled:
             return
         try:
             remove(file_path)
-        except:
+        except OSError:
             pass
         self.file_processed_bytes = 0
         if not Config.IS_TEAM_DRIVE:
@@ -227,4 +239,4 @@ class GoogleDriveUpload(GoogleDriveHelper):
                 .execute()
             )
             return self.G_DRIVE_BASE_DOWNLOAD_URL.format(drive_file.get("id"))
-        return
+        return None

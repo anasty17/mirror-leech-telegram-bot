@@ -2,6 +2,10 @@ from uvloop import install
 
 install()
 from contextlib import asynccontextmanager
+from hashlib import sha256
+from hmac import compare_digest, new as hmac_new
+from importlib import import_module
+from os import getenv
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
@@ -25,6 +29,24 @@ sabnzbd_client = SabnzbdClient(
     api_key="mltb",
     port="8070",
 )
+
+
+def _load_selector_secret():
+    try:
+        settings = import_module("config")
+        secret = getattr(settings, "BOT_TOKEN", "")
+    except ModuleNotFoundError:
+        secret = getenv("BOT_TOKEN", "")
+    if not secret:
+        raise RuntimeError("BOT_TOKEN is required for file selector authentication")
+    return secret.encode()
+
+
+_SELECTOR_SECRET = _load_selector_secret()
+
+
+def _expected_pin(gid):
+    return hmac_new(_SELECTOR_SECRET, gid.encode(), sha256).hexdigest()[:12]
 
 
 @asynccontextmanager
@@ -72,14 +94,14 @@ async def re_verify(paused, resumed, hash_id):
                 await qbittorrent.torrents.file_prio(
                     hash=hash_id, id=paused, priority=0
                 )
-            except (ClientError, TimeoutError, Exception, AQError) as e:
+            except (ClientError, TimeoutError, AQError, Exception) as e:
                 LOGGER.error(f"{e} Errored in reverification paused!")
         if resumed:
             try:
                 await qbittorrent.torrents.file_prio(
                     hash=hash_id, id=resumed, priority=1
                 )
-            except (ClientError, TimeoutError, Exception, AQError) as e:
+            except (ClientError, TimeoutError, AQError, Exception) as e:
                 LOGGER.error(f"{e} Errored in reverification resumed!")
         k += 1
         if k > 5:
@@ -106,7 +128,8 @@ async def handle_torrent(request: Request):
                 "engine": "",
                 "error": "GID is missing",
                 "message": "GID not specified",
-            }
+            },
+            status_code=400,
         )
 
     if not (pin := params.get("pin")):
@@ -116,18 +139,19 @@ async def handle_torrent(request: Request):
                 "engine": "",
                 "error": "Pin is missing",
                 "message": "PIN not specified",
-            }
+            },
+            status_code=401,
         )
 
-    code = "".join([nbr for nbr in gid if nbr.isdigit()][:4])
-    if code != pin:
+    if not compare_digest(_expected_pin(gid), pin):
         return JSONResponse(
             {
                 "files": [],
                 "engine": "",
                 "error": "Invalid pin",
                 "message": "The PIN you entered is incorrect",
-            }
+            },
+            status_code=403,
         )
 
     if request.method == "POST":
@@ -138,9 +162,21 @@ async def handle_torrent(request: Request):
                     "engine": "",
                     "error": "Mode is not specified",
                     "message": "Mode is not specified",
-                }
+                },
+                status_code=400,
             )
-        data = await request.json()
+        try:
+            data = await request.json()
+        except Exception:
+            return JSONResponse(
+                {
+                    "files": [],
+                    "engine": "",
+                    "error": "Invalid request body",
+                    "message": "Request body must be valid JSON",
+                },
+                status_code=400,
+            )
         if mode == "rename":
             if len(gid) > 20:
                 await handle_rename(gid, data)
@@ -185,13 +221,13 @@ async def handle_torrent(request: Request):
                 op = await aria2.getOption(gid)
                 fpath = f"{op['dir']}/"
                 content = make_tree(res, "aria2", fpath)
-        except (ClientError, TimeoutError, Exception, AQError) as e:
-            LOGGER.error(str(e))
+        except (ClientError, TimeoutError, AQError, Exception):
+            LOGGER.exception("Error getting selector files")
             content = {
                 "files": [],
                 "engine": "",
                 "error": "Error getting files",
-                "message": str(e),
+                "message": "Unable to load files for this task.",
             }
     return JSONResponse(content)
 
@@ -199,13 +235,14 @@ async def handle_torrent(request: Request):
 async def handle_rename(gid, data):
     try:
         _type = data["type"]
+        data = dict(data)
         del data["type"]
         if _type == "file":
             await qbittorrent.torrents.rename_file(hash=gid, **data)
         else:
             await qbittorrent.torrents.rename_folder(hash=gid, **data)
-    except (ClientError, TimeoutError, Exception, AQError) as e:
-        LOGGER.error(f"{e} Errored in renaming")
+    except (ClientError, TimeoutError, AQError, Exception):
+        LOGGER.exception("Error while renaming torrent item")
 
 
 async def set_sabnzbd(gid, unselected_files):
@@ -219,14 +256,14 @@ async def set_qbittorrent(gid, selected_files, unselected_files):
             await qbittorrent.torrents.file_prio(
                 hash=gid, id=unselected_files, priority=0
             )
-        except (ClientError, TimeoutError, Exception, AQError) as e:
+        except (ClientError, TimeoutError, AQError, Exception) as e:
             LOGGER.error(f"{e} Errored in paused")
     if selected_files:
         try:
             await qbittorrent.torrents.file_prio(
                 hash=gid, id=selected_files, priority=1
             )
-        except (ClientError, TimeoutError, Exception, AQError) as e:
+        except (ClientError, TimeoutError, AQError, Exception) as e:
             LOGGER.error(f"{e} Errored in resumed")
     await sleep(0.5)
     if not await re_verify(unselected_files, selected_files, gid):
@@ -244,15 +281,15 @@ async def set_aria2(gid, selected_files):
 @app.get("/", response_class=HTMLResponse)
 async def homepage():
     return (
-        "<h1>See mirror-leech-telegram-bot "
-        "<a href='https://www.github.com/anasty17/mirror-leech-telegram-bot'>@GitHub</a> "
-        "By <a href='https://github.com/anasty17'>Anas</a></h1>"
+        "<h1>FileHub</h1>"
+        "<p>Secure file selection service for the Telegram bot.</p>"
     )
 
 
 @app.exception_handler(Exception)
-async def page_not_found(_, exc):
+async def internal_error(_, exc):
+    LOGGER.exception("Unhandled web error", exc_info=exc)
     return HTMLResponse(
-        f"<h1>404: Task not found! Mostly wrong input. <br><br>Error: {exc}</h1>",
-        status_code=404,
+        "<h1>Request failed</h1><p>The task could not be processed.</p>",
+        status_code=500,
     )

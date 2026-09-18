@@ -1,5 +1,5 @@
-from xml.etree import ElementTree as ET
-from aiohttp import ClientSession
+from defusedxml import ElementTree as ET
+from aiohttp import ClientSession, ClientTimeout
 
 from .. import LOGGER
 from ..core.config_manager import Config
@@ -56,7 +56,8 @@ async def search_nzbhydra(query, limit=50):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
     }
 
-    async with ClientSession() as session:
+    timeout = ClientTimeout(total=60, connect=15)
+    async with ClientSession(timeout=timeout) as session:
         try:
             async with session.get(
                 search_url,
@@ -71,7 +72,7 @@ async def search_nzbhydra(query, limit=50):
                 LOGGER.error(
                     f"Failed to search NZBHydra. Status Code: {response.status}",
                 )
-                LOGGER.error(f"Response Text: {await response.text()}")
+                LOGGER.error(f"Response Text: {(await response.text())[:500]}")
                 return None
         except ET.ParseError:
             LOGGER.error("Failed to parse the XML response.")

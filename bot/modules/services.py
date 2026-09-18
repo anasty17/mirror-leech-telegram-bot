@@ -1,5 +1,12 @@
 from time import time
 
+from ..core.branding import (
+    APP_NAME,
+    APP_TAGLINE,
+    AUTHORIZED_WELCOME,
+    REPOSITORY_URL,
+    UNAUTHORIZED_WELCOME,
+)
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.message_utils import send_message, edit_message, send_file
@@ -7,34 +14,37 @@ from ..helper.telegram_helper.filters import CustomFilters
 from ..helper.telegram_helper.bot_commands import BotCommands
 
 
+def _start_buttons():
+    buttons = ButtonMaker()
+    buttons.url_button("💻 Source", REPOSITORY_URL)
+    return buttons.build_menu()
+
+
 @new_task
 async def start(_, message):
-    buttons = ButtonMaker()
-    buttons.url_button(
-        "Repo", "https://www.github.com/anasty17/mirror-leech-telegram-bot"
-    )
-    buttons.url_button("Code Owner", "https://t.me/anas_tayyar")
-    reply_markup = buttons.build_menu(2)
+    reply_markup = _start_buttons()
+
     if await CustomFilters.authorized(_, message):
-        start_string = f"""
-This bot can mirror from links|tgfiles|torrents|nzb|rclone-cloud to any rclone cloud, Google Drive or to telegram.
-Type /{BotCommands.HelpCommand} to get a list of available commands
-"""
+        start_string = AUTHORIZED_WELCOME.format(
+            name=APP_NAME,
+            tagline=APP_TAGLINE,
+            help_command=BotCommands.HelpCommand,
+        )
         await send_message(message, start_string, reply_markup)
     else:
-        await send_message(
-            message,
-            "This bot can mirror from links|tgfiles|torrents|nzb|rclone-cloud to any rclone cloud, Google Drive or to telegram.\n\n⚠️ You Are not authorized user! Deploy your own mirror-leech bot",
-            reply_markup,
+        start_string = UNAUTHORIZED_WELCOME.format(
+            name=APP_NAME,
+            tagline=APP_TAGLINE,
         )
+        await send_message(message, start_string, reply_markup)
 
 
 @new_task
 async def ping(_, message):
     start_time = int(round(time() * 1000))
-    reply = await send_message(message, "Starting Ping")
+    reply = await send_message(message, "🏓 Pinging…")
     end_time = int(round(time() * 1000))
-    await edit_message(reply, f"{end_time - start_time} ms")
+    await edit_message(reply, f"🏓 <b>{APP_NAME}</b> • {end_time - start_time} ms")
 
 
 @new_task

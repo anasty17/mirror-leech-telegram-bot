@@ -9,6 +9,15 @@ from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.message_utils import send_message, edit_message
 
 
+def _parse_bool(value):
+    lowered = value.lower()
+    if lowered == "true":
+        return True
+    if lowered == "false":
+        return False
+    raise ValueError("Invalid boolean callback value")
+
+
 async def list_buttons(user_id, is_recursive=True, user_token=False):
     buttons = ButtonMaker()
     buttons.data_button(
@@ -36,7 +45,7 @@ async def _list_drive(key, message, item_type, is_recursive, user_token, user_id
     LOGGER.info(f"listing: {key}")
     if user_token:
         user_dict = user_data.get(user_id, {})
-        target_id = user_dict.get("gdrive_id", "") or ""
+        target_id = user_dict.get("GDRIVE_ID", "") or ""
         LOGGER.info(target_id)
     else:
         target_id = ""
@@ -62,29 +71,44 @@ async def _list_drive(key, message, item_type, is_recursive, user_token, user_id
 async def select_type(_, query):
     user_id = query.from_user.id
     message = query.message
-    key = message.reply_to_message.text.split(maxsplit=1)[1].strip()
     data = query.data.split()
+    if len(data) < 3:
+        await query.answer(text="Invalid selection data.", show_alert=True)
+        return
     if user_id != int(data[1]):
-        return await query.answer(text="Not Yours!", show_alert=True)
-    elif data[2] == "rec":
+        await query.answer(text="Not Yours!", show_alert=True)
+        return
+    if data[2] == "cancel":
         await query.answer()
-        is_recursive = not bool(eval(data[3]))
-        buttons = await list_buttons(user_id, is_recursive, eval(data[4]))
-        return await edit_message(message, "Choose list options:", buttons)
-    elif data[2] == "ut":
+        await edit_message(message, "list has been canceled!")
+        return
+    if len(data) < 5:
+        await query.answer(text="Invalid selection data.", show_alert=True)
+        return
+    try:
+        is_recursive = _parse_bool(data[3])
+        user_token = _parse_bool(data[4])
+    except ValueError:
+        await query.answer(text="Invalid selection data.", show_alert=True)
+        return
+    if data[2] == "rec":
         await query.answer()
-        user_token = not bool(eval(data[4]))
-        buttons = await list_buttons(user_id, eval(data[3]), user_token)
-        return await edit_message(message, "Choose list options:", buttons)
-    elif data[2] == "cancel":
+        buttons = await list_buttons(user_id, not is_recursive, user_token)
+        await edit_message(message, "Choose list options:", buttons)
+        return
+    if data[2] == "ut":
         await query.answer()
-        return await edit_message(message, "list has been canceled!")
+        buttons = await list_buttons(user_id, is_recursive, not user_token)
+        await edit_message(message, "Choose list options:", buttons)
+        return
+    reply = message.reply_to_message
+    if not reply or not reply.text or len(reply.text.split(maxsplit=1)) < 2:
+        await query.answer(text="Search message is unavailable.", show_alert=True)
+        return
+    key = reply.text.split(maxsplit=1)[1].strip()
     await query.answer()
-    item_type = data[2]
-    is_recursive = eval(data[3])
-    user_token = eval(data[4])
     await edit_message(message, f"<b>Searching for <i>{key}</i></b>")
-    await _list_drive(key, message, item_type, is_recursive, user_token, user_id)
+    await _list_drive(key, message, data[2], is_recursive, user_token, user_id)
 
 
 @new_task
@@ -94,6 +118,3 @@ async def gdrive_search(_, message):
     user_id = message.from_user.id
     buttons = await list_buttons(user_id)
     await send_message(message, "Choose list options:", buttons)
-
-
-

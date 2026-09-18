@@ -1,9 +1,10 @@
+from ast import literal_eval
 from aiofiles.os import remove, path as aiopath, makedirs
 from asyncio import sleep
 from functools import partial
 from html import escape
 from io import BytesIO
-from os import getcwd
+from os import chmod, getcwd
 from pyrogram.filters import create
 from pyrogram.handlers import MessageHandler
 from time import time
@@ -47,6 +48,13 @@ leech_options = [
 rclone_options = ["RCLONE_CONFIG", "RCLONE_PATH", "RCLONE_FLAGS"]
 gdrive_options = ["TOKEN_PICKLE", "GDRIVE_ID", "INDEX_URL"]
 uploaders_options = ["BUZZHEAVIER_ACCOUNT_ID", "BUZZHEAVIER_FOLDER_ID"]
+
+
+def _parse_dict(value):
+    parsed = literal_eval(value)
+    if not isinstance(parsed, dict):
+        raise ValueError("Value must be a dictionary")
+    return parsed
 
 
 async def get_user_settings(from_user, stype="main"):
@@ -428,11 +436,13 @@ async def add_file(_, message, ftype):
         await makedirs(rpath, exist_ok=True)
         des_dir = f"{rpath}{user_id}.conf"
         await message.download(file_name=des_dir)
+        chmod(des_dir, 0o600)
     elif ftype == "TOKEN_PICKLE":
         tpath = f"{getcwd()}/tokens/"
         await makedirs(tpath, exist_ok=True)
         des_dir = f"{tpath}{user_id}.pickle"
         await message.download(file_name=des_dir)
+        chmod(des_dir, 0o600)
     update_user_ldata(user_id, ftype, des_dir)
     await delete_message(message)
     await database.update_user_doc(user_id, ftype, des_dir)
@@ -446,12 +456,12 @@ async def add_one(_, message, option):
     value = message.text
     if value.startswith("{") and value.endswith("}"):
         try:
-            value = eval(value)
-            if user_dict[option]:
+            value = _parse_dict(value)
+            if user_dict.get(option):
                 user_dict[option].update(value)
             else:
                 update_user_ldata(user_id, option, value)
-        except Exception as e:
+        except (ValueError, SyntaxError) as e:
             await send_message(message, str(e))
             return
     else:
@@ -505,8 +515,8 @@ async def set_option(_, message, option):
     ]:
         if value.startswith("{") and value.endswith("}"):
             try:
-                value = eval(value)
-            except Exception as e:
+                value = _parse_dict(value)
+            except (ValueError, SyntaxError) as e:
                 await send_message(message, str(e))
                 return
         else:
@@ -673,6 +683,7 @@ async def edit_user_settings(client, query):
     user_dict = user_data.get(user_id, {})
     if user_id != int(data[1]):
         await query.answer("Not Yours!", show_alert=True)
+        return
     elif data[2] == "setevent":
         await query.answer()
     elif data[2] in ["leech", "gdrive", "rclone", "uploaders"]:
@@ -755,7 +766,7 @@ async def edit_user_settings(client, query):
                 fpath = token_pickle
             if await aiopath.exists(fpath):
                 await remove(fpath)
-            del user_dict[data[3]]
+            user_dict.pop(data[3], None)
             await database.update_user_doc(user_id, data[3])
         else:
             update_user_ldata(user_id, data[3], "")
