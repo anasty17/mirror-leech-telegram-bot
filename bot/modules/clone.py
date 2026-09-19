@@ -60,7 +60,14 @@ class Clone(TaskListener):
         self.is_clone = True
 
     async def new_event(self):
-        text = self.message.text.split("\n")
+        if self.message.rich_message:
+            text = text = (
+                self.message.rich_message.blocks[0].text[0].text
+                + self.message.rich_message.blocks[0].text[1]
+            )
+        else:
+            text = self.message.text
+        text = text.split("\n")
         input_list = text[0].split(" ")
 
         args = {
