@@ -10,6 +10,7 @@ from .. import (
 )
 from ..core.config_manager import Config
 from ..core.torrent_manager import TorrentManager
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import (
     bt_selection_buttons,
     new_task,
@@ -82,13 +83,15 @@ async def select(_, message):
             elif task.listener.is_qbit:
                 id_ = task.hash()
                 await TorrentManager.qbittorrent.torrents.stop([id_])
-            else:
+            elif task.listener.is_torrent:
                 try:
                     await TorrentManager.aria2.forcePause(id_)
                 except Exception as e:
                     LOGGER.error(
                         f"{e} Error in pause, this mostly happens after abuse aria2"
                     )
+            else:
+                raise Exception("Unsupported task type")
         task.listener.select = True
     except:
         await send_message(message, "This is not a bittorrent or sabnzbd task!")
@@ -136,13 +139,15 @@ async def select_callback(query):
             elif task.listener.is_qbit:
                 id_ = task.hash()
                 await TorrentManager.qbittorrent.torrents.stop([id_])
-            else:
+            elif task.listener.is_torrent:
                 try:
                     await TorrentManager.aria2.forcePause(id_)
                 except Exception as e:
                     LOGGER.error(
                         f"{e} Error in pause, this mostly happens after abuse aria2"
                     )
+            else:
+                raise Exception("Unsupported task type")
         task.listener.select = True
     except:
         await query.answer("This is not a bittorrent or sabnzbd task!", show_alert=True)
@@ -150,7 +155,11 @@ async def select_callback(query):
     await query.answer()
     SBUTTONS = bt_selection_buttons(id_)
     msg = "Your download paused. Choose files then press Done Selecting button to resume downloading."
-    await send_message(query.message, msg, SBUTTONS)
+    cmd_msg = (
+        await TgClient.bot.get_messages(query.message.chat.id, task.listener.mid)
+        or query.message
+    )
+    await send_message(cmd_msg, msg, SBUTTONS)
 
 
 @new_task

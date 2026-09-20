@@ -228,11 +228,15 @@ async def get_readable_message(sid, is_user, page_no=1, status="All", page_step=
         else:
             msg += f"<br><b>Size: </b>{task.size()}"
         msg += f"<br><b>Fn: </b><tg-button type='callback_data' data='cancel canconf {task.gid()}' style='danger'>Cancel</tg-button>"
-        if task.tool in [
-            "aria2",
-            "qbittorrent",
-            "sabnzbd",
-        ] and tstatus in [
+        if (
+            task.tool == "aria2"
+            and task.listener.is_torrent
+            or task.tool
+            in [
+                "qbittorrent",
+                "sabnzbd",
+            ]
+        ) and tstatus in [
             MirrorStatus.STATUS_DOWNLOAD,
             MirrorStatus.STATUS_PAUSED,
             MirrorStatus.STATUS_QUEUEDL,

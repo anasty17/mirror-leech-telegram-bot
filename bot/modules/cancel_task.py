@@ -2,6 +2,7 @@ from asyncio import sleep
 
 from .. import task_dict, task_dict_lock, user_data, multi_tags
 from ..core.config_manager import Config
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import (
     get_task_by_gid,
@@ -92,8 +93,14 @@ async def cancel_updates(_, query):
             button = ButtonMaker()
             button.data_button("Yes", f"cancel conf {data[2]}", style="green")
             button.data_button("No", "cancel close", style="red")
+            cmd_msg = (
+                await TgClient.bot.get_messages(
+                    query.message.chat.id, task.listener.mid
+                )
+                or query.message
+            )
             res = await send_message(
-                query.message,
+                cmd_msg,
                 "Are you sure you want to cancel this task?",
                 buttons=button.build_menu(2),
             )
