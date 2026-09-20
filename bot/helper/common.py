@@ -235,7 +235,7 @@ class TaskConfig:
             self.user_dict.get("USER_TRANSMISSION")
             or Config.USER_TRANSMISSION
             and "USER_TRANSMISSION" not in self.user_dict
-        )
+        ) and TgClient.user is not None
 
         if self.user_dict.get("UPLOAD_PATHS", False):
             if self.up_dest in self.user_dict["UPLOAD_PATHS"]:
@@ -390,7 +390,7 @@ class TaskConfig:
             if self.bot_trans:
                 self.user_transmission = False
                 self.hybrid_leech = False
-            if self.user_trans:
+            if self.user_trans and TgClient.user is not None:
                 self.user_transmission = True
             if self.up_dest:
                 if not isinstance(self.up_dest, int):
@@ -398,10 +398,10 @@ class TaskConfig:
                         self.up_dest = self.up_dest.replace("b:", "", 1)
                         self.user_transmission = False
                         self.hybrid_leech = False
-                    elif self.up_dest.startswith("u:"):
+                    elif self.up_dest.startswith("u:") and TgClient.user is not None:
                         self.up_dest = self.up_dest.replace("u:", "", 1)
                         self.user_transmission = True
-                    elif self.up_dest.startswith("h:"):
+                    elif self.up_dest.startswith("h:") and TgClient.user is not None:
                         self.up_dest = self.up_dest.replace("h:", "", 1)
                         self.user_transmission = True
                         self.hybrid_leech = (
