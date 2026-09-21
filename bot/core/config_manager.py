@@ -63,6 +63,10 @@ class Config:
     STATUS_UPDATE_INTERVAL = 15
     STOP_DUPLICATE = False
     STREAMWISH_API = ""
+    STREAM_BASE_URL = ""
+    STREAM_PORT = 8088
+    STREAM_CHANNEL = 0
+    STREAM_BOT_TOKENS = []
     SUDO_USERS = ""
     TELEGRAM_API = 0
     TELEGRAM_HASH = ""
@@ -145,6 +149,7 @@ class Config:
             return "rc"
         if attr in {
             "BASE_URL",
+            "STREAM_BASE_URL",
             "RCLONE_SERVE_URL",
             "SEARCH_API_LINK",
         }:

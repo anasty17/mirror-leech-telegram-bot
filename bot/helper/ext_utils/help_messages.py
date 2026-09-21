@@ -274,6 +274,13 @@ leech_as = """<b>Leech as</b>: -doc -med
 /cmd link -doc (Leech as document)
 /cmd link -med (Leech as media)"""
 
+stream_links = """<b>Stream Links</b>: -st
+/cmd link -st
+/cmd -st by replying to an uploaded Telegram file
+
+Creates stream, direct download and short links for Telegram leeched files.
+Requires STREAM_BASE_URL and STREAM_CHANNEL."""
+
 ffmpeg_cmds = """<b>FFmpeg Commands</b>: -ff
 list of lists of ffmpeg commands. You can set multiple ffmpeg commands for all files before upload. Don't write ffmpeg at beginning, start directly with the arguments.
 Notes:
@@ -333,6 +340,7 @@ YT_HELP_DICT = {
     "TG-Transmission": transmission,
     "Thumb-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
+    "Stream-Links": stream_links,
     "FFmpeg-Cmds": ffmpeg_cmds,
 }
 

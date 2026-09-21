@@ -29,6 +29,7 @@ from .... import intervals
 from ....core.config_manager import Config
 from ....core.telegram_manager import TgClient
 from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.stream_utils import send_stream_links
 from ...ext_utils.files_utils import is_archive, get_base_name
 from ...telegram_helper.message_utils import delete_message
 from ...ext_utils.media_utils import (
@@ -208,6 +209,8 @@ class TelegramUploader:
             media=self._get_input_media(subkey, key),
             disable_notification=True,
         )
+        for message in msgs_list:
+            await send_stream_links(self._listener, message)
         for msg in msgs:
             if msg.link in self._msgs_dict:
                 del self._msgs_dict[msg.link]
@@ -281,6 +284,8 @@ class TelegramUploader:
                     self._last_msg_in_group = False
                     self._last_uploaded = 0
                     await self._upload_file(cap_mono, file_, f_path)
+                    if self._sent_msg and not self._last_msg_in_group:
+                        await send_stream_links(self._listener, self._sent_msg, file_)
                     if self._sent_msg and self._sent_msg.media_group_id:
                         for ch, ch_data in list(
                             self._listener.clone_dump_chats.items()
