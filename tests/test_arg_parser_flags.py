@@ -1,4 +1,4 @@
-"""Tests for the new ``-ad`` and ``-bh`` CLI flags."""
+"""Tests for the ``-ad`` CLI flag."""
 
 from __future__ import annotations
 
@@ -54,23 +54,11 @@ def arg_parser(monkeypatch):
 
 
 def test_ad_bool_flag_set(arg_parser):
-    args = {"-ad": False, "-bh": False, "-z": False, "link": ""}
+    args = {"-ad": False, "-z": False, "link": ""}
     arg_parser(["http://x", "-ad"], args)
     assert args["-ad"] is True
     assert args["link"] == "http://x"
 
-
-def test_bh_bool_flag_set(arg_parser):
-    args = {"-ad": False, "-bh": False, "link": ""}
-    arg_parser(["http://x", "-bh"], args)
-    assert args["-bh"] is True
-
-
-def test_ad_and_bh_combined(arg_parser):
-    args = {"-ad": False, "-bh": False, "link": ""}
-    arg_parser(["http://x", "-ad", "-bh"], args)
-    assert args["-ad"] is True
-    assert args["-bh"] is True
 
 
 def test_unknown_flag_left_alone(arg_parser):
