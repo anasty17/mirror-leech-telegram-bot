@@ -3,6 +3,7 @@ from asyncio import wait_for, Event
 from functools import partial
 from pyrogram.filters import regex, user
 from pyrogram.handlers import CallbackQueryHandler
+from pyrogram.types import RichTextUrl
 from time import time
 from yt_dlp import YoutubeDL
 
@@ -282,9 +283,11 @@ class YtDlp(TaskListener):
 
     async def new_event(self):
         if self.message.rich_message:
-            text = text = (
-                self.message.rich_message.blocks[0].text[0].text
-                + self.message.rich_message.blocks[0].text[1]
+            items = self.message.rich_message.blocks[0].text
+            text = items[0].text + (
+                items[1] + items[2].text + items[3]
+                if len(items) > 3 and isinstance(items[2], RichTextUrl)
+                else items[1]
             )
         else:
             text = self.message.text

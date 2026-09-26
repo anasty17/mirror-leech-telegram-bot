@@ -3,6 +3,7 @@ from aiofiles.os import path as aiopath
 from os import path as ospath
 from base64 import b64encode
 from re import match as re_match
+from pyrogram.types import RichTextUrl
 
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
 from ..helper.ext_utils.bot_utils import (
@@ -89,9 +90,11 @@ class Mirror(TaskListener):
 
     async def new_event(self):
         if self.message.rich_message:
-            text = text = (
-                self.message.rich_message.blocks[0].text[0].text
-                + self.message.rich_message.blocks[0].text[1]
+            items = self.message.rich_message.blocks[0].text
+            text = items[0].text + (
+                items[1] + items[2].text + items[3]
+                if len(items) > 3 and isinstance(items[2], RichTextUrl)
+                else items[1]
             )
         else:
             text = self.message.text

@@ -616,7 +616,9 @@ class TaskConfig:
             msgts = " ".join(msg)
             if self.multi > 2:
                 msgts += f"<br><tg-button type='callback_data' data='cancel multi {self.multi_tag}' style='danger'>Cancel Multi</tg-button>"
-            nextmsg = await send_message(self.message, msgts)
+            nextmsg = await send_rich_message(
+                self.message, InputRichMessage(html=msgts)
+            )
         else:
             msg = [s.strip() for s in input_list]
             index = msg.index("-i")
