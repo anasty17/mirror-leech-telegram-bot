@@ -66,48 +66,30 @@ async def cancel(_, message):
 async def cancel_updates(_, query):
     data = query.data.split()
     user_id = query.from_user.id
-    msg = ""
-    if data[1] == "multi":
-        tag = data[2]
-        if tag in multi_tags:
-            uid = multi_tags[tag]
-            if uid != user_id and not await CustomFilters.sudo("", query):
-                msg = "Not Yours!"
-            else:
-                del multi_tags[tag]
-                msg = "Stopped!"
-        else:
-            msg = "Already Stopped/Finished!"
-    else:
-        gid = data[2]
-        task = await get_task_by_gid(gid)
-        if task is None:
-            msg = "Task already cancelled or finished!"
-        elif user_id != task.listener.user_id and not await CustomFilters.sudo(
-            "", query
-        ):
-            await query.answer("Not Yours!", show_alert=True)
-            return
-        elif data[1] == "canconf":
-            await query.answer()
-            button = ButtonMaker()
-            button.data_button("Yes", f"cancel conf {data[2]}", style="green")
-            button.data_button("No", "cancel close", style="red")
-            cmd_msg = (
-                await TgClient.bot.get_messages(
-                    query.message.chat.id, task.listener.mid
-                )
-                or query.message
-            )
-            res = await send_message(
-                cmd_msg,
-                "Are you sure you want to cancel this task?",
-                buttons=button.build_menu(2),
-            )
-            await auto_delete_message(res)
-            return
-    if msg:
+    gid = data[2]
+    task = await get_task_by_gid(gid)
+    if task is None:
+        msg = "Task already cancelled or finished!"
         await query.answer(msg, show_alert=True)
+        return
+    elif user_id != task.listener.user_id and not await CustomFilters.sudo("", query):
+        await query.answer("Not Yours!", show_alert=True)
+        return
+    elif data[1] == "canconf":
+        await query.answer()
+        button = ButtonMaker()
+        button.data_button("Yes", f"cancel conf {data[2]}", style="green")
+        button.data_button("No", "cancel close", style="red")
+        cmd_msg = (
+            await TgClient.bot.get_messages(query.message.chat.id, task.listener.mid)
+            or query.message
+        )
+        res = await send_message(
+            cmd_msg,
+            "Are you sure you want to cancel this task?",
+            buttons=button.build_menu(2),
+        )
+        await auto_delete_message(res)
         return
     await delete_message(query.message)
     await query.answer()

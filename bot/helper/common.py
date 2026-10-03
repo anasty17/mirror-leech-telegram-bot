@@ -5,7 +5,6 @@ from os import walk, path as ospath
 from secrets import token_urlsafe
 from aioshutil import move, rmtree
 from pyrogram.enums import ChatAction
-from pyrogram.types import InputRichMessage
 from re import sub, I, findall
 from shlex import split
 from collections import Counter
@@ -615,10 +614,8 @@ class TaskConfig:
             msg.append(f"{self.bulk[0]} -i {self.multi - 1} {self.options}")
             msgts = " ".join(msg)
             if self.multi > 2:
-                msgts += f"<br><tg-button type='callback_data' data='cancel multi {self.multi_tag}' style='danger'>Cancel Multi</tg-button>"
-            nextmsg = await send_rich_message(
-                self.message, InputRichMessage(html=msgts)
-            )
+                msgts += f"\nCancel Multi: <code>/{BotCommands.CancelTaskCommand[1]} {self.multi_tag}</code>"
+            nextmsg = await send_message(self.message, msgts)
         else:
             msg = [s.strip() for s in input_list]
             index = msg.index("-i")
@@ -636,8 +633,8 @@ class TaskConfig:
                 return
             msgts = " ".join(msg)
             if self.multi > 2:
-                msgts += f"<br><tg-button type='callback_data' data='cancel multi {self.multi_tag}' style='danger'>Cancel Multi</tg-button>"
-            nextmsg = await send_rich_message(nextmsg, InputRichMessage(html=msgts))
+                msgts += f"\nCancel Multi: <code>/{BotCommands.CancelTaskCommand[1]} {self.multi_tag}</code>"
+            nextmsg = await send_message(nextmsg, msgts)
         if self.message.from_user:
             nextmsg.from_user = self.user
         else:
@@ -674,8 +671,8 @@ class TaskConfig:
             if len(self.bulk) > 2:
                 self.multi_tag = token_urlsafe(3)
                 multi_tags[self.multi_tag] = self.user_id
-                msg += f"<br><tg-button type='callback_data' data='cancel multi {self.multi_tag}' style='danger'>Cancel Multi</tg-button>"
-            nextmsg = await send_rich_message(self.message, InputRichMessage(html=msg))
+                msg += f"\nCancel Multi: <code>/{BotCommands.CancelTaskCommand[1]} {self.multi_tag}</code>"
+            nextmsg = await send_message(self.message, msg)
             if self.message.from_user:
                 nextmsg.from_user = self.user
             else:
