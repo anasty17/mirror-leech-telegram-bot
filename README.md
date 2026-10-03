@@ -327,6 +327,8 @@ options [HERE](https://github.com/yt-dlp/yt-dlp/blob/master/yt_dlp/YoutubeDL.py#
 
 - `BUZZHEAVIER_ACCOUNT_ID` (`Str`): Buzzheavier account ID.
 
+- `TLDV_TOKEN` (`Str`): tldv.io authorization token for downloading private meetings. Refer to the tldv.io section under Extras for how to get the token.
+
 - `USE_SERVICE_ACCOUNTS` (`Bool`): Whether to use Service Accounts or not, with google-api-python-client. For this to work
 see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-bot#generate-service-accounts-what-is-service-account) section below. Default is `False`.
 
@@ -715,6 +717,25 @@ python3 generate_drive_token.py
 - Whenever you want to write path manually to use user rclone.conf that added from usetting then you must add
   the `mt:` at the beginning.
 - So in short, up: has 4 possible values which are: `gd` (Upload to GDRIVE_ID), `rc` (Upload to RCLONE_PATH), `rcl` (Select Rclone Path) and `rclone_path` (remote:path (owner rclone.conf) or `mt`:remote:path (user rclone.conf))
+
+------
+
+</details>
+
+<details>
+  <summary><h5>Downloading from tldv.io (Private Meetings)</h5></summary>
+
+For public meetings, no authentication token is required. For private meetings, you need a valid `tldvtoken` cookie value to authenticate:
+
+1. Log in to your account on [tldv.io](https://tldv.io).
+2. Open developer tools in your browser (F12 or right-click -> Inspect).
+3. Go to the **Application** tab (Chrome/Edge) or **Storage** tab (Firefox).
+4. Expand **Cookies** in the sidebar and select `https://tldv.io` or `https://app.tldv.io`.
+5. Find the cookie named `tldvtoken` and copy its value.
+6. Use this token in the bot:
+   - **Globally**: Add the token to `TLDV_TOKEN` in `config.py`.
+   - **Per-command**: Pass the token in the command's custom headers flag, for example:
+     `/mirror https://tldv.io/app/meetings/MEETING_ID -h cookie: tldvtoken=YOUR_TOKEN`
 
 ------
 

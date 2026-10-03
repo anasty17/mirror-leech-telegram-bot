@@ -2,6 +2,7 @@ from asyncio import sleep
 
 from .. import task_dict, task_dict_lock, user_data, multi_tags
 from ..core.config_manager import Config
+from ..core.telegram_manager import TgClient
 from ..helper.ext_utils.bot_utils import new_task
 from ..helper.ext_utils.status_utils import (
     get_task_by_gid,
@@ -11,6 +12,7 @@ from ..helper.ext_utils.status_utils import (
 from ..helper.telegram_helper import button_build
 from ..helper.telegram_helper.bot_commands import BotCommands
 from ..helper.telegram_helper.filters import CustomFilters
+from ..helper.telegram_helper.button_build import ButtonMaker
 from ..helper.telegram_helper.message_utils import (
     send_message,
     auto_delete_message,
@@ -25,9 +27,12 @@ async def cancel(_, message):
     msg = message.text.split()
     if len(msg) > 1:
         gid = msg[1]
-        if len(gid) == 4:
-            multi_tags.discard(gid)
-            return
+        if gid in multi_tags:
+            uid = multi_tags[gid]
+            if uid != user_id and not await CustomFilters.sudo("", message):
+                await send_message(message, "Not Yours!")
+                return
+            del multi_tags[gid]
         else:
             task = await get_task_by_gid(gid)
             if task is None:
@@ -58,20 +63,38 @@ async def cancel(_, message):
 
 
 @new_task
-async def cancel_multi(_, query):
+async def cancel_updates(_, query):
     data = query.data.split()
     user_id = query.from_user.id
-    if user_id != int(data[1]) and not await CustomFilters.sudo("", query):
+    gid = data[2]
+    task = await get_task_by_gid(gid)
+    if task is None:
+        msg = "Task already cancelled or finished!"
+        await query.answer(msg, show_alert=True)
+        return
+    elif user_id != task.listener.user_id and not await CustomFilters.sudo("", query):
         await query.answer("Not Yours!", show_alert=True)
         return
-    tag = int(data[2])
-    if tag in multi_tags:
-        multi_tags.discard(int(data[2]))
-        msg = "Stopped!"
-    else:
-        msg = "Already Stopped/Finished!"
-    await query.answer(msg, show_alert=True)
+    elif data[1] == "canconf":
+        await query.answer()
+        button = ButtonMaker()
+        button.data_button("Yes", f"cancel conf {data[2]}", style="green")
+        button.data_button("No", "cancel close", style="red")
+        cmd_msg = (
+            await TgClient.bot.get_messages(query.message.chat.id, task.listener.mid)
+            or query.message
+        )
+        res = await send_message(
+            cmd_msg,
+            "Are you sure you want to cancel this task?",
+            buttons=button.build_menu(2),
+        )
+        await auto_delete_message(res)
+        return
     await delete_message(query.message)
+    await query.answer()
+    obj = task.task()
+    await obj.cancel_task()
 
 
 async def cancel_all(status, user_id):

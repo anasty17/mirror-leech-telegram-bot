@@ -1,4 +1,5 @@
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ButtonStyle
 
 
 class ButtonMaker:
@@ -7,24 +8,54 @@ class ButtonMaker:
         self._header_button = []
         self._footer_button = []
 
-    def url_button(self, key, link, position=None):
+    def url_button(self, key, link, position=None, style=ButtonStyle.DEFAULT):
+        if style not in [
+            ButtonStyle.DEFAULT,
+            ButtonStyle.PRIMARY,
+            ButtonStyle.DANGER,
+            ButtonStyle.SUCCESS,
+        ]:
+            if style.lower() == "blue":
+                style = ButtonStyle.PRIMARY
+            elif style.lower() == "red":
+                style = ButtonStyle.DANGER
+            elif style.lower() == "green":
+                style = ButtonStyle.SUCCESS
         if not position:
-            self._button.append(InlineKeyboardButton(text=key, url=link))
-        elif position == "header":
-            self._header_button.append(InlineKeyboardButton(text=key, url=link))
-        elif position == "footer":
-            self._footer_button.append(InlineKeyboardButton(text=key, url=link))
-
-    def data_button(self, key, data, position=None):
-        if not position:
-            self._button.append(InlineKeyboardButton(text=key, callback_data=data))
+            self._button.append(InlineKeyboardButton(text=key, url=link, style=style))
         elif position == "header":
             self._header_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
+                InlineKeyboardButton(text=key, url=link, style=style)
             )
         elif position == "footer":
             self._footer_button.append(
-                InlineKeyboardButton(text=key, callback_data=data)
+                InlineKeyboardButton(text=key, url=link, style=style)
+            )
+
+    def data_button(self, key, data, position=None, style=ButtonStyle.DEFAULT):
+        if style not in [
+            ButtonStyle.DEFAULT,
+            ButtonStyle.PRIMARY,
+            ButtonStyle.DANGER,
+            ButtonStyle.SUCCESS,
+        ]:
+            if style.lower() == "blue":
+                style = ButtonStyle.PRIMARY
+            elif style.lower() == "red":
+                style = ButtonStyle.DANGER
+            elif style.lower() == "green":
+                style = ButtonStyle.SUCCESS
+        if not position:
+            self._button.append(
+                InlineKeyboardButton(text=key, callback_data=data, style=style)
+            )
+        elif position == "header":
+            self._header_button.append(
+                InlineKeyboardButton(text=key, callback_data=data, style=style)
+            )
+        elif position == "footer":
+            self._footer_button.append(
+                InlineKeyboardButton(text=key, callback_data=data, style=style)
             )
 
     def build_menu(self, b_cols=1, h_cols=8, f_cols=8):

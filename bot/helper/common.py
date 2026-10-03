@@ -11,6 +11,7 @@ from collections import Counter
 from copy import deepcopy
 from natsort import natsorted
 
+
 from .. import (
     user_data,
     multi_tags,
@@ -57,6 +58,7 @@ from .ext_utils.media_utils import (
 )
 from .telegram_helper.message_utils import (
     send_message,
+    send_rich_message,
     send_status_message,
     get_tg_link_message,
     temp_download,
@@ -233,7 +235,7 @@ class TaskConfig:
             self.user_dict.get("USER_TRANSMISSION")
             or Config.USER_TRANSMISSION
             and "USER_TRANSMISSION" not in self.user_dict
-        )
+        ) and TgClient.user is not None
 
         if self.user_dict.get("UPLOAD_PATHS", False):
             if self.up_dest in self.user_dict["UPLOAD_PATHS"]:
@@ -388,7 +390,7 @@ class TaskConfig:
             if self.bot_trans:
                 self.user_transmission = False
                 self.hybrid_leech = False
-            if self.user_trans:
+            if self.user_trans and TgClient.user is not None:
                 self.user_transmission = True
             if self.up_dest:
                 if not isinstance(self.up_dest, int):
@@ -396,10 +398,10 @@ class TaskConfig:
                         self.up_dest = self.up_dest.replace("b:", "", 1)
                         self.user_transmission = False
                         self.hybrid_leech = False
-                    elif self.up_dest.startswith("u:"):
+                    elif self.up_dest.startswith("u:") and TgClient.user is not None:
                         self.up_dest = self.up_dest.replace("u:", "", 1)
                         self.user_transmission = True
-                    elif self.up_dest.startswith("h:"):
+                    elif self.up_dest.startswith("h:") and TgClient.user is not None:
                         self.up_dest = self.up_dest.replace("h:", "", 1)
                         self.user_transmission = True
                         self.hybrid_leech = (
@@ -594,10 +596,10 @@ class TaskConfig:
         await sleep(7)
         if not self.multi_tag and self.multi > 1:
             self.multi_tag = token_urlsafe(3)
-            multi_tags.add(self.multi_tag)
+            multi_tags[self.multi_tag] = self.user_id
         elif self.multi <= 1:
             if self.multi_tag in multi_tags:
-                multi_tags.discard(self.multi_tag)
+                del multi_tags[self.multi_tag]
             return
         if self.multi_tag and self.multi_tag not in multi_tags:
             await send_message(
@@ -669,7 +671,7 @@ class TaskConfig:
             msg = " ".join(b_msg)
             if len(self.bulk) > 2:
                 self.multi_tag = token_urlsafe(3)
-                multi_tags.add(self.multi_tag)
+                multi_tags[self.multi_tag] = self.user_id
                 msg += f"\nCancel Multi: <code>/{BotCommands.CancelTaskCommand[1]} {self.multi_tag}</code>"
             nextmsg = await send_message(self.message, msg)
             if self.message.from_user:

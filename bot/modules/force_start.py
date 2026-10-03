@@ -81,3 +81,50 @@ By reply to task cmd:
                 msg = "This task not in queue!"
     if msg:
         await send_message(message, msg)
+
+
+@new_task
+async def remove_from_queue_callback(_, query):
+    data = query.data.split()
+    user_id = query.from_user.id
+    task = await get_task_by_gid(data[2])
+    if task is None:
+        await query.answer("This task has been cancelled!", show_alert=True)
+        return
+    if (
+        Config.OWNER_ID != user_id
+        and task.listener.user_id != user_id
+        and (user_id not in user_data or not user_data[user_id].get("SUDO"))
+    ):
+        await query.answer("This task is not for you!", show_alert=True)
+        return
+    listener = task.listener
+    msg = ""
+    async with queue_dict_lock:
+        if data[1] == "fu":
+            listener.force_upload = True
+            if listener.mid in queued_up:
+                await start_up_from_queued(listener.mid)
+                msg = "Task have been force started to upload!"
+            else:
+                msg = "Force upload enabled for this task!"
+        elif data[1] == "fd":
+            listener.force_download = True
+            if listener.mid in queued_dl:
+                await start_dl_from_queued(listener.mid)
+                msg = "Task have been force started to download only!"
+            else:
+                msg = "This task not in download queue!"
+        else:
+            listener.force_download = True
+            listener.force_upload = True
+            if listener.mid in queued_up:
+                await start_up_from_queued(listener.mid)
+                msg = "Task have been force started to upload!"
+            elif listener.mid in queued_dl:
+                await start_dl_from_queued(listener.mid)
+                msg = "Task have been force started to download and upload will start once download finish!"
+            else:
+                msg = "This task not in queue!"
+    if msg:
+        await query.answer(msg, show_alert=True)

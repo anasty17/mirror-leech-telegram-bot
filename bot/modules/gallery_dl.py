@@ -3,7 +3,6 @@ from gallery_dl import extractor
 from .. import LOGGER, bot_loop, task_dict_lock, DOWNLOAD_DIR
 from ..core.config_manager import Config
 from ..helper.ext_utils.bot_utils import (
-    sync_to_async,
     arg_parser,
     COMMAND_USAGE,
 )
