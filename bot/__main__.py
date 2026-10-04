@@ -62,5 +62,5 @@ add_aria2_callbacks()
 create_help_buttons()
 add_handlers()
 
-LOGGER.info("Bot Started!")
+LOGGER.info(f"Bot Started! @{TgClient.NAME}")
 bot_loop.run_forever()

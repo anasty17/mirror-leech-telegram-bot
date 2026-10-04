@@ -5,7 +5,7 @@ class DirectDownloadLinkException(Exception):
 
 
 class NotSupportedExtractionArchive(Exception):
-    """The archive format use is trying to extract is not supported"""
+    """The archive format being used for extraction is not supported"""
 
     pass
 
