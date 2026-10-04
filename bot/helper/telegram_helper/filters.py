@@ -12,6 +12,8 @@ class CustomFilters:
     owner = create(owner_filter)
 
     async def authorized_user(self, _, update):
+        if Config.PUBLIC_MODE:
+            return True
         user = update.from_user or update.sender_chat
         uid = user.id
         chat_id = update.chat.id
