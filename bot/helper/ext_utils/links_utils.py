@@ -40,7 +40,7 @@ def is_share_link(url: str):
 
 
 def is_rclone_path(path: str):
-    return bool(
+    return not is_gdrive_id(path) and bool(
         re_match(
             r"^(mt:)?(?!(magnet:|sa:|tp:))(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$",
             path,
