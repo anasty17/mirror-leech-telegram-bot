@@ -42,7 +42,7 @@ def is_share_link(url: str):
 def is_rclone_path(path: str):
     return bool(
         re_match(
-            r"^(mt:)?(?!(magnet:|sa:|tp:))(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$",
+            r"^(mt:)?(?!(magnet:|sa:|tp:|mt:))(?![- ])[a-zA-Z0-9_\. -]+(?<! ):(?!.*\/\/).*$|^rcl$",
             path,
         )
     )
