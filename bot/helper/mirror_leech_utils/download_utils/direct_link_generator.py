@@ -100,6 +100,8 @@ def direct_link_generator(link):
         return swisstransfer(link)
     elif "mega.nz" in domain:
         return mega(link)
+    elif "koramaup.com" in domain:
+        return koramaup(link)
     elif any(x in domain for x in ["akmfiles.com", "akmfls.xyz"]):
         return akmfiles(link)
     elif any(
@@ -292,6 +294,61 @@ def mega(url):
             "path": "",
         })
     return details
+
+
+def koramaup(url):
+    session = Session()
+    session.headers.update(
+        {
+            "User-Agent": user_agent,
+        }
+    )
+
+    try:
+        response = session.get(url, timeout=10)
+        if response.status_code != 200:
+            raise DirectDownloadLinkException(
+                f"ERROR: HTTP status {response.status_code}"
+            )
+
+    except Exception as e:
+        raise DirectDownloadLinkException(f"ERROR: Fallo de conexión -> {e}")
+
+    html = HTML(response.text)
+
+    if error := html.xpath('//div[@class="uk-alert-danger uk-alert"]//p/text()'):
+        raise DirectDownloadLinkException(f"ERROR: {error[0]}")
+
+    if content := html.xpath("//script[contains(text(),'download-timer')]"):
+        content = content[0].text or ""
+        if match := search(r"""href\s=\s\\['"]([^'"]+)[\\"]';""", content):
+            intermediate_url = match.group(1)
+
+            sleep(5)
+            try:
+                redirect_response = session.get(
+                    intermediate_url,
+                    timeout=15,
+                    allow_redirects=False,
+                    headers={"Referer": url},
+                )
+            except Exception as e:
+                raise DirectDownloadLinkException(
+                    f"ERROR: Failure while following a redirection -> {e}"
+                )
+
+            if redirect_response.status_code in (301, 302, 303, 307, 308):
+                final_url = redirect_response.headers.get("Location")
+                if final_url:
+                    return final_url
+
+                raise DirectDownloadLinkException(
+                    "ERROR: Redirect without a header Location"
+                )
+
+            return intermediate_url
+
+    raise DirectDownloadLinkException("ERROR: Direct Link not found")
 
 
 def buzzheavier(url):
