@@ -199,6 +199,7 @@ def direct_link_generator(link):
             "teltobx.net",
             "telbx.net",
             "linkbox.cloud",
+            "linkbox.zone",
         ]
     ):
         return linkBox(link)
