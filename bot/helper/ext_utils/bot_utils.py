@@ -1,3 +1,4 @@
+from ast import literal_eval
 from httpx import AsyncClient
 from asyncio.subprocess import PIPE
 from functools import partial, wraps
@@ -174,7 +175,7 @@ def arg_parser(items, arg_base):
                             arg_base[part].add(value)
                         else:
                             try:
-                                arg_base[part].add(tuple(eval(value)))
+                                arg_base[part].add(tuple(literal_eval(value)))
                             except:
                                 pass
                     else:
