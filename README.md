@@ -398,7 +398,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 
 - `EQUAL_SPLITS` (`Bool`): Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`.
 
-- `SPLIT_PART_AT_END` (`Bool`): Put the part number at the end of split video names, like `movie.mkv.001` instead of `movie.part001.mkv`. Telegram won't recognize these parts as videos, so they will be uploaded as documents. Default is `False`.
+- `SPLIT_PART_AT_END` (`Bool`): Put the part number at the end of split video names, like `movie.mkv.001` instead of `movie.part001.mkv`. Default is `False`.
 
 - `MEDIA_GROUP` (`Bool`): View Uploaded split file parts in media group. Default is `False`.
 
