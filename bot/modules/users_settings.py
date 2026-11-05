@@ -113,6 +113,21 @@ async def get_user_settings(from_user, stype="main"):
             )
             equal_splits = "Disabled"
         if (
+            user_dict.get("SPLIT_PART_AT_END", False)
+            or "SPLIT_PART_AT_END" not in user_dict
+            and Config.SPLIT_PART_AT_END
+        ):
+            buttons.data_button(
+                "Split as name.part001.ext",
+                f"userset {user_id} tog SPLIT_PART_AT_END f",
+            )
+            split_names = "name.ext.001"
+        else:
+            buttons.data_button(
+                "Split as name.ext.001", f"userset {user_id} tog SPLIT_PART_AT_END t"
+            )
+            split_names = "name.part001.ext"
+        if (
             user_dict.get("MEDIA_GROUP", False)
             or "MEDIA_GROUP" not in user_dict
             and Config.MEDIA_GROUP
@@ -203,6 +218,7 @@ Leech Type is <b>{ltype}</b>
 Custom Thumbnail <b>{thumbmsg}</b>
 Leech Split Size is <b>{split_size}</b>
 Equal Splits is <b>{equal_splits}</b>
+Split Names are <code>{split_names}</code>
 Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>

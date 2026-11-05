@@ -104,6 +104,7 @@ class TaskConfig:
         self.is_buzzheavier = False
         self.is_gofile = False
         self.equal_splits = False
+        self.split_part_at_end = False
         self.user_transmission = False
         self.hybrid_leech = False
         self.extract = False
@@ -514,6 +515,11 @@ class TaskConfig:
                 self.user_dict.get("EQUAL_SPLITS")
                 or Config.EQUAL_SPLITS
                 and "EQUAL_SPLITS" not in self.user_dict
+            )
+            self.split_part_at_end = (
+                self.user_dict.get("SPLIT_PART_AT_END")
+                or Config.SPLIT_PART_AT_END
+                and "SPLIT_PART_AT_END" not in self.user_dict
             )
             self.max_split_size = (
                 TgClient.MAX_SPLIT_SIZE

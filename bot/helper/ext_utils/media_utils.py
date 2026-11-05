@@ -1,5 +1,5 @@
 from PIL import Image
-from aiofiles.os import remove, path as aiopath, makedirs
+from aiofiles.os import remove, rename, path as aiopath, makedirs
 from asyncio import (
     create_subprocess_exec,
     gather,
@@ -764,4 +764,10 @@ class FFMpeg:
             self._last_processed_bytes += out_size
             start_time += lpd - 3
             i += 1
+        # ffmpeg picks the muxer from the extension, so rename parts only after splitting
+        if self._listener.split_part_at_end:
+            for j in range(1, i + 1):
+                part = f_path.replace(file_, f"{base_name}.part{j:03}{extension}")
+                if await aiopath.exists(part):
+                    await rename(part, f"{f_path}.{j:03}")
         return True
