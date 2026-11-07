@@ -3,6 +3,7 @@ from aiofiles import open as aiopen
 from aioshutil import rmtree
 from asyncio import create_subprocess_exec, create_subprocess_shell, sleep
 from importlib import import_module
+from os import environ
 
 from .. import (
     aria2_options,
@@ -261,6 +262,21 @@ async def load_configurations():
     if Config.BASE_URL:
         await create_subprocess_shell(
             f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.wserver:app --bind 0.0.0.0:{Config.BASE_URL_PORT}"
+        )
+
+    if Config.STREAM_BASE_URL and Config.STREAM_CHANNEL:
+        stream_env = environ.copy()
+        stream_env.update(
+            {
+                "STREAM_BASE_URL": str(Config.STREAM_BASE_URL),
+                "STREAM_PORT": str(Config.STREAM_PORT),
+                "STREAM_CHANNEL": str(Config.STREAM_CHANNEL),
+                "STREAM_BOT_TOKENS": repr(Config.STREAM_BOT_TOKENS),
+            }
+        )
+        await create_subprocess_shell(
+            f"gunicorn -k uvicorn.workers.UvicornWorker -w 1 web.stream_server:app --bind 0.0.0.0:{Config.STREAM_PORT} --timeout 0",
+            env=stream_env,
         )
 
     if await aiopath.exists("cfg.zip"):
