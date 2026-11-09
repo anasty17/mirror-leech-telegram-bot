@@ -397,6 +397,7 @@ see [Using Service Accounts](https://github.com/anasty17/mirror-leech-telegram-b
 - `AS_DOCUMENT` (`Bool`): Default type of Telegram file upload. Default is `False` mean as media.
 
 - `EQUAL_SPLITS` (`Bool`): Split files larger than **LEECH_SPLIT_SIZE** into equal parts size (Not working with zip cmd). Default is `False`.
+- `EXTENSION_FIRST_SPLIT` (`Bool`): Split media files naming format as `filename.ext.001` instead of `filename.part001.ext`. Default is `False`.
 
 - `MEDIA_GROUP` (`Bool`): View Uploaded split file parts in media group. Default is `False`.
 
