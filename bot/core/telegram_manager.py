@@ -1,6 +1,7 @@
 from pyrogram import Client, enums
 from pyrogram.types import LinkPreviewOptions
 from asyncio import Lock
+from os import makedirs
 
 from .. import LOGGER
 from .config_manager import Config
@@ -17,6 +18,7 @@ class TgClient:
 
     @classmethod
     async def start_bot(cls):
+        makedirs("/app/session", exist_ok=True)
         LOGGER.info("Creating client from BOT_TOKEN")
         cls.ID = Config.BOT_TOKEN.split(":", 1)[0]
         cls.bot = Client(
@@ -25,7 +27,7 @@ class TgClient:
             Config.TELEGRAM_HASH,
             proxy=Config.TG_PROXY or None,
             bot_token=Config.BOT_TOKEN,
-            workdir="/app",
+            workdir="/app/session",
             parse_mode=enums.ParseMode.HTML,
             max_concurrent_transmissions=10,
             max_message_cache_size=15000,
@@ -47,7 +49,7 @@ class TgClient:
                     Config.TELEGRAM_HASH,
                     proxy=Config.TG_PROXY or None,
                     session_string=Config.USER_SESSION_STRING,
-                    workdir="/app",
+                    workdir="/app/session",
                     parse_mode=enums.ParseMode.HTML,
                     sleep_threshold=60,
                     max_concurrent_transmissions=10,

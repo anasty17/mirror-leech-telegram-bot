@@ -1,3 +1,8 @@
+#!/bin/bash
+
+pkill -9 -f qbittorrent-nox 2>/dev/null
+rm -f qBittorrent/config/lockfile qBittorrent/config/ipc-socket
+
 tracker_list=$(curl -Ns https://ngosang.github.io/trackerslist/trackers_all_http.txt | awk '$0' | tr '\n\n' ',')
 aria2c --allow-overwrite=true --auto-file-renaming=true --bt-enable-lpd=true --bt-detach-seed-only=true \
        --bt-remove-unselected-file=true --bt-tracker="[$tracker_list]" --bt-max-peers=0 --enable-rpc=true \
@@ -9,3 +14,12 @@ aria2c --allow-overwrite=true --auto-file-renaming=true --bt-enable-lpd=true --b
        --summary-interval=0 --max-upload-limit=1K
 qbittorrent-nox -d --profile="$(pwd)"
 sabnzbdplus -f sabnzbd/SABnzbd.ini -s :::8070 -b 0 -d -c -l 0 --console
+
+for port in 8090 6800 8070; do
+    for _ in $(seq 1 30); do
+        if (echo > /dev/tcp/127.0.0.1/"$port") >/dev/null 2>&1; then
+            break
+        fi
+        sleep 1
+    done
+done
