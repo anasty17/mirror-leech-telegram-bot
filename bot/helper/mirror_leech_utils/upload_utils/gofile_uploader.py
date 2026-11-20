@@ -10,6 +10,7 @@ from httpx import AsyncByteStream, AsyncClient, HTTPError, Limits, Timeout
 
 from ....core.config_manager import Config
 from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.files_utils import get_mime_type
 
 LOGGER = getLogger(__name__)
 
@@ -129,9 +130,13 @@ class GoFileUploader:
     async def upload(self):
         files = []
         corrupted = 0
+        uploaded = 0
         error = ""
+        first_link = ""
+        mime_type = "Folder"
         if await aiopath.isfile(self._path):
             files.append(self._path)
+            mime_type = await sync_to_async(get_mime_type, self._path)
         else:
             walk_data = await sync_to_async(lambda: list(walk(self._path)))
             for root, _, names in walk_data:
@@ -165,27 +170,27 @@ class GoFileUploader:
                         return
                     if self._listener.is_cancelled:
                         return
-                    first_link = first_link or link
+                    uploaded += 1
+                    if not first_link:
+                        first_link = link
         except Exception as exc:
             LOGGER.error(f"GoFile session error: {exc}")
             await self._listener.on_upload_error(f"GoFile: {exc}")
             return
 
-        if total_files <= corrupted:
+        if not uploaded:
             await self._listener.on_upload_error(
                 f"Files Corrupted or unable to upload. {error or 'Check logs!'}"
             )
             return
         if self._listener.is_cancelled:
             return
-        LOGGER.info(
-            f"Uploaded To GoFile: {self._listener.name} - {total_files - corrupted} files"
-        )
+        LOGGER.info(f"Uploaded To GoFile: {self._listener.name} - {uploaded} files")
         await self._listener.on_upload_complete(
             first_link,
-            files_dict,
-            total_files,
-            corrupted,
+            uploaded,
+            0,
+            mime_type,
         )
 
     async def cancel_task(self):
