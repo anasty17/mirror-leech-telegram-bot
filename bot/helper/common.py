@@ -105,6 +105,7 @@ class TaskConfig:
         self.is_buzzheavier = False
         self.is_gofile = False
         self.equal_splits = False
+        self.extension_first_split = False
         self.user_transmission = False
         self.hybrid_leech = False
         self.extract = False
@@ -515,6 +516,12 @@ class TaskConfig:
                 self.user_dict.get("EQUAL_SPLITS")
                 or Config.EQUAL_SPLITS
                 and "EQUAL_SPLITS" not in self.user_dict
+            )
+            self.extension_first_split = (
+                self.extension_first_split
+                or self.user_dict.get("EXTENSION_FIRST_SPLIT")
+                or Config.EXTENSION_FIRST_SPLIT
+                and "EXTENSION_FIRST_SPLIT" not in self.user_dict
             )
             self.max_split_size = (
                 TgClient.MAX_SPLIT_SIZE
@@ -1238,7 +1245,7 @@ class TaskConfig:
                     split_size = self.split_size
                 if not self.as_doc and (await get_document_type(f_path))[0]:
                     self.progress = True
-                    res = await ffmpeg.split(f_path, file_, parts, split_size)
+                    res = await ffmpeg.split(f_path, file_, parts, split_size, self.extension_first_split)
                 else:
                     self.progress = False
                     res = await split_file(f_path, split_size, self)

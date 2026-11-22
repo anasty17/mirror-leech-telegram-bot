@@ -663,7 +663,7 @@ class FFMpeg:
                 await remove(output_file)
             return False
 
-    async def split(self, f_path, file_, parts, split_size):
+    async def split(self, f_path, file_, parts, split_size, extension_first_split=False):
         self.clear()
         multi_streams = True
         self._total_time = duration = (await get_media_info(f_path))[0]
@@ -672,7 +672,10 @@ class FFMpeg:
         start_time = 0
         i = 1
         while i <= parts or start_time < duration - 4:
-            out_path = f_path.replace(file_, f"{base_name}.part{i:03}{extension}")
+            if extension_first_split:
+                out_path = f_path.replace(file_, f"{file_}.{i:03}")
+            else:
+                out_path = f_path.replace(file_, f"{base_name}.part{i:03}{extension}")
             cmd = [
                 "taskset",
                 "-c",
