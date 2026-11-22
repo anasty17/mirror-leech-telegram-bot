@@ -118,7 +118,7 @@ def arg_parser(items, arg_base):
         "-bt",
         "-ad",
         "-tb",
-        "-efs",
+        "-ses",
     }
 
     while i < total:
@@ -146,7 +146,7 @@ def arg_parser(items, arg_base):
                     "-bt",
                     "-ad",
                     "-tb",
-                    "-efs",
+                    "-ses",
                 ]
             ):
                 arg_base[part] = True

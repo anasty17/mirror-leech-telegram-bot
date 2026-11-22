@@ -67,7 +67,7 @@ def test_unknown_flag_left_alone(arg_parser):
     assert args["-ad"] is False
 
 def test_efs_bool_flag_set(arg_parser):
-    args = {"-efs": False, "-ad": False, "link": ""}
-    arg_parser(["http://x", "-efs"], args)
-    assert args["-efs"] is True
+    args = {"-ses": False, "-ad": False, "link": ""}
+    arg_parser(["http://x", "-ses"], args)
+    assert args["-ses"] is True
     assert args["link"] == "http://x"

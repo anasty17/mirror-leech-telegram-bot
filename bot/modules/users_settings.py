@@ -113,19 +113,19 @@ async def get_user_settings(from_user, stype="main"):
             )
             equal_splits = "Disabled"
         if (
-            user_dict.get("EXTENSION_FIRST_SPLIT", False)
-            or "EXTENSION_FIRST_SPLIT" not in user_dict
-            and Config.EXTENSION_FIRST_SPLIT
+            user_dict.get("SPLIT_EXT_SUFFIX", False)
+            or "SPLIT_EXT_SUFFIX" not in user_dict
+            and Config.SPLIT_EXT_SUFFIX
         ):
             buttons.data_button(
-                "Disable Ext First Split", f"userset {user_id} tog EXTENSION_FIRST_SPLIT f"
+                "Disable Split Ext Suffix", f"userset {user_id} tog SPLIT_EXT_SUFFIX f"
             )
-            ext_first_split = "Enabled"
+            split_ext_suffix = "Enabled"
         else:
             buttons.data_button(
-                "Enable Ext First Split", f"userset {user_id} tog EXTENSION_FIRST_SPLIT t"
+                "Enable Split Ext Suffix", f"userset {user_id} tog SPLIT_EXT_SUFFIX t"
             )
-            ext_first_split = "Disabled"
+            split_ext_suffix = "Disabled"
         if (
             user_dict.get("MEDIA_GROUP", False)
             or "MEDIA_GROUP" not in user_dict
@@ -217,7 +217,7 @@ Leech Type is <b>{ltype}</b>
 Custom Thumbnail <b>{thumbmsg}</b>
 Leech Split Size is <b>{split_size}</b>
 Equal Splits is <b>{equal_splits}</b>
-Extension First Split is <b>{ext_first_split}</b>
+Split Ext Suffix is <b>{split_ext_suffix}</b>
 Media Group is <b>{media_group}</b>
 Leech Prefix is <code>{escape(lprefix)}</code>
 Leech Destination is <code>{leech_dest}</code>

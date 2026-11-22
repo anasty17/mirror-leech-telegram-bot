@@ -13,13 +13,14 @@ from ...ext_utils.bot_utils import sync_to_async
 
 LOGGER = getLogger(__name__)
 
-_SERVERS_URL = "https://api.gofile.io/servers"
+_API_URL = "https://api.gofile.io"
+_SERVERS_URL = f"{_API_URL}/servers"
 _UPLOAD_CHUNK = 1024 * 1024
 _HTTP_TIMEOUT = Timeout(connect=30.0, read=600.0, write=600.0, pool=30.0)
 
 
 class MultipartFileStream(AsyncByteStream):
-    def __init__(self, uploader, file_path, file_size, token=""):
+    def __init__(self, uploader, file_path, file_size, token="", folder_id=""):
         self._uploader = uploader
         self._file_path = file_path
         self._file_size = file_size
@@ -29,6 +30,11 @@ class MultipartFileStream(AsyncByteStream):
             token_part = f'--{self.boundary}\r\nContent-Disposition: form-data; name="token"\r\n\r\n{token}\r\n'
         else:
             token_part = ""
+        if folder_id:
+            token_part += (
+                f'--{self.boundary}\r\nContent-Disposition: form-data; name="folderId"'
+                f"\r\n\r\n{folder_id}\r\n"
+            )
         self._prefix = (
             f"{token_part}--{self.boundary}\r\n"
             + f'Content-Disposition: form-data; name="file"; filename="{file_name}"\r\n'
@@ -93,11 +99,13 @@ class GoFileUploader:
         else:
             raise RuntimeError("GoFile server response missing server name")
 
-    async def _upload_one(self, client, upload_url, file_path):
+    async def _upload_one(self, client, upload_url, file_path, folder_id=""):
         if self._listener.is_cancelled:
             raise CancelledError()
         file_size = await aiopath.getsize(file_path)
-        stream = MultipartFileStream(self, file_path, file_size, self._token)
+        stream = MultipartFileStream(
+            self, file_path, file_size, self._token, folder_id
+        )
         headers = {
             "Content-Type": f"multipart/form-data; boundary={stream.boundary}",
             "Content-Length": str(stream.content_length),
@@ -126,34 +134,105 @@ class GoFileUploader:
         else:
             raise RuntimeError("GoFile response missing downloadPage")
 
-    async def upload(self):
-        files = []
-        corrupted = 0
-        error = ""
-        if await aiopath.isfile(self._path):
-            files.append(self._path)
-        else:
-            walk_data = await sync_to_async(lambda: list(walk(self._path)))
-            for root, _, names in walk_data:
-                for name in sorted(names):
-                    candidate = ospath.join(root, name)
-                    if await aiopath.isfile(candidate):
-                        files.append(candidate)
-        if not files:
-            await self._listener.on_upload_error(
-                "GoFile: no files were found to upload"
-            )
+    async def _api(self, client, method, url, **kwargs):
+        headers = {"Authorization": f"Bearer {self._token}"}
+        response = await client.request(method, url, headers=headers, **kwargs)
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            raise RuntimeError(
+                f"GoFile non-JSON response [{response.status_code}]: {response.text[:200]}"
+            ) from exc
+        if response.status_code != 200 or payload.get("status") != "ok":
+            raise RuntimeError(f"GoFile API error: {payload}")
+        return payload.get("data") or {}
+
+    async def _ensure_token(self, client):
+        if self._token:
             return
-        total_files = len(files)
+        response = await client.post(f"{_API_URL}/accounts")
+        payload = response.json()
+        data = payload.get("data") or {}
+        if payload.get("status") != "ok" or not data.get("token"):
+            raise RuntimeError(f"GoFile guest account creation failed: {payload}")
+        self._token = data["token"]
+
+    async def _get_root_folder(self, client):
+        account = await self._api(client, "GET", f"{_API_URL}/accounts/getid")
+        account_id = account.get("id")
+        if not account_id:
+            raise RuntimeError("GoFile: unable to get account id")
+        info = await self._api(client, "GET", f"{_API_URL}/accounts/{account_id}")
+        if root := info.get("rootFolder"):
+            return root
+        raise RuntimeError("GoFile: root folder not found")
+
+    async def _create_folder(self, client, name, parent_id):
+        data = await self._api(
+            client,
+            "POST",
+            f"{_API_URL}/contents/createFolder",
+            json={"parentFolderId": parent_id, "folderName": name},
+        )
+        if not data.get("id"):
+            raise RuntimeError("GoFile: folder creation returned no id")
+        return data["id"], data.get("code", "")
+
+    async def upload(self):
+        corrupted = 0
+        uploaded = 0
+        folders = 0
+        error = ""
+        link = ""
+        is_file = await aiopath.isfile(self._path)
+        # (folder_id, file_path)
+        queue = []
         try:
             async with AsyncClient(
                 timeout=_HTTP_TIMEOUT,
                 limits=Limits(max_connections=4, max_keepalive_connections=2),
             ) as client:
                 upload_url = await self._get_upload_url(client)
-                for file_path in files:
+                if is_file:
+                    queue.append(("", self._path))
+                else:
+                    await self._ensure_token(client)
+                    root = await self._get_root_folder(client)
+                    top = ospath.basename(ospath.abspath(self._path))
+                    top_id, code = await self._create_folder(client, top, root)
+                    await self._api(
+                        client,
+                        "PUT",
+                        f"{_API_URL}/contents/{top_id}/update",
+                        json={"attribute": "public", "attributeValue": True},
+                    )
+                    link = f"https://gofile.io/d/{code}" if code else ""
+                    folders_map = {ospath.abspath(self._path): top_id}
+                    walk_data = await sync_to_async(lambda: list(walk(self._path)))
+                    for r, _, names in walk_data:
+                        if self._listener.is_cancelled:
+                            return
+                        r_abs = ospath.abspath(r)
+                        if r_abs not in folders_map:
+                            parent = folders_map[ospath.dirname(r_abs)]
+                            folders_map[r_abs], _ = await self._create_folder(
+                                client, ospath.basename(r_abs), parent
+                            )
+                            folders += 1
+                        for name in sorted(names):
+                            candidate = ospath.join(r, name)
+                            if await aiopath.isfile(candidate):
+                                queue.append((folders_map[r_abs], candidate))
+                if not queue:
+                    await self._listener.on_upload_error(
+                        "GoFile: no files were found to upload"
+                    )
+                    return
+                for folder_id, file_path in queue:
                     try:
-                        link = await self._upload_one(client, upload_url, file_path)
+                        file_link = await self._upload_one(
+                            client, upload_url, file_path, folder_id
+                        )
                     except (HTTPError, RuntimeError) as exc:
                         LOGGER.error(
                             f"GoFile Upload Error: {exc} - File Path: {file_path}"
@@ -165,27 +244,28 @@ class GoFileUploader:
                         return
                     if self._listener.is_cancelled:
                         return
-                    first_link = first_link or link
+                    uploaded += 1
+                    link = link or file_link
+        except CancelledError:
+            return
         except Exception as exc:
             LOGGER.error(f"GoFile session error: {exc}")
             await self._listener.on_upload_error(f"GoFile: {exc}")
             return
 
-        if total_files <= corrupted:
+        if uploaded == 0:
             await self._listener.on_upload_error(
                 f"Files Corrupted or unable to upload. {error or 'Check logs!'}"
             )
             return
         if self._listener.is_cancelled:
             return
-        LOGGER.info(
-            f"Uploaded To GoFile: {self._listener.name} - {total_files - corrupted} files"
-        )
+        LOGGER.info(f"Uploaded To GoFile: {self._listener.name} - {uploaded} files")
         await self._listener.on_upload_complete(
-            first_link,
-            files_dict,
-            total_files,
-            corrupted,
+            link,
+            uploaded,
+            folders,
+            "File" if is_file else "Folder",
         )
 
     async def cancel_task(self):

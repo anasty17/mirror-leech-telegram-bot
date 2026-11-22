@@ -312,6 +312,13 @@ waits for TorBox to finish/cache it, then downloads each file from TorBox CDN li
 
 Requires <code>TORBOX_API_KEY</code> in bot configuration."""
 
+split_ext_suffix_arg = """<b>Split Ext Suffix</b>: -ses
+
+/cmd link -ses
+Names split media parts as <code>filename.ext.001</code> instead of <code>filename.part001.ext</code>.
+Example: <code>movie.mkv.001</code> instead of <code>movie.part001.mkv</code>.
+Note: Applies to leech split of media files only. Can also be enabled with <code>SPLIT_EXT_SUFFIX</code> in config or user settings."""
+
 YT_HELP_DICT = {
     "main": yt,
     "New-Name": f"{new_name}\nNote: Don't add file extension",
@@ -371,6 +378,7 @@ MIRROR_HELP_DICT = {
     "Same-Directory": same_dir,
     "Thumb": thumb,
     "Split-Size": split_size,
+    "Split-Ext-Suffix": split_ext_suffix_arg,
     "Upload-Destination": upload,
     "Rclone-Flags": rcf,
     "Bulk": bulk,

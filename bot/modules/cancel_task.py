@@ -66,6 +66,11 @@ async def cancel(_, message):
 async def cancel_updates(_, query):
     data = query.data.split()
     user_id = query.from_user.id
+    if len(data) < 3:
+        await query.answer()
+        if len(data) > 1 and data[1] == "close":
+            await delete_message(query.message)
+        return
     gid = data[2]
     task = await get_task_by_gid(gid)
     if task is None:

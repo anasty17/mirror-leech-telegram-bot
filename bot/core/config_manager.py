@@ -23,7 +23,7 @@ class Config:
     DATABASE_NAME = "mltb"
     DEFAULT_UPLOAD = "rc"
     EQUAL_SPLITS = False
-    EXTENSION_FIRST_SPLIT = False
+    SPLIT_EXT_SUFFIX = False
     EXCLUDED_EXTENSIONS = ""
     INCLUDED_EXTENSIONS = ""
     FFMPEG_CMDS = {}

@@ -110,7 +110,7 @@ class Mirror(TaskListener):
             "-ut": False,
             "-ad": False,
             "-tb": False,
-            "-efs": False,
+            "-ses": False,
             "-i": 0,
             "-sp": 0,
             "link": "",
@@ -158,7 +158,7 @@ class Mirror(TaskListener):
         self.bot_trans = args["-bt"]
         self.user_trans = args["-ut"]
         self.is_alldebrid = args["-ad"]
-        self.extension_first_split = args["-efs"]
+        self.split_ext_suffix = args["-ses"]
         self.is_torbox = args["-tb"]
         self.ffmpeg_cmds = args["-ff"]
 
