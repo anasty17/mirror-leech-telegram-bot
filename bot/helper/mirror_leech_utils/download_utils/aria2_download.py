@@ -1,6 +1,4 @@
 from aiofiles.os import remove, path as aiopath
-from aiofiles import open as aiopen
-from base64 import b64encode
 from aiohttp.client_exceptions import ClientError
 from asyncio import TimeoutError
 
@@ -23,6 +21,8 @@ async def add_aria2_download(listener, dpath, header, ratio, seed_time):
         a2c_opt["seed-ratio"] = ratio
     if seed_time:
         a2c_opt["seed-time"] = seed_time
+    if listener.seed:
+        a2c_opt["force-save"] = "true"
     if TORRENT_TIMEOUT := Config.TORRENT_TIMEOUT:
         a2c_opt["bt-stop-timeout"] = f"{TORRENT_TIMEOUT}"
 
@@ -35,12 +35,14 @@ async def add_aria2_download(listener, dpath, header, ratio, seed_time):
 
     try:
         if await aiopath.exists(listener.link):
-            async with aiopen(listener.link, "rb") as tf:
+            """async with aiopen(listener.link, "rb") as tf:
                 torrent = await tf.read()
             encoded = b64encode(torrent).decode()
             params = [encoded, [], a2c_opt]
-            gid = await TorrentManager.aria2.jsonrpc("addTorrent", params)
-            """gid = await TorrentManager.aria2.add_torrent(path=listener.link, options=a2c_opt)"""
+            gid = await TorrentManager.aria2.jsonrpc("addTorrent", params)"""
+            gid = await TorrentManager.aria2.add_torrent(
+                path=listener.link, options=a2c_opt
+            )
         else:
             gid = await TorrentManager.aria2.addUri(
                 uris=[listener.link], options=a2c_opt
